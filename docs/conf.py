@@ -209,9 +209,17 @@ _BUILD_LANGUAGE = OutputLanguage(language)
 # the record is written into the output when the build finishes, because the
 # resolvers run inside this child process and the driver does not.
 _COMPILE_SLOTS = import_module("dev.docs.compile_slots")
+_MESSAGE_MARKS = import_module("dev.docs.message_marks")
+_MESSAGE_MARKS_TRANSFORM = _MESSAGE_MARKS.DeclareBlockLanguage
 _MULTILINGUAL = os.environ.get("CADRUMO_DOCS_MULTILINGUAL") == "1"
 if _MULTILINGUAL:
     _COMPILE_SLOTS.activate([member.value for member in OutputLanguage])
+    # The authored pages are translated through gettext, so the one compile
+    # needs a catalogue of its own: it is generated into the source tree being
+    # read, and its translation of every message is that message's mark
+    # (:mod:`dev.docs.message_marks`). It is kept out of ``locales``, where the
+    # authored catalogues live, and searched first so it is the primary one.
+    locale_dirs = [_MESSAGE_MARKS.PSEUDO_LOCALE_DIR, *locale_dirs]
 
 _SITE_LABELS = site_labels(_BUILD_LANGUAGE)
 
@@ -1798,6 +1806,57 @@ def setup(app):
                     continue
         check_sequence_goldens(app, pages=pages)
 
+    def _mark_authored_messages(app):
+        """Put a mark where each authored page's translation goes, for every language.
+
+        The source tree is discovered here rather than waited for, because the
+        generated catalogue has to exist before Sphinx reads a document and the
+        fragment documents have to exist before it lists them. Discovery is the
+        builder's own, so the pages marked are exactly the pages this scope
+        reads.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        import logging
+
+        slots = _COMPILE_SLOTS.active()
+        if slots is None:
+            return
+        plan = _MESSAGE_MARKS.prepare(
+            Path(app.srcdir),
+            slots=slots,
+            # The exclusions are the builder's own, so the pages marked are the
+            # pages this scope reads and no more; Sphinx discovers again for
+            # its read phase and picks the fragment documents up then.
+            docnames=app.project.discover(
+                app.config.exclude_patterns + app.config.templates_path + app.builder.get_asset_paths(),
+                app.config.include_patterns,
+            ),
+            doc2path=lambda docname: Path(app.project.doc2path(docname, absolute=True)),
+            source_language=OutputLanguage.EN.value,
+            compact=app.config.gettext_compact,
+        )
+        logging.getLogger(__name__).info(
+            "DOCS_MESSAGE_MARKS pages=%d messages=%d languages=%d",
+            len(plan.pages),
+            plan.messages,
+            len(plan.languages),
+        )
+
+    def _read_authored_messages(app, exception):
+        """Record what each fragment document rendered, then drop the fragments.
+
+        Args:
+            app: The Sphinx application instance.
+            exception: The build's failure, or None when it succeeded.
+        """
+        slots = _COMPILE_SLOTS.active()
+        plan = _MESSAGE_MARKS.active()
+        if exception is not None or slots is None or plan is None:
+            return
+        _MESSAGE_MARKS.harvest(plan, slots, lambda docname: Path(app.builder.get_outfilename(docname)))
+
     def _write_compile_slots(app, exception):
         """Leave the recorded marks where the driver that ran this build reads them.
 
@@ -1812,7 +1871,13 @@ def setup(app):
         slots.write(Path(app.outdir) / _COMPILE_SLOTS.SLOTS_FILE)
 
     if _MULTILINGUAL:
-        app.connect("build-finished", _write_compile_slots)
+        # The messages are marked after the generated pages are written, so the
+        # discovered source tree is the one Sphinx will read, and read back
+        # before the marks are written, which is what the record needs them for.
+        app.connect("builder-inited", _mark_authored_messages, priority=900)
+        app.connect("build-finished", _read_authored_messages, priority=100)
+        app.connect("build-finished", _write_compile_slots, priority=200)
+        app.add_transform(_MESSAGE_MARKS_TRANSFORM)
     app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)

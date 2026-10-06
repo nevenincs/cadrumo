@@ -27,6 +27,13 @@ writer are the same bytes and need different strings.
 - :attr:`Rendering.VERBATIM` is text already in the form the creation site
   wrote it for -- a generator's own ``.. raw:: html`` block, a JSON literal --
   and is placed as it was recorded.
+- :attr:`Rendering.MESSAGE` is one translatable message of an authored page,
+  whose translation carries inline markup, links and roles and is therefore
+  recorded already rendered. One message reaches more than one writer -- a
+  page title stands in its own heading, in the ``<title>`` element and in the
+  navigation of every page -- so a message mark records two forms: the
+  rendered markup, and the plain text that markup reads as. The position
+  decides which form the page carries.
 """
 
 from __future__ import annotations
@@ -79,6 +86,7 @@ class Rendering(StrEnum):
 
     DOCUTILS = "docutils"
     VERBATIM = "verbatim"
+    MESSAGE = "message"
 
 
 class Position(StrEnum):
@@ -110,6 +118,18 @@ def _number(value: int) -> str:
         digits = _DIGITS[remainder] + digits
         if not value:
             return digits
+
+
+def mark_number(mark: str) -> int:
+    """Return the number one whole mark carries.
+
+    Raises:
+        CompileSlotsError: If *mark* is not one whole mark.
+    """
+    matched = MARK.fullmatch(mark)
+    if matched is None:
+        raise CompileSlotsError(f"not one whole mark: {mark!r}")
+    return int(matched.group(1), len(_DIGITS))
 
 
 def _docutils_text(value: str) -> str:
@@ -169,10 +189,68 @@ def _minimal(value: str) -> str:
     return html.escape(value, quote=False)
 
 
-def _written(rendering: Rendering, position: Position, value: str, language: str) -> str:
+def _resouped(markup: str) -> str:
+    """Return one stretch of markup as BeautifulSoup writes it back.
+
+    Furo hands the writer's toctree markup to BeautifulSoup and writes
+    ``str(soup)``, which parses what the writer escaped and escapes the result
+    minimally. For plain text that is :func:`_minimal` of the unescaped text;
+    for a message carrying inline markup it is the only faithful answer,
+    because the escaping has to be undone inside the elements and not around
+    them. Running the same library the theme runs is what keeps the two equal.
+    """
+    from bs4 import BeautifulSoup
+
+    return str(BeautifulSoup(markup, "html.parser"))
+
+
+def plain_text(markup: str) -> str:
+    """Return the plain text one stretch of rendered markup reads as.
+
+    This is what ``markupsafe``'s ``striptags`` does to the title the theme's
+    template is handed: drop the elements, unescape the text, fold the
+    whitespace. It is applied to a message's rendered form so that the plain
+    form is derived from the markup rather than recorded twice.
+    """
+    return " ".join(html.unescape(_TAGS.sub("", markup)).split())
+
+
+#: One element's opening or closing tag inside a stretch of rendered markup.
+_TAGS: Final[re.Pattern[str]] = re.compile(r"<[^>]*>")
+
+
+def _message_written(position: Position, markup: str, plain: str) -> str:
+    """Return one language's message as the page carries it at *position*.
+
+    A message is recorded rendered, so the form the position wants is derived
+    from the rendering rather than escaped from a string: the docutils writer's
+    own output is already what a text node carries, the theme's ``<title>`` and
+    every attribute carry the plain text, and the navigation carries the
+    rendering as BeautifulSoup writes it back.
+    """
+    if position is Position.TEXT:
+        return markup
+    if position is Position.MARKUP:
+        raise CompileSlotsError(f"a message reached page markup rather than text or an attribute: {plain!r}")
+    if position is Position.TITLE:
+        return _template_title(plain)
+    if position is Position.NAVIGATION_TEXT:
+        return _resouped(markup)
+    if position is Position.NAVIGATION_ATTRIBUTE:
+        return _minimal(plain)
+    if position is Position.ENTRY_TEXT:
+        return _docutils_text(plain)
+    return _docutils_attribute(plain)
+
+
+def _written(rendering: Rendering, position: Position, value: str, plain: str | None, language: str) -> str:
     """Return one language's string as the page carries it at *position*."""
     if rendering is Rendering.VERBATIM:
         return value
+    if rendering is Rendering.MESSAGE:
+        if plain is None:
+            raise CompileSlotsError(f"a message mark reached the page with no plain form recorded: {value!r}")
+        return _message_written(position, value, plain)
     # Navigation and body-toctree entry titles reach the page without being
     # educated, so each language's string must not be educated either.
     if position is Position.ENTRY_TEXT:
@@ -203,12 +281,16 @@ class CompileSlots:
             strings are stored.
         renderings: Which writer owns each mark's strings, by mark number.
         values: Each mark's string in every language, by mark number.
+        plain: For a message mark, the plain text its rendering reads as in
+            every language; None for every other mark, which has one form.
     """
 
     languages: tuple[str, ...]
     renderings: list[Rendering] = field(default_factory=list)
     values: list[tuple[str, ...]] = field(default_factory=list)
+    plain: list[tuple[str, ...] | None] = field(default_factory=list)
     _numbers: dict[tuple[Rendering, tuple[str, ...]], int] = field(default_factory=dict)
+    _reserved: set[int] = field(default_factory=set)
 
     def mark(self, rendering: Rendering, values: Sequence[str]) -> str:
         """Return the mark that reads *values* across the languages, recording it once.
@@ -238,7 +320,56 @@ class CompileSlots:
             number = self._numbers[key] = len(self.values)
             self.renderings.append(rendering)
             self.values.append(strings)
+            self.plain.append(None)
         return f"{MARK_OPEN}{_number(number)}{MARK_CLOSE}"
+
+    def reserve(self, rendering: Rendering) -> str:
+        """Return a mark whose strings this compile will record later.
+
+        A translatable message is rendered by the compile that carries it, so
+        the mark has to exist before its strings do: the pseudo-catalogue that
+        puts the mark on the page is written before Sphinx reads a document,
+        and the rendering it stands for is read back when the build has
+        written it (:mod:`dev.docs.message_marks`). A reserved mark is never
+        shared with another string, so it is kept out of the record of marks
+        taken by what they read.
+        """
+        number = len(self.values)
+        self._reserved.add(number)
+        self.renderings.append(rendering)
+        self.values.append(())
+        self.plain.append(None)
+        return f"{MARK_OPEN}{_number(number)}{MARK_CLOSE}"
+
+    def supply(self, mark: str, values: Sequence[str], plain: Sequence[str]) -> None:
+        """Record what a mark reserved by :meth:`reserve` reads in every language.
+
+        Args:
+            mark: A mark this compile reserved.
+            values: One rendering per language, in :attr:`languages` order.
+            plain: The plain text each rendering reads as, in the same order.
+
+        Raises:
+            CompileSlotsError: If *mark* was not reserved by this compile, or
+                the strings are not one per language.
+        """
+        matched = MARK.fullmatch(mark)
+        if matched is None:
+            raise CompileSlotsError(f"not one whole mark: {mark!r}")
+        number = int(matched.group(1), len(_DIGITS))
+        if number not in self._reserved:
+            raise CompileSlotsError(f"mark {number} was not reserved by this compile")
+        if len(values) != len(self.languages) or len(plain) != len(self.languages):
+            raise CompileSlotsError(
+                f"a mark needs one string per language; got {len(values)} rendered and "
+                f"{len(plain)} plain for {len(self.languages)}"
+            )
+        for value in (*values, *plain):
+            if MARK_OPEN in value or MARK_CLOSE in value:
+                raise CompileSlotsError("a recorded string contains a character reserved for mark delimiters")
+        self.values[number] = tuple(values)
+        self.plain[number] = tuple(plain)
+        self._reserved.discard(number)
 
     def derive(self, mark: str, rendering: Rendering, transform: Callable[[str], str]) -> str:
         """Return a mark reading each string of *mark* put through *transform*.
@@ -296,13 +427,24 @@ class CompileSlots:
         return self.renderings[number], self.values[number]
 
     def document(self) -> dict[str, object]:
-        """Return the marks as the JSON document :func:`read_slots` reads."""
+        """Return the marks as the JSON document :func:`read_slots` reads.
+
+        Raises:
+            CompileSlotsError: If a mark was reserved and never supplied. Such
+                a mark stands on a page with nothing to read, so the record is
+                refused here rather than factored into an empty string.
+        """
+        if self._reserved:
+            raise CompileSlotsError(
+                f"{len(self._reserved)} mark(s) were reserved and never supplied, first {min(self._reserved)}"
+            )
         return {
             "schema": SLOTS_SCHEMA,
             "languages": list(self.languages),
             "marks": [
                 {"rendering": rendering.value, "values": list(values)}
-                for rendering, values in zip(self.renderings, self.values, strict=True)
+                | ({} if plain is None else {"plain": list(plain)})
+                for rendering, values, plain in zip(self.renderings, self.values, self.plain, strict=True)
             ],
         }
 
@@ -315,7 +457,7 @@ class CompileSlots:
 #: The schema of the recorded marks, which the compile writes and the finishing
 #: pass reads. They run in different processes: the marks are created inside the
 #: ``sphinx-build`` child, and the site is factored by the driver that ran it.
-SLOTS_SCHEMA: Final[int] = 1
+SLOTS_SCHEMA: Final[int] = 2
 
 #: Where inside the compiled site the compile leaves its recorded marks.
 SLOTS_FILE: Final[str] = ".compile-slots.json"
@@ -344,7 +486,17 @@ def read_slots(path: Path) -> CompileSlots:
     for entry in marks:
         if not isinstance(entry, dict) or not isinstance(entry.get("values"), list):
             raise CompileSlotsError(f"{path} holds a mark with no strings")
-        slots.mark(Rendering(entry.get("rendering")), [str(value) for value in entry["values"]])
+        rendering = Rendering(entry.get("rendering"))
+        values = [str(value) for value in entry["values"]]
+        recorded = entry.get("plain")
+        if recorded is None:
+            slots.mark(rendering, values)
+            continue
+        if not isinstance(recorded, list):
+            raise CompileSlotsError(f"{path} holds a mark whose plain form is not a list of strings")
+        # A message mark is read back as it was reserved, because two marks
+        # reading the same rendering can still be two messages.
+        slots.supply(slots.reserve(rendering), values, [str(value) for value in recorded])
     return slots
 
 
@@ -560,11 +712,13 @@ def factor_page(page: str, slots: CompileSlots) -> list[str | tuple[str, ...]]:
     for mark, where in mark_positions(page):
         if mark.start() > position:
             factored.append(page[position : mark.start()])
-        rendering, values = slots.strings(int(mark.group(1), len(_DIGITS)))
+        number = int(mark.group(1), len(_DIGITS))
+        rendering, values = slots.strings(number)
+        plain = slots.plain[number] or (None,) * len(values)
         factored.append(
             tuple(
-                _written(rendering, where, value, language)
-                for language, value in zip(slots.languages, values, strict=True)
+                _written(rendering, where, value, text, language)
+                for language, value, text in zip(slots.languages, values, plain, strict=True)
             )
         )
         position = mark.end()
