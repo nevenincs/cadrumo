@@ -8,6 +8,7 @@ import {
   FIXTURE_TODAY,
   STRADDLING_CALENDAR,
 } from "@/dev/fixtures/calendar";
+import { BUSY_CALENDAR, BUSY_TODAY } from "@/dev/fixtures/calendarBusy";
 import type { CalendarState } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
 import { FilingCalendarView } from "./FilingCalendar";
@@ -127,6 +128,25 @@ export const TodayWithinMonth: Story = {
 export const TodayCloses: Story = {
   name: "Today: everything is behind",
   args: { state: { kind: "ready", calendar: BEHIND_CALENDAR } },
+};
+
+// The turn of a year: nine windows open over the same weeks, one moved
+// past a weekend into the next month, one late, one closing after the range.
+export const Busy: Story = {
+  name: "Many windows at once",
+  args: {
+    state: { kind: "ready", calendar: BUSY_CALENDAR },
+    today: BUSY_TODAY,
+  },
+};
+
+export const BusyPane: Story = {
+  name: "Many windows at once, in a pane",
+  args: {
+    state: { kind: "ready", calendar: BUSY_CALENDAR },
+    today: BUSY_TODAY,
+    pane: true,
+  },
 };
 
 // A calendar the product worked out on another day than this one: its mark
