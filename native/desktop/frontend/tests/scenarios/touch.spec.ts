@@ -165,6 +165,31 @@ test("a tap on messages says why there is no count", async ({
   );
 });
 
+// Spanish has the longest name for the calendar.
+test("a narrow header gives up a duplicate control before it cuts its title", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
+  );
+  await target.locator(".rail button").nth(3).tap();
+  await expect(target.locator(".calendar-page")).toBeVisible();
+  const title = target.locator(".pane-docs .pane-title");
+  expect(
+    await title.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth,
+    ),
+  ).toBe(true);
+  // What it gave up is the swap, which the TUI's header still has: maximize
+  // and close here; maximize, swap and close there.
+  await expect(
+    target.locator(".pane-docs .pane-head button:visible"),
+  ).toHaveCount(2);
+  await expect(
+    target.locator(".pane-tui .pane-head button:visible"),
+  ).toHaveCount(3);
+});
+
 test("the shell stacks its panes and never scrolls sideways", async ({
   page: target,
 }) => {

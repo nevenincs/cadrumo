@@ -1620,7 +1620,11 @@ export function App({ host }: { host: Host }) {
               ? "desktop.calendar.maximize"
               : "desktop.pane.maximize_docs",
           ),
-          ...(tuiVisible ? splitControls : []),
+          // The split's controls are on the TUI's header too: narrow, this
+          // header gives them up before it cuts its title.
+          ...(tuiVisible
+            ? splitControls.map((control) => ({ ...control, yields: true }))
+            : []),
           // The calendar is put away as the TUI is: by its pane's close.
           ...(calendarOn
             ? [

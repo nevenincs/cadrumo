@@ -8,6 +8,10 @@ export type PaneControl = {
   label: string;
   shortcut?: string;
   pressed?: boolean;
+  /** Given up where the header is too narrow to say its title beside it.
+   * Only for a control that has another home, so nothing becomes
+   * unreachable. */
+  yields?: boolean;
   run: () => void;
 };
 
@@ -51,7 +55,7 @@ export function PaneHeader({
 }) {
   return (
     <div
-      className="pane-head flex h-control-lg shrink-0 items-center gap-2 border-b bg-chrome pr-1.5 pl-3 text-muted-foreground select-none"
+      className="pane-head @container/head flex h-control-lg shrink-0 items-center gap-2 border-b bg-chrome pr-1.5 pl-3 text-muted-foreground select-none"
       onDoubleClick={(event) => {
         if (!(event.target as HTMLElement).closest("button"))
           onToggleMaximize();
@@ -80,6 +84,7 @@ export function PaneHeader({
           label={control.label}
           shortcut={control.shortcut}
           aria-pressed={control.pressed}
+          className={control.yields ? "@max-sm/head:hidden" : undefined}
           onClick={control.run}
         >
           <Icon name={control.icon} />
