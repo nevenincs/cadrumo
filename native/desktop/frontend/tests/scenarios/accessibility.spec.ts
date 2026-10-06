@@ -352,6 +352,37 @@ const SURFACES: {
     },
   },
   {
+    name: "a listed profile that cannot be chosen, with its reason",
+    scenario: "odd-names",
+    reach: async (target) => {
+      await expect(target.locator(".profile-unnameable")).toBeVisible();
+    },
+  },
+  {
+    name: "a creation whose outcome is not known",
+    scenario: "create-unanswered",
+    reach: async (target) => {
+      const fields = target.locator(".create-profile input");
+      await fields.nth(0).fill("Marta Ruiz Ferrer");
+      await fields.nth(1).fill("correct horse");
+      await fields.nth(2).fill("correct horse");
+      await target.locator(".create-profile button[type=submit]").click();
+      await expect(target.locator(".create-unknown")).toBeVisible();
+    },
+  },
+  {
+    name: "a profile being created, with its wait said",
+    scenario: "creating-profile",
+    reach: async (target) => {
+      const fields = target.locator(".create-profile input");
+      await fields.nth(0).fill("Marta Ruiz Ferrer");
+      await fields.nth(1).fill("correct horse");
+      await fields.nth(2).fill("correct horse");
+      await target.locator(".create-profile button[type=submit]").click();
+      await expect(target.locator(".create-wait")).toBeVisible();
+    },
+  },
+  {
     name: "a profile just created, to sign in to",
     scenario: "first-run",
     reach: async (target) => {

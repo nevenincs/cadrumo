@@ -195,6 +195,20 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "creating-profile",
+    title: "Creating a profile",
+    summary:
+      "No profile exists; submit the form and the host never answers, so the wait stays up.",
+    signIn: {
+      status: signedOut,
+      submit: { kind: "accept" },
+      profile: null,
+      create: { kind: "pending" },
+    },
+    profiles: "none",
+  },
+  {
+    ...base,
     id: "create-unanswered",
     title: "Profile creation unanswered",
     summary:
