@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from "react";
+import { memo, useId, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -314,8 +314,12 @@ function Month({
  * observed standing on its own day and today marked. It is the overview the
  * list beside it gives the detail of, and choosing a window in one shows it
  * in the other.
+ *
+ * It is drawn again only when what it shows changes: a page that gains or
+ * loses the list beside it, at a change of width, draws the months as they
+ * are.
  */
-export function CalendarMonths({
+export const CalendarMonths = memo(function CalendarMonths({
   calendar,
   locale,
   today,
@@ -425,4 +429,4 @@ export function CalendarMonths({
       ))}
     </div>
   );
-}
+});
