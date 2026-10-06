@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:ecdafca394cc9cb717068729fc132b186e630a745faaa564e7593fa229b28b1c'
+body_hash: 'sha256:2ec0ad3407fefc98c6e73f4272013aabc237bcefd5e9758208a069f1b05af277'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -426,6 +426,10 @@ The late edge measured 2.8 to 1 against the card and the due edge 1.6 to 1. Reso
 ### Eighth review left | low | not changed
 
 A crowded month can still be taller than a short page, eight hundred pixels in a pane of five hundred: four rows a week is what keeps a deadline legible, and the page scrolls. A reader's scroll in the same frame as a resize is taken for the layout's and not recorded. A window that is counted in every week it crosses is reached by the keyboard from the list or by drawing its month whole. Not exercised by the review or since: a real contrast theme, real browser zoom, a screen reader, the native host.
+
+### Calendar face frame | low | a change of face redrew every month
+
+The benchmark's drag of the split showed one frame of about fifty milliseconds where the calendar changes between one face and two. Measured on the minified build with long-animation-frame entries, the time was in the resize observation, which drew every month again though only the list had come or gone. Resolved in `621d3ffe2b`: the months are drawn again only when what they show changes. Over eight changes of face the long frames went from two, of 75 and 69 ms, to one of 56 ms; what is left is the list being put in or taken out and the layout that follows. The edge of a due window was quietened in `fe0f0dbe12`, to 4.3 to 1 against the card in the light scheme and 5.0 in the dark, and a test now measures every reading's edge in both schemes against a floor of three to one. Two states that could only be reached by hand, a counted window chosen and a crowded month drawn whole, are in the catalogue from `5d6ccdbfab`.
 
 ## Recommendations
 
