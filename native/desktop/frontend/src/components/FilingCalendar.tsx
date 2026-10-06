@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useId,
   useMemo,
@@ -153,6 +154,32 @@ function Entry({
 }
 
 /**
+ * Where the past ends: a line across the list at the day the product worked
+ * the states out for, so what is behind and what is ahead are told apart at
+ * a glance. It is said in the language's own word for today.
+ */
+function TodayMark({ on, locale }: { on: string; locale: string }) {
+  const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
+    0,
+    "day",
+  );
+  const label = `${word.charAt(0).toLocaleUpperCase(locale)}${word.slice(1)} · ${new Intl.DateTimeFormat(
+    locale,
+    { day: "numeric", month: "short" },
+  ).format(day(on))}`;
+  return (
+    <div
+      role="separator"
+      aria-label={label}
+      className="calendar-today flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-brand"
+    >
+      <span aria-hidden="true">{label}</span>
+      <span aria-hidden="true" className="h-px flex-1 bg-current opacity-40" />
+    </div>
+  );
+}
+
+/**
  * The filing calendar: every obligation in a range of dates, by month, with
  * the product's own reading of where each stands. It keeps apart what the
  * product keeps apart: the local filing work, what has been seen of the tax
@@ -225,7 +252,7 @@ export function FilingCalendarView({
     });
     const groups = new Map<
       string,
-      { title: string; entries: CalendarEntry[] }
+      { title: string; entries: CalendarEntry[]; ahead: number }
     >();
     for (const entry of [...(calendar?.entries ?? [])].sort(
       (a, b) =>
@@ -236,12 +263,21 @@ export function FilingCalendarView({
       const group = groups.get(key) ?? {
         title: month.format(day(entry.adjusted_closes_on)),
         entries: [],
+        ahead: 0,
       };
+      // How many of the month's obligations bind on or after the day the
+      // product evaluated: they are listed last, being sorted by date.
+      if (entry.adjusted_closes_on >= entry.evaluated_on) group.ahead += 1;
       group.entries.push(entry);
       groups.set(key, group);
     }
     return [...groups];
   }, [calendar, locale]);
+  // The day the product worked the states out for, and the month in which
+  // the first obligation still ahead falls: the mark for today stands just
+  // before that obligation, or after the last one when none is ahead.
+  const today = calendar?.entries[0]?.evaluated_on ?? null;
+  const turning = months.find(([, month]) => month.ahead > 0)?.[0] ?? null;
 
   let body: ReactNode;
   if (state.kind === "loading") {
@@ -355,6 +391,12 @@ export function FilingCalendarView({
         ) : (
           months.map(([key, month]) => (
             <section key={key} aria-labelledby={`${heading}-${key}`}>
+              {/* Before the month's heading where the whole month is ahead. */}
+              {today &&
+                key === turning &&
+                month.ahead === month.entries.length && (
+                  <TodayMark on={today} locale={locale} />
+                )}
               <h2
                 id={`${heading}-${key}`}
                 className={cn(
@@ -364,18 +406,36 @@ export function FilingCalendarView({
               >
                 {month.title}
               </h2>
-              <ul>
-                {month.entries.map((entry) => (
-                  <Entry
-                    key={`${entry.modelo}:${entry.period}`}
-                    entry={entry}
-                    locale={locale}
-                    onOpen={onOpen}
-                  />
-                ))}
-              </ul>
+              {/* Within the month where today falls between its dates: the
+                  month is then two lists with the mark between them. */}
+              {(today && key === turning && month.ahead < month.entries.length
+                ? [
+                    month.entries.slice(0, month.entries.length - month.ahead),
+                    month.entries.slice(month.entries.length - month.ahead),
+                  ]
+                : [month.entries]
+              ).map((entries, part) => (
+                <Fragment key={part}>
+                  {part === 1 && today && (
+                    <TodayMark on={today} locale={locale} />
+                  )}
+                  <ul>
+                    {entries.map((entry) => (
+                      <Entry
+                        key={`${entry.modelo}:${entry.period}`}
+                        entry={entry}
+                        locale={locale}
+                        onOpen={onOpen}
+                      />
+                    ))}
+                  </ul>
+                </Fragment>
+              ))}
             </section>
           ))
+        )}
+        {today && months.length > 0 && turning === null && (
+          <TodayMark on={today} locale={locale} />
         )}
         {coverage.advised.length > 0 && (
           <p className="px-4 py-3 text-sm text-muted-foreground">

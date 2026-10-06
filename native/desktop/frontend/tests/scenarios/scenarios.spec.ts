@@ -1554,6 +1554,40 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
   ).toContainText(said.format(3, "month"));
   // The standing is a list of readings, each with its count.
   await expect(page.locator("ul.calendar-standing > li")).toHaveCount(4);
+  // Where the past ends is marked once, in the language's word for today,
+  // between the last obligation behind and the first one ahead.
+  const mark = page.getByRole("separator");
+  await expect(mark).toHaveCount(1);
+  await expect(mark).toHaveAccessibleName(
+    new RegExp(`^${said.format(0, "day")} · `, "i"),
+  );
+  expect(
+    await page.evaluate((element) => {
+      const order = [
+        ...element.querySelectorAll(".calendar-today, li:has(time)"),
+      ];
+      const at = order.findIndex((node) =>
+        node.classList.contains("calendar-today"),
+      );
+      const dates = (nodes: Element[]) =>
+        nodes.map((node) => node.querySelector("time")?.dateTime ?? "");
+      return {
+        behind: dates(order.slice(0, at)),
+        ahead: dates(order.slice(at + 1)),
+      };
+    }),
+  ).toEqual({
+    behind: ["2026-07-20", "2026-07-20"],
+    ahead: [
+      "2026-10-20",
+      "2026-10-20",
+      "2026-10-20",
+      "2026-10-20",
+      "2027-02-01",
+      "2027-02-01",
+      "2027-06-30",
+    ],
+  });
   // What could not be determined is said, not left out.
   await expect(page).toContainText("347");
   await expect.poll(calendarReads(target)).toBe(1);
