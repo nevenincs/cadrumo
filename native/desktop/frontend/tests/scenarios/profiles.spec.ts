@@ -160,6 +160,69 @@ test("another profile chosen is the one signed in to, and the one the window the
   );
 });
 
+for (const from of ["settings", "palette"] as const)
+  test(`switching profile from ${from} signs out once and goes on to the choice of another`, async ({
+    page: target,
+  }) => {
+    await open(target, "signed-in");
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+    if (from === "settings") {
+      await target
+        .getByRole("button", { name: label("desktop.rail.settings") })
+        .click();
+      await target
+        .locator(".settings")
+        .getByRole("button", { name: label("desktop.account.switch_profile") })
+        .click();
+    } else {
+      await target
+        .getByRole("button", { name: label("desktop.rail.search") })
+        .click();
+      const palette = target.locator(".palette");
+      await palette
+        .getByRole("combobox")
+        .fill(label("desktop.account.switch_profile"));
+      await palette
+        .getByRole("option", { name: label("desktop.account.switch_profile") })
+        .click();
+    }
+    // Signed out, and asked: the sign-in, with its choice, over the window.
+    await expect(password(target)).toBeFocused();
+    await expect(target.locator(".settings")).toHaveCount(0);
+    await expect(choice(target).locator("option:checked")).toHaveText(
+      "Demo profile",
+    );
+    expect(await calls(target, "signOut")()).toBe(1);
+
+    await choice(target).selectOption({ label: "Taller Ribera, S.L." });
+    await password(target).fill("anything");
+    await submit(target).click();
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+    expect(await everyCall(target)).toContain("signInProfile 3");
+    expect(await calls(target, "signOut")()).toBe(1);
+    expect(await calls(target, "signIn")()).toBe(1);
+  });
+
+test("a switch whose sign-out fails says so where it was asked, and asks for no password", async ({
+  page: target,
+}) => {
+  await open(target, "sign-out-refused");
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  const settings = target.locator(".settings");
+  await settings
+    .getByRole("button", { name: label("desktop.account.switch_profile") })
+    .click();
+  await expect(settings.getByRole("alert")).toBeVisible();
+  await expect(dialog(target)).toHaveCount(0);
+  await expect(
+    settings.getByRole("button", { name: label("desktop.account.sign_out") }),
+  ).toBeVisible();
+  expect(await calls(target, "signOut")()).toBe(1);
+  expect(await calls(target, "signIn")()).toBe(0);
+});
+
 test("several profiles and none selected: no password is sent until a profile is chosen", async ({
   page: target,
 }) => {

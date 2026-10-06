@@ -91,6 +91,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.account.signed_in",
         "desktop.account.signed_out",
         "desktop.account.switch_hint",
+        "desktop.account.switch_profile",
         "desktop.account.unknown",
         "desktop.action.docs_back",
         "desktop.action.docs_forward",

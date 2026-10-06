@@ -519,6 +519,7 @@ desktop:
     signed_out: Nincs bejelentkezve
     switch_hint: Másik profil használatához jelentkezz ki, és bejelentkezéskor válaszd
       ki.
+    switch_profile: Profilváltás
     unknown: A bejelentkezés állapota ismeretlen
   action:
     docs_back: Vissza

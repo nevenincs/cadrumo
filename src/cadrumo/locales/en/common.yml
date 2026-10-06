@@ -512,6 +512,7 @@ desktop:
     signed_in: Signed in
     signed_out: Not signed in
     switch_hint: To use another profile, sign out and choose it when you sign in.
+    switch_profile: Switch profile
     unknown: Sign-in state unknown
   action:
     docs_back: Back

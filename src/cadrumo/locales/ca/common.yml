@@ -529,6 +529,7 @@ desktop:
     signed_out: Sense sessió iniciada
     switch_hint: Per fer servir un altre perfil, tanca la sessió i tria'l en iniciar
       la sessió.
+    switch_profile: Canvia de perfil
     unknown: Estat de la sessió desconegut
   action:
     docs_back: Enrere

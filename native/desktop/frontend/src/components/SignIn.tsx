@@ -833,11 +833,14 @@ export function Account({
   account,
   onSignIn,
   onSignOut,
+  onSwitch,
   onOpenTui,
 }: {
   account: SignInController;
   onSignIn: () => void;
   onSignOut: () => void;
+  /** Sign out of this profile and go on to the choice of another. */
+  onSwitch?: () => void;
   onOpenTui: () => void;
 }) {
   const t = useStrings();
@@ -908,15 +911,29 @@ export function Account({
             <Badge variant={SESSION_TONE[phase] ?? "neutral"}>{t(label)}</Badge>
           )}
           {phase === "signed-in" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              pending={account.busy}
-              onClick={onSignOut}
-            >
-              {!account.busy && <Icon name="signOut" />}
-              {t("desktop.account.sign_out")}
-            </Button>
+            <span className="flex flex-wrap items-center gap-2">
+              {account.canCreate && onSwitch && (
+                <Button
+                  className="switch-profile"
+                  variant="ghost"
+                  size="sm"
+                  aria-disabled={account.busy || undefined}
+                  onClick={account.busy ? undefined : onSwitch}
+                >
+                  <Icon name="swap" />
+                  {t("desktop.account.switch_profile")}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                pending={account.busy}
+                onClick={onSignOut}
+              >
+                {!account.busy && <Icon name="signOut" />}
+                {t("desktop.account.sign_out")}
+              </Button>
+            </span>
           ) : account.canSignIn ? (
             <Button variant="outline" size="sm" onClick={onSignIn}>
               {t("desktop.signin.submit")}

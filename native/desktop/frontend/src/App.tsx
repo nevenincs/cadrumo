@@ -256,6 +256,23 @@ export function App({ host }: { host: Host }) {
     setSignInDismissed(true);
     void accountRef.current.signOut();
   }, []);
+  // Another profile: this one is signed out, and the sign-in that follows
+  // offers the choice. Unlike a plain sign-out it is a reason to ask. A
+  // sign-out that fails is said in settings, wherever it was asked from.
+  const [switching, setSwitching] = useState(false);
+  const switchProfile = useCallback(() => {
+    setSettingsOpen(false);
+    signInOpener.current = null;
+    setSignInDismissed(false);
+    setSwitching(true);
+    void accountRef.current.signOut();
+  }, []);
+  const switchFailed = account.signOutFailure !== null;
+  useEffect(() => {
+    if (!switching) return;
+    if (switchFailed) setSettingsOpen(true);
+    if (gated || switchFailed) setSwitching(false);
+  }, [switching, gated, switchFailed]);
   useEffect(() => {
     if (gated) return;
     // Admitted: the next time the gate closes, the dialog opens again.
@@ -1086,6 +1103,15 @@ export function App({ host }: { host: Host }) {
         run: signOut,
       },
       {
+        id: "account.switchProfile",
+        label: t("desktop.account.switch_profile"),
+        group: "account",
+        icon: "swap",
+        keywords: "change another user account choose",
+        enabled: () => signedIn && canCreateProfile,
+        run: switchProfile,
+      },
+      {
         id: "focus.next",
         label: t("desktop.action.focus_next"),
         group: "general",
@@ -1155,6 +1181,7 @@ export function App({ host }: { host: Host }) {
       continueInTui,
       signedIn,
       signOut,
+      switchProfile,
       cycleFocus,
       openLink,
       goHome,
@@ -2068,6 +2095,7 @@ export function App({ host }: { host: Host }) {
                     setSignInDismissed(false);
                   }}
                   onSignOut={signOut}
+                  onSwitch={switchProfile}
                   onOpenTui={continueInTui}
                 />
               }

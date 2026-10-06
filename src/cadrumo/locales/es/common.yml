@@ -534,6 +534,7 @@ desktop:
     signed_in: Sesión iniciada
     signed_out: Sin sesión iniciada
     switch_hint: Para usar otro perfil, cierra la sesión y elígelo al iniciar sesión.
+    switch_profile: Cambiar de perfil
     unknown: Estado de la sesión desconocido
   action:
     docs_back: Atrás
