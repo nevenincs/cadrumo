@@ -22,18 +22,33 @@ function PopoverAnchor(
  * A non-modal surface anchored to its trigger. It closes on Escape or a
  * press outside and hands focus back to the trigger. It never grows past the
  * window: tall content scrolls inside it.
+ *
+ * Escape pressed inside it closes it at the first press. The foundation gives
+ * the key to the topmost layer only, so a tooltip showing anywhere in the
+ * window would otherwise take the first press and leave the popover up.
  */
 function PopoverContent({
   className,
   align = "center",
   sideOffset = 8,
   collisionPadding = 8,
+  children,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  const dismiss = React.useRef<HTMLButtonElement>(null);
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        onKeyDownCapture={(event) => {
+          // A layer portalled out of the popover keeps its own Escape.
+          if (
+            event.key === "Escape" &&
+            !event.nativeEvent.isComposing &&
+            event.currentTarget.contains(event.target as Node)
+          )
+            dismiss.current?.click();
+        }}
         align={align}
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
@@ -43,7 +58,10 @@ function PopoverContent({
           className,
         )}
         {...props}
-      />
+      >
+        {children}
+        <PopoverPrimitive.Close ref={dismiss} hidden tabIndex={-1} />
+      </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   );
 }

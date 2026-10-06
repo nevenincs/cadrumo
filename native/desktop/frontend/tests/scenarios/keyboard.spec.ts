@@ -340,6 +340,45 @@ test("settings opens on the current choice, moves by arrows and returns focus", 
   await expect(opener).toBeFocused();
 });
 
+test("settings opened straight after the palette closes keeps the keyboard", async ({
+  page: target,
+}) => {
+  await open(target);
+  await rail(target).getByRole("button").first().focus();
+  const settings = target.locator(".settings");
+  const palette = target.locator(".palette");
+  // As fast as keys can follow each other: the palette's leaving must not
+  // take focus back from the surface opened after it.
+  for (let round = 0; round < 12; round++) {
+    await target.keyboard.press("Control+Shift+KeyK");
+    await expect(palette).toBeVisible();
+    await target.keyboard.press("Escape");
+    await palette.waitFor({ state: "detached" });
+    await target.keyboard.press("Control+Comma");
+    await settings.waitFor();
+    await expect(settings.locator(":focus")).toHaveCount(1);
+    await target.keyboard.press("Escape");
+    await settings.waitFor({ state: "detached" });
+  }
+});
+
+test("one Escape closes settings while a tooltip is showing elsewhere", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.keyboard.press("Control+Comma");
+  const settings = target.locator(".settings");
+  await expect(settings).toBeVisible();
+  await expect(settings.locator(":focus")).toHaveCount(1);
+  // A tooltip opened by the pointer is a layer above settings, with the
+  // keyboard still inside settings.
+  await rail(target).getByRole("button").nth(1).hover();
+  await expect(target.getByRole("tooltip")).toBeVisible();
+  await expect(settings.locator(":focus")).toHaveCount(1);
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+});
+
 test("the shell's chords reach their actions from the chrome", async ({
   page: target,
 }) => {

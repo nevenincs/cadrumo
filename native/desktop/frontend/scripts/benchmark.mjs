@@ -256,6 +256,11 @@ try {
       await page.locator(".palette").waitFor({ state: "detached" });
       await page.keyboard.press("Control+Comma");
       await page.locator(".settings").waitFor();
+      // Settings takes focus a moment after it is in the document; a key
+      // pressed before that is not pressed in it.
+      await page.waitForFunction(
+        () => document.activeElement?.closest(".settings") != null,
+      );
       await page.keyboard.press("Escape");
       await page.locator(".settings").waitFor({ state: "detached" });
     }

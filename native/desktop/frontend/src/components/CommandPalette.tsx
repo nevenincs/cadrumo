@@ -190,7 +190,17 @@ export function CommandPalette({
         aria-describedby={undefined}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
-          if (returnTo instanceof HTMLElement && returnTo.isConnected)
+          // The palette takes a moment to leave. Focus already put somewhere
+          // in that moment, by a surface opened straight after it, is left
+          // there: taking it back would leave that surface open and unheld.
+          const held = document.activeElement;
+          const moved =
+            held !== null &&
+            held !== document.body &&
+            held.closest(".palette") === null;
+          if (moved) {
+            // Nothing to return.
+          } else if (returnTo instanceof HTMLElement && returnTo.isConnected)
             returnTo.focus();
           else fallbackFocus?.();
           const action = chosen.current;

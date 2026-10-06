@@ -23,16 +23,18 @@ One command writes all of them:
 npm run bootstrap
 ```
 
-It configures the standalone desktop project into `build/desktop-frontend` at
-the repository root and runs the two generators. It compiles nothing and takes a
-few seconds. Options:
+It configures the standalone desktop project with the preset for this host
+(`native/desktop/CMakePresets.json`), into the directory that preset names
+under `build/` at the repository root: `build/desktop-windows-x64` on Windows.
+Then it runs the two generators. It compiles nothing and takes a few seconds.
+Options:
 
-| Option                  | Default                  | Meaning                                                |
-| ----------------------- | ------------------------ | ------------------------------------------------------ |
-| `--build-dir <path>`    | `build/desktop-frontend` | The build directory to prepare                         |
-| `--host <address>`      | `127.0.0.1`              | The address the servers bind                           |
-| `--dev-port <port>`     | `15370`                  | The development server port                            |
-| `--preview-port <port>` | `15371`                  | The port that serves the production build to the tests |
+| Option                  | Default           | Meaning                                                |
+| ----------------------- | ----------------- | ------------------------------------------------------ |
+| `--build-dir <path>`    | the host preset's | Another build directory, configured without the preset |
+| `--host <address>`      | `127.0.0.1`       | The address the servers bind                           |
+| `--dev-port <port>`     | `15370`           | The development server port                            |
+| `--preview-port <port>` | `15371`           | The port that serves the production build to the tests |
 
 Pass options after `--`, for example `npm run bootstrap -- --dev-port 15380`.
 Run it again after a locale catalogue or the documentation theme changes.
