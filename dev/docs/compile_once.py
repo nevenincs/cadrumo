@@ -61,20 +61,46 @@ _UTF_8: Final[str] = "utf-8"
 class IntendedDifference:
     """One difference from a language's own build that is kept, and why.
 
+    A declaration names the page and what the built page has there as well as
+    the markup it sits in, because a markup context covers a whole site: a
+    declaration keyed on the context alone would excuse every later difference
+    of that kind, which is the one way a proof stops proving anything.
+
     Attributes:
         context: The markup context (:func:`markup_contexts`) the difference
             sits in.
+        page: The page it is on, as a path inside the site root.
+        built: What the built page has there, which the composed page does not.
         reason: Why the composed page is right and the built page is not.
     """
 
     context: str
+    page: str
+    built: str
     reason: str
 
+    @property
+    def key(self) -> str:
+        """Return how a comparison counts and reports this difference."""
+        return f"{self.page} {self.context}"
 
-#: Differences from the per-language builds that are deliberate. Empty until one
-#: is decided: a difference nobody has decided to keep is a defect, and folding
-#: it in here is how a proof stops proving anything.
-INTENDED_DIFFERENCES: Final[tuple[IntendedDifference, ...]] = ()
+
+#: Differences from the per-language builds that are deliberate. A difference
+#: nobody has decided to keep is a defect, so each one here names its page, its
+#: markup and the exact bytes it covers.
+INTENDED_DIFFERENCES: Final[tuple[IntendedDifference, ...]] = (
+    IntendedDifference(
+        context="markup:p",
+        page="_release_notes_template.html",
+        built='<input class="task-list-item-checkbox" disabled="disabled" type="checkbox">',
+        reason=(
+            "Sphinx translates a paragraph by replacing its children, which drops the checkbox a "
+            "task list item carries: every language whose build translates this page already loses "
+            "it, and the one compile reads the source language through a catalogue as well, so the "
+            "English page now reads as the other three do"
+        ),
+    ),
+)
 
 
 @dataclass
@@ -88,7 +114,8 @@ class Comparison:
         missing: Paths the built site has and the composed site does not.
         extra: Paths the composed site has and the built site does not.
         by_context: Differing stretches by the markup context they sit in.
-        intended: Differing stretches a declared intended difference covers.
+        intended: Differing stretches a declared intended difference covers,
+            by that declaration's own key.
         samples: Up to three examples per context.
     """
 
@@ -117,9 +144,9 @@ class Comparison:
             lines.append(f"  missing: {path}")
         for path in self.extra[:5]:
             lines.append(f"  extra: {path}")
-        for context, count in self.intended.most_common():
-            reason = next(entry.reason for entry in INTENDED_DIFFERENCES if entry.context == context)
-            lines.append(f"  {count:8d}  {context}  (intended: {reason})")
+        for key, count in self.intended.most_common():
+            reason = next(entry.reason for entry in INTENDED_DIFFERENCES if entry.key == key)
+            lines.append(f"  {count:8d}  {key}  (intended: {reason})")
         for context, count in self.by_context.most_common(contexts):
             lines.append(f"  {count:8d}  {context}")
             for path, built, composed in self.samples.get(context, []):
@@ -292,7 +319,6 @@ def compare(composed: Path, built: Path, language: str, *, samples: int = 3) -> 
     composed_files, built_files = _site_files(composed), _site_files(built)
     found.missing = sorted(set(built_files) - set(composed_files))
     found.extra = sorted(set(composed_files) - set(built_files))
-    intended = {entry.context for entry in INTENDED_DIFFERENCES}
     for path in sorted(set(composed_files) & set(built_files)):
         built_bytes = built_files[path].read_bytes()
         composed_bytes = composed_files[path].read_bytes()
@@ -307,8 +333,16 @@ def compare(composed: Path, built: Path, language: str, *, samples: int = 3) -> 
         starts = [start for start, _ in contexts]
         for difference in compare_page(built_page, composed_bytes.decode(_UTF_8, errors="replace")):
             context = context_at(starts, contexts, difference.offset)
-            if context in intended:
-                found.intended[context] += 1
+            declared = next(
+                (
+                    entry
+                    for entry in INTENDED_DIFFERENCES
+                    if entry.context == context and entry.page == path and entry.built in difference.base
+                ),
+                None,
+            )
+            if declared is not None:
+                found.intended[declared.key] += 1
                 continue
             found.by_context[context] += 1
             kept = found.samples.setdefault(context, [])

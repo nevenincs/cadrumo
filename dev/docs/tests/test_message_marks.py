@@ -34,9 +34,14 @@ from ..message_marks import (
     PSEUDO_LOCALE_DIR,
     MessageMarksError,
     MessagePlan,
+    collect_notes,
     fragment_docname,
     harvest,
+    merge_notes,
+    notes_for,
     prepare,
+    purge_notes,
+    rendered_markup,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -245,6 +250,169 @@ def test_a_mark_whose_rendering_never_came_back_is_refused(tmp_path: Path) -> No
 
     with pytest.raises(MessageMarksError, match="did not render in every language"):
         harvest(plan, slots, lambda docname: built / f"{docname}.html")
+
+
+def test_a_generated_page_s_markup_is_carried_by_a_fragment_beside_it(tmp_path: Path) -> None:
+    """A generated page has no catalogue, so its chrome reaches the fragment directly."""
+    _page(tmp_path, "cli/index", suffix=".rst")
+    slots = CompileSlots(_LANGUAGES)
+    mark = rendered_markup(slots, "cli/index", ["Open ``aeat``", "Abre ``aeat``"])
+    plan = prepare(
+        tmp_path,
+        slots=slots,
+        docnames=["cli/index"],
+        doc2path=lambda docname: tmp_path / f"{docname}.rst",
+        source_language="en",
+        compact=False,
+    )
+
+    assert MARK.fullmatch(mark) is not None
+    assert slots.renderings == [Rendering.MESSAGE]
+    assert plan.pages == ["cli/index"]
+    written = (tmp_path / "cli" / f"{FRAGMENT_PREFIX}index.rst").read_text(encoding="utf-8")
+    assert f"{BLOCK_OPEN}0{BLOCK_MID} Open ``aeat`` {BLOCK_CLOSE}" in written
+    assert f"{BLOCK_OPEN}1{BLOCK_MID} Abre ``aeat`` {BLOCK_CLOSE}" in written
+    # Nothing translates a generated page, so no catalogue is generated for it.
+    assert not (tmp_path / PSEUDO_LOCALE_DIR).exists()
+
+
+def test_one_string_a_generated_page_carries_twice_is_rendered_once(tmp_path: Path) -> None:
+    """A classification repeated on every command of a page must not be a mark each time."""
+    _page(tmp_path, "cli/app", suffix=".rst")
+    slots = CompileSlots(_LANGUAGES)
+    first = rendered_markup(slots, "cli/app", ["Option, required.", "Opción, obligatoria."])
+    again = rendered_markup(slots, "cli/app", ["Option, required.", "Opción, obligatoria."])
+    plan = prepare(
+        tmp_path,
+        slots=slots,
+        docnames=["cli/app"],
+        doc2path=lambda docname: tmp_path / f"{docname}.rst",
+        source_language="en",
+        compact=False,
+    )
+
+    assert first == again
+    assert plan.messages == 1
+    assert len(slots.values) == 1
+
+
+def test_markup_asked_for_on_a_page_the_build_does_not_read_is_refused(tmp_path: Path) -> None:
+    """Nothing would render such a mark, so the compile must say so rather than write it."""
+    _page(tmp_path, "guide")
+    slots = CompileSlots(_LANGUAGES)
+    rendered_markup(slots, "cli/index", ["Open ``aeat``", "Abre ``aeat``"])
+
+    with pytest.raises(MessageMarksError, match="does not read"):
+        _prepared(tmp_path, ["guide"])
+
+
+def test_a_generated_page_s_markup_comes_back_rendered(tmp_path: Path) -> None:
+    """The point of the fragment is the rendering: raw RST must not reach a reader."""
+    _page(tmp_path, "cli/index", suffix=".rst")
+    slots = CompileSlots(_LANGUAGES)
+    rendered_markup(slots, "cli/index", ["Open ``aeat``", "Abre ``aeat``"])
+    plan = prepare(
+        tmp_path,
+        slots=slots,
+        docnames=["cli/index"],
+        doc2path=lambda docname: tmp_path / f"{docname}.rst",
+        source_language="en",
+        compact=False,
+    )
+    built = tmp_path / "built"
+    _render(
+        built,
+        plan,
+        {
+            0: 'Open <code class="docutils literal">aeat</code>',
+            1: 'Abre <code class="docutils literal">aeat</code>',
+        },
+    )
+
+    harvest(plan, slots, lambda docname: built / f"{docname}.html")
+
+    assert slots.values[0] == (
+        'Open <code class="docutils literal">aeat</code>',
+        'Abre <code class="docutils literal">aeat</code>',
+    )
+    assert slots.plain[0] == ("Open aeat", "Abre aeat")
+
+
+def test_a_chrome_string_is_markup_of_the_page_it_is_resolved_for(tmp_path: Path) -> None:
+    """The generator knows the page; the resolver below it cannot, so it is declared."""
+    from cadrumo.core.external_constants import OutputLanguage
+
+    from .._locale_chrome import docs_chrome, markup_page
+    from ..compile_slots import activate, deactivate
+
+    _page(tmp_path, "cli/index", suffix=".rst")
+    slots = activate(_LANGUAGES)
+    try:
+        with markup_page("cli/index"):
+            inside = docs_chrome("docs.cli.index.intro", OutputLanguage.EN, count=7)
+        outside = docs_chrome("docs.cli.index.intro", OutputLanguage.EN, count=7)
+        plan = prepare(
+            tmp_path,
+            slots=slots,
+            docnames=["cli/index"],
+            doc2path=lambda docname: tmp_path / f"{docname}.rst",
+            source_language="en",
+            compact=False,
+        )
+    finally:
+        deactivate()
+
+    # The same string resolved outside the page is a string a docutils writer
+    # escapes, which is the one thing a string carrying markup must not be.
+    assert inside != outside
+    assert slots.renderings == [Rendering.MESSAGE, Rendering.DOCUTILS]
+    assert plan.pages == ["cli/index"]
+    # Each language's own authored string reaches the fragment, with the
+    # generator's placeholder value filled in and its markup intact.
+    written = (tmp_path / "cli" / f"{FRAGMENT_PREFIX}index.rst").read_text(encoding="utf-8")
+    assert "``aeat``" in written
+    assert "7 leaf commands" in written
+
+
+def test_what_a_worker_noted_while_reading_survives_the_merge(tmp_path: Path) -> None:
+    """Sphinx reads in worker processes and keeps only the environment they pickle back.
+
+    So the notes are the environment's, and the merge the parallel read runs is
+    what carries them home. The handler is exercised here the way that read
+    runs it: one environment per process, each with its own documents' notes,
+    merged into the one the compile reads back from.
+    """
+    import pickle
+    from copy import deepcopy
+    from types import SimpleNamespace
+
+    _page(tmp_path, "guide")
+    _catalogue(tmp_path, "es", "guide", {"Hola": "Hello"})
+    _, plan = _prepared(tmp_path, ["guide"])
+    mark = plan.blocks[0].mark
+
+    main = SimpleNamespace()
+    worker = SimpleNamespace()
+    notes_for(main, "index").titles.add(mark)
+    worker_notes = notes_for(worker, "how-to/guide")
+    worker_notes.dropped[mark] = {1}
+    # The worker's environment reaches the main process as bytes and nothing
+    # else, so the notes have to be serialisable, and the merge is given a
+    # separate object rather than the one the notes were made on.
+    assert pickle.dumps(worker)
+    merge_notes(None, main, ["how-to/guide"], deepcopy(worker))
+    collect_notes(main, plan)
+
+    assert plan.titles == {mark}
+    assert plan.dropped == {mark: {1}}
+
+    # A document read again starts from no notes, so a note about a heading it
+    # no longer carries cannot outlive it.
+    purge_notes(None, main, "how-to/guide")
+    purged = MessagePlan(languages=_LANGUAGES)
+    collect_notes(main, purged)
+    assert purged.dropped == {}
+    assert purged.titles == {mark}
 
 
 def test_a_message_reaching_bare_markup_is_refused(tmp_path: Path) -> None:

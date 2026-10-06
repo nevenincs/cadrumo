@@ -41,6 +41,7 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ..glossary_reference import (
+    GlossaryDefinitionError,
     GlossaryResult,
     generate_glossary_reference,
     render_glossary,
@@ -324,6 +325,78 @@ def test_a_concept_without_build_language_prose_never_borrows_another_language()
 
     assert docs_chrome("docs.glossary.entry.undefined", OutputLanguage.CA) in rst
     assert docs_chrome("docs.glossary.entry.legal_basis", OutputLanguage.CA) in rst
+
+
+def test_every_language_s_definition_is_recorded_by_the_one_compile() -> None:
+    """One compile carries every language's prose, so each entry's body is recorded.
+
+    The definitions are the glossary's one per-language content: they come from
+    the curated sections rather than a catalogue, so a compile that did not
+    record them would publish the build language's prose in every root. The
+    expected strings are read by an independent traversal of the handbook.
+    """
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
+    from cadrumo.core.external_constants import OutputLanguage
+
+    from ..compile_slots import MARK, activate, deactivate
+    from ..terminology_handbook.schema import ConceptRecord
+
+    handbook = _load_handbook()
+    languages = ("en", "es")
+    slots = activate(languages)
+    try:
+        rst, _ = render_glossary(_REPO_ROOT, handbook, OutputLanguage.EN)
+    finally:
+        deactivate()
+
+    def _bodies(concept: ConceptRecord) -> tuple[str, str]:
+        """One concept's en and es body, read from its own sections."""
+        authored = {section.language: section.definition or section.short_description for section in concept.languages}
+        return authored[OutputLanguage.EN], authored[OutputLanguage.ES]
+
+    approved = [c for c in handbook.concepts if c.lifecycle is ConceptLifecycle.APPROVED]
+    assert approved, "no approved concepts to exercise"
+    recorded = {values for values in slots.values if len(values) == len(languages)}
+    for concept in approved:
+        assert _bodies(concept) in recorded, f"{concept.concept_id}: the compile recorded no body for both languages"
+    # The page carries the mark rather than one language's prose.
+    assert MARK.search(rst) is not None
+    assert _bodies(approved[0])[0] not in rst
+
+
+def test_a_concept_defined_in_some_carried_languages_and_not_the_rest_is_refused() -> None:
+    """Two languages needing two page structures is an authoring fault, not a fallback.
+
+    One compile writes one page for every language it carries, so a body in
+    some of them and a plainly stated absence in the others cannot both be on
+    it. The generator says so while someone can author the definition.
+    """
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
+    from cadrumo.core.external_constants import OutputLanguage
+
+    from ..compile_slots import activate, deactivate
+
+    handbook = _load_handbook()
+    approved = next(c for c in handbook.concepts if c.lifecycle is ConceptLifecycle.APPROVED)
+    stripped = handbook.model_copy(
+        update={
+            "concepts": tuple(
+                concept.model_copy(
+                    update={"languages": tuple(s for s in concept.languages if s.language is not OutputLanguage.ES)},
+                )
+                if concept.concept_id == approved.concept_id
+                else concept
+                for concept in handbook.concepts
+            ),
+        },
+    )
+
+    activate(("en", "es"))
+    try:
+        with pytest.raises(GlossaryDefinitionError, match=approved.concept_id):
+            render_glossary(_REPO_ROOT, stripped, OutputLanguage.EN)
+    finally:
+        deactivate()
 
 
 def test_broader_related_relations_render_as_term_cross_references() -> None:

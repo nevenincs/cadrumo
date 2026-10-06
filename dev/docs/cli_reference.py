@@ -57,7 +57,7 @@ from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from dev._paths import AUTHORITY_ROOT_ENV
 from dev.product_environment import ambient_product_settings_removed
 
-from ._locale_chrome import docs_chrome
+from ._locale_chrome import docs_chrome, markup_page
 
 if TYPE_CHECKING:
     from cadrumo.entrypoints.cli.command_spec import CommandSpecNode
@@ -396,7 +396,28 @@ def _render_automation_page(language: OutputLanguage) -> str:
     return "".join(parts)
 
 
-def _render_schemas_page(language: OutputLanguage, schema_registry: Mapping[str, object]) -> str:
+def _schema_group_entries(language: OutputLanguage, schema_registry: Mapping[str, object]) -> str:
+    """Return the sentence naming the group-callback surfaces, for the page summary.
+
+    Resolved apart from the page it appears on, because it is a value inside
+    another chrome string rather than a stretch of the page's own markup: the
+    summary that carries it is what the compile renders, and it carries this
+    string's own words in every language.
+
+    Args:
+        language: The language this docs root is being built for.
+        schema_registry: The immutable CommandSpec-derived schema projection.
+    """
+    group_keys = sorted(_GROUP_CALLBACK_EMIT_KEYS & set(schema_registry))
+    return docs_chrome(
+        "docs.cli.schemas.group_entries",
+        language,
+        count=len(group_keys),
+        keys=", ".join(f"``{k}``" for k in group_keys),
+    )
+
+
+def _render_schemas_page(language: OutputLanguage, schema_registry: Mapping[str, object], group_entries: str) -> str:
     """Render the ``docs/cli/schemas.rst`` page.
 
     Carries the output-schema registry listing under the
@@ -405,6 +426,8 @@ def _render_schemas_page(language: OutputLanguage, schema_registry: Mapping[str,
 
     Args:
         schema_registry: The immutable CommandSpec-derived schema projection.
+        group_entries: The group-callback sentence the summary interpolates, as
+            :func:`_schema_group_entries` resolved it.
 
     Returns:
         The complete RST page content.
@@ -414,14 +437,7 @@ def _render_schemas_page(language: OutputLanguage, schema_registry: Mapping[str,
     parts.append(_rst_heading(docs_chrome("docs.cli.schemas.title", language), "="))
     parts.append("\n")
     envelope_keys = sorted(k for k in schema_registry if k not in _GROUP_CALLBACK_EMIT_KEYS)
-    group_keys = sorted(_GROUP_CALLBACK_EMIT_KEYS & set(schema_registry))
     parts.append(docs_chrome("docs.cli.schemas.tooling_note", language) + "\n\n")
-    group_entries = docs_chrome(
-        "docs.cli.schemas.group_entries",
-        language,
-        count=len(group_keys),
-        keys=", ".join(f"``{k}``" for k in group_keys),
-    )
     parts.append(
         docs_chrome("docs.cli.schemas.summary", language, count=len(envelope_keys), groups=group_entries) + "\n\n",
     )
@@ -496,13 +512,21 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     rendered: dict[str, str] = {}
     for family in families:
         _render_family_reference(family, leaves, language, output_dir, rendered)
-    index = _render_index_page(language, family_names=families, total_leaf_count=len(leaves))
+    # Each page's chrome is authored as that page's own markup, so it is
+    # resolved against the page it is written to; see
+    # :func:`~dev.docs._locale_chrome.markup_page`.
+    with markup_page("cli/index"):
+        index = _render_index_page(language, family_names=families, total_leaf_count=len(leaves))
     rendered["cli/index.rst"] = index
     _write_text_if_changed(output_dir / "index.rst", index)
-    automation = _render_automation_page(language)
+    with markup_page("cli/automation"):
+        automation = _render_automation_page(language)
     rendered["cli/automation.rst"] = automation
     _write_text_if_changed(output_dir / "automation.rst", automation)
-    schemas = _render_schemas_page(language, command_schema_types())
+    schema_registry = command_schema_types()
+    group_entries = _schema_group_entries(language, schema_registry)
+    with markup_page("cli/schemas"):
+        schemas = _render_schemas_page(language, schema_registry, group_entries)
     rendered["cli/schemas.rst"] = schemas
     _write_text_if_changed(output_dir / "schemas.rst", schemas)
     return rendered
@@ -620,29 +644,36 @@ def _render_family_reference(
     rendered: dict[str, str],
 ) -> None:
     family_nodes, groups, direct = _family_graph_nodes(family, leaves)
-    # The family landing page is the reader's entry into a whole command family,
-    # and it rendered as a bare bullet list of links: the raw family token as its
-    # title, no orientation, no heading over the direct commands, and no way back
-    # to the index. Every string below already existed, authored in four locales,
-    # and went unused -- which is also why it kept being pruned as an unused key.
-    family_parts = [
-        _rst_heading(docs_chrome("docs.cli.family.title", language, command=family), "="),
-        "\n",
-        docs_chrome("docs.cli.family.intro", language, family=family) + "\n\n",
-    ]
-    if direct:
-        family_parts.append(_rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-") + "\n")
-        family_parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family) + "\n\n")
-    family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
-    if groups:
-        family_parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-") + "\n")
-    for group in groups:
-        _render_group_reference(family, group, family_nodes, language, output_dir, rendered, family_parts)
-    if groups:
-        family_parts.extend(("\n.. toctree::\n", "   :hidden:\n\n"))
-        family_parts.extend(f"   {family}/{group}\n" for group in groups)
-    if groups or direct:
-        family_parts.append("\n" + docs_chrome("docs.cli.family.index_link_line", language) + "\n")
+    family_parts: list[str] = []
+    with markup_page(_family_index_page_stem(family)):
+        # The family landing page is the reader's entry into a whole command
+        # family, and it rendered as a bare bullet list of links: the raw family
+        # token as its title, no orientation, no heading over the direct
+        # commands, and no way back to the index. Every string below already
+        # existed, authored in four locales, and went unused -- which is also
+        # why it kept being pruned as an unused key.
+        family_parts.extend(
+            (
+                _rst_heading(docs_chrome("docs.cli.family.title", language, command=family), "="),
+                "\n",
+                docs_chrome("docs.cli.family.intro", language, family=family) + "\n\n",
+            )
+        )
+        if direct:
+            family_parts.append(
+                _rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-") + "\n"
+            )
+            family_parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family) + "\n\n")
+        family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
+        if groups:
+            family_parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-") + "\n")
+        for group in groups:
+            _render_group_reference(family, group, family_nodes, language, output_dir, rendered, family_parts)
+        if groups:
+            family_parts.extend(("\n.. toctree::\n", "   :hidden:\n\n"))
+            family_parts.extend(f"   {family}/{group}\n" for group in groups)
+        if groups or direct:
+            family_parts.append("\n" + docs_chrome("docs.cli.family.index_link_line", language) + "\n")
     family_content = "".join(family_parts)
     rel = f"cli/{family}.rst"
     rendered[rel] = family_content
@@ -668,11 +699,13 @@ def _render_group_reference(
     family_parts: list[str],
 ) -> None:
     group_nodes = tuple(node for node in family_nodes if len(node.path) > 3 and node.path[2] == group)
-    content = (
-        _rst_heading(f"{family} {group}", "=")
-        + "\n"
-        + "".join(_render_graph_command(language, node.path, node.spec) for node in group_nodes)
-    )
+    # The group's own page, not the family page this is called from.
+    with markup_page(_verb_group_page_stem(family, group)):
+        content = (
+            _rst_heading(f"{family} {group}", "=")
+            + "\n"
+            + "".join(_render_graph_command(language, node.path, node.spec) for node in group_nodes)
+        )
     rel = f"cli/{family}/{group}.rst"
     rendered[rel] = content
     (output_dir / family).mkdir(parents=True, exist_ok=True)

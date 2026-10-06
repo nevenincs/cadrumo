@@ -25,18 +25,20 @@ written.
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
 
-from .compile_slots import Rendering, active
+from .compile_slots import CompileSlots, Rendering, active
 
 __all__ = [
     "DocsChromeError",
     "docs_chrome",
     "docs_fragment",
     "docs_line",
+    "markup_page",
     "template_chrome",
     "toctree_title_chrome",
 ]
@@ -54,7 +56,9 @@ def docs_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
     every language reads, each language's own authored value filled with the
     same placeholders. ``language`` is still resolved and still refused when it
     has no authored value, so a build cannot pass by rendering the languages it
-    can and marking the one it cannot.
+    can and marking the one it cannot. Inside :func:`markup_page` the compile
+    records what each language's string renders to on that page, which is what
+    a string carrying inline markup or a role needs.
 
     Args:
         key: The dotted catalogue key holding the string.
@@ -127,25 +131,71 @@ def toctree_title_chrome(key: str, language: OutputLanguage, /, **values: object
     return _chrome(Rendering.PLAIN, key, language, values)
 
 
+# ── The page the chrome resolved inside it stands on ─────────────────────────
+# A chrome string is authored as the markup of the page it lands on: it carries
+# inline literals, links and roles, and a role resolves against that page. The
+# page is known to the generator writing it and to nothing further down, so it
+# is declared here for the stretch of work that renders one page.
+_PAGE: str | None = None
+
+
+@contextmanager
+def markup_page(docname: str) -> Iterator[None]:
+    """Declare that the chrome resolved inside stands as markup on *docname*.
+
+    A single-language build parses each chrome string as part of the page's own
+    source, so a string carrying ``aeat`` as a literal or a ``:doc:`` link
+    reaches the reader rendered. The one compile writes a mark where the string
+    goes, and a mark carries no markup for the parser to find -- so without the
+    page, every such string would reach the reader as the RST it was authored
+    as. Knowing the page, the compile renders each language's string on it
+    instead (:func:`~dev.docs.message_marks.rendered_markup`).
+
+    Only :func:`docs_chrome` is affected, because only its strings are a
+    docutils writer's to render. A toctree entry title and a string a Jinja
+    template writes are never parsed as markup wherever they stand.
+
+    Outside the one multilingual compile this changes nothing: the generator
+    writes the authored string into the page's source exactly as before.
+
+    Args:
+        docname: The page being written, as Sphinx names it.
+    """
+    global _PAGE
+    outer = _PAGE
+    _PAGE = docname
+    try:
+        yield
+    finally:
+        _PAGE = outer
+
+
 def _chrome(rendering: Rendering, key: str, language: OutputLanguage, values: Mapping[str, object]) -> str:
     """Return one chrome string, or the mark recording every language's under the compile."""
     slots = active()
     if slots is None:
         return _authored(key, language, values)
-    return slots.mark(
-        rendering,
-        [
-            _authored(
-                key,
-                OutputLanguage(carried),
-                {
-                    name: slots.resolved(value, index) if isinstance(value, str) else value
-                    for name, value in values.items()
-                },
-            )
-            for index, carried in enumerate(slots.languages)
-        ],
-    )
+    strings = _per_language(slots, key, values)
+    if rendering is Rendering.DOCUTILS and _PAGE is not None:
+        # Imported here because the fragment machinery subclasses Sphinx's own
+        # transforms, and every generator that resolves a chrome string imports
+        # this module -- including where no Sphinx build is running.
+        from .message_marks import rendered_markup
+
+        return rendered_markup(slots, _PAGE, strings)
+    return slots.mark(rendering, strings)
+
+
+def _per_language(slots: CompileSlots, key: str, values: Mapping[str, object]) -> list[str]:
+    """Return one language's authored string per language, each value's marks read in it."""
+    return [
+        _authored(
+            key,
+            OutputLanguage(carried),
+            {name: slots.resolved(value, index) if isinstance(value, str) else value for name, value in values.items()},
+        )
+        for index, carried in enumerate(slots.languages)
+    ]
 
 
 def docs_fragment(render: Callable[[OutputLanguage], str], language: OutputLanguage, /) -> str:

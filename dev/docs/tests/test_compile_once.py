@@ -77,14 +77,56 @@ def test_a_declared_intended_difference_is_reported_apart_with_its_reason(
     """A difference kept on purpose must never be folded into the count it would hide in."""
     monkeypatch.setattr(
         "dev.docs.compile_once.INTENDED_DIFFERENCES",
-        (IntendedDifference(context="attr:h1.id", reason="the anchor no longer depends on the language"),),
+        (
+            IntendedDifference(
+                context="attr:h1.id",
+                page="index.html",
+                built="calendario-fiscal",
+                reason="the anchor no longer depends on the language",
+            ),
+        ),
     )
     found = compare(
         _site(tmp_path / "composed", _COMPOSED),
         _site(tmp_path / "built", _BUILT),
         "es",
     )
-    assert dict(found.intended) == {"attr:h1.id": 1}
+    assert dict(found.intended) == {"index.html attr:h1.id": 1}
     assert "attr:h1.id" not in found.by_context
     assert found.differences == 2
     assert "intended: the anchor no longer depends on the language" in found.report()
+
+
+def test_a_declared_difference_covers_the_page_and_the_bytes_it_names_and_no_others(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A markup context covers a whole site, so a declaration must not excuse one.
+
+    The same context on another page, and the same page's own other bytes in
+    that context, stay in the count: a declaration excusing them would be a
+    standing permission for every later difference of that kind.
+    """
+    monkeypatch.setattr(
+        "dev.docs.compile_once.INTENDED_DIFFERENCES",
+        (
+            IntendedDifference(
+                context="attr:a.title",
+                page="other.html",
+                built="Actividad",
+                reason="another page's",
+            ),
+            IntendedDifference(
+                context="attr:h1.id",
+                page="index.html",
+                built="something-else",
+                reason="the same page's other bytes",
+            ),
+        ),
+    )
+    found = compare(
+        _site(tmp_path / "composed", _COMPOSED),
+        _site(tmp_path / "built", _BUILT),
+        "es",
+    )
+    assert found.intended == {}
+    assert found.differences == 3

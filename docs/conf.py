@@ -214,6 +214,7 @@ _COMPILE_SLOTS = import_module("dev.docs.compile_slots")
 _MESSAGE_MARKS = import_module("dev.docs.message_marks")
 _MESSAGE_MARKS_TRANSFORM = _MESSAGE_MARKS.DeclareBlockLanguage
 _MESSAGE_MARKS_TITLE_TRANSFORM = _MESSAGE_MARKS.NoteToctreeTitleMarks
+_MESSAGE_MARKS_HEADING_TRANSFORM = _MESSAGE_MARKS.NoteDroppedHeadingTranslations
 _MESSAGE_MARKS_POST_TRANSFORM = _MESSAGE_MARKS.ResolveOwnPageAnchors
 _MULTILINGUAL = os.environ.get("CADRUMO_DOCS_MULTILINGUAL") == "1"
 if _MULTILINGUAL:
@@ -1898,6 +1899,9 @@ def setup(app):
         plan = _MESSAGE_MARKS.active()
         if exception is not None or slots is None or plan is None:
             return
+        # What the read phase noted lives on the environment, because a worker
+        # process reading its own chunk of documents can return nothing else.
+        _MESSAGE_MARKS.collect_notes(app.env, plan)
         _MESSAGE_MARKS.harvest(plan, slots, lambda docname: Path(app.builder.get_outfilename(docname)))
 
     def _write_compile_slots(app, exception):
@@ -1913,14 +1917,36 @@ def setup(app):
             return
         slots.write(Path(app.outdir) / _COMPILE_SLOTS.SLOTS_FILE)
 
+    def _write_the_compiled_site_in_this_process(app):
+        """Keep the one compile's write phase in the process that records its marks.
+
+        Sphinx writes documents in worker processes where it can, and discards
+        whatever they leave behind: a worker's return value is thrown away and
+        its memory goes with it. The marks for Sphinx's own interface strings,
+        the language switcher and the per-language scripts are created while a
+        page is written, so under the one compile they have to be created here.
+        Reading stays parallel, which is where the time goes, and clearing the
+        builder's own permission rather than declaring an extension unsafe is
+        what keeps the build quiet about it (``Builder.build`` asks the builder
+        first and only then asks the extensions).
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        app.builder.allow_parallel = False
+
     if _MULTILINGUAL:
         # The messages are marked after the generated pages are written, so the
         # discovered source tree is the one Sphinx will read, and read back
         # before the marks are written, which is what the record needs them for.
         app.connect("builder-inited", _mark_authored_messages, priority=900)
+        app.connect("builder-inited", _write_the_compiled_site_in_this_process)
+        app.connect("env-purge-doc", _MESSAGE_MARKS.purge_notes)
+        app.connect("env-merge-info", _MESSAGE_MARKS.merge_notes)
         app.connect("build-finished", _read_authored_messages, priority=100)
         app.connect("build-finished", _write_compile_slots, priority=200)
         app.add_transform(_MESSAGE_MARKS_TITLE_TRANSFORM)
+        app.add_transform(_MESSAGE_MARKS_HEADING_TRANSFORM)
         app.add_transform(_MESSAGE_MARKS_TRANSFORM)
         app.add_post_transform(_MESSAGE_MARKS_POST_TRANSFORM)
     _LANGUAGE_SWITCHER.register(app)

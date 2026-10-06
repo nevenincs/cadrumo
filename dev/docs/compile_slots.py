@@ -486,9 +486,21 @@ class CompileSlots:
         return MARK.sub(lambda found: self.strings(int(found.group(1), len(_DIGITS)))[1][language], value)
 
     def strings(self, number: int) -> tuple[Rendering, tuple[str, ...]]:
-        """Return one mark's owning writer and its string in every language."""
+        """Return one mark's owning writer and its string in every language.
+
+        Raises:
+            CompileSlotsError: If the compile recorded no such mark, or if its
+                strings are still to come. A mark the compile will render later
+                has no string yet, so it cannot be read as one -- which is what
+                a string built from it would be asking for.
+        """
         if number >= len(self.values):
             raise CompileSlotsError(f"the compile recorded {len(self.values)} mark(s), not {number + 1}")
+        if number in self._reserved:
+            raise CompileSlotsError(
+                f"mark {number} is one this compile renders later, so it has no string to read yet; "
+                "a string built from another is built from that one's own strings"
+            )
         return self.renderings[number], self.values[number]
 
     def document(self) -> dict[str, object]:
