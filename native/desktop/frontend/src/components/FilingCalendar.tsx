@@ -80,6 +80,8 @@ export type CalendarMemory = {
   asked?: ReadonlySet<string>;
   months?: Place | null;
   list?: Place | null;
+  /** Whether the chosen obligation was in view when the reader last moved. */
+  chosenSeen?: boolean;
 };
 
 const markKey = (mark: HTMLElement) =>
@@ -415,18 +417,22 @@ export function FilingCalendarView({
       let on: Place | null = null;
       if (at.scroller.scrollTop <= 0) on = { key: "", top: 0, start: true };
       else {
+        // The row at the top of the view: the first that reaches below what
+        // stays at the top, whether it begins there or far above. A month
+        // drawn whole can be taller than the page, and the reader inside it
+        // is on that month, not on the next one down.
         let row: number | null = null;
         const current = evaluatedOn?.slice(0, 7);
         for (const mark of at.marks) {
-          const top = mark.getBoundingClientRect().top;
-          // Past the first row in view: nothing further is nearer.
-          if (row !== null && top > row + 1) break;
+          const box = mark.getBoundingClientRect();
+          if (row !== null && box.top > row + 1) break;
+          if (row === null && box.bottom <= at.under + 1) continue;
           // Of the months of that row, the current one where it is among
           // them: a view left where it opened stays on the current month
-          // however its row is made up next.
+          // however its row is made up next. Otherwise the row's first.
           if (row === null || (face === "months" && markKey(mark) === current))
-            on = { key: markKey(mark), top: top - at.under, start: false };
-          if (top >= at.under - 1) row ??= top;
+            on = { key: markKey(mark), top: box.top - at.under, start: false };
+          row ??= box.top;
         }
       }
       if (!on) return;
@@ -529,6 +535,15 @@ export function FilingCalendarView({
     },
     [remembered],
   );
+  // Another memory is another profile's, or the same one signed in anew:
+  // nothing made of the page before is carried into it.
+  const [memoryWas, setMemoryWas] = useState(remembered);
+  if (memoryWas !== remembered) {
+    setMemoryWas(remembered);
+    setViewNow(defaultView);
+    setAsked(new Set());
+    setSelected(null);
+  }
   const selectInList = useCallback(
     (key: string) => select(key, "list"),
     [select],
@@ -559,6 +574,7 @@ export function FilingCalendarView({
       const page = el.getBoundingClientRect();
       chosenSeen.current =
         box.bottom > page.top + kept() && box.top < page.bottom;
+      remembered.current.chosenSeen = chosenSeen.current;
     }
   };
 
@@ -580,6 +596,10 @@ export function FilingCalendarView({
       remembered.current.list = null;
       return;
     }
+    // The width was measured in this same pass and the drawing may not have
+    // caught up with it: the faces are placed when it has, so that a page
+    // brought back wide places both of its faces as brought back.
+    if (wideNow.current !== wide) return;
     const face = wide ? "both" : view;
     if (placed.current === face) return;
     if (
@@ -588,11 +608,13 @@ export function FilingCalendarView({
       return;
     const before = placed.current;
     // A page brought back has the places it was put away with.
-    if (before === null)
+    if (before === null) {
       place.current = {
         months: remembered.current.months ?? null,
         list: remembered.current.list ?? null,
       };
+      chosenSeen.current = remembered.current.chosenSeen ?? false;
+    }
     placed.current = face;
     const chosen = (within: string) =>
       selected === null
@@ -681,9 +703,15 @@ export function FilingCalendarView({
   };
   // Just chosen, an obligation is in view: it was pressed, or is brought
   // into view below. Whether it still is, is the reader's scrolling to say.
+  const selectedWas = useRef(selected);
   useEffect(() => {
+    // Only when the choice changes: a page brought back with its choice
+    // has what was last said of it.
+    if (selectedWas.current === selected) return;
+    selectedWas.current = selected;
     chosenSeen.current = selected !== null;
-  }, [selected]);
+    remembered.current.chosenSeen = chosenSeen.current;
+  }, [selected, remembered]);
   useEffect(() => {
     if (selected === null) return;
     const other = chosenIn.current === "months" ? "list" : "months";
@@ -1034,6 +1062,17 @@ export function FilingCalendarView({
                     variant="ghost"
                     size="sm"
                     className="calendar-to-today min-w-control-sm"
+                    // Named for today it needs no more. Named for another
+                    // day, the day alone is not a name: it says where to.
+                    aria-label={
+                      today === here
+                        ? undefined
+                        : t("desktop.calendar.to_day", {
+                            date: new Intl.DateTimeFormat(locale, {
+                              dateStyle: "medium",
+                            }).format(day(today)),
+                          })
+                    }
                     onClick={toToday}
                   >
                     {evaluatedWord(today, here, locale)}
@@ -1118,7 +1157,9 @@ export function FilingCalendarView({
       onScroll={(event) =>
         scrolled(event.currentTarget, wide ? ["months"] : [view])
       }
-      className="group/calendar calendar-page @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background focus-visible:-outline-offset-2"
+      // The scrollbar's room is kept whether or not there is one: a month
+      // drawn whole must not change the page's width by making it scroll.
+      className="group/calendar calendar-page @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background [scrollbar-gutter:stable] focus-visible:-outline-offset-2"
     >
       {body}
     </section>

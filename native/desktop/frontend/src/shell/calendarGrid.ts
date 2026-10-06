@@ -242,22 +242,22 @@ function kept(
       Number(entryKey(b.entry) === chosen) -
         Number(entryKey(a.entry) === chosen) || urgency(a.entry, b.entry),
   );
-  const shown: GridBar[] = [];
-  const hidden: GridBar[] = [];
-  for (const bar of ranked) {
-    // A row is free for it where no window already kept shares its days.
-    const room = rows([...shown, bar]).every((at) => at.lane < cap - 1);
-    (room ? shown : hidden).push(bar);
-  }
-  // In the order the week is laid out in, whatever was kept first: a window
-  // that was drawn before it was chosen stays in its row.
   const order = new Map(week.bars.map((bar, index) => [bar, index]));
   const byOrder = (a: GridBar, b: GridBar) =>
     (order.get(a) ?? 0) - (order.get(b) ?? 0);
-  return {
-    shown: rows(shown.sort(byOrder)),
-    hidden: hidden.sort(byOrder),
-  };
+  // Laid out from the left, a set of windows takes the fewest rows it can:
+  // that is the measure of whether one more fits, and the layout drawn.
+  // Whatever was kept first, a window drawn before it was chosen is then in
+  // the row it was in.
+  const laid = (bars: readonly GridBar[]) =>
+    rows([...bars].sort((a, b) => a.from - b.from || byOrder(a, b)));
+  const shown: GridBar[] = [];
+  const hidden: GridBar[] = [];
+  for (const bar of ranked) {
+    const room = laid([...shown, bar]).every((at) => at.lane < cap - 1);
+    (room ? shown : hidden).push(bar);
+  }
+  return { shown: laid(shown), hidden: hidden.sort(byOrder) };
 }
 
 /**

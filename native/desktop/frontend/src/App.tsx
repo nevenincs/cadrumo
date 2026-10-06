@@ -163,9 +163,6 @@ export function App({ host }: { host: Host }) {
   // where the host offers one. The documentation stays loaded underneath.
   const [page, setPage] = useState<"docs" | "calendar">("docs");
   const calendarPage = useRef<HTMLElement>(null);
-  // What the reader has made of the calendar, kept while its page is away:
-  // the page is taken down when it is put away, and comes back as it was.
-  const calendarMemory = useRef<CalendarMemory>({});
   // The calendar was asked for: it takes focus once it is laid out.
   const wantsCalendar = useRef(false);
   // What held focus when the sign-in dialog was asked for, and whether
@@ -281,10 +278,17 @@ export function App({ host }: { host: Host }) {
       ? (account.status?.active_profile ?? "")
       : null;
   const recheckAccount = useCallback(() => accountRef.current.recheck(), []);
-  // A calendar belongs to its profile, and so does what was made of it.
-  useEffect(() => {
-    calendarMemory.current = {};
-  }, [reader]);
+  // What the reader has made of the calendar, kept while its page is away:
+  // the page is taken down when it is put away, and comes back as it was.
+  // A calendar belongs to its profile, and so does what was made of it: a
+  // new memory for each profile, and for each time one is signed in.
+  const [calendarKept, setCalendarKept] = useState(() => ({
+    reader,
+    memory: { current: {} as CalendarMemory },
+  }));
+  if (calendarKept.reader !== reader)
+    setCalendarKept({ reader, memory: { current: {} } });
+  const calendarMemory = calendarKept.memory;
   const [rechecking, setRechecking] = useState(false);
   const lookAgain = useCallback(() => {
     setRechecking(true);

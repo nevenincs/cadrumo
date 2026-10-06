@@ -1,4 +1,4 @@
-import { memo, useId, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -364,8 +364,30 @@ export const CalendarMonths = memo(function CalendarMonths({
     () => drawnWeeks(months, (month) => asked.has(month.key), kept),
     [months, asked, kept],
   );
+  // A choice, or a month drawn whole, can move an obligation's stop to
+  // another of its weeks. Where the keyboard was on the part that is no
+  // longer the stop, it goes to the part that is, the view unmoved: it is
+  // never left on a part hidden from assistive technology.
+  const all = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const held = document.activeElement;
+    if (
+      !(held instanceof HTMLElement) ||
+      !all.current?.contains(held) ||
+      held.getAttribute("aria-hidden") !== "true"
+    )
+      return;
+    const entry = held.getAttribute("data-entry");
+    if (entry === null) return;
+    all.current
+      .querySelector<HTMLElement>(
+        `.calendar-bar[data-entry="${CSS.escape(entry)}"]:not([tabindex="-1"])`,
+      )
+      ?.focus({ preventScroll: true });
+  }, [drawn]);
   return (
     <div
+      ref={all}
       className="calendar-months grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-x-4 gap-y-5 p-2 @md:p-4"
       onBlur={(event) => {
         if (

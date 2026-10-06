@@ -2679,16 +2679,26 @@ test("the calendar says what its marks are, and has a way back to where it stand
   await target.clock.setFixedTime(new Date(2026, 9, 7, 9));
   await open(target, "signed-in");
   await calendarButton(target).click();
-  await expect(
-    page.getByRole("button", {
-      name: new Intl.DateTimeFormat("en", {
-        day: "numeric",
-        month: "short",
-      }).format(FIXTURE_DAY),
-      exact: true,
+  // The day alone is what is shown; read aloud it says where it goes.
+  const toDay = page.getByRole("button", {
+    name: label("desktop.calendar.to_day", {
+      date: new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
+        FIXTURE_DAY,
+      ),
     }),
-  ).toBeVisible();
+    exact: true,
+  });
+  await expect(toDay).toHaveText(
+    new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(
+      FIXTURE_DAY,
+    ),
+  );
   await expect(back).toHaveCount(0);
+  // The page keeps room for a scrollbar whether or not it has one, so a
+  // month drawn whole cannot change the page's width by making it scroll.
+  expect(
+    await page.evaluate((element) => getComputedStyle(element).scrollbarGutter),
+  ).toBe("stable");
 });
 
 test("the arrow keys go from one obligation to the next among the months", async ({
@@ -2758,6 +2768,12 @@ test("a calendar read again after a sign-out opens on the current month, as the 
   await expect(october).toBeInViewport();
   const first = await page.evaluate((element) => element.scrollTop);
   expect(first).toBeGreaterThan(100);
+  // Something is chosen, and then the profile is signed out.
+  const chosen = page
+    .locator('.calendar-bar[data-entry="303:2026-3T"]')
+    .first();
+  await chosen.click();
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
   // Signed out from the page, and in again from it.
   await target.keyboard.press("ControlOrMeta+k");
   await target
@@ -2773,6 +2789,9 @@ test("a calendar read again after a sign-out opens on the current month, as the 
   await submit(target).click();
   await expect(october).toBeInViewport();
   expect(await page.evaluate((element) => element.scrollTop)).toBe(first);
+  // Nothing made of the page before is carried into the new sign-in.
+  await expect(chosen).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("[data-selected]")).toHaveCount(0);
 });
 
 test("the months come back to the month the reader left them on, in a pane and beside the list", async ({
@@ -2854,14 +2873,22 @@ test("the reader's month does not drift however often the months are laid out an
           kept,
       );
     }, month);
+  // March's row to the top of the view, just under the head, with the row
+  // before it gone above: the row at the top is the one that is kept.
   const toMarch = () =>
     page.evaluate((element) => {
       const month = element.querySelector('[data-month="2027-03"]');
       if (!month) throw new Error("no March");
+      const kept =
+        element.querySelector<HTMLElement>(".calendar-head")?.offsetHeight ||
+        element.querySelector<HTMLElement>(".calendar-controls")
+          ?.offsetHeight ||
+        0;
       element.scrollTop +=
         month.getBoundingClientRect().top -
         element.getBoundingClientRect().top -
-        140;
+        kept -
+        12;
     });
   // The reader goes on to March. The place that is kept is the month that
   // begins March's row, which need not be March: the months of a row are
@@ -2982,6 +3009,178 @@ test("the reader's month does not drift however often the months are laid out an
     .click();
   await expect(aside).toHaveCount(0);
   expect(await page.evaluate((element) => element.scrollTop)).toBe(0);
+});
+
+test("a choice that moves another obligation's stop takes the keyboard to the new stop", async ({
+  page: target,
+}) => {
+  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.setViewportSize({ width: 1600, height: 900 });
+  await open(target, "signed-in", "&calendar=busy");
+  await calendarButton(target).click();
+  await target
+    .locator(".pane-docs .pane-head")
+    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const aside = page.locator(".calendar-aside");
+  await expect(aside).toBeVisible();
+  const stop = (key: string) =>
+    page.locator(`.calendar-bar[data-entry="${key}"]:not([tabindex="-1"])`);
+  const weekOf = (bar: Locator) =>
+    bar.evaluate((element) =>
+      [...(element.parentElement?.parentElement?.children ?? [])].indexOf(
+        element.parentElement as Element,
+      ),
+    );
+  // Chosen in the list, a window that January's weeks only counted takes
+  // the place of the one they kept last, whose stop moves to a later week.
+  const before = await weekOf(stop("130:2026-4T"));
+  await aside
+    .locator('li[data-entry="303:2026-4T"]')
+    .getByRole("button")
+    .click();
+  await expect(stop("303:2026-4T")).toHaveAttribute("aria-pressed", "true");
+  const moved = await weekOf(stop("130:2026-4T"));
+  expect(moved).toBeGreaterThan(before);
+  // The keyboard goes to that stop and chooses it: its stop is back in the
+  // first week, and the keyboard is on it, not on a part that is now only
+  // for the eye.
+  await stop("130:2026-4T").focus();
+  await target.keyboard.press("Enter");
+  await expect(stop("130:2026-4T")).toHaveAttribute("aria-pressed", "true");
+  expect(await weekOf(stop("130:2026-4T"))).toBe(before);
+  await expect(stop("130:2026-4T")).toBeFocused();
+  expect(
+    await target.evaluate(() =>
+      document.activeElement?.getAttribute("aria-hidden"),
+    ),
+  ).toBeNull();
+  // And the arrow keys go on from there.
+  await target.keyboard.press("ArrowRight");
+  expect(
+    await target.evaluate(() =>
+      document.activeElement?.getAttribute("data-entry"),
+    ),
+  ).not.toBe("130:2026-4T");
+  await expect(target.locator(".calendar-bar:focus")).toHaveCount(1);
+});
+
+test("a calendar brought back keeps a place the reader scrolled away from their choice to", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1600, height: 700 });
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  await target
+    .locator(".pane-docs .pane-head")
+    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const aside = page.locator(".calendar-aside");
+  await expect(aside).toBeVisible();
+  // An October window is chosen; the reader then goes to the end of the
+  // months, and to the start of the list.
+  const chosen = page
+    .locator('.calendar-bar[data-entry="303:2026-3T"]')
+    .first();
+  await chosen.click();
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
+  // Scrolled as far as asked, or to the end, and reported to the page.
+  const scrolledTo = (scroller: Locator, top: number | "end") =>
+    scroller.evaluate(
+      (element, to) =>
+        new Promise<number>((done) => {
+          element.addEventListener(
+            "scroll",
+            () => requestAnimationFrame(() => done(element.scrollTop)),
+            { once: true },
+          );
+          element.scrollTop = to === "end" ? element.scrollHeight : to;
+        }),
+      top,
+    );
+  const monthsAt = await scrolledTo(page, "end");
+  expect(monthsAt).toBeGreaterThan(200);
+  await expect(chosen).not.toBeInViewport();
+  const listAt = await scrolledTo(aside, 60);
+  expect(listAt).toBe(60);
+  // Put away and brought back: both faces are where they were left, and
+  // the choice is not pulled back into view.
+  await target.keyboard.press("Control+Shift+KeyD");
+  await expect(page).toHaveCount(0);
+  await target.keyboard.press("Control+Shift+KeyD");
+  await expect(aside).toBeVisible();
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
+  expect(
+    Math.abs((await page.evaluate((element) => element.scrollTop)) - monthsAt),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs((await aside.evaluate((element) => element.scrollTop)) - listAt),
+  ).toBeLessThanOrEqual(1);
+  await expect(chosen).not.toBeInViewport();
+});
+
+test("a reader inside a month taller than the page is kept on that month", async ({
+  page: target,
+}) => {
+  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.setViewportSize({ width: 1600, height: 900 });
+  await open(target, "signed-in", "&calendar=busy");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const january = page.locator('.calendar-month[data-month="2027-01"]');
+  await january.locator(".calendar-whole").click();
+  // Deep inside January: its name is far above the view and the next row
+  // of months is still below it.
+  const top = () =>
+    page.evaluate((element) =>
+      Math.round(
+        (element
+          .querySelector('[data-month="2027-01"]')
+          ?.getBoundingClientRect().top ?? 0) -
+          element.getBoundingClientRect().top -
+          (element.querySelector<HTMLElement>(".calendar-head")?.offsetHeight ||
+            element.querySelector<HTMLElement>(".calendar-controls")
+              ?.offsetHeight ||
+            0),
+      ),
+    );
+  await page.evaluate(
+    (element) =>
+      new Promise<void>((done) => {
+        const month = element.querySelector('[data-month="2027-01"]');
+        if (!month) throw new Error("no January");
+        element.addEventListener("scroll", () => done(), { once: true });
+        element.scrollTop +=
+          month.getBoundingClientRect().top -
+          element.getBoundingClientRect().top +
+          300;
+      }),
+  );
+  const inside = await top();
+  expect(inside).toBeLessThan(-300);
+  expect((await january.boundingBox())!.height).toBeGreaterThan(
+    (await page.boundingBox())!.height,
+  );
+  // Beside the list, and back, the reader is as deep inside January.
+  const head = target.locator(".pane-docs .pane-head");
+  await head
+    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .click();
+  await expect(page.locator(".calendar-aside")).toBeVisible();
+  expect(Math.abs((await top()) - inside)).toBeLessThanOrEqual(1);
+  await head
+    .getByRole("button", { name: label("desktop.pane.restore") })
+    .click();
+  await expect(page.locator(".calendar-aside")).toHaveCount(0);
+  expect(Math.abs((await top()) - inside)).toBeLessThanOrEqual(1);
 });
 
 test("a calendar put away and brought back is as it was left", async ({

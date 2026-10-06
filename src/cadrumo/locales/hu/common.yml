@@ -542,6 +542,7 @@ desktop:
       late: Lejárt
       unknown: Ismeretlen
     title: Bevallási naptár
+    to_day: 'Ugrás ide: {date}'
     undetermined: 'Nem sikerült megállapítani: {modelos}'
     view: Nézet
     view_list: Lista

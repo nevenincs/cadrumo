@@ -549,6 +549,7 @@ desktop:
       late: Fora de termini
       unknown: Desconegut
     title: Calendari de presentacions
+    to_day: Ves al {date}
     undetermined: 'No s''ha pogut determinar: {modelos}'
     view: Vista
     view_list: Llista

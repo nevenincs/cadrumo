@@ -557,6 +557,7 @@ desktop:
       late: Fuera de plazo
       unknown: Desconocido
     title: Calendario de presentaciones
+    to_day: Ir al {date}
     undetermined: 'No se ha podido determinar: {modelos}'
     view: Vista
     view_list: Lista

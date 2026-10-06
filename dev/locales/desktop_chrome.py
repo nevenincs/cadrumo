@@ -110,6 +110,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.calendar.state.late",
         "desktop.calendar.state.unknown",
         "desktop.calendar.title",
+        "desktop.calendar.to_day",
         "desktop.calendar.undetermined",
         "desktop.calendar.view",
         "desktop.calendar.view_list",

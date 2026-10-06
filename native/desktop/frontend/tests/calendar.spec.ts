@@ -682,6 +682,49 @@ test("what is chosen is always drawn, in place of what the week would keep last,
   );
 });
 
+test("choosing a window a crowded week already keeps changes nothing of the week", () => {
+  // Seven windows of every reading and length in one week: four begin on
+  // its Monday, one in the middle, one on its last day.
+  const months = calendarMonths(
+    OCTOBER,
+    [
+      reading("112", "2026-10-05", "2026-10-10", "unknown"),
+      reading("103", "2026-10-05", "2026-10-11", "unknown"),
+      reading("104", "2026-10-05", "2026-10-11", "filed"),
+      reading("100", "2026-10-05", "2026-10-05", "late"),
+      reading("106", "2026-10-05", "2026-10-05", "filed"),
+      reading("110", "2026-10-07", "2026-10-11", "due"),
+      reading("101", "2026-10-11", "2026-10-11", "unknown"),
+    ],
+    [],
+    null,
+    1,
+  );
+  const plain = shownIn(months, 1);
+  // Five of them fit in three rows when laid out from the left; the two
+  // that are filed are what is counted.
+  expect(plain.shown.map(([modelo]) => modelo).sort()).toEqual([
+    "100",
+    "101",
+    "103",
+    "110",
+    "112",
+  ]);
+  expect([...plain.hidden].sort()).toEqual(["104", "106"]);
+  // Choosing any window that is already drawn hides nothing more urgent
+  // and moves no window to another row.
+  for (const [modelo] of plain.shown)
+    expect(shownIn(months, 1, `${modelo}:2026-3T`), String(modelo)).toEqual(
+      plain,
+    );
+  // Choosing one that was counted draws it and counts one fewer of the
+  // rest; what was late, due and nearest stays.
+  const filed = shownIn(months, 1, "106:2026-3T");
+  expect(filed.shown.map(([modelo]) => modelo)).toContain("106");
+  for (const urgent of ["100", "110", "112"])
+    expect(filed.shown.map(([modelo]) => modelo)).toContain(urgent);
+});
+
 test("windows that do not share a day share a row of what a crowded week keeps", () => {
   const months = calendarMonths(
     OCTOBER,

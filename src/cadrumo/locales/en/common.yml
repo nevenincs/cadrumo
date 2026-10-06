@@ -534,6 +534,7 @@ desktop:
       late: Late
       unknown: Unknown
     title: Filing calendar
+    to_day: Go to {date}
     undetermined: 'Could not be determined: {modelos}'
     view: View
     view_list: List
