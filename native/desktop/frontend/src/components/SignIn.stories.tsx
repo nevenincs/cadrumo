@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
 import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
 import type { SignInController } from "../shell/signIn";
+import { useStrings } from "../shell/strings";
 import { Account, SignedOut, SignInDialog } from "./SignIn";
 
 // Stories take a controller in a fixed state, so every state of the screen
@@ -111,6 +112,33 @@ function Pane({ account }: { account: SignInController }) {
   );
 }
 
+// The same gate in a second pane beside the TUI's, as the calendar shows
+// it: its own sentence for what signing in gives, and quiet actions, so the
+// window has one filled button and not two.
+function Beside({ account }: { account: SignInController }) {
+  const t = useStrings();
+  return (
+    <div className="grid min-h-dvh grid-cols-2">
+      <div className="flex bg-background">
+        <SignedOut
+          account={account}
+          lead={t("desktop.calendar.signed_out")}
+          quiet
+          onSignIn={() => undefined}
+          onOpenTui={() => undefined}
+        />
+      </div>
+      <div className="flex bg-background" data-scheme="dark">
+        <SignedOut
+          account={account}
+          onSignIn={() => undefined}
+          onOpenTui={() => undefined}
+        />
+      </div>
+    </div>
+  );
+}
+
 export const PaneChecking: Story = {
   name: "Pane: checking",
   render: () => <Pane account={controller({ status: null })} />,
@@ -136,6 +164,30 @@ export const PaneUnknown: Story = {
   render: () => <Pane account={controller({ status: UNKNOWN })} />,
 };
 
+export const PaneLocked: Story = {
+  name: "Pane: profile locked",
+  render: () => (
+    <Pane account={controller({ refusal: refused("PROFILE_LOCKED") })} />
+  ),
+};
+
+export const BesideSignedOut: Story = {
+  name: "Two panes: signed out",
+  render: () => <Beside account={controller()} />,
+};
+
+export const BesideLocked: Story = {
+  name: "Two panes: profile locked",
+  render: () => (
+    <Beside account={controller({ refusal: refused("PROFILE_LOCKED") })} />
+  ),
+};
+
+export const BesideNoProfile: Story = {
+  name: "Two panes: no active profile",
+  render: () => <Beside account={controller({ status: NO_PROFILE })} />,
+};
+
 // The account in settings, in every phase: the profile and its sign-in say
 // the same thing the rest of the window does.
 const present = controller({ status: PRESENT });
@@ -154,6 +206,7 @@ const SECTIONS: [string, SignInController][] = [
   ["No active profile", controller({ status: NO_PROFILE })],
   ["Services not running", controller({ status: SERVICES_DOWN })],
   ["State unknown", controller({ status: UNKNOWN })],
+  ["Profile locked", controller({ refusal: refused("PROFILE_LOCKED") })],
   ["Continuing in the TUI", controller({ handover: true })],
 ];
 
