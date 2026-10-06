@@ -518,11 +518,14 @@ desktop:
       ready_to_file: Ready to file
     maximize: Maximize the calendar
     modelo: Modelo {modelo}
+    more: '{count} more'
     moved: Moved from {date}
     observed: Filing history and messages
     open_tui: Open in the TUI
     payment_cutoff: Direct debit until {date}
     refresh: Refresh
+    show_all: Show all
+    show_fewer: Show fewer
     signed_out: Sign in to see your filing calendar.
     state:
       due: Due

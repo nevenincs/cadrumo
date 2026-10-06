@@ -541,11 +541,14 @@ desktop:
       ready_to_file: Listo para presentar
     maximize: Maximizar el calendario
     modelo: Modelo {modelo}
+    more: '{count} más'
     moved: Trasladado desde el {date}
     observed: Historial de presentaciones y mensajes
     open_tui: Abrir en la TUI
     payment_cutoff: Domiciliación hasta el {date}
     refresh: Actualizar
+    show_all: Mostrar todo
+    show_fewer: Mostrar menos
     signed_out: Inicia sesión para ver tu calendario de presentaciones.
     state:
       due: Pendiente

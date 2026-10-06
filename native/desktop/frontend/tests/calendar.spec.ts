@@ -2,7 +2,10 @@ import { expect, test } from "@playwright/test";
 import { calendarRange, deadlineDistance } from "../src/shell/calendar";
 import {
   calendarMonths,
+  crowded,
+  drawnWeeks,
   entrySpan,
+  LANES_SHOWN,
   weekStartOf,
 } from "../src/shell/calendarGrid";
 import type { CalendarEntry } from "../src/shell/views";
@@ -169,7 +172,7 @@ test("the window ends on the day that binds, and an unknown opening is not guess
   expect(week?.lanes).toBe(1);
 });
 
-test("windows that overlap take rows of their own, the longer keeping the first", () => {
+test("windows that overlap take rows of their own, the nearer deadline keeping the first", () => {
   const [month] = calendarMonths(
     OCTOBER,
     [
@@ -185,9 +188,9 @@ test("windows that overlap take rows of their own, the longer keeping the first"
   const first = month?.weeks[0];
   expect(first?.lanes).toBe(3);
   expect(first?.bars.map((bar) => [bar.entry.modelo, bar.lane])).toEqual([
-    ["100", 0],
-    ["111", 1],
-    ["303", 2],
+    ["111", 0],
+    ["303", 1],
+    ["100", 2],
   ]);
   // No two in a week share a row where they share a day.
   for (const week of month?.weeks ?? [])
@@ -251,10 +254,12 @@ test("what was observed stands on its own day", () => {
 
 // The edges of the arithmetic: the ends of the range, of the year, and data
 // that is not as it should be.
-const bars = (months: ReturnType<typeof calendarMonths>) =>
-  months.flatMap((month) =>
+const bars = (months: ReturnType<typeof calendarMonths>) => {
+  // Drawn whole: the first of each obligation is then its first anywhere.
+  const drawn = drawnWeeks(months, () => true);
+  return months.flatMap((month) =>
     month.weeks.flatMap((week) =>
-      week.bars.map((bar) => ({
+      (drawn.get(week)?.bars ?? []).map(({ bar, stop }) => ({
         month: month.key,
         days: [
           week.days[bar.from]?.day ?? null,
@@ -263,11 +268,12 @@ const bars = (months: ReturnType<typeof calendarMonths>) =>
         lane: bar.lane,
         opens: bar.opens,
         closes: bar.closes,
-        first: bar.first,
+        first: stop,
         modelo: bar.entry.modelo,
       })),
     ),
   );
+};
 
 test("a window that crosses the year's end is drawn in both years, and is first once", () => {
   const drawn = bars(
@@ -437,4 +443,118 @@ test("the week begins on the day the language begins it, and on Monday where it 
   expect(weekStartOf("hu")).toBe(1);
   expect(weekStartOf("ar-EG")).toBe(6);
   expect(weekStartOf("not a locale")).toBe(1);
+});
+
+// A crowded week shows its nearest deadlines and counts the rest.
+const JANUARY = { from_date: "2027-01-01", to_date: "2027-02-28" };
+const crowd = () =>
+  calendarMonths(
+    JANUARY,
+    [
+      // Three that close on the twentieth, three on the first of February,
+      // and one that opens in the month's second week.
+      obligation("111", "2027-01-04", "2027-01-20"),
+      obligation("115", "2027-01-04", "2027-01-20"),
+      obligation("123", "2027-01-04", "2027-01-20"),
+      obligation("130", "2027-01-04", "2027-02-01"),
+      obligation("303", "2027-01-04", "2027-02-01"),
+      obligation("390", "2027-01-04", "2027-02-01"),
+      obligation("349", "2027-01-11", "2027-01-13"),
+    ],
+    [],
+    null,
+    1,
+  );
+
+test("a week with more windows than it shows keeps the nearest deadlines and counts the rest", () => {
+  const months = crowd();
+  const [january, february] = months;
+  expect(LANES_SHOWN).toBe(4);
+  expect(crowded(january!)).toBe(true);
+  // Three windows on its one day of February: nothing to leave out.
+  expect(crowded(february!)).toBe(false);
+  const drawn = drawnWeeks(months, () => false);
+  // The week of the fourth: six windows. Three are drawn, the ones that
+  // close soonest, and the fourth row is the count of the other three.
+  const first = drawn.get(january!.weeks[1]!);
+  expect(first?.bars.map(({ bar }) => bar.entry.modelo)).toEqual([
+    "111",
+    "115",
+    "123",
+  ]);
+  expect(first?.hidden.map((bar) => bar.entry.modelo)).toEqual([
+    "130",
+    "303",
+    "390",
+  ]);
+  expect(first?.bars.every(({ bar }) => bar.lane < LANES_SHOWN - 1)).toBe(true);
+  // The last week of January: the three long ones alone, all drawn.
+  const last = drawn.get(january!.weeks[4]!);
+  expect(last?.bars.map(({ bar }) => bar.entry.modelo)).toEqual([
+    "130",
+    "303",
+    "390",
+  ]);
+  expect(last?.hidden).toEqual([]);
+});
+
+test("an obligation's one stop is the first of it that is drawn, not the first that is counted", () => {
+  const months = crowd();
+  const january = months[0]!;
+  const stops = (open: boolean) => {
+    const drawn = drawnWeeks(months, () => open);
+    return months.flatMap((month) =>
+      month.weeks.flatMap((week, index) =>
+        (drawn.get(week)?.bars ?? [])
+          .filter(({ stop }) => stop)
+          .map(({ bar }) => [bar.entry.modelo, month.key, index]),
+      ),
+    );
+  };
+  // Left out of January's crowded weeks, the long windows are first drawn
+  // where the short ones have closed: the week of the twenty-fifth.
+  expect(stops(false)).toEqual([
+    ["111", "2027-01", 1],
+    ["115", "2027-01", 1],
+    ["123", "2027-01", 1],
+    ["130", "2027-01", 4],
+    ["303", "2027-01", 4],
+    ["390", "2027-01", 4],
+  ]);
+  // A window that is never drawn has no stop among the months: the count
+  // in its week and the list are where it is found.
+  expect(stops(false).some(([modelo]) => modelo === "349")).toBe(false);
+  expect(
+    drawnWeeks(months, () => false)
+      .get(january.weeks[2]!)
+      ?.hidden.map((bar) => bar.entry.modelo),
+  ).toContain("349");
+  // Drawn whole, every obligation stops where it opens.
+  expect(stops(true)).toEqual([
+    ["111", "2027-01", 1],
+    ["115", "2027-01", 1],
+    ["123", "2027-01", 1],
+    ["130", "2027-01", 1],
+    ["303", "2027-01", 1],
+    ["390", "2027-01", 1],
+    ["349", "2027-01", 2],
+  ]);
+  // Every obligation has exactly one stop when all of it is drawn.
+  expect(new Set(stops(true).map(([modelo]) => modelo)).size).toBe(7);
+});
+
+test("a week with exactly as many windows as it shows leaves none out", () => {
+  const months = calendarMonths(
+    OCTOBER,
+    ["111", "115", "123", "130"].map((modelo) =>
+      obligation(modelo, "2026-10-05", "2026-10-07"),
+    ),
+    [],
+    null,
+    1,
+  );
+  expect(crowded(months[0]!)).toBe(false);
+  const week = drawnWeeks(months, () => false).get(months[0]!.weeks[1]!);
+  expect(week?.bars).toHaveLength(4);
+  expect(week?.hidden).toEqual([]);
 });

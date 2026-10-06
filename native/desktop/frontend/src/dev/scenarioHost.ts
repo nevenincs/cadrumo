@@ -15,6 +15,7 @@ import type {
 } from "../ipc/contract";
 import type { Host } from "../shell/host";
 import type { ProfileViews } from "../shell/views";
+import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import {
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
@@ -53,7 +54,8 @@ export type ScenarioHostOptions = {
    * after the backlog, as a process writing its log sends them. */
   logFeedMs?: number;
   /** Another shape of the fixture calendar: everything behind the day it
-   * was evaluated on, everything ahead, or that day inside a month. */
+   * was evaluated on, everything ahead, that day inside a month, or the
+   * turn of a year with many windows open at once. */
   calendar?: CalendarShape | null;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
@@ -63,6 +65,7 @@ export const CALENDAR_SHAPES = {
   behind: BEHIND_CALENDAR,
   ahead: AHEAD_CALENDAR,
   straddling: STRADDLING_CALENDAR,
+  busy: BUSY_CALENDAR,
 } as const;
 export type CalendarShape = keyof typeof CALENDAR_SHAPES;
 

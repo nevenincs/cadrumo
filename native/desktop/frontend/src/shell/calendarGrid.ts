@@ -18,9 +18,6 @@ export type GridBar = {
    * that does neither is the middle of a longer window. */
   opens: boolean;
   closes: boolean;
-  /** Whether this is the first the calendar draws of the obligation. One
-   * obligation crosses many weeks; it is one thing to reach and to hear. */
-  first: boolean;
 };
 
 export type GridDay = {
@@ -94,12 +91,13 @@ export function calendarMonths(
       const span = entrySpan(entry);
       return { entry, from: ordinal(span.from), to: ordinal(span.to) };
     })
-    // Earlier first, and of two that open together the longer first, so a
-    // long window keeps one row and short ones fill in around it.
+    // Earlier first, and of two that open together the one that closes
+    // sooner first: the nearest deadline takes the first row, which is the
+    // last a crowded week gives up.
     .sort(
       (a, b) =>
         a.from - b.from ||
-        b.to - a.to ||
+        a.to - b.to ||
         entryKey(a.entry).localeCompare(entryKey(b.entry)),
     );
   const observed = new Map<string, CalendarEvent[]>();
@@ -113,7 +111,6 @@ export function calendarMonths(
     .map(Number);
   const [lastYear = 1970, lastMonth = 1] = range.to_date.split("-").map(Number);
   const months: GridMonth[] = [];
-  const drawn = new Set<CalendarEntry>();
   for (
     let year = firstYear, month = firstMonth;
     year < lastYear || (year === lastYear && month <= lastMonth);
@@ -159,15 +156,63 @@ export function calendarMonths(
           lane,
           opens: span.from >= begin,
           closes: span.to <= end,
-          first: !drawn.has(span.entry),
         });
-        drawn.add(span.entry);
       }
       weeks.push({ days, bars, lanes: taken.length });
     }
     months.push({ key: isoOf(year, month, 1).slice(0, 7), year, month, weeks });
   }
   return months;
+}
+
+/** How many rows of windows a week shows before it says how many more
+ * there are. The last of them is the row that says so. */
+export const LANES_SHOWN = 4;
+
+/** Whether any week of a month has more windows than it shows at once. */
+export const crowded = (month: GridMonth, cap: number = LANES_SHOWN) =>
+  month.weeks.some((week) => week.lanes > cap);
+
+/** A week as it is drawn. */
+export type DrawnWeek = {
+  /** The windows drawn. `stop` marks the first drawn of its obligation in
+   * the whole calendar: one obligation crosses many weeks, and is one thing
+   * to reach and to hear. */
+  bars: { bar: GridBar; stop: boolean }[];
+  /** The windows left out, for the row that counts them. */
+  hidden: GridBar[];
+};
+
+/**
+ * What of each week is drawn when a week shows at most `cap` rows. A week
+ * with more keeps its first rows, the nearest deadlines, and gives its last
+ * row to the count of the rest; a month that is `open` is drawn whole.
+ */
+export function drawnWeeks(
+  months: readonly GridMonth[],
+  open: (month: GridMonth) => boolean,
+  cap: number = LANES_SHOWN,
+): Map<GridWeek, DrawnWeek> {
+  const reached = new Set<CalendarEntry>();
+  const drawn = new Map<GridWeek, DrawnWeek>();
+  for (const month of months) {
+    const whole = open(month);
+    for (const week of month.weeks) {
+      const over = !whole && week.lanes > cap;
+      const bars: DrawnWeek["bars"] = [];
+      const hidden: GridBar[] = [];
+      for (const bar of week.bars) {
+        if (over && bar.lane >= cap - 1) {
+          hidden.push(bar);
+          continue;
+        }
+        bars.push({ bar, stop: !reached.has(bar.entry) });
+        reached.add(bar.entry);
+      }
+      drawn.set(week, { bars, hidden });
+    }
+  }
+  return drawn;
 }
 
 /** The first day of the week where `locale` is spoken, 0 Sunday to 6

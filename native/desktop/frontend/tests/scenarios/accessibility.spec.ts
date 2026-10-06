@@ -58,12 +58,14 @@ async function audit(
   }, unchecked);
 }
 
-const open = (target: Page, scenario: string) =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+const open = (target: Page, scenario: string, extra = "") =>
+  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off${extra}`);
 
 const SURFACES: {
   name: string;
   scenario: string;
+  /** Further options of the scenario page, as they stand in its address. */
+  extra?: string;
   reach: (target: Page) => Promise<void>;
   /** Rules that do not apply to this surface, each with its reason. */
   unchecked?: readonly string[];
@@ -195,6 +197,27 @@ const SURFACES: {
     },
   },
   {
+    name: "a crowded calendar, one month counted and one drawn whole",
+    scenario: "signed-in",
+    extra: "&calendar=busy",
+    reach: async (target) => {
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.calendar.title") })
+        .click();
+      const page = target.getByRole("region", {
+        name: label("desktop.calendar.title"),
+      });
+      await expect(page.locator(".calendar-more").first()).toBeVisible();
+      await page
+        .locator('.calendar-month[data-month="2027-02"] .calendar-whole')
+        .click();
+      await expect(
+        page.locator('.calendar-month[data-month="2027-02"] .calendar-whole'),
+      ).toHaveAttribute("aria-expanded", "true");
+    },
+  },
+  {
     name: "the filing calendar as a list",
     scenario: "signed-in",
     reach: async (target) => {
@@ -319,7 +342,7 @@ for (const scheme of ["light", "dark"] as const)
           JSON.stringify({ prefs: { appearance } }),
         );
       }, scheme);
-      await open(target, surface.scenario);
+      await open(target, surface.scenario, surface.extra);
       await surface.reach(target);
       await expect(target.locator("html")).toHaveAttribute(
         "data-scheme",

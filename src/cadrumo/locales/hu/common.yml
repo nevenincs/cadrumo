@@ -526,11 +526,14 @@ desktop:
       ready_to_file: Benyújtásra kész
     maximize: Naptár teljes méretben
     modelo: Modelo {modelo}
+    more: még {count}
     moved: 'Áthelyezve erről: {date}'
     observed: Bevallási előzmények és üzenetek
     open_tui: Megnyitás a TUI-ban
     payment_cutoff: 'Beszedési megbízás eddig: {date}'
     refresh: Frissítés
+    show_all: Összes megjelenítése
+    show_fewer: Kevesebb megjelenítése
     signed_out: Jelentkezz be a bevallási naptárad megtekintéséhez.
     state:
       due: Esedékes

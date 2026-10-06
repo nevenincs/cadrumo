@@ -2429,6 +2429,128 @@ test("a calendar left on screen past midnight is read again for the new day", as
   expect(await calendarReads(target)()).toBe(2);
 });
 
+test("a crowded month shows each week's nearest deadlines and counts the rest, and can be drawn whole", async ({
+  page: target,
+}) => {
+  // The day the crowded fixture was evaluated on.
+  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await open(target, "signed-in", "&calendar=busy");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const january = page.locator('.calendar-month[data-month="2027-01"]');
+  const title = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(2027, 0, 1));
+  const all = `${label("desktop.calendar.show_all")}: ${title}`;
+  const fewer = `${label("desktop.calendar.show_fewer")}: ${title}`;
+  const whole = january.locator(".calendar-whole");
+  await expect(whole).toHaveAccessibleName(all);
+  await expect(whole).toHaveAttribute("aria-expanded", "false");
+  // A month with room for all its windows has nothing to ask.
+  await expect(
+    page.locator('.calendar-month[data-month="2026-12"] .calendar-whole'),
+  ).toHaveCount(0);
+
+  // Eight windows cross the week of the third: the three that close on the
+  // twentieth are drawn, and the fourth row counts the five that close
+  // later. No week is more than four rows.
+  const week = january.locator(":scope > div:last-child > div").nth(2);
+  await expect(week.locator(".calendar-bar")).toHaveCount(3);
+  await expect(week.locator(".calendar-bar")).toHaveText([
+    /^111/,
+    /^115/,
+    /^123/,
+  ]);
+  await expect(week.locator(".calendar-more")).toHaveText(
+    label("desktop.calendar.more", { count: 5 }),
+  );
+  const rows = (month: Locator) =>
+    month.evaluate((element) =>
+      Math.max(
+        ...[
+          ...element.querySelectorAll<HTMLElement>(
+            ".calendar-bar, .calendar-more",
+          ),
+        ].map((bar) => Number(bar.style.gridRowStart) - 1),
+      ),
+    );
+  expect(await rows(january)).toBe(4);
+  // What is only counted is not drawn, and is not a stop for the keyboard;
+  // the count is for the eye and the pointer, and says which they are.
+  await expect(january.locator('[data-entry="303:2026-4T"]')).toHaveCount(0);
+  await expect(week.locator(".calendar-more")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+  await expect(week.locator(".calendar-more")).toHaveAttribute(
+    "title",
+    /303 2026-4T/,
+  );
+  const collapsed = (await january.boundingBox())!.height;
+
+  // By the keyboard: the month's own control draws it whole, stays where
+  // it is, and keeps the keyboard.
+  await whole.focus();
+  await target.keyboard.press("Enter");
+  await expect(whole).toHaveAttribute("aria-expanded", "true");
+  await expect(whole).toHaveAccessibleName(fewer);
+  await expect(whole).toBeFocused();
+  await expect(january.locator(".calendar-more")).toHaveCount(0);
+  await expect(week.locator(".calendar-bar")).toHaveCount(8);
+  expect(await rows(january)).toBe(8);
+  expect((await january.boundingBox())!.height).toBeGreaterThan(
+    collapsed * 1.3,
+  );
+  // Each obligation is still one stop: its first week in the month.
+  const stops = january.locator(
+    '.calendar-bar[data-entry="303:2026-4T"]:not([tabindex="-1"])',
+  );
+  await expect(stops).toHaveCount(1);
+  await expect(stops).toHaveAccessibleName(/303.* 2026-4T/);
+  // And back.
+  await target.keyboard.press("Enter");
+  await expect(whole).toHaveAttribute("aria-expanded", "false");
+  await expect(whole).toBeFocused();
+  expect((await january.boundingBox())!.height).toBe(collapsed);
+
+  // By the pointer, the count itself opens its month, and the keyboard is
+  // left on the control that undoes it, not on nothing.
+  await week.locator(".calendar-more").click();
+  await expect(whole).toHaveAttribute("aria-expanded", "true");
+  await expect(whole).toBeFocused();
+  await whole.click();
+  await expect(whole).toHaveAttribute("aria-expanded", "false");
+
+  // What is chosen is never among what is only counted: chosen in the
+  // list, an obligation left out of its weeks has its months drawn whole.
+  const view = page.getByRole("radiogroup", {
+    name: label("desktop.calendar.view"),
+  });
+  await view
+    .getByRole("radio", { name: label("desktop.calendar.view_list") })
+    .click();
+  await page
+    .locator('.calendar-list li[data-entry="390:2026"]')
+    .getByRole("button")
+    .click();
+  await view
+    .getByRole("radio", { name: label("desktop.calendar.view_months") })
+    .click();
+  const chosen = page.locator('.calendar-bar[data-entry="390:2026"]').first();
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
+  await expect(chosen).toBeInViewport();
+  await expect(whole).toHaveAttribute("aria-expanded", "true");
+  // Fewer, of a month the choice keeps whole, lets the choice go with it.
+  await whole.click();
+  await expect(whole).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("[data-selected]")).toHaveCount(0);
+  await expect(january.locator('[data-entry="390:2026"]')).toHaveCount(0);
+  expect(await calendarReads(target)()).toBe(1);
+});
+
 test("the calendar is not read again for being put away and brought back", async ({
   page: target,
 }) => {

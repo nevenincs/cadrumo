@@ -533,11 +533,14 @@ desktop:
       ready_to_file: A punt per presentar
     maximize: Maximitza el calendari
     modelo: Modelo {modelo}
+    more: '{count} més'
     moved: Traslladat des del {date}
     observed: Historial de presentacions i missatges
     open_tui: Obre a la TUI
     payment_cutoff: Domiciliació fins al {date}
     refresh: Actualitza
+    show_all: Mostra-ho tot
+    show_fewer: Mostra'n menys
     signed_out: Inicia la sessió per veure el teu calendari de presentacions.
     state:
       due: Pendent

@@ -178,6 +178,34 @@ for (const language of ["en", "hu"])
       .toBeGreaterThan(before + 60);
   });
 
+test("a crowded month's controls fit a finger, and its count opens it", async ({
+  page: target,
+}) => {
+  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&calendar=busy",
+  );
+  await target.locator(".rail button").nth(3).tap();
+  const page = target.locator(".calendar-page");
+  const january = page.locator('.calendar-month[data-month="2027-01"]');
+  const whole = january.locator(".calendar-whole");
+  await expect(whole).toBeVisible();
+  for (const control of [
+    whole,
+    january.locator(".calendar-more").first(),
+    january.locator(".calendar-bar").first(),
+  ]) {
+    const box = (await control.boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(FINGER);
+    expect(box.width).toBeGreaterThanOrEqual(FINGER);
+  }
+  expect(await overflowing(target)).toBe(false);
+  await january.locator(".calendar-more").first().tap();
+  await expect(whole).toHaveAttribute("aria-expanded", "true");
+  await expect(january.locator(".calendar-more")).toHaveCount(0);
+  expect(await overflowing(target)).toBe(false);
+});
+
 test("a tap on messages says why there is no count", async ({
   page: target,
 }) => {

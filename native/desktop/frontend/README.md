@@ -104,15 +104,15 @@ Select one in the control or in the address:
 /scenarios.html?scenario=throttled&lang=es
 ```
 
-| Parameter  | Values                          | Meaning                                                                                                |
-| ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `scenario` | a name from the table           | The scenario to start in                                                                               |
-| `lang`     | `en`, `es`, `ca`, `hu`          | The output language the host reports                                                                   |
-| `latency`  | milliseconds                    | The fixed delay before a sign-in or sign-out answer, 600 by default                                    |
-| `bar`      | `off`                           | Hide the scenario control, for a clean screenshot                                                      |
-| `records`  | a count                         | Fill the log with that many generated records, up to its ring size                                     |
-| `feed`     | milliseconds                    | Keep the log growing: twenty more records at that interval                                             |
-| `calendar` | `behind`, `ahead`, `straddling` | Another shape of the fixture calendar: all of it behind its day, all ahead, or that day inside a month |
+| Parameter  | Values                                  | Meaning                                                                                                                                                                             |
+| ---------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scenario` | a name from the table                   | The scenario to start in                                                                                                                                                            |
+| `lang`     | `en`, `es`, `ca`, `hu`                  | The output language the host reports                                                                                                                                                |
+| `latency`  | milliseconds                            | The fixed delay before a sign-in or sign-out answer, 600 by default                                                                                                                 |
+| `bar`      | `off`                                   | Hide the scenario control, for a clean screenshot                                                                                                                                   |
+| `records`  | a count                                 | Fill the log with that many generated records, up to its ring size                                                                                                                  |
+| `feed`     | milliseconds                            | Keep the log growing: twenty more records at that interval                                                                                                                          |
+| `calendar` | `behind`, `ahead`, `straddling`, `busy` | Another shape of the fixture calendar: all of it behind its day, all ahead, that day inside a month, or the turn of a year with nine windows open at once (evaluated on 2027-01-12) |
 
 The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to
@@ -279,7 +279,12 @@ The calendar has two faces over the one read, in
   windows overlap. What was observed, a filing made or a message from the
   agency, is a mark on its day, and the day the product evaluated is marked.
   A window whose opening is null is drawn on its closing day alone and says
-  the opening was not reported: an opening is never guessed. The week begins
+  the opening was not reported: an opening is never guessed. A week shows
+  at most four rows: with more windows than that it keeps the three that
+  close soonest and gives the fourth to a count of the rest. Such a month
+  has a control beside its name that draws it whole and back, and a month
+  holding a part of the chosen obligation that would be left out is drawn
+  whole for as long as it is chosen. The week begins
   on the day the chrome language begins it.
 - **The list** says where each obligation stands, by month, with what was
   observed in each month under its obligations.
@@ -390,6 +395,7 @@ and in the calendar `.calendar-page`, `.calendar-head`,
 `.calendar-month` with `data-month`, `[data-day]`, `.calendar-bar` and
 `li[data-entry]` with `data-entry` (Modelo and period), `data-selected`,
 `.calendar-grid-today`, `.calendar-event` with `data-event`,
+`.calendar-more`, `.calendar-whole`,
 `.calendar-list`, `.calendar-aside`, `.calendar-observed`,
 `.calendar-today` and `.calendar-distance`.
 

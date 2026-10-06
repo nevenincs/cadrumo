@@ -1,12 +1,18 @@
-import { useId, useMemo } from "react";
+import { useId, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import {
   calendarMonths,
+  crowded,
+  drawnWeeks,
   entryKey,
   entrySpan,
+  LANES_SHOWN,
   weekStartOf,
+  type DrawnWeek,
   type GridBar,
   type GridMonth,
+  type GridWeek,
 } from "../shell/calendarGrid";
 import { evaluatedDay } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
@@ -39,19 +45,30 @@ function day(iso: string): Date {
 
 function Month({
   month,
+  drawn,
+  whole,
   locale,
   weekStart,
   selected,
   onSelect,
+  onWhole,
 }: {
   month: GridMonth;
+  /** What of each of the month's weeks is drawn. */
+  drawn: ReadonlyMap<GridWeek, DrawnWeek>;
+  /** Whether a crowded month is drawn whole, for having been asked for or
+   * for holding what is chosen; null where the month is not crowded and
+   * there is nothing to ask. */
+  whole: boolean | null;
   locale: string;
   weekStart: number;
   selected: string | null;
   onSelect: (key: string) => void;
+  onWhole: (whole: boolean) => void;
 }) {
   const t = useStrings();
   const heading = useId();
+  const wholeControl = useRef<HTMLButtonElement>(null);
   const formats = useMemo(
     () => ({
       title: new Intl.DateTimeFormat(locale, {
@@ -82,6 +99,10 @@ function Month({
         : formats.short.formatRange(day(span.from), day(span.to));
     return `${t("desktop.calendar.modelo", { modelo: bar.entry.modelo })} ${bar.entry.period}, ${days}, ${t(`desktop.calendar.state.${bar.entry.user_state}`)}`;
   };
+  const title = formats.title.format(new Date(month.year, month.month - 1, 1));
+  const toggle = t(
+    whole ? "desktop.calendar.show_fewer" : "desktop.calendar.show_all",
+  );
   return (
     <div
       // A group, not a region: the list names its months as regions, and
@@ -91,12 +112,30 @@ function Month({
       aria-labelledby={heading}
       data-month={month.key}
     >
-      <h2
-        id={heading}
-        className="px-1 pb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-      >
-        {formats.title.format(new Date(month.year, month.month - 1, 1))}
-      </h2>
+      <div className="flex items-end justify-between gap-2 px-1 pb-1.5">
+        <h2
+          id={heading}
+          className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+        >
+          {title}
+        </h2>
+        {/* A crowded month shows the nearest deadlines of each week and
+            counts the rest. This is the way to all of it and back, and it
+            stays where it is, so the keyboard is never left on nothing. */}
+        {whole !== null && (
+          <Button
+            variant="ghost"
+            size="xs"
+            ref={wholeControl}
+            className="calendar-whole -my-1"
+            aria-expanded={whole}
+            aria-label={`${toggle}: ${title}`}
+            onClick={() => onWhole(!whole)}
+          >
+            {toggle}
+          </Button>
+        )}
+      </div>
       <div className="overflow-hidden rounded-lg border bg-card">
         <div
           aria-hidden="true"
@@ -157,7 +196,7 @@ function Month({
                 )}
               </div>
             ))}
-            {week.bars.map((bar) => {
+            {(drawn.get(week)?.bars ?? []).map(({ bar, stop }) => {
               const key = entryKey(bar.entry);
               const said = describe(bar);
               return (
@@ -170,10 +209,10 @@ function Month({
                   // first of it drawn is what the keyboard reaches and what
                   // is read aloud; the rest of it is there for the eye and
                   // the pointer.
-                  aria-label={bar.first ? said : undefined}
-                  aria-pressed={bar.first ? selected === key : undefined}
-                  aria-hidden={bar.first ? undefined : true}
-                  tabIndex={bar.first ? undefined : -1}
+                  aria-label={stop ? said : undefined}
+                  aria-pressed={stop ? selected === key : undefined}
+                  aria-hidden={stop ? undefined : true}
+                  tabIndex={stop ? undefined : -1}
                   data-selected={selected === key || undefined}
                   title={said}
                   style={{
@@ -202,6 +241,31 @@ function Month({
                 </button>
               );
             })}
+            {(drawn.get(week)?.hidden.length ?? 0) > 0 && (
+              // The week's last row says how many more windows cross it.
+              // For the pointer it also opens the month; the keyboard and a
+              // screen reader have the month's own control for that.
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-hidden="true"
+                className="calendar-more flex h-control-xs min-w-0 cursor-pointer items-center px-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:underline"
+                style={{ gridColumn: "1 / -1", gridRow: LANES_SHOWN + 1 }}
+                title={(drawn.get(week)?.hidden ?? [])
+                  .map((bar) => `${bar.entry.modelo} ${bar.entry.period}`)
+                  .join(", ")}
+                onClick={() => {
+                  onWhole(true);
+                  // This row goes with what it counted: the keyboard goes to
+                  // the control that brings it back.
+                  wholeControl.current?.focus();
+                }}
+              >
+                {t("desktop.calendar.more", {
+                  count: drawn.get(week)?.hidden.length ?? 0,
+                })}
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -241,12 +305,63 @@ export function CalendarMonths({
       ),
     [calendar, weekStart],
   );
+  // The crowded months the person asked to see whole. A month that holds a
+  // part of the chosen obligation that would be left out is drawn whole as
+  // well: what is chosen is never among what is only counted.
+  const [asked, setAsked] = useState<ReadonlySet<string>>(new Set());
+  const chosenIn = useMemo(
+    () =>
+      new Set(
+        months
+          .filter(
+            (month) =>
+              selected !== null &&
+              month.weeks.some(
+                (week) =>
+                  week.lanes > LANES_SHOWN &&
+                  week.bars.some(
+                    (bar) =>
+                      bar.lane >= LANES_SHOWN - 1 &&
+                      entryKey(bar.entry) === selected,
+                  ),
+              ),
+          )
+          .map((month) => month.key),
+      ),
+    [months, selected],
+  );
+  const drawn = useMemo(
+    () =>
+      drawnWeeks(
+        months,
+        (month) => asked.has(month.key) || chosenIn.has(month.key),
+      ),
+    [months, asked, chosenIn],
+  );
   return (
     <div className="calendar-months grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-x-4 gap-y-5 p-2 @md:p-4">
       {months.map((month) => (
         <Month
           key={month.key}
           month={month}
+          drawn={drawn}
+          whole={
+            crowded(month)
+              ? asked.has(month.key) || chosenIn.has(month.key)
+              : null
+          }
+          onWhole={(whole) => {
+            setAsked((held) => {
+              const next = new Set(held);
+              if (whole) next.add(month.key);
+              else next.delete(month.key);
+              return next;
+            });
+            // Fewer, of a month the choice is keeping whole: the choice is
+            // let go with it, since it would be among what is left out.
+            if (!whole && selected !== null && chosenIn.has(month.key))
+              onSelect(selected);
+          }}
           locale={locale}
           weekStart={weekStart}
           selected={selected}
