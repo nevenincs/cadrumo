@@ -2630,6 +2630,18 @@ test("a short page keeps only the calendar's controls in view, a tall one its wh
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
+  // Nothing the page does while it is resized is reported as an error:
+  // not a loop of its own observations either.
+  const errors: string[] = [];
+  target.on("pageerror", (error) => errors.push(error.message));
+  await target.addInitScript(() => {
+    window.addEventListener("error", (event) => {
+      (window as unknown as { __errors?: string[] }).__errors ??= [];
+      (window as unknown as { __errors: string[] }).__errors.push(
+        event.message,
+      );
+    });
+  });
   // Tall: the counts, which are the key to the months' colours, and the
   // sentence about where the page comes from stay with the controls.
   await target.setViewportSize({ width: 1280, height: 1000 });
@@ -2656,6 +2668,26 @@ test("a short page keeps only the calendar's controls in view, a tall one its wh
       ?.offsetHeight,
   }));
   expect(sizes.kept ?? 0).toBeLessThan(sizes.page / 3);
+  // And tall again, wide enough for both faces, and back to a pane's width.
+  for (const size of [
+    { width: 1280, height: 1000 },
+    { width: 2000, height: 1000 },
+    { width: 2000, height: 420 },
+    { width: 1280, height: 420 },
+    { width: 1280, height: 1000 },
+  ]) {
+    await target.setViewportSize(size);
+    await expect(page).toHaveAttribute(
+      "data-head",
+      size.height >= 700 ? "whole" : "controls",
+    );
+  }
+  expect(errors).toEqual([]);
+  expect(
+    await target.evaluate(
+      () => (window as unknown as { __errors?: string[] }).__errors ?? [],
+    ),
+  ).toEqual([]);
 });
 
 test("with the system's colours forced, the calendar still shows its day, its states and what is chosen", async ({

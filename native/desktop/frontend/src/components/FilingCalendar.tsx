@@ -294,6 +294,7 @@ export function FilingCalendarView({
   // place the months are put back on whenever they are laid out anew.
   const anchor = useRef<{ key: string; top: number } | null>(null);
   const widthWas = useRef<number | null>(null);
+  const wideNow = useRef(false);
   // The row of controls stays at the top while the page scrolls under it.
   const head = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLDivElement>(null);
@@ -304,7 +305,8 @@ export function FilingCalendarView({
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
-    const fit = () =>
+    const fit = () => {
+      wideNow.current = el.clientWidth >= splitAt;
       setRoom((held) => {
         const next = {
           wide: el.clientWidth >= splitAt,
@@ -312,6 +314,7 @@ export function FilingCalendarView({
         };
         return held.wide === next.wide && held.tall === next.tall ? held : next;
       });
+    };
     const measure = () => {
       el.style.setProperty("--calendar-head", `${kept()}px`);
       el.style.setProperty("--calendar-height", `${el.clientHeight}px`);
@@ -331,12 +334,15 @@ export function FilingCalendarView({
             left.top;
       }
       widthWas.current = width;
-      // What the new size changes in the drawing is drawn now, before the
-      // browser paints: a page that has just become wide enough for both
-      // faces is never shown for a moment with one, laid out for the other.
-      // A face that comes to be shown by it is then placed by its own rule,
-      // which has the last word: on what is chosen, or on that same month.
-      flushSync(fit);
+      // A change of face is drawn now, before the browser paints: a page
+      // that has just become wide enough for both faces is never shown for
+      // a moment with one, laid out for the other. The face that comes to
+      // be shown is then placed by its own rule, which has the last word:
+      // on what is chosen, or on that same month. How much of the head
+      // stays can wait for the next frame, and has to: drawn here it would
+      // resize what is being observed, inside the observation.
+      if (el.clientWidth >= splitAt !== wideNow.current) flushSync(fit);
+      else fit();
       measure();
     };
     measure();
