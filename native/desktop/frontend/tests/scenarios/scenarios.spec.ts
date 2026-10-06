@@ -1450,6 +1450,35 @@ test("Space on a record with no detail does not scroll the log", async ({
   expect((await logPlace(target)).scrollTop).toBe(before);
 });
 
+test("a pane's note that is cut for want of room still says all of itself", async ({
+  page: target,
+}) => {
+  // A window at 200 percent, in the language with the longest words: the
+  // note beside the TUI's title has room for a few letters.
+  await target.setViewportSize({ width: 640, height: 450 });
+  await open(target, "signed-out", "&lang=hu");
+  await expect(target.locator(".sign-in input[type=password]")).toBeFocused();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  const note = target.locator(".pane-tui .pane-note");
+  const whole = label("desktop.account.signed_out", {}, "hu");
+  await expect(note).toHaveText(whole);
+  expect(
+    await note.evaluate((element) => element.scrollWidth > element.clientWidth),
+  ).toBe(true);
+  // The title beside it is whole, the note says the rest to a pointer that
+  // rests on it, and the pane itself says it in full.
+  expect(
+    await target
+      .locator(".pane-tui .pane-title")
+      .evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+  await expect(note).toHaveAttribute("title", whole);
+  await expect(
+    target.locator(".pane-tui").getByText(whole, { exact: true }).last(),
+  ).toBeInViewport();
+});
+
 test("hiding the TUI from inside it leaves the keyboard in the window", async ({
   page: target,
 }) => {

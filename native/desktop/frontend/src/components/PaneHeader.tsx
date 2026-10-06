@@ -63,14 +63,16 @@ export function PaneHeader({
     >
       {status && <SessionDot phase={status.phase} />}
       {/* The note gives way first: the title is cut only once the note has
-          gone. */}
+          gone. Cut, it still says all of itself to a pointer that rests on
+          it. */}
       <span className="pane-title min-w-0 truncate font-semibold text-foreground">
         {title}
       </span>
       {status?.note && (
         <span
+          title={status.note}
           className={cn(
-            "min-w-0 shrink-[9999] truncate text-xs",
+            "pane-note min-w-0 shrink-[9999] truncate text-xs",
             status.phase === "failed" ? "text-destructive" : "text-faint",
           )}
         >
