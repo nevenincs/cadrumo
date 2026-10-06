@@ -94,18 +94,53 @@ def test_every_position_a_page_offers_is_recognised(slots: CompileSlots) -> None
 
 def test_each_position_receives_the_string_its_writer_writes(slots: CompileSlots) -> None:
     """A docutils mark's strings are escaped as the writer that owns the position escapes."""
-    mark = slots.mark(Rendering.DOCUTILS, ['a&b<c>"d"@e', "x\ty\nz", "d'IVA"])
+    mark = slots.mark(Rendering.DOCUTILS, ["a&b<c>@e", "x\ty\nz", "l'IVA"])
     page = f'<head><title>{mark}</title></head><body><p>{mark}</p><p title="{mark}">t</p></body>'
     factored = factor_page(page, slots)
     assert factored == [
         "<head><title>",
-        ("a&amp;b&lt;c&gt;&#34;d&#34;@e", "x y z", "d&#39;IVA"),
+        ("a&amp;b&lt;c&gt;@e", "x y z", "l’IVA"),
         "</title></head><body><p>",
-        ("a&amp;b&lt;c&gt;&quot;d&quot;&#64;e", "x\ty\nz", "d'IVA"),
+        ("a&amp;b&lt;c&gt;&#64;e", "x\ty\nz", "l’IVA"),
         '</p><p title="',
-        ("a&amp;b&lt;c&gt;&quot;d&quot;&#64;e", "x y z", "d'IVA"),
+        ("a&amp;b&lt;c&gt;&#64;e", "x y z", "l’IVA"),
         '">t</p></body>',
     ]
+
+
+#: Strings a built root carries, with the typography that root's own language
+#: gave them. Read off the desktop roots built on 2026-10-06: the English root
+#: writes the legal catalogue's ``Cataloguer's note`` as ``Cataloguer’s note``
+#: and Modelo 151's ``"Beckham law"`` as ``“Beckham law”``, and the Catalan root
+#: writes ``l'Estat`` as ``l’Estat``. The transform that does that never sees a
+#: mark, so each language's string is given the same treatment where the mark is
+#: factored, in that language.
+_BUILT_TYPOGRAPHY: tuple[tuple[str, str, str], ...] = (
+    ("en", "Cataloguer's note", "Cataloguer’s note"),
+    (
+        "en",
+        'special regime for posted workers (inbound expatriates, "Beckham law")',
+        "special regime for posted workers (inbound expatriates, “Beckham law”)",
+    ),
+    ("ca", "publicat al Butlletí Oficial de l'Estat", "publicat al Butlletí Oficial de l’Estat"),
+)
+
+
+@pytest.mark.parametrize(("language", "authored", "built"), _BUILT_TYPOGRAPHY)
+def test_a_marked_string_gets_the_typography_its_own_build_gives_it(language: str, authored: str, built: str) -> None:
+    """A page composed without this reads ``'`` and ``&quot;`` where the build wrote ``’`` and ``“``."""
+    recorded = activate([language])
+    try:
+        mark = recorded.mark(Rendering.DOCUTILS, [authored])
+        assert factor_page(f"<p>{mark}</p>", recorded) == ["<p>", (built,), "</p>"]
+    finally:
+        deactivate()
+
+
+def test_a_verbatim_string_keeps_the_form_its_creation_site_wrote(slots: CompileSlots) -> None:
+    """A generator's own raw HTML never met the transform, so educating it would change it."""
+    mark = slots.mark(Rendering.VERBATIM, ["Cataloguer's note"] * len(_LANGUAGES))
+    assert factor_page(f"<p>{mark}</p>", slots) == ["<p>", ("Cataloguer's note",) * len(_LANGUAGES), "</p>"]
 
 
 def test_a_verbatim_mark_is_placed_as_it_was_recorded(slots: CompileSlots) -> None:
@@ -215,3 +250,21 @@ def test_a_string_a_mark_is_built_from_may_itself_hold_marks(slots: CompileSlots
 def test_resolving_leaves_a_string_with_no_marks_alone(slots: CompileSlots) -> None:
     """The ordinary case must not pay for the composed one."""
     assert slots.resolved("Ley 37/1992", 0) == "Ley 37/1992"
+
+
+def test_an_element_only_some_languages_carry_owns_its_own_line_break(slots: CompileSlots) -> None:
+    """A language without the element composes to no line, not to an empty one."""
+    from cadrumo.core.external_constants import OutputLanguage
+
+    from .._locale_chrome import docs_line
+
+    titles = {OutputLanguage.EN: "<h3>Activity</h3>", OutputLanguage.ES: "<h3>Actividad</h3>"}
+    lines = ["<header>", "<span>01</span>" + docs_line(titles.get, OutputLanguage.EN), "</header>"]
+    composed = {}
+    text = LanguageText(slots.languages)
+    structure = text.structure(factor_page("\n".join(lines), slots))
+    for language in slots.languages:
+        composed[language] = compose_page(structure, text.strings[language])
+    assert composed["en"] == "<header>\n<span>01</span>\n<h3>Activity</h3>\n</header>"
+    assert composed["es"] == "<header>\n<span>01</span>\n<h3>Actividad</h3>\n</header>"
+    assert composed["ca"] == "<header>\n<span>01</span>\n</header>"

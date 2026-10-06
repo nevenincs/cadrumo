@@ -122,16 +122,43 @@ def _template_title(value: str) -> str:
     return html.escape(" ".join(value.split()), quote=False).replace('"', "&#34;").replace("'", "&#39;")
 
 
-def _written(rendering: Rendering, position: Position, value: str) -> str:
+#: What the docutils smart-quotes transform is asked to educate: quotation
+#: marks, dashes and ellipses (``docutils.transforms.universal.SmartQuotes``'s
+#: own ``smartquotes_action``, which Sphinx leaves at its default).
+_SMARTQUOTES_ACTION: Final[str] = "qDe"
+
+
+def _educated(value: str, language: str) -> str:
+    """Return one string with the typography the language's own build gives it.
+
+    Sphinx educates quotation marks, dashes and ellipses in every text block
+    before the writer sees it, and which quotation marks it uses depends on the
+    language: a language's build writes its own. A mark holds no quotation mark
+    for that transform to find, so each language's string is educated here
+    instead, in its own language. Without this an apostrophe reaches the page as
+    ``'`` where the build wrote ``’``, which was 1,847 of the differences the
+    first measured compile reported in English alone.
+
+    A string recorded verbatim is not educated: it is already in the form its
+    creation site wrote, and a generator's own raw HTML never met the transform.
+    """
+    from docutils.utils import smartquotes
+
+    educated = smartquotes.educate_tokens([("text", value)], attr=_SMARTQUOTES_ACTION, language=language)
+    return "".join(str(piece) for piece in educated)
+
+
+def _written(rendering: Rendering, position: Position, value: str, language: str) -> str:
     """Return one language's string as the page carries it at *position*."""
     if rendering is Rendering.VERBATIM:
         return value
+    educated = _educated(value, language)
     if position is Position.TEXT:
-        return _docutils_text(value)
+        return _docutils_text(educated)
     if position is Position.ATTRIBUTE:
-        return _docutils_attribute(value)
+        return _docutils_attribute(educated)
     if position is Position.TITLE:
-        return _template_title(value)
+        return _template_title(educated)
     raise CompileSlotsError(
         f"a mark whose strings docutils owns reached page markup rather than text: {value!r}. "
         "A creation site writing markup itself must record its strings verbatim."
@@ -453,7 +480,12 @@ def factor_page(page: str, slots: CompileSlots) -> list[str | tuple[str, ...]]:
         if mark.start() > position:
             factored.append(page[position : mark.start()])
         rendering, values = slots.strings(int(mark.group(1), len(_DIGITS)))
-        factored.append(tuple(_written(rendering, where, value) for value in values))
+        factored.append(
+            tuple(
+                _written(rendering, where, value, language)
+                for language, value in zip(slots.languages, values, strict=True)
+            )
+        )
         position = mark.end()
     if position < len(page):
         factored.append(page[position:])

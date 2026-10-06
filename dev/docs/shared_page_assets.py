@@ -16,6 +16,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from .compile_slots import active
+
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
@@ -66,6 +68,19 @@ def chrome_strings_script(strings: Mapping[str, str]) -> str:
     return f"window.{CHROME_STRINGS_GLOBAL}={json.dumps(dict(strings), ensure_ascii=True, sort_keys=True)};\n"
 
 
+def language_chrome_strings(language: str) -> str:
+    """Return the name a multilingual compile writes one language's strings under.
+
+    The canonical :data:`CHROME_STRINGS_SCRIPT` is what every page links, and
+    under the one compile its bytes carry marks rather than any language's
+    strings. Each language's real script is written beside it under this name,
+    for the driver to store as that language's copy of the canonical path
+    (:func:`dev.docs.compile_once.compile_once`). A variant is build output of
+    the compile and is never served.
+    """
+    return f"cadrumo-chrome-strings.{language}.js"
+
+
 def _write_shared_page_assets(app: Sphinx) -> None:
     # Imported here: only a documentation build has Sphinx and the theme installed.
     from furo import get_pygments_style_colors
@@ -93,9 +108,17 @@ def _write_shared_page_assets(app: Sphinx) -> None:
     static.mkdir(parents=True, exist_ok=True)
     # Written before any page renders, so each page's link carries the file's checksum.
     (static / THEME_VARIABLES_STYLESHEET).write_text(stylesheet, encoding="utf-8", newline="\n")
-    (static / CHROME_STRINGS_SCRIPT).write_text(
-        chrome_strings_script(app.config.html_context.get("cadrumo_chrome", {})), encoding="utf-8", newline="\n"
-    )
+    chrome = app.config.html_context.get("cadrumo_chrome", {})
+    (static / CHROME_STRINGS_SCRIPT).write_text(chrome_strings_script(chrome), encoding="utf-8", newline="\n")
+    slots = active()
+    if slots is None:
+        return
+    for index, language in enumerate(slots.languages):
+        (static / language_chrome_strings(language)).write_text(
+            chrome_strings_script({name: slots.resolved(value, index) for name, value in chrome.items()}),
+            encoding="utf-8",
+            newline="\n",
+        )
 
 
 def register(app: Sphinx) -> None:

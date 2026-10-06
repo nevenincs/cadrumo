@@ -31,7 +31,7 @@ from cadrumo.core.i18n.render import lookup_translation
 
 from .compile_slots import Rendering, active
 
-__all__ = ["DocsChromeError", "docs_chrome", "docs_fragment"]
+__all__ = ["DocsChromeError", "docs_chrome", "docs_fragment", "docs_line"]
 
 
 class DocsChromeError(RuntimeError):
@@ -109,6 +109,38 @@ def docs_fragment(render: Callable[[OutputLanguage], str], language: OutputLangu
         Rendering.VERBATIM,
         [slots.resolved(render(OutputLanguage(carried)), index) for index, carried in enumerate(slots.languages)],
     )
+
+
+def docs_line(render: Callable[[OutputLanguage], str | None], language: OutputLanguage, /) -> str:
+    """Return a line break and an element for each language that has one, nothing for the rest.
+
+    An element some languages carry and others do not cannot be a line of its
+    own: the generated pages assemble raw HTML as a list of lines that
+    :func:`~dev.docs.casilla_markup._raw_html` indents into an RST block, so an
+    element that is sometimes empty would leave an empty line where the page has
+    no line at all, and a mark spanning two lines would break the block's
+    indentation.
+
+    So the mark owns its own line break and is written at the END of the
+    preceding line. A language with the element reads a newline and the element;
+    a language without it reads nothing, and composes to no line. The mark stays
+    on one line, the indentation rule is untouched, and what is stored is the
+    element rather than the lines around it.
+
+    Args:
+        render: Returns the element in one language, or None where that
+            language has no such element.
+        language: The language a single-language build renders.
+
+    Returns:
+        The line break and element, empty where the language has neither.
+    """
+
+    def line(carried: OutputLanguage) -> str:
+        element = render(carried)
+        return f"\n{element}" if element else ""
+
+    return docs_fragment(line, language)
 
 
 def _authored(key: str, language: OutputLanguage, values: Mapping[str, object]) -> str:

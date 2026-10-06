@@ -44,6 +44,7 @@ from .build_paths import DOCS_BUILD_ROOT_ENV
 from .compile_slots import SLOTS_FILE, context_at, markup_contexts, read_slots
 from .language_roots import compose_root, store_compiled_root
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+from .shared_page_assets import CHROME_STRINGS_SCRIPT, language_chrome_strings
 from .shared_structure import compare_page
 
 #: The environment key ``docs/conf.py`` reads to carry every language.
@@ -159,6 +160,23 @@ def _site_files(root: Path) -> dict[str, Path]:
     return files
 
 
+def _per_language_assets(files: dict[str, Path], languages: Sequence[str]) -> dict[str, dict[str, Path]]:
+    """Return each language's own copy of the assets the compile wrote per language.
+
+    The variants are build output of the compile, so they are taken out of the
+    site's shared files: what the site holds is the canonical path, stored once
+    per language from these.
+    """
+    per_language: dict[str, dict[str, Path]] = {language: {} for language in languages}
+    canonical = f"_static/{CHROME_STRINGS_SCRIPT}"
+    for language in languages:
+        variant = f"_static/{language_chrome_strings(language)}"
+        source = files.pop(variant, None)
+        if source is not None:
+            per_language[language][canonical] = source
+    return per_language
+
+
 def _pin_build_environment(build_root: Path, *, flavor: str, jobs: int | None) -> None:
     """Pin the one compile's selectors so an ambient setting cannot reshape it.
 
@@ -234,12 +252,9 @@ def compile_once(
         )
     slots = read_slots(record)
     stored = destination / "stored"
-    store_compiled_root(
-        _site_files(compiled),
-        slots,
-        stored,
-        language_files={language: {} for language in slots.languages},
-    )
+    files = _site_files(compiled)
+    language_files = _per_language_assets(files, slots.languages)
+    store_compiled_root(files, slots, stored, language_files=language_files)
     roots: dict[str, Path] = {}
     for language in slots.languages:
         roots[language] = destination / "roots" / language
