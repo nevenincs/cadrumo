@@ -2,6 +2,9 @@ include_guard(GLOBAL)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "Use an out-of-source build directory")
 endif()
+include("${CMAKE_CURRENT_LIST_DIR}/BinaryDirectory.cmake")
+cadrumo_require_enrolled_binary_directory(
+  "${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/CMakePresets.json" "${CMAKE_CURRENT_LIST_DIR}/../..")
 
 # Build output ownership. Helpers consume build-paths.json.
 set(CADRUMO_BUILD_DIRECTORIES
