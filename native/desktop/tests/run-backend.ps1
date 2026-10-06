@@ -3,20 +3,22 @@
 .SYNOPSIS
   Run native Tauri backend checks without building the frontend or package.
 .DESCRIPTION
-  BuildDirectory must already contain the standalone CMake build-path manifest
-  and generated native contract. Unit runs mock-IPC, policy and subprocess tests.
+  BuildDirectory defaults to the binary directory of the Windows x64 configure
+  preset in native\desktop\CMakePresets.json. It must already contain the
+  standalone CMake build-path manifest and generated native contract. Unit runs
+  mock-IPC, policy and subprocess tests.
   Package adds real PTY/projection probes against an existing assembled package;
   use Filter to select a capability. Neither mode starts the GUI or rebuilds the
   supplied package. Clippy checks native targets. Cargo compiles test artifacts
   incrementally; CARGO_TARGET_DIR may select an existing compiler cache.
 .EXAMPLE
-  ./native/desktop/tests/run-backend.ps1 -BuildDirectory build/windows-x86-64/e2e-desktop -Filter shell::sign_in
+  ./native/desktop/tests/run-backend.ps1 -Filter shell::sign_in
 .EXAMPLE
-  ./native/desktop/tests/run-backend.ps1 -BuildDirectory build/windows-x86-64/e2e-desktop -Mode Package -PackageRoot <existing-app> -Filter python_kind_is_a_repl
+  ./native/desktop/tests/run-backend.ps1 -Mode Package -PackageRoot <existing-app> -Filter python_kind_is_a_repl
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true)][string]$BuildDirectory,
+    [string]$BuildDirectory,
     [ValidateSet('Unit','Package','Clippy')][string]$Mode = 'Unit',
     [string]$PackageRoot,
     [string]$Filter,
@@ -25,6 +27,16 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $repository = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..\..')).ProviderPath
+# The standalone desktop project's presets own the default build directory:
+# the preset that configures the Windows x64 target names it.
+function Get-DesktopPreset([string]$Source) {
+    $presets = (Get-Content -LiteralPath (Join-Path $Source 'CMakePresets.json') -Raw | ConvertFrom-Json).configurePresets
+    $selected = @($presets | Where-Object { $_.cacheVariables.CADRUMO_TARGET -eq 'windows-x86-64' })
+    if ($selected.Count -ne 1) { throw 'The desktop presets do not name exactly one Windows x64 configure preset.' }
+    $binary = $selected[0].binaryDir.Replace('${sourceDir}', $Source).Replace('${presetName}', $selected[0].name)
+    return [pscustomobject]@{ Name = $selected[0].name; BinaryDirectory = [IO.Path]::GetFullPath($binary) }
+}
+if (-not $BuildDirectory) { $BuildDirectory = (Get-DesktopPreset (Join-Path $repository 'native\desktop')).BinaryDirectory }
 $buildRoot = (Resolve-Path -LiteralPath $BuildDirectory).ProviderPath
 $paths = (Get-Content -LiteralPath (Join-Path $buildRoot 'build-paths.json') -Raw | ConvertFrom-Json).paths
 function Resolve-BuildMember([string]$Member) {

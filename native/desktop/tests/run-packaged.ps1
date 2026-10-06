@@ -8,7 +8,10 @@
   the test host with the webview2-remote-debugging feature and runs the
   desktop-packaged-test target against an assembled package with documentation.
   Each run uses a fresh storage root. Results go to
-  <BuildDirectory>\desktop\test-results\packaged\<timestamp>\.
+  <BuildDirectory>\desktop\test-results\packaged\<timestamp>\. BuildDirectory
+  defaults to the binary directory of the Windows x64 configure preset in
+  native\desktop\CMakePresets.json, and the build is then configured through
+  that preset.
 
   Give either -PackageRoot, an assembled package that carries
   docs\user\manifest.json, or -Kit, a directory holding app\ (a package) and
@@ -48,7 +51,23 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 
 $Repository = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..\..')).ProviderPath
-if (-not $BuildDirectory) { $BuildDirectory = Join-Path $Repository 'build\desktop-packaged' }
+$Desktop = Join-Path $Repository 'native\desktop'
+
+# The standalone desktop project's presets own the default build directory:
+# the preset that configures the Windows x64 target names it.
+function Get-DesktopPreset([string]$Source) {
+    $presets = (Get-Content -LiteralPath (Join-Path $Source 'CMakePresets.json') -Raw | ConvertFrom-Json).configurePresets
+    $selected = @($presets | Where-Object { $_.cacheVariables.CADRUMO_TARGET -eq 'windows-x86-64' })
+    if ($selected.Count -ne 1) { throw 'The desktop presets do not name exactly one Windows x64 configure preset.' }
+    $binary = $selected[0].binaryDir.Replace('${sourceDir}', $Source).Replace('${presetName}', $selected[0].name)
+    return [pscustomobject]@{ Name = $selected[0].name; BinaryDirectory = [IO.Path]::GetFullPath($binary) }
+}
+
+$Preset = $null
+if (-not $BuildDirectory) {
+    $Preset = Get-DesktopPreset $Desktop
+    $BuildDirectory = $Preset.BinaryDirectory
+}
 $BuildDirectory = [IO.Path]::GetFullPath($BuildDirectory)
 if (-not $DevPython) { $DevPython = Join-Path $Repository '.venv\Scripts\python.exe' }
 if (-not (Test-Path -LiteralPath $DevPython)) { throw "Development interpreter not found: $DevPython (pass -DevPython)" }
@@ -134,11 +153,17 @@ if (-not $PrepareOnly) {
 }
 
 # Build and run -------------------------------------------------------------------
-$configure = @('-S', (Join-Path $Repository 'native\desktop'), '-B', $BuildDirectory,
-    "-DCMAKE_BUILD_TYPE=$Configuration", "-DCADRUMO_DESKTOP_PACKAGE_ROOT=$PackageRoot", "-DCADRUMO_DEV_PYTHON=$DevPython")
-if (-not (Test-Path -LiteralPath (Join-Path $BuildDirectory 'CMakeCache.txt')) -and (Get-Command ninja -ErrorAction SilentlyContinue)) {
-    $configure = @('-G', 'Ninja') + $configure
+$configure = @('-S', $Desktop)
+if ($Preset) {
+    # The preset pins the generator and the binary directory.
+    $configure += @('--preset', $Preset.Name)
+} else {
+    if (-not (Test-Path -LiteralPath (Join-Path $BuildDirectory 'CMakeCache.txt')) -and (Get-Command ninja -ErrorAction SilentlyContinue)) {
+        $configure = @('-G', 'Ninja') + $configure
+    }
+    $configure += @('-B', $BuildDirectory, "-DCMAKE_BUILD_TYPE=$Configuration")
 }
+$configure += @("-DCADRUMO_DESKTOP_PACKAGE_ROOT=$PackageRoot", "-DCADRUMO_DEV_PYTHON=$DevPython")
 Invoke-Checked 'cmake' $configure
 Push-Location $Repository
 try { Invoke-Checked $DevPython @('-B', '-m', 'dev.packaging.native.generate', (Join-Path $BuildDirectory 'generated')) }
