@@ -774,12 +774,29 @@ for (const state of ACCOUNT_STATES)
       await expect(calendarRegion).toContainText(label(state.saying));
     else
       await expect(calendarRegion.getByRole("listitem").first()).toBeVisible();
-    await expect(
-      calendarRegion.getByRole("button", {
-        name: label("desktop.signin.submit"),
-        exact: true,
-      }),
-    ).toHaveCount(state.offers.includes("desktop.signin.submit") ? 1 : 0);
+    for (const key of state.offers.filter(
+      (offer) => offer !== "desktop.account.sign_out",
+    ))
+      await expect(
+        calendarRegion.getByRole("button", { name: label(key), exact: true }),
+      ).toBeVisible();
+    for (const key of state.withholds)
+      await expect(
+        calendarRegion.getByRole("button", { name: label(key), exact: true }),
+      ).toHaveCount(0);
+    // Messages has a count only for a signed-in profile; otherwise it says
+    // the same thing the panes say.
+    const messages = target
+      .getByRole("navigation", { name: label("desktop.rail.label") })
+      .getByRole("button", { name: label("desktop.rail.messages") });
+    if (state.saying) {
+      await expect(messages).toHaveAccessibleName(
+        `${label("desktop.rail.messages")}, ${label(state.saying)}`,
+      );
+      await expect(messages.locator("[data-pin]")).toHaveCount(1);
+    } else {
+      await expect(messages.locator("[data-slot=badge]")).toHaveText("3");
+    }
     await calendarToggle.click();
     await expect(calendarRegion).toHaveCount(0);
 
@@ -1259,14 +1276,31 @@ test("views-refused: a read that fails is said, never drawn as an empty calendar
   const again = page.getByRole("button", {
     name: label("desktop.calendar.refresh"),
   });
+  // Marked, so the same elements can be told from new ones afterwards.
+  await page.getByRole("alert").evaluate((node) => {
+    node.setAttribute("data-heard", "");
+  });
+  await again.evaluate((node) => node.setAttribute("data-kept", ""));
+  // Settled first: the refusals so far have each had the account read.
+  await expect
+    .poll(async () => {
+      const count = await calls(target, "signInStatus")();
+      await target.waitForTimeout(150);
+      return count === (await calls(target, "signInStatus")()) ? count : -1;
+    })
+    .toBeGreaterThan(0);
+  const statusReads = await calls(target, "signInStatus")();
   await again.focus();
   await target.keyboard.press("Enter");
   await expect.poll(calendarReads(target)).toBe(2);
   await expect(page.getByRole("alert")).toContainText("timed_out");
-  // The button that asked is still there, and still holds the keyboard.
+  // The button that asked is the same one, and still holds the keyboard.
   await expect(again).toBeFocused();
-  // A refused read has the account looked at again.
-  await expect.poll(calls(target, "signInStatus")).toBeGreaterThanOrEqual(2);
+  await expect(again).toHaveAttribute("data-kept", "");
+  // The failure is said by a new alert, so it is heard a second time.
+  await expect(page.getByRole("alert")).not.toHaveAttribute("data-heard");
+  // This refusal has the account looked at again: one more status read.
+  await expect.poll(calls(target, "signInStatus")).toBe(statusReads + 1);
 });
 
 test("unsupported: where sign-in is the TUI's, the calendar is asked for and shown", async ({
@@ -1351,8 +1385,10 @@ test("the calendar's own actions replace the documentation's while it is shown",
     ).toHaveCount(0);
   }
   await target.keyboard.press("Escape");
-  // A zoom chord changes nothing that is not on screen.
+  // A zoom chord changes nothing that is not on screen. The layout is
+  // saved a quarter of a second after a change, so it is given that long.
   await target.keyboard.press("ControlOrMeta+=");
+  await target.waitForTimeout(500);
   await calendarButton(target).click();
   await target
     .getByRole("button", { name: label("desktop.rail.search") })
@@ -1541,13 +1577,14 @@ test("messages are read at sign-in and dropped at sign-out, never while signed o
   await open(target, "signed-out");
   const button = messagesButton(target);
   // Under the dialog the rail is out of the accessibility tree, so the
-  // button is found by its attribute: its name is the label and no more.
+  // button is found by its attribute: no count, and the account's own
+  // reason why.
   await expect(target.locator(".sign-in")).toBeVisible();
-  const plain = target.locator(
-    `.rail button[aria-label="${label("desktop.rail.messages")}"]`,
-  );
+  const withheld = named("desktop.account.signed_out");
+  const plain = target.locator(`.rail button[aria-label="${withheld}"]`);
   await expect(plain).toHaveCount(1);
   await expect(plain.locator("[data-slot=badge]")).toHaveCount(0);
+  await expect(plain.locator("[data-pin=unknown]")).toHaveCount(1);
   expect(await calls(target, "notifications")()).toBe(0);
   await password(target).fill("demo");
   await submit(target).click();
@@ -1564,9 +1601,111 @@ test("messages are read at sign-in and dropped at sign-out, never while signed o
       exact: true,
     })
     .click();
-  await expect(button).toHaveAccessibleName(label("desktop.rail.messages"));
+  await expect(button).toHaveAccessibleName(withheld);
   await expect(button.locator("[data-slot=badge]")).toHaveCount(0);
   await expect.poll(calls(target, "notifications")).toBe(1);
+});
+
+test("until the messages answer, the button shows them as not known", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=signed-in&latency=1500&bar=off");
+  const button = messagesButton(target);
+  // No count yet is not none unread: the hollow pin stands meanwhile.
+  await expect(button.locator("[data-pin=unknown]")).toHaveCount(1);
+  await expect(button.locator("[data-slot=badge]")).toHaveCount(0);
+  await expect(button.locator("[data-slot=badge]")).toHaveText("3");
+  await expect(button.locator("[data-pin]")).toHaveCount(0);
+});
+
+test("messages, with the TUI withheld, leads to the way in", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  // From the documentation's side of the window, with the TUI hidden.
+  await target
+    .locator(".pane-tui .pane-head")
+    .getByRole("button")
+    .last()
+    .click();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await messagesButton(target).click();
+  await expect(
+    target.locator(".pane-tui").getByRole("button", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    }),
+  ).toBeFocused();
+});
+
+test("the dialog's way to the TUI takes the keyboard there, wherever it was opened from", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await target.keyboard.press("Escape");
+  await calendarButton(target).click();
+  await target
+    .getByRole("region", { name: label("desktop.calendar.title") })
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await target
+    .locator(".sign-in")
+    .getByRole("button", {
+      name: label("desktop.signin.open_tui"),
+      exact: true,
+    })
+    .click();
+  await expect(tui(target)).toBeFocused();
+});
+
+test("carrying on in the TUI, the calendar looks at the account again", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await target
+    .locator(".sign-in")
+    .getByRole("button", {
+      name: label("desktop.signin.open_tui"),
+      exact: true,
+    })
+    .click();
+  await expect(tui(target)).toBeFocused();
+  const before = await calls(target, "signInStatus")();
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  // The window does not know how the TUI's sign-in went: it says so,
+  // looks once on opening, and offers to look again.
+  await expect(page).toContainText(label("desktop.account.in_tui"));
+  await expect.poll(calls(target, "signInStatus")).toBe(before + 1);
+  await page
+    .getByRole("button", { name: label("desktop.calendar.refresh") })
+    .click();
+  await expect.poll(calls(target, "signInStatus")).toBe(before + 2);
+  expect(await calendarReads(target)()).toBe(0);
+});
+
+test("signing out from a terminal leaves the keyboard on the way back in", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await target.locator('[data-terminal="tui"] .xterm-screen').click();
+  await expect(tui(target)).toBeFocused();
+  await target.keyboard.press("ControlOrMeta+Shift+k");
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.account.sign_out"));
+  await target.keyboard.press("Enter");
+  await expect(
+    target.locator(".pane-tui").getByRole("button", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    }),
+  ).toBeFocused();
+  // Signing out here is not a reason to ask for the password again.
+  await expect(target.locator(".sign-in")).toHaveCount(0);
 });
 
 test("what is not known of the messages is said, never shown as none unread", async ({

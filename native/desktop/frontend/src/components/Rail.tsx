@@ -60,12 +60,14 @@ function RailButton({ item }: { item: RailItem }) {
             </Badge>
           ) : item.pin ? (
             // Hollow, as a session's dot is once there is nothing running:
-            // not a zero, an absence of an answer.
+            // not a zero, an absence of an answer. It is centred where a
+            // count is, clear of the icon, so nothing has to be painted
+            // behind it.
             <span
               data-pin={item.pin}
               aria-hidden="true"
               className={cn(
-                "absolute top-1 right-1 size-2 rounded-full bg-chrome ring-1 ring-inset",
+                "absolute top-0.5 right-0.5 size-2 rounded-full ring-1 ring-inset",
                 item.pin === "failed" ? "ring-destructive" : "ring-faint",
               )}
             />

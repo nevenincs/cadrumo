@@ -45,6 +45,7 @@ export function useFilingCalendar(
 ) {
   const [read, setRead] = useState<Read>({ kind: "loading" });
   const [refreshing, setRefreshing] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const request = useRef(0);
   const refused = useRef(onRefused);
   refused.current = onRefused;
@@ -68,6 +69,7 @@ export function useFilingCalendar(
         if (mine !== request.current) return;
         setRead(next);
         setRefreshing(false);
+        setAttempt((count) => count + 1);
         if (next.kind === "failed") refused.current();
       });
   }, [views]);
@@ -86,6 +88,8 @@ export function useFilingCalendar(
   return {
     state,
     refreshing: refreshing && state.kind !== "loading",
+    /** How many reads have answered: tells one failure from the next. */
+    attempt,
     refresh,
   };
 }

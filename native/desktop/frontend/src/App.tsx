@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
-import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { IconButton } from "@/components/ui/icon-button";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Spinner } from "@/components/ui/spinner";
@@ -47,6 +52,7 @@ import { useFilingCalendar } from "./shell/calendar";
 import { useMessages } from "./shell/messages";
 import { useSignIn } from "./shell/signIn";
 import { FilingCalendarView } from "./components/FilingCalendar";
+import { Button } from "@/components/ui/button";
 import { Split } from "./components/Split";
 import {
   TerminalPane,
@@ -298,6 +304,9 @@ export function App({ host }: { host: Host }) {
       docs.current?.focus();
     calendarWas.current = calendarVisible;
   }, [calendarVisible, firstPaneShown]);
+  useEffect(() => {
+    if (calendarVisible && phase === "in-tui") recheckAccount();
+  }, [calendarVisible, phase, recheckAccount]);
   const askSignIn = useCallback(() => {
     const element = document.activeElement;
     signInOpener.current = {
@@ -467,6 +476,13 @@ export function App({ host }: { host: Host }) {
       return;
     }
     if (wish.granted && document.activeElement !== document.body) return;
+    // Withheld, the TUI's pane holds the way in instead of a terminal.
+    const wayIn = signInButton.current;
+    if (wish.view === "tui" && wayIn && wayIn.offsetParent !== null) {
+      wayIn.focus();
+      wish.granted = true;
+      return;
+    }
     const target = document.querySelector<HTMLElement>(
       wish.view === "logs"
         ? ".logview .filter-text"
@@ -516,10 +532,18 @@ export function App({ host }: { host: Host }) {
   // Every way into the TUI's own flow, from the pane, the dialog, settings
   // or the palette: the TUI is shown and the keyboard goes to it.
   const continueInTui = useCallback(() => {
+    // Wherever it was asked from, the keyboard goes on to the TUI.
+    signInOpener.current = null;
     accountRef.current.openTui();
     setSettingsOpen(false);
     showTui();
   }, [showTui]);
+  useEffect(() => {
+    // Signed out from here, no dialog follows. If the terminal that held
+    // focus went with the session, the pane's way back in takes it.
+    if (gated && signInDismissed && document.activeElement === document.body)
+      focusView("tui");
+  }, [gated, signInDismissed, focusView]);
 
   const openTab = useCallback(
     (tab: PanelTab, { toggle = true }: { toggle?: boolean } = {}) => {
@@ -944,7 +968,22 @@ export function App({ host }: { host: Host }) {
         keywords: "notifications notificaciones dehu inbox unread",
         enabled: () => views !== undefined,
         // The notifications are read in the TUI; the window shows the count.
-        run: showTui,
+        // Why there is no count is said where a tap reaches too, not only
+        // in a tooltip.
+        run: () => {
+          if (messages.kind === "failed")
+            say(
+              `${t("desktop.rail.messages")}: ${t("desktop.messages.failed", { code: messages.code })}`,
+            );
+          else if (
+            messages.kind === "ready" &&
+            messages.summary.captured_at === null
+          )
+            say(
+              `${t("desktop.rail.messages")}: ${t("desktop.messages.never")}`,
+            );
+          showTui();
+        },
       },
       {
         id: "link.aeat",
@@ -1049,6 +1088,8 @@ export function App({ host }: { host: Host }) {
       docsEntry,
       phase,
       views,
+      messages,
+      say,
       showTui,
       calendarOn,
       calendarVisible,
@@ -1480,7 +1521,14 @@ export function App({ host }: { host: Host }) {
                     hint: t("desktop.messages.failed", { code: messages.code }),
                     pin: "failed",
                   }
-                : {}),
+                : // Not read: while the account withholds it, for the
+                  // account's own reason; otherwise the answer is on its way.
+                  {
+                    pin: "unknown",
+                    ...(reader === null && accountLabel(phase)
+                      ? { hint: t(accountLabel(phase) ?? "") }
+                      : {}),
+                  }),
             onClick: () => runAction("view.messages"),
           } satisfies RailItem,
         ]
@@ -1595,22 +1643,34 @@ export function App({ host }: { host: Host }) {
         <FilingCalendarView
           page={calendarPage}
           state={calendar.state}
-          // Withheld, it says what the rest of the window says of the
-          // account, and offers a sign-in only where one can be given.
-          gate={
-            phase === "checking"
-              ? { title: t("desktop.signin.checking"), pending: true }
-              : {
-                  title: t(accountLabel(phase) ?? "desktop.account.unknown"),
-                  lead: mayEnterPassword
-                    ? t("desktop.calendar.signed_out")
-                    : undefined,
-                }
+          attempt={calendar.attempt}
+          // Withheld, it says what the TUI pane says of the account, with
+          // the same ways on. While the person carries on in the TUI the
+          // window does not know how that went: it offers to look again.
+          withheld={
+            phase === "in-tui" ? (
+              <Empty>
+                <EmptyMedia>
+                  <Icon name="tui" />
+                </EmptyMedia>
+                <EmptyTitle>{t("desktop.account.in_tui")}</EmptyTitle>
+                <Button variant="outline" onClick={recheckAccount}>
+                  {t("desktop.calendar.refresh")}
+                </Button>
+              </Empty>
+            ) : (
+              <SignedOut
+                account={account}
+                lead={t("desktop.calendar.signed_out")}
+                quiet
+                onSignIn={askSignIn}
+                onOpenTui={continueInTui}
+              />
+            )
           }
           locale={locale}
           refreshing={calendar.refreshing}
           onRefresh={calendar.refresh}
-          onSignIn={mayEnterPassword ? askSignIn : undefined}
         />
       )}
       {/* Put aside, not unloaded: the page it was on is there on return. */}
@@ -1949,10 +2009,19 @@ export function App({ host }: { host: Host }) {
               if (!open) accountRef.current.settle();
             }}
             onOpenTui={continueInTui}
-            // Focus goes back to what asked for the dialog while that is
-            // still on screen. Otherwise: to the page that asked, to the
-            // TUI's way back in or the TUI that has just started, and last
-            // to the rail.
+            // Opened by the gate closing rather than by a press, the dialog
+            // still took focus from somewhere: that is where it returns.
+            onOpening={(from) => {
+              signInOpener.current ??= {
+                element: from,
+                calendar: from?.closest(".calendar-page") != null,
+              };
+            }}
+            // Put aside, focus goes back to what the dialog took it from
+            // while that is on screen, else to the page it was in, else to
+            // the TUI's way back in. Admitted, it goes on: to the calendar
+            // the sign-in was asked from, else to the TUI that has started.
+            // The rail is the last resort of both.
             onClosed={() => {
               const opener = signInOpener.current;
               signInOpener.current = null;
@@ -1961,14 +2030,17 @@ export function App({ host }: { host: Host }) {
                 element.isConnected &&
                 element.offsetParent !== null;
               const from = opener?.element ?? null;
-              if (shown(from)) from.focus();
-              else if (opener?.calendar && shown(calendarPage.current))
-                calendarPage.current.focus();
-              else if (shown(signInButton.current))
-                signInButton.current.focus();
-              else if (tuiVisible && !account.gated) focusView("tui");
-              else if (shown(calendarPage.current))
-                calendarPage.current.focus();
+              const page = calendarPage.current;
+              if (account.gated) {
+                if (shown(from)) from.focus();
+                else if (opener?.calendar && shown(page)) page.focus();
+                else if (shown(signInButton.current))
+                  signInButton.current.focus();
+                else if (shown(page)) page.focus();
+                else focusRail();
+              } else if (opener?.calendar && shown(page)) page.focus();
+              else if (tuiVisible) focusView("tui");
+              else if (shown(page)) page.focus();
               else focusRail();
             }}
           />

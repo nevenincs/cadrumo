@@ -131,15 +131,39 @@ for (const language of ["en", "hu"])
     // How far off each open obligation is stays on screen at this width:
     // seven of the fixture's nine are not filed.
     await expect(page.locator(".calendar-distance:visible")).toHaveCount(7);
-    // A finger scrolls the page.
+    // A finger scrolls the page: a real drag, sent as touch input.
     const box = (await page.boundingBox())!;
-    await target.touchscreen.tap(box.x + box.width / 2, box.y + 20);
-    await page.evaluate((element) => element.scrollTo(0, 200));
-    expect(
-      await page.evaluate((element) => element.scrollTop),
-      language,
-    ).toBeGreaterThan(0);
+    const client = await target.context().newCDPSession(target);
+    const x = box.x + box.width / 2;
+    const from = box.y + box.height - 30;
+    const touch = (type: "touchStart" | "touchMove" | "touchEnd", y: number) =>
+      client.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+      });
+    await touch("touchStart", from);
+    for (let step = 1; step <= 10; step++)
+      await touch("touchMove", from - step * 12);
+    await touch("touchEnd", from - 120);
+    await expect
+      .poll(() => page.evaluate((element) => element.scrollTop), {
+        message: language,
+      })
+      .toBeGreaterThan(0);
   });
+
+test("a tap on messages says why there is no count", async ({
+  page: target,
+}) => {
+  // Never synced: under a finger there is no tooltip to say so.
+  await open(target, "empty");
+  await target
+    .locator(`.rail button[aria-label^="${label("desktop.rail.messages")}"]`)
+    .tap();
+  await expect(target.locator("[data-slot=toast]")).toContainText(
+    label("desktop.messages.never"),
+  );
+});
 
 test("the shell stacks its panes and never scrolls sideways", async ({
   page: target,

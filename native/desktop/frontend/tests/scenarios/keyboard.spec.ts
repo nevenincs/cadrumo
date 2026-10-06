@@ -237,6 +237,14 @@ test("F6 reaches the calendar where the documentation would be", async ({
   expect(await scrolled()).toBe(0);
   await target.keyboard.press("PageDown");
   await expect.poll(scrolled).toBeGreaterThan(0);
+  // The scroll is eased: the next key waits for it to come to rest, or the
+  // first would carry on over it.
+  const resting = async () => {
+    const at = await scrolled();
+    await target.waitForTimeout(120);
+    return at === (await scrolled());
+  };
+  await expect.poll(resting).toBe(true);
   await target.keyboard.press("Home");
   await expect.poll(scrolled).toBe(0);
   await target.keyboard.press("F6");

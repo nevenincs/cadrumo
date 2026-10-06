@@ -69,7 +69,11 @@ function useRailItems(chosen: string, errors = 0, messages?: Messages) {
                       }),
                       pin: "failed" as const,
                     }
-                  : {}),
+                  : // Not read: the account's own reason stands in.
+                    {
+                      pin: "unknown" as const,
+                      hint: t("desktop.account.signed_out"),
+                    }),
           },
         ]),
     {
@@ -131,7 +135,7 @@ export const RailViews: Story = {
   render: () => (
     <Specimen
       title="Rail with profile views"
-      note="Where the host offers the profile's views, the calendar and Messages lead the shortcuts. Messages shows what was unread at the last sync; none unread shows nothing more, while never synced and a failed read carry a hollow pin, not a zero, and say which in the tooltip and the name. Signed out, it says nothing."
+      note="Where the host offers the profile's views, the calendar and Messages lead the shortcuts. Messages shows what was unread at the last sync; none unread shows nothing more, while never synced and a failed read carry a hollow pin, not a zero, and say which in the tooltip and the name. Withheld by the account, it carries the same pin and the account's own reason."
       className="items-start gap-8"
     >
       <RailSpecimen chosen="calendar" messages={3} />

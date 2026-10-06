@@ -184,11 +184,14 @@ export function SignInDialog({
   open,
   onOpenChange,
   onClosed,
+  onOpening,
   onOpenTui,
 }: {
   account: SignInController;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The dialog is about to take focus from this element. */
+  onOpening?: (from: Element | null) => void;
   /** The dialog has closed: put focus where the person continues. */
   onClosed: () => void;
   /** Carry on in the TUI's own flow. */
@@ -257,6 +260,7 @@ export function SignInDialog({
         closeLabel={t("desktop.signin.dismiss")}
         {...(lead ? {} : { "aria-describedby": undefined })}
         onOpenAutoFocus={(event) => {
+          onOpening?.(document.activeElement);
           // The password field where there is one, else the way on.
           const target = input.current ?? handover.current;
           if (!target) return;
@@ -387,20 +391,30 @@ export function SignInDialog({
 }
 
 /**
- * What the TUI pane shows while the account is not settled: the status check
- * in flight, or what stands in the way with the ways forward. The primary
- * action takes `signInButton`, so focus has somewhere to go in every phase.
+ * What a pane shows while the account withholds it: the status check in
+ * flight, or what stands in the way with the ways forward. The TUI pane and
+ * the calendar say it with this one component, so they cannot disagree. The
+ * primary action takes `signInButton`, so focus has somewhere to go in every
+ * phase.
  */
 export function SignedOut({
   account,
+  lead,
+  quiet = false,
   onSignIn,
   onOpenTui,
   signInButton,
 }: {
   account: SignInController;
+  /** What signing in gives here, where a password can answer. The TUI's
+   * own sentence where it is left out. */
+  lead?: string;
+  /** Beside another pane that says the same, the actions are drawn
+   * quietly: one filled button in the window, not two. */
+  quiet?: boolean;
   onSignIn: () => void;
   onOpenTui: () => void;
-  signInButton: RefObject<HTMLButtonElement | null>;
+  signInButton?: RefObject<HTMLButtonElement | null>;
 }) {
   const t = useStrings();
   const gate = GATES[account.phase];
@@ -424,7 +438,9 @@ export function SignedOut({
       <div className="grid gap-1">
         <EmptyTitle>{t(gate.title)}</EmptyTitle>
         {gate.lead && !refused && (
-          <EmptyDescription>{t(gate.lead)}</EmptyDescription>
+          <EmptyDescription>
+            {password && lead ? lead : t(gate.lead)}
+          </EmptyDescription>
         )}
       </div>
       {refused && (
@@ -434,13 +450,17 @@ export function SignedOut({
       )}
       <div className="flex flex-wrap justify-center gap-2">
         {password && (
-          <Button ref={signInButton} onClick={onSignIn}>
+          <Button
+            ref={signInButton}
+            variant={quiet ? "outline" : "primary"}
+            onClick={onSignIn}
+          >
             {t("desktop.signin.submit")}
           </Button>
         )}
         <Button
           ref={password ? undefined : signInButton}
-          variant={password ? "ghost" : "primary"}
+          variant={password ? "ghost" : quiet ? "outline" : "primary"}
           aria-disabled={account.busy || undefined}
           onClick={account.busy ? undefined : onOpenTui}
         >

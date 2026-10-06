@@ -156,14 +156,6 @@ function Entry({
   );
 }
 
-/** Why the calendar is withheld, in the account's own words. */
-export type CalendarGate = {
-  title: string;
-  lead?: string;
-  /** The account is still being read: a wait, not a refusal. */
-  pending?: boolean;
-};
-
 /**
  * The filing calendar: every obligation in a range of dates, by month, with
  * the product's own reading of where each stands. It keeps apart what the
@@ -177,17 +169,21 @@ export type CalendarGate = {
  */
 export function FilingCalendarView({
   state,
-  gate,
+  withheld,
+  attempt = 0,
   locale,
   refreshing = false,
   page,
   onRefresh,
-  onSignIn,
   onOpen,
 }: {
   state: CalendarState;
-  /** What a withheld calendar says. Signed out, where it is left out. */
-  gate?: CalendarGate;
+  /** What stands in the page while the account withholds the calendar: the
+   * account's own account of why, and the ways on. */
+  withheld?: ReactNode;
+  /** Which read this is. A failure is announced again when a new read
+   * fails the same way. */
+  attempt?: number;
   /** The chrome language, for dates. */
   locale: string;
   /** A newer read is in flight over what is shown. */
@@ -195,8 +191,6 @@ export function FilingCalendarView({
   /** The page's own element, for whoever sends focus to it. */
   page?: RefObject<HTMLElement | null>;
   onRefresh: () => void;
-  /** Left out where a password cannot settle the account as it stands. */
-  onSignIn?: () => void;
   /** Take the person to where this obligation is worked on. Left out where
    * the window cannot: no row then offers a way it does not have. */
   onOpen?: (entry: CalendarEntry) => void;
@@ -262,38 +256,29 @@ export function FilingCalendarView({
       </Empty>
     );
   } else if (state.kind === "withheld") {
-    const said = gate ?? {
-      title: t("desktop.account.signed_out"),
-      lead: t("desktop.calendar.signed_out"),
-    };
-    body = said.pending ? (
-      <Empty role="status">
-        <Spinner />
-        <EmptyDescription>{said.title}</EmptyDescription>
-      </Empty>
-    ) : (
+    body = withheld ?? (
       <Empty>
         <EmptyMedia>
           <Icon name="lock" />
         </EmptyMedia>
         <div className="grid gap-1">
-          <EmptyTitle>{said.title}</EmptyTitle>
-          {said.lead && <EmptyDescription>{said.lead}</EmptyDescription>}
+          <EmptyTitle>{t("desktop.account.signed_out")}</EmptyTitle>
+          <EmptyDescription>
+            {t("desktop.calendar.signed_out")}
+          </EmptyDescription>
         </div>
-        {onSignIn && (
-          <Button variant="outline" onClick={onSignIn}>
-            {t("desktop.signin.submit")}
-          </Button>
-        )}
       </Empty>
     );
   } else if (state.kind === "failed") {
     body = (
-      <Empty role="alert">
+      <Empty>
         <EmptyMedia>
           <Icon name="alert" />
         </EmptyMedia>
-        <EmptyDescription>
+        {/* The sentence is the alert, made anew for each read that fails,
+            so a second failure is heard. The button beside it stays as it
+            is, and keeps the keyboard. */}
+        <EmptyDescription key={attempt} role="alert">
           {t("desktop.calendar.failed", { code: state.code })}
         </EmptyDescription>
         <Button variant="outline" pending={refreshing} onClick={onRefresh}>
