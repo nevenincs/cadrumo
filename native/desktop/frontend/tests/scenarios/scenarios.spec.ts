@@ -1019,6 +1019,22 @@ test("Tab does not go back to a record the reader has scrolled away from", async
   expect((await logPlace(target)).scrollTop).toBe(before.scrollTop);
 });
 
+/**
+ * Puts the keyboard on the newest record of a log that is growing, in one
+ * step inside the page, and says which record that was. A click sent from
+ * here would first scroll to a record the log has since moved past, which
+ * is a scroll up and ends following: nothing a person at the end can do.
+ */
+const focusNewest = (target: Page) =>
+  target.locator(".logview-list").evaluate((element) => {
+    const newest = element.querySelector<HTMLElement>(
+      ":scope > .record:last-of-type",
+    );
+    if (!newest) throw new Error("the log has no record");
+    newest.focus({ preventScroll: true });
+    return Number(newest.dataset.seq);
+  });
+
 /** Tab from the filter field until focus is in the log's list. */
 const tabIntoLog = async (target: Page) => {
   const list = target.locator(".logview-list");
@@ -1080,9 +1096,7 @@ test("Tab does not go back to a record the log has moved on from while following
   const { list, follow } = await overLog(target);
   // The keyboard was on the newest record, then went to the filter; the
   // log went on following and that record is long out of view.
-  const newest = list.locator(".record").last();
-  const seq = Number(await newest.getAttribute("data-seq"));
-  await newest.click();
+  const seq = await focusNewest(target);
   await target.locator(".logview .filter-text").focus();
   await expect(follow).toHaveAttribute("aria-pressed", "true");
   await expect
@@ -1167,6 +1181,92 @@ test("ArrowDown on the newest record resumes following", async ({
   await target.keyboard.press("ArrowDown");
   await expect(follow).toHaveAttribute("aria-pressed", "true");
   await expect(newest).toBeFocused();
+});
+
+test("an arrow from a record the following log has moved past takes the view to where the keyboard goes", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=200",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  // The keyboard is on the newest record; the log goes on following and
+  // that record is soon far above the view.
+  const seq = await focusNewest(target);
+  await expect
+    .poll(async () =>
+      Number(await list.locator(".record").last().getAttribute("data-seq")),
+    )
+    .toBeGreaterThan(seq + 60);
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  for (const [key, least] of [
+    ["ArrowDown", 1],
+    ["PageDown", 2],
+  ] as const) {
+    await target.keyboard.press(key);
+    // The record moved to is in view, and the log has stopped following:
+    // the view went with the keyboard, not back to the end from under it.
+    const at = await list.evaluate((element) => {
+      const row = document.activeElement as HTMLElement;
+      const box = element.getBoundingClientRect();
+      const rect = row.getBoundingClientRect();
+      return {
+        seq: Number(row.dataset.seq),
+        inView: rect.top >= box.top - 1 && rect.bottom <= box.bottom + 1,
+      };
+    });
+    expect(at.seq, key).toBeGreaterThanOrEqual(seq + least);
+    expect(at.inView, key).toBe(true);
+    await expect(follow).toHaveAttribute("aria-pressed", "false");
+  }
+  // And it stays there while more records arrive.
+  const held = await errorsHeld(target)();
+  await expect.poll(errorsHeld(target)).toBeGreaterThan(held + 5);
+  expect(
+    await list.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const rect = (
+        document.activeElement as HTMLElement
+      ).getBoundingClientRect();
+      return rect.top >= box.top - 1 && rect.bottom <= box.bottom + 1;
+    }),
+  ).toBe(true);
+});
+
+test("Follow keeps the keyboard when the bar changes shape under it", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1600, height: 900 });
+  await open(target, "signed-in");
+  await openLogs(target);
+  await expect(target.locator(".logview-list .record").first()).toBeVisible();
+  const follow = target.getByRole("button", {
+    name: label("desktop.logs.follow"),
+  });
+  await follow.focus();
+  // Wide to narrow, narrow to a short panel, and back: each shape shows
+  // Follow in another place, and the one shown has the keyboard.
+  for (const size of [
+    { width: 700, height: 900 },
+    { width: 700, height: 420 },
+    { width: 1600, height: 900 },
+  ]) {
+    await target.setViewportSize(size);
+    await expect(follow).toHaveCount(1);
+    await expect(follow).toBeFocused();
+  }
+  // A panel grown from the palette changes the bar's shape too.
+  await target.setViewportSize({ width: 700, height: 420 });
+  await expect(follow).toBeFocused();
+  await target.keyboard.press("ControlOrMeta+k");
+  await target
+    .locator(".palette")
+    .getByRole("combobox")
+    .fill(label("desktop.pane.maximize_panel"));
+  await target.keyboard.press("Enter");
+  await expect(target.locator(".palette")).toHaveCount(0);
+  await expect(follow).toBeFocused();
 });
 
 test("Follow is reached by the keyboard where the eye finds it, in each shape of the bar", async ({

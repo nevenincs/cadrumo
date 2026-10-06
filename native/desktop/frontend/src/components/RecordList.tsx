@@ -308,16 +308,23 @@ export const RecordList = memo(function RecordList({
 
   // Whether the current record is in view, asked whenever the view or what
   // is drawn has moved: wherever the keyboard is, and following or not.
+  // It reads the current record from a ref and never changes itself: the
+  // effect that keeps a following log at its end calls it, and must not run
+  // again because the keyboard moved to another record, or it would take
+  // the view back to the end from under the record just moved to.
+  const currentNow = useRef(current);
+  currentNow.current = current;
   const measureStray = useCallback(() => {
     const el = list.current;
-    if (!el || current === null) return;
+    const seq = currentNow.current;
+    if (!el || seq === null) return;
     const at = el
-      .querySelector(`:scope > [data-seq="${current}"]`)
+      .querySelector(`:scope > [data-seq="${seq}"]`)
       ?.getBoundingClientRect();
     const box = el.getBoundingClientRect();
     const away = !at || at.bottom <= box.top || at.top >= box.bottom;
     setStrayed((held) => (held === away ? held : away));
-  }, [current]);
+  }, []);
 
   // The focused record can leave the drawn span as newer ones arrive. Focus
   // then goes, once, to the list itself, without moving the view, rather
@@ -631,8 +638,22 @@ export const RecordList = memo(function RecordList({
       variant="outline"
       size="sm"
       className={cn(chip, place)}
+      data-follow=""
       aria-pressed={follow}
       title={t("desktop.logs.follow_hint")}
+      // The bar has changed shape under the keyboard and this place is no
+      // longer the one shown: focus goes to the one that is.
+      onBlur={(event) => {
+        const left = event.currentTarget;
+        if (event.relatedTarget || left.getClientRects().length > 0) return;
+        [
+          ...(left
+            .closest(".logview")
+            ?.querySelectorAll<HTMLElement>("[data-follow]") ?? []),
+        ]
+          .find((place) => place.getClientRects().length > 0)
+          ?.focus();
+      }}
       onClick={() => {
         if (follow) leaveEnd();
         else {
