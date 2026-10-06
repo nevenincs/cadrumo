@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/components/ui/cn";
+import { revealFocused } from "@/components/ui/reveal";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 
@@ -52,6 +53,7 @@ function DialogContent({
   children,
   closeLabel,
   placement = "center",
+  onFocusCapture,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   closeLabel?: string;
@@ -64,6 +66,11 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        // Tall content scrolls inside: what takes focus is brought into view.
+        onFocusCapture={(event) => {
+          onFocusCapture?.(event);
+          revealFocused(event);
+        }}
         onKeyDownCapture={(event) => {
           // A layer portalled out of the dialog keeps its own Escape.
           if (

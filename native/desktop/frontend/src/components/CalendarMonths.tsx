@@ -366,8 +366,8 @@ export const CalendarMonths = memo(function CalendarMonths({
   );
   // A choice, or a month drawn whole, can move an obligation's stop to
   // another of its weeks. Where the keyboard was on the part that is no
-  // longer the stop, it goes to the part that is, the view unmoved: it is
-  // never left on a part hidden from assistive technology.
+  // longer the stop, it goes to the part that is: it is never left on a
+  // part hidden from assistive technology.
   const all = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const held = document.activeElement;
@@ -379,11 +379,14 @@ export const CalendarMonths = memo(function CalendarMonths({
       return;
     const entry = held.getAttribute("data-entry");
     if (entry === null) return;
+    // The keyboard goes where it can be seen. A pointer chose what it was
+    // on, which stays under it: the view is not taken from the hand.
+    const byKeyboard = held.matches(":focus-visible");
     all.current
       .querySelector<HTMLElement>(
         `.calendar-bar[data-entry="${CSS.escape(entry)}"]:not([tabindex="-1"])`,
       )
-      ?.focus({ preventScroll: true });
+      ?.focus({ preventScroll: !byKeyboard });
   }, [drawn]);
   return (
     <div

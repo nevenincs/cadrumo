@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import { cn } from "@/components/ui/cn";
+import { revealFocused } from "@/components/ui/reveal";
 
 function Popover(props: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
@@ -33,6 +34,7 @@ function PopoverContent({
   sideOffset = 8,
   collisionPadding = 8,
   children,
+  onFocusCapture,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const dismiss = React.useRef<HTMLButtonElement>(null);
@@ -40,6 +42,11 @@ function PopoverContent({
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        // Tall content scrolls inside: what takes focus is brought into view.
+        onFocusCapture={(event) => {
+          onFocusCapture?.(event);
+          revealFocused(event);
+        }}
         onKeyDownCapture={(event) => {
           // A layer portalled out of the popover keeps its own Escape.
           if (

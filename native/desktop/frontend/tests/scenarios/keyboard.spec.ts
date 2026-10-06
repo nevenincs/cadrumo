@@ -219,6 +219,56 @@ test("no chord reaches the shell from under the sign-in dialog", async ({
   await expect(focusedWithin(dialog)).toHaveCount(1);
 });
 
+test("in settings taller than the window, the keyboard is never on something out of sight", async ({
+  page: target,
+}) => {
+  // A window at 200 percent, in the language with the longest words:
+  // settings scrolls inside itself.
+  await target.setViewportSize({ width: 640, height: 450 });
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=hu",
+  );
+  await target.locator(".rail button").first().focus();
+  await target.keyboard.press("Control+Comma");
+  const settings = target.locator(".settings");
+  await expect(settings).toBeVisible();
+  expect(
+    await settings.evaluate(
+      (element) => element.scrollHeight > element.clientHeight,
+    ),
+  ).toBe(true);
+  await expect(focusedWithin(settings)).toHaveCount(1);
+  // Round all of its stops and past the last, back to the first: the trap
+  // carries focus round without scrolling, and each stop is seen anyway.
+  const first = await target.evaluate(
+    () => document.activeElement?.textContent ?? "",
+  );
+  for (let stop = 0; stop < 12; stop++) {
+    await target.keyboard.press("Tab");
+    await expect(focusedWithin(settings)).toHaveCount(1);
+    await expect(focusedWithin(settings)).toBeInViewport({ ratio: 1 });
+    expect(
+      await settings.evaluate((element) => {
+        const room = element.getBoundingClientRect();
+        const at = (
+          document.activeElement as HTMLElement
+        ).getBoundingClientRect();
+        return at.top >= room.top - 1 && at.bottom <= room.bottom + 1;
+      }),
+      `stop ${stop}`,
+    ).toBe(true);
+    if (
+      stop > 0 &&
+      (await target.evaluate(
+        () => document.activeElement?.textContent ?? "",
+      )) === first
+    )
+      break;
+  }
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+});
+
 test("F6 reaches the calendar where the documentation would be", async ({
   page: target,
 }) => {

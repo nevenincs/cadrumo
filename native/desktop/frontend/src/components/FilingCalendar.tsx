@@ -585,6 +585,13 @@ export function FilingCalendarView({
   // the place it was left at, or else where the calendar stands: the month
   // of the day the product evaluated, and the list's mark for today.
   const placed = useRef<string | null>(null);
+  // Another memory, another reader: the places start afresh with the rest,
+  // whether or not the page was ever without a calendar in between.
+  useLayoutEffect(() => {
+    placed.current = null;
+    place.current = { months: null, list: null };
+    chosenSeen.current = false;
+  }, [remembered]);
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
@@ -711,16 +718,15 @@ export function FilingCalendarView({
     selectedWas.current = selected;
     chosenSeen.current = selected !== null;
     remembered.current.chosenSeen = chosenSeen.current;
-  }, [selected, remembered]);
-  useEffect(() => {
     if (selected === null) return;
+    // And the face it was not chosen in brings it into view.
     const other = chosenIn.current === "months" ? "list" : "months";
     root.current
       ?.querySelector(
         `.calendar-${other} [data-entry="${CSS.escape(selected)}"]`,
       )
       ?.scrollIntoView({ block: "nearest" });
-  }, [selected, root]);
+  }, [selected, remembered, root]);
 
   // Whether the last thing focused or pressed was in the page. Removing a
   // focused control reports nothing, so this is how its loss is known.
@@ -1157,9 +1163,16 @@ export function FilingCalendarView({
       onScroll={(event) =>
         scrolled(event.currentTarget, wide ? ["months"] : [view])
       }
-      // The scrollbar's room is kept whether or not there is one: a month
-      // drawn whole must not change the page's width by making it scroll.
-      className="group/calendar calendar-page @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background [scrollbar-gutter:stable] focus-visible:-outline-offset-2"
+      className={cn(
+        "group/calendar calendar-page @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background focus-visible:-outline-offset-2",
+        // With months to show, the scrollbar's room is kept whether or
+        // not there is one: a month drawn whole must not change the page's
+        // width by making it scroll. A page that only says something, that
+        // it is loading, withheld or empty, keeps its words in the middle.
+        calendar !== null &&
+          calendar.entries.length + calendar.events.length > 0 &&
+          "[scrollbar-gutter:stable]",
+      )}
     >
       {body}
     </section>
