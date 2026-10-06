@@ -104,6 +104,9 @@
   /* The calendar page at this width shows its months and its list side by
      side; narrower, one of them at a time. */
   --calendar-split: 56rem;
+  /* The calendar page at this height keeps its whole head in view while it
+     scrolls; shorter, only its controls. */
+  --calendar-tall: 22rem;
   /* Where a top-placed dialog sits: the same gap is kept below it. */
   --overlay-top: 12vh;
 

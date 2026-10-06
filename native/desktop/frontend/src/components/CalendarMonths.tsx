@@ -1,6 +1,7 @@
 import { useId, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
+import { Icon, type IconName } from "@/components/ui/icon";
 import {
   calendarMonths,
   crowded,
@@ -14,7 +15,7 @@ import {
   type GridMonth,
   type GridWeek,
 } from "../shell/calendarGrid";
-import { evaluatedDay } from "../shell/calendar";
+import { evaluatedDay, evaluatedLabel, isoDay as day } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
 import type {
   CalendarEvent,
@@ -24,30 +25,37 @@ import type {
 
 // How a filing window is drawn for each of the product's readings: a wash
 // and an edge in the reading's colour, with the words in ink, so the colour
-// tells the windows apart and never carries the text.
+// never carries the text. Colour is not the only teller: the edge is drawn
+// differently for what is late and what is not known, and a window with
+// room for it carries the reading's mark. Where the system forces its own
+// colours the wash and the hue are gone, and the edge and the mark remain.
 const BAR_TONE: Record<CalendarUserState, string> = {
   due: "border-border-strong bg-secondary",
-  late: "border-destructive/60 bg-destructive/10",
+  late: "border-dashed border-destructive/60 bg-destructive/10",
   filed: "border-success/60 bg-success/10",
-  unknown: "border-warning/60 bg-warning/10",
+  unknown: "border-dotted border-warning/60 bg-warning/10",
 };
 
+const BAR_MARK: Record<CalendarUserState, IconName | null> = {
+  due: null,
+  late: "alert",
+  filed: "check",
+  unknown: "info",
+};
+
+// A filing made is a filled mark, a message a hollow one: told apart by
+// shape, with or without colour.
 const EVENT_TONE: Record<CalendarEvent["event_type"], string> = {
-  filing: "bg-success",
-  message: "bg-muted-foreground",
+  filing: "bg-success forced-colors:bg-[CanvasText]",
+  message: "border-2 border-muted-foreground",
 };
-
-/** An ISO date as a local calendar day: no time, so no zone can move it. */
-function day(iso: string): Date {
-  const [year = 1970, month = 1, date = 1] = iso.split("-").map(Number);
-  return new Date(year, month - 1, date);
-}
 
 function Month({
   month,
   drawn,
   whole,
   locale,
+  today,
   weekStart,
   selected,
   onSelect,
@@ -61,6 +69,8 @@ function Month({
    * there is nothing to ask. */
   whole: boolean | null;
   locale: string;
+  /** The local day. */
+  today: string;
   weekStart: number;
   selected: string | null;
   onSelect: (key: string) => void;
@@ -165,13 +175,23 @@ function Month({
                       aria-hidden="true"
                       className={cn(
                         "grid size-5 place-items-center rounded-full text-xs tabular-nums",
-                        cell.today
-                          ? "calendar-grid-today bg-primary font-semibold text-primary-foreground"
-                          : "text-muted-foreground",
+                        // The day the product evaluated: filled where that
+                        // day is today here, ringed where it is another.
+                        !cell.today
+                          ? "text-muted-foreground"
+                          : cell.iso === today
+                            ? "calendar-grid-today bg-primary font-semibold text-primary-foreground forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]"
+                            : "calendar-grid-today border border-primary font-semibold text-foreground",
                       )}
+                      data-today={cell.today ? cell.iso === today : undefined}
                     >
                       {cell.day}
                     </span>
+                    {cell.today && (
+                      <span className="sr-only">
+                        {evaluatedLabel(cell.iso, today, locale, true)}
+                      </span>
+                    )}
                     {cell.events.length > 0 && (
                       <span className="flex gap-0.5">
                         {cell.events.map((event) => {
@@ -222,6 +242,8 @@ function Month({
                   className={cn(
                     "calendar-bar @container flex h-control-xs min-w-0 cursor-pointer items-center border-y px-1 text-xs font-medium text-foreground",
                     "scroll-mt-[calc(var(--calendar-head)+--spacing(8))] hover:brightness-95 focus-visible:z-(--layer-separator) data-selected:ring-2 data-selected:ring-ring data-selected:ring-inset",
+                    // A ring is a shadow, which forced colours do not draw.
+                    "forced-colors:data-selected:outline-2 forced-colors:data-selected:-outline-offset-2 forced-colors:data-selected:outline-[Highlight]",
                     BAR_TONE[bar.entry.user_state],
                     // A window is closed at the end it has inside this week,
                     // and runs to the edge where it goes on.
@@ -231,9 +253,28 @@ function Month({
                     bar.opens && "rounded-l-md border-l pointer-fine:ml-0.5",
                     bar.closes && "rounded-r-md border-r-4 pointer-fine:mr-0.5",
                   )}
-                  onClick={() => onSelect(key)}
+                  onClick={(event) => {
+                    onSelect(key);
+                    // The rest of a window is for the eye and the pointer:
+                    // pressed, the keyboard goes to the part that is the
+                    // obligation's stop, without the view moving to it.
+                    if (!stop)
+                      event.currentTarget
+                        .closest(".calendar-months")
+                        ?.querySelector<HTMLElement>(
+                          `.calendar-bar[data-entry="${CSS.escape(key)}"]:not([tabindex="-1"])`,
+                        )
+                        ?.focus({ preventScroll: true });
+                  }}
                 >
-                  {/* The Modelo is what a window too short for both keeps. */}
+                  {BAR_MARK[bar.entry.user_state] && (
+                    <Icon
+                      name={BAR_MARK[bar.entry.user_state] ?? "info"}
+                      size="xs"
+                      className="mr-1 @max-[4.5rem]:hidden"
+                    />
+                  )}
+                  {/* The Modelo is what a window too short for more keeps. */}
                   <span className="shrink-0">{bar.entry.modelo}</span>{" "}
                   <span className="ml-1 min-w-0 truncate font-normal text-muted-foreground @max-[4.5rem]:hidden">
                     {bar.entry.period}
@@ -283,12 +324,16 @@ function Month({
 export function CalendarMonths({
   calendar,
   locale,
+  today,
   selected,
   onSelect,
 }: {
   calendar: FilingCalendar;
   /** The chrome language: for names, and for the day a week begins on. */
   locale: string;
+  /** The local day: the evaluated day is marked as today only where it is
+   * this one. */
+  today: string;
   /** The obligation chosen, by its Modelo and period. */
   selected: string | null;
   onSelect: (key: string) => void;
@@ -363,6 +408,7 @@ export function CalendarMonths({
               onSelect(selected);
           }}
           locale={locale}
+          today={today}
           weekStart={weekStart}
           selected={selected}
           onSelect={onSelect}

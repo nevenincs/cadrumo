@@ -75,7 +75,8 @@ export function entrySpan(entry: CalendarEntry): { from: string; to: string } {
 }
 
 /**
- * The months from the first to the last of the range, each as weeks that
+ * The months from the first of the range to its last, or to the month the
+ * last window open in it closes, each as weeks that
  * begin on `weekStart` (0 Sunday to 6 Saturday), with the windows that cross
  * each week placed in rows and the day's observed events on their days.
  */
@@ -109,7 +110,18 @@ export function calendarMonths(
   const [firstYear = 1970, firstMonth = 1] = range.from_date
     .split("-")
     .map(Number);
-  const [lastYear = 1970, lastMonth = 1] = range.to_date.split("-").map(Number);
+  // The months run to the range's last, and on to the month in which the
+  // last window open in the range closes: its closing day is what the
+  // calendar is for, and the list names that month. Never more than a year
+  // past the range, whatever a date says.
+  const rangeEnd = ordinal(range.to_date);
+  const latest = spans.reduce(
+    (far, span) => (span.from <= rangeEnd && span.to > far ? span.to : far),
+    rangeEnd,
+  );
+  const until = new Date(Math.min(latest, rangeEnd + 366) * DAY_MS);
+  const lastYear = until.getUTCFullYear();
+  const lastMonth = until.getUTCMonth() + 1;
   const months: GridMonth[] = [];
   for (
     let year = firstYear, month = firstMonth;

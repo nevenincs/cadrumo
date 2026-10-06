@@ -45,6 +45,40 @@ export function evaluatedDay(calendar: FilingCalendar): string | null {
   return latest;
 }
 
+/** An ISO date as a local calendar day: no time, so no zone can move it. */
+export function isoDay(iso: string): Date {
+  const [year = 1970, month = 1, date = 1] = iso.split("-").map(Number);
+  return new Date(year, month - 1, date);
+}
+
+/**
+ * What the mark for the evaluated day says: the language's own word for
+ * today, with the day, where that day is today here; the day alone where the
+ * calendar was worked out for another day. `full` says the whole date, for
+ * where there is no month heading beside it to complete it.
+ */
+export function evaluatedLabel(
+  on: string,
+  today: string,
+  locale: string,
+  full = false,
+): string {
+  const day = isoDay(on);
+  if (on !== today)
+    return new Intl.DateTimeFormat(locale, {
+      dateStyle: full ? "full" : "medium",
+    }).format(day);
+  const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
+    0,
+    "day",
+  );
+  const date = new Intl.DateTimeFormat(
+    locale,
+    full ? { dateStyle: "full" } : { day: "numeric", month: "short" },
+  ).format(day);
+  return `${word.charAt(0).toLocaleUpperCase(locale)}${word.slice(1)} · ${date}`;
+}
+
 /**
  * The local day, kept current: looked at again just after each midnight, and
  * whenever the window is returned to, since a machine that slept through

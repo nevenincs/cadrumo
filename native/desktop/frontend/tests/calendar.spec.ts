@@ -317,32 +317,70 @@ test("a window that crosses the year's end is drawn in both years, and is first 
   ]);
 });
 
-test("a window wider than the range fills it, and one outside it is not drawn", () => {
+test("a window wider than the range is drawn through to its closing day, and no window stretches the months without bound", () => {
   const months = calendarMonths(
     OCTOBER,
     [
       obligation("100", "2026-09-15", "2026-11-10"),
+      // Closed before the range began.
       obligation("111", "2026-08-01", "2026-08-20"),
-      obligation("115", "2026-11-02", "2026-11-20"),
     ],
     [],
     null,
     1,
   );
+  // The month the window closes in is drawn after the range's own: the
+  // closing day is what the calendar is for.
+  expect(months.map((month) => month.key)).toEqual(["2026-10", "2026-11"]);
   const drawn = bars(months);
-  // One segment for each of October's five weeks, each from the first to
-  // the last of that week's days in the month, none of them an end.
-  expect(drawn.map((bar) => bar.days)).toEqual([
-    [1, 4],
-    [5, 11],
-    [12, 18],
-    [19, 25],
-    [26, 31],
+  // One segment for each week it crosses, from the first of October, where
+  // it was already open, to the tenth of November, where it closes. The
+  // first of November 2026 is a Sunday.
+  expect(drawn.map((bar) => [bar.month, ...bar.days])).toEqual([
+    ["2026-10", 1, 4],
+    ["2026-10", 5, 11],
+    ["2026-10", 12, 18],
+    ["2026-10", 19, 25],
+    ["2026-10", 26, 31],
+    ["2026-11", 1, 1],
+    ["2026-11", 2, 8],
+    ["2026-11", 9, 10],
   ]);
   expect(drawn.every((bar) => bar.modelo === "100")).toBe(true);
-  expect(drawn.some((bar) => bar.opens || bar.closes)).toBe(false);
+  expect(drawn.some((bar) => bar.opens)).toBe(false);
+  expect(drawn.map((bar) => bar.closes)).toEqual([
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+  ]);
   expect(drawn.filter((bar) => bar.first)).toHaveLength(1);
   expect(drawn[0]?.first).toBe(true);
+  // A window that is not open in the range does not stretch it.
+  expect(
+    calendarMonths(
+      OCTOBER,
+      [obligation("115", "2026-11-02", "2026-12-20")],
+      [],
+      null,
+      1,
+    ).map((month) => month.key),
+  ).toEqual(["2026-10"]);
+  // Nor does a closing date years away draw years of months: a year past
+  // the range at most.
+  const far = calendarMonths(
+    OCTOBER,
+    [obligation("100", "2026-10-01", "2031-01-01")],
+    [],
+    null,
+    1,
+  );
+  expect(far).toHaveLength(14);
+  expect(far.at(-1)?.key).toBe("2027-11");
 });
 
 test("an opening after its close is not believed: the closing day alone is drawn", () => {

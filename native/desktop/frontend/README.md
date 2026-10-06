@@ -276,8 +276,16 @@ The calendar has two faces over the one read, in
 - **The months** (`src/components/CalendarMonths.tsx`, laid out by
   `src/shell/calendarGrid.ts`) draw each obligation as a bar across the days
   its window is open, ending on the day that binds, in a row of its own where
-  windows overlap. What was observed, a filing made or a message from the
-  agency, is a mark on its day, and the day the product evaluated is marked.
+  windows overlap. What was observed is a mark on its day, filled for a
+  filing made and hollow for a message from the agency. The day the product
+  evaluated is marked: filled and said as today where it is today here,
+  ringed and said as its date where it is not. The months run from the
+  range's first to its last, and on to the month in which the last window
+  open in the range closes, a year past the range at most.
+  A window's reading is never told by colour alone: what is late has a
+  dashed edge and what is not known a dotted one, and a window with room
+  carries the reading's mark. Where the system forces its colours the edge,
+  the mark, the day and an outline on what is chosen remain.
   A window whose opening is null is drawn on its closing day alone and says
   the opening was not reported: an opening is never guessed. A week shows
   at most four rows: with more windows than that it keeps the three that
@@ -292,8 +300,12 @@ The calendar has two faces over the one read, in
 A page at least `--calendar-split` wide, a maximized pane on most windows,
 shows both: the months, and the list as a second column that scrolls by
 itself. A narrower page shows one, the months first, with a switch that
-stays in reach as the page scrolls. Each face opens on where the person is:
-the current month, the list's mark for today, or the obligation chosen.
+stays in reach as the page scrolls; a page at least `--calendar-tall` high
+keeps its whole head there, counts and all. Each face opens on where the
+person is: the current month, the list's mark for today, or the obligation
+chosen. After that the place is theirs: the month whose name was in view
+is put back where it was whenever the months are laid out anew, by a pane
+resized or maximized or by coming back from the list.
 Choosing an obligation in one face marks it in the other and brings it into
 view. An obligation is one keyboard stop and one thing read aloud however
 many weeks its bar crosses. The colours of the bars are the colours of the

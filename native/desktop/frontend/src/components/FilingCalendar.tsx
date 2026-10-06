@@ -1,15 +1,17 @@
 import {
   Fragment,
+  memo,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
   type ReactNode,
   type RefObject,
 } from "react";
+import { flushSync } from "react-dom";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,8 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   deadlineDistance,
   evaluatedDay,
+  evaluatedLabel,
+  isoDay as day,
   localDay,
   type CalendarState,
 } from "../shell/calendar";
@@ -58,13 +62,24 @@ const STATE_ORDER: readonly CalendarUserState[] = [
 
 const DAY_MS = 86_400_000;
 
-/** An ISO date as a local calendar day: no time, so no zone can move it. */
-function day(iso: string): Date {
-  const [year = 1970, month = 1, date = 1] = iso.split("-").map(Number);
-  return new Date(year, month - 1, date);
+// The formats of a language, made once: a row needs four and there are
+// many rows.
+const FORMATS = new Map<string, ReturnType<typeof makeFormats>>();
+const makeFormats = (locale: string) => ({
+  short: new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }),
+  full: new Intl.DateTimeFormat(locale, { dateStyle: "full" }),
+  weekday: new Intl.DateTimeFormat(locale, { weekday: "short" }),
+  relative: new Intl.RelativeTimeFormat(locale, { numeric: "auto" }),
+});
+function formatsFor(locale: string) {
+  let formats = FORMATS.get(locale);
+  if (!formats) FORMATS.set(locale, (formats = makeFormats(locale)));
+  return formats;
 }
 
-function Entry({
+// A row is drawn again only when it changes: choosing one obligation does
+// not redraw the others.
+const Entry = memo(function Entry({
   entry,
   locale,
   selected,
@@ -75,15 +90,12 @@ function Entry({
   locale: string;
   /** Chosen, here or in the months beside the list. */
   selected: boolean;
-  onSelect: () => void;
+  onSelect: (key: string) => void;
   onOpen?: (entry: CalendarEntry) => void;
 }) {
   const t = useStrings();
   const closes = day(entry.adjusted_closes_on);
-  const short = useMemo(
-    () => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }),
-    [locale],
-  );
+  const { short, full, weekday, relative: distance } = formatsFor(locale);
   // How far the binding date is from the day the product evaluated: the
   // product's own count where it gives one.
   const away =
@@ -95,12 +107,7 @@ function Entry({
   // A filed obligation has no distance left to say.
   const { value, unit } = deadlineDistance(away, entry.days_overdue !== null);
   const relative =
-    entry.user_state === "filed"
-      ? null
-      : new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
-          value,
-          unit,
-        );
+    entry.user_state === "filed" ? null : distance.format(value, unit);
   const name = t("desktop.calendar.modelo", { modelo: entry.modelo });
   const notes = [
     t(`desktop.calendar.local.${entry.local_filing_state}`),
@@ -122,7 +129,7 @@ function Entry({
       aria-current={selected || undefined}
       // The chosen row carries a bar as well as a surface, as a chosen item
       // does everywhere in the window.
-      className="grid scroll-mt-[calc(var(--calendar-head)+--spacing(8))] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-l-2 border-l-transparent px-4 py-2 hover:bg-accent aria-[current=true]:border-l-ring aria-[current=true]:bg-selected"
+      className="grid scroll-mt-[calc(var(--calendar-head)+--spacing(8))] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-l-2 border-l-transparent px-4 py-2 hover:bg-accent aria-[current=true]:border-l-ring aria-[current=true]:bg-selected forced-colors:border-l-[Canvas] forced-colors:aria-[current=true]:border-l-[Highlight]"
     >
       <time
         dateTime={entry.adjusted_closes_on}
@@ -130,11 +137,7 @@ function Entry({
       >
         {/* The eye has the month in the heading above; read aloud, a day
             and a weekday alone are not a date, so the whole date is said. */}
-        <span className="sr-only">
-          {new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(
-            closes,
-          )}
-        </span>
+        <span className="sr-only">{full.format(closes)}</span>
         <span
           aria-hidden="true"
           className="text-md leading-tight font-semibold tabular-nums"
@@ -142,7 +145,7 @@ function Entry({
           {closes.getDate()}
         </span>
         <span aria-hidden="true" className="text-xs text-muted-foreground">
-          {new Intl.DateTimeFormat(locale, { weekday: "short" }).format(closes)}
+          {weekday.format(closes)}
         </span>
       </time>
       <div className="grid min-w-0 gap-0.5">
@@ -152,7 +155,7 @@ function Entry({
           type="button"
           aria-pressed={selected}
           className="flex min-h-control-xs cursor-pointer flex-wrap items-center gap-x-2 justify-self-start rounded-sm text-left hover:underline"
-          onClick={onSelect}
+          onClick={() => onSelect(entryKey(entry))}
         >
           <span className="font-medium">{name}</span>
           <span className="text-muted-foreground">{entry.period}</span>
@@ -192,7 +195,7 @@ function Entry({
       </div>
     </li>
   );
-}
+});
 
 /**
  * Where the past ends: a line across the list at the day the product worked
@@ -210,19 +213,7 @@ function TodayMark({
   today: string;
   locale: string;
 }) {
-  const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
-    0,
-    "day",
-  );
-  const label =
-    on === today
-      ? `${word.charAt(0).toLocaleUpperCase(locale)}${word.slice(1)} · ${new Intl.DateTimeFormat(
-          locale,
-          { day: "numeric", month: "short" },
-        ).format(day(on))}`
-      : new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-          day(on),
-        );
+  const label = evaluatedLabel(on, today, locale);
   return (
     <div
       role="separator"
@@ -293,7 +284,16 @@ export function FilingCalendarView({
   // side; a narrower one shows one, the months first, with a switch.
   const [view, setView] = useState<"months" | "list">(defaultView);
   const splitAt = useMetric("--calendar-split", 896);
-  const [size, setSize] = useState({ wide: false, height: 0, head: 0 });
+  const tallAt = useMetric("--calendar-tall", 352);
+  // Only what changes the drawing is state: whether there is room for both
+  // faces, and whether the page is tall enough for its whole head to stay.
+  // The sizes themselves go to the page's styles as they are measured, and
+  // draw nothing again.
+  const [room, setRoom] = useState({ wide: false, tall: true });
+  // The month at the top of the reader's view, and where it sits: the
+  // place the months are put back on whenever they are laid out anew.
+  const anchor = useRef<{ key: string; top: number } | null>(null);
+  const widthWas = useRef<number | null>(null);
   // The row of controls stays at the top while the page scrolls under it.
   const head = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLDivElement>(null);
@@ -304,48 +304,88 @@ export function FilingCalendarView({
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
-    const read = () =>
-      setSize((held) => {
+    const fit = () =>
+      setRoom((held) => {
         const next = {
           wide: el.clientWidth >= splitAt,
-          height: el.clientHeight,
-          head: kept(),
+          tall: el.clientHeight >= tallAt,
         };
-        return held.wide === next.wide &&
-          held.height === next.height &&
-          held.head === next.head
-          ? held
-          : next;
+        return held.wide === next.wide && held.tall === next.tall ? held : next;
       });
-    read();
-    const observer = new ResizeObserver(read);
+    const measure = () => {
+      el.style.setProperty("--calendar-head", `${kept()}px`);
+      el.style.setProperty("--calendar-height", `${el.clientHeight}px`);
+    };
+    const resized = () => {
+      // A page made wider or narrower lays its months out in other rows.
+      // The month the reader was on is put back where it was, here, before
+      // the browser reports the scroll that the new layout caused.
+      const width = el.clientWidth;
+      const left = anchor.current;
+      if (left && widthWas.current !== null && width !== widthWas.current) {
+        const month = el.querySelector(`[data-month="${left.key}"]`);
+        if (month)
+          el.scrollTop +=
+            month.getBoundingClientRect().top -
+            el.getBoundingClientRect().top -
+            left.top;
+      }
+      widthWas.current = width;
+      // What the new size changes in the drawing is drawn now, before the
+      // browser paints: a page that has just become wide enough for both
+      // faces is never shown for a moment with one, laid out for the other.
+      // A face that comes to be shown by it is then placed by its own rule,
+      // which has the last word: on what is chosen, or on that same month.
+      flushSync(fit);
+      measure();
+    };
+    measure();
+    fit();
+    widthWas.current = el.clientWidth;
+    const observer = new ResizeObserver(resized);
     observer.observe(el);
     if (head.current) observer.observe(head.current);
     if (bar.current) observer.observe(bar.current);
     return () => observer.disconnect();
-  }, [root, splitAt, shown]);
-  const wide = size.wide;
+  }, [root, splitAt, tallAt, shown]);
+  const wide = room.wide;
 
   // The obligation chosen, by Modelo and period, and which face it was
   // chosen in: the other face brings it into view.
   const [selected, setSelected] = useState<string | null>(null);
   const chosenIn = useRef<"months" | "list">("months");
-  const select = (key: string, from: "months" | "list") => {
+  const select = useCallback((key: string, from: "months" | "list") => {
     chosenIn.current = from;
     setSelected((held) => (held === key ? null : key));
-  };
+  }, []);
+  const selectInList = useCallback(
+    (key: string) => select(key, "list"),
+    [select],
+  );
+  const selectInMonths = useCallback(
+    (key: string) => select(key, "months"),
+    [select],
+  );
 
   // A face opens on where the person is: on the obligation they chose, or
   // else the months on the month of the day the product evaluated and the
   // list on its mark for today. Once for each time a face comes to be
-  // shown; after that the place is theirs.
+  // shown; after that the place is theirs: the months come back to the month
+  // that was at the top when they were last scrolled, where it was, in a
+  // pane or beside the list alike.
   const aside = useRef<HTMLDivElement>(null);
   const placed = useRef<string | null>(null);
   const evaluatedOn = calendar ? evaluatedDay(calendar) : null;
   const here = localToday ?? localDay();
   useLayoutEffect(() => {
     const el = root.current;
-    if (!el || evaluatedOn === null) return;
+    if (!el) return;
+    if (evaluatedOn === null) {
+      // Nothing is shown: a calendar read anew opens as a first one does.
+      placed.current = null;
+      anchor.current = null;
+      return;
+    }
     const face = wide ? "both" : view;
     if (placed.current === face) return;
     if (
@@ -365,13 +405,19 @@ export function FilingCalendarView({
       selected === null
         ? null
         : el.querySelector(`${within} [data-entry="${CSS.escape(selected)}"]`);
-    if (face !== "list")
-      bring(
-        el,
-        chosen(".calendar-months") ??
+    if (face !== "list") {
+      const bar = chosen(".calendar-months");
+      const left = anchor.current;
+      if (bar) bring(el, bar, kept() + 48);
+      else if (left)
+        bring(el, el.querySelector(`[data-month="${left.key}"]`), left.top);
+      else
+        bring(
+          el,
           el.querySelector(`[data-month="${evaluatedOn.slice(0, 7)}"]`),
-        kept() + (chosen(".calendar-months") ? 48 : 12),
-      );
+          kept() + 12,
+        );
+    }
     // The list keeps a month's name above its rows: exactly its room is
     // left, so no sliver of the row before shows under it.
     const list = wide ? aside.current : el;
@@ -384,7 +430,7 @@ export function FilingCalendarView({
           el.querySelector(".calendar-list .calendar-today"),
         (wide ? 0 : kept()) + name,
       );
-  }, [evaluatedOn, root, size, view, wide, selected]);
+  }, [evaluatedOn, root, room, view, wide, selected]);
   useEffect(() => {
     if (selected === null) return;
     const other = chosenIn.current === "months" ? "list" : "months";
@@ -580,7 +626,7 @@ export function FilingCalendarView({
                         entry={entry}
                         locale={locale}
                         selected={selected === entryKey(entry)}
-                        onSelect={() => select(entryKey(entry), "list")}
+                        onSelect={selectInList}
                         onOpen={onOpen}
                       />
                     ))}
@@ -646,17 +692,17 @@ export function FilingCalendarView({
         <div className="min-w-0">
           {/* The head stays while the page scrolls under it: the calendar
               opens on the current month, which is seldom the first. Where
-              the page is small only the controls stay, and the counts and
-              the sentence scroll with the rest. */}
+              the page is narrow or short only the controls stay, and the
+              counts and the sentence scroll with the rest. */}
           <div
             ref={head}
-            className="calendar-head contents @md:sticky @md:top-0 @md:z-(--layer-pinned) @md:block @md:border-b @md:bg-background"
+            className="calendar-head contents @md:group-data-[head=whole]/calendar:sticky @md:group-data-[head=whole]/calendar:top-0 @md:group-data-[head=whole]/calendar:z-(--layer-pinned) @md:group-data-[head=whole]/calendar:block @md:group-data-[head=whole]/calendar:border-b @md:group-data-[head=whole]/calendar:bg-background"
           >
-            <div className="contents @md:grid @md:grid-cols-[minmax(0,1fr)_auto] @md:items-center @md:gap-x-3 @md:px-4 @md:py-1.5">
+            <div className="contents @md:group-data-[head=whole]/calendar:grid @md:group-data-[head=whole]/calendar:grid-cols-[minmax(0,1fr)_auto] @md:group-data-[head=whole]/calendar:items-center @md:group-data-[head=whole]/calendar:gap-x-3 @md:group-data-[head=whole]/calendar:px-4 @md:group-data-[head=whole]/calendar:py-1.5">
               {/* The counts are also the key to the months' colours. With
                   nothing to count, the sentence takes their place. */}
               {standing.length > 0 ? (
-                <ul className="calendar-standing flex flex-wrap gap-1.5 px-4 pt-2.5 @md:p-0">
+                <ul className="calendar-standing flex flex-wrap gap-1.5 px-4 pt-2.5 @md:group-data-[head=whole]/calendar:p-0">
                   {standing.map(([kind, count]) => (
                     <li key={kind} className="flex">
                       <Badge variant={STATE_TONE[kind]}>
@@ -669,11 +715,13 @@ export function FilingCalendarView({
                   ))}
                 </ul>
               ) : (
-                <div className="px-4 pt-2.5 @md:p-0">{provenance}</div>
+                <div className="px-4 pt-2.5 @md:group-data-[head=whole]/calendar:p-0">
+                  {provenance}
+                </div>
               )}
               <div
                 ref={bar}
-                className="calendar-controls sticky top-0 z-(--layer-pinned) flex items-center justify-end gap-2 border-b bg-background px-4 py-1 @md:static @md:border-b-0 @md:p-0"
+                className="calendar-controls sticky top-0 z-(--layer-pinned) flex items-center justify-end gap-2 border-b bg-background px-4 py-1 @md:group-data-[head=whole]/calendar:static @md:group-data-[head=whole]/calendar:border-b-0 @md:group-data-[head=whole]/calendar:p-0"
               >
                 {/* One face at a time where there is no room for both. */}
                 {!wide && !nothing && (
@@ -703,7 +751,7 @@ export function FilingCalendarView({
               </div>
             </div>
             {standing.length > 0 && (
-              <div className="border-b px-4 py-1.5 @md:border-b-0 @md:pt-0 @md:pb-2">
+              <div className="border-b px-4 py-1.5 @md:group-data-[head=whole]/calendar:border-b-0 @md:group-data-[head=whole]/calendar:pt-0 @md:group-data-[head=whole]/calendar:pb-2">
                 {provenance}
               </div>
             )}
@@ -735,8 +783,9 @@ export function FilingCalendarView({
             <CalendarMonths
               calendar={state.calendar}
               locale={locale}
+              today={here}
               selected={selected}
-              onSelect={(key) => select(key, "months")}
+              onSelect={selectInMonths}
             />
           ) : (
             list
@@ -748,8 +797,7 @@ export function FilingCalendarView({
         {wide && !nothing && (
           <div
             ref={aside}
-            className="calendar-aside sticky top-0 overflow-y-auto border-l bg-background [--calendar-head:0px]"
-            style={{ height: size.height }}
+            className="calendar-aside sticky top-0 h-(--calendar-height) overflow-y-auto border-l bg-background [--calendar-head:0px]"
           >
             {list}
           </div>
@@ -764,8 +812,31 @@ export function FilingCalendarView({
       tabIndex={-1}
       aria-label={t("desktop.calendar.title")}
       aria-busy={refreshing || undefined}
-      style={{ "--calendar-head": `${size.head}px` } as CSSProperties}
-      className="calendar-page @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background focus-visible:-outline-offset-2"
+      data-head={room.tall ? "whole" : "controls"}
+      // The month the reader is on, for when the months are laid out anew:
+      // the first whose name is in view under the head, or else the last
+      // that begins above it. A month that begins in view is still the
+      // first to do so when it is put back where it was, so what is kept
+      // does not drift from one layout to the next.
+      onScroll={(event) => {
+        const el = event.currentTarget;
+        // A scroll reported while the page is a width the months have not
+        // yet been put back for is the new layout's doing, not the
+        // reader's: where it left the view is not their place.
+        if (el.clientWidth !== widthWas.current) return;
+        const edge = el.getBoundingClientRect().top;
+        const under = edge + kept() - 1;
+        let on: { key: string; top: number } | null = null;
+        for (const month of el.querySelectorAll<HTMLElement>(
+          ".calendar-month",
+        )) {
+          const top = month.getBoundingClientRect().top;
+          on = { key: month.dataset.month ?? "", top: top - edge };
+          if (top >= under) break;
+        }
+        if (on) anchor.current = on;
+      }}
+      className="group/calendar calendar-page @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background focus-visible:-outline-offset-2"
     >
       {body}
     </section>

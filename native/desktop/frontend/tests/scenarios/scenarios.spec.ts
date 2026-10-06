@@ -2169,12 +2169,20 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
 test("the calendar's months draw each filing window across the days it is open", async ({
   page: target,
 }) => {
+  // Short enough that the months before the current one cannot all be in
+  // view with it: opening on it is something the page has to do.
+  await target.setViewportSize({ width: 1280, height: 640 });
   await open(target, "signed-in");
   await calendarButton(target).click();
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
   const months = page.locator(".calendar-month");
+  await expect(months.first()).toBeAttached();
+  expect(await page.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+    100,
+  );
+  await expect(months.first().getByRole("heading")).not.toBeInViewport();
   // Every month of the range that was read, each under its own name.
   await expect(months).toHaveCount(12);
   await expect(months.first().getByRole("heading", { level: 2 })).toHaveText(
@@ -2236,6 +2244,16 @@ test("the calendar's months draw each filing window across the days it is open",
     await expect(window303.nth(index)).toHaveAttribute("aria-hidden", "true");
     await expect(window303.nth(index)).toHaveAttribute("tabindex", "-1");
   }
+  // Pressed, a part that is only for the eye chooses the obligation and
+  // leaves the keyboard on the part that is its stop, the view unmoved.
+  await window303.nth(2).scrollIntoViewIfNeeded();
+  const before = await page.evaluate((element) => element.scrollTop);
+  await window303.nth(2).click();
+  await expect(window303.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(window303.first()).toBeFocused();
+  expect(await page.evaluate((element) => element.scrollTop)).toBe(before);
+  await window303.first().click();
+  await expect(window303.first()).toHaveAttribute("aria-pressed", "false");
   // Windows open over the same days each keep a row of their own.
   const tops = new Set<number>();
   for (const key of ["111:2026-3T", "130:2026-3T", "303:2026-3T"])
@@ -2481,9 +2499,18 @@ test("the calendar's mark stands where the past ends in each shape of range, and
   await found.page
     .getByRole("radio", { name: label("desktop.calendar.view_months") })
     .click();
-  await expect(
-    found.page.locator('[data-day="2026-10-06"] .calendar-grid-today'),
-  ).toHaveCount(1);
+  const cell = found.page.locator('[data-day="2026-10-06"]');
+  await expect(cell.locator(".calendar-grid-today")).toHaveAttribute(
+    "data-today",
+    "true",
+  );
+  // Read aloud it is a whole date, with the word for today.
+  const whole = new Intl.DateTimeFormat("en", { dateStyle: "full" }).format(
+    FIXTURE_DAY,
+  );
+  await expect(cell.locator(".sr-only")).toHaveText(
+    new RegExp(`^${said.format(0, "day")} · ${whole}$`, "i"),
+  );
 
   // A calendar worked out for a day that is not today here does not call
   // that day today: the mark says the day, and stands where it stood.
@@ -2494,6 +2521,212 @@ test("the calendar's mark stands where the past ends in each shape of range, and
     new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(FIXTURE_DAY),
   );
   await expect(found.mark).not.toHaveAccessibleName(today);
+  // Among the months that day is still marked, as the day the readings
+  // are of, and is neither drawn nor said as today.
+  await found.page
+    .getByRole("radio", { name: label("desktop.calendar.view_months") })
+    .click();
+  const stale = found.page.locator('[data-day="2026-10-06"]');
+  await expect(stale.locator(".calendar-grid-today")).toHaveAttribute(
+    "data-today",
+    "false",
+  );
+  await expect(stale.locator(".sr-only")).toHaveText(whole);
+  expect(
+    await stale
+      .locator(".calendar-grid-today")
+      .evaluate((mark) => getComputedStyle(mark).borderTopWidth),
+  ).toBe("1px");
+  await expect(found.page.locator('[data-today="true"]')).toHaveCount(0);
+});
+
+test("a calendar read again after a sign-out opens on the current month, as the first did", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1280, height: 640 });
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const october = page.locator('.calendar-month[data-month="2026-10"] h2');
+  await expect(october).toBeInViewport();
+  const first = await page.evaluate((element) => element.scrollTop);
+  expect(first).toBeGreaterThan(100);
+  // Signed out from the page, and in again from it.
+  await target.keyboard.press("ControlOrMeta+k");
+  await target
+    .locator(".palette")
+    .getByRole("combobox")
+    .fill(label("desktop.account.sign_out"));
+  await target.keyboard.press("Enter");
+  await expect(page).toContainText(label("desktop.calendar.signed_out"));
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await password(target).fill("demo");
+  await submit(target).click();
+  await expect(october).toBeInViewport();
+  expect(await page.evaluate((element) => element.scrollTop)).toBe(first);
+});
+
+test("the months come back to the month the reader left them on, in a pane and beside the list", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const heading = (month: string) =>
+    page.locator(`.calendar-month[data-month="${month}"] h2`);
+  await expect(heading("2026-10")).toBeInViewport();
+  // The reader scrolls on to January, which begins a row of months in a
+  // pane and beside the list alike.
+  await page.evaluate((element) => {
+    const month = element.querySelector('[data-month="2027-01"]');
+    if (!month) throw new Error("no January");
+    element.scrollTop +=
+      month.getBoundingClientRect().top -
+      element.getBoundingClientRect().top -
+      100;
+  });
+  await expect(heading("2027-01")).toBeInViewport();
+  await expect(heading("2026-10")).not.toBeInViewport();
+  const head = target.locator(".pane-docs .pane-head");
+  // Maximized, the months are laid out anew beside the list: on January.
+  await head
+    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .click();
+  await expect(page.locator(".calendar-aside")).toBeVisible();
+  await expect(heading("2027-01")).toBeInViewport();
+  await expect(heading("2026-10")).not.toBeInViewport();
+  // And back in a pane, the same.
+  await head
+    .getByRole("button", { name: label("desktop.pane.restore") })
+    .click();
+  await expect(page.locator(".calendar-aside")).toHaveCount(0);
+  await expect(heading("2027-01")).toBeInViewport();
+  await expect(heading("2026-10")).not.toBeInViewport();
+  // After the list, too: the list opens on its own mark for today, and
+  // the months are where they were left.
+  const view = page.getByRole("radiogroup", {
+    name: label("desktop.calendar.view"),
+  });
+  await view
+    .getByRole("radio", { name: label("desktop.calendar.view_list") })
+    .click();
+  await expect(page.getByRole("separator")).toBeInViewport();
+  await view
+    .getByRole("radio", { name: label("desktop.calendar.view_months") })
+    .click();
+  await expect(heading("2027-01")).toBeInViewport();
+  await expect(heading("2026-10")).not.toBeInViewport();
+});
+
+test("a short page keeps only the calendar's controls in view, a tall one its whole head", async ({
+  page: target,
+}) => {
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  // Tall: the counts, which are the key to the months' colours, and the
+  // sentence about where the page comes from stay with the controls.
+  await target.setViewportSize({ width: 1280, height: 1000 });
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  await expect(page).toHaveAttribute("data-head", "whole");
+  await page.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(page.locator(".calendar-standing")).toBeInViewport();
+  await expect(page.locator(".calendar-controls")).toBeInViewport();
+  // Short: the head would take half of what there is. Only the controls
+  // stay, and the rest of the head scrolls with the page.
+  await target.setViewportSize({ width: 1280, height: 500 });
+  await expect(page).toHaveAttribute("data-head", "controls");
+  await page.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(page.locator(".calendar-controls")).toBeInViewport();
+  await expect(page.locator(".calendar-standing")).not.toBeInViewport();
+  const sizes = await page.evaluate((element) => ({
+    page: element.clientHeight,
+    kept: element.querySelector<HTMLElement>(".calendar-controls")
+      ?.offsetHeight,
+  }));
+  expect(sizes.kept ?? 0).toBeLessThan(sizes.page / 3);
+});
+
+test("with the system's colours forced, the calendar still shows its day, its states and what is chosen", async ({
+  page: target,
+}) => {
+  await target.emulateMedia({ forcedColors: "active" });
+  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await open(target, "signed-in", "&calendar=busy");
+  await calendarButton(target).click();
+  await target
+    .locator(".pane-docs .pane-head")
+    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const style = (locator: Locator, property: string) =>
+    locator.evaluate(
+      (element, name) => getComputedStyle(element).getPropertyValue(name),
+      property,
+    );
+  const canvas = await style(
+    page.locator(".calendar-month > div").last(),
+    "background-color",
+  );
+  // The evaluated day is filled with the system's highlight, not left as a
+  // number among numbers.
+  expect(
+    await style(page.locator(".calendar-grid-today"), "background-color"),
+  ).not.toBe(canvas);
+  // A filing is a filled mark and a message a hollow one.
+  const filing = page.locator('.calendar-event[data-event="filing"]').first();
+  const message = page.locator('.calendar-event[data-event="message"]').first();
+  expect(await style(filing, "background-color")).not.toBe(canvas);
+  expect(await style(message, "border-top-width")).toBe("2px");
+  expect(await style(message, "background-color")).not.toBe(
+    await style(filing, "background-color"),
+  );
+  // What is late and what is not known are told by the edge, and by a
+  // mark where the window has room, with the hue gone.
+  const late = page.locator('.calendar-bar[data-state="late"]').first();
+  const unknown = page.locator('.calendar-bar[data-state="unknown"]').first();
+  const due = page.locator('.calendar-bar[data-state="due"]').first();
+  expect(await style(late, "border-top-style")).toBe("dashed");
+  expect(await style(due, "border-top-style")).toBe("solid");
+  await expect(late.locator("[data-slot=icon]")).toBeVisible();
+  await expect(due.locator("[data-slot=icon]")).toHaveCount(0);
+  await expect(
+    page.locator('.calendar-bar[data-state="filed"] [data-slot=icon]').first(),
+  ).toBeVisible();
+  // The unknown window of the fixture is one day wide and is found whole.
+  await page
+    .locator('.calendar-month[data-month="2027-02"] .calendar-whole')
+    .click();
+  expect(await style(unknown, "border-top-style")).toBe("dotted");
+  // What is chosen is outlined among the months, and in the list it alone
+  // has an edge that is not the page's own colour.
+  await late.click();
+  expect(await style(late, "outline-style")).toBe("solid");
+  expect(await style(late, "outline-width")).toBe("2px");
+  expect(await style(due, "outline-style")).toBe("none");
+  const rows = page.locator(".calendar-list li[data-entry]");
+  const chosen = page.locator('.calendar-list li[aria-current="true"]');
+  await expect(chosen).toHaveCount(1);
+  const edge = await style(chosen, "border-left-color");
+  const plain = await style(
+    rows.filter({ hasNot: target.locator(":scope[aria-current]") }).first(),
+    "border-left-color",
+  );
+  expect(edge).not.toBe(plain);
+  expect(plain).toBe(await style(page, "background-color"));
 });
 
 test("a calendar left on screen past midnight is read again for the new day", async ({
@@ -2549,6 +2782,14 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   const whole = january.locator(".calendar-whole");
   await expect(whole).toHaveAccessibleName(all);
   await expect(whole).toHaveAttribute("aria-expanded", "false");
+  // The range asked for ends in April; the Renta window open in it closes
+  // at the end of June, and the months run on to that closing day.
+  await expect(page.locator(".calendar-month")).toHaveCount(8);
+  await expect(
+    page.locator(
+      '.calendar-month[data-month="2027-06"] .calendar-bar[data-entry="100:2026"]',
+    ),
+  ).not.toHaveCount(0);
   // A month with room for all its windows has nothing to ask.
   await expect(
     page.locator('.calendar-month[data-month="2026-12"] .calendar-whole'),
