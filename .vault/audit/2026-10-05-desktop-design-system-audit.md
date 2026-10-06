@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:a6432267a8052535960539888cd1d06452127d72c341fd1e7be74fea3ae37141'
+body_hash: 'sha256:795b897eee3cb8d9dc21165646f6ffb372aee452e58cdcf47f39b67be17e1d32'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -494,6 +494,22 @@ Walked by keyboard at 200 percent and looked at in forced colours: each password
 ### sign-in view | low | another profile could be used only by knowing to sign out first
 
 Resolved: settings and the palette offer Switch profile while signed in, where the host lists profiles. It signs out once and goes on to the sign-in with its choice; a sign-out that fails is said in settings wherever the switch was asked from. The product itself does not sign the previous profile out when another is signed in to, which is why the window does it first.
+
+### sign-in host | high | the product's command line rewrites a profile label on Windows, after the option terminator too
+
+Found by the eleventh independent review and confirmed against a real package on storage of its own: the command line expands environment variables, file-name patterns and a leading home directory in every argument, so `config profile create -- "%USERNAME% y Cia"` made a profile under the user's name followed by "y Cia", `Taller [2025]` one under the name of a file beside it, and `~` one under the home directory's path. A sign-in that named such a label would send its password to another. Resolved in the window's reach: the host refuses a label holding `*`, `?`, `[`, `%` or `$` or beginning with a tilde (`native/desktop/src-tauri/src/shell/sign_in/mod.rs`), the form refuses it before anything is sent, a listed profile under such a label is shown and not offered, and the selected profile is signed in to unnamed, so that one under such a label is still within reach. The rewriting itself is the product's, and reaches its other commands and the terminal: that is not resolved here.
+
+### sign-in view | medium | a creation without an answer was said to have failed, and a stale list could name the wrong profile
+
+Same review, by reading the paths and by running them on the scenario host. A creation that timed out or whose answer could not be read was reported as not made, although the host itself says a child stopped part-way leaves that unknown. A list read that failed left the earlier rows in place as current, so that after a creation the password asked for the new profile would have been sent under the old selection's name. Resolved in `native/desktop/frontend/src/shell/signIn.ts`: an unanswered creation is its own state, said as unknown, with the list as the witness of a profile that is there all the same; a list that cannot be read, or that names another selection than the status beside it, names nobody; the held list is dropped before the read that follows a creation.
+
+### sign-in view | medium | the dialog opened while the account was still being read, with a way out to the TUI under the keyboard
+
+Same review, run with a slow list: with no profile selected the dialog showed its checking state with "Open the TUI" focused, and Enter there started the TUI. Resolved: the dialog is not shown until the account is known (`native/desktop/frontend/src/components/SignIn.tsx`), and arrives with the keyboard in its form. It is also no longer put aside while a profile is being made, and another profile or a new one is offered only while it is known that nobody is signed in.
+
+### sign-in host | low | smaller findings of the same review
+
+Resolved: a refusal the product makes before it has read its command names no command, and was reduced to an unreadable answer (`native/desktop/src-tauri/src/shell/sign_in/wire.rs`); a read's deadline counted its wait for the running command (`native/desktop/src-tauri/src/shell/sign_in/process.rs`); the packaged recorder kept the length of a password body (`native/desktop/tests/packaged/browser.mjs`); the taken-name check followed the system's language; a test of the single submission passed without the guards it named. The contract passage is corrected where it differed from the code. Left as recorded: closing the window stops a creation in flight without waiting for it, and what the product's custody recovery makes of that was not traced; whether the webview's transport ever resends a long-pending request was not established.
 
 ## Recommendations
 

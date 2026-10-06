@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b774bd4536381ca68b0a0c5d1e5d0c8444cbcdbd8b0ff4ee34d543149d4698c'
+body_hash: 'sha256:b6e9b6ecc6b006ecd0a8179ec153ec55eb59dc2f6a871138cd3910cfb0a4ce68'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -330,6 +330,12 @@ related:
 - `S11` `verify:` `npm run check` -> `pass`
 - `S11` `verify:` `npm test` -> `pass`
 - `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/shell/profiles.ts`
+- `S11` `M` `native/desktop/tests/packaged/browser.mjs`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `verify:` `host unit, clippy and live package tests` -> `pass`
+- `S11` `verify:` `npm test` -> `fail`
 
 ## Notes
 
@@ -342,3 +348,4 @@ related:
 - `S07` Steps S07 to S10 landed in one commit, 3692025e60: they recompose the same file, src/App.tsx, and could not be separated into builds that each pass.
 - `S12` The packaged run's result files were removed with their build directory before the triage was written; the README's table is from notes taken when the run was read.
 - `S13` Skipped work: no check that needs the Tauri window ran. The assembled package and the desktop host's build were removed from this machine during the session, and desktop-packaged-test needs both and an interactive desktop. The README lists each remaining window check with its reason.
+- `S11` npm test: 317 of 318; scenarios.spec.ts:1274 (Follow keeps the keyboard) failed once in the full run on a loaded machine and passed 4 of 4 alone; not touched by this change
