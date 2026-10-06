@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:63021c97eef3254ce492276cca48f462ce8ec446133014fc3ba58f05d8591d67'
+body_hash: 'sha256:bcbcd9a78e723f965ba042f9c46bafa9628c1359dfbbd9e996c8bd5d3d3877c4'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -358,6 +358,38 @@ After the generated strings and palette moved to the build directory, `dev/local
 ### Record hashes | low | a rewrite of the branch left this audit citing commits no longer in it
 
 The branch was rewritten on 2026-10-06 by another session and this plan's commits were replayed under new hashes. Thirty citations in this audit named commits that are no longer ancestors of the branch; each was repointed to the commit with the same subject and author date. The ledger's rows cite paths and were not affected.
+
+### Calendar crowded month | medium | a month with many windows open at once stopped being an overview
+
+A fixture of the turn of a year, added in `7fabafeedf`, has nine filing windows over the same weeks of January. Drawn in full, each week repeated nine bars and the month was about eleven hundred pixels tall. Resolved in `a83aaa558d`: a week shows at most four rows, keeps the three windows that close soonest and gives the fourth row to a count of the rest, at `native/desktop/frontend/src/shell/calendarGrid.ts:203`; rows are ordered by closing day so the nearest deadline is the last left out. A crowded month has a control beside its name that draws it whole and back and keeps the keyboard; a month holding a part of the chosen obligation that would be left out is drawn whole while it is chosen. A window that is only counted in every week it crosses has no stop among the months until its month is drawn whole; the list is where it is reached. Unit, scenario, touch and accessibility tests cover it, and seven further unit tests in `71245c1ad8` hold the month arithmetic at the ends of the range and of the year.
+
+### Seventh review log | high | an arrow from a record the following log had passed put focus out of view
+
+An independent review of the month view and of the sixth review's fixes. The sixth review's fix made the measurement of whether the current record is in view depend on which record is current, and the effect that keeps a following log at its end depended on that measurement, so moving the keyboard re-ran the effect and took the view back to the end from under the record moved to: focus on a record twelve hundred pixels above the view with Follow still pressed, four runs of four. Resolved in `96c5caba25`: the measurement reads the current record from a ref and never changes, at `native/desktop/frontend/src/components/RecordList.tsx:317`. A test moves by ArrowDown and PageDown under a live feed and requires the record moved to in view and Follow off. Two earlier tests had been passing because that defect undid a scroll their own click caused; they now focus the record in one step in the page.
+
+### Seventh review Follow | medium | Follow's three places dropped focus when the bar changed shape
+
+Follow is drawn once for each shape of the log's bar and shown in one. With the keyboard on it, a resize or a panel maximized from the palette hid the focused place and left focus on the document. Resolved in `96c5caba25`: a place that loses focus by no longer being shown hands it to the one that is. A test resizes through all three shapes and maximizes the panel.
+
+### Seventh review calendar place | medium | the calendar lost the reader's month
+
+A calendar read again after a sign-out opened at the top of its range, because the record of having placed it was never cleared. Any resize across the width at which both faces fit, a maximize or a drag of the split, threw the reader back to the current month. Resolved in `ad5666ab75`: nothing shown clears the placement; the months keep an anchor, the month whose name is in view and where it sits, at `native/desktop/frontend/src/components/FilingCalendar.tsx:295`, and are put back on it whenever they are laid out anew. Two things made that hold: a scroll reported between a change of width and its handling is the layout's doing and is not recorded, and the change of face is drawn before the browser paints, which also removes a frame in which a widened page showed one face in the other's layout. Tests cover the sign-out, the maximize and restore, and coming back from the list; the tests of opening on the current month now run in a window too short to pass with no scroll.
+
+### Seventh review today and colour | medium | the months called the evaluated day today, and told states by colour alone
+
+The filled circle among the months marked the evaluated day whatever the local day was and had no text. A window's reading was a tint only, and with the system's colours forced the day, the event marks, the readings and the choice all disappeared, while every row of the list showed the edge meant for the chosen one. Resolved in `ad5666ab75`: the day is filled and said as today only where it is the local day, ringed and said as its date otherwise; what is late has a dashed edge and what is not known a dotted one, and a window with room carries the reading's mark; a filing is a filled mark and a message a hollow one; forced colours keep the day in the system highlight, an outline on the chosen window and an edge on the chosen row alone. A test runs with forced colours emulated; a real contrast theme on Windows has not been looked at.
+
+### Seventh review range end | medium | a window that closes after the range never showed its closing day
+
+The product returns every window that intersects the range asked for, so a window open in the range can close after it, and the list then named a month the months did not draw. Resolved in `ad5666ab75`: the months run on to the month in which the last window open in the range closes, a year past the range at most, at `native/desktop/frontend/src/shell/calendarGrid.ts:117`. Unit tests hold the extension, its bound, and that a window not open in the range does not stretch it.
+
+### Seventh review minor | low | settled in the same change
+
+Pressing a part of a window that is only for the eye focused a control hidden from assistive technology; it now hands the keyboard to the obligation's stop without moving the view. The whole head stayed in view on a page too short to spare it, about half of a page a hundred and sixty pixels tall; below `--calendar-tall` only the controls stay. Every pixel of height and every choice drew all months and rows again; the page's sizes now go to its styles without a draw, a row's formats are made once for a language, and a row is drawn again only when it changes. Resolved in `ad5666ab75`.
+
+### Seventh review left | low | not changed
+
+A window can take another row from one week to the next, because each week is packed on its own: that is what keeps a week short once its neighbours have closed, and the count of what is left out depends on it. The two waits that outlast a wish for focus are as long as the wish lives and stay fixed for that reason. A chord pressed while a slow sign-in is in flight opens nothing on the scenario host, so that path of granting a pending wish is not exercised.
 
 ## Recommendations
 
