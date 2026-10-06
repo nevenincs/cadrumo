@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:5aa406170b06565c450e45840a0609278ccc15a2b9f11048fa521bf4292e6bcd'
+body_hash: 'sha256:83b8d1cc619f016967cd1d14d17f1d473063b54eed6e3689e072ec24641c52da'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -242,6 +242,21 @@ related:
 - `S11` `verify:` `npm run benchmark -- --check` -> `pass`
 - `S11` `verify:` `npm test (114 passed, twice)` -> `pass`
 - `S11` `verify:` `npm run benchmark -- --check (with the streaming-log stage)` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S11` `M` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ui/dialog.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/fixtures/account.ts`
+- `S11` `A` `native/desktop/frontend/src/shell/calendar.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S11` `M` `native/desktop/frontend/src/components/FilingCalendar.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/keyboard.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/touch.spec.ts`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
 
 ## Notes
 

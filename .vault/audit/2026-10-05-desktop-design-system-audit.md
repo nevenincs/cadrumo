@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f95855d2240065195f595c9b561ca5c8fb96caa0d8476a2bbb312e78795b987'
+body_hash: 'sha256:c243e59c657e68283d86d13f560bd34395047b95a3b42052d700e096449dc659'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -191,6 +191,26 @@ Upward movement was measured from the previous scroll, so a pixel at a time neve
 
 Whether the menu key is told from a pointer in engines other than Chromium, which Playwright's WebKit and Firefox do not let a test press; and returning to the end of a log growing at the host's maximum by ordinary wheel notches, which loses the race, where End and the Follow button are the way back.
 
+### Account review offers | medium | a locked profile was still offered a password in three places
+
+An independent review of `17fec7e798` and `09f8ce4c89` found the dialog withholding the password field for `PROFILE_LOCKED` while the TUI pane, settings and the palette still offered sign-in. Resolved in `3ba984d705`: whether a password can settle the account is one answer from the controller, at `native/desktop/frontend/src/shell/signIn.ts:88`, read by every element; the pane shows the refusal in place of its lead. The account-state table test gained a locked-profile row.
+
+### Account review focus | medium | choosing the TUI's own flow left the keyboard on nothing
+
+From the pane, settings or the palette, "Set up a profile" and "Open the TUI" started the TUI and left focus on the document body. Resolved in `3ba984d705`: one handler shows the TUI and asks for focus there, and a focus wish is kept for its short life so a view that is rebuilt as it starts is given focus again. Settings returns focus to its opener only when nothing else has taken it. Three tests cover the three ways in.
+
+### Account review wording | medium | with no services running the dialog and settings said something else
+
+The dialog was titled as a sign-in over a generic lead, and settings named a profile it could not know. Resolved in `3ba984d705`: the dialog's title is the phase's own words and the profile section is left out where the profile is not known. Two existing assertions on the refusal sentence now assert the dialog's heading instead, which is the same fact in the words the rest of the window uses.
+
+### Account review minor | low | settled in the same change
+
+A refusal the person had seen came back when its surface was reopened, and a failed sign-out stayed in settings; a running wait and a locked profile are kept because they are still true. The first Escape in a dialog closed only a tooltip open over it. A failed sign-out left the dialog suppressed for the next time the gate closed. The window section of settings was not a labelled region, a stray rule showed where there was no account, the header said nothing while the status was being read, the address test matched a key in any table, and hidden scrollbars relied on one engine's property.
+
+### Calendar page | medium | the filing calendar was a component nothing could open
+
+Resolved in `c536509aed`: profile views are an optional part of the host port at `native/desktop/frontend/src/shell/host.ts:62`. The desktop host offers none, so the product shows no button, action or page; the scenario host offers the calendar from a fixture, as design evidence only. The page is read when shown, dropped at sign-out, and a failed read is never drawn as an empty calendar. The audit engine found the month headings skipping a level, which was corrected. No row links to a Modelo: the window cannot take the TUI to a page.
+
 ## Recommendations
 
 - From `P02 primitive API`: give Field a context that wires ids, error ids and the invalid state, so a form control cannot be mislabelled by hand.
@@ -198,3 +218,5 @@ Whether the menu key is told from a pointer in engines other than Chromium, whic
 - From `P05 log rows`: if copying the visible records should be an action as well as a menu item, lift the filtered list out of the log view first.
 - From `P05 follow`: check the log in a WebKit webview, which has no scroll anchoring, while records arrive and the view is not following.
 - From `P05 names and roles` and the sign-in findings: rerun the packaged acceptance suite on a built package; nothing in these reviews exercised the Tauri host.
+- From `Calendar page`: the page reaches a real profile only once a host command exists; that waits on the proposed decision `2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr`.
+- From `Calendar page`: a row's link to its Modelo needs a decision on how the window asks the TUI for a destination.
