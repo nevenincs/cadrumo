@@ -19,7 +19,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
-import type { CalendarState } from "../shell/calendar";
+import { deadlineDistance, type CalendarState } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
 import type { CalendarEntry, CalendarUserState } from "../shell/views";
 
@@ -37,9 +37,6 @@ const STATE_ORDER: readonly CalendarUserState[] = [
 ];
 
 const DAY_MS = 86_400_000;
-/** Beyond this many days ahead, a distance is said in months. */
-const FAR_DAYS = 60;
-const MONTH_DAYS = 365.25 / 12;
 
 /** An ISO date as a local calendar day: no time, so no zone can move it. */
 function day(iso: string): Date {
@@ -70,16 +67,15 @@ function Entry({
       : Math.round(
           (closes.getTime() - day(entry.evaluated_on).getTime()) / DAY_MS,
         );
-  // A filed obligation has no distance left to say. Lateness is said in
-  // the product's own days. A date far ahead is said in months, as it is
-  // read: the day itself is beside it.
-  const distance = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  // A filed obligation has no distance left to say.
+  const { value, unit } = deadlineDistance(away, entry.days_overdue !== null);
   const relative =
     entry.user_state === "filed"
       ? null
-      : entry.days_overdue === null && away > FAR_DAYS
-        ? distance.format(Math.round(away / MONTH_DAYS), "month")
-        : distance.format(away, "day");
+      : new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
+          value,
+          unit,
+        );
   const name = t("desktop.calendar.modelo", { modelo: entry.modelo });
   const notes = [
     t(`desktop.calendar.local.${entry.local_filing_state}`),
@@ -310,14 +306,16 @@ export function FilingCalendarView({
             the note takes the row beside it. */}
         <div className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b px-4 py-2">
           {standing.length > 0 && (
-            <p className="calendar-standing col-start-1 row-start-1 flex flex-wrap gap-1.5">
+            <ul className="calendar-standing col-start-1 row-start-1 flex flex-wrap gap-1.5">
               {standing.map(([kind, count]) => (
-                <Badge key={kind} variant={STATE_TONE[kind]}>
-                  {t(`desktop.calendar.state.${kind}`)}
-                  <span className="font-semibold tabular-nums">{count}</span>
-                </Badge>
+                <li key={kind} className="flex">
+                  <Badge variant={STATE_TONE[kind]}>
+                    {t(`desktop.calendar.state.${kind}`)}{" "}
+                    <span className="font-semibold tabular-nums">{count}</span>
+                  </Badge>
+                </li>
               ))}
-            </p>
+            </ul>
           )}
           <IconButton
             label={t("desktop.calendar.refresh")}

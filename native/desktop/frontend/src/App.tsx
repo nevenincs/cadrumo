@@ -275,6 +275,11 @@ export function App({ host }: { host: Host }) {
       ? (account.status?.active_profile ?? "")
       : null;
   const recheckAccount = useCallback(() => accountRef.current.recheck(), []);
+  const [rechecking, setRechecking] = useState(false);
+  const lookAgain = useCallback(() => {
+    setRechecking(true);
+    void recheckAccount().finally(() => setRechecking(false));
+  }, [recheckAccount]);
   const calendar = useFilingCalendar(
     views,
     reader,
@@ -296,11 +301,14 @@ export function App({ host }: { host: Host }) {
       firstPaneShown &&
       document.activeElement === document.body
     )
-      docs.current?.focus();
+      (
+        docs.current ??
+        document.querySelector<HTMLElement>(".rail [role=toolbar]")
+      )?.focus();
     calendarWas.current = calendarVisible;
   }, [calendarVisible, firstPaneShown]);
   useEffect(() => {
-    if (calendarVisible && phase === "in-tui") recheckAccount();
+    if (calendarVisible && phase === "in-tui") void recheckAccount();
   }, [calendarVisible, phase, recheckAccount]);
   const askSignIn = useCallback(() => {
     const element = document.activeElement;
@@ -533,6 +541,21 @@ export function App({ host }: { host: Host }) {
     setSettingsOpen(false);
     showTui();
   }, [showTui]);
+  // Whether the last render showed a gate the person could act on. The
+  // first status read is a gate too, but not one anybody was standing at:
+  // being let through it at startup moves no focus.
+  const stoodAtGate = useRef(false);
+  useEffect(() => {
+    // Admitted after the dialog was put aside: the way in that held focus
+    // went with the gate, and the TUI that has started takes it.
+    if (
+      stoodAtGate.current &&
+      !gated &&
+      document.activeElement === document.body
+    )
+      focusView("tui");
+    stoodAtGate.current = gated && phase !== "checking";
+  }, [gated, phase, focusView]);
   useEffect(() => {
     // Signed out from here, no dialog follows. If the terminal that held
     // focus went with the session, the pane's way back in takes it.
@@ -1147,9 +1170,13 @@ export function App({ host }: { host: Host }) {
   );
   const runShortcut = useCallback(
     (id: string) => {
-      if (chordAllowed(id)) runAction(id);
+      // A chord from the documentation asks for an action by name: one that
+      // is not offered is not run, as a key pressed in the window is not.
+      const action = actionsRef.current.find((known) => known.id === id);
+      if (action && chordAllowed(id) && action.enabled?.() !== false)
+        action.run();
     },
-    [chordAllowed, runAction],
+    [chordAllowed],
   );
 
   useEffect(() => {
@@ -1597,7 +1624,12 @@ export function App({ host }: { host: Host }) {
       isShellChord={isShellChord}
       onStatus={(k, s) => {
         setStatus((all) => ({ ...all, [k]: s }));
-        if (k === "tui" && s.phase === "exited") account.tuiExited();
+        if (k !== "tui") return;
+        // The TUI's own flow has ended, or never began: the person is back
+        // at the gate, and is told when it was because it could not start.
+        if (s.phase === "failed" && accountRef.current.phase === "in-tui")
+          say(t("desktop.session.failed", { reason: s.message }));
+        if (s.phase === "exited" || s.phase === "failed") account.tuiExited();
       }}
       onMenu={terminalMenu}
       register={(k, api) => {
@@ -1653,7 +1685,11 @@ export function App({ host }: { host: Host }) {
                   <Icon name="tui" />
                 </EmptyMedia>
                 <EmptyTitle>{t("desktop.account.in_tui")}</EmptyTitle>
-                <Button variant="outline" onClick={recheckAccount}>
+                <Button
+                  variant="outline"
+                  pending={rechecking}
+                  onClick={lookAgain}
+                >
                   {t("desktop.calendar.refresh")}
                 </Button>
               </Empty>
@@ -2024,6 +2060,11 @@ export function App({ host }: { host: Host }) {
             onClosed={() => {
               const opener = signInOpener.current;
               signInOpener.current = null;
+              // The dialog takes a moment to leave. Focus the person has
+              // already put somewhere in that moment is left where it is.
+              const held = document.activeElement;
+              if (held && held !== document.body && !held.closest(".sign-in"))
+                return;
               const shown = (element: Element | null): element is HTMLElement =>
                 element instanceof HTMLElement &&
                 element.isConnected &&

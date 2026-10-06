@@ -11,6 +11,9 @@ const buttonVariants = cva(
   [
     "inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap select-none",
     "transition-colors disabled:pointer-events-none disabled:opacity-50",
+    // Disabled in name only, so that it keeps focus: it looks disabled all
+    // the same, unless it is busy, which its spinner says.
+    "aria-disabled:cursor-default aria-disabled:not-aria-busy:opacity-50",
     "aria-busy:cursor-progress",
     "forced-colors:aria-pressed:bg-[Highlight] forced-colors:aria-pressed:text-[HighlightText]",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",

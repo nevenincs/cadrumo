@@ -101,9 +101,13 @@ const refusalCode = (refusal: SignInRefusal | null) =>
 function Refusal({
   refusal,
   seconds,
+  quiet = false,
 }: {
   refusal: SignInRefusal | null;
   seconds: number;
+  /** A second copy of what another pane already announces: read in place,
+   * not announced again. */
+  quiet?: boolean;
 }) {
   const t = useStrings();
   if (!refusal) return null;
@@ -130,7 +134,7 @@ function Refusal({
   return (
     <Alert
       tone={entry.tone}
-      role={entry.tone === "danger" ? "alert" : "status"}
+      role={quiet ? "note" : entry.tone === "danger" ? "alert" : "status"}
       icon={<Icon name={entry.icon} />}
     >
       {t(entry.key, { code: refusal.code })}
@@ -414,7 +418,11 @@ export function SignedOut({
       </div>
       {refused && (
         <div className="w-full max-w-dialog text-left">
-          <Refusal refusal={account.refusal} seconds={account.retrySeconds} />
+          <Refusal
+            refusal={account.refusal}
+            seconds={account.retrySeconds}
+            quiet={quiet}
+          />
         </div>
       )}
       <div className="flex flex-wrap justify-center gap-2">

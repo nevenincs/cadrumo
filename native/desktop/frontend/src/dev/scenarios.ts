@@ -260,6 +260,15 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "tui-unavailable",
+    title: "TUI cannot start",
+    summary:
+      "Signed out, and every session fails to start: carrying on in the TUI comes back to the gate.",
+    signIn: { status: signedOut, submit: { kind: "accept" } },
+    terminals: "failed",
+  },
+  {
+    ...base,
     id: "views-refused",
     title: "Profile views refused",
     summary:

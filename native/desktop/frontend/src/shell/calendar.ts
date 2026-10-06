@@ -29,6 +29,25 @@ export function calendarRange(today: Date): { from: string; to: string } {
   };
 }
 
+/** Beyond this many days ahead, a distance is said in months. */
+const FAR_DAYS = 60;
+const MONTH_DAYS = 365.25 / 12;
+
+/**
+ * How far a deadline is, in the unit it is read in. Lateness is the
+ * product's own count of days and stays in days. A date far ahead is said in
+ * whole months that have fully to pass, never rounded up: a deadline must
+ * not read as further off than it is.
+ */
+export function deadlineDistance(
+  days: number,
+  overdue: boolean,
+): { value: number; unit: "day" | "month" } {
+  return !overdue && days > FAR_DAYS
+    ? { value: Math.floor(days / MONTH_DAYS), unit: "month" }
+    : { value: days, unit: "day" };
+}
+
 /** A calendar read this recently is shown again as it is: on a real host a
  * read is a process, and putting the page away and back is not a question.
  * Refresh always asks. */
@@ -90,8 +109,12 @@ export function useFilingCalendar(
   }, [reader]);
 
   useEffect(() => {
-    if (reader !== null && shown && Date.now() - readAt.current >= FRESH_MS)
+    if (reader !== null && shown && Date.now() - readAt.current >= FRESH_MS) {
+      // Shown anew after a failure, it starts over: the old failure is not
+      // said a second time ahead of the new answer.
+      setRead((held) => (held.kind === "failed" ? { kind: "loading" } : held));
       refresh();
+    }
   }, [reader, shown, refresh]);
 
   const state: CalendarState = reader === null ? { kind: "withheld" } : read;
