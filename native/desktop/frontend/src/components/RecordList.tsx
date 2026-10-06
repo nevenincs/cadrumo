@@ -475,7 +475,7 @@ export const RecordList = memo(function RecordList({
           that scrolls sideways, so the bar is never taller than two rows.
           In a panel near its floor it is one row again, all of it scrolling
           sideways, so the records keep their room. */}
-      <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center panel-short:flex-row panel-short:items-center panel-short:overflow-x-auto panel-short:[scrollbar-width:none]">
+      <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center panel-short:flex-row panel-short:items-center panel-short:overflow-x-auto panel-short:[scrollbar-width:none] panel-short:[&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-0 items-center gap-1.5 @4xl:contents panel-short:contents panel-short:*:shrink-0">
           <Input
             className="filter-text min-w-20 flex-1 @4xl:w-field @4xl:flex-none panel-short:w-field panel-short:flex-none"
@@ -520,7 +520,7 @@ export const RecordList = memo(function RecordList({
             {t("desktop.logs.follow")}
           </Button>
         </div>
-        <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] @4xl:contents panel-short:contents">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden @4xl:contents panel-short:contents">
           <div
             className="flex shrink-0 gap-1"
             role="group"

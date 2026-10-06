@@ -59,7 +59,14 @@ function Screen({
         languages={languages}
         onReset={() => setPrefs(initial)}
         close={noop}
-        account={<Account account={account} onSignIn={noop} onSignOut={noop} />}
+        account={
+          <Account
+            account={account}
+            onSignIn={noop}
+            onSignOut={noop}
+            onOpenTui={noop}
+          />
+        }
       />
     </div>
   );

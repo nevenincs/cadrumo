@@ -89,9 +89,6 @@ const OTHER = {
   icon: "alert",
 } as const;
 
-// Refusals the password form cannot answer: the way on is the TUI's own flow.
-const HANDED_OVER = new Set(["PROFILE_LOCKED", "KEYRING_UNAVAILABLE"]);
-
 const refusalCode = (refusal: SignInRefusal | null) =>
   refusal?.code.toUpperCase() ?? null;
 
@@ -113,7 +110,7 @@ const GATES: Partial<
   "services-down": {
     icon: "unplug",
     title: "desktop.account.services_down",
-    lead: "desktop.signin.open_tui_hint",
+    lead: null,
   },
   unknown: { icon: "alert", title: "desktop.account.unknown", lead: null },
 };
@@ -126,10 +123,6 @@ export function accountLabel(phase: AccountPhase): string | null {
   if (phase === "in-tui") return "desktop.account.in_tui";
   return GATES[phase]?.title ?? null;
 }
-
-/** Whether a password can settle this phase. */
-const signsIn = (phase: AccountPhase) =>
-  phase === "signed-out" || phase === "unknown";
 
 /**
  * A refusal, said in the shell's own words. A throttle shows its wait as it
@@ -191,12 +184,15 @@ export function SignInDialog({
   open,
   onOpenChange,
   onClosed,
+  onOpenTui,
 }: {
   account: SignInController;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** The dialog has closed: put focus where the person continues. */
   onClosed: () => void;
+  /** Carry on in the TUI's own flow. */
+  onOpenTui: () => void;
 }) {
   const t = useStrings();
   const input = useRef<HTMLInputElement>(null);
@@ -216,15 +212,20 @@ export function SignInDialog({
   if (!status) return null;
 
   const seconds = account.retrySeconds;
-  const code = refusalCode(account.refusal);
-  const rejected = code === "CREDENTIAL_REJECTED";
-  const available = status.runtimeAvailable;
-  // Where a password cannot help, the form is not offered.
-  const handedOver = code !== null && HANDED_OVER.has(code);
-  // With no profile there is nothing to sign in to: the dialog offers the
-  // way to create one.
+  const rejected = refusalCode(account.refusal) === "CREDENTIAL_REJECTED";
+  // Where a password cannot help, the form is not offered: with no profile
+  // the dialog offers the way to set one up, and with no services running it
+  // says so in its title, as the rest of the window does.
   const creating = account.phase === "no-profile";
-  const answerable = available && !handedOver && !creating;
+  const servicesDown = account.phase === "services-down";
+  const answerable = status.runtimeAvailable && account.canSignIn;
+  const lead = creating
+    ? t("desktop.account.no_profile_lead")
+    : servicesDown
+      ? null
+      : answerable
+        ? t("desktop.signin.lead")
+        : t("desktop.signin.open_tui_hint");
 
   return (
     <Dialog
@@ -237,6 +238,7 @@ export function SignInDialog({
       <DialogContent
         className="sign-in"
         closeLabel={t("desktop.signin.dismiss")}
+        {...(lead ? {} : { "aria-describedby": undefined })}
         onOpenAutoFocus={(event) => {
           // The password field where there is one, else the way on.
           const target = input.current ?? handover.current;
@@ -256,16 +258,12 @@ export function SignInDialog({
               {t(
                 creating
                   ? "desktop.account.no_profile"
-                  : "desktop.signin.title",
+                  : servicesDown
+                    ? "desktop.account.services_down"
+                    : "desktop.signin.title",
               )}
             </DialogTitle>
-            <DialogDescription>
-              {creating
-                ? t("desktop.account.no_profile_lead")
-                : answerable
-                  ? t("desktop.signin.lead")
-                  : t("desktop.signin.open_tui_hint")}
-            </DialogDescription>
+            {lead && <DialogDescription>{lead}</DialogDescription>}
           </div>
         </DialogHeader>
 
@@ -343,12 +341,8 @@ export function SignInDialog({
               {t(busy ? "desktop.signin.submitting" : "desktop.signin.submit")}
             </Button>
           </form>
-        ) : creating ? null : account.refusal ? (
+        ) : creating || servicesDown ? null : (
           <Refusal refusal={account.refusal} seconds={seconds} />
-        ) : (
-          <Alert tone="warning" icon={<Icon name="unplug" />}>
-            {t("desktop.signin.refused.runtime_unavailable")}
-          </Alert>
         )}
 
         {answerable ? (
@@ -363,14 +357,14 @@ export function SignInDialog({
                 variant="outline"
                 size="sm"
                 aria-disabled={busy || undefined}
-                onClick={busy ? undefined : account.openTui}
+                onClick={busy ? undefined : onOpenTui}
               >
                 {t("desktop.signin.open_tui")}
               </Button>
             </div>
           </>
         ) : (
-          <Button ref={handover} className="w-full" onClick={account.openTui}>
+          <Button ref={handover} className="w-full" onClick={onOpenTui}>
             {t(
               creating
                 ? "desktop.account.create_profile"
@@ -391,10 +385,12 @@ export function SignInDialog({
 export function SignedOut({
   account,
   onSignIn,
+  onOpenTui,
   signInButton,
 }: {
   account: SignInController;
   onSignIn: () => void;
+  onOpenTui: () => void;
   signInButton: RefObject<HTMLButtonElement | null>;
 }) {
   const t = useStrings();
@@ -406,7 +402,11 @@ export function SignedOut({
         <EmptyDescription>{t("desktop.signin.checking")}</EmptyDescription>
       </Empty>
     );
-  const password = signsIn(account.phase);
+  const password = account.canSignIn;
+  // A refusal no password can answer takes the lead's place: it is why the
+  // only way on is the TUI.
+  const refused =
+    !password && account.refusal && account.phase !== "no-profile";
   return (
     <Empty>
       <EmptyMedia>
@@ -414,8 +414,15 @@ export function SignedOut({
       </EmptyMedia>
       <div className="grid gap-1">
         <EmptyTitle>{t(gate.title)}</EmptyTitle>
-        {gate.lead && <EmptyDescription>{t(gate.lead)}</EmptyDescription>}
+        {gate.lead && !refused && (
+          <EmptyDescription>{t(gate.lead)}</EmptyDescription>
+        )}
       </div>
+      {refused && (
+        <div className="w-full max-w-dialog text-left">
+          <Refusal refusal={account.refusal} seconds={account.retrySeconds} />
+        </div>
+      )}
       <div className="flex flex-wrap justify-center gap-2">
         {password && (
           <Button ref={signInButton} onClick={onSignIn}>
@@ -426,7 +433,7 @@ export function SignedOut({
           ref={password ? undefined : signInButton}
           variant={password ? "ghost" : "primary"}
           aria-disabled={account.busy || undefined}
-          onClick={account.busy ? undefined : account.openTui}
+          onClick={account.busy ? undefined : onOpenTui}
         >
           {t(
             account.phase === "no-profile"
@@ -446,15 +453,19 @@ const SESSION_TONE: Partial<
 /**
  * The account in settings, as two sections: which profile this window works
  * in, and its sign-in. Each says the same phase the rest of the window shows.
+ * It closes with the line that sets it apart from what follows, so settings
+ * draws none where there is no account to show.
  */
 export function Account({
   account,
   onSignIn,
   onSignOut,
+  onOpenTui,
 }: {
   account: SignInController;
   onSignIn: () => void;
   onSignOut: () => void;
+  onOpenTui: () => void;
 }) {
   const t = useStrings();
   const profileId = useId();
@@ -463,40 +474,40 @@ export function Account({
   const phase = account.phase;
   if (!status?.supported) return null;
   const label = accountLabel(phase === "no-profile" ? "signed-out" : phase);
+  // The profile is shown where it is known, by name or as none. With no
+  // runtime to ask it is simply not known, and the section is left out.
+  const profile = status.active_profile !== null || phase === "no-profile";
   return (
     <>
-      <section className="grid gap-2" aria-labelledby={profileId}>
-        <h3
-          id={profileId}
-          className="text-sm font-medium text-muted-foreground"
-        >
-          {t("desktop.signin.profile")}
-        </h3>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="flex min-w-0 items-center gap-2">
-            <Icon name="user" className="text-muted-foreground" />
-            <span
-              className={
-                status.active_profile
-                  ? "truncate font-medium"
-                  : "text-muted-foreground"
-              }
-            >
-              {/* Unnamed is only "none" where that is known: with no runtime
-                  to ask, the profile is simply not known. */}
-              {status.active_profile ??
-                (phase === "no-profile"
-                  ? t("desktop.account.no_profile")
-                  : "—")}
+      {profile && (
+        <section className="grid gap-2" aria-labelledby={profileId}>
+          <h3
+            id={profileId}
+            className="text-sm font-medium text-muted-foreground"
+          >
+            {t("desktop.signin.profile")}
+          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-2">
+              <Icon name="user" className="text-muted-foreground" />
+              <span
+                className={
+                  status.active_profile
+                    ? "truncate font-medium"
+                    : "text-muted-foreground"
+                }
+              >
+                {status.active_profile ?? t("desktop.account.no_profile")}
+              </span>
             </span>
-          </span>
-          {phase === "no-profile" && (
-            <Button variant="outline" size="sm" onClick={account.openTui}>
-              {t("desktop.account.create_profile")}
-            </Button>
-          )}
-        </div>
-      </section>
+            {phase === "no-profile" && (
+              <Button variant="outline" size="sm" onClick={onOpenTui}>
+                {t("desktop.account.create_profile")}
+              </Button>
+            )}
+          </div>
+        </section>
+      )}
       <section className="account grid gap-2" aria-labelledby={sessionId}>
         <h3
           id={sessionId}
@@ -518,7 +529,7 @@ export function Account({
               {!account.busy && <Icon name="signOut" />}
               {t("desktop.account.sign_out")}
             </Button>
-          ) : signsIn(phase) ? (
+          ) : account.canSignIn ? (
             <Button variant="outline" size="sm" onClick={onSignIn}>
               {t("desktop.signin.submit")}
             </Button>
@@ -543,6 +554,7 @@ export function Account({
           </Alert>
         )}
       </section>
+      <Separator />
     </>
   );
 }

@@ -7,7 +7,6 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -88,6 +87,7 @@ export function Settings({
 }) {
   const t = useStrings();
   const languageId = useId();
+  const windowId = useId();
   const content = useRef<HTMLDivElement>(null);
   // Closing returns focus to where settings was opened from.
   const [returnTo] = useState(() => document.activeElement);
@@ -117,7 +117,13 @@ export function Settings({
         }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
-          if (returnTo instanceof HTMLElement) returnTo.focus();
+          // Unless focus has already been put somewhere: what closed
+          // settings may have sent the keyboard on.
+          if (
+            returnTo instanceof HTMLElement &&
+            document.activeElement === document.body
+          )
+            returnTo.focus();
         }}
         onInteractOutside={(event) => {
           // The rail's own button toggles this popover; let it.
@@ -127,91 +133,96 @@ export function Settings({
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
         {account}
-        {account && <Separator />}
-        <h3 className="text-sm font-medium text-muted-foreground">
-          {t("desktop.settings.window")}
-        </h3>
-        <Choice
-          label={t("desktop.settings.appearance")}
-          value={prefs.appearance}
-          options={[
-            ["follow", t("desktop.settings.follow_docs")],
-            ["light", t("desktop.settings.light")],
-            ["dark", t("desktop.settings.dark")],
-          ]}
-          onChange={(appearance) => setPrefs({ ...prefs, appearance })}
-        />
-        <Choice
-          label={t("desktop.settings.terminals")}
-          value={prefs.terminals}
-          options={[
-            ["match", t("desktop.settings.match_appearance")],
-            ["dark", t("desktop.settings.always_dark")],
-          ]}
-          onChange={(terminals) => setPrefs({ ...prefs, terminals })}
-        />
-        <Choice
-          label={t("desktop.settings.docs_and_tui")}
-          value={prefs.orientation}
-          options={[
-            ["row", t("desktop.settings.side_by_side")],
-            ["column", t("desktop.settings.stacked")],
-          ]}
-          onChange={(orientation) => setPrefs({ ...prefs, orientation })}
-        />
-        <Choice
-          label={t("desktop.settings.first_pane")}
-          value={prefs.order}
-          options={[
-            ["docs", t("desktop.pane.docs")],
-            ["tui", t("desktop.pane.tui")],
-          ]}
-          onChange={(order) => setPrefs({ ...prefs, order })}
-        />
-        <Choice
-          label={t("desktop.settings.terminal_text")}
-          value={prefs.fontSize}
-          options={TERMINAL_FONT_SIZES.map(
-            (step) => [step, String(Math.round(terminalFontPx(step)))] as const,
-          )}
-          onChange={(fontSize) => setPrefs({ ...prefs, fontSize })}
-        />
-        {languages.length > 1 && (
-          <Field>
-            <FieldLabel htmlFor={languageId}>
-              {t("desktop.settings.language")}
-            </FieldLabel>
-            <NativeSelect
-              id={languageId}
-              controlSize="sm"
-              value={
-                languages.includes(prefs.language)
-                  ? prefs.language
-                  : FOLLOW_LANGUAGE
-              }
-              onChange={(event) =>
-                setPrefs({ ...prefs, language: event.target.value })
-              }
-            >
-              <option value={FOLLOW_LANGUAGE}>
-                {t("desktop.settings.follow_cadrumo")}
-              </option>
-              {languages.map((code) => (
-                <option key={code} value={code} lang={code}>
-                  {languageName(code)}
+        <section className="grid gap-3" aria-labelledby={windowId}>
+          <h3
+            id={windowId}
+            className="text-sm font-medium text-muted-foreground"
+          >
+            {t("desktop.settings.window")}
+          </h3>
+          <Choice
+            label={t("desktop.settings.appearance")}
+            value={prefs.appearance}
+            options={[
+              ["follow", t("desktop.settings.follow_docs")],
+              ["light", t("desktop.settings.light")],
+              ["dark", t("desktop.settings.dark")],
+            ]}
+            onChange={(appearance) => setPrefs({ ...prefs, appearance })}
+          />
+          <Choice
+            label={t("desktop.settings.terminals")}
+            value={prefs.terminals}
+            options={[
+              ["match", t("desktop.settings.match_appearance")],
+              ["dark", t("desktop.settings.always_dark")],
+            ]}
+            onChange={(terminals) => setPrefs({ ...prefs, terminals })}
+          />
+          <Choice
+            label={t("desktop.settings.docs_and_tui")}
+            value={prefs.orientation}
+            options={[
+              ["row", t("desktop.settings.side_by_side")],
+              ["column", t("desktop.settings.stacked")],
+            ]}
+            onChange={(orientation) => setPrefs({ ...prefs, orientation })}
+          />
+          <Choice
+            label={t("desktop.settings.first_pane")}
+            value={prefs.order}
+            options={[
+              ["docs", t("desktop.pane.docs")],
+              ["tui", t("desktop.pane.tui")],
+            ]}
+            onChange={(order) => setPrefs({ ...prefs, order })}
+          />
+          <Choice
+            label={t("desktop.settings.terminal_text")}
+            value={prefs.fontSize}
+            options={TERMINAL_FONT_SIZES.map(
+              (step) =>
+                [step, String(Math.round(terminalFontPx(step)))] as const,
+            )}
+            onChange={(fontSize) => setPrefs({ ...prefs, fontSize })}
+          />
+          {languages.length > 1 && (
+            <Field>
+              <FieldLabel htmlFor={languageId}>
+                {t("desktop.settings.language")}
+              </FieldLabel>
+              <NativeSelect
+                id={languageId}
+                controlSize="sm"
+                value={
+                  languages.includes(prefs.language)
+                    ? prefs.language
+                    : FOLLOW_LANGUAGE
+                }
+                onChange={(event) =>
+                  setPrefs({ ...prefs, language: event.target.value })
+                }
+              >
+                <option value={FOLLOW_LANGUAGE}>
+                  {t("desktop.settings.follow_cadrumo")}
                 </option>
-              ))}
-            </NativeSelect>
-          </Field>
-        )}
-        <Button
-          variant="outline"
-          size="sm"
-          className="justify-self-start"
-          onClick={onReset}
-        >
-          {t("desktop.settings.reset_layout")}
-        </Button>
+                {languages.map((code) => (
+                  <option key={code} value={code} lang={code}>
+                    {languageName(code)}
+                  </option>
+                ))}
+              </NativeSelect>
+            </Field>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="justify-self-start"
+            onClick={onReset}
+          >
+            {t("desktop.settings.reset_layout")}
+          </Button>
+        </section>
       </PopoverContent>
     </Popover>
   );

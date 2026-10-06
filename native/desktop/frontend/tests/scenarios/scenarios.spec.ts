@@ -144,10 +144,11 @@ test("profile locked: the refusal shows and the TUI handover is offered", async 
   page: target,
 }) => {
   await open(target, "profile-locked");
-  await expect(
-    target.getByText(label("desktop.signin.refused.profile_locked")),
-  ).toBeVisible();
-  await target
+  const dialog = target.locator(".sign-in");
+  await expect(dialog).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
+  await dialog
     .getByRole("button", {
       name: label("desktop.signin.open_tui"),
       exact: true,
@@ -162,10 +163,11 @@ test("runtime unavailable: said plainly, with submission disabled", async ({
   page: target,
 }) => {
   await open(target, "runtime-unavailable");
-  await expect(
-    target.getByText(label("desktop.signin.refused.runtime_unavailable")),
-  ).toBeVisible();
+  await expect(target.locator(".sign-in").getByRole("heading")).toHaveText(
+    label("desktop.account.services_down"),
+  );
   await expect(password(target)).toHaveCount(0);
+  await expect(submit(target)).toHaveCount(0);
 });
 
 test("unsupported: no sign-in view, and the TUI starts", async ({
@@ -180,9 +182,14 @@ test("loading: nothing is invented while the host has not answered", async ({
   page: target,
 }) => {
   await open(target, "loading");
-  await expect(
-    target.getByText(label("desktop.signin.checking")),
-  ).toBeVisible();
+  // The pane and its header say the same thing: the check is in flight.
+  const pane = target.locator(".pane-tui");
+  await expect(pane.locator("[data-slot=empty]")).toHaveText(
+    label("desktop.signin.checking"),
+  );
+  await expect(pane.locator(".pane-head")).toContainText(
+    label("desktop.signin.checking"),
+  );
   await expect(target.locator(".docs-frame")).toHaveCount(0);
   await openLogs(target);
   await expect(target.locator(".record")).toHaveCount(0);
@@ -692,6 +699,19 @@ const ACCOUNT_STATES: {
     withholds: ["desktop.signin.submit", "desktop.account.sign_out"],
   },
   {
+    // A locked profile is not answered by a password: nothing offers one.
+    scenario: "profile-locked",
+    saying: "desktop.account.signed_out",
+    dot: "unavailable",
+    badge: "desktop.account.signed_out",
+    offers: [],
+    withholds: [
+      "desktop.signin.submit",
+      "desktop.account.sign_out",
+      "desktop.account.create_profile",
+    ],
+  },
+  {
     scenario: "runtime-unavailable",
     saying: "desktop.account.services_down",
     dot: "unavailable",
@@ -795,6 +815,170 @@ test("no-profile: the dialog offers the TUI's setup and no password field", asyn
   await expect(dialog).toHaveCount(0);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(0);
+});
+
+const tui = (target: Page) => target.locator('[data-terminal="tui"] textarea');
+
+// Wherever the TUI's own flow is chosen from, the keyboard follows it there.
+for (const from of ["pane", "settings", "palette"] as const)
+  test(`no-profile: setting up a profile from the ${from} puts the keyboard in the TUI`, async ({
+    page: target,
+  }) => {
+    await open(target, "no-profile");
+    await expect(target.locator(".sign-in")).toBeVisible();
+    await target.keyboard.press("Escape");
+    await expect(target.locator(".sign-in")).toHaveCount(0);
+    const setUp = {
+      name: label("desktop.account.create_profile"),
+      exact: true,
+    };
+    if (from === "pane") {
+      await target.locator(".pane-tui").getByRole("button", setUp).click();
+    } else if (from === "settings") {
+      await target
+        .getByRole("button", { name: label("desktop.rail.settings") })
+        .click();
+      await target.locator(".settings").getByRole("button", setUp).click();
+      await expect(target.locator(".settings")).toHaveCount(0);
+    } else {
+      await target
+        .getByRole("button", { name: label("desktop.rail.search") })
+        .click();
+      const palette = target.locator(".palette");
+      await palette.getByRole("combobox").fill(setUp.name);
+      await target.keyboard.press("Enter");
+      await expect(palette).toHaveCount(0);
+    }
+    await expect(tui(target)).toBeFocused();
+  });
+
+test("profile-locked: the pane says why and offers only the TUI", async ({
+  page: target,
+}) => {
+  await open(target, "profile-locked");
+  const dialog = target.locator(".sign-in");
+  await expect(dialog).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
+  await expect(password(target)).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  const pane = target.locator(".pane-tui");
+  await expect(pane).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
+  const onward = pane.getByRole("button", {
+    name: label("desktop.signin.open_tui"),
+    exact: true,
+  });
+  await expect(onward).toBeFocused();
+  await onward.click();
+  await expect(tui(target)).toBeFocused();
+  await expect.poll(calls(target, "signIn")).toBe(0);
+});
+
+test("runtime-unavailable: the dialog and settings say what the window says", async ({
+  page: target,
+}) => {
+  await open(target, "runtime-unavailable");
+  const dialog = target.locator(".sign-in");
+  await expect(dialog.getByRole("heading")).toHaveText(
+    label("desktop.account.services_down"),
+  );
+  await expect(dialog).not.toContainText(label("desktop.signin.title"));
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  // With no runtime to ask, the profile is not known: it is not said to be
+  // none, and no section stands empty for it.
+  const settings = target.locator(".settings");
+  await expect(
+    settings.getByRole("region", { name: label("desktop.signin.profile") }),
+  ).toHaveCount(0);
+  await expect(settings).not.toContainText(label("desktop.account.no_profile"));
+  await expect(
+    settings.getByRole("region", { name: label("desktop.settings.window") }),
+  ).toBeVisible();
+});
+
+test("wrong-password: a refusal that was seen is not shown again", async ({
+  page: target,
+}) => {
+  await open(target, "wrong-password");
+  await password(target).fill("not-the-password");
+  await submit(target).click();
+  const dialog = target.locator(".sign-in");
+  await expect(dialog).toContainText(label("desktop.signin.refused.invalid"));
+  await target.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await target
+    .locator(".pane-tui")
+    .getByRole("button", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    })
+    .click();
+  await expect(password(target)).toBeFocused();
+  await expect(dialog).not.toContainText(
+    label("desktop.signin.refused.invalid"),
+  );
+});
+
+test("throttled: a wait that is still running outlasts the dialog", async ({
+  page: target,
+}) => {
+  await open(target, "throttled");
+  await password(target).fill("anything");
+  await submit(target).click();
+  const dialog = target.locator(".sign-in");
+  await expect(dialog.locator("button[type=submit]")).toBeDisabled();
+  await target.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await target
+    .locator(".pane-tui")
+    .getByRole("button", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    })
+    .click();
+  await expect(dialog.locator("button[type=submit]")).toBeDisabled();
+});
+
+test("one Escape closes the dialog from a button showing its tooltip", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await expect(password(target)).toBeFocused();
+  // The reveal button follows the field; focused by keyboard, it shows its
+  // tooltip, which is a layer above the dialog.
+  await target.keyboard.press("Tab");
+  await expect(target.getByRole("tooltip")).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+});
+
+test("sign-out-refused: the failure is said once, not again when settings reopens", async ({
+  page: target,
+}) => {
+  await open(target, "sign-out-refused");
+  const settingsButton = target.getByRole("button", {
+    name: label("desktop.rail.settings"),
+  });
+  await settingsButton.click();
+  const settings = target.locator(".settings");
+  await settings
+    .getByRole("button", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect(settings.getByRole("alert")).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await settingsButton.click();
+  await expect(settings).toBeVisible();
+  await expect(settings.getByRole("alert")).toHaveCount(0);
 });
 
 test("signing out leaves no running session showing in the TUI's header", async ({

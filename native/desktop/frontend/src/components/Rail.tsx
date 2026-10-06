@@ -79,7 +79,7 @@ export function Rail({
 }) {
   return (
     <nav
-      className="rail min-h-0 w-rail overflow-y-auto border-r bg-chrome [scrollbar-width:none]"
+      className="rail min-h-0 w-rail overflow-y-auto border-r bg-chrome [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       aria-label={label}
     >
       <Toolbar.Root

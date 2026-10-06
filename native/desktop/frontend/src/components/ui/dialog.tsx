@@ -42,6 +42,10 @@ function DialogOverlay({
  * trapped inside while it is open and returns to the opener when it closes.
  * `closeLabel` names the corner close button; leave it out for a dialog that
  * offers its own way out.
+ *
+ * Escape closes it at the first press. The foundation gives the key to the
+ * topmost layer only, so a tooltip open on a focused button inside the
+ * dialog would otherwise take the first press and leave the dialog up.
  */
 function DialogContent({
   className,
@@ -54,11 +58,21 @@ function DialogContent({
   /** `top` suits a surface whose height changes as it is used. */
   placement?: "center" | "top";
 }) {
+  const dismiss = React.useRef<HTMLButtonElement>(null);
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        onKeyDownCapture={(event) => {
+          // A layer portalled out of the dialog keeps its own Escape.
+          if (
+            event.key === "Escape" &&
+            !event.nativeEvent.isComposing &&
+            event.currentTarget.contains(event.target as Node)
+          )
+            dismiss.current?.click();
+        }}
         className={cn(
           "fixed left-1/2 z-(--layer-modal) grid w-dialog max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-xl border bg-card p-5 text-card-foreground shadow-overlay outline-none",
           placement === "center"
@@ -70,6 +84,7 @@ function DialogContent({
         {...props}
       >
         {children}
+        <DialogPrimitive.Close ref={dismiss} hidden tabIndex={-1} />
         {closeLabel && (
           <DialogPrimitive.Close asChild>
             <IconButton

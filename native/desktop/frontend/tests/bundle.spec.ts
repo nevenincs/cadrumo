@@ -86,7 +86,10 @@ test("the addresses the shell opens are the product's own constants", () => {
     local("../../../../src/cadrumo/core/external_constants.toml"),
     "utf8",
   );
-  expect(/^sede = "([^"]+)"$/m.exec(constants)?.[1]).toBe(AEAT_SEDE);
+  // The key within its own table: another table may name a `sede` too.
+  const tables = constants.split(/^(?=\[)/m);
+  const domains = tables.find((table) => table.startsWith("[aeat.domains]"));
+  expect(/^sede = "([^"]+)"/m.exec(domains ?? "")?.[1]).toBe(AEAT_SEDE);
 });
 
 test("the production build contains no development scenario code", () => {

@@ -74,6 +74,27 @@ export function phaseOf(
   return "signed-out";
 }
 
+/** Refusals a password cannot answer: the way on is the TUI's own flow. */
+const HANDED_OVER: ReadonlySet<string> = new Set([
+  "PROFILE_LOCKED",
+  "KEYRING_UNAVAILABLE",
+]);
+
+/** Refusals that outlast the attempt that met them. */
+const STANDING: ReadonlySet<string> = new Set([...HANDED_OVER, "THROTTLED"]);
+
+/** Whether a password can settle the account as it stands. Every element
+ * that offers sign-in asks this, so none offers a form that is not there. */
+export function canSignIn(
+  phase: AccountPhase,
+  refusal: SignInRefusal | null,
+): boolean {
+  return (
+    (phase === "signed-out" || phase === "unknown") &&
+    !(refusal && HANDED_OVER.has(refusal.code.toUpperCase()))
+  );
+}
+
 const COUNTDOWN_TICK_MS = 250;
 
 /** The seconds left of a refusal's wait. No timer runs unless one is owed. */
@@ -225,8 +246,18 @@ export function useSignIn(host: Host) {
     remaining,
     signOutFailure,
     gated: GATED.has(phase),
+    canSignIn: canSignIn(phase, currentRefusal),
     submit,
     signOut,
+    /** The person has seen what was refused: a refusal that came from an
+     * attempt is not shown again when its surface is next opened. What is
+     * still true stays: a wait that is running, a profile that is locked. */
+    settle: () => {
+      setRefusal((held) =>
+        held && STANDING.has(held.code.toUpperCase()) ? held : null,
+      );
+      setSignOutFailure(null);
+    },
     openTui: () => setHandover(true),
     tuiExited: () => {
       setHandover(false);

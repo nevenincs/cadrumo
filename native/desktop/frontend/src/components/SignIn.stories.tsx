@@ -16,6 +16,7 @@ function Screen({ account }: { account: SignInController }) {
       <SignedOut
         account={account}
         onSignIn={() => undefined}
+        onOpenTui={() => undefined}
         signInButton={button}
       />
       <SignInDialog
@@ -23,6 +24,7 @@ function Screen({ account }: { account: SignInController }) {
         open
         onOpenChange={() => undefined}
         onClosed={() => button.current?.focus()}
+        onOpenTui={() => undefined}
       />
     </div>
   );
@@ -102,6 +104,7 @@ function Pane({ account }: { account: SignInController }) {
       <SignedOut
         account={account}
         onSignIn={() => undefined}
+        onOpenTui={() => undefined}
         signInButton={{ current: null }}
       />
     </div>
@@ -165,6 +168,7 @@ export const AccountSection: Story = {
             account={account}
             onSignIn={() => undefined}
             onSignOut={() => undefined}
+            onOpenTui={() => undefined}
           />
         </Specimen>
       ))}

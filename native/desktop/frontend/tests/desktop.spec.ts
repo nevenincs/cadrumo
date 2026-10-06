@@ -394,10 +394,15 @@ test("TUI handover remains available for locked profiles and refreshes on focus"
     );
     window.dispatchEvent(new Event("focus"));
   });
-  await expect(
-    target.getByText(label("desktop.signin.refused.profile_locked")),
-  ).toBeVisible();
+  // Said in the dialog, and in the pane behind it.
+  await expect(target.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
+  await expect(target.locator(".pane-tui")).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
   await target
+    .locator(".sign-in")
     .getByRole("button", {
       name: label("desktop.signin.open_tui"),
       exact: true,
@@ -429,9 +434,18 @@ test("runtime-unavailable remains distinct from unknown presence", async ({
     );
     window.dispatchEvent(new Event("focus"));
   });
-  await expect(
-    target.getByText(label("desktop.signin.refused.runtime_unavailable")),
-  ).toBeVisible();
+  // The dialog says it in the words the rest of the window uses, and does
+  // not say the presence is merely unknown.
+  const dialog = target.locator(".sign-in");
+  await expect(dialog.getByRole("heading")).toHaveText(
+    label("desktop.account.services_down"),
+  );
+  await expect(target.locator(".pane-tui")).toContainText(
+    label("desktop.account.services_down"),
+  );
+  await expect(target.getByText(label("desktop.account.unknown"))).toHaveCount(
+    0,
+  );
   // With no runtime to ask, a password is not asked for.
   await expect(
     target.getByLabel(label("desktop.signin.password"), { exact: true }),

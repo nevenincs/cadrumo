@@ -240,6 +240,13 @@ export function App({ host }: { host: Host }) {
     // Admitted: the next time the gate closes, the dialog opens again.
     setSignInDismissed(false);
   }, [gated]);
+  const signOutFailed = account.signOutFailure !== null;
+  useEffect(() => {
+    // A sign-out that failed leaves the person signed in: the next time the
+    // gate closes it is not by their choice, so the dialog opens.
+    if (signOutFailed) setSignInDismissed(false);
+  }, [signOutFailed]);
+  const mayEnterPassword = account.canSignIn;
 
   useEffect(() => {
     let current = true;
@@ -381,10 +388,13 @@ export function App({ host }: { host: Host }) {
   // Focus asked for a view that may not be on screen yet: showing it is a
   // state change, and that commits later than the request does. The wish is
   // kept and granted after the commit that shows the view, or dropped when
-  // none does in time.
+  // none does in time. Granted, it is kept for the rest of its life: a view
+  // that is rebuilt as it starts takes its focus with it, and the commit
+  // that follows gives it back, unless focus has gone somewhere by then.
   const wanted = useRef<{
     view: TerminalKind | "logs";
     since: number;
+    granted?: boolean;
   } | null>(null);
   const grantFocus = useCallback(() => {
     const wish = wanted.current;
@@ -393,6 +403,7 @@ export function App({ host }: { host: Host }) {
       wanted.current = null;
       return;
     }
+    if (wish.granted && document.activeElement !== document.body) return;
     const target = document.querySelector<HTMLElement>(
       wish.view === "logs"
         ? ".logview .filter-text"
@@ -404,7 +415,7 @@ export function App({ host }: { host: Host }) {
     else if (terminals.current[wish.view])
       terminals.current[wish.view]?.focus();
     else return;
-    wanted.current = null;
+    wish.granted = true;
   }, []);
   useEffect(grantFocus);
   useEffect(() => {
@@ -433,6 +444,15 @@ export function App({ host }: { host: Host }) {
     () => document.querySelector<HTMLElement>(".rail [role=toolbar]")?.focus(),
     [],
   );
+  // Every way into the TUI's own flow, from the pane, the dialog, settings
+  // or the palette: the TUI is shown and the keyboard goes to it.
+  const continueInTui = useCallback(() => {
+    accountRef.current.openTui();
+    setSettingsOpen(false);
+    setMaximized((area) => (area === "tui" ? area : null));
+    patch({ tuiShown: true });
+    focusView("tui");
+  }, [patch, focusView]);
 
   const openTab = useCallback(
     (tab: PanelTab, { toggle = true }: { toggle?: boolean } = {}) => {
@@ -823,7 +843,7 @@ export function App({ host }: { host: Host }) {
         group: "account",
         icon: "lock",
         keywords: "login password",
-        enabled: () => phase === "signed-out" || phase === "unknown",
+        enabled: () => mayEnterPassword,
         run: () => setSignInDismissed(false),
       },
       {
@@ -833,7 +853,7 @@ export function App({ host }: { host: Host }) {
         icon: "user",
         keywords: "register new account",
         enabled: () => phase === "no-profile",
-        run: () => accountRef.current.openTui(),
+        run: continueInTui,
       },
       {
         id: "account.signOut",
@@ -900,6 +920,8 @@ export function App({ host }: { host: Host }) {
       docsSearchReady,
       docsEntry,
       phase,
+      mayEnterPassword,
+      continueInTui,
       signedIn,
       signOut,
       cycleFocus,
@@ -1433,12 +1455,10 @@ export function App({ host }: { host: Host }) {
         // header says the account's phase, not the last session's.
         status={
           account.gated
-            ? phase === "checking"
-              ? { phase: "starting" }
-              : {
-                  phase: "unavailable",
-                  note: t(accountLabel(phase) ?? "desktop.account.unknown"),
-                }
+            ? {
+                phase: phase === "checking" ? "starting" : "unavailable",
+                note: t(accountLabel(phase) ?? "desktop.account.unknown"),
+              }
             : { phase: status.tui.phase, note: sessionNote("tui") }
         }
         onToggleMaximize={() => toggleMaximize("tui")}
@@ -1458,6 +1478,7 @@ export function App({ host }: { host: Host }) {
         <SignedOut
           account={account}
           onSignIn={() => setSignInDismissed(false)}
+          onOpenTui={continueInTui}
           signInButton={signInButton}
         />
       ) : (
@@ -1655,12 +1676,16 @@ export function App({ host }: { host: Host }) {
                     setSignInDismissed(false);
                   }}
                   onSignOut={signOut}
+                  onOpenTui={continueInTui}
                 />
               }
               prefs={prefs}
               setPrefs={setPrefs}
               languages={languages}
-              close={() => setSettingsOpen(false)}
+              close={() => {
+                setSettingsOpen(false);
+                accountRef.current.settle();
+              }}
               onReset={() => {
                 setPrefs(DEFAULT_PREFS);
                 setLayout(DEFAULT_LAYOUT);
@@ -1709,7 +1734,11 @@ export function App({ host }: { host: Host }) {
           <SignInDialog
             account={account}
             open={account.gated && !signInDismissed}
-            onOpenChange={(open) => setSignInDismissed(!open)}
+            onOpenChange={(open) => {
+              setSignInDismissed(!open);
+              if (!open) accountRef.current.settle();
+            }}
+            onOpenTui={continueInTui}
             // Dismissed, focus goes to the way back in; signed in, to the
             // TUI that has just started.
             onClosed={() => {
