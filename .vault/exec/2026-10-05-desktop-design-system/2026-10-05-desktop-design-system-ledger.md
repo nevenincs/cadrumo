@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:3207b01bb2a0a994bc843f8fca7e63663970823799be79ba03d1f0ae60fbcdf7'
+body_hash: 'sha256:fb41296f2fb6214d12be102442146629c3f60fef9304866b45c97358b5d611b6'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -320,6 +320,11 @@ related:
 - `S11` `verify:` `host unit tests` -> `pass`
 - `S11` `verify:` `host live package test` -> `pass`
 - `S11` `verify:` `host clippy` -> `pass`
+- `S11` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `verify:` `host unit and live package tests` -> `pass`
 
 ## Notes
 
