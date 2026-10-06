@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:04ec968c9f52baed42c9a382da818b2803e95bce888af531720613eb3dda13c5'
+body_hash: 'sha256:7e02dd2c0ffb2e03fd8f20ff3361897ee0068dd2a012d8650bcf37f0b359e080'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -297,7 +297,7 @@ The notice of dropped records stood above every span, with thousands of older re
 
 ### Log review left | low | not changed
 
-Rows have no role of their own beneath the log. Three tests still rest on a fixed wait: the gentlest wheel, the cap on the drawn span, and focus handed to the list once. The frame times and heap the check measured are of the development build; the production figures are the benchmark's, which stayed within budget after the change.
+Rows have no role of their own beneath the log. The three tests that rested on a fixed wait, the gentlest wheel, the cap on the drawn span, and focus handed to the list once, wait since `7a739a8787` for the log's own count to show that records have arrived; the wheel is one notch of two pixels and the cap is asserted to be reached exactly. The frame times and heap the check measured are of the development build; the production figures are the benchmark's, which stayed within budget after the change.
 
 ### Overlay focus | medium | settings could be left open with the keyboard outside it
 
