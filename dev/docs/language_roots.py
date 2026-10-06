@@ -184,15 +184,17 @@ def _rendered_language_file(content: bytes, slots: CompileSlots, language_index:
     """Return one language's bytes for a compiled file that is not a page.
 
     A file that is not a page has no markup for a position to be read from, so
-    only a mark whose creation site already wrote its strings for that file's
-    syntax can appear in one.
+    only a mark whose strings are placed as they were recorded can appear in
+    one: a creation site that wrote them for that file's syntax, or a template
+    that interpolated them without escaping, which is how Sphinx renders the
+    theme's own files.
     """
     text = content.decode(_UTF_8)
     pieces: list[str] = []
     position = 0
     for mark in MARK.finditer(text):
         rendering, values = slots.strings(int(mark.group(1), 36))
-        if rendering is not Rendering.VERBATIM:
+        if rendering not in {Rendering.VERBATIM, Rendering.TEMPLATE}:
             raise LanguageRootsError(
                 f"{path} is not a page and carries a mark whose strings a docutils writer owns; "
                 "a file written outside a page must record its strings in its own syntax"
@@ -260,23 +262,34 @@ def store_compiled_root(
     per_language = {path for language in languages for path in own[language]}
     pages: list[str] = []
     shared: list[str] = []
+    # Every file that is not a page is stored first, and the pages after it. A
+    # page links such a file by the cache key of the bytes the compile wrote, so
+    # each key the pages have to answer with one per language has to be known
+    # before the first page is factored.
+    page_paths: list[str] = []
     for path in sorted(compiled):
         if path in per_language:
             continue
         content = compiled[path].read_bytes()
-        page = _page_text(content) if path.endswith(_PAGE_SUFFIX) else None
-        if page is None:
-            if MARK_OPEN in content.decode(_UTF_8, errors="replace"):
-                for index, language in enumerate(languages):
-                    _write(
-                        _inside(destination / LANGUAGES_DIRECTORY / language, path),
-                        _rendered_language_file(content, slots, index, path),
-                    )
-                    own[language].append(path)
-                continue
+        if path.endswith(_PAGE_SUFFIX) and _page_text(content) is not None:
+            page_paths.append(path)
+            continue
+        if MARK_OPEN not in content.decode(_UTF_8, errors="replace"):
             _write(_inside(destination / STRUCTURE_DIRECTORY, path), content)
             shared.append(path)
             continue
+        written = []
+        for index, language in enumerate(languages):
+            rendered = _rendered_language_file(content, slots, index, path)
+            _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), rendered)
+            own[language].append(path)
+            written.append(asset_cache_key(rendered))
+        keys[f"{PurePosixPath(path).name}?v={asset_cache_key(content)}"] = tuple(written)
+    for path in page_paths:
+        content = compiled[path].read_bytes()
+        page = _page_text(content)
+        if page is None:  # pragma: no cover - the page text was read once already
+            raise LanguageRootsError(f"{path} stopped being a page between the two passes")
         factored: list[str | tuple[str, ...]] = []
         for part in _factor_compiled_page(page, slots):
             factored.extend(_cache_key_slots(part, keys) if isinstance(part, str) else [part])

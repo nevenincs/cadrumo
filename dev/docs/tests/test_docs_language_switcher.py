@@ -1,13 +1,14 @@
 """Language-switcher rendering and configuration contracts.
 
-The header language switcher (``docs/_templates/cadrumo-language-switcher.html``)
-is a native ``<details>/<summary>`` dropdown linking every page to its
-counterpart under each per-language deploy root. These gates prove, with a real
-Furo build (no mocks), that the switcher computes the correct relative hrefs
-from both a localized subdir build and the default English root build, that the
-closed state keeps a fixed footprint (current language code only, so the header
-cannot overflow on narrow viewports), and that ``docs/conf.py`` populates the
-switcher context from the single ``OutputLanguage`` authority.
+The header language switcher (:mod:`dev.docs.language_switcher`, placed by
+``docs/_templates/cadrumo-language-switcher.html``) is a native
+``<details>/<summary>`` dropdown linking every page to its counterpart under
+each per-language deploy root. These gates prove, with a real Furo build (no
+mocks), that the switcher computes the correct relative hrefs from both a
+localized subdir build and the default English root build, that the closed
+state keeps a fixed footprint (current language code only, so the header cannot
+overflow on narrow viewports), and that ``docs/conf.py`` populates the switcher
+context from the single ``OutputLanguage`` authority.
 """
 
 from __future__ import annotations
@@ -40,11 +41,8 @@ def _switcher_context(language: str) -> dict[str, object]:
     """Return the switcher html_context for one build language."""
     order = ["en", *[member.value for member in OutputLanguage if member is not OutputLanguage.EN]]
     return {
-        "cadrumo_docs_language": language,
         "cadrumo_docs_default_language": "en",
-        "cadrumo_docs_language_is_default": language == "en",
         "cadrumo_docs_languages": [{"code": code, "label": _LANGUAGE_LABELS[code]} for code in order],
-        "cadrumo_docs_language_label": _LANGUAGE_LABELS[language],
         # The switcher's accessible name is resolved chrome, so the real mapping
         # the build hands the template is supplied here rather than a stub.
         "cadrumo_chrome": site_chrome(OutputLanguage(language), language_endonym=_LANGUAGE_LABELS[language]),
@@ -57,6 +55,8 @@ def _build_switcher_site(tmp_path: Path, language: str) -> str:
     (site / "how-to").mkdir(parents=True)
     context = _switcher_context(language)
     conf = (
+        "import sys\n"
+        f"sys.path.insert(0, r'{_REPO_ROOT}')\n"
         'extensions = ["myst_parser"]\n'
         'html_theme = "furo"\n'
         f"templates_path = [r'{_TEMPLATES}']\n"
@@ -66,6 +66,10 @@ def _build_switcher_site(tmp_path: Path, language: str) -> str:
         'html_theme_options = {"announcement": "x"}\n'
         f'language = "{language}"\n'
         f"html_context = {context!r}\n"
+        # The element is built by the module that owns it, registered exactly as
+        # the production configuration registers it, so the build under test
+        # exercises the shipped code and not a copy of it.
+        "from dev.docs.language_switcher import register as setup\n"
     )
     (site / "conf.py").write_text(conf, encoding="utf-8")
     (site / "index.md").write_text("# Home\n\n```{toctree}\nhow-to/quickstart\n```\n", encoding="utf-8")
@@ -166,9 +170,8 @@ def _conf_switcher_context(language: str) -> dict[str, object]:
         f"ns = runpy.run_path(r'{conf}');"
         "ctx = ns['html_context'];"
         "print('SWITCHER=' + json.dumps({"
-        "'language': ctx['cadrumo_docs_language'],"
+        "'language': ctx['language'],"
         "'default': ctx['cadrumo_docs_default_language'],"
-        "'is_default': ctx['cadrumo_docs_language_is_default'],"
         "'languages': ctx['cadrumo_docs_languages']}))"
     )
     with tempfile.TemporaryDirectory(prefix="cadrumo-switcher-ctx-") as storage_root:
@@ -199,7 +202,6 @@ def test_conf_populates_switcher_context_from_output_language() -> None:
     context = _conf_switcher_context("ca")
     assert context["language"] == "ca"
     assert context["default"] == "en"
-    assert context["is_default"] is False
     raw_languages = context.get("languages")
     assert isinstance(raw_languages, list)
     languages: list[dict[str, object]] = []

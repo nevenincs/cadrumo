@@ -45,16 +45,19 @@ class CasillaFacts:
 class ModeloOverview:
     """What a modelo IS, compiled from the registry plus the Terminology Handbook.
 
-    ``definition`` is curated Handbook prose and is present only for an approved
-    concept that authored it IN THE BUILD LANGUAGE; everything else is compiled
-    from the schema, so a modelo with no curated definition still says what it
-    is rather than opening on a bare list.
+    ``definitions`` is curated Handbook prose and carries a language only where
+    an approved concept authored it IN THAT LANGUAGE; everything else is
+    compiled from the schema, so a modelo with no curated definition still says
+    what it is rather than opening on a bare list. A definition is held per
+    language rather than resolved to one because the paragraph it fills is a
+    paragraph the page does not have where it is absent, which is a difference
+    in markup and not in a string (:func:`~dev.docs._locale_chrome.docs_line`).
     """
 
     title: str
     official_name: str
-    #: Curated Handbook definition in the build language, or ``None``.
-    definition: str | None
+    #: Curated Handbook definitions by language tag, absent where unauthored.
+    definitions: Mapping[str, str]
     tax_domain: str
     cadence: str
     legal_refs: tuple[str, ...]

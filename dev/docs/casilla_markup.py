@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    pass
-
+from .compile_slots import widest
 
 #: RST inline-markup start characters. Registry labels carry free AEAT prose
 #: with footnote markers (``2025(*)``), pipes, and stray asterisks, so every
 #: embedded free-text value reaching an RST heading is backslash-escaped or the
 #: ``-n -W`` build reds on an unbalanced ``*`` / ``` ` ``` / ``|`` run. Card
 #: bodies are raw HTML and are HTML-escaped instead.
+#:
+#: A mark (:mod:`dev.docs.compile_slots`) carries none of them, so a value the
+#: one compile marked passes through untouched -- which is right: the escaping
+#: protects the parser from free text, and the free text is in the record of
+#: marks rather than in the source the parser reads.
 _RST_SPECIAL = "\\`*_|[]"
 
 
@@ -22,7 +23,7 @@ def _rst_escape(text: str) -> str:
 
 
 def _rst_heading(text: str, underline: str) -> str:
-    return f"{text}\n{underline * max(len(text), 3)}\n"
+    return f"{text}\n{underline * max(widest(text), 3)}\n"
 
 
 def _raw_html(lines: list[str]) -> str:

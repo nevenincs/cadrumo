@@ -8,13 +8,14 @@ escaping the mark would leave every language's string unescaped.
 
 from __future__ import annotations
 
+import html
 import re
 from collections import OrderedDict
 from collections.abc import Mapping
 from functools import partial
 from typing import TYPE_CHECKING
 
-from ._locale_chrome import docs_chrome, docs_fragment
+from ._locale_chrome import docs_chrome, docs_fragment, docs_line
 from .casilla_card_rendering import _box_number, _localised, _render_entry
 from .casilla_display import _section_anchor, _section_display, _token_display
 from .casilla_legal_grounding import _legal_list, _LegalLink
@@ -116,6 +117,19 @@ def _casilla_index(
     return lines
 
 
+def _definition_paragraph(overview: ModeloOverview, language: OutputLanguage) -> str | None:
+    """Return the curated-definition paragraph in one language, or None where it has none.
+
+    The definition is already one language's own string, so it is escaped as
+    plain HTML rather than through the slot-aware escape: there is no mark left
+    inside a value the per-language rendering resolved.
+    """
+    definition = overview.definitions.get(language.value)
+    if not definition:
+        return None
+    return f'<p class="modelo-overview__definition">{html.escape(definition)}</p>'
+
+
 def _page_header(
     modelo: str,
     overview: ModeloOverview | None,
@@ -129,8 +143,10 @@ def _page_header(
     resolved = 0
     if overview is not None:
         lines.append(f'<p class="modelo-overview__name">{escape(overview.official_name)}</p>')
-        if overview.definition:
-            lines.append(f'<p class="modelo-overview__definition">{escape(overview.definition)}</p>')
+        # A curated definition is authored per language, so the paragraph is a
+        # paragraph only the languages that have one carry; it rides at the end
+        # of the line before it with its own line break.
+        lines[-1] += docs_line(lambda carried: _definition_paragraph(overview, carried), language)
 
     counted: dict[str, int] = {}
     for record in records:

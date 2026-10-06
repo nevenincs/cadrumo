@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
@@ -72,6 +72,37 @@ def docs_site_prefix(environ: Mapping[str, str] | None = None) -> str:
             f"directory in the served site; got {raw!r}",
         )
     return f"{segment}/"
+
+
+def docs_site_prefixes(
+    languages: Sequence[str],
+    *,
+    build_language: str,
+    environ: Mapping[str, str] | None = None,
+) -> dict[str, str]:
+    """Return every language's own path inside the served site, for one compile of all of them.
+
+    A single-language build is told its own prefix and needs no other
+    (:func:`docs_site_prefix`). One compile carrying every language writes every
+    root at once, so it needs the whole layout -- and the configured value still
+    decides it, for the same reason: a build given no prefix is the apex of the
+    layout being produced, so the language it builds in carries no directory and
+    every other language carries its own; a build given a prefix is one root in
+    a layout where each sits under its own code.
+
+    Args:
+        languages: The languages the compile carries.
+        build_language: The language the compile builds in.
+        environ: The environment to read; the process environment by default.
+
+    Returns:
+        Each language's prefix, as :func:`docs_site_prefix` returns one.
+
+    Raises:
+        ValueError: As :func:`docs_site_prefix` raises it.
+    """
+    at_apex = not docs_site_prefix(environ)
+    return {language: "" if at_apex and language == build_language else f"{language}/" for language in languages}
 
 
 def pin_docs_build_root(repo_root: Path | None = None) -> Path:

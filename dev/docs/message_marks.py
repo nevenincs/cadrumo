@@ -44,6 +44,7 @@ from pathlib import Path
 from typing import Final, override
 
 from sphinx.transforms import SphinxTransform
+from sphinx.transforms.post_transforms import SphinxPostTransform
 
 from .compile_slots import MARK, MARK_CLOSE, MARK_OPEN, CompileSlots, Rendering, mark_number, plain_text
 
@@ -127,6 +128,13 @@ class MessagePlan:
         if index >= len(self.blocks):
             return None
         return self.languages[self.blocks[index].language]
+
+    def owner_of(self, docname: str) -> str | None:
+        """Return the page whose translations one fragment document carries, if it is one."""
+        try:
+            return self.pages[self.fragments.index(docname)]
+        except ValueError:
+            return None
 
 
 # ── The compile's one active plan ────────────────────────────────────────────
@@ -462,6 +470,58 @@ def harvest(plan: MessagePlan, slots: CompileSlots, page_path: Callable[[str], P
         slots.supply(mark, markup, [plain_text(string) for string in markup])
     _ACTIVE = None
     return len(rendered)
+
+
+class ResolveOwnPageAnchors(SphinxPostTransform):
+    """Point a fragment's links to its own page's headings at that page.
+
+    A translation can link to a heading of the page it stands on, written as
+    ``[text](#the-heading)``. MyST resolves that form against the slugs of the
+    document it was parsed in, and a fragment document is not that document, so
+    the link reaches the reference resolver unresolved, is reported missing and
+    renders as plain text -- which a strict build refuses.
+
+    The owning page is known from the fragment's own docname, and its heading
+    slugs are in the environment by the time references are resolved. So the
+    link is rewritten here into the form MyST resolves against another
+    document: the owning page, with the heading as the target inside it. What
+    that resolves to differs from the page's own link by the page's filename in
+    front of the anchor and the title wrapper a cross-document reference
+    carries, both of which :func:`harvest` already takes back off.
+
+    The page's own order of precedence is kept rather than guessed at: a page
+    resolves such a link against its declared targets first and its heading
+    slugs second, and a declared target is a label of the whole project that
+    the ordinary resolver already reaches from the fragment. So only a slug
+    that is not also a label is rewritten here. Without that, a heading
+    carrying both -- a declared target whose name is the heading's own slug --
+    would be reached through its section instead of through the target, and the
+    section's own identifier is not the target's.
+    """
+
+    #: Ahead of MyST's own reference resolver, which runs at 9.
+    default_priority = 8
+
+    @override
+    def run(self, **kwargs: object) -> None:
+        """Rewrite every link to one of the owning page's headings that nothing else resolves."""
+        from sphinx import addnodes
+
+        plan = _ACTIVE
+        owner = plan.owner_of(self.env.docname) if plan is not None else None
+        if owner is None:
+            return
+        slugs = self.env.metadata.get(owner, {}).get("myst_slugs", {})
+        standard = self.env.domains.standard_domain
+        for node in self.document.findall(addnodes.pending_xref):
+            if node.get("reftype") != "myst" or node.get("refdomain"):
+                continue
+            target = node["reftarget"]
+            if target not in slugs or target.lower() in standard.labels or target.lower() in standard.anonlabels:
+                continue
+            node["refdomain"] = "doc"
+            node["reftargetid"] = target
+            node["reftarget"] = owner
 
 
 class DeclareBlockLanguage(SphinxTransform):

@@ -32,7 +32,7 @@ from cadrumo.core.i18n.render import lookup_translation
 
 from .compile_slots import Rendering, active
 
-__all__ = ["DocsChromeError", "docs_chrome", "docs_fragment", "docs_line"]
+__all__ = ["DocsChromeError", "docs_chrome", "docs_fragment", "docs_line", "template_chrome"]
 
 
 class DocsChromeError(RuntimeError):
@@ -64,23 +64,53 @@ def docs_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
             match the ones supplied.  Both are authoring faults that must
             surface at build time rather than reaching a reader.
     """
+    return _chrome(Rendering.DOCUTILS, key, language, values)
+
+
+def template_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
+    """Return one chrome string a Jinja template will write, or refuse.
+
+    The site's own chrome does not reach the page through a docutils writer: it
+    is handed to the theme's templates, which escape it as ``markupsafe`` does
+    and never educate its typography. So the compile records it as the
+    templates' own (:attr:`~dev.docs.compile_slots.Rendering.TEMPLATE`) rather
+    than as a docutils writer's, which would publish a typographic apostrophe
+    where every single-language build writes the authored one.
+
+    Args:
+        key: The dotted catalogue key holding the string.
+        language: The language this docs root is being built for.
+        values: Placeholder values interpolated into the authored string.
+
+    Returns:
+        The authored string for ``language``, with placeholders filled, or the
+        mark standing for every language's string under a multilingual compile.
+
+    Raises:
+        DocsChromeError: As :func:`docs_chrome` raises it.
+    """
+    return _chrome(Rendering.TEMPLATE, key, language, values)
+
+
+def _chrome(rendering: Rendering, key: str, language: OutputLanguage, values: Mapping[str, object]) -> str:
+    """Return one chrome string, or the mark recording every language's under the compile."""
     slots = active()
-    if slots is not None:
-        return slots.mark(
-            Rendering.DOCUTILS,
-            [
-                _authored(
-                    key,
-                    OutputLanguage(carried),
-                    {
-                        name: slots.resolved(value, index) if isinstance(value, str) else value
-                        for name, value in values.items()
-                    },
-                )
-                for index, carried in enumerate(slots.languages)
-            ],
-        )
-    return _authored(key, language, values)
+    if slots is None:
+        return _authored(key, language, values)
+    return slots.mark(
+        rendering,
+        [
+            _authored(
+                key,
+                OutputLanguage(carried),
+                {
+                    name: slots.resolved(value, index) if isinstance(value, str) else value
+                    for name, value in values.items()
+                },
+            )
+            for index, carried in enumerate(slots.languages)
+        ],
+    )
 
 
 def docs_fragment(render: Callable[[OutputLanguage], str], language: OutputLanguage, /) -> str:

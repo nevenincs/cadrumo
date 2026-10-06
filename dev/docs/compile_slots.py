@@ -24,6 +24,11 @@ writer are the same bytes and need different strings.
   The finishing pass renders it as that writer does at the position the mark
   reached: a text node, an attribute value, or the ``<title>`` element the
   theme's template fills through Jinja.
+- :attr:`Rendering.TEMPLATE` is text the theme's Jinja templates write. Sphinx
+  renders them without autoescaping, and nothing a template writes ever met the
+  smart-quotes transform, so the string reaches the page as it was authored
+  where a docutils writer would have escaped it and published a typographic
+  apostrophe. The ``<title>`` element is the exception its template escapes.
 - :attr:`Rendering.VERBATIM` is text already in the form the creation site
   wrote it for -- a generator's own ``.. raw:: html`` block, a JSON literal --
   and is placed as it was recorded.
@@ -85,6 +90,7 @@ class Rendering(StrEnum):
     """Which writer owns a mark's strings, and therefore how they are written."""
 
     DOCUTILS = "docutils"
+    TEMPLATE = "template"
     VERBATIM = "verbatim"
     MESSAGE = "message"
 
@@ -142,6 +148,15 @@ def _docutils_attribute(value: str) -> str:
     return _ATTRIBUTE_WHITESPACE.sub(" ", value).translate(_DOCUTILS_SPECIAL)
 
 
+def _jinja(value: str) -> str:
+    """Return one string as Jinja escapes it into a template's output.
+
+    ``markupsafe`` escapes ``&``, ``<`` and ``>`` like docutils does, leaves
+    ``@`` alone, and writes both quotation marks as numeric references.
+    """
+    return html.escape(value, quote=False).replace('"', "&#34;").replace("'", "&#39;")
+
+
 def _template_title(value: str) -> str:
     """Return one string as the theme's ``<title>`` carries it.
 
@@ -151,7 +166,7 @@ def _template_title(value: str) -> str:
     page is the plain string, whitespace folded, escaped the way
     ``markupsafe`` escapes rather than the way docutils does.
     """
-    return html.escape(" ".join(value.split()), quote=False).replace('"', "&#34;").replace("'", "&#39;")
+    return _jinja(" ".join(value.split()))
 
 
 #: What the docutils smart-quotes transform is asked to educate: quotation
@@ -251,6 +266,19 @@ def _written(rendering: Rendering, position: Position, value: str, plain: str | 
         if plain is None:
             raise CompileSlotsError(f"a message mark reached the page with no plain form recorded: {value!r}")
         return _message_written(position, value, plain)
+    if rendering is Rendering.TEMPLATE:
+        if position is Position.TITLE:
+            return _template_title(value)
+        if position in {Position.TEXT, Position.ATTRIBUTE}:
+            # Sphinx renders the theme's templates in an environment that does
+            # not autoescape, so a chrome string a template interpolates reaches
+            # the page as it was authored. Only the ``<title>``, which the
+            # template escapes itself, is written otherwise.
+            return value
+        raise CompileSlotsError(
+            f"a mark whose strings a Jinja template owns reached {position.value} markup: {value!r}. "
+            "Only text and attribute values a template writes can be recorded that way."
+        )
     # Navigation and body-toctree entry titles reach the page without being
     # educated, so each language's string must not be educated either.
     if position is Position.ENTRY_TEXT:
@@ -528,6 +556,48 @@ def deactivate() -> None:
 def active() -> CompileSlots | None:
     """Return this compile's mark record, or None outside a multilingual compile."""
     return _ACTIVE
+
+
+def language_text(
+    value_of: Callable[[str], str],
+    language: str,
+    *,
+    rendering: Rendering = Rendering.DOCUTILS,
+) -> str:
+    """Return one value per language as a mark, or the build language's value alone.
+
+    The primitive for a creation site that can already say what every language
+    reads and needs no rendering of its own:
+    :func:`~dev.docs._locale_chrome.docs_chrome` for a catalogue string,
+    :func:`~dev.docs._locale_chrome.docs_fragment` where the markup itself
+    differs, and this where the value is simply looked up per language.
+
+    Args:
+        value_of: Returns the value for one language tag.
+        language: The language a single-language build renders.
+        rendering: Which writer owns the strings.
+
+    Returns:
+        The mark, or the build language's value outside the one compile.
+    """
+    slots = _ACTIVE
+    if slots is None:
+        return value_of(language)
+    return slots.mark(rendering, [value_of(carried) for carried in slots.languages])
+
+
+def widest(value: str) -> int:
+    """Return how many characters *value* reads as in the language that reads it longest.
+
+    An RST heading is underlined to the width of its own text, and a mark is
+    four characters standing for a title of any length. Docutils accepts an
+    underline longer than its title and the length never reaches the page, so
+    the widest language's is the one that is safe for all of them.
+    """
+    slots = _ACTIVE
+    if slots is None or MARK_OPEN not in value:
+        return len(value)
+    return max(len(slots.resolved(value, index)) for index in range(len(slots.languages)))
 
 
 def escape(value: str, *, quote: bool = True) -> str:

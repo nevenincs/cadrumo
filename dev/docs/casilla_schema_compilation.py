@@ -5,13 +5,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
+from cadrumo.core.external_constants import OutputLanguage
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .casilla_reference_models import CasillaFacts, CompiledSchema, ModeloOverview
+from .compile_slots import active, language_text
 from .terminology.search_record import CasillaSearchRecord
 
 if TYPE_CHECKING:
-    from cadrumo.core.external_constants import OutputLanguage
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
     from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition, ModeloRevision
     from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -67,17 +68,25 @@ def _compile_modelo_overviews(
     language: OutputLanguage,
     modelos: Mapping[str, ModeloDefinition],
 ) -> dict[str, ModeloOverview]:
-    """Compile each modelo's identity, cadence, grounding and curated definition."""
-    definitions = _handbook_definitions(language)
+    """Compile each modelo's identity, cadence, grounding and curated definition.
+
+    The identity is authored in every language, so under the one compile the
+    title and the official name are marks reading each language's own, and the
+    curated definitions are carried per language for the page to make its own
+    paragraph out of (:class:`~dev.docs.casilla_reference_models.ModeloOverview`).
+    """
+    slots = active()
+    carried = slots.languages if slots is not None else (language.value,)
+    definitions = {tag: _handbook_definitions(OutputLanguage(tag)) for tag in carried}
     overviews: dict[str, ModeloOverview] = {}
     for modelo_id in sorted(modelo_ids):
         modelo = modelos.get(modelo_id)
         if modelo is None:
             continue
         overviews[modelo_id] = ModeloOverview(
-            title=modelo.get_title(language.value),
-            official_name=modelo.get_official_name(language.value),
-            definition=definitions.get(modelo_id),
+            title=language_text(modelo.get_title, language.value),
+            official_name=language_text(modelo.get_official_name, language.value),
+            definitions={tag: authored[modelo_id] for tag, authored in definitions.items() if modelo_id in authored},
             tax_domain=str(modelo.tax_domain),
             cadence=str(modelo.cadence),
             legal_refs=tuple(str(ref) for ref in modelo.legal_refs),

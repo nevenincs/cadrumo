@@ -41,6 +41,8 @@ site_chrome = import_module("dev.docs.site_chrome").site_chrome
 site_labels = import_module("dev.docs.site_chrome").site_labels
 _DOCS_HTML_ROOT = import_module("dev.docs.build_paths").docs_html_root(_PROJECT_ROOT)
 _DOCS_SITE_PREFIX = import_module("dev.docs.build_paths").docs_site_prefix(os.environ)
+_DOCS_SITE_PREFIXES = import_module("dev.docs.build_paths").docs_site_prefixes
+_LANGUAGE_SWITCHER = import_module("dev.docs.language_switcher")
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
@@ -211,6 +213,7 @@ _BUILD_LANGUAGE = OutputLanguage(language)
 _COMPILE_SLOTS = import_module("dev.docs.compile_slots")
 _MESSAGE_MARKS = import_module("dev.docs.message_marks")
 _MESSAGE_MARKS_TRANSFORM = _MESSAGE_MARKS.DeclareBlockLanguage
+_MESSAGE_MARKS_POST_TRANSFORM = _MESSAGE_MARKS.ResolveOwnPageAnchors
 _MULTILINGUAL = os.environ.get("CADRUMO_DOCS_MULTILINGUAL") == "1"
 if _MULTILINGUAL:
     _COMPILE_SLOTS.activate([member.value for member in OutputLanguage])
@@ -663,26 +666,59 @@ _DOCS_LANGUAGE_ENDONYMS = {
     OutputLanguage.HU: "Magyar",
 }
 _DOCS_LANGUAGE_ORDER = (OutputLanguage.EN, *(member for member in OutputLanguage if member is not OutputLanguage.EN))
-html_context["cadrumo_docs_language"] = language
 html_context["cadrumo_docs_default_language"] = OutputLanguage.EN.value
-html_context["cadrumo_docs_language_is_default"] = language == OutputLanguage.EN.value
 html_context["cadrumo_docs_languages"] = [
     {"code": member.value, "label": _DOCS_LANGUAGE_ENDONYMS[member]} for member in _DOCS_LANGUAGE_ORDER
 ]
+
+
+def _per_language_template_value(value_of):
+    """Return each carried language's own value as one mark, or this build's value alone.
+
+    The theme's templates write these, so under the one compile they are
+    recorded as the templates' own: Sphinx renders them without autoescaping,
+    and nothing a template writes meets the smart-quotes transform.
+
+    Args:
+        value_of: Returns the value for one language tag.
+
+    Returns:
+        The mark reading every carried language's value, or the build
+        language's value outside the one compile.
+    """
+    slots = _COMPILE_SLOTS.active()
+    if slots is None:
+        return value_of(language)
+    return slots.mark(_COMPILE_SLOTS.Rendering.TEMPLATE, [value_of(carried) for carried in slots.languages])
+
+
+# The ``lang`` attribute of every page, which the theme takes from the template
+# context when it is set there and from the build's one Sphinx language when it
+# is not.
+html_context["language"] = _per_language_template_value(lambda carried: carried)
 # This root's own path inside the served site, which the search controller needs
 # because the site carries ONE index, at the apex above every language root. The
 # prefix is how a page walks back from its own root to that apex, and how a
 # record shared by every language is opened inside the root being read.
-html_context["cadrumo_docs_site_prefix"] = _DOCS_SITE_PREFIX
+_SITE_PREFIXES = _DOCS_SITE_PREFIXES(
+    [member.value for member in OutputLanguage],
+    build_language=language,
+    environ=os.environ,
+)
+html_context["cadrumo_docs_site_prefix"] = _per_language_template_value(lambda carried: _SITE_PREFIXES[carried])
 
 # ── Site chrome ──────────────────────────────────────────────────────────────
 # Every template-rendered label, accessible name, and interaction-layer string,
 # flat and resolved for this root's language. The templates read it by name and
 # the build publishes it once per root as the script docs/_static/cadrumo-docs.js
 # reads, so the server-rendered and browser-written chrome share one authority.
+# The endonym is the name of the language the ROOT is in, so under the one
+# compile it depends on the language exactly as the chrome around it does: a
+# value resolved for one language would read "Language: English" inside every
+# other root.
 html_context["cadrumo_chrome"] = site_chrome(
     _BUILD_LANGUAGE,
-    language_endonym=_DOCS_LANGUAGE_ENDONYMS[_BUILD_LANGUAGE],
+    language_endonym=_per_language_template_value(lambda carried: _DOCS_LANGUAGE_ENDONYMS[OutputLanguage(carried)]),
 )
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
@@ -1878,6 +1914,8 @@ def setup(app):
         app.connect("build-finished", _read_authored_messages, priority=100)
         app.connect("build-finished", _write_compile_slots, priority=200)
         app.add_transform(_MESSAGE_MARKS_TRANSFORM)
+        app.add_post_transform(_MESSAGE_MARKS_POST_TRANSFORM)
+    _LANGUAGE_SWITCHER.register(app)
     app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)

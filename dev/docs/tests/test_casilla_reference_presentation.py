@@ -386,7 +386,7 @@ def _overview(**overrides: object) -> ModeloOverview:
     fields: dict[str, object] = {
         "title": "IRPF pago fraccionado",
         "official_name": "Modelo 130. Pago fraccionado.",
-        "definition": None,
+        "definitions": {},
         "tax_domain": "irpf",
         "cadence": "quarterly",
         "legal_refs": ("ley-37-1992:art-92",),
@@ -398,7 +398,11 @@ def _overview(**overrides: object) -> ModeloOverview:
 def test_modelo_page_leads_with_the_curated_definition_when_one_exists() -> None:
     """An approved Handbook definition is the modelo's opening statement."""
     definition = "Curated statement of what this modelo is."
-    rst = _render((_record(),), OutputLanguage.EN, _schema(overview=_overview(definition=definition)))
+    rst = _render(
+        (_record(),),
+        OutputLanguage.EN,
+        _schema(overview=_overview(definitions={OutputLanguage.EN.value: definition})),
+    )
     assert f'<p class="modelo-overview__definition">{definition}</p>' in rst
     assert "Modelo 130. Pago fraccionado." in rst
 
