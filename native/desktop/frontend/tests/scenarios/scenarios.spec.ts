@@ -512,3 +512,144 @@ test("a focused record that scrolls out of the log hands focus to the log, once"
   await target.keyboard.press("ArrowUp");
   await expect(list.locator(".record:focus")).toHaveCount(1);
 });
+
+// The log's Follow toggle and its list, with the pointer over the list.
+async function overLog(target: Page) {
+  const list = target.locator(".logview-list");
+  const follow = target.getByRole("button", {
+    name: label("desktop.logs.follow"),
+  });
+  await expect(list.locator(".record")).toHaveCount(400);
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  const box = await list.boundingBox();
+  if (!box) throw new Error("The log's list is not on screen.");
+  await target.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  return { list, follow };
+}
+
+test("a slow scroll up from the end stops the log following", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  // A pixel at a time, as a slow drag of the scrollbar moves it: the
+  // movement adds up from the end.
+  await list.evaluate(
+    (element) =>
+      new Promise<void>((done) => {
+        let steps = 0;
+        const step = () => {
+          element.scrollTop -= 1;
+          if (++steps < 60) requestAnimationFrame(step);
+          else done();
+        };
+        requestAnimationFrame(step);
+      }),
+  );
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+});
+
+test("the gentlest wheel up leaves the end of a busy log", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000&feed=100",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  for (let notch = 0; notch < 40; notch++) await target.mouse.wheel(0, -2);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // And the view stays where the wheel left it while records arrive.
+  const gap = () =>
+    list.evaluate(
+      (element) =>
+        element.scrollHeight - element.scrollTop - element.clientHeight,
+    );
+  const before = await gap();
+  await target.waitForTimeout(600);
+  expect(await gap()).toBeGreaterThan(before);
+});
+
+test("End returns a reader to the newest record of a busy log", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=40",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  // Repeated: losing this to a batch that lands mid-way was intermittent.
+  for (let round = 0; round < 5; round++) {
+    await target.mouse.wheel(0, -900);
+    await expect(follow).toHaveAttribute("aria-pressed", "false");
+    await list.locator(".record").nth(5).focus();
+    await target.keyboard.press("End");
+    await expect(follow).toHaveAttribute("aria-pressed", "true");
+    await expect(list.locator(".record")).toHaveCount(400);
+    await expect(list.locator(".record:focus")).toHaveCount(1);
+  }
+});
+
+test("opening a detail at the end keeps the newest record in view", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await openLogs(target);
+  const list = target.locator(".logview-list");
+  const rows = list.locator(".record");
+  await expect(rows.last()).toBeVisible();
+  await rows
+    .filter({ has: target.locator("[aria-expanded]") })
+    .last()
+    .locator("[aria-expanded]")
+    .click();
+  await expect(list.locator("pre")).toBeVisible();
+  const [listBox, newest] = [
+    await list.boundingBox(),
+    await rows.last().boundingBox(),
+  ];
+  if (!listBox || !newest) throw new Error("The log is not on screen.");
+  expect(newest.y + newest.height).toBeLessThanOrEqual(
+    listBox.y + listBox.height + 1,
+  );
+});
+
+test("a reader far from the end is never given the whole log to draw", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=20",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await target.mouse.wheel(0, -900);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  const resting = await list.evaluate((element) => {
+    const edge = element.getBoundingClientRect().top;
+    const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
+      (candidate) => candidate.getBoundingClientRect().top >= edge,
+    );
+    return {
+      seq: row?.dataset.seq ?? "",
+      top: (row?.getBoundingClientRect().top ?? 0) - edge,
+    };
+  });
+  // Far more arrives than the span may hold.
+  await target.waitForTimeout(4000);
+  const drawn = await list.locator(".record").count();
+  expect(drawn).toBeLessThanOrEqual(2000);
+  expect(drawn).toBeGreaterThan(400);
+  const after = await list.evaluate((element, seq) => {
+    const edge = element.getBoundingClientRect().top;
+    const row = element.querySelector(`[data-seq="${seq}"]`);
+    return (row?.getBoundingClientRect().top ?? Number.NaN) - edge;
+  }, resting.seq);
+  expect(Math.abs(after - resting.top)).toBeLessThanOrEqual(2);
+  // The Follow button is the way back to the newest record.
+  await follow.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect(list.locator(".record")).toHaveCount(400);
+});

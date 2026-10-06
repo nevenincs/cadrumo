@@ -362,6 +362,34 @@ try {
     filterMs: round(filter),
     ...(await metrics(client)),
   };
+  // A reader who has scrolled up in a full log while records stream in at
+  // the most the host sends: the drawn span grows to its limit and every
+  // batch is a commit over it.
+  await page.goto(
+    `${origin}/scenarios.html?scenario=signed-in&bar=off&records=${RECORDS}&feed=100`,
+  );
+  // The log's tab is still the open one, so the console is not on screen.
+  await page.waitForSelector('[data-terminal="console"] .xterm-rows', {
+    state: "attached",
+  });
+  await page.locator("#tab-logs").click();
+  await page.locator(".logview-list .record").first().waitFor();
+  const reading = await page.locator(".logview-list").boundingBox();
+  await page.mouse.move(
+    reading.x + reading.width / 2,
+    reading.y + reading.height / 2,
+  );
+  await page.mouse.wheel(0, -900);
+  await page.waitForTimeout(12000);
+  const streamed = await frames(page, () => page.waitForTimeout(3000));
+  report.logWhileReading = {
+    drawn: await page.locator(".logview-list .record").count(),
+    frameMs: {
+      median: round(median(streamed)),
+      p95: round(percentile(streamed, 0.95)),
+      worst: round(Math.max(...streamed)),
+    },
+  };
   await context.close();
 } finally {
   await browser.close();
@@ -390,6 +418,11 @@ const BUDGETS = [
   ["log first rows ms", report.log.firstRowsMs, 150],
   ["log scroll frame, p95 ms", report.log.scrollFrameMs.p95, 34],
   ["log filter ms", report.log.filterMs, 100],
+  [
+    "frame while reading a streaming log, p95 ms",
+    report.logWhileReading.frameMs.p95,
+    50,
+  ],
   ["heap with the largest log MB", report.log.heapMB, 48],
 ];
 report.budgets = BUDGETS.map(([name, value, most]) => ({

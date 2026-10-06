@@ -66,6 +66,9 @@ export function recordLine(record: LogRecord): string {
 // log holds up to ten thousand; drawing them all costs every scroll and every
 // keystroke in the filter. Reaching the top brings in the next span.
 const WINDOW = 400;
+// The most records drawn at once for a reader who has left the end. The span
+// moves with them a window at a time, so it never becomes the whole log.
+const MAX_SPAN = 5 * WINDOW;
 
 const LEVEL_TONE: Partial<Record<LogLevel, string>> = {
   WARNING: "text-warning",
@@ -205,14 +208,19 @@ export const RecordList = memo(function RecordList({
   const [follow, setFollow] = useState(true);
   // While the log follows its end, the newest span is drawn. Once a reader
   // has left the end the span is pinned to its first record instead, so the
-  // records that arrive do not slide it out from under them; it grows until
-  // they return to the end.
+  // records that arrive do not slide it out from under them. It grows with
+  // them up to a limit, and moves a window at a time as the reader nears
+  // either end of it.
   const [first, setFirst] = useState<number | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
-  // The record at the top of the view when an earlier span was asked for,
-  // and where it sat, so the view is put back on it once the span is in the
-  // document. New records may arrive in the same commit; it is still there.
-  const held = useRef<{ seq: string; top: number } | null>(null);
+  // The record at the top of a reader's view, and where it sits. Whenever
+  // what is drawn changes, the view is put back on it: an earlier or later
+  // span comes in, the oldest records are dropped from the ring, and not
+  // every engine keeps the view anchored by itself.
+  const anchor = useRef<{ seq: string; top: number } | null>(null);
+  // End was pressed away from the end: the newest record takes focus once
+  // the newest span is drawn.
+  const focusNewest = useRef(false);
   // The record the keyboard is on, to notice when it leaves the drawn span.
   const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
@@ -257,21 +265,23 @@ export const RecordList = memo(function RecordList({
       else high = middle;
     }
     // Never less than the newest span, whatever the pin.
-    return low < visible.length - WINDOW ? visible.slice(low) : newest;
+    return low < visible.length - WINDOW
+      ? visible.slice(low, low + MAX_SPAN)
+      : newest;
   }, [visible, first]);
 
   useLayoutEffect(() => {
     const el = list.current;
-    const keep = held.current;
-    held.current = null;
-    if (!el || !keep) return;
+    const keep = anchor.current;
+    if (!el || !keep || follow) return;
     const row = el.querySelector(`:scope > [data-seq="${keep.seq}"]`);
-    if (row)
-      el.scrollTop +=
-        row.getBoundingClientRect().top -
-        el.getBoundingClientRect().top -
-        keep.top;
-  }, [first]);
+    if (!row) return;
+    const moved =
+      row.getBoundingClientRect().top -
+      el.getBoundingClientRect().top -
+      keep.top;
+    if (Math.abs(moved) >= 1) el.scrollTop += moved;
+  }, [drawn, follow]);
 
   // The focused record can leave the drawn span as newer ones arrive. Focus
   // then goes, once, to the list itself, without moving the view, rather
@@ -299,15 +309,28 @@ export const RecordList = memo(function RecordList({
   // moved up from there, not merely being short of an end that has grown.
   const lastTop = useRef(0);
 
-  // In the commit that draws new records, before anything is painted or any
-  // scroll is reported: there is no moment at which the end has moved on and
-  // the view has not.
+  // In the commit that draws new records or opens a record's detail, before
+  // anything is painted or any scroll is reported: there is no moment at
+  // which the end has moved on and the view has not.
   useLayoutEffect(() => {
     const el = list.current;
     if (!shown || !follow || !el) return;
     el.scrollTop = el.scrollHeight;
     lastTop.current = el.scrollTop;
-  }, [drawn, follow, shown]);
+    if (!focusNewest.current || first !== null) return;
+    focusNewest.current = false;
+    const newest = el.lastElementChild;
+    if (newest instanceof HTMLElement && newest.classList.contains("record"))
+      newest.focus({ preventScroll: true });
+  }, [drawn, expanded, first, follow, shown]);
+
+  // Leaving the end, by whatever means: the span stays on what it shows.
+  const leaveEnd = () => {
+    if (!follow) return;
+    setFollow(false);
+    setFirst(drawn[0]?.seq ?? null);
+  };
+  const touchStart = useRef(0);
 
   // Following also holds when the list itself changes size: a narrower panel
   // wraps its rows, and the end moves without any new record.
@@ -402,6 +425,16 @@ export const RecordList = memo(function RecordList({
     const row = from.closest<HTMLElement>(".record");
     if (!row) return;
     const rows = () => box.querySelectorAll<HTMLElement>(":scope > .record");
+    // End, away from the newest record, is the way back to it: the log
+    // follows again, and the newest record takes focus when it is drawn.
+    if (event.key === "End" && (!follow || first !== null)) {
+      event.preventDefault();
+      focusNewest.current = true;
+      anchor.current = null;
+      setFirst(null);
+      setFollow(true);
+      return;
+    }
     // Movement keys work from a control inside a row as from the row.
     const target =
       event.key === "ArrowDown"
@@ -476,12 +509,11 @@ export const RecordList = memo(function RecordList({
             aria-pressed={follow}
             title={t("desktop.logs.follow_hint")}
             onClick={() => {
-              setFollow(!follow);
-              if (follow) setFirst(drawn[0]?.seq ?? null);
+              if (follow) leaveEnd();
               else {
+                anchor.current = null;
                 setFirst(null);
-                if (list.current)
-                  list.current.scrollTop = list.current.scrollHeight;
+                setFollow(true);
               }
             }}
           >
@@ -597,46 +629,82 @@ export const RecordList = memo(function RecordList({
           // no such destination.
           if (event.relatedTarget) focused.current = null;
         }}
+        // A wheel turned upward, or a finger drawn down, leaves the end at
+        // once: under a busy log a slow movement would otherwise be undone
+        // by the next records before it had gone anywhere.
+        onWheel={(event) => {
+          const el = event.currentTarget;
+          if (event.deltaY < 0 && el.scrollHeight > el.clientHeight) leaveEnd();
+        }}
+        onTouchStart={(event) => {
+          touchStart.current = event.touches[0]?.clientY ?? 0;
+        }}
+        onTouchMove={(event) => {
+          const el = event.currentTarget;
+          if (
+            (event.touches[0]?.clientY ?? 0) > touchStart.current + 4 &&
+            el.scrollHeight > el.clientHeight
+          )
+            leaveEnd();
+        }}
         onScroll={() => {
           const el = list.current;
           if (!el) return;
-          const atEnd =
-            el.scrollHeight - el.scrollTop - el.clientHeight < followSlack;
-          const movedUp = el.scrollTop < lastTop.current - 1;
-          lastTop.current = el.scrollTop;
-          // Following ends when the reader scrolls up from the end, and
-          // resumes when they are back at it.
-          if (follow && !atEnd && !movedUp) return;
-          if (atEnd !== follow) setFollow(atEnd);
           const top = drawn[0];
-          if (atEnd) {
-            // Back at the newest record: the earlier spans are let go.
+          const fromEnd = el.scrollHeight - el.scrollTop - el.clientHeight;
+          // The end of the log, not merely of the span that is drawn.
+          const newest = drawn.at(-1) === visible.at(-1);
+          const atEnd = newest && fromEnd < followSlack;
+          const movedUp = el.scrollTop < lastTop.current - 0.5;
+          // While following, upward movement is measured from the end, so a
+          // slow scroll adds up instead of never counting.
+          if (atEnd || !follow) lastTop.current = el.scrollTop;
+          if (follow) {
+            // Still at the end, or the end has merely moved on: following
+            // ends only when the reader has scrolled up from it.
+            if (atEnd || !movedUp) return;
+            setFollow(false);
+          } else if (atEnd && !movedUp) {
+            // Back down at the newest record: following resumes and the
+            // earlier spans are let go.
+            anchor.current = null;
+            setFollow(true);
             if (first !== null) setFirst(null);
-          } else if (!top) {
             return;
-          } else if (
+          }
+          if (!top) return;
+          // The record at the top of the view, to keep the view on.
+          const box = el.getBoundingClientRect();
+          const hit = document
+            .elementFromPoint(box.left + box.width / 2, box.top + 2)
+            ?.closest<HTMLElement>(".record");
+          const row =
+            hit && el.contains(hit)
+              ? hit
+              : [...el.querySelectorAll<HTMLElement>(":scope > .record")].find(
+                  (candidate) =>
+                    candidate.getBoundingClientRect().bottom > box.top,
+                );
+          anchor.current = row
+            ? {
+                seq: row.dataset.seq ?? "",
+                top: row.getBoundingClientRect().top - box.top,
+              }
+            : null;
+          const at = visible.indexOf(top);
+          if (
             el.scrollTop < el.clientHeight &&
             top.seq > (visible[0]?.seq ?? top.seq)
-          ) {
+          )
             // Near the top of what is drawn, with earlier records to show.
-            const edge = el.getBoundingClientRect().top;
-            for (const row of el.querySelectorAll<HTMLElement>(
-              ":scope > .record",
-            )) {
-              const box = row.getBoundingClientRect();
-              if (box.bottom <= edge) continue;
-              held.current = {
-                seq: row.dataset.seq ?? "",
-                top: box.top - edge,
-              };
-              break;
-            }
-            const at = visible.indexOf(top);
             setFirst(visible[Math.max(0, at - WINDOW)]?.seq ?? top.seq);
-          } else if (first === null) {
+          else if (!newest && fromEnd < el.clientHeight)
+            // Near the bottom of a span that is not the newest: later
+            // records come in and the earliest drawn are let go.
+            setFirst(visible[at + WINDOW]?.seq ?? top.seq);
+          else if (first === null)
             // Left the end: the span stays on the records it shows.
             setFirst(top.seq);
-          }
         }}
       >
         {loading && (
