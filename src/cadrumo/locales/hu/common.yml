@@ -492,6 +492,7 @@ desktop:
         titkosítva.
       mismatch: A két jelszó nem egyezik.
       name: Profil neve
+      name_hyphen: A név nem kezdődhet kötőjellel.
       name_long: Használj rövidebb nevet.
       name_missing: Adj nevet a profilnak.
       name_taken: Már van ilyen nevű profil.

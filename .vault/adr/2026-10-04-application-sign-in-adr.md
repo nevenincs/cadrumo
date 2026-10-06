@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd35004ce0a95cf74745f41dcb0739a3f24b51aa3965f7456f3983f5a7fadac2'
+body_hash: 'sha256:44e89a6d8fb4814f47baa4a4790399b8e9ac2864f28822b2a00730ff8b8aa175'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -160,9 +160,9 @@ This record decides the sign-in model, its owner, its lifecycle and synchronizat
 **Profiles in the desktop view (amended 2026-10-06).**
 - Until this amendment the view covered the selected profile only, and first run and other profiles were handed to the TUI. On 2026-10-06 the operator ruled, on seeing the view, that showing the profile, choosing between profiles, creating a profile, signing in and signing out in the desktop window are the foundation of the application. That ruling is the authorization for this amendment.
 - The view names the profile a password is for under a visible label.
-- The view lists the profiles on this computer. A token-checked host command spawns `aeat --format json config profile list`, which needs no password, session or runtime. Only each profile's label, identity and selected flag cross to the window. A list the product reports as incoherent is shown as unreadable, never as empty.
-- Sign-in may name a profile. The sign-in host command passes the profile's identity as the positional argument of `aeat config login`, with the password on the same piped stdin as before. The product selects that profile only after its login succeeds. With several profiles and none selected, the view sends nothing until one is chosen.
-- The view creates a profile, on first run and beside existing ones. One further dedicated token-checked host command takes the name and the password in a raw IPC body and spawns a fresh `aeat config profile create NAME --quiet --secrets-stdin`, writing the password and its confirmation to a piped stdin that is closed after writing. The rules of the sign-in command apply unchanged: zeroized host buffers, stdout kept out of diagnostics, one submission, no automatic retry, typed refusals shown undiminished. The name travels as an argument and is never logged.
+- The view lists the profiles on this computer. A token-checked host command spawns `aeat --format json config profile list`, which needs no password, session or runtime. Only each profile's label and selected flag cross to the window: the product's output redacts profile identities, so the label, which is unique on a computer, is how the view knows a profile. A list the product reports as incoherent is shown as unreadable, never as empty.
+- Sign-in may name a profile. The sign-in host command passes the profile's label as the positional argument of `aeat config login`, after `--` so that no label is read as an option, with the password on the same piped stdin as before. The product selects that profile only after its login succeeds. With several profiles and none selected, the view sends nothing until one is chosen.
+- The view creates a profile, on first run and beside existing ones. One further dedicated token-checked host command takes the name and the password in a raw IPC body and spawns a fresh `aeat config profile create --quiet --secrets-stdin -- NAME`, writing the password and its confirmation to a piped stdin that is closed after writing. The rules of the sign-in command apply unchanged: zeroized host buffers, stdout kept out of diagnostics, one submission, no automatic retry, typed refusals shown undiminished. The name travels as an argument and is never logged.
 - Creation leaves the new profile selected and signed out, as the product does. Whether the host goes on to sign in from the same buffer, so that the password is typed once, is a *hypothesis* left open; until it is decided the view asks for the password again.
 - Signing in to another profile does not sign the previous one out, and `aeat config logout` acts on the selected profile only. The view therefore offers another profile only while signed out: the person signs out, then chooses.
 - Recovery enrolment is not part of the view.

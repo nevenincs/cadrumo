@@ -65,6 +65,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.account.create.lead",
         "desktop.account.create.mismatch",
         "desktop.account.create.name",
+        "desktop.account.create.name_hyphen",
         "desktop.account.create.name_long",
         "desktop.account.create.name_missing",
         "desktop.account.create.name_taken",

@@ -45,10 +45,6 @@ export const FIXTURE_PROFILE = "Demo profile";
 /** The other profiles of a computer that has several. Made-up names. */
 const OTHER_PROFILES = ["Ana Soler Vidal", "Taller Ribera, S.L."];
 
-/** Identities shaped like the product's, and plainly not one of them. */
-const fixtureId = (index: number) =>
-  `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
-
 export type ScenarioHostOptions = {
   /** The documentation fixture the environment reports, or null for none. */
   docs: { origin: string; languages: DocsLanguage[] } | null;
@@ -100,20 +96,19 @@ export function scenarioHost(
   // The profiles of this made-up computer, and the one that is selected.
   // A host with no profile commands still has the one its status names.
   const first = scenario.signIn.profile ?? FIXTURE_PROFILE;
-  const accounts: { id: string; name: string }[] =
+  // Each is known by its label, as the product's own list knows them.
+  const accounts: string[] =
     scenario.profiles === "none" ||
     (scenario.profiles === "absent" && scenario.signIn.profile === null)
       ? []
-      : [first, ...(scenario.profiles === "several" ? OTHER_PROFILES : [])].map(
-          (name, index) => ({ id: fixtureId(index + 1), name }),
-        );
+      : [first, ...(scenario.profiles === "several" ? OTHER_PROFILES : [])];
   let active: string | null =
-    scenario.signIn.profile === null ? null : (accounts[0]?.id ?? null);
+    scenario.signIn.profile === null ? null : (accounts[0] ?? null);
 
   const status = (): SignInStatus => ({
     ...scenario.signIn.status,
     state: presence,
-    active_profile: accounts.find((a) => a.id === active)?.name ?? null,
+    active_profile: active,
   });
 
   const profiles: ProfileAccounts = {
@@ -122,8 +117,8 @@ export function scenarioHost(
       if (scenario.profiles === "unreadable") throw failure("timed_out", "cli");
       return {
         profiles: [...accounts]
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((a) => ({ ...a, active: a.id === active })),
+          .sort((a, b) => a.localeCompare(b))
+          .map((name) => ({ name, active: name === active })),
         complete: true,
       };
     },
@@ -135,7 +130,7 @@ export function scenarioHost(
       await wait(options.latencyMs);
       if (outcome.kind === "fail") throw failure(outcome.code, "cli");
       const taken = accounts.some(
-        (a) => a.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+        (held) => held.toLocaleLowerCase() === name.toLocaleLowerCase(),
       );
       if (outcome.kind === "refuse" || taken)
         return {
@@ -146,11 +141,10 @@ export function scenarioHost(
             outcome.kind === "refuse" ? outcome.retryAfterSeconds : null,
         };
       // As the product does: the new profile is selected, and signed out.
-      const made = { id: fixtureId(accounts.length + 1), name };
-      accounts.push(made);
-      active = made.id;
+      accounts.push(name);
+      active = name;
       presence = "absent";
-      return { kind: "created", ...made };
+      return { kind: "created", name };
     },
   };
 
@@ -209,7 +203,7 @@ export function scenarioHost(
     async signIn(_password, profile) {
       say("signIn");
       // Which profile, by its place in the list: never its name.
-      const named = accounts.findIndex((a) => a.id === profile);
+      const named = accounts.indexOf(profile ?? "");
       if (profile !== undefined) say(`signInProfile ${named + 1}`);
       const outcome = scenario.signIn.submit;
       if (outcome.kind === "pending") return never();
@@ -222,7 +216,7 @@ export function scenarioHost(
           retryAfterSeconds: outcome.retryAfterSeconds,
         };
       // A sign-in that is accepted is what selects the profile.
-      if (named >= 0) active = accounts[named]?.id ?? active;
+      if (named >= 0) active = accounts[named] ?? active;
       presence = "present";
       return { kind: "signed-in" };
     },

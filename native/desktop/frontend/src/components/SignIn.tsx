@@ -379,7 +379,7 @@ export function SignInDialog({
                   ref={choice}
                   id="profile-choice"
                   className="profile-choice"
-                  value={account.target?.id ?? ""}
+                  value={account.target?.name ?? ""}
                   aria-invalid={(unchosen && mustChoose) || undefined}
                   aria-describedby={
                     unchosen && mustChoose ? choiceErrorId : undefined
@@ -397,7 +397,7 @@ export function SignInDialog({
                     </option>
                   )}
                   {choices.map((profile) => (
-                    <option key={profile.id} value={profile.id}>
+                    <option key={profile.name} value={profile.name}>
                       {profile.name}
                     </option>
                   ))}
@@ -518,6 +518,7 @@ function ProfileNamed({ name }: { name: string }) {
 
 const NAME_PROBLEMS: Record<NameProblem, string> = {
   missing: "desktop.account.create.name_missing",
+  hyphen: "desktop.account.create.name_hyphen",
   long: "desktop.account.create.name_long",
   taken: "desktop.account.create.name_taken",
 };

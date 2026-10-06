@@ -234,7 +234,7 @@ export function useSignIn(host: Host) {
     setSignOutFailure(null);
     try {
       await statusRead.current?.promise;
-      const result = await host.signIn(password, target?.id);
+      const result = await host.signIn(password, target?.name);
       if (result.kind === "refused") setRefusal(result);
     } catch (error) {
       setRefusal(refusalFrom(error));
@@ -267,7 +267,7 @@ export function useSignIn(host: Host) {
       await statusRead.current?.promise;
       const result = await accounts.create(name, password);
       if (result.kind === "created") {
-        setChosen(result.id);
+        setChosen(result.name);
         setCreated(result.name);
         made = true;
       } else setCreateRefusal(result);
@@ -315,8 +315,8 @@ export function useSignIn(host: Host) {
     createRefusal,
     /** The name of a profile created a moment ago and not yet signed in to. */
     created,
-    choose: (id: string) => {
-      setChosen(id);
+    choose: (name: string) => {
+      setChosen(name);
       // What another profile's attempt was refused for is not this one's.
       setRefusal(null);
       setCreated(null);

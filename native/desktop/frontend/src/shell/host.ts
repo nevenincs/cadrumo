@@ -41,7 +41,7 @@ export interface Host {
   readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
   signInStatus(): Promise<SignInStatus>;
-  /** Signs in to `profile`, by its identity, or to the profile the product
+  /** Signs in to `profile`, by its label, or to the profile the product
    * has selected where none is named. */
   signIn(password: Uint8Array, profile?: string): Promise<SignInResult>;
   signOut(): Promise<SignOutResult>;

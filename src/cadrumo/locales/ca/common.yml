@@ -501,6 +501,7 @@ desktop:
         la seva contrasenya.
       mismatch: Les dues contrasenyes no coincideixen.
       name: Nom del perfil
+      name_hyphen: El nom no pot començar amb un guionet.
       name_long: Fes servir un nom més curt.
       name_missing: Posa un nom al perfil.
       name_taken: Ja hi ha un perfil amb aquest nom.

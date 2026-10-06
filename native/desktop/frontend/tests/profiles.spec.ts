@@ -16,11 +16,7 @@ const list = (
   active: number | null = null,
   complete = true,
 ): ProfileList => ({
-  profiles: names.map((name, index) => ({
-    id: `id-${index}`,
-    name,
-    active: index === active,
-  })),
+  profiles: names.map((name, index) => ({ name, active: index === active })),
   complete,
 });
 
@@ -36,7 +32,7 @@ const status = (change: Partial<SignInStatus> = {}): SignInStatus => ({
 test("a password goes to the chosen profile, else the selected one, else the only one", () => {
   const several = list(["Ana", "Berta", "Carles"], 1);
   expect(targetOf(several, null)?.name).toBe("Berta");
-  expect(targetOf(several, "id-2")?.name).toBe("Carles");
+  expect(targetOf(several, "Carles")?.name).toBe("Carles");
   // A choice that is no longer listed is not a choice.
   expect(targetOf(several, "gone")?.name).toBe("Berta");
   expect(targetOf(list(["Ana"]), null)?.name).toBe("Ana");
@@ -45,13 +41,16 @@ test("a password goes to the chosen profile, else the selected one, else the onl
 test("with several profiles and none selected there is no profile to send a password to", () => {
   expect(targetOf(list(["Ana", "Berta"]), null)).toBeNull();
   expect(targetOf(list([]), null)).toBeNull();
-  expect(targetOf(null, "id-0")).toBeNull();
+  expect(targetOf(null, "Ana")).toBeNull();
 });
 
-test("a profile's name is refused when blank, too long, or another profile's", () => {
+test("a profile's name is refused when blank, hyphen-led, too long, or another profile's", () => {
   const held = list(["Ana Soler"]);
   expect(nameProblem("", held)).toBe("missing");
   expect(nameProblem("   ", held)).toBe("missing");
+  expect(nameProblem("--help", held)).toBe("hyphen");
+  expect(nameProblem("  -Ana", held)).toBe("hyphen");
+  expect(nameProblem("Ana-Maria", held)).toBeNull();
   expect(nameProblem("x".repeat(160), held)).toBeNull();
   expect(nameProblem("x".repeat(161), held)).toBe("long");
   // Counted in characters, not in the units a string stores them in.

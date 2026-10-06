@@ -485,6 +485,7 @@ desktop:
         its password.
       mismatch: The two passwords are not the same.
       name: Profile name
+      name_hyphen: A name cannot start with a hyphen.
       name_long: Use a shorter name.
       name_missing: Give the profile a name.
       name_taken: A profile with this name already exists.

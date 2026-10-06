@@ -93,11 +93,7 @@ export const NoProfile: Story = {
 
 // A host that lists and creates profiles. The names are made up.
 const profiles = (names: string[], active: number | null): ProfileList => ({
-  profiles: names.map((name, index) => ({
-    id: `profile-${index}`,
-    name,
-    active: index === active,
-  })),
+  profiles: names.map((name, index) => ({ name, active: index === active })),
   complete: true,
 });
 const THREE = ["Ana Soler Vidal", "Demo profile", "Taller Ribera, S.L."];

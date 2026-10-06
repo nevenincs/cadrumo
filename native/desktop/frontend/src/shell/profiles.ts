@@ -7,9 +7,9 @@
 import type { SignInRefusal } from "../ipc/contract";
 
 export type ProfileChoice = {
-  /** The profile's stable identity: what a sign-in names. */
-  id: string;
-  /** The label the person gave it. */
+  /** The label the person gave it. It is also what a sign-in names: labels
+   * are unique on a computer, and the product keeps a profile's identity
+   * out of everything it prints. */
   name: string;
   /** The profile the product has selected. */
   active: boolean;
@@ -23,8 +23,7 @@ export type ProfileList = {
 };
 
 export type ProfileCreateResult =
-  | { kind: "created"; id: string; name: string }
-  | ({ kind: "refused" } & SignInRefusal);
+  { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
 export interface ProfileAccounts {
   list(): Promise<ProfileList>;
@@ -41,7 +40,7 @@ export const PASSWORD_MIN = 8;
 // characters can reach and never pass.
 export const PASSWORD_MAX = 256;
 
-export type NameProblem = "missing" | "long" | "taken";
+export type NameProblem = "missing" | "hyphen" | "long" | "taken";
 
 export function nameProblem(
   name: string,
@@ -49,6 +48,9 @@ export function nameProblem(
 ): NameProblem | null {
   const given = name.trim();
   if (!given) return "missing";
+  // The product's command line reads a leading hyphen as an option, and
+  // answers such a name with an internal error instead of a refusal.
+  if (given.startsWith("-")) return "hyphen";
   if ([...given].length > PROFILE_NAME_MAX) return "long";
   const folded = given.toLocaleLowerCase();
   return list?.profiles.some((p) => p.name.toLocaleLowerCase() === folded)
@@ -76,7 +78,7 @@ export function targetOf(
 ): ProfileChoice | null {
   if (!list) return null;
   return (
-    list.profiles.find((p) => p.id === chosen) ??
+    list.profiles.find((p) => p.name === chosen) ??
     list.profiles.find((p) => p.active) ??
     (list.profiles.length === 1 ? (list.profiles[0] ?? null) : null)
   );

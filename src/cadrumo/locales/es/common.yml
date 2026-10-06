@@ -507,6 +507,7 @@ desktop:
         con su contraseña.
       mismatch: Las dos contraseñas no coinciden.
       name: Nombre del perfil
+      name_hyphen: El nombre no puede empezar con un guion.
       name_long: Usa un nombre más corto.
       name_missing: Ponle un nombre al perfil.
       name_taken: Ya existe un perfil con este nombre.
