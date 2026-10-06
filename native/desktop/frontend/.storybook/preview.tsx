@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Frame, type Surface } from "../src/dev/catalogue/Frame";
 import "../src/dev/index.css";
 
-import.meta.glob("../src/generated/palette.css", { eager: true });
+import "virtual:desktop-palette.css";
 
 // Every story is drawn on a real shell surface, in the scheme and language
 // chosen in the toolbar, with the application's own providers around it.

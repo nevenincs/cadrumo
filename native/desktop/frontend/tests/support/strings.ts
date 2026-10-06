@@ -1,17 +1,15 @@
-import { existsSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { buildPath } from "../../../scripts/build-paths.mjs";
 
 // Expected chrome text comes from the generated catalogue, the same file the
-// shell reads. Before it exists the shell shows each key, and so do these.
-const path = fileURLToPath(
-  new URL("../../src/generated/chrome-strings.json", import.meta.url),
-);
-const catalogue: Record<string, Record<string, string>> = existsSync(path)
-  ? (JSON.parse(readFileSync(path, "utf8")) as Record<
-      string,
-      Record<string, string>
-    >)
-  : {};
+// shell is built from: an output of the build directory in use.
+const catalogue = JSON.parse(
+  readFileSync(
+    resolve(buildPath("desktop_frontend_generated"), "chrome-strings.json"),
+    "utf8",
+  ),
+) as Record<string, Record<string, string>>;
 
 /** The chrome string for `key` in `locale`, with `{name}` values filled in. */
 export function label(

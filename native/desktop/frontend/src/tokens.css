@@ -1,6 +1,6 @@
 /* The shell's length, type, radius, density, layer and motion tokens. Each has
    one declaration, here. Colour is not declared in this file: values come
-   from src/generated/palette.css and roles from src/theme.css.
+   from the generated palette and roles from src/theme.css.
 
    The first block is Tailwind's theme: every name in it is also a utility
    (`h-control-md`, `text-sm`, `rounded-lg`, `size-icon-sm`), so components use

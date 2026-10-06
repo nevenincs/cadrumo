@@ -56,8 +56,9 @@ endforeach()
 
 # Shell inputs generated from their canonical sources: the chrome strings from the
 # locale catalogues and the palette from the documentation theme. They are build
-# outputs, ignored by Git, and regenerate whenever a source or a generator changes.
-set(desktop_generated "${desktop_frontend}/src/generated")
+# outputs of this binary directory, never written into the source tree, and
+# regenerate whenever a source or a generator changes.
+set(desktop_generated "${CADRUMO_PATH_DESKTOP_FRONTEND_GENERATED}")
 set(desktop_generator "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
   "${CADRUMO_DEV_PYTHON}" -B -m)
 file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS

@@ -15,8 +15,9 @@ assembling a package or building the documentation is not needed to edit it.
 
 The development server reads a few generated files from a CMake build
 directory: the build paths, the product identity and the server address. The
-shell reads two more from `src/generated/`: the chrome strings, projected from
-the locale catalogues, and the palette, projected from the documentation theme.
+shell reads two more from that directory's `desktop/frontend-generated/`: the
+chrome strings, projected from the locale catalogues, and the palette, projected
+from the documentation theme. Nothing generated is written into the source tree.
 One command writes all of them:
 
 ```sh
@@ -183,7 +184,7 @@ a value, so a change of palette, density or type reaches everything at once.
 
 | Layer       | Where                       | Rule                                                                                        |
 | ----------- | --------------------------- | ------------------------------------------------------------------------------------------- |
-| Colour      | `src/generated/palette.css` | Generated from the documentation theme, which is the colour authority; never edited by hand |
+| Colour      | the generated palette       | Generated from the documentation theme, which is the colour authority; never edited by hand |
 | Roles       | `src/theme.css`             | Maps palette values to roles (`background`, `chrome`, `card`, `selected`, `ring`, …)        |
 | Tokens      | `src/tokens.css`            | Lengths in rem: type scale, radii, density, icon sizes, fixed widths, layers and motion     |
 | Primitives  | `src/components/ui/`        | shadcn/ui components on Radix, restyled to roles and tokens; they know nothing of Cadrumo   |
@@ -403,19 +404,19 @@ is from the notes taken when it was read; a fresh run replaces it.
 
 ## Layout
 
-| Path                                | Holds                                                                 |
-| ----------------------------------- | --------------------------------------------------------------------- |
-| `index.html`, `src/main.tsx`        | The production entry                                                  |
-| `scenarios.html`, `src/dev/`        | The development entry, the scenario host and its fixtures             |
-| `dev/docs-fixture/`                 | The stand-in documentation site and the server plugin that serves it  |
-| `dev/product-boundary.ts`           | The build check that keeps development modules out of the product     |
-| `src/App.tsx`, `src/shell/`         | Composition, the action registry, layout state and the host port      |
-| `src/shell/views.ts`                | The read-only profile views a host may offer, types only              |
-| `src/tokens.css`, `src/theme.css`   | The design tokens and the colour roles                                |
-| `src/components/ui/`                | The primitives                                                        |
-| `src/components/`                   | The shell's components and their stories                              |
-| `.storybook/`, `src/dev/catalogue/` | The catalogue's configuration and its foundations stories             |
-| `src/ipc/contract.ts`               | The published host and bridge contract, types only                    |
-| `src/generated/`                    | Generated chrome strings and palette; never edited by hand            |
-| `scripts/`                          | The bootstrap, the catalogue launcher, its screenshots, the benchmark |
-| `tests/`                            | The browser tests                                                     |
+| Path                                       | Holds                                                                       |
+| ------------------------------------------ | --------------------------------------------------------------------------- |
+| `index.html`, `src/main.tsx`               | The production entry                                                        |
+| `scenarios.html`, `src/dev/`               | The development entry, the scenario host and its fixtures                   |
+| `dev/docs-fixture/`                        | The stand-in documentation site and the server plugin that serves it        |
+| `dev/product-boundary.ts`                  | The build check that keeps development modules out of the product           |
+| `src/App.tsx`, `src/shell/`                | Composition, the action registry, layout state and the host port            |
+| `src/shell/views.ts`                       | The read-only profile views a host may offer, types only                    |
+| `src/tokens.css`, `src/theme.css`          | The design tokens and the colour roles                                      |
+| `src/components/ui/`                       | The primitives                                                              |
+| `src/components/`                          | The shell's components and their stories                                    |
+| `.storybook/`, `src/dev/catalogue/`        | The catalogue's configuration and its foundations stories                   |
+| `src/ipc/contract.ts`                      | The published host and bridge contract, types only                          |
+| `virtual:desktop-strings`, `…-palette.css` | The generated chrome strings and palette, resolved from the build directory |
+| `scripts/`                                 | The bootstrap, the catalogue launcher, its screenshots, the benchmark       |
+| `tests/`                                   | The browser tests                                                           |

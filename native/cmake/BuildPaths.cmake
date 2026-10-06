@@ -21,6 +21,7 @@ set(CADRUMO_BUILD_DIRECTORIES
   TESTING testing
   VERIFICATION verification
   DESKTOP_FRONTEND desktop/frontend
+  DESKTOP_FRONTEND_GENERATED desktop/frontend-generated
   DESKTOP_CACHE desktop/vite-cache
   DESKTOP_ICONS desktop/icons
   DESKTOP_HOST desktop/host
@@ -45,7 +46,7 @@ set(cleanup_groups [=[{
   "packages": ["packages"],
   "dependencies": ["runtime", "tools", "product"],
   "native": ["bin", "lib", "symbols", "cargo"],
-  "desktop": ["desktop_frontend", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results"],
+  "desktop": ["desktop_frontend", "desktop_frontend_generated", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results"],
   "docs": ["user_docs_build", "user_docs_work", "user_docs_stage"]
 }]=])
 string(JSON build_paths SET "${build_paths}" cleanup "${cleanup_groups}")

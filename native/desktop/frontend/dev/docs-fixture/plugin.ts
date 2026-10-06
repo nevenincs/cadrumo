@@ -16,7 +16,9 @@
 import { readFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildPath } from "../../../scripts/build-paths.mjs";
 import type { Plugin } from "vite";
 
 export const DOCS_FIXTURE_LANGUAGES = ["en", "es", "ca", "hu"] as const;
@@ -41,7 +43,10 @@ const STATIC = new Map<string, { file: string; type: string }>([
   ["fixture.css", { file: here("./fixture.css"), type: "text/css" }],
   [
     "palette.css",
-    { file: here("../../src/generated/palette.css"), type: "text/css" },
+    {
+      file: resolve(buildPath("desktop_frontend_generated"), "palette.css"),
+      type: "text/css",
+    },
   ],
 ]);
 

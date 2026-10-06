@@ -2,6 +2,7 @@ import { buildPath } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
 import { docsFixture } from "./dev/docs-fixture/plugin.ts";
 import { productBoundary } from "./dev/product-boundary.ts";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
@@ -14,8 +15,17 @@ const docsStatic = fileURLToPath(
   new URL("../../../docs/_static", import.meta.url),
 );
 
+// The shell's two generated inputs, by the names the shell imports them
+// under. They are outputs of the build directory in use, so one build's are
+// never another's and nothing generated is written into the source tree.
+const GENERATED_INPUTS: Record<string, string> = {
+  "virtual:desktop-strings": "chrome-strings.json",
+  "virtual:desktop-palette.css": "palette.css",
+};
+
 export default defineConfig(({ mode }) => {
   const identity = readIdentity();
+  const generated = buildPath("desktop_frontend_generated");
   const ports = server();
   const environment = loadEnv(mode, root, "CADRUMO_DESKTOP_");
   const allowedHosts = (
@@ -56,7 +66,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       // The shell's typefaces are the documentation's own files, outside
       // this project, so that directory of public assets is served as well.
-      fs: { allow: [root, docsStatic] },
+      fs: { allow: [root, docsStatic, generated] },
     },
     preview: {
       host: ports.host,
@@ -70,6 +80,22 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       docsFixture(),
       ...(scenarios ? [] : [productBoundary(root)]),
+      {
+        name: "desktop-generated-inputs",
+        enforce: "pre",
+        resolveId(id) {
+          const name = GENERATED_INPUTS[id];
+          if (!name) return;
+          const file = resolve(generated, name);
+          if (!existsSync(file))
+            this.error(
+              `${name} has not been generated in ${generated}. Run "npm run bootstrap".`,
+            );
+          // The file itself: it is then watched and transformed as any
+          // stylesheet or JSON module is.
+          return file;
+        },
+      },
       {
         name: "canonical-desktop-content",
         transformIndexHtml() {

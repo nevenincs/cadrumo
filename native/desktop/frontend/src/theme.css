@@ -1,7 +1,7 @@
 /* The shell's colour roles, elevation and base styles.
 
    Colour values come only from the generated documentation palette
-   (src/generated/palette.css): light on :root, dark under
+   (`virtual:desktop-palette.css`): light on :root, dark under
    [data-scheme="dark"], on the root or on any area that is always dark. This
    file maps those values to roles and hands the roles to Tailwind, so a
    component says `bg-card` or `text-muted-foreground` and never a value.

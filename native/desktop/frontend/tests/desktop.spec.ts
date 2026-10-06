@@ -1,22 +1,10 @@
 import { expect, test, type Frame, type Page } from "@playwright/test";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { identity } from "../../scripts/configuration.mjs";
+import { label } from "./support/strings";
 
 const local = (path: string) => fileURLToPath(new URL(path, import.meta.url));
-
-// Expected labels come from the generated catalogue once it exists; before
-// that the shell shows each key, and so do these expectations.
-const catalogue = local("../src/generated/chrome-strings.json");
-const english: Record<string, string> = existsSync(catalogue)
-  ? ((
-      JSON.parse(readFileSync(catalogue, "utf8")) as Record<
-        string,
-        Record<string, string>
-      >
-    ).en ?? {})
-  : {};
-const label = (key: string) => english[key] ?? key;
 
 // A transport boundary fixture for presentation tests, never a live sign-in
 // acceptance claim. The actual Tauri adapter and React shell run unchanged.

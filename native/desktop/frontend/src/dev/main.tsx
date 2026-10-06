@@ -13,7 +13,7 @@ import { ScenarioBar, type HostCallLine } from "./ScenarioBar";
 import { scenarioHost } from "./scenarioHost";
 import { findScenario, type Scenario } from "./scenarios";
 
-import.meta.glob("../generated/palette.css", { eager: true });
+import "virtual:desktop-palette.css";
 
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 const CALL_LIMIT = 40;

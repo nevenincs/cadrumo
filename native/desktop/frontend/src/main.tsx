@@ -6,9 +6,7 @@ import { browserHost } from "./shell/host";
 import { tauriHost } from "./shell/tauriHost";
 import "./index.css";
 
-// The generated palette is optional at build time: before its generator has
-// run the file is simply absent.
-import.meta.glob("./generated/palette.css", { eager: true });
+import "virtual:desktop-palette.css";
 
 document.title = identity.name;
 const root = document.getElementById("root");

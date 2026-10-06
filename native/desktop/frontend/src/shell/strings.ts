@@ -1,16 +1,10 @@
 import { createContext, useContext } from "react";
+import catalogue from "virtual:desktop-strings";
 
-// Chrome strings come only from the catalogues generated out of the canonical
-// locale sources; there is no hand-written table here. Until the generated file
-// exists the lookup shows the key itself, which no release build can ship.
-type Catalogue = Record<string, Record<string, string>>;
-
-const generated = import.meta.glob<{ default: Catalogue }>(
-  "../generated/chrome-strings.json",
-  { eager: true },
-);
-const catalogue: Catalogue =
-  Object.values(generated)[0]?.default ?? ({} as Catalogue);
+// Chrome strings come only from the catalogue generated out of the canonical
+// locale sources; there is no hand-written table here. The build refuses to
+// start without it. A key the catalogue lacks is shown as the key itself,
+// which the generator's own checks keep out of a release.
 
 export const SOURCE_LOCALE = "en";
 
