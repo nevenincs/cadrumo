@@ -210,6 +210,39 @@ const SURFACES: {
     },
   },
   {
+    name: "settings and the calendar with a locked profile",
+    scenario: "profile-locked",
+    reach: async (target) => {
+      await expect(target.locator(".sign-in")).toBeVisible();
+      await target.keyboard.press("Escape");
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.calendar.title") })
+        .click();
+      await target
+        .getByRole("button", { name: label("desktop.rail.settings") })
+        .click();
+      await expect(target.locator(".settings")).toContainText(
+        label("desktop.signin.refused.profile_locked"),
+      );
+    },
+  },
+  {
+    name: "a calendar that could not be read, and messages not known",
+    scenario: "views-refused",
+    reach: async (target) => {
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.calendar.title") })
+        .click();
+      await expect(
+        target
+          .getByRole("region", { name: label("desktop.calendar.title") })
+          .getByRole("alert"),
+      ).toBeVisible();
+    },
+  },
+  {
     name: "the log view",
     scenario: "signed-in",
     reach: async (target) => {
