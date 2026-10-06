@@ -9,7 +9,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-06'
 body_schema: body-v2
-body_hash: 'sha256:1492967ab83dc4643cb59f4bcf66be7e755693319c62d07c974d743ca47d30fc'
+body_hash: 'sha256:2c844ec66a5e52283e5e4709b84deb67d0adce23b69237b38911dfd02baa0d81'
 ---
 
 # `google-client-provisioning` plan
@@ -22,7 +22,7 @@ Approved 2026-10-06. The user explicitly requested moving the Google client out 
 
 - [x] `S01` - Move publisher OAuth resolution into core Settings with a packaged fallback; `src/cadrumo/core, src/cadrumo/adapters/outbound/google, env/.env.example, docs/reference/environment-overrides.md`.
 - [x] `S02` - Provision validated OAuth metadata into Python and native artifacts and ignored development-worker resources from build environment and local dotenv; `dev/packaging, dev/env, packaging, native, .importlinter`.
-- [ ] `S03` - Install local and GitHub credentials, wire CI, purge credential history, and verify integrated delivery; `.github/workflows, .gitignore, ignored env/.env files, Git refs, .vault`.
+- [x] `S03` - Install local and GitHub credentials, wire CI, purge credential history, and verify integrated delivery; `.github/workflows, .gitignore, ignored env/.env files, Git refs, .vault`.
 
 ## Parallelization
 

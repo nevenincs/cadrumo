@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:a7e5491d4da27aa7e8ccc00e1b4bc822dd899434fae89f36a1807356ad0c52c7'
+body_hash: 'sha256:67e3aa4199bb3d18aec74d87f135187b5fd9acdaf561c382be38f44d17464f58'
 related:
   - "[[2026-10-06-google-client-provisioning-plan]]"
 ---
@@ -76,9 +76,21 @@ related:
 - `S02` `verify:` `scoped Ruff format ty and closed-dev-classification` -> `pass`
 - `S02` `verify:` `cmake preset windows-x64 docs enabled` -> `pass`
 - `S02` `verify:` `cmake build native_contract and rust_application Debug` -> `pass`
+- `S03` `M` `.github/workflows/release.yml`
+- `S03` `M` `.gitignore`
+- `S03` `M` `.vault/adr/2026-10-04-google-app-identity-adr.md`
+- `S03` `A` `.vault/audit/2026-10-06-google-client-provisioning-audit.md`
+- `S03` `verify:` `just check-workflows` -> `pass`
+- `S03` `verify:` `private configuration and reachable history assertions` -> `pass`
+- `S03` `verify:` `independent integrated review` -> `pass`
+- `S03` `verify:` `repository-wide lint format type and import checks` -> `fail`
 
 ## Notes
 
 - `S01` Existing unrelated worktree changes are preserved; task-only staging uses pre-task snapshots.
 - `S02` Two pre-existing packaging failures (authority currency and interpreter patch pin) excluded from applicable packaging run.
 - `S02` Task checkpoint includes the CMake always-run product target needed to evaluate credential changes; other pre-existing native edits remain in working tree.
+- `S03` Whole-repository failures are pre-existing outside task scope; task-owned issues were corrected and scoped checks passed.
+- `S03` Ignored main/env/.env and tui/env/.env provisioned; GitHub repository secret set and name read back.
+- `S03` Restricted rewrite removed the credential blob from all reachable refs/reflogs, preserving unrelated trees and remote ancestry. No remote push and no aggressive physical object pruning.
+- `S03` ADR checkpoint isolates this task amendment; pre-existing ADR amendments remain in the working tree. No live OAuth or full installer validation performed.

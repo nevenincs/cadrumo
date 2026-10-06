@@ -366,8 +366,13 @@ jobs:
         shell: bash
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          CADRUMO_GOOGLE_OAUTH_CLIENT_JSON: ${{ secrets.CADRUMO_GOOGLE_OAUTH_CLIENT_JSON }}
         run: |
           set -euo pipefail
+          if [ -z "$CADRUMO_GOOGLE_OAUTH_CLIENT_JSON" ]; then
+            echo "::error::CADRUMO_GOOGLE_OAUTH_CLIENT_JSON must be configured as a repository secret"
+            exit 1
+          fi
           uv run --no-sync python -m dev.packaging.release_cohort build \
             --output var/release-cohort \
             --source-tag "v${INPUT_VERSION#v}" \

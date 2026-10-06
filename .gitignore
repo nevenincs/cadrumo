@@ -180,6 +180,8 @@ node_modules/
 # inside it except the tracked example template.
 env/*
 !env/.env.example
+# Publisher OAuth metadata is provisioned into build artifacts from managed settings.
+src/cadrumo/_data/google/oauth_client.json
 venv/
 env.bak/
 venv.bak/
