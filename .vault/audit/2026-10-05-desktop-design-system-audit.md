@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ec0ad3407fefc98c6e73f4272013aabc237bcefd5e9758208a069f1b05af277'
+body_hash: 'sha256:0c6a20a12f7d740b66f99741fd8cb4af0b3f677c6b25b6e359a86dd226028345'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -430,6 +430,26 @@ A crowded month can still be taller than a short page, eight hundred pixels in a
 ### Calendar face frame | low | a change of face redrew every month
 
 The benchmark's drag of the split showed one frame of about fifty milliseconds where the calendar changes between one face and two. Measured on the minified build with long-animation-frame entries, the time was in the resize observation, which drew every month again though only the list had come or gone. Resolved in `621d3ffe2b`: the months are drawn again only when what they show changes. Over eight changes of face the long frames went from two, of 75 and 69 ms, to one of 56 ms; what is left is the list being put in or taken out and the layout that follows. The edge of a due window was quietened in `fe0f0dbe12`, to 4.3 to 1 against the card in the light scheme and 5.0 in the dark, and a test now measures every reading's edge in both schemes against a floor of three to one. Two states that could only be reached by hand, a counted window chosen and a crowded month drawn whole, are in the catalogue from `5d6ccdbfab`.
+
+### Ninth review stops | medium | a choice could leave the keyboard on a part hidden from assistive technology
+
+An independent review of the key, the way back to today, the arrow keys and the eighth review's fixes; it found no high-severity defect. A choice can take the place of the window a crowded week kept last, and that window's stop then moves to a later week. With the keyboard on the part that had been the stop, focus was left on a part marked hidden, and the arrow keys did nothing. Resolved in `888388f6b1`: whenever what is drawn changes, a focused part that is no longer its obligation's stop hands the keyboard to the part that is, the view unmoved, at `native/desktop/frontend/src/components/CalendarMonths.tsx:371`. A test chooses in the list, then by keyboard among the months, and goes on with the arrow keys.
+
+### Ninth review memory | medium | a calendar brought back did not come back as it was left
+
+Whether the chosen obligation was in view was reset to true whenever the page was shown, so a calendar put away and brought back pulled its choice back into view from a place the reader had scrolled away to. The page's first drawing is always of one face, and the faces were placed during it, so with both faces shown the list counted as shown afresh and was placed on the choice. Choice, face and whole months stayed with a page that remained on screen through a sign-out. Resolved in `888388f6b1`: the shell's memory of the page includes whether the choice was in view, and it changes only with the choice or the reader's scrolling; the faces are placed once the drawing has caught up with the measured width; and a new memory, which the shell makes for each profile and each sign-in, starts the page's choices afresh. Tests put away a calendar with a choice out of view and the list off its start, and sign out with a window chosen.
+
+### Ninth review tall month | medium | a reader inside a month taller than the page was kept on the row below
+
+The place was the first row whose name was in view, so inside a month drawn whole and taller than the page it was the next row down, and a new layout threw the reader to the top. Resolved in `888388f6b1`: the place is the row that covers the top of the view, at `native/desktop/frontend/src/components/FilingCalendar.tsx:420`. With real scrollbars, opening a month from a week's count could make the scrollbar appear, change the page's width, and undo the hold that keeps the pressed week in place; the review saw this by launching the browser with its scrollbars, which the test runner hides. The page now keeps room for its scrollbar whether or not it has one. A test goes deep inside a whole January and maximizes and restores; the scrollbar case is held only by a check that the room is kept, since the suite cannot draw a scrollbar.
+
+### Ninth review minor | low | settled in the same change
+
+Whether one more window fits a crowded week was tried by placing windows in order of urgency, which is not the fewest rows: over fifteen hundred random calendars, choosing a window that was already drawn changed what was kept in twenty-one. It is now measured by laying the set out from the left, and a test holds that choosing any window already drawn changes nothing of its week. The way back to a day that is not today was named by the bare day; read aloud it now says where it goes. The counts in the page's head were a list with no name, and are named as obligations by state; that change was swept into another session's checkpoint commit, `dd6f10745a`. Resolved otherwise in `888388f6b1`.
+
+### Ninth review left | low | not changed
+
+A reader's scroll in the same frame as a change of width is taken for the layout's and undone; measured again by this review. Not exercised by it: the log's keys, touch and the four languages, the midnight re-read, forced colours.
 
 ## Recommendations
 
