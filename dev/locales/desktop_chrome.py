@@ -32,7 +32,6 @@ from typing import Final
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n.render import extract_placeholders
-from dev._paths import REPO_ROOT
 
 from ._paths import LOCALES_DIR, SRC_DIR
 from ._status import CatalogueLeafState, classify_catalogue_leaf
@@ -258,11 +257,6 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset(
     {"desktop.signin.start_services", "desktop.signin.unsupported"}
 )
 
-#: Where the shell's build reads the generated strings.
-DESKTOP_CHROME_OUTPUT: Final[Path] = (
-    REPO_ROOT / "native" / "desktop" / "frontend" / "src" / "generated" / "chrome-strings.json"
-)
-
 # The only placeholder form the shell substitutes: ``{name}``.
 _SHELL_PLACEHOLDER: Final[re.Pattern[str]] = re.compile(r"\{(\w+)\}")
 
@@ -330,7 +324,8 @@ def render_desktop_chrome(strings: Mapping[str, Mapping[str, str]]) -> str:
 def main(argv: Sequence[str] | None = None) -> int:
     """Write the desktop shell's chrome strings."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--output", type=Path, default=DESKTOP_CHROME_OUTPUT)
+    # The build names where its generated inputs go; nothing is written into the source tree by default.
+    parser.add_argument("--output", type=Path, required=True)
     arguments = parser.parse_args(argv)
     try:
         strings = desktop_chrome_strings()

@@ -480,8 +480,9 @@ export function App({ host }: { host: Host }) {
     }
     if (wish.granted && document.activeElement !== document.body) return;
     // The sign-in dialog holds the keyboard while it is up: nothing behind
-    // it is given focus, whatever was wished for before it opened.
-    if (document.querySelector(".sign-in")) return;
+    // it is given focus, whatever was wished for before it opened. On its
+    // way out it holds nothing, and a wish made then is granted at once.
+    if (document.querySelector('.sign-in[data-state="open"]')) return;
     // Withheld, the TUI's pane holds the way in instead of a terminal.
     const wayIn = signInButton.current;
     if (wish.view === "tui" && wayIn && wayIn.offsetParent !== null) {
@@ -1458,6 +1459,23 @@ export function App({ host }: { host: Host }) {
       first ?? document.querySelector<HTMLElement>(".rail [role=toolbar]")
     )?.focus();
   }, [tuiVisible, firstPaneShown]);
+  // The bottom panel maximized over the panes above it: focus held in one
+  // of them goes into the panel, to the view its tab shows.
+  const panelMaximized = maximized === "panel";
+  const panelWasMaximized = useRef(panelMaximized);
+  useEffect(() => {
+    const covered = !panelWasMaximized.current && panelMaximized;
+    panelWasMaximized.current = panelMaximized;
+    const held = document.activeElement;
+    if (
+      !covered ||
+      (held !== null &&
+        held !== document.body &&
+        held.closest(".main-area") === null)
+    )
+      return;
+    focusView(layout.tab);
+  }, [panelMaximized, layout.tab, focusView]);
 
   // What a session's header says beside its state: how it ended, or why it
   // could not start.
@@ -1707,6 +1725,7 @@ export function App({ host }: { host: Host }) {
           page={calendarPage}
           state={calendar.state}
           attempt={calendar.attempt}
+          today={calendar.today}
           // Withheld, it says what the TUI pane says of the account, with
           // the same ways on. While the person carries on in the TUI the
           // window does not know how that went: it offers to look again.
@@ -2092,6 +2111,8 @@ export function App({ host }: { host: Host }) {
             onClosed={() => {
               const opener = signInOpener.current;
               signInOpener.current = null;
+              // Something asked for while the dialog was up comes first.
+              grantFocus();
               // The dialog takes a moment to leave. Focus the person has
               // already put somewhere in that moment is left where it is.
               const held = document.activeElement;
@@ -2103,16 +2124,20 @@ export function App({ host }: { host: Host }) {
                 element.offsetParent !== null;
               const from = opener?.element ?? null;
               const page = calendarPage.current;
+              const frame = document.querySelector(".docs-frame");
               if (account.gated) {
                 if (shown(from)) from.focus();
                 else if (opener?.calendar && shown(page)) page.focus();
                 else if (shown(signInButton.current))
                   signInButton.current.focus();
                 else if (shown(page)) page.focus();
+                else if (shown(frame) && docs.current) docs.current.focus();
                 else focusRail();
               } else if (opener?.calendar && shown(page)) page.focus();
+              else if (panelMaximized) focusView(layout.tab);
               else if (tuiVisible) focusView("tui");
               else if (shown(page)) page.focus();
+              else if (shown(frame) && docs.current) docs.current.focus();
               else focusRail();
             }}
           />

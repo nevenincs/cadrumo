@@ -27,7 +27,12 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import { deadlineDistance, type CalendarState } from "../shell/calendar";
+import {
+  deadlineDistance,
+  evaluatedDay,
+  localDay,
+  type CalendarState,
+} from "../shell/calendar";
 import { entryKey } from "../shell/calendarGrid";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
@@ -192,17 +197,32 @@ function Entry({
 /**
  * Where the past ends: a line across the list at the day the product worked
  * the states out for, so what is behind and what is ahead are told apart at
- * a glance. It is said in the language's own word for today.
+ * a glance. It is said in the language's own word for today where that day
+ * is today here; a calendar worked out for another day says the day alone.
  */
-function TodayMark({ on, locale }: { on: string; locale: string }) {
+function TodayMark({
+  on,
+  today,
+  locale,
+}: {
+  on: string;
+  /** The local day. */
+  today: string;
+  locale: string;
+}) {
   const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
     0,
     "day",
   );
-  const label = `${word.charAt(0).toLocaleUpperCase(locale)}${word.slice(1)} · ${new Intl.DateTimeFormat(
-    locale,
-    { day: "numeric", month: "short" },
-  ).format(day(on))}`;
+  const label =
+    on === today
+      ? `${word.charAt(0).toLocaleUpperCase(locale)}${word.slice(1)} · ${new Intl.DateTimeFormat(
+          locale,
+          { day: "numeric", month: "short" },
+        ).format(day(on))}`
+      : new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
+          day(on),
+        );
   return (
     <div
       role="separator"
@@ -231,6 +251,7 @@ export function FilingCalendarView({
   withheld,
   attempt = 0,
   locale,
+  today: localToday,
   defaultView = "months",
   refreshing = false,
   page,
@@ -246,6 +267,9 @@ export function FilingCalendarView({
   attempt?: number;
   /** The chrome language, for dates. */
   locale: string;
+  /** The local day, as an ISO date, from whoever keeps it current. The
+   * calendar's mark is called today only where its day is this one. */
+  today?: string;
   /** The face a page too narrow for both shows first. */
   defaultView?: "months" | "list";
   /** A newer read is in flight over what is shown. */
@@ -317,7 +341,8 @@ export function FilingCalendarView({
   // shown; after that the place is theirs.
   const aside = useRef<HTMLDivElement>(null);
   const placed = useRef<string | null>(null);
-  const evaluatedOn = calendar?.entries[0]?.evaluated_on ?? null;
+  const evaluatedOn = calendar ? evaluatedDay(calendar) : null;
+  const here = localToday ?? localDay();
   useLayoutEffect(() => {
     const el = root.current;
     if (!el || evaluatedOn === null) return;
@@ -419,7 +444,8 @@ export function FilingCalendarView({
       };
       // How many of the month's obligations bind on or after the day the
       // product evaluated: they are listed last, being sorted by date.
-      if (entry.adjusted_closes_on >= entry.evaluated_on) group.ahead += 1;
+      if (evaluatedOn !== null && entry.adjusted_closes_on >= evaluatedOn)
+        group.ahead += 1;
       group.entries.push(entry);
       groups.set(key, group);
     }
@@ -439,11 +465,11 @@ export function FilingCalendarView({
       groups.set(key, group);
     }
     return [...groups].sort(([a], [b]) => a.localeCompare(b));
-  }, [calendar, locale]);
+  }, [calendar, locale, evaluatedOn]);
   // The day the product worked the states out for, and the month in which
   // the first obligation still ahead falls: the mark for today stands just
   // before that obligation, or after the last one when none is ahead.
-  const today = calendar?.entries[0]?.evaluated_on ?? null;
+  const today = evaluatedOn;
   const turning = months.find(([, month]) => month.ahead > 0)?.[0] ?? null;
 
   let body: ReactNode;
@@ -522,7 +548,7 @@ export function FilingCalendarView({
             {today &&
               key === turning &&
               month.ahead === month.entries.length && (
-                <TodayMark on={today} locale={locale} />
+                <TodayMark on={today} today={here} locale={locale} />
               )}
             <h2
               id={`${heading}-${key}`}
@@ -544,7 +570,7 @@ export function FilingCalendarView({
             ).map((entries, part) => (
               <Fragment key={part}>
                 {part === 1 && today && (
-                  <TodayMark on={today} locale={locale} />
+                  <TodayMark on={today} today={here} locale={locale} />
                 )}
                 {entries.length > 0 && (
                   <ul>
@@ -596,7 +622,9 @@ export function FilingCalendarView({
             )}
           </section>
         ))}
-        {today && turning === null && <TodayMark on={today} locale={locale} />}
+        {today && turning === null && (
+          <TodayMark on={today} today={here} locale={locale} />
+        )}
       </div>
     );
     const note = coverage.advised.length > 0 && (

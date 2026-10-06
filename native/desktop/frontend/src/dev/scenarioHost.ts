@@ -16,8 +16,11 @@ import type {
 import type { Host } from "../shell/host";
 import type { ProfileViews } from "../shell/views";
 import {
+  AHEAD_CALENDAR,
+  BEHIND_CALENDAR,
   EMPTY_CALENDAR,
   FIXTURE_CALENDAR,
+  STRADDLING_CALENDAR,
   FIXTURE_NOTIFICATIONS,
   NEVER_CAPTURED,
 } from "./fixtures/calendar";
@@ -49,9 +52,19 @@ export type ScenarioHostOptions = {
   /** Keep the log growing: a batch of records every this many milliseconds
    * after the backlog, as a process writing its log sends them. */
   logFeedMs?: number;
+  /** Another shape of the fixture calendar: everything behind the day it
+   * was evaluated on, everything ahead, or that day inside a month. */
+  calendar?: CalendarShape | null;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
+
+export const CALENDAR_SHAPES = {
+  behind: BEHIND_CALENDAR,
+  ahead: AHEAD_CALENDAR,
+  straddling: STRADDLING_CALENDAR,
+} as const;
+export type CalendarShape = keyof typeof CALENDAR_SHAPES;
 
 const never = <T>() => new Promise<T>(() => undefined);
 
@@ -101,7 +114,10 @@ export function scenarioHost(
       say(`filingCalendar ${range.from} ${range.to}`);
       await wait(options.latencyMs);
       if (!readable()) throw failure("timed_out", "cli");
-      return scenario.views === "empty" ? EMPTY_CALENDAR : FIXTURE_CALENDAR;
+      if (scenario.views === "empty") return EMPTY_CALENDAR;
+      return options.calendar
+        ? CALENDAR_SHAPES[options.calendar]
+        : FIXTURE_CALENDAR;
     },
   };
 

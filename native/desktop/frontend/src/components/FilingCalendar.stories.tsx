@@ -5,6 +5,7 @@ import {
   BEHIND_CALENDAR,
   EMPTY_CALENDAR,
   FIXTURE_CALENDAR,
+  FIXTURE_TODAY,
   STRADDLING_CALENDAR,
 } from "@/dev/fixtures/calendar";
 import type { CalendarState } from "../shell/calendar";
@@ -26,6 +27,8 @@ type Args = {
   pane?: boolean;
   /** The face such a pane shows first. */
   view?: "months" | "list";
+  /** The local day; the fixture's own unless a story is about another. */
+  today?: string;
   /** Why the calendar is withheld, as a phase of the account. */
   phase?: "signed-out" | "checking" | "locked" | "services-down";
 };
@@ -42,7 +45,7 @@ const ACCOUNTS = {
   }),
 };
 
-function Page({ state, refreshing, phase, pane, view }: Args) {
+function Page({ state, refreshing, phase, pane, view, today }: Args) {
   const t = useStrings();
   return (
     <div
@@ -62,6 +65,8 @@ function Page({ state, refreshing, phase, pane, view }: Args) {
         locale={document.documentElement.lang || "en"}
         refreshing={refreshing}
         defaultView={view}
+        // The fixture's day, so the catalogue reads the same on any day.
+        today={today ?? FIXTURE_TODAY}
         withheld={
           phase && (
             <SignedOut
@@ -122,6 +127,13 @@ export const TodayWithinMonth: Story = {
 export const TodayCloses: Story = {
   name: "Today: everything is behind",
   args: { state: { kind: "ready", calendar: BEHIND_CALENDAR } },
+};
+
+// A calendar the product worked out on another day than this one: its mark
+// says the day, and does not call it today.
+export const AnotherDay: Story = {
+  name: "Evaluated on another day",
+  args: { pane: true, view: "list", today: "2026-10-07" },
 };
 
 export const Loading: Story = { args: { state: { kind: "loading" } } };

@@ -104,14 +104,15 @@ Select one in the control or in the address:
 /scenarios.html?scenario=throttled&lang=es
 ```
 
-| Parameter  | Values                 | Meaning                                                             |
-| ---------- | ---------------------- | ------------------------------------------------------------------- |
-| `scenario` | a name from the table  | The scenario to start in                                            |
-| `lang`     | `en`, `es`, `ca`, `hu` | The output language the host reports                                |
-| `latency`  | milliseconds           | The fixed delay before a sign-in or sign-out answer, 600 by default |
-| `bar`      | `off`                  | Hide the scenario control, for a clean screenshot                   |
-| `records`  | a count                | Fill the log with that many generated records, up to its ring size  |
-| `feed`     | milliseconds           | Keep the log growing: twenty more records at that interval          |
+| Parameter  | Values                          | Meaning                                                                                                |
+| ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `scenario` | a name from the table           | The scenario to start in                                                                               |
+| `lang`     | `en`, `es`, `ca`, `hu`          | The output language the host reports                                                                   |
+| `latency`  | milliseconds                    | The fixed delay before a sign-in or sign-out answer, 600 by default                                    |
+| `bar`      | `off`                           | Hide the scenario control, for a clean screenshot                                                      |
+| `records`  | a count                         | Fill the log with that many generated records, up to its ring size                                     |
+| `feed`     | milliseconds                    | Keep the log growing: twenty more records at that interval                                             |
+| `calendar` | `behind`, `ahead`, `straddling` | Another shape of the fixture calendar: all of it behind its day, all ahead, or that day inside a month |
 
 The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to
@@ -246,7 +247,10 @@ typed in `src/shell/views.ts`.
   is on screen, and what the scenarios show of it is design evidence.
 - **A view is read for a profile, when something shows it.** The calendar is
   read when its page is shown, and not again for being put away and brought
-  back within half a minute; its Refresh always asks. The counts are read
+  back within half a minute; its Refresh always asks. A calendar on screen
+  when the local day changes is read again, since every distance on it is
+  counted from the day it was read, and its mark is called today only where
+  the day the product evaluated is today here. The counts are read
   when the profile becomes readable and when the window is returned to, at
   most once a minute. What was read is
   dropped when the profile or its sign-in changes. A read that is refused has

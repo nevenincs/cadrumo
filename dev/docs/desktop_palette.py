@@ -35,7 +35,6 @@ from dev._paths import REPO_ROOT, UTF_8
 
 CONF_PATH: Final[Path] = REPO_ROOT / "docs" / "conf.py"
 STYLESHEET_PATH: Final[Path] = REPO_ROOT / "docs" / "_static" / "cadrumo-docs.css"
-PALETTE_OUTPUT: Final[Path] = REPO_ROOT / "native" / "desktop" / "frontend" / "src" / "generated" / "palette.css"
 
 #: Light values apply everywhere; the dark block is a plain attribute selector
 #: so the document root and any nested always-dark area both resolve it.
@@ -278,7 +277,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--conf", type=Path, default=CONF_PATH)
     parser.add_argument("--stylesheet", type=Path, default=STYLESHEET_PATH)
-    parser.add_argument("--output", type=Path, default=PALETTE_OUTPUT)
+    # The build names where its generated inputs go; nothing is written into the source tree by default.
+    parser.add_argument("--output", type=Path, required=True)
     arguments = parser.parse_args(argv)
     try:
         palette = desktop_palette(

@@ -8,6 +8,7 @@ import {
   type GridBar,
   type GridMonth,
 } from "../shell/calendarGrid";
+import { evaluatedDay } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
 import type {
   CalendarEvent,
@@ -235,7 +236,7 @@ export function CalendarMonths({
         calendar.range,
         calendar.entries,
         calendar.events,
-        calendar.entries[0]?.evaluated_on ?? null,
+        evaluatedDay(calendar),
         weekStart,
       ),
     [calendar, weekStart],

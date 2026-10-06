@@ -416,7 +416,13 @@ test("the smallest window keeps the newest record in view", async ({
     .locator(".logview .filter-text, .logview select, .logview button")
     .evaluateAll((all) =>
       all
-        .filter((control) => !control.closest(".logview-list"))
+        // Those that are drawn: Follow has a place in each shape of the
+        // bar and is shown in one.
+        .filter(
+          (control) =>
+            !control.closest(".logview-list") &&
+            control.getClientRects().length > 0,
+        )
         .map((control) => {
           const box = control.getBoundingClientRect();
           return { left: box.left, right: box.right, width: box.width };
@@ -988,11 +994,9 @@ test("Tab does not go back to a record the reader has scrolled away from", async
   await expect
     .poll(async () => (await logPlace(target)).fromEnd)
     .toBeGreaterThan(2000);
+  // Nothing more is scrolled once the keyboard is elsewhere: where the
+  // record went was known when it went.
   await target.locator(".logview .filter-text").focus();
-  await target.mouse.wheel(0, -40);
-  await expect
-    .poll(async () => (await logPlace(target)).fromEnd)
-    .toBeGreaterThan(3000);
   const before = await logPlace(target);
   for (let press = 0; press < 12; press++) {
     await target.keyboard.press("Tab");
@@ -1007,6 +1011,264 @@ test("Tab does not go back to a record the reader has scrolled away from", async
   }
   await expect(list).toBeFocused();
   expect((await logPlace(target)).scrollTop).toBe(before.scrollTop);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // Out of the list and back in, the same.
+  await target.keyboard.press("Shift+Tab");
+  await target.keyboard.press("Tab");
+  await expect(list).toBeFocused();
+  expect((await logPlace(target)).scrollTop).toBe(before.scrollTop);
+});
+
+/** Tab from the filter field until focus is in the log's list. */
+const tabIntoLog = async (target: Page) => {
+  const list = target.locator(".logview-list");
+  await target.locator(".logview .filter-text").focus();
+  for (let press = 0; press < 12; press++) {
+    await target.keyboard.press("Tab");
+    if (
+      await list.evaluate(
+        (element) =>
+          element === document.activeElement ||
+          element.contains(document.activeElement),
+      )
+    )
+      return;
+  }
+  throw new Error("Tab never reached the log");
+};
+
+test("Tab goes to the newest record once the reader is back at the end, not to one they left", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=5000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  // A record chosen well above the end; then the keyboard goes elsewhere
+  // and the reader scrolls back down to the end.
+  await target.mouse.wheel(0, -4000);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  const chosen = (await logPlace(target)).seq + 2;
+  await list.locator(`.record[data-seq="${chosen}"]`).click();
+  await target.locator(".logview .filter-text").focus();
+  await list.hover();
+  await target.mouse.wheel(0, 20000);
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await tabIntoLog(target);
+  await expect(list.locator(".record").last()).toBeFocused();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  expect((await logPlace(target)).fromEnd).toBeLessThan(30);
+  // One stop in the list, whatever the state.
+  expect(
+    await list.evaluate(
+      (element) =>
+        [element, ...element.querySelectorAll(":scope > .record")].filter(
+          (node) => (node as HTMLElement).tabIndex === 0,
+        ).length,
+    ),
+  ).toBe(1);
+});
+
+test("Tab does not go back to a record the log has moved on from while following", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=200",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  // The keyboard was on the newest record, then went to the filter; the
+  // log went on following and that record is long out of view.
+  const newest = list.locator(".record").last();
+  const seq = Number(await newest.getAttribute("data-seq"));
+  await newest.click();
+  await target.locator(".logview .filter-text").focus();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect
+    .poll(async () =>
+      Number(await list.locator(".record").last().getAttribute("data-seq")),
+    )
+    .toBeGreaterThan(seq + 60);
+  await tabIntoLog(target);
+  // On the newest record there now is, still following: not thrown back.
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  expect(
+    await target.evaluate(() =>
+      Number((document.activeElement as HTMLElement).dataset.seq),
+    ),
+  ).toBeGreaterThan(seq + 60);
+  expect((await logPlace(target)).fromEnd).toBeLessThan(30);
+});
+
+test("a filter typed with the current record out of view does not throw the view to that record", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=5000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await target.mouse.wheel(0, -600);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // A record chosen in view that names its logger; then the reader scrolls
+  // far above it and filters to that logger, which the record at the top of
+  // their view does not match.
+  const chosen = await list.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
+      (candidate) =>
+        candidate.getBoundingClientRect().top >= box.top &&
+        candidate.querySelector("span[title]"),
+    );
+    return {
+      seq: Number(row?.dataset.seq),
+      logger: row?.querySelector("span[title]")?.getAttribute("title") ?? "",
+    };
+  });
+  expect(chosen.logger).not.toBe("");
+  await list.locator(`.record[data-seq="${chosen.seq}"]`).click();
+  await target.locator(".logview .filter-text").focus();
+  await list.hover();
+  await target.mouse.wheel(0, -2500);
+  await expect
+    .poll(async () => (await logPlace(target)).fromEnd)
+    .toBeGreaterThan(2500);
+  const top = (await logPlace(target)).seq;
+  const word = chosen.logger.split(".").at(-1) ?? chosen.logger;
+  // The record at the top must not match, or its place would simply hold.
+  expect(
+    await list
+      .locator(`.record[data-seq="${top}"]`)
+      .evaluate((row, text) => row.textContent?.includes(text) ?? false, word),
+  ).toBe(false);
+  await target.locator(".logview .filter-text").fill(word);
+  // Neither record is a place to keep: the view starts at its newest again
+  // and follows, as any new view does.
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  expect((await logPlace(target)).fromEnd).toBeLessThan(30);
+});
+
+test("ArrowDown on the newest record resumes following", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  const newest = list.locator(".record").last();
+  await newest.focus();
+  await target.keyboard.press("ArrowUp");
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // Back on the newest by a press, which resumes nothing by itself.
+  await newest.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await target.keyboard.press("ArrowDown");
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect(newest).toBeFocused();
+});
+
+test("Follow is reached by the keyboard where the eye finds it, in each shape of the bar", async ({
+  page: target,
+}) => {
+  const order = async () => {
+    const follow = target.getByRole("button", {
+      name: label("desktop.logs.follow"),
+    });
+    // One Follow is shown, however many places the bar keeps for it.
+    await expect(follow).toHaveCount(1);
+    return target.locator(".logview").evaluate((view, name) => {
+      const controls = [
+        ...view.querySelectorAll<HTMLElement>(
+          ":scope > div:first-child :is(input, select, button)",
+        ),
+      ].filter((control) => control.offsetParent !== null);
+      const at = controls.findIndex(
+        (control) => control.textContent?.trim() === name,
+      );
+      const lefts = controls.map((control) =>
+        Math.round(control.getBoundingClientRect().left),
+      );
+      const tops = controls.map((control) =>
+        Math.round(control.getBoundingClientRect().top),
+      );
+      return {
+        at,
+        count: controls.length,
+        // Among the controls of its own row, how many stand to its left.
+        before: controls.filter(
+          (_, index) =>
+            Math.abs((tops[index] ?? 0) - (tops[at] ?? 0)) < 8 &&
+            (lefts[index] ?? 0) < (lefts[at] ?? 0),
+        ).length,
+        rowmates: controls.filter(
+          (_, index) => Math.abs((tops[index] ?? 0) - (tops[at] ?? 0)) < 8,
+        ).length,
+      };
+    }, label("desktop.logs.follow"));
+  };
+  // A wide bar: one row, Follow last on it and last for the keyboard.
+  await target.setViewportSize({ width: 1600, height: 900 });
+  await open(target, "signed-in");
+  await openLogs(target);
+  await expect(target.locator(".logview-list .record").first()).toBeVisible();
+  let found = await order();
+  expect(found.at).toBe(found.count - 1);
+  expect(found.before).toBe(found.rowmates - 1);
+  // A narrow bar: two rows, Follow at the end of the first, after the level.
+  await target.setViewportSize({ width: 700, height: 900 });
+  found = await order();
+  expect(found.at).toBe(2);
+  expect(found.before).toBe(2);
+  expect(found.rowmates).toBe(3);
+  // A short panel: one row again, Follow first on it and first for the
+  // keyboard, and still on screen when the keyboard has gone to the far end
+  // of a bar that scrolls sideways.
+  await target.setViewportSize({ width: 700, height: 420 });
+  found = await order();
+  expect(found.at).toBe(0);
+  expect(found.before).toBe(0);
+  const follow = target.getByRole("button", {
+    name: label("desktop.logs.follow"),
+  });
+  await follow.focus();
+  for (let press = 1; press < found.count; press++)
+    await target.keyboard.press("Tab");
+  await expect(follow).toBeInViewport({ ratio: 1 });
+});
+
+test("maximizing the bottom panel over the pane that holds the keyboard takes it into the panel", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await expect(target.locator(".docs-frame")).toBeVisible();
+  for (const from of ["tui", "docs"] as const) {
+    if (from === "tui") {
+      await target.locator('[data-terminal="tui"] .xterm-screen').click();
+      await expect(tui(target)).toBeFocused();
+    } else {
+      await target.locator(".docs-frame").focus();
+      await expect(target.locator(".docs-frame")).toBeFocused();
+    }
+    await target.keyboard.press("Control+Shift+KeyK");
+    const palette = target.locator(".palette");
+    await palette
+      .getByRole("combobox")
+      .fill(label("desktop.pane.maximize_panel"));
+    await target.keyboard.press("Enter");
+    await expect(target.locator(".pane-tui")).toBeHidden();
+    // The view the panel's tab shows takes it: not the document, where no
+    // key works, and not a pane that is no longer there.
+    await expect(
+      target.locator('[data-terminal="console"] textarea'),
+    ).toBeFocused();
+    // And back, for the next pane to start from.
+    await target.keyboard.press("Control+Shift+KeyK");
+    await palette.getByRole("combobox").fill(label("desktop.pane.restore"));
+    await target.keyboard.press("Enter");
+    await expect(target.locator(".pane-tui")).toBeVisible();
+  }
 });
 
 test("Space on a record with no detail does not scroll the log", async ({
@@ -1031,8 +1293,23 @@ test("Space on a record with no detail does not scroll the log", async ({
   });
   await list.locator(`.record[data-seq="${plain}"]`).focus();
   const before = (await logPlace(target)).scrollTop;
+  // The key is taken from the browser, whose own answer to it is to scroll.
+  await target.evaluate(() => {
+    document.addEventListener(
+      "keydown",
+      (event) => {
+        (window as unknown as { spaceTaken?: boolean }).spaceTaken =
+          event.defaultPrevented;
+      },
+      { once: true },
+    );
+  });
   await target.keyboard.press("Space");
-  await target.waitForTimeout(250);
+  expect(
+    await target.evaluate(
+      () => (window as unknown as { spaceTaken?: boolean }).spaceTaken,
+    ),
+  ).toBe(true);
   expect((await logPlace(target)).scrollTop).toBe(before);
 });
 
@@ -1639,9 +1916,13 @@ const calendarReads = (target: Page) => () =>
       ).length ?? 0,
   );
 
+/** The day the fixture calendar was evaluated on, at noon. */
+const FIXTURE_DAY = new Date(2026, 9, 6, 12);
+
 test("the filing calendar is a page of the first pane, read when it is shown", async ({
   page: target,
 }) => {
+  await target.clock.setFixedTime(FIXTURE_DAY);
   await open(target, "signed-in");
   const pane = target.locator(".pane-docs");
   await expect(pane.locator(".docs-frame")).toBeVisible();
@@ -2040,6 +2321,112 @@ test("a maximized calendar shows the months and the list together, and one marks
   await kept.getByRole("button").click();
   await expect(page.locator('[aria-current="true"]')).toHaveCount(0);
   expect(await calendarReads(target)()).toBe(1);
+});
+
+test("the calendar's mark stands where the past ends in each shape of range, and is called today only on that day", async ({
+  page: target,
+}) => {
+  const said = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const today = new RegExp(`^${said.format(0, "day")} · `, "i");
+  const shown = async (shape: string) => {
+    await open(target, "signed-in", `&calendar=${shape}`);
+    await calendarButton(target).click();
+    const page = target.getByRole("region", {
+      name: label("desktop.calendar.title"),
+    });
+    await page
+      .getByRole("radio", { name: label("desktop.calendar.view_list") })
+      .click();
+    const mark = page.getByRole("separator");
+    await expect(mark).toHaveCount(1);
+    const order = await page.evaluate((element) => {
+      const nodes = [
+        ...element.querySelectorAll(".calendar-today, li[data-entry]"),
+      ];
+      const at = nodes.findIndex((node) =>
+        node.classList.contains("calendar-today"),
+      );
+      const section = nodes[at]?.closest("section");
+      return {
+        behind: at,
+        ahead: nodes.length - at - 1,
+        // Rows of the mark's own month on each side of it.
+        split: [
+          nodes
+            .slice(0, at)
+            .filter((node) => node.closest("section") === section).length,
+          nodes
+            .slice(at + 1)
+            .filter((node) => node.closest("section") === section).length,
+        ],
+      };
+    });
+    return { page, mark, order };
+  };
+  await target.clock.setFixedTime(FIXTURE_DAY);
+  // Everything behind: the mark closes the list, after the last row.
+  let found = await shown("behind");
+  expect(found.order).toMatchObject({ behind: 2, ahead: 0 });
+  await expect(found.mark).toHaveAccessibleName(today);
+  await expect(found.mark).toBeInViewport();
+  // Everything ahead: the mark opens the list, before the first month.
+  found = await shown("ahead");
+  expect(found.order).toMatchObject({ behind: 0, ahead: 7, split: [0, 4] });
+  await expect(found.mark).toHaveAccessibleName(today);
+  // The day inside a month: that month is two lists with the mark between.
+  found = await shown("straddling");
+  expect(found.order).toMatchObject({ behind: 1, ahead: 7, split: [1, 4] });
+  await expect(found.mark).toHaveAccessibleName(today);
+  // Among the months the same day is the one marked.
+  await found.page
+    .getByRole("radio", { name: label("desktop.calendar.view_months") })
+    .click();
+  await expect(
+    found.page.locator('[data-day="2026-10-06"] .calendar-grid-today'),
+  ).toHaveCount(1);
+
+  // A calendar worked out for a day that is not today here does not call
+  // that day today: the mark says the day, and stands where it stood.
+  await target.clock.setFixedTime(new Date(2026, 9, 7, 9));
+  found = await shown("straddling");
+  expect(found.order).toMatchObject({ behind: 1, ahead: 7, split: [1, 4] });
+  await expect(found.mark).toHaveAccessibleName(
+    new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(FIXTURE_DAY),
+  );
+  await expect(found.mark).not.toHaveAccessibleName(today);
+});
+
+test("a calendar left on screen past midnight is read again for the new day", async ({
+  page: target,
+}) => {
+  await target.clock.install({ time: new Date(2026, 9, 6, 23, 59, 40) });
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await page
+    .getByRole("radio", { name: label("desktop.calendar.view_list") })
+    .click();
+  const mark = page.getByRole("separator");
+  const said = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  await expect(mark).toHaveAccessibleName(
+    new RegExp(`^${said.format(0, "day")} · `, "i"),
+  );
+  await expect.poll(calendarReads(target)).toBe(1);
+  // Every distance on the page is counted from the day it was read: at
+  // midnight it is asked for again, without anyone touching it.
+  await target.clock.fastForward("01:00");
+  await expect.poll(calendarReads(target)).toBe(2);
+  // The fixture still answers for the sixth, which is no longer today.
+  await expect(mark).toHaveAccessibleName(
+    new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(FIXTURE_DAY),
+  );
+  // Put away, nothing is read at the next midnight for a page nobody sees.
+  await calendarButton(target).click();
+  await target.clock.fastForward("24:00:00");
+  await target.clock.runFor(1000);
+  expect(await calendarReads(target)()).toBe(2);
 });
 
 test("the calendar is not read again for being put away and brought back", async ({
@@ -2587,7 +2974,9 @@ test("admitted after the dialog was put aside, the keyboard goes to the TUI", as
 test("tui-unavailable: a TUI that cannot start is not a way on", async ({
   page: target,
 }) => {
-  await open(target, "tui-unavailable");
+  // Records keep arriving, so the shell is drawn again and again while a
+  // wish for focus could still be granted.
+  await open(target, "tui-unavailable", "&feed=200");
   const dialog = target.locator(".sign-in");
   await expect(dialog).toBeVisible();
   await target.keyboard.press("Escape");
@@ -2640,15 +3029,23 @@ test("tui-unavailable: the dialog's own way to the TUI comes back to a dialog th
     "spawn_failed",
   );
   await expect(dialog).toBeVisible();
-  // Past the moment in which a focus wished for the TUI could be granted.
-  await target.waitForTimeout(1300);
+  // Past the moment in which a focus wished for the TUI could be granted,
+  // with the shell drawn again inside it: each return to the window has
+  // the account read again, and each answer draws the shell.
+  const asked = calls(target, "signInStatus");
+  const before = await asked();
+  for (let draw = 0; draw < 4; draw++) {
+    await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await target.waitForTimeout(330);
+  }
+  expect(await asked()).toBeGreaterThan(before + 2);
   await expect(password(target)).toBeFocused();
 });
 
 test("signing in from the calendar keeps the keyboard in the calendar, with the TUI beside it", async ({
   page: target,
 }) => {
-  await open(target, "signed-out");
+  await open(target, "signed-out", "&feed=200");
   await target.keyboard.press("Escape");
   await expect(target.locator(".sign-in")).toHaveCount(0);
   await calendarButton(target).click();
@@ -2660,11 +3057,83 @@ test("signing in from the calendar keeps the keyboard in the calendar, with the 
     .click();
   await password(target).fill("demo");
   await submit(target).click();
-  await expect(page.getByRole("listitem").first()).toBeVisible();
+  await expect(page.locator(".calendar-bar").first()).toBeVisible();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
-  // The TUI has started beside it, and has not taken the keyboard.
+  // The TUI has started beside it, and has not taken the keyboard, through
+  // the moment in which it could have and several draws of the shell.
+  const held = await errorsHeld(target)();
   await target.waitForTimeout(1300);
+  expect(await errorsHeld(target)()).toBeGreaterThan(held);
   await expect(page).toBeFocused();
+});
+
+test("a view asked for while the sign-in dialog is leaving gets the keyboard", async ({
+  page: target,
+}) => {
+  const filter = target.locator(".logview .filter-text");
+  // Put aside, with the logs asked for before the dialog has gone.
+  await open(target, "signed-out");
+  await expect(password(target)).toBeFocused();
+  await target.keyboard.press("Escape");
+  await target.keyboard.press("Control+Shift+KeyL");
+  await expect(filter).toBeFocused();
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await expect(filter).toBeFocused();
+});
+
+test("a view asked for as a sign-in is admitted gets the keyboard, not the TUI", async ({
+  page: target,
+}) => {
+  const filter = target.locator(".logview .filter-text");
+  // The dialog is a moment in leaving; the chord is pressed in that moment,
+  // by the page itself the instant the dialog starts to go.
+  await open(target, "signed-out");
+  await password(target).fill("demo");
+  await target.evaluate(() => {
+    const dialog = document.querySelector(".sign-in");
+    if (!dialog) throw new Error("no sign-in dialog");
+    new MutationObserver((_, observer) => {
+      if (dialog.getAttribute("data-state") !== "closed") return;
+      observer.disconnect();
+      document.body.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "L",
+          code: "KeyL",
+          ctrlKey: true,
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    }).observe(dialog, { attributes: true, attributeFilter: ["data-state"] });
+  });
+  await target.keyboard.press("Enter");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(filter).toBeFocused();
+});
+
+test("with the TUI hidden, the sign-in dialog leaves the keyboard in the documentation", async ({
+  page: target,
+}) => {
+  // The window was last used with the TUI hidden.
+  await open(target, "signed-in");
+  await target.locator('[data-terminal="tui"] .xterm-screen').click();
+  await target.keyboard.press("Control+Shift+KeyT");
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  // Put aside: no pane holds a way in, so the pane that is shown takes it.
+  await open(target, "signed-out");
+  await expect(password(target)).toBeFocused();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await expect(target.locator(".docs-frame")).toBeFocused();
+  // Admitted: the same, where there is no TUI on screen to go on to.
+  await open(target, "signed-out");
+  await password(target).fill("demo");
+  await submit(target).click();
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await expect(target.locator(".docs-frame")).toBeFocused();
 });
 
 test("a calendar put away with no documentation behind it leaves the keyboard on the rail", async ({

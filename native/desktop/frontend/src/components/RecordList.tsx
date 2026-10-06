@@ -1,4 +1,5 @@
 import {
+  useCallback,
   memo,
   useEffect,
   useLayoutEffect,
@@ -199,8 +200,9 @@ export const RecordList = memo(function RecordList({
   // either end of it.
   const [first, setFirst] = useState<number | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
-  // The reader has scrolled the current record out of view with the keyboard
-  // elsewhere: Tab back into the list must not throw the view back to it.
+  // The current record is out of view, however that came about: the reader
+  // scrolled, the log moved on under them, or the record left what is drawn.
+  // Tab into the list must not throw the view back to it.
   const [strayed, setStrayed] = useState(false);
   // The record at the top of a reader's view, and where it sits. Whenever
   // what is drawn changes, the view is put back on it: an earlier or later
@@ -251,18 +253,17 @@ export const RecordList = memo(function RecordList({
     if (at < 0 && !follow && current !== null) {
       // The record at the top is not in this view. The one the reader is
       // on may be: a filter chosen from a record's own menu keeps it. The
-      // view stays on that record, where it was on screen.
+      // view stays on that record, where it is on screen.
       at = visible.findIndex((record) => record.seq === current);
       const el = list.current;
-      const row = el?.querySelector(`:scope > [data-seq="${current}"]`);
-      if (at >= 0 && el && row)
-        anchor.current = {
-          seq: current,
-          top: Math.max(
-            0,
-            row.getBoundingClientRect().top - el.getBoundingClientRect().top,
-          ),
-        };
+      const row = el
+        ?.querySelector(`:scope > [data-seq="${current}"]`)
+        ?.getBoundingClientRect();
+      const box = el?.getBoundingClientRect();
+      // Only where the reader can see it: a record above or below the view
+      // is not where they are, and the view would jump to it.
+      if (at >= 0 && row && box && row.bottom > box.top && row.top < box.bottom)
+        anchor.current = { seq: current, top: Math.max(0, row.top - box.top) };
       else at = -1;
     }
     if (at >= 0) {
@@ -305,6 +306,19 @@ export const RecordList = memo(function RecordList({
     if (Math.abs(moved) >= 1) el.scrollTop += moved;
   }, [drawn, follow]);
 
+  // Whether the current record is in view, asked whenever the view or what
+  // is drawn has moved: wherever the keyboard is, and following or not.
+  const measureStray = useCallback(() => {
+    const el = list.current;
+    if (!el || current === null) return;
+    const at = el
+      .querySelector(`:scope > [data-seq="${current}"]`)
+      ?.getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    const away = !at || at.bottom <= box.top || at.top >= box.bottom;
+    setStrayed((held) => (held === away ? held : away));
+  }, [current]);
+
   // The focused record can leave the drawn span as newer ones arrive. Focus
   // then goes, once, to the list itself, without moving the view, rather
   // than out of the log; an arrow key takes it on to a record.
@@ -339,12 +353,14 @@ export const RecordList = memo(function RecordList({
     if (!shown || !follow || !el) return;
     el.scrollTop = el.scrollHeight;
     lastTop.current = el.scrollTop;
+    // The end has moved on, and what was in view may no longer be.
+    measureStray();
     if (!focusNewest.current || first !== null) return;
     focusNewest.current = false;
     const newest = el.lastElementChild;
     if (newest instanceof HTMLElement && newest.classList.contains("record"))
       newest.focus({ preventScroll: true });
-  }, [drawn, expanded, first, follow, shown]);
+  }, [drawn, expanded, first, follow, shown, measureStray]);
 
   // The record at the top of the view and where it sits, to keep the view
   // on. Taken when the view moves, and at once after anything that moves
@@ -580,6 +596,17 @@ export const RecordList = memo(function RecordList({
       }
       // Where the view now is, before any batch can put it back.
       if (!follow || target !== row) captureAnchor();
+    } else if (
+      event.key === "ArrowDown" &&
+      !follow &&
+      Number(row.dataset.seq) === visible.at(-1)?.seq
+    ) {
+      // Already on the newest record, with nothing below to move to: asking
+      // for more is asking to follow the end again.
+      event.preventDefault();
+      anchor.current = null;
+      setFirst(null);
+      setFollow(true);
     } else if (from === row && (event.key === "Enter" || event.key === " ")) {
       // Enter and Space on a control inside the row belong to that control.
       // On the row they open its detail; where it has none, Space still
@@ -594,6 +621,30 @@ export const RecordList = memo(function RecordList({
   const loading = records === null && sourceState === null;
   const empty = state?.kind === "available" && visible.length === 0;
   const chip = "shrink-0 rounded-full";
+  // Follow stands where each shape of the bar wants it: last in a wide bar,
+  // after the level in a narrow one, and first in the one-row bar of a short
+  // panel, where it also stays put while the rest scrolls sideways under it.
+  // It is drawn once in each place and shown in one, so the keyboard reaches
+  // it in the order the eye does.
+  const followButton = (place: string) => (
+    <Button
+      variant="outline"
+      size="sm"
+      className={cn(chip, place)}
+      aria-pressed={follow}
+      title={t("desktop.logs.follow_hint")}
+      onClick={() => {
+        if (follow) leaveEnd();
+        else {
+          anchor.current = null;
+          setFirst(null);
+          setFollow(true);
+        }
+      }}
+    >
+      {t("desktop.logs.follow")}
+    </Button>
+  );
 
   return (
     <div
@@ -610,6 +661,9 @@ export const RecordList = memo(function RecordList({
           sideways, so the records keep their room. */}
       <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center panel-short:flex-row panel-short:items-center panel-short:scroll-cue-x panel-short:overflow-x-auto panel-short:[scrollbar-width:none] panel-short:[&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-0 items-center gap-1.5 @4xl:contents panel-short:contents panel-short:*:shrink-0">
+          {followButton(
+            "sticky left-0 z-(--layer-separator) hidden bg-background panel-short:inline-flex",
+          )}
           <Input
             ref={filterInput}
             className="filter-text min-w-20 flex-1 @4xl:w-field @4xl:flex-none panel-short:w-field panel-short:flex-none"
@@ -636,25 +690,7 @@ export const RecordList = memo(function RecordList({
             <option value={2}>{t("desktop.logs.level_warning")}</option>
             <option value={3}>{t("desktop.logs.level_error")}</option>
           </NativeSelect>
-          <Button
-            variant="outline"
-            size="sm"
-            // In the one-row bar it leads: the bar scrolls sideways there,
-            // and the way back to the end must not be off its edge.
-            className={cn(chip, "@4xl:order-last panel-short:-order-1")}
-            aria-pressed={follow}
-            title={t("desktop.logs.follow_hint")}
-            onClick={() => {
-              if (follow) leaveEnd();
-              else {
-                anchor.current = null;
-                setFirst(null);
-                setFollow(true);
-              }
-            }}
-          >
-            {t("desktop.logs.follow")}
-          </Button>
+          {followButton("@4xl:hidden panel-short:hidden")}
         </div>
         <div className="flex min-w-0 items-center gap-1.5 scroll-cue-x overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden @4xl:contents panel-short:contents">
           <div
@@ -717,6 +753,7 @@ export const RecordList = memo(function RecordList({
               {t("desktop.logs.warnings", { count: counts.warnings })}
             </Badge>
           )}
+          {followButton("hidden @4xl:inline-flex panel-short:hidden!")}
         </div>
       </div>
       {sourceState === "unavailable" && (
@@ -804,6 +841,7 @@ export const RecordList = memo(function RecordList({
         onScroll={() => {
           const el = list.current;
           if (!el) return;
+          measureStray();
           const top = drawn[0];
           const fromEnd = el.scrollHeight - el.scrollTop - el.clientHeight;
           // The end of the log, not merely of the span that is drawn.
@@ -828,15 +866,6 @@ export const RecordList = memo(function RecordList({
           }
           if (!top) return;
           captureAnchor();
-          // Whether the record the keyboard was last on is still in view,
-          // asked only while the keyboard is not in the list.
-          if (current !== null && focused.current === null) {
-            const row = el.querySelector(`:scope > [data-seq="${current}"]`);
-            const at = row?.getBoundingClientRect();
-            const box = el.getBoundingClientRect();
-            const away = !at || at.bottom <= box.top || at.top >= box.bottom;
-            if (away !== strayed) setStrayed(away);
-          }
           const at = visible.indexOf(top);
           // The next span comes in a few views before the edge of this one,
           // so a fast scroll does not run into the edge first.

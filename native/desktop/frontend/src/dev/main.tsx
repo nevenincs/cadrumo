@@ -10,7 +10,11 @@ import { App } from "../App";
 import type { DocsLanguage } from "../ipc/contract";
 import "./index.css";
 import { ScenarioBar, type HostCallLine } from "./ScenarioBar";
-import { scenarioHost } from "./scenarioHost";
+import {
+  CALENDAR_SHAPES,
+  scenarioHost,
+  type CalendarShape,
+} from "./scenarioHost";
 import { findScenario, type Scenario } from "./scenarios";
 
 import "virtual:desktop-palette.css";
@@ -54,6 +58,12 @@ function readParams() {
     logRecords: Math.max(0, Math.trunc(Number(params.get("records")) || 0)),
     // A batch of records every this many milliseconds, for a log that grows.
     logFeedMs: Math.max(0, Math.trunc(Number(params.get("feed")) || 0)),
+    // Another shape of the fixture calendar, for where its mark for the
+    // evaluated day stands.
+    calendar: ((shape) =>
+      shape !== null && shape in CALENDAR_SHAPES
+        ? (shape as CalendarShape)
+        : null)(params.get("calendar")),
   };
 }
 
@@ -100,6 +110,7 @@ function Scenarios() {
         : null,
       logRecords: initial.logRecords,
       logFeedMs: initial.logFeedMs,
+      calendar: initial.calendar,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {
