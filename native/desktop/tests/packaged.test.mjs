@@ -238,10 +238,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     if (preflight.verdict !== PASS) return;
 
     const tauri = JSON.parse(
-      readFileSync(
-        resolve(packagedHostPaths().snapshot, "src-tauri/tauri.conf.json"),
-        "utf8",
-      ),
+      readFileSync(packagedHostPaths().configuration, "utf8"),
     );
     const window = tauri.app.windows[0];
     const scheme = window.useHttpsScheme ? "https" : "http";

@@ -68,7 +68,7 @@ test("generated identity, server settings and artifact paths have no product fal
       ),
     );
     const config = tauriConfig(template, identity(), {
-      configDirectory: resolve(root, "host/src-tauri"),
+      configDirectory: resolve(root, "host/desktop/src-tauri"),
       frontend: resolve(root, "assets"),
       icons: resolve(root, "icons"),
     });
@@ -122,7 +122,7 @@ test("the shell policy frames only the documentation origin of the target platfo
     version: "3.2.1",
   };
   const locations = {
-    configDirectory: resolve("host/src-tauri"),
+    configDirectory: resolve("host/desktop/src-tauri"),
     frontend: resolve("frontend"),
     icons: resolve("icons"),
   };
@@ -188,10 +188,16 @@ test("the frontend directory is emitted relative to the Tauri configuration", ()
     application_id: "org.example.configured",
     version: "3.2.1",
   };
-  const configDirectory = resolve("build", "desktop", "host", "src-tauri");
+  const configDirectory = resolve(
+    "build",
+    "desktop",
+    "host",
+    "desktop",
+    "src-tauri",
+  );
   for (const frontend of [
     resolve("build", "desktop", "frontend"),
-    resolve("build", "desktop", "host", "src-tauri", "dist"),
+    resolve(configDirectory, "dist"),
     resolve("elsewhere", "frontend output"),
   ]) {
     const { frontendDist } = tauriConfig(

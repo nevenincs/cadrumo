@@ -6,18 +6,14 @@
 // packaging, and it is never staged, packaged or distributed.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { delimiter, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  hostSnapshot,
+  snapshotHostSources,
+} from "../../scripts/backend-snapshot.mjs";
 import { buildPath } from "../../scripts/build-paths.mjs";
 import {
   identity as readIdentity,
@@ -31,9 +27,11 @@ const BINARY = "cadrumo";
 /** The directories this test host owns, all inside the desktop testing directory. */
 export function packagedHostPaths() {
   const root = resolve(buildPath("desktop_testing"), "packaged");
+  const snapshot = resolve(root, "host");
   return {
     root,
-    snapshot: resolve(root, "host"),
+    snapshot,
+    configuration: resolve(hostSnapshot(snapshot).crate, "tauri.conf.json"),
     cargo: resolve(root, "cargo"),
     icons: resolve(root, "icons"),
     record: resolve(root, "host.json"),
@@ -85,44 +83,20 @@ function build() {
     throw new Error(
       "Set CADRUMO_NATIVE_CONTRACT to the generated native contract.json.",
     );
-  // Remove only the generated source copies, as the shipped build does.
-  for (const directory of [
-    resolve(paths.snapshot, "src-tauri/src"),
-    resolve(paths.snapshot, "../application/src"),
-    resolve(paths.snapshot, "../platform/src"),
-  ])
-    if (existsSync(directory)) rmSync(directory, { recursive: true });
-  mkdirSync(resolve(paths.snapshot, "src-tauri"), { recursive: true });
-  for (const crate of ["application", "platform"])
-    cpSync(
-      resolve(desktop, "..", crate),
-      resolve(paths.snapshot, "..", crate),
-      {
-        recursive: true,
-      },
-    );
-  for (const entry of ["Cargo.toml", "Cargo.lock", "build.rs", "src"])
-    cpSync(
-      resolve(desktop, "src-tauri", entry),
-      resolve(paths.snapshot, "src-tauri", entry),
-      { recursive: true },
-    );
-  const configDirectory = resolve(paths.snapshot, "src-tauri");
+  // The same fresh copy of the sources the shipped build compiles.
+  const snapshot = snapshotHostSources(resolve(desktop, ".."), paths.snapshot);
   const config = tauriConfig(
     JSON.parse(
       readFileSync(resolve(desktop, "src-tauri/tauri.conf.json.in"), "utf8"),
     ),
     readIdentity(),
     {
-      configDirectory,
+      configDirectory: snapshot.crate,
       frontend: buildPath("desktop_frontend"),
       icons: paths.icons,
     },
   );
-  writeFileSync(
-    resolve(configDirectory, "tauri.conf.json"),
-    JSON.stringify(config, null, 2),
-  );
+  writeFileSync(paths.configuration, JSON.stringify(config, null, 2));
   const environment = {
     ...process.env,
     ...selected.environment,
@@ -145,7 +119,7 @@ function build() {
   );
   const run = (args) => {
     const result = spawnSync(process.execPath, [cli, ...args], {
-      cwd: paths.snapshot,
+      cwd: snapshot.project,
       env: environment,
       stdio: "inherit",
       windowsHide: true,

@@ -1,18 +1,10 @@
 import { spawnSync } from "node:child_process";
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { delimiter, isAbsolute, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { delimiter, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "./build-paths.mjs";
-import { syncBackendSource } from "./backend-snapshot.mjs";
+import { snapshotHostSources } from "./backend-snapshot.mjs";
 import {
   identity as readIdentity,
   profile,
@@ -44,21 +36,6 @@ if (action === "run") {
 }
 const cli = resolve(desktop, "frontend/node_modules/@tauri-apps/cli/tauri.js");
 const icons = buildPath("desktop_icons");
-const snapshot = buildPath("desktop_host");
-// Remove only generated source copies so renamed Rust modules cannot survive a rebuild.
-for (const directory of [
-  resolve(snapshot, "src-tauri/src"),
-  resolve(snapshot, "../application/src"),
-  resolve(snapshot, "../platform/src"),
-]) {
-  if (backendOnly || !existsSync(directory)) continue;
-  const ownedPath = relative(realpathSync(binaryDir), realpathSync(directory));
-  if (!ownedPath || ownedPath.startsWith("..") || isAbsolute(ownedPath))
-    throw new Error(
-      "Generated sources must remain inside the selected build directory.",
-    );
-  rmSync(directory, { recursive: true });
-}
 const contract = process.env.CADRUMO_NATIVE_CONTRACT;
 if (!contract || !isAbsolute(contract))
   throw new Error(
@@ -83,18 +60,16 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     delimiter +
     (environment[pathKey] ?? "");
 }
-function copySource(source, destination) {
-  if (backendOnly) syncBackendSource(source, destination, binaryDir);
-  else cpSync(source, destination, { recursive: true });
-}
-copySource(
-  resolve(desktop, "../application"),
-  resolve(snapshot, "../application"),
+// The backend checks keep Cargo's incremental inputs; every other action
+// rebuilds from a fresh copy of the sources.
+const snapshot = snapshotHostSources(
+  resolve(desktop, ".."),
+  buildPath("desktop_host"),
+  { incremental: backendOnly },
 );
-copySource(resolve(desktop, "../platform"), resolve(snapshot, "../platform"));
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
-    cwd: snapshot,
+    cwd: snapshot.project,
     stdio: "inherit",
     windowsHide: true,
     env: environment,
@@ -102,14 +77,7 @@ function run(args) {
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
-mkdirSync(resolve(snapshot, "src-tauri"), { recursive: true });
-for (const entry of ["Cargo.toml", "Cargo.lock", "build.rs", "src"]) {
-  copySource(
-    resolve(desktop, "src-tauri", entry),
-    resolve(snapshot, "src-tauri", entry),
-  );
-}
-const configDirectory = resolve(snapshot, "src-tauri");
+const configDirectory = snapshot.crate;
 // tauri-build watches this directory even when no capabilities are declared.
 // A missing watched path makes Cargo rerun the build script on every test.
 if (backendOnly)
@@ -165,7 +133,7 @@ if (action === "build") {
     "cargo",
     ["metadata", "--no-deps", "--locked", "--format-version", "1"],
     {
-      cwd: resolve(snapshot, "src-tauri"),
+      cwd: snapshot.crate,
       env: environment,
       encoding: "utf8",
       windowsHide: true,
@@ -173,7 +141,7 @@ if (action === "build") {
   );
   if (metadata.error) throw metadata.error;
   if (metadata.status !== 0) throw new Error(metadata.stderr);
-  const manifest = resolve(snapshot, "src-tauri/Cargo.toml");
+  const manifest = resolve(snapshot.crate, "Cargo.toml");
   const owner = JSON.parse(metadata.stdout).packages.find(
     (pkg) => resolve(pkg.manifest_path) === manifest,
   );
@@ -227,7 +195,7 @@ if (action === "build") {
         "warnings",
       ];
   const result = spawnSync("cargo", args, {
-    cwd: resolve(snapshot, "src-tauri"),
+    cwd: snapshot.crate,
     env: { ...environment, TAURI_CONFIG: JSON.stringify(config) },
     stdio: "inherit",
     windowsHide: true,
