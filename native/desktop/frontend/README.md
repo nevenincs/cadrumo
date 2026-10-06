@@ -217,11 +217,49 @@ Conventions a new component follows:
 - **Text** is a chrome string. Add it in English, Spanish, Catalan and
   Hungarian through `python -m dev.locales set-batch`, declare its key in
   `dev/locales/desktop_chrome.py`, and run the bootstrap again.
+- **A component's module** exports components and types, nothing else. A
+  value beside a component turns every edit of that file into a page reload
+  in the development server. Words and helpers that others share live in a
+  module of their own, as `src/components/accountWords.ts` and
+  `src/shell/records.ts` do. The primitives keep the registry's habit of
+  exporting their variants.
 
 To add a primitive from the shadcn registry, run its CLI from this directory
 (`components.json` points it at `src/components/ui/`), then restyle what it
 wrote to roles and tokens and remove any dependency it added beyond the ones
 already declared. The class merger is the local `@/components/ui/cn`.
+
+### Profile views
+
+The window can show read-only views of the signed-in profile: the filing
+calendar, and the notification counts behind the rail's Messages button. They
+are an optional part of the host port, `Host.views` in `src/shell/host.ts`,
+typed in `src/shell/views.ts`.
+
+- **A host without views is a complete host.** The shell then draws no
+  button, action, chord or page for one, so nothing leads to a view that
+  cannot load. The desktop host offers none yet: in the product none of this
+  is on screen, and what the scenarios show of it is design evidence.
+- **A view is read for a profile, when something shows it.** The calendar is
+  read when its page is shown; the counts when the profile becomes readable
+  and when the window is returned to, at most once a minute. What was read is
+  dropped when the profile or its sign-in changes. A read that is refused has
+  the account's status read again, since the account may have changed
+  underneath.
+- **Not known is never drawn as empty.** A calendar that is loading, withheld
+  or failed says so and is never an empty calendar. Messages shows a count,
+  or nothing when none is unread, or a hollow pin with the reason in its name
+  and tooltip.
+- **Withheld, a view says what the TUI pane says**, by the same component,
+  `SignedOut`, with the same ways on.
+- **The types are what a host must return.** The calendar mirrors the result
+  of `app overview calendar` field for field. The notification summary is
+  counts only: the rows it is counted from carry names and tax numbers, and
+  they do not reach the window.
+
+A new view takes its type and method in `src/shell/views.ts`, a fixture and
+an answer in the scenario host, a hook in `src/shell/` that owns when it is
+read and dropped, and then its surface.
 
 ### Keyboard
 
@@ -367,6 +405,7 @@ is from the notes taken when it was read; a fresh run replaces it.
 | `dev/docs-fixture/`                 | The stand-in documentation site and the server plugin that serves it  |
 | `dev/product-boundary.ts`           | The build check that keeps development modules out of the product     |
 | `src/App.tsx`, `src/shell/`         | Composition, the action registry, layout state and the host port      |
+| `src/shell/views.ts`                | The read-only profile views a host may offer, types only              |
 | `src/tokens.css`, `src/theme.css`   | The design tokens and the colour roles                                |
 | `src/components/ui/`                | The primitives                                                        |
 | `src/components/`                   | The shell's components and their stories                              |
