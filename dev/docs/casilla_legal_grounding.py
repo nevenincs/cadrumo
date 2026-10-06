@@ -1,8 +1,14 @@
-"""Project authored legal provisions into casilla-card citations and links."""
+"""Project authored legal provisions into casilla-card citations and links.
+
+A citation block is raw HTML this module escapes itself, so it escapes through
+:func:`~dev.docs.compile_slots.escape` rather than :func:`html.escape`: the
+instrument kind and the block's label are chrome, which under the one
+multilingual compile is a mark whose escaping has to reach every language's
+string.
+"""
 
 from __future__ import annotations
 
-import html
 import posixpath
 import re
 from collections import OrderedDict
@@ -13,6 +19,7 @@ from typing import TYPE_CHECKING, Final
 
 from ._locale_chrome import docs_chrome
 from .casilla_display import _LEGAL_INSTRUMENT_NAMES, _humanise_token
+from .compile_slots import escape
 from .legal_catalogue import load_legal_provisions
 from .legal_reference_routing import legal_reference_target
 from .terminology.casilla_anchor import CASILLA_REFERENCE_DIR
@@ -155,25 +162,25 @@ def _legal_list(refs: tuple[str, ...], links: dict[str, _LegalLink], label: str)
         link = links.get(ref)
         if link is None:
             grouped.setdefault("", []).append(
-                f'<span class="casilla-legal-ref casilla-legal-ref--raw">{html.escape(ref)}</span>',
+                f'<span class="casilla-legal-ref casilla-legal-ref--raw">{escape(ref)}</span>',
             )
             continue
         resolved += 1
         # No class: a large modelo carries tens of thousands of these, and the
         # stylesheet reaches a resolved citation through the list it sits in.
         anchor = (
-            f'<a href="{html.escape(link.target, quote=True)}"'
-            f' title="{html.escape(ref, quote=True)}">{html.escape(link.provision or link.instrument)}</a>'
+            f'<a href="{escape(link.target, quote=True)}"'
+            f' title="{escape(ref, quote=True)}">{escape(link.provision or link.instrument)}</a>'
         )
         grouped.setdefault(link.instrument, []).append(anchor)
 
     items: list[str] = []
     for instrument, anchors in grouped.items():
-        name = f'<span class="casilla-legal-name">{html.escape(instrument)}</span> ' if instrument else ""
+        name = f'<span class="casilla-legal-name">{escape(instrument)}</span> ' if instrument else ""
         items.append(f"<li>{name}{', '.join(anchors)}</li>")
     lines = [
         '<div class="casilla-card__legal">',
-        f'<span class="casilla-card__legal-label">{html.escape(label)}</span>',
+        f'<span class="casilla-card__legal-label">{escape(label)}</span>',
         '<ul class="casilla-card__legal-list">',
         *items,
         "</ul>",

@@ -26,6 +26,12 @@ def _rst_heading(text: str, underline: str) -> str:
 
 
 def _raw_html(lines: list[str]) -> str:
-    """Wrap rendered HTML lines in an RST ``raw`` directive block."""
-    body = "\n".join(f"   {line}" for line in lines)
+    """Wrap rendered HTML lines in an RST ``raw`` directive block.
+
+    Each entry is indented by its own physical lines rather than as one string:
+    an element only some languages carry rides at the end of the preceding entry
+    with its own line break (:func:`~dev.docs._locale_chrome.docs_line`), so an
+    entry can be two lines of HTML and both have to sit inside the block.
+    """
+    body = "\n".join(f"   {line}" for line in "\n".join(lines).split("\n"))
     return f".. raw:: html\n\n{body}\n"

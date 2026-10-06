@@ -349,7 +349,7 @@ def active() -> CompileSlots | None:
     return _ACTIVE
 
 
-def escape(value: str, *, quote: bool = False) -> str:
+def escape(value: str, *, quote: bool = True) -> str:
     """Return *value* escaped for a generator's own HTML, marks included.
 
     A generator that writes HTML escapes what it puts in it. Escaping a mark
@@ -357,6 +357,10 @@ def escape(value: str, *, quote: bool = False) -> str:
     escaping has to reach the strings instead. This is :func:`html.escape` for
     ordinary text and the same escaping applied to every language's string for a
     mark, recorded as the generator's own verbatim markup.
+
+    ``quote`` defaults as :func:`html.escape` defaults, because every call site
+    is a call to :func:`html.escape` that had to become slot-aware: a different
+    default here silently un-escapes an apostrophe at each of them.
     """
     slots = _ACTIVE
     if slots is None or MARK_OPEN not in value:

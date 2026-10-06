@@ -185,6 +185,20 @@ def test_escaping_outside_a_compile_is_ordinary_escaping() -> None:
     assert escape("a&b<c>", quote=True) == "a&amp;b&lt;c&gt;"
 
 
+def test_the_default_escaping_is_the_default_html_escaping(slots: CompileSlots) -> None:
+    """Every call site replaced an ``html.escape`` call, whose default escapes quotes.
+
+    An apostrophe in a registry label is common enough that a looser default
+    here silently writes a different page from the one the per-language build
+    writes, at every site that took the default.
+    """
+    mark = slots.mark(Rendering.DOCUTILS, ["an employee's", "de l'empleat", "<x>"])
+    _rendering, values = slots.strings(int(escape(mark)[1:-1], 36))
+    assert values == ("an employee&#x27;s", "de l&#x27;empleat", "&lt;x&gt;")
+    deactivate()
+    assert escape('an employee\'s "name"') == "an employee&#x27;s &quot;name&quot;"
+
+
 def test_each_language_composes_back_to_its_own_page(slots: CompileSlots) -> None:
     """The stored form is only as good as the page it gives back."""
     mark = slots.mark(Rendering.DOCUTILS, ["Filing", "Presentación", "Presentació"])
@@ -253,18 +267,26 @@ def test_resolving_leaves_a_string_with_no_marks_alone(slots: CompileSlots) -> N
 
 
 def test_an_element_only_some_languages_carry_owns_its_own_line_break(slots: CompileSlots) -> None:
-    """A language without the element composes to no line, not to an empty one."""
+    """A language without the element composes to no line, not to an empty one.
+
+    The element's line break is the one the finished page already uses, which is
+    the terminator the HTML writer wrote it with, so the page under test is
+    joined with that terminator too.
+    """
+    import os
+
     from cadrumo.core.external_constants import OutputLanguage
 
     from .._locale_chrome import docs_line
 
+    break_ = os.linesep
     titles = {OutputLanguage.EN: "<h3>Activity</h3>", OutputLanguage.ES: "<h3>Actividad</h3>"}
     lines = ["<header>", "<span>01</span>" + docs_line(titles.get, OutputLanguage.EN), "</header>"]
     composed = {}
     text = LanguageText(slots.languages)
-    structure = text.structure(factor_page("\n".join(lines), slots))
+    structure = text.structure(factor_page(break_.join(lines), slots))
     for language in slots.languages:
         composed[language] = compose_page(structure, text.strings[language])
-    assert composed["en"] == "<header>\n<span>01</span>\n<h3>Activity</h3>\n</header>"
-    assert composed["es"] == "<header>\n<span>01</span>\n<h3>Actividad</h3>\n</header>"
-    assert composed["ca"] == "<header>\n<span>01</span>\n</header>"
+    assert composed["en"] == f"<header>{break_}<span>01</span>{break_}<h3>Activity</h3>{break_}</header>"
+    assert composed["es"] == f"<header>{break_}<span>01</span>{break_}<h3>Actividad</h3>{break_}</header>"
+    assert composed["ca"] == f"<header>{break_}<span>01</span>{break_}</header>"

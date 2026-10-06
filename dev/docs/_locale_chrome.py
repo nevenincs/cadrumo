@@ -24,6 +24,7 @@ written.
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable, Mapping
 
 from cadrumo.core.external_constants import OutputLanguage
@@ -135,10 +136,16 @@ def docs_line(render: Callable[[OutputLanguage], str | None], language: OutputLa
     Returns:
         The line break and element, empty where the language has neither.
     """
+    # The two line breaks are not the same line break. Outside the compile this
+    # returns RST source, where a newline is a newline and the HTML writer gives
+    # the page its own terminator. Under the compile the recorded string is put
+    # straight into the finished page, so it has to carry the terminator that
+    # page already uses -- the one the writer that wrote it used.
+    terminator = "\n" if active() is None else os.linesep
 
     def line(carried: OutputLanguage) -> str:
         element = render(carried)
-        return f"\n{element}" if element else ""
+        return f"{terminator}{element}" if element else ""
 
     return docs_fragment(line, language)
 

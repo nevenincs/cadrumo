@@ -178,6 +178,23 @@ def test_catalogue_line_wrapping_cannot_break_raw_html_cards_or_index() -> None:
     assert "Ayuda con\n" not in rst
 
 
+def test_an_element_only_some_languages_carry_stays_inside_the_raw_html_block() -> None:
+    """The title and the help ride on the line before them and keep the block's indent.
+
+    They are elements a language has or has not, so each is written at the end of
+    the preceding line with its own line break
+    (:func:`~dev.docs._locale_chrome.docs_line`). A continuation line that lost
+    the three-space indent would end the ``raw`` directive and put the card's
+    markup on the page as text.
+    """
+    rst = _render((_record(),), OutputLanguage.ES)
+
+    carried = [line for line in rst.split("\n") if "casilla-card__title" in line or "casilla-card__help" in line]
+    assert len(carried) == 2, "the reference record authors both a label and a help text"
+    for line in carried:
+        assert line.startswith("   <"), line
+
+
 @pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU])
 def test_absent_locale_omits_the_string_rather_than_substituting(language: OutputLanguage) -> None:
     """A language with no authored string gets none - Spanish is not a fallback."""

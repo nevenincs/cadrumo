@@ -1,19 +1,26 @@
-"""Render ordered modelo pages, their section navigation, and the casilla index."""
+"""Render ordered modelo pages, their section navigation, and the casilla index.
+
+These pages write their own raw HTML, so they escape what they put in it through
+:func:`~dev.docs.compile_slots.escape` rather than :func:`html.escape`: a chrome
+string or a registry label is a mark under the one multilingual compile, and
+escaping the mark would leave every language's string unescaped.
+"""
 
 from __future__ import annotations
 
-import html
 import re
 from collections import OrderedDict
 from collections.abc import Mapping
+from functools import partial
 from typing import TYPE_CHECKING
 
-from ._locale_chrome import docs_chrome
+from ._locale_chrome import docs_chrome, docs_fragment
 from .casilla_card_rendering import _box_number, _localised, _render_entry
 from .casilla_display import _section_anchor, _section_display, _token_display
 from .casilla_legal_grounding import _legal_list, _LegalLink
 from .casilla_markup import _raw_html, _rst_escape, _rst_heading
 from .casilla_reference_models import CasillaPage, CasillaReferenceError, CompiledSchema, ModeloOverview
+from .compile_slots import escape
 from .terminology.casilla_anchor import casilla_page_anchor, casilla_page_relpath
 from .terminology.search_record import CasillaSearchRecord
 
@@ -40,6 +47,16 @@ def _box_sort_key(box_number: str) -> tuple[int, int, str]:
     return (1, 0, box_number)
 
 
+def _chip_title(record: CasillaSearchRecord, language: OutputLanguage) -> str:
+    """Return one index chip's hover title in ``language``, escaped as an attribute.
+
+    A casilla with no label in that language is named by its registry id, which
+    is what the chip already links to, so the chip never loses its hover title.
+    """
+    label, _help = _localised(record, language)
+    return escape(" ".join((label or str(record.casilla_id)).split()), quote=True)
+
+
 def _casilla_index(
     grouped: OrderedDict[tuple[str, ...], list[CasillaSearchRecord]],
     schema: CompiledSchema,
@@ -57,28 +74,31 @@ def _casilla_index(
     heading = docs_chrome("docs.casilla.chrome.casilla_index", language)
     hint = docs_chrome("docs.casilla.chrome.casilla_index_hint", language)
     lines = [
-        f'<nav class="casilla-index" aria-label="{html.escape(heading, quote=True)}">',
+        f'<nav class="casilla-index" aria-label="{escape(heading, quote=True)}">',
         '<p class="casilla-index__lead">'
-        f'<span class="casilla-index__title">{html.escape(heading)}</span> '
-        f'<span class="casilla-index__hint">{html.escape(hint)}</span>'
+        f'<span class="casilla-index__title">{escape(heading)}</span> '
+        f'<span class="casilla-index__hint">{escape(hint)}</span>'
         "</p>",
         '<div class="casilla-index__scroll">',
     ]
     for section, section_records in grouped.items():
         lines.append('<div class="casilla-index__group">')
         lines.append(
-            f'<a class="casilla-index__section" href="#{html.escape(_section_anchor(section), quote=True)}">'
-            f"{html.escape(_section_display(section, language))}</a>",
+            f'<a class="casilla-index__section" href="#{escape(_section_anchor(section), quote=True)}">'
+            f"{escape(_section_display(section, language))}</a>",
         )
         numbered: list[str] = []
         named: list[str] = []
         for record in section_records:
             facts = schema.casillas.get((modelo, str(record.casilla_id)))
-            label, _help = _localised(record, language)
             anchor = casilla_page_anchor(record.modelo, record.casilla_id)
-            title = html.escape(" ".join((label or str(record.casilla_id)).split()), quote=True)
+            # The hover title is the casilla's registry label, which the
+            # authority holds per language. The chip is one attribute value in a
+            # line of ordinary markup, so each language's title is escaped and
+            # folded where it is read rather than after the fact.
+            title = docs_fragment(partial(_chip_title, record), language)
             box = _box_number(record, facts)
-            chip = f'<a href="#{html.escape(anchor, quote=True)}" title="{title}">{html.escape(box)}</a>'
+            chip = f'<a href="#{escape(anchor, quote=True)}" title="{title}">{escape(box)}</a>'
             # A casilla with no printed number falls back to its id, which is
             # five times the width of a number and would tear the grid apart.
             # The two kinds get two affordances rather than one clamped chip.
@@ -108,9 +128,9 @@ def _page_header(
     lines = ['<div class="modelo-overview">']
     resolved = 0
     if overview is not None:
-        lines.append(f'<p class="modelo-overview__name">{html.escape(overview.official_name)}</p>')
+        lines.append(f'<p class="modelo-overview__name">{escape(overview.official_name)}</p>')
         if overview.definition:
-            lines.append(f'<p class="modelo-overview__definition">{html.escape(overview.definition)}</p>')
+            lines.append(f'<p class="modelo-overview__definition">{escape(overview.definition)}</p>')
 
     counted: dict[str, int] = {}
     for record in records:
@@ -127,7 +147,7 @@ def _page_header(
         for kind, count in sorted(counted.items())
     )
     lines.append('<ul class="modelo-overview__facts">')
-    lines.extend(f'<li class="casilla-fact">{html.escape(fact)}</li>' for fact in facts)
+    lines.extend(f'<li class="casilla-fact">{escape(fact)}</li>' for fact in facts)
     lines.append("</ul>")
 
     if overview is not None and overview.legal_refs:
