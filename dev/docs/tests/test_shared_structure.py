@@ -106,6 +106,13 @@ def test_a_page_that_already_holds_a_slot_delimiter_is_refused(delimiter: str) -
         factor_page((_ENGLISH, _SPANISH.replace("Base imponible", f"Base{delimiter}imponible")))
 
 
+def test_the_format_is_the_one_the_desktop_host_composes() -> None:
+    """The same vector is replayed by the documentation scheme's own composer."""
+    structure = f"<p>{SLOT_OPEN}0{SLOT_CLOSE}</p><i>{SLOT_OPEN}a{SLOT_CLOSE}</i>"
+    strings = ["uno", *[""] * 9, "dos & tres"]
+    assert compose_page(structure, strings) == "<p>uno</p><i>dos & tres</i>"
+
+
 def test_a_structure_naming_a_slot_the_language_lacks_is_refused() -> None:
     structures, text = factor_pages({"c.html": _PAGES}, _LANGUAGES)
     with pytest.raises(SharedStructureError, match="past the language's"):

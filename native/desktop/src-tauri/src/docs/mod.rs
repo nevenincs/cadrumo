@@ -1,6 +1,7 @@
 //! The read-only `cadrumo-docs` scheme that serves the packaged user
 //! documentation to the shell's documentation frame.
 
+mod compose;
 mod media;
 mod policy;
 mod request;

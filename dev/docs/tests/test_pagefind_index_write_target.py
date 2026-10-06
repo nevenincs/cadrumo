@@ -19,7 +19,6 @@ the defective one differ on.
 from __future__ import annotations
 
 import contextlib
-import shutil
 from pathlib import Path
 
 import pytest
@@ -35,7 +34,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 # dev/docs/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
 _BUILT_HTML = docs_html_root(_REPO_ROOT)
-_PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 
 
 def _site(tmp_path: Path) -> Path:
@@ -50,7 +48,6 @@ def _site(tmp_path: Path) -> Path:
     site.mkdir(parents=True)
     for source in pages:
         (site / source.name).write_bytes(source.read_bytes())
-    shutil.copy(_PAGEFIND_YML, site / "pagefind.yml")
     return site
 
 

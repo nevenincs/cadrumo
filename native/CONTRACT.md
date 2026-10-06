@@ -501,8 +501,8 @@ both the CPython SDK extensions and every retained third-party extension identit
 ### Bundled user documentation
 
 `native/package-layout.json` declares the bundled user documentation under
-`user_docs`: its directory beneath `paths.docs`, the manifest name, the entry and
-search files of each language, the language set and the `media_types` table of
+`user_docs`: its directory beneath `paths.docs`, the manifest name, the entry
+address, the search address, the language set and the `media_types` table of
 files the documentation scheme serves. Each language must be one of
 the product's output languages, and English must be declared. `native/cmake/Docs.cmake`
 defines the `user_docs` target for the source build and the standalone desktop
@@ -521,9 +521,11 @@ previous roots. A stale published authority fails the target, and the owner's re
 is printed as the `cause:` line. Each root's previous search index is removed before
 its build, so staging can never accept an older root after a failed build.
 
-`dev/packaging/native/docs_stage.py` stages the published site layout: English at
-`P/docs/user/` and every other language at `P/docs/user/<lang>/`, where the owner's
-language switcher links. Sphinx build state (`.doctrees`, `.buildinfo`, `_sources`)
+`dev/packaging/native/docs_stage.py` stages the addresses of the published site
+layout: English at `P/docs/user/` and every other language at
+`P/docs/user/<lang>/`, where the owner's language switcher links. Those are the
+addresses the documentation scheme answers, not the layout of the files stored;
+the stored layout is below. Sphinx build state (`.doctrees`, `.buildinfo`, `_sources`)
 and site-language directories nested in a source root are not copied. Only files
 whose name `user_docs.media_types` types are copied, because the documentation
 scheme answers every other file with 404; staging prints what it left out.
@@ -540,23 +542,44 @@ leave the package, because the desktop opens `https:` and `mailto:` links
 externally and refuses other schemes. Each refusal names the reference, its
 location count and the first page and line.
 
+The package holds one documentation structure and each language's text, not one
+site per language. `P/docs/user/` therefore carries:
+
+| Stored | Holds |
+| --- | --- |
+| `structure/<site path>` | A page's structure: its bytes with a slot wherever the languages differ, `U+E000`, the slot number in lowercase base 36, `U+E001`. For a file identical in every language, that file, stored once |
+| `text/<language>.json` | A JSON array of that language's strings; element `N` is slot `N` |
+| `languages/<language>/<site path>` | The files one language alone has and that are not pages |
+
+`dev/docs/shared_structure.py` writes the structures and the strings and is the
+format's definition. The addresses a request asks for are unchanged: the apex
+language's site is at the top and every other language under `<language>/`.
+
 `P/docs/user/manifest.json` is the documentation handler's input:
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | Manifest schema, currently `1` |
+| `schema` | Manifest schema, currently `2` |
 | `languages` | Declared languages, in declared order |
 | `apex_language` | Language served at the documentation root, `en` |
-| `entries` | Entry page per language relative to `P/docs/user/`, such as `index.html` and `es/index.html` |
-| `search` | Pagefind module per language, such as `pagefind/pagefind.js` and `es/pagefind/pagefind.js` |
+| `entries` | Entry page address per language, such as `index.html` and `es/index.html` |
+| `search` | The one search index address, at the site's apex, such as `pagefind/pagefind.js` |
 | `script_hashes` | CSP `sha256-<base64>` values of every executing inline `<script>`, hashed after HTML newline normalization; inert types such as `application/json` are omitted |
-| `files` | Every servable file relative to `P/docs/user/`, with its SHA-256; the manifest does not list itself |
+| `stored` | Where each stored kind lives relative to `P/docs/user/`: `structure`, `languages`, and `text` per language |
+| `pages` | The site paths served by composing a structure with a language's text |
+| `files` | Every stored file relative to `P/docs/user/`, with its SHA-256; the manifest does not list itself |
 
-The desktop host serves only `files` members and derives the documentation
-origin's CSP from `script_hashes`; [Desktop shell](#desktop-shell) describes the
-handler. It reads the manifest once at startup and does not rehash a file per
-request; the package checks below own the digests. The shell CSP does not govern
-the documentation.
+`entries` and `search` are addresses; `stored`, `pages` and `files` describe the
+files the package holds. The desktop host serves only what those describe and
+derives the documentation origin's CSP from `script_hashes`;
+[Desktop shell](#desktop-shell) describes the handler. It reads the manifest
+once at startup and does not rehash a file per request; the package checks below
+own the digests. The shell CSP does not govern the documentation.
+
+Admission refuses a schema other than `2`, an entry or search address that
+resolves to nothing servable, a `stored.text` whose languages are not exactly
+`languages`, a text file outside `files`, and a page whose structure is outside
+`files`.
 
 The package manifest does not list each documentation file. It lists
 `docs/user/manifest.json` with its hash and declares
@@ -642,7 +665,8 @@ origins at startup. The host refuses to start unless the shell
 policy's `frame-src` is exactly the documentation origin.
 
 `src-tauri/src/docs/` serves the read-only `cadrumo-docs` scheme from
-`P/docs/user/`. It reads `manifest.json` once at startup and never walks or
+`P/docs/user/`, composing a page from its structure and its language's text on
+the way out. It reads `manifest.json` once at startup and never walks or
 rehashes the tree; the package checks above own the digests. Each request is
 answered as follows:
 
@@ -653,12 +677,29 @@ answered as follows:
   character, a Windows reserved name or character, or a percent escape of `/`,
   `\`, `.`, `%` or a control receives 400. A path ending in `/` names its
   `index.html`.
-- A path absent from the manifest's `files`, a file name the media-type table
-  does not type, a link or reparse point, and a file resolving outside the
-  canonical root receive 404.
-- A served file carries its media type, `Content-Length`, the documentation
-  policy, `X-Content-Type-Options: nosniff` and `Cache-Control: no-cache`.
-  Refusals carry the same policy and `nosniff` with an empty body.
+- A file name the media-type table does not type receives 404. The address's
+  own name decides the type, whatever the address is stored as.
+- The address is then resolved against the manifest. Its first segment names
+  its language when that segment is a declared language other than
+  `apex_language`, and the rest is the site path; otherwise the language is
+  `apex_language` and the site path is the whole address. The handler serves
+  `<stored.languages>/<language>/<site path>` when `files` lists it, else
+  composes `<stored.structure>/<site path>` with that language's text when
+  `pages` lists the site path, else serves `<stored.structure>/<site path>`
+  when `files` lists it, else answers 404. A stored path is no address of its
+  own: a request for `structure/index.html`, `text/en.json` or
+  `languages/es/x` asks for a site path nothing answers.
+- A link or reparse point and a file resolving outside the canonical root
+  receive 404. Structures and text files are read under the same containment.
+- A page whose structure is not UTF-8, names a slot its language has no string
+  for or is malformed, or whose text cannot be read as a list of strings,
+  receives 500. No response carries part of a composed page.
+- A served address carries its media type, the `Content-Length` of what it
+  answers with, the documentation policy, `X-Content-Type-Options: nosniff` and
+  `Cache-Control: no-cache`. Refusals carry the same policy and `nosniff` with
+  an empty body.
+- A language's text is read once and kept, because one file carries the strings
+  of every page of that language.
 
 A response sent before the policy is fixed carries
 `default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`.

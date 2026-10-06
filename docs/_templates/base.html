@@ -8,3 +8,16 @@
    page. They are the same on every page of a root, so the build writes them
    once to cadrumo-theme-variables.css, linked after every other stylesheet. #}
 {% block theme_styles %}{% endblock theme_styles %}
+
+{# This root's own path inside the served site, empty when the root IS the site.
+   The site carries one search index for every language, at the apex above the
+   language roots, so the search controller needs to know how far back the apex
+   is and which root a shared result must be opened inside. It is declared here,
+   in the head of every page, because the search page does not extend this
+   project's page template and so carries none of the header this would
+   otherwise ride on. The theme already declares the path from a page to its own
+   root as data-content_root on <html>; this is the one further fact. #}
+{% block extrahead %}
+  {{ super() }}
+  <meta name="cadrumo-docs-site-prefix" content="{{ cadrumo_docs_site_prefix | default('', true) }}">
+{% endblock extrahead %}

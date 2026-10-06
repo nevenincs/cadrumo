@@ -40,7 +40,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 # dev/deploy/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
 _BUILT_HTML = docs_html_root(_REPO_ROOT)
-_PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 _PAGES = 2
 
 
@@ -56,7 +55,6 @@ def _built_root(tmp_path: Path, name: str, *, with_records: bool) -> Path:
     site.mkdir(parents=True)
     for source in pages:
         (site / source.name).write_bytes(source.read_bytes())
-    shutil.copy(_PAGEFIND_YML, site / "pagefind.yml")
 
     async def _inject(index: PagefindIndex) -> None:
         for kind in ("concept", "casilla", "cli"):

@@ -138,7 +138,6 @@ def search_site(tmp_path_factory: pytest.TempPathFactory) -> object:
     """The built, indexed, served search site. Built once for every case."""
     out = tmp_path_factory.mktemp("search-site")
     build = _build_search_site(out)
-    (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
     build_search_index(build)
 
     with serve_directory(build) as (_httpd, port):

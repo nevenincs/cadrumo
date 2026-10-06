@@ -530,11 +530,13 @@ def docs_build_jobs(env: Mapping[str, str]) -> str:
     return str(jobs)
 
 
-#: The two search-index contracts the deployment may select. ``full`` runs the
+#: The search-index contracts the deployment may select. ``full`` runs the
 #: custom-record injection (concept/casilla/legal/CLI records boosted by the sweep);
 #: ``pages`` indexes only the rendered HTML pages, shipping a lighter index with
-#: no injected navigation records.
-_PAGEFIND_MODES = ("full", "pages")
+#: no injected navigation records; ``none`` writes no index at all, which is
+#: what a build of several language roots selects for each root, because the
+#: site's one index is built over all of them afterwards.
+_PAGEFIND_MODES = ("full", "pages", "none")
 
 
 def docs_build_language(env: Mapping[str, str]) -> OutputLanguage:
@@ -573,13 +575,16 @@ def pagefind_index_mode(env: Mapping[str, str]) -> str:
 
     Defaults to ``full`` so local docs keep the injected concept/casilla/legal/CLI
     records. The deployment may set ``CADRUMO_DOCS_PAGEFIND_MODE=pages`` to
-    index only the rendered pages, skipping the custom-record injection seam.
+    index only the rendered pages, skipping the custom-record injection seam, or
+    ``none`` to write no index: a build that produces several language roots
+    indexes none of them on its own, because the site has ONE index and it is
+    built over every root once they are all built.
 
     Args:
         env: The build environment mapping to read the override from.
 
     Returns:
-        Either ``full`` or ``pages``.
+        One of ``full``, ``pages`` or ``none``.
 
     Raises:
         SystemExit: If the override names an unsupported mode, so the
@@ -606,38 +611,36 @@ def resolve_record_injector(
 
     The single place a build environment decides whether the shipped index
     carries the injected concept/casilla/legal/CLI records: ``full`` returns the real
-    record injector, ``pages`` returns ``None`` and the index carries the
-    rendered pages alone. It also decides WHICH language index those records
-    land in, and it resolves that from the same environment the pages are built
-    from (:func:`docs_build_language`) rather than pinning English: a localized
-    root's pages are indexed under their own language, and Pagefind's reader
-    loads only the index matching the page it is on, so records pinned to
-    English would leave every localized root shipping rendered prose alone.
-    It is a named function rather than a branch inside
-    :func:`compile_search_index` so the deployment-parity gate can observe the
-    real decision for the real deploy environment instead of re-deriving the
-    mapping — a re-derived copy would agree with itself while the build shipped
-    something else, which is precisely how a ``pages`` deploy value discarded
-    every injected record from the published site unnoticed.
+    record injector, while ``pages`` and ``none`` return ``None`` -- the former
+    indexing the rendered pages alone, the latter writing no index for this root
+    at all (:func:`pagefind_index_mode`). It is a named function rather than a
+    branch inside :func:`compile_search_index` so the deployment-parity gate can
+    observe the real decision for the real deploy environment instead of
+    re-deriving the mapping — a re-derived copy would agree with itself while the
+    build shipped something else, which is precisely how a ``pages`` deploy value
+    discarded every injected record from the published site unnoticed.
+
+    The records are not resolved against the build language: the site has one
+    index and each record is injected once into it, carrying every published
+    language as a filter value so a reader of any of them reaches it.
 
     Args:
         repo_root: Repository root (for the committed relevance file).
-        env: The build environment whose contract is being resolved — both the
-            index mode and the build language the records are injected under.
+        env: The build environment whose index contract is being resolved.
         on_complete: Optional sink for the injection stats.
         sample_per_kind: Optional bound on records per kind, forwarded to the
             injector. Production leaves it ``None`` (every record).
 
     Returns:
-        The injection callback, or ``None`` under the ``pages`` contract.
+        The injection callback, or ``None`` under the ``pages`` and ``none``
+        contracts.
     """
     from .pagefind_inject import build_record_injector
 
-    if pagefind_index_mode(env) == "pages":
+    if pagefind_index_mode(env) != "full":
         return None
     return build_record_injector(
         repo_root,
-        language=docs_build_language(env),
         on_complete=on_complete,
         sample_per_kind=sample_per_kind,
     )
@@ -798,7 +801,13 @@ def build_docs(
         if base_url and flavor == "web":
             sitemap_path = write_deployment_sitemap(html_root, base_url)
             print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)
-        compile_search_index(html_root, repo_root)
+        if pagefind_index_mode(os.environ) == "none":
+            # A root of a multi-root site: the one index is built over every
+            # root after they are all built, so indexing here would write an
+            # index the served site does not use.
+            print("Search index skipped: this root is indexed with the rest of the site.", flush=True)
+        else:
+            compile_search_index(html_root, repo_root)
 
 
 def compile_search_index(
@@ -809,11 +818,13 @@ def compile_search_index(
 ) -> None:
     """Compile the bundled Ctrl-K search corpus over the freshly built HTML.
 
-    Runs the post-build Pagefind index pass and injects the unified
-    search records -- concept cards, casilla, legal, and CLI navigation surfaces --
-    boosted by the committed build-time RAG sweep. The resulting
-    per-language index is an uncommitted build artifact, regenerated on every
-    full build exactly like the generated CLI/API surfaces. A missing vendored
+    Runs the post-build Pagefind index pass over ONE built root -- a root that
+    is its own site -- and injects the unified search records: concept cards,
+    casilla, legal, and CLI navigation surfaces, boosted by the committed
+    build-time RAG sweep. A site of several language roots instead calls
+    :func:`~dev.docs.pagefind_index.build_shared_search_index` once over all of
+    them. The resulting index is an uncommitted build artifact, regenerated on
+    every full build exactly like the generated CLI/API surfaces. A missing vendored
     Pagefind wheel is reported and skipped rather than failing the
     otherwise-successful docs build (the documented Orama fallback applies only
     if the wheel is unvendorable for a platform).
@@ -841,7 +852,11 @@ def compile_search_index(
             on_complete=captured.append,
         )
     try:
-        outcome = build_search_index(html_root, inject=resolved_injector)
+        outcome = build_search_index(
+            html_root,
+            inject=resolved_injector,
+            language=docs_build_language(os.environ).value,
+        )
     except PagefindUnavailableError as exc:
         print(f"Search index skipped (vendored Pagefind unavailable): {exc}", flush=True)
         return

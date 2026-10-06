@@ -1,4 +1,4 @@
-"""Stage the declared user-documentation roots as the package's shippable subset and manifest."""
+"""Stage the declared user-documentation roots as one structure, each language's text, and a manifest."""
 
 from __future__ import annotations
 
@@ -19,6 +19,14 @@ from urllib.parse import unquote
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV, docs_html_root
+from dev.docs.language_roots import (
+    LANGUAGES_DIRECTORY,
+    LAYOUT_FILE,
+    STRUCTURE_DIRECTORY,
+    differences,
+    factor_roots,
+    text_file,
+)
 
 from .build_paths import build_paths
 from .hashing import digest
@@ -30,10 +38,12 @@ from .package_inventory import checked_member
 BUILD_STATE = frozenset({".doctrees", ".buildinfo", "_sources"})
 STAGED_PAYLOAD = "user"
 # The owner's language switcher links the default language at the site apex and every
-# other language one directory down, so the package keeps that one published layout.
+# other language one directory down, so those stay the addresses the package answers.
+# What it stores is one structure and each language's text; the manifest says which
+# address is served from which.
 APEX_LANGUAGE = OutputLanguage.EN.value
 SITE_ROOTS = frozenset(member.value for member in OutputLanguage)
-MANIFEST_SCHEMA = 1
+MANIFEST_SCHEMA = 2
 RECONFIGURE = (
     "The user_docs target has not run for this CMake binary directory. Reconfigure it from the current "
     "native/cmake sources so package assembly depends on user_docs, then build again."
@@ -473,7 +483,7 @@ def _shippable_files(root: Path) -> list[Path]:
 
 
 def stage_roots(build: Path, *, target: str | None = None) -> None:
-    """Copy each declared root's shippable subset and write the manifest the package consumes."""
+    """Store the declared roots' shippable files once and write the manifest the package consumes."""
     paths = build_paths(build)
     layout = load_layout(target)
     declaration = layout["user_docs"]
@@ -484,16 +494,22 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
         shutil.rmtree(destination)
     payload = destination / STAGED_PAYLOAD
     media_types = served_media_types(declaration)
+    entry, search = declaration["entry"], declaration["search"]
     selected: dict[str, list[Path]] = {}
     hashes: set[str] = set()
     problems: list[str] = []
     refused: dict[str, list[str]] = {}
+    for required in (entry, search):
+        if media_types.of(PurePosixPath(required).name) is None:
+            problems.append(f"the documentation scheme does not serve {required}")
     for language, root in roots.items():
-        for required in (declaration["entry"], declaration["search"]):
-            if media_types.of(PurePosixPath(required).name) is None:
-                problems.append(f"{language}: the documentation scheme does not serve {required}")
-            if not (root / required).is_file():
-                problems.append(f"{language}: missing {required} in {root}")
+        if not (root / entry).is_file():
+            problems.append(f"{language}: missing {entry} in {root}")
+        # The site has one search index, at its apex, which every language's pages load.
+        if language == APEX_LANGUAGE and not (root / search).is_file():
+            problems.append(f"{language}: missing {search} in {root}")
+        if language != APEX_LANGUAGE and (root / search).is_file():
+            problems.append(f"{language}: holds its own {search}; the one search index belongs to {APEX_LANGUAGE}")
         if not root.is_dir():
             continue
         # The scheme answers any other file type with 404, so it never ships; a
@@ -504,8 +520,6 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
         if excluded:
             unserved = len(shippable) - len(selected[language])
             print(f"Excluded {unserved} unserved {language} files: {', '.join(excluded)}", flush=True)
-        if language == APEX_LANGUAGE and (root / declaration["manifest"]) in selected[language]:
-            problems.append(f"{language}: the apex root already contains {declaration['manifest']}")
         for source in selected[language]:
             kind = (media_types.of(source.name) or "").split(";")[0]
             if kind == "text/html":
@@ -523,28 +537,55 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
         problems.append(f"{reason}: {len(locations)} location(s), first {locations[0]}")
     if problems:
         raise DocsPackagingError("User documentation cannot be packaged:\n  " + "\n  ".join(problems))
+    built = {
+        language: {source.relative_to(roots[language]).as_posix(): source for source in files}
+        for language, files in selected.items()
+    }
+    try:
+        for language, site in built.items():
+            for path in site:
+                checked_member(package_prefix(language) + path)
+        stored = factor_roots(built, payload)
+        # The stored form is only as good as what it gives back: every file of
+        # every language is composed again and compared with the one that was built.
+        unequal = differences(payload, built)
+    except ValueError as error:
+        raise DocsPackagingError(str(error)) from None
+    if unequal:
+        raise DocsPackagingError(
+            f"The stored documentation does not give {len(unequal)} built file(s) back: " + "; ".join(unequal[:5])
+        )
+    # The manifest below carries what the layout file says, so the package ships one of them.
+    (payload / LAYOUT_FILE).unlink()
     inventory: dict[str, str] = {}
-    for language, files in selected.items():
-        root = roots[language]
-        for source in files:
-            relative = package_prefix(language) + source.relative_to(root).as_posix()
-            try:
-                checked_member(relative)
-            except ValueError as error:
-                raise DocsPackagingError(str(error)) from None
-            output_file = payload / relative
-            output_file.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, output_file)
-            inventory[relative] = digest(output_file)
-        size = sum(source.stat().st_size for source in files)
-        print(f"Staged {language} user documentation: {len(files)} files, {size / 1_000_000:.1f} MB", flush=True)
+    for file in sorted(path for path in payload.rglob("*") if path.is_file()):
+        relative = file.relative_to(payload).as_posix()
+        try:
+            checked_member(relative)
+        except ValueError as error:
+            raise DocsPackagingError(str(error)) from None
+        inventory[relative] = digest(file)
+    built_size = sum(source.stat().st_size for files in selected.values() for source in files)
+    stored_size = sum(file.stat().st_size for file in payload.rglob("*") if file.is_file())
+    print(
+        f"Staged user documentation in {len(languages)} languages: {sum(map(len, selected.values()))} built files, "
+        f"{built_size / 1_000_000:.1f} MB, stored as {len(inventory)} files, {stored_size / 1_000_000:.1f} MB "
+        f"({len(stored.pages)} pages composed per language)",
+        flush=True,
+    )
     manifest = {
         "schema": MANIFEST_SCHEMA,
         "languages": list(languages),
         "apex_language": APEX_LANGUAGE,
-        "entries": {language: package_prefix(language) + declaration["entry"] for language in languages},
-        "search": {language: package_prefix(language) + declaration["search"] for language in languages},
+        "entries": {language: package_prefix(language) + entry for language in languages},
+        "search": search,
         "script_hashes": sorted(hashes),
+        "stored": {
+            "structure": STRUCTURE_DIRECTORY,
+            "languages": LANGUAGES_DIRECTORY,
+            "text": {language: text_file(language) for language in languages},
+        },
+        "pages": list(stored.pages),
         "files": dict(sorted(inventory.items())),
     }
     (payload / declaration["manifest"]).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

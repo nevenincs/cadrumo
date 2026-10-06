@@ -1,4 +1,9 @@
-use super::{media::MediaTypes, policy::SCHEME, site::Site};
+use super::{
+    compose,
+    media::MediaTypes,
+    policy::SCHEME,
+    site::{Served, Site},
+};
 use cadrumo_application::value::RelativePath;
 use std::{fs, path::Path};
 use tauri::http::{Method, Request, Response, StatusCode, header};
@@ -7,9 +12,10 @@ const HOST: &str = "localhost";
 const DIRECTORY_INDEX: &str = "index.html";
 const NO_SNIFF: &str = "nosniff";
 
-/// Answers one request on the documentation scheme. A member is served only
-/// when `media` types its name. Every response, refusals included, carries
-/// `policy` and `nosniff`.
+/// Answers one request on the documentation scheme. An address is served only
+/// when `media` types its name, and its bytes come from the stored form, a
+/// page being composed on the way out. Every response, refusals included,
+/// carries `policy` and `nosniff`.
 pub fn respond(
     site: &Site,
     media: &MediaTypes,
@@ -27,11 +33,37 @@ pub fn respond(
     let Some(path) = member_path(request.uri().path()) else {
         return refusal(StatusCode::BAD_REQUEST, policy);
     };
-    let (true, Some(content_type)) = (site.contains(&path), media.of_member(&path)) else {
+    // The address's own name decides the media type, whatever it is stored as.
+    let Some(content_type) = media.of_member(&path) else {
         return refusal(StatusCode::NOT_FOUND, policy);
     };
-    let Some(bytes) = read_contained(site.root(), &path) else {
+    let Some(served) = site.resolve(&path) else {
         return refusal(StatusCode::NOT_FOUND, policy);
+    };
+    let bytes = match served {
+        Served::File(stored) => match read_contained(site.root(), &stored) {
+            Some(bytes) => bytes,
+            None => return refusal(StatusCode::NOT_FOUND, policy),
+        },
+        Served::Page {
+            structure,
+            language,
+        } => {
+            let Some(stored) = read_contained(site.root(), &structure) else {
+                return refusal(StatusCode::NOT_FOUND, policy);
+            };
+            // A structure that is not text, a slot the language has no string
+            // for and an unreadable text are all a broken package. Half a page
+            // must never reach the frame, so nothing is sent.
+            let composed = std::str::from_utf8(&stored)
+                .ok()
+                .zip(site.text(language))
+                .and_then(|(structure, strings)| compose::page(structure, strings));
+            match composed {
+                Some(page) => page.into_bytes(),
+                None => return refusal(StatusCode::INTERNAL_SERVER_ERROR, policy),
+            }
+        }
     };
     let length = bytes.len();
     response(StatusCode::OK, policy)
@@ -86,9 +118,10 @@ fn hex(byte: u8) -> Option<u8> {
     char::from(byte).to_digit(16).map(|digit| digit as u8)
 }
 
-/// Reads a member only when it resolves beneath the root and is not itself a
-/// link, so a replaced file or directory cannot redirect a read elsewhere.
-fn read_contained(root: &Path, path: &RelativePath) -> Option<Vec<u8>> {
+/// Reads a stored file only when it resolves beneath the root and is not
+/// itself a link, so a replaced file or directory cannot redirect a read
+/// elsewhere. Structures and text files are read through here too.
+pub(super) fn read_contained(root: &Path, path: &RelativePath) -> Option<Vec<u8>> {
     let candidate = path.under(root);
     let metadata = fs::symlink_metadata(&candidate).ok()?;
     if !metadata.is_file() || linked(&metadata) {

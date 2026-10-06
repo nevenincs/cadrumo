@@ -23,7 +23,7 @@ from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
 from .build_paths import build_paths
-from .docs_stage import DocsPackagingError, declared_languages, language_roots
+from .docs_stage import DocsPackagingError, declared_languages, language_roots, package_prefix
 from .identity import identity
 from .layout import distribution_target, load_layout
 
@@ -31,7 +31,17 @@ from .layout import distribution_target, load_layout
 _RAISED = re.compile(r"^\s*((?:\w+\.)*\w*(?:Error|Exception): .+)$")
 
 
-def _owner_environment(build_root: Path, storage: Path, *, check_sequences: bool, jobs: int) -> dict[str, str]:
+#: The index contract the packaged site is built under: the full record corpus,
+#: injected once into the ONE index this module writes after every root is
+#: built. Named here, in one place, because the root builds are pinned to the
+#: opposite contract -- they must index nothing -- and the two values only make
+#: sense read together.
+PACKAGE_INDEX_ENVIRONMENT: dict[str, str] = {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}
+
+
+def _owner_environment(
+    build_root: Path, storage: Path, *, language: str, check_sequences: bool, jobs: int
+) -> dict[str, str]:
     """Pin every documentation selector so ambient developer settings cannot reshape a root."""
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_DOCS_")}
     environment.update(
@@ -39,7 +49,15 @@ def _owner_environment(build_root: Path, storage: Path, *, check_sequences: bool
             DOCS_BUILD_ROOT_ENV: str(build_root),
             DOCS_FLAVOR_ENV: "desktop",
             "CADRUMO_DOCS_JOBS": str(jobs),
-            "CADRUMO_DOCS_PAGEFIND_MODE": "full",
+            # The packaged site has ONE search index, built over every root once
+            # they are all built (:func:`_index_site`). A root that indexed
+            # itself would write an index addressed to its own build directory,
+            # which is not where the staged site puts its pages.
+            "CADRUMO_DOCS_PAGEFIND_MODE": "none",
+            # Where this root sits in the staged site: the apex language at the
+            # top, the others under their own directory. A page resolves the one
+            # index, and opens a result shared by every language, against this.
+            "CADRUMO_DOCS_SITE_PREFIX": package_prefix(language),
             STORAGE_ROOT.variable: str(storage),
             "PYTHONIOENCODING": "utf-8",
         }
@@ -54,7 +72,9 @@ def owner_build(
 ) -> tuple[list[str], dict[str, str]]:
     """Return the owner command and pinned environment that build one language root."""
     command = language_build_command(language, root.parent)
-    return command, _owner_environment(build_root, storage, check_sequences=check_sequences, jobs=jobs)
+    return command, _owner_environment(
+        build_root, storage, language=language, check_sequences=check_sequences, jobs=jobs
+    )
 
 
 def require_host_product_metadata(expected_version: str) -> None:
@@ -86,7 +106,9 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None) -> None
             print("Reusing user documentation: inputs and output inventory unchanged", flush=True)
             return
         (build_root / "ready").unlink(missing_ok=True)
-        _run_owner_builds(build_root, paths["user_docs_work"], declared_languages(layout))
+        languages = declared_languages(layout)
+        _run_owner_builds(build_root, paths["user_docs_work"], languages)
+        _index_site(build_root, languages)
         completed(build_root, input_identity)
 
 
@@ -136,6 +158,60 @@ def _run_owner_builds(build_root: Path, work: Path, languages: tuple[str, ...]) 
         print(f"cause ({language}): {causes[-1] if causes else 'see the log above'}", file=sys.stderr, flush=True)
     if failed:
         raise SystemExit(f"User documentation build failed: {', '.join(language for language, _, _ in failed)}")
+
+
+def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
+    """Build the site's ONE search index over every built root.
+
+    Runs after every root has built, because the index spans all of them: each
+    page is indexed under the address it has in the STAGED site -- the apex
+    language at the top, the others under their own directory -- and carries its
+    own language as the filter the reader's search narrows by, while a concept,
+    casilla, legal or CLI record is injected once and declares every language.
+    The index is written into the apex language's root, which is the directory
+    the staging step lifts to the site's apex; every language's pages resolve
+    the bundle there.
+
+    Args:
+        build_root: The documentation build root holding the language roots.
+        languages: The declared languages, the apex language among them.
+    """
+    from dev.docs.build import ensure_isolated_storage_root, resolve_record_injector
+    from dev.docs.pagefind_index import IndexedRoot, build_shared_search_index
+    from dev.docs.pagefind_inject import InjectionStats
+
+    roots = language_roots(build_root, languages)
+    indexed = [
+        IndexedRoot(html_root=roots[language], language=language, url_prefix=package_prefix(language))
+        for language in languages
+    ]
+    # The apex language is the one the staged layout serves at the top, which is
+    # to say the one with no prefix. Reading it off the prefix owner keeps one
+    # authority for where a root sits: a second reading could name a different
+    # root than the prefixes address.
+    apex = [root for root in indexed if not root.url_prefix]
+    if len(apex) != 1:
+        raise DocsPackagingError(
+            f"exactly one documentation language must be served at the site apex; {len(apex)} carry no prefix"
+        )
+    # The projections import the application to read the registry authority and
+    # the live command tree, exactly as a root build does, so they get the same
+    # scratch product storage rather than the workstation's own state.
+    ensure_isolated_storage_root()
+    stats: list[InjectionStats] = []
+    print(f"Indexing the documentation site once over {', '.join(languages)}", flush=True)
+    outcome = build_shared_search_index(
+        indexed,
+        apex[0].html_root,
+        inject=resolve_record_injector(REPO_ROOT, PACKAGE_INDEX_ENVIRONMENT, on_complete=stats.append),
+    )
+    written = stats[0].custom_records_written if stats else 0
+    print(
+        f"Search index compiled: {outcome.page_count} pages of {len(languages)} languages "
+        f"+ {written} shared term/casilla/legal/CLI records "
+        f"-> {outcome.html_root / outcome.output_subdir}",
+        flush=True,
+    )
 
 
 def main() -> None:

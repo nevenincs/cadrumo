@@ -14,12 +14,16 @@ from the Handbook, casilla projections from the registry authority, CLI
 surface records from the live command tree, legal provisions from the
 registry-backed legal-reference projection) and funnelled through the uniform
 :class:`~dev.docs.terminology.unified_record.SearchRecord`. Each record is
-injected ONCE, into the language of the root being built, with content
-carrying every language's description (see :func:`_content_for`). It is not
-injected once per language section: Pagefind's reader loads only the index
-matching the page's own language, so a record duplicated into the other three
-splits would be unreachable weight, while a record placed in a split the root
-never loads would be invisible. Typed metadata (kind, concept id/domain,
+injected ONCE for the whole site, with content carrying every language's
+description (see :func:`_content_for`), a ``language`` filter naming EVERY
+language the site serves, and a one-line summary per language in its metadata.
+A record's text is the same in every language already, so one copy is what it
+is worth: the four copies the per-language index splits once required were the
+same casilla corpus four times. The site's one index
+(:data:`~dev.docs.pagefind_index.SHARED_INDEX_LANGUAGE`) makes the single copy
+reachable from every language's pages, the filter is what the reader's
+controller narrows by, and the per-language summaries are what let it show the
+card in the language being read. Typed metadata (kind, concept id/domain,
 modelo/casilla.id, command path, and legal catalogue/BOE grounding) rides on
 the record for the palette term card, and ``kind``/``domain`` filters let the
 palette narrow by surface.
@@ -37,7 +41,7 @@ relevance file lands - no re-injection is needed.
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -47,6 +51,8 @@ from pydantic import ValidationError
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT, UTF_8
 
+from .i18n import SITE_ROOT_LANGUAGES
+from .pagefind_index import SHARED_INDEX_LANGUAGE
 from .terminology.term_relevance_mapping import SweepResult
 from .terminology.unified_record import SearchRecord, derive_display_class, to_search_record
 
@@ -108,6 +114,8 @@ class InjectionStats:
     #: rather than left implicit, so a build never claims more index entries
     #: than the shipped index holds.
     records_sharing_a_destination: int = 0
+    #: The languages every written entry is reachable from, as its ``language``
+    #: filter declares them. Not the index's own split: the site has one.
     languages: tuple[str, ...] = ()
     cli_skipped_reason: str | None = None
     relevance_boosts_applied: int = 0
@@ -341,11 +349,15 @@ def _sort_key(weight: float) -> str:
     return f"{round(weight * _SORT_SCALE):08d}"
 
 
-#: The injection language when a caller names none: the English root's own
-#: language. Every localized root passes its OWN build language instead (see
-#: :func:`build_record_injector`), because Pagefind loads only the index
-#: matching the reader's page language.
-_DEFAULT_INJECTION_LANGUAGE = OutputLanguage.EN
+#: The languages a shared record is reachable from: every language the
+#: documentation is published in. Read from the site-root authority rather than
+#: listed again here, so a language added there reaches the search records
+#: without a second edit.
+SITE_LANGUAGES: Final[tuple[OutputLanguage, ...]] = tuple(OutputLanguage(code) for code in SITE_ROOT_LANGUAGES)
+
+#: The language a summary falls back to: English, the language the
+#: documentation's prose is authored in.
+_FALLBACK_SUMMARY_LANGUAGE = OutputLanguage.EN
 
 
 def _content_for(record: SearchRecord) -> str:
@@ -373,28 +385,58 @@ def _content_for(record: SearchRecord) -> str:
 _SUMMARY_MAX_CHARS: Final[int] = 160
 
 
-def _summary_for(record: SearchRecord, language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE) -> str:
+def _summary_for(record: SearchRecord, language: OutputLanguage) -> str:
     """A clean single-language one-line summary for the card display.
 
-    Prefers the description in the ROOT's own language, so a reader on the
-    Spanish root reads a Spanish card; falls back to English, then to the
-    always-present Spanish text, when the record carries no section for the
-    root language. Whitespace is collapsed and the result is truncated so the
+    Prefers the description in the asked-for language, so a reader of the
+    Spanish pages reads a Spanish card; falls back to English, then to the
+    always-present Spanish text, when the record carries no section for that
+    language. Whitespace is collapsed and the result is truncated so the
     palette never renders the multilingual search blob.
     """
-    text = record.descriptions.get(language) or record.descriptions.get(OutputLanguage.EN) or record.description_es
+    text = (
+        record.descriptions.get(language)
+        or record.descriptions.get(_FALLBACK_SUMMARY_LANGUAGE)
+        or record.description_es
+    )
     collapsed = " ".join(text.split())
     if len(collapsed) > _SUMMARY_MAX_CHARS:
         collapsed = collapsed[: _SUMMARY_MAX_CHARS - 1].rstrip() + "…"
     return collapsed
 
 
+def summary_meta_key(language: OutputLanguage | str) -> str:
+    """Return the metadata key carrying one language's card summary.
+
+    One derivation for the producer and for the gates that read the written
+    index, so the key the injection ships and the key the search controller
+    looks up cannot drift into two spellings.
+    """
+    code = language.value if isinstance(language, OutputLanguage) else language
+    return f"summary_{code}"
+
+
 def _meta_for(
     record: SearchRecord,
     weight: float,
-    language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE,
+    languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
 ) -> dict[str, str]:
-    """Build the typed Pagefind meta map for the palette term card."""
+    """Build the typed Pagefind meta map for the palette term card.
+
+    The record is one index entry for the whole site, so it carries one summary
+    per language rather than the single summary a per-language copy once
+    carried: the controller reads the key for the language of the page it runs
+    on. No plain ``summary`` key is shipped beside them, because a card rendered
+    from it would be in whichever language happened to be the fallback.
+
+    It also carries its own ``target``, the destination relative to A language
+    root, which the record's URL in the index cannot express: a shared record
+    has one entry and four destinations, one per language root, and Pagefind
+    resolves the entry's URL against the site apex, so what comes back names no
+    language. The controller completes the target with the prefix of the root
+    being read. Shipping the target is what keeps that one address derivation in
+    the data rather than recovering it by editing the resolved URL.
+    """
     meta: dict[str, str] = {
         # An opaque record identity, kept explicit in Pagefind metadata so that
         # results deduplicate on the same identity whichever pass surfaced
@@ -410,8 +452,9 @@ def _meta_for(
         # display/crumb axis, never re-derived heuristically in the renderer.
         "display_class": derive_display_class(record).value,
         "title": record.title,
-        "summary": _summary_for(record, language),
+        "target": record.target,
         "weight": f"{weight:.6f}",
+        **{summary_meta_key(language): _summary_for(record, language) for language in languages},
     }
     md = record.metadata
     if md.concept_id:
@@ -435,9 +478,23 @@ def _meta_for(
     return meta
 
 
-def _filters_for(record: SearchRecord) -> dict[str, list[str]]:
-    """Build the Pagefind filter map (kind + domain) for palette narrowing."""
-    filters: dict[str, list[str]] = {"kind": [record.kind.value]}
+def _filters_for(
+    record: SearchRecord,
+    languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
+) -> dict[str, list[str]]:
+    """Build the Pagefind filter map (kind + domain + language) for palette narrowing.
+
+    The ``language`` axis names EVERY language the site serves, because the
+    record's content carries every language's text and its destination exists in
+    every language's root. A page carries the one language it is written in, so
+    the reader's controller narrowing by the page's language keeps that
+    language's pages AND the records every language shares -- which is the whole
+    reason one index can serve four languages.
+    """
+    filters: dict[str, list[str]] = {
+        "kind": [record.kind.value],
+        "language": [language.value for language in languages],
+    }
     if record.metadata.domain:
         filters["domain"] = [record.metadata.domain]
     return filters
@@ -474,11 +531,14 @@ def _group_content(members: tuple[SearchRecord, ...]) -> str:
     return "\n".join(unique)
 
 
-def _group_filters(members: tuple[SearchRecord, ...]) -> dict[str, list[str]]:
+def _group_filters(
+    members: tuple[SearchRecord, ...],
+    languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
+) -> dict[str, list[str]]:
     """Union the members' filter values so the palette narrows to every one of them."""
     filters: dict[str, list[str]] = {}
     for member in members:
-        for axis, values in _filters_for(member).items():
+        for axis, values in _filters_for(member, languages).items():
             existing = filters.setdefault(axis, [])
             for value in values:
                 if value not in existing:
@@ -544,21 +604,20 @@ async def _inject_records(
     index: PagefindIndex,
     materialised: _Materialised,
     relevance: dict[str, float],
-    language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE,
+    languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
 ) -> InjectionStats:
     written = 0
-    languages: set[str] = set()
     entries = _index_entries(materialised.records, relevance)
     boosts = sum(1 for record in materialised.records if record.id in relevance)
     for entry in entries:
-        meta = _meta_for(entry.primary, entry.weight, language)
-        filters = _group_filters(entry.members)
+        meta = _meta_for(entry.primary, entry.weight, languages)
+        filters = _group_filters(entry.members, languages)
         sort = {"weight": _sort_key(entry.weight)}
-        # Inject once, into the index this ROOT's pages are indexed under -- the
-        # only index the reader's palette loads -- with content carrying every
-        # language's description, so the record is reachable from this root's
-        # pages and still matchable by the Spanish term and the other-language
-        # forms.
+        # Inject once for the whole site, with content carrying every language's
+        # description, so the record is matchable by the Spanish term and the
+        # other-language forms and reachable from every language's pages. The
+        # record is added under the index's own forced language, which is what
+        # keeps the site's one index a single split.
         content = _group_content(entry.members)
         if not content:
             continue
@@ -566,13 +625,12 @@ async def _inject_records(
         await index.add_custom_record(
             url=entry.primary.target,
             content=content,
-            language=language.value,
+            language=SHARED_INDEX_LANGUAGE,
             meta=meta,
             filters=filters,
             sort=sort,
         )
         written += 1
-        languages.add(language.value)
     return InjectionStats(
         concepts=materialised.concepts,
         casillas=materialised.casillas,
@@ -581,7 +639,7 @@ async def _inject_records(
         cli_options=materialised.cli_options,
         custom_records_written=written,
         records_sharing_a_destination=len(materialised.records) - len(entries),
-        languages=tuple(sorted(languages)),
+        languages=tuple(language.value for language in languages),
         cli_skipped_reason=materialised.cli_skipped_reason,
         relevance_boosts_applied=boosts,
     )
@@ -640,7 +698,7 @@ def _bounded_to_sample(materialised: _Materialised, sample_per_kind: int) -> _Ma
 def build_record_injector(
     repo_root: Path,
     *,
-    language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE,
+    languages: Sequence[OutputLanguage] = SITE_LANGUAGES,
     on_complete: Callable[[InjectionStats], None] | None = None,
     sample_per_kind: int | None = None,
 ) -> InjectCallback:
@@ -648,18 +706,16 @@ def build_record_injector(
 
     The callback materialises every unified search record, applies the
     committed relevance boost when present, and injects each record ONCE into
-    the ``language`` index -- the one index this root's palette loads.
+    the site's one index, reachable from every language it serves.
 
     Args:
         repo_root: Repository root (for the relevance file).
-        language: The language of the root being built, which is the index the
-            records are injected into. Pagefind's reader auto-loads only the
-            index matching the page's own language, so a localized root whose
-            records landed in another language's split would ship rendered
-            prose alone: its palette would never fetch the record index at all.
-            The caller resolves this from the build language rather than
-            defaulting it, so English and localized roots carry the same
-            record corpus in the index each one actually loads.
+        languages: The languages the site serves. Each record carries all of
+            them as its ``language`` filter values and one card summary per
+            language, so one copy answers a reader of any of them. A language
+            missing here is a language whose reader sees no shared records at
+            all, which is why the default is the published site-root set rather
+            than the language of whichever root a caller happens to be building.
         on_complete: Optional sink for the :class:`InjectionStats` (a caller
             that wants the counts, since the seam itself returns no value).
         sample_per_kind: Optional cap on records injected per record kind.
@@ -681,7 +737,7 @@ def build_record_injector(
         relevance = load_relevance_weights(repo_root)
         if sample_per_kind is not None:
             materialised = _bounded_to_sample(materialised, sample_per_kind)
-        stats = await _inject_records(index, materialised, relevance, language)
+        stats = await _inject_records(index, materialised, relevance, languages)
         if on_complete is not None:
             on_complete(stats)
 

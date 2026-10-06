@@ -1,11 +1,9 @@
 """Real-behaviour tests for the post-build Pagefind index pass.
 
 Exercises the vendored Pagefind binary over a self-contained HTML fixture
-(no mocks): the directory pass indexes pages, the per-language splits are
-produced (es/ca/en - proving the extended binary's multi-language stemmers
-are vendored), the custom-record injection seam works, and the search-page
-template plus the pagefind.yml config reference the artifacts the pass
-emits.
+(no mocks): the directory pass indexes pages, the whole corpus lands in ONE
+index split, the extended binary carries every published language's stemmer,
+and the custom-record injection seam works.
 
 Every test here runs the bundled binary over real HTML, so the module is
 ``integration`` throughout. The config and template assertions that used to
@@ -16,14 +14,21 @@ the vendored binary runs offline.
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
-from ..pagefind_index import SearchIndexResult, build_search_index
+from ..pagefind_index import (
+    SHARED_INDEX_LANGUAGE,
+    SearchIndexResult,
+    await_complete_pagefind_entry,
+    build_search_index,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -46,7 +51,7 @@ _FIXTURE_PAGE = """<!DOCTYPE html>
 
 
 def _write_fixture_site(root: Path) -> None:
-    """Materialise a tiny built-HTML site with the pagefind.yml config."""
+    """Materialise a tiny built-HTML site."""
     (root / "index.html").write_text(
         _FIXTURE_PAGE.format(
             title="Prorrata",
@@ -59,11 +64,6 @@ def _write_fixture_site(root: Path) -> None:
             title="Casilla",
             body="Posicion longitud tipo descripcion del campo del registro.",
         ),
-        encoding="utf-8",
-    )
-    # Use the real shipped pagefind.yml so the test covers the actual config.
-    (root / "pagefind.yml").write_text(
-        (_DOCS / "pagefind.yml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
 
@@ -89,30 +89,26 @@ def test_index_pass_indexes_built_html(tmp_path: Path) -> None:
     assert "pagefind.js" in files
 
 
-def test_custom_record_injection_seam_and_language_splits(tmp_path: Path) -> None:
-    """The injection seam runs and per-language (es/ca/en) splits are produced.
+def test_custom_record_injection_seam_writes_one_index_split(tmp_path: Path) -> None:
+    """The injection seam runs and the pass writes ONE index split, not one per language.
 
     Confirms two contract points at once: the custom-record injection seam is
-    callable (records injected via the ``inject`` callback), and the extended
-    binary produces separate per-language index splits - es and ca splits
-    prove the Spanish and Catalan stemmers are vendored (the standard binary
-    would lack them).
+    callable (records injected via the ``inject`` callback), and the whole
+    corpus lands in a single split. The split is the load-bearing half: a
+    reader's bundle loads one split, so a record shared by every language is
+    reachable from all of them only because there is one -- which is what lets
+    the site index each shared record once instead of once per language.
     """
     _write_fixture_site(tmp_path)
 
     async def inject(index: object) -> None:
-        # The custom-record step plugs in here; the seam must accept es/ca/en.
+        # The custom-record step plugs in here, under the index's own language.
         await index.add_custom_record(  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]  # reason: pagefind index is dynamically typed
-            url="/glossary/#prorrata",
+            url="_generated/glossary.html#term-prorrata",
             content="La prorrata es la regla del porcentaje de IVA deducible.",
-            language="es",
+            language=SHARED_INDEX_LANGUAGE,
             meta={"title": "prorrata", "kind": "concept"},
-        )
-        await index.add_custom_record(  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]  # reason: pagefind index is dynamically typed
-            url="/glossary/#prorrata-ca",
-            content="La prorrata determina el percentatge IVA deduible.",
-            language="ca",
-            meta={"title": "prorrata", "kind": "concept"},
+            filters={"kind": ["concept"], "language": ["en", "es", "ca", "hu"]},
         )
 
     result = build_search_index(tmp_path, inject=inject)
@@ -120,4 +116,38 @@ def test_custom_record_injection_seam_and_language_splits(tmp_path: Path) -> Non
 
     pf = tmp_path / "pagefind"
     languages = {p.name.split("_")[0] for p in scan_directory(pf, pattern="*.pf_index", recursive=True)}
-    assert {"es", "ca", "en"} <= languages, languages
+    assert languages == {SHARED_INDEX_LANGUAGE}, languages
+
+
+@pytest.mark.parametrize("language", sorted(member.value for member in OutputLanguage))
+def test_the_vendored_binary_carries_every_published_language_stemmer(tmp_path: Path, language: str) -> None:
+    """Each published language's stemmer is in the vendored binary.
+
+    The site's one index is built under a single language, so nothing in the
+    production path would notice the Catalan or Hungarian stemmer going missing
+    -- and the vendoring of the EXTENDED wheel, rather than the standard one, is
+    the reason those stemmers are available at all. Forcing the index to each
+    published language in turn and reading back the emitted WASM is what keeps
+    that vendoring proven, and it keeps the choice of the shared index language
+    a reversible one rather than the only language that still works.
+    """
+    site = tmp_path / language
+    site.mkdir()
+    _write_fixture_site(site)
+
+    asyncio.run(_index_forced_to(site, language))
+
+    emitted = {p.name for p in scan_directory(site / "pagefind", recursive=True)}
+    assert f"wasm.{language}.pagefind" in emitted, sorted(emitted)
+
+
+async def _index_forced_to(site: Path, language: str) -> None:
+    """Index ``site`` with the language forced, through the real vendored binary."""
+    from ..pagefind_service import ResponsivePagefindService
+
+    output = site / "pagefind"
+    async with ResponsivePagefindService() as service:
+        index = await service.create_index({"output_path": str(output), "force_language": language})
+        await index.add_directory(str(site))
+        await index.write_files(output_path=str(output))
+        await await_complete_pagefind_entry(output / "pagefind-entry.json")

@@ -65,7 +65,7 @@ from dev.deploy.docs_site_languages import (
 from dev.docs.build_paths import docs_html_root
 
 from ..build import docs_build_language, resolve_record_injector
-from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, build_search_index
+from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, SHARED_INDEX_LANGUAGE, build_search_index
 from ..pagefind_inject import InjectionStats
 from ._http_serve_support import serve_directory
 
@@ -74,7 +74,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 # dev/docs/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
 _BUILT_HTML = docs_html_root(_REPO_ROOT)
-_PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 
 #: Record kinds the shipped index is required to carry. A kind absent from the
 #: built index means a reader cannot reach that surface at all.
@@ -91,7 +90,7 @@ _SAMPLE_PER_KIND = 4
 
 
 def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
-    """Copy a small real built-HTML subset plus the real pagefind.yml into tmp."""
+    """Copy a small real built-HTML subset into tmp."""
     if not _BUILT_HTML.is_dir():
         pytest.fail(
             f"no built documentation HTML at {_BUILT_HTML}; this gate reads the shipped "
@@ -106,16 +105,22 @@ def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
         dest = site / source.relative_to(_BUILT_HTML)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(source, dest)
-    shutil.copy(_PAGEFIND_YML, site / "pagefind.yml")
     return site
 
 
-def _kinds_in_built_index(site: Path) -> dict[str, int]:
+def _kinds_in_built_index(site: Path, language: str | None = None) -> dict[str, int]:
     """Return the ``kind`` filter counts read out of the built index by Pagefind.
 
     Reads through ``pagefind.js`` in a real browser against a real HTTP server:
     the record kinds a reader's palette can actually narrow by, taken from the
     written artefact rather than from the injection's own report.
+
+    With ``language`` the counts are those REACHABLE BY A READER of that
+    language, taken from a filtered search rather than from the index-wide
+    inventory. That distinction is the whole of what one index changes: the
+    inventory would report every kind present while a reader of one language
+    reached none of them, because the filter and not the index is what separates
+    the languages now.
     """
     with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
@@ -125,19 +130,35 @@ def _kinds_in_built_index(site: Path) -> dict[str, int]:
             browser = pw.chromium.launch()
             page = browser.new_page()
             page.goto(f"http://127.0.0.1:{port}/{page_name}", wait_until="networkidle")
-            filters = page.evaluate(
-                """async () => {
+            kinds = page.evaluate(
+                """async (language) => {
                   const pf = await import('/pagefind/pagefind.js');
                   await pf.options({});
                   await pf.init();
-                  return await pf.filters();
-                }"""
+                  if (!language) {
+                    const all = await pf.filters();
+                    return (all && all.kind) || {};
+                  }
+                  /* A filter-only search returns every record the language
+                     reaches; its kinds are counted off the records themselves,
+                     because the response's own filter counts come back empty
+                     for a null query. */
+                  const response = await pf.search(null, { filters: { language: [language] } });
+                  const rows = await Promise.all(response.results.map((r) => r.data()));
+                  const counted = {};
+                  for (const row of rows) {
+                    const kind = row.meta && row.meta.kind;
+                    if (kind) counted[kind] = (counted[kind] || 0) + 1;
+                  }
+                  return counted;
+                }""",
+                language,
             )
             browser.close()
-    return dict(filters.get("kind") or {})
+    return dict(kinds or {})
 
 
-def _indexed_page_baseline(scratch: Path, site: Path) -> int:
+def _indexed_page_baseline(scratch: Path, site: Path, language: str = OutputLanguage.EN.value) -> int:
     """Return how many of ``site``'s pages Pagefind actually writes into the index.
 
     A separate no-injection pass over a copy of the same page corpus. Pagefind
@@ -149,7 +170,7 @@ def _indexed_page_baseline(scratch: Path, site: Path) -> int:
     """
     copy = scratch / "pages-only"
     shutil.copytree(site, copy, ignore=shutil.ignore_patterns("pagefind"))
-    build_search_index(copy, inject=None)
+    build_search_index(copy, inject=None, language=language)
     entry = json.loads((copy / "pagefind" / "pagefind-entry.json").read_bytes().decode("utf-8"))
     return sum(int(split["page_count"]) for split in entry["languages"].values())
 
@@ -234,9 +255,11 @@ def test_deployed_pagefind_entry_counts_the_injected_records(tmp_path: Path) -> 
 
     entry = json.loads((site / "pagefind" / "pagefind-entry.json").read_bytes().decode("utf-8"))
     languages = entry["languages"]
-    assert "en" in languages, f"the built index carries no English split: {sorted(languages)}"
+    # The site's one index is one split, under the forced language. Its name
+    # says nothing about the pages' own languages, which are a filter.
+    assert sorted(languages) == [SHARED_INDEX_LANGUAGE], f"the built index is not one split: {sorted(languages)}"
 
-    indexed = languages["en"]["page_count"]
+    indexed = languages[SHARED_INDEX_LANGUAGE]["page_count"]
     assert indexed == baseline + stats.custom_records_written, (
         f"entry page_count {indexed} does not equal {baseline} indexed pages + "
         f"{stats.custom_records_written} injected records"
@@ -374,7 +397,6 @@ def _root_page_corpus(root: Path, language: str) -> Path:
             )
             assert count == 1, f"built page {source.name} carries no <html lang> attribute to retarget"
             (site / source.name).write_text(retargeted, encoding="utf-8")
-    shutil.copy(_PAGEFIND_YML, site / "pagefind.yml")
     return site
 
 
@@ -392,7 +414,7 @@ class _RootBuild:
 def _build_root(root: Path, language: str) -> _RootBuild:
     """Build one root's index the way the DEPLOYMENT builds it, and read it back."""
     site = _root_page_corpus(root, language)
-    indexed_pages = _indexed_page_baseline(root / f"baseline-{language}", site)
+    indexed_pages = _indexed_page_baseline(root / f"baseline-{language}", site, language)
     captured: list[InjectionStats] = []
     injector = resolve_record_injector(
         _REPO_ROOT,
@@ -400,7 +422,7 @@ def _build_root(root: Path, language: str) -> _RootBuild:
         on_complete=captured.append,
         sample_per_kind=_SAMPLE_PER_KIND,
     )
-    build_search_index(site, inject=injector)
+    build_search_index(site, inject=injector, language=language)
     entry = json.loads((site / "pagefind" / "pagefind-entry.json").read_bytes().decode("utf-8"))
     return _RootBuild(
         language=language,
@@ -419,49 +441,58 @@ def built_roots(tmp_path_factory: pytest.TempPathFactory) -> dict[str, _RootBuil
 
 
 @pytest.mark.parametrize("language", _ROOT_LANGUAGES)
-def test_every_root_index_carries_the_record_corpus_in_its_own_language(
+def test_every_root_index_holds_its_pages_and_the_whole_record_corpus(
     language: str,
     built_roots: dict[str, _RootBuild],
 ) -> None:
-    """A root's OWN loaded index holds its pages AND its records, and nothing is stranded.
+    """The index a root's palette loads holds that root's pages AND every record.
 
-    The reader's palette auto-loads only the index matching the page language,
-    so a root's records must live in that index. Asserting the entry's language
-    set is EXACTLY the root's language is what catches the stranding: an
-    English-pinned injection on the Spanish root produced ``{es: 3 pages, en: 12
-    records}`` and a palette that never fetched the ``en`` split at all.
+    One split, not one per detected page language, is the mechanism: a reader's
+    bundle loads a single split, so splitting by language is what once stranded
+    records a root's palette never fetched -- an English-pinned injection on the
+    Spanish root produced ``{es: 3 pages, en: 12 records}`` and a palette that
+    fetched only the ``es`` half. With one split that stranding has no shape to
+    take, and this asserts the shape is gone AND that the split holds exactly
+    the pages plus the records.
+
+    The split's name is the index's forced language and carries no claim about
+    the pages, whose own language is a FILTER now; what a reader of each
+    language reaches through that filter is asserted below.
     """
     built = built_roots[language]
     assert built.stats is not None, f"the {language!r} root's deploy environment injected no records at all"
 
     languages = dict(built.entry["languages"])
-    assert set(languages) == {language}, (
-        f"the {language!r} root built index splits {sorted(languages)}; records outside {language!r} "
-        f"are stranded in a split this root's palette never loads (site {built.site})"
+    assert sorted(languages) == [SHARED_INDEX_LANGUAGE], (
+        f"the {language!r} root built index splits {sorted(languages)}; a reader's bundle loads one split, "
+        f"so anything outside it is unreachable (site {built.site})"
     )
 
-    indexed = languages[language]["page_count"]
+    indexed = languages[SHARED_INDEX_LANGUAGE]["page_count"]
     assert indexed == built.indexed_pages + built.stats.custom_records_written, (
         f"the {language!r} index holds {indexed} entries, not {built.indexed_pages} indexed pages + "
         f"{built.stats.custom_records_written} injected records"
     )
 
 
-def test_the_record_corpus_is_the_same_size_on_every_root(
+@pytest.mark.parametrize("language", _ROOT_LANGUAGES)
+def test_every_record_declares_every_published_language(
+    language: str,
     built_roots: dict[str, _RootBuild],
 ) -> None:
-    """Record-count parity: no root ships a narrower corpus than any other.
+    """A record is injected once and declares every published language.
 
-    Locale capability is not "the localized roots have some records"; it is that
-    a reader on any root reaches the SAME corpus. A per-root count divergence is
-    how a root would silently degrade while every kind is still nominally
-    present.
+    Record-count parity used to mean comparing four per-root corpora for equal
+    size. One index makes that structural -- there is one corpus -- and moves
+    the property a reader depends on onto the record's own ``language`` filter:
+    a reader reaches the corpus because the record names their language, so a
+    language missing from a record's filter is a reader who sees no records at
+    all while every count still agrees.
     """
-    written = {language: built_roots[language].stats for language in _ROOT_LANGUAGES}
-    assert all(stats is not None for stats in written.values())
-    counts = {language: stats.custom_records_written for language, stats in written.items() if stats}
-    assert len(set(counts.values())) == 1, f"roots ship different record corpus sizes: {counts}"
-    assert all(count > 0 for count in counts.values()), f"a root shipped an empty record corpus: {counts}"
+    built = built_roots[language]
+    assert built.stats is not None
+    assert built.stats.custom_records_written > 0, f"the {language!r} root shipped an empty record corpus"
+    assert sorted(built.stats.languages) == sorted(member.value for member in OutputLanguage), built.stats.languages
 
 
 @pytest.mark.parametrize("language", _ROOT_LANGUAGES)
@@ -469,13 +500,15 @@ def test_every_root_palette_narrows_by_every_decided_record_kind(
     language: str,
     built_roots: dict[str, _RootBuild],
 ) -> None:
-    """Read through ``pagefind.js`` on each root: the reader sees every decided kind.
+    """Read through ``pagefind.js`` on each root: a reader of this language sees every kind.
 
     The reader-visible half, and the one that is not satisfiable by counting
     files. On the defective Spanish root this call returned ``None`` for the
     ``kind`` filters while the index directory was full of English fragments.
+    The counts are taken through this root's own ``language`` filter, which is
+    what separates the languages in the one index.
     """
-    kinds = _kinds_in_built_index(built_roots[language].site)
+    kinds = _kinds_in_built_index(built_roots[language].site, language)
 
     missing = sorted(_DECIDED_RECORD_KINDS - set(kinds))
     assert not missing, (
@@ -484,11 +517,12 @@ def test_every_root_palette_narrows_by_every_decided_record_kind(
     assert all(kinds[kind] > 0 for kind in _DECIDED_RECORD_KINDS)
 
 
-def _search_urls(site: Path, queries: tuple[str, ...]) -> dict[str, list[str]]:
+def _search_urls(site: Path, queries: tuple[str, ...], language: str) -> dict[str, list[str]]:
     """Run each query through ``pagefind.js`` on this root and return the result URLs.
 
     One browser session, one Pagefind init, every query — the same search call
-    the reader's palette makes, against the root's own loaded index.
+    the reader's palette makes, narrowed to the reader's language exactly as the
+    palette narrows it.
     """
     with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
@@ -499,13 +533,13 @@ def _search_urls(site: Path, queries: tuple[str, ...]) -> dict[str, list[str]]:
             page = browser.new_page()
             page.goto(f"http://127.0.0.1:{port}/{page_name}", wait_until="networkidle")
             found = page.evaluate(
-                """async (queries) => {
+                """async ({ queries, language }) => {
                   const pf = await import('/pagefind/pagefind.js');
                   await pf.options({});
                   await pf.init();
                   const out = {};
                   for (const q of queries) {
-                    const search = await pf.search(q);
+                    const search = await pf.search(q, { filters: { language: [language] } });
                     const hits = await Promise.all(
                       search.results.slice(0, 25).map((r) => r.data().then((d) => d.url))
                     );
@@ -513,7 +547,7 @@ def _search_urls(site: Path, queries: tuple[str, ...]) -> dict[str, list[str]]:
                   }
                   return out;
                 }""",
-                list(queries),
+                {"queries": list(queries), "language": language},
             )
             browser.close()
     return {query: list(hits) for query, hits in found.items()}
@@ -580,7 +614,7 @@ def test_every_root_recalls_a_record_by_its_declared_terms_in_any_language(
     locale-PARTITIONED rather than locale-capable.
     """
     target, terms = _probe_record()
-    hits = _search_urls(built_roots[language].site, terms)
+    hits = _search_urls(built_roots[language].site, terms, language)
 
     unrecalled = [term for term in terms if not any(url.endswith(target) for url in hits[term])]
     assert not unrecalled, (
@@ -601,7 +635,7 @@ def test_every_root_recalls_a_casilla_by_its_declared_localized_terms(
     index cannot satisfy the assertion by accident.
     """
     target, terms = _probe_casilla_record()
-    hits = _search_urls(built_roots[language].site, terms)
+    hits = _search_urls(built_roots[language].site, terms, language)
 
     unrecalled = [term for term in terms if not any(url.endswith(target) for url in hits[term])]
     assert not unrecalled, (

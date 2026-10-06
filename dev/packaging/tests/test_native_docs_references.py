@@ -14,7 +14,6 @@ from ..native.docs_stage import (
     ServedMediaTypes,
     css_references,
     declared_languages,
-    package_prefix,
     scan_page,
     scan_stylesheet,
     served_media_types,
@@ -54,11 +53,12 @@ def _build(tmp_path: Path, files: dict[str, str] | None = None) -> Path:
     (tmp_path / "build-paths.json").write_text(json.dumps({"paths": paths}), encoding="utf-8")
     for index, language in enumerate(declared_languages(load_layout())):
         root = tmp_path / "user-docs/build/html" / language
+        # The site has one search index, in the apex language's root.
+        search = {"pagefind/pagefind.js": "export {};", "pagefind/pagefind-entry.json": "{}"} if index == 0 else {}
         contents = {
             "index.html": PAGE,
             "how-to/index.html": PAGE,
-            "pagefind/pagefind.js": "export {};",
-            "pagefind/pagefind-entry.json": "{}",
+            **search,
             "_static/site.css": STYLESHEET,
             **{name: "unserved" for name in UNSERVED},
             "objects.inv": "inventory",
@@ -226,15 +226,16 @@ def test_staging_excludes_unserved_file_types_from_the_package(tmp_path: Path) -
     stage_roots(build)
     payload = verified_stage(build / "user-docs/stage", load_layout()["user_docs"])
     manifest = json.loads((payload / "manifest.json").read_text(encoding="utf-8"))
-    served = (
-        "index.html",
-        "how-to/index.html",
-        "pagefind/pagefind.js",
-        "pagefind/pagefind-entry.json",
-        "_static/site.css",
-    )
     languages = declared_languages(load_layout())
-    assert set(manifest["files"]) == {f"{package_prefix(language)}{name}" for language in languages for name in served}
+    # Every language wrote the same bytes here, so each served file is stored once.
+    assert set(manifest["files"]) == {
+        "structure/index.html",
+        "structure/how-to/index.html",
+        "structure/_static/site.css",
+        f"languages/{languages[0]}/pagefind/pagefind.js",
+        f"languages/{languages[0]}/pagefind/pagefind-entry.json",
+        *(f"text/{language}.json" for language in languages),
+    }
 
 
 # The desktop host's documentation scheme replays the same cases against its own parser.

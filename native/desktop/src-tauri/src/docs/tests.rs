@@ -1,4 +1,5 @@
 use super::{
+    compose,
     media::{self, MediaTypes},
     open,
     policy::{self, CLOSED, SCHEME},
@@ -18,6 +19,21 @@ use tauri::{
 
 const DIGEST: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const HASH: &str = "sha256-47DEQpj8HBSa+/TjIW5Adh6bkdwGzRRYkKlTZKN0F6g=";
+
+/// The format vector `dev/docs/tests/test_shared_structure.py` pins too: the
+/// same structure and strings must compose to the same page on both sides.
+const VECTOR_STRUCTURE: &str = "<p>\u{e000}0\u{e001}</p><i>\u{e000}a\u{e001}</i>";
+const VECTOR_PAGE: &str = "<p>uno</p><i>dos & tres</i>";
+const SPANISH_PAGE: &str = "<p>una</p><i>dos y tres</i>";
+
+/// Eleven strings, of which the vector's structure names the first and the
+/// eleventh; the nine between stand for the strings other pages name.
+fn strings(first: &str, eleventh: &str) -> Vec<String> {
+    let mut strings = vec![String::from("unnamed"); 11];
+    strings[0] = first.to_owned();
+    strings[10] = eleventh.to_owned();
+    strings
+}
 
 struct Scratch(PathBuf);
 impl Scratch {
@@ -48,64 +64,152 @@ fn write(root: &Path, relative: &str, bytes: &[u8]) {
     fs::write(path, bytes).unwrap();
 }
 
-fn manifest(members: &[&str]) -> serde_json::Value {
-    serde_json::json!({
-        "schema": 1,
-        "languages": ["en", "es"],
-        "apex_language": "en",
-        "entries": {"en": "index.html", "es": "es/index.html"},
-        "search": {"en": "pagefind/pagefind.js", "es": "es/pagefind/pagefind.js"},
-        "script_hashes": [HASH],
-        "files": members
-            .iter()
-            .map(|m| (m.to_string(), serde_json::Value::from(DIGEST)))
-            .collect::<serde_json::Map<_, _>>(),
-    })
+/// The stored form of a two-language site: `structure/` holds a page's
+/// structure or a file every language shares, `text/<language>.json` holds a
+/// language's strings and `languages/<language>/` the rest.
+struct Package {
+    /// Stored paths and their bytes; the manifest lists every one.
+    stored: Vec<(String, Vec<u8>)>,
+    /// Stored paths the manifest lists and the tree does not hold.
+    absent: Vec<String>,
+    /// Paths written into the tree that the manifest does not list.
+    unlisted: Vec<(String, Vec<u8>)>,
+    /// Site paths composed from their structure.
+    pages: Vec<String>,
 }
 
-const MEMBERS: &[&str] = &[
-    "index.html",
-    "es/index.html",
-    "pagefind/pagefind.js",
+impl Package {
+    /// One page, each language's text and the one search index at the apex.
+    fn new() -> Self {
+        let mut package = Self {
+            stored: Vec::new(),
+            absent: Vec::new(),
+            unlisted: Vec::new(),
+            pages: vec!["index.html".into()],
+        };
+        package.add("structure/index.html", VECTOR_STRUCTURE.as_bytes());
+        package.add("structure/pagefind/pagefind.js", b"one index");
+        package.text("en", &strings("uno", "dos & tres"));
+        package.text("es", &strings("una", "dos y tres"));
+        package
+    }
+
+    fn add(&mut self, path: &str, bytes: &[u8]) -> &mut Self {
+        self.stored.push((path.to_owned(), bytes.to_vec()));
+        self
+    }
+
+    /// A file every language shares, stored once, its bytes its site path.
+    fn shared(&mut self, site_path: &str) -> &mut Self {
+        self.add(&format!("structure/{site_path}"), site_path.as_bytes())
+    }
+
+    fn text(&mut self, language: &str, strings: &[String]) -> &mut Self {
+        let json = serde_json::to_vec(strings).unwrap();
+        self.add(&format!("text/{language}.json"), &json)
+    }
+
+    /// Replaces the bytes of an already stored path.
+    fn replace(&mut self, path: &str, bytes: &[u8]) -> &mut Self {
+        let stored = self
+            .stored
+            .iter_mut()
+            .find(|(stored, _)| stored == path)
+            .expect("a stored path");
+        stored.1 = bytes.to_vec();
+        self
+    }
+
+    fn manifest(&self) -> serde_json::Value {
+        let files: serde_json::Map<String, serde_json::Value> = self
+            .stored
+            .iter()
+            .map(|(path, _)| path.clone())
+            .chain(self.absent.iter().cloned())
+            .map(|path| (path, serde_json::Value::from(DIGEST)))
+            .collect();
+        serde_json::json!({
+            "schema": 2,
+            "languages": ["en", "es"],
+            "apex_language": "en",
+            "entries": {"en": "index.html", "es": "es/index.html"},
+            "search": "pagefind/pagefind.js",
+            "script_hashes": [HASH],
+            "stored": {
+                "structure": "structure",
+                "languages": "languages",
+                "text": {"en": "text/en.json", "es": "text/es.json"},
+            },
+            "pages": self.pages,
+            "files": files,
+        })
+    }
+
+    fn write_into(&self, root: &Path) {
+        for (path, bytes) in self.stored.iter().chain(&self.unlisted) {
+            write(root, path, bytes);
+        }
+        write(
+            root,
+            "manifest.json",
+            self.manifest().to_string().as_bytes(),
+        );
+    }
+}
+
+/// Writes a package into a scratch tree and returns where it is.
+fn staged(label: &str, package: &Package) -> (Scratch, PathBuf) {
+    let scratch = Scratch::new(label);
+    let root = scratch.0.join("user");
+    package.write_into(&root);
+    (scratch, root)
+}
+
+fn admitted(label: &str, package: &Package) -> (Scratch, Site) {
+    let (scratch, root) = staged(label, package);
+    let site = Site::open(&root, &root.join("manifest.json")).unwrap();
+    (scratch, site)
+}
+
+/// A staged tree holding the stored form and `extra` as files every language
+/// shares, each file's bytes its own site path.
+fn tree(label: &str, extra: &[String]) -> (Scratch, Site) {
+    let mut package = Package::new();
+    for site_path in extra {
+        package.shared(site_path);
+    }
+    admitted(label, &package)
+}
+
+/// The files every language shares in the richer fixture. `objects.inv` is
+/// outside the media table and `absent.html` is listed without being stored.
+const SHARED: &[&str] = &[
+    "_static/furo.css",
     "pagefind/pagefind-worker.js",
     "pagefind/pagefind-entry.json",
     "pagefind/wasm.en.pagefind",
     "pagefind/index/en_1.pf_index",
     "pagefind/fragment/en_1.pf_fragment",
-    "es/pagefind/pagefind.js",
-    "_static/furo.css",
     "objects.inv",
-    "missing.html",
 ];
 
-/// The members every manifest must list: each language's entry and search.
-const REQUIRED: &[&str] = &[
-    "index.html",
-    "es/index.html",
-    "pagefind/pagefind.js",
-    "es/pagefind/pagefind.js",
-];
+/// The stored form plus shared files, one Spanish-only file, a listed file
+/// absent from disk and a file on disk the manifest does not list.
+fn fixture(label: &str) -> (Scratch, Site) {
+    admitted(label, &rich())
+}
 
-/// A staged tree holding the required members and `extra`, each file's
-/// bytes its own member path.
-fn tree(label: &str, extra: &[String]) -> (Scratch, Site) {
-    let scratch = Scratch::new(label);
-    let root = scratch.0.join("user");
-    let members: Vec<&str> = REQUIRED
-        .iter()
-        .copied()
-        .chain(extra.iter().map(String::as_str))
-        .collect();
-    for member in &members {
-        write(&root, member, member.as_bytes());
+fn rich() -> Package {
+    let mut package = Package::new();
+    for site_path in SHARED {
+        package.shared(site_path);
     }
-    write(
-        &root,
-        "manifest.json",
-        manifest(&members).to_string().as_bytes(),
-    );
-    let site = Site::open(&root, &root.join("manifest.json")).unwrap();
-    (scratch, site)
+    package.add("languages/es/local.js", b"es only");
+    package.absent.push("structure/absent.html".into());
+    package
+        .unlisted
+        .push(("stray.html".into(), b"stray".to_vec()));
+    package
 }
 
 /// The media-type table the package layout declares for this build.
@@ -118,25 +222,6 @@ fn declared() -> MediaTypes {
 fn declared_table() -> serde_json::Value {
     let contract: serde_json::Value = serde_json::from_str(media::CONTRACT).unwrap();
     contract["layout"]["user_docs"]["media_types"].clone()
-}
-
-/// A staged tree with a manifest; `objects.inv` is a member outside the media
-/// table, `missing.html` a member absent from disk and `stray.html` a file on
-/// disk the manifest does not list.
-fn fixture(label: &str) -> (Scratch, Site) {
-    let scratch = Scratch::new(label);
-    let root = scratch.0.join("user");
-    for member in MEMBERS.iter().filter(|m| **m != "missing.html") {
-        write(&root, member, member.as_bytes());
-    }
-    write(&root, "stray.html", b"stray");
-    write(
-        &root,
-        "manifest.json",
-        manifest(MEMBERS).to_string().as_bytes(),
-    );
-    let site = Site::open(&root, &root.join("manifest.json")).unwrap();
-    (scratch, site)
 }
 
 fn get(method: Method, uri: &str) -> Request<Vec<u8>> {
@@ -166,6 +251,14 @@ fn served(site: &Site, method: Method, uri: &str) -> Response<Vec<u8>> {
     let response = respond(site, &declared(), POLICY, &get(method, uri));
     assert_guarded(&response, POLICY);
     response
+}
+
+fn address(site: &Site, path: &str) -> Response<Vec<u8>> {
+    served(
+        site,
+        Method::GET,
+        &format!("cadrumo-docs://localhost{path}"),
+    )
 }
 
 #[test]
@@ -217,6 +310,174 @@ fn paths_map_to_manifest_keys_only_without_escapes() {
     }
 }
 
+/// The vector both sides of the format pin, replayed from
+/// `test_the_format_is_the_one_the_desktop_host_composes`: the same structure
+/// and the same eleven strings compose to the same page.
+#[test]
+fn the_shared_format_vector_composes_to_its_page() {
+    let strings: Vec<String> = std::iter::once("uno")
+        .chain(std::iter::repeat_n("", 9))
+        .chain(std::iter::once("dos & tres"))
+        .map(str::to_owned)
+        .collect();
+    assert_eq!(strings.len(), 11);
+    assert_eq!(
+        compose::page(VECTOR_STRUCTURE, &strings).unwrap(),
+        VECTOR_PAGE
+    );
+    // A structure without a slot is the page, and a page is left alone.
+    assert_eq!(compose::page(VECTOR_PAGE, &strings).unwrap(), VECTOR_PAGE);
+}
+
+/// One structure plus each language's text gives each language's page, at the
+/// addresses the language switcher uses.
+#[test]
+fn each_language_gets_its_own_page_from_the_one_structure() {
+    let (_scratch, site) = fixture("languages");
+    for (path, page) in [
+        ("/index.html", VECTOR_PAGE),
+        ("/", VECTOR_PAGE),
+        ("/es/index.html", SPANISH_PAGE),
+        ("/es/", SPANISH_PAGE),
+    ] {
+        let response = address(&site, path);
+        assert_eq!(response.status(), StatusCode::OK, "{path}");
+        assert_eq!(
+            response.headers()[header::CONTENT_TYPE],
+            "text/html; charset=utf-8",
+            "{path}"
+        );
+        assert_eq!(response.body(), page.as_bytes(), "{path}");
+    }
+}
+
+/// A file identical in every language is stored once and answers every
+/// language's address for it.
+#[test]
+fn a_shared_file_answers_every_language_from_one_stored_copy() {
+    let (scratch, site) = fixture("shared");
+    for site_path in SHARED.iter().filter(|path| **path != "objects.inv") {
+        let stored = scratch.0.join("user/structure").join(site_path);
+        assert!(stored.is_file(), "{site_path}");
+        for prefix in ["", "es/"] {
+            let response = address(&site, &format!("/{prefix}{site_path}"));
+            assert_eq!(response.status(), StatusCode::OK, "{prefix}{site_path}");
+            assert_eq!(response.body(), site_path.as_bytes(), "{prefix}{site_path}");
+        }
+    }
+}
+
+/// A file one language alone has is served for that language and nowhere else.
+#[test]
+fn a_language_file_answers_its_own_language_only() {
+    let (_scratch, site) = fixture("language-file");
+    let served = address(&site, "/es/local.js");
+    assert_eq!(served.status(), StatusCode::OK);
+    assert_eq!(served.body(), b"es only");
+    for path in ["/local.js", "/en/local.js"] {
+        assert_eq!(
+            address(&site, path).status(),
+            StatusCode::NOT_FOUND,
+            "{path}"
+        );
+    }
+}
+
+/// The stored layout is not a site: no request reaches a structure, a text
+/// file or a language directory under its stored name.
+#[test]
+fn the_stored_layout_is_not_addressable() {
+    let (_scratch, site) = fixture("stored");
+    for path in [
+        "/structure/index.html",
+        "/structure/_static/furo.css",
+        "/structure/pagefind/pagefind.js",
+        "/es/structure/index.html",
+        "/text/en.json",
+        "/text/es.json",
+        "/es/text/es.json",
+        "/languages/es/local.js",
+        "/languages/en/index.html",
+        "/es/languages/es/local.js",
+        "/manifest.json",
+    ] {
+        let response = address(&site, path);
+        assert_eq!(response.status(), StatusCode::NOT_FOUND, "{path}");
+        assert!(response.body().is_empty(), "{path}");
+    }
+}
+
+/// A broken stored form is refused whole: no response carries part of a page.
+#[test]
+fn a_broken_stored_page_is_refused_without_partial_content() {
+    let malformed = [
+        // A slot the language has no string for.
+        "<p>\u{e000}b\u{e001}</p>",
+        // Delimiters that do not pair, and digits outside base 36.
+        "<p>\u{e000}0</p>",
+        "<p>0\u{e001}</p>",
+        "<p>\u{e000}\u{e001}</p>",
+        "<p>\u{e000}0!\u{e001}</p>",
+        "<p>\u{e000}A\u{e001}</p>",
+        "<p>\u{e000}-1\u{e001}</p>",
+        // One number has one spelling, so a padded slot is malformed.
+        "<p>\u{e000}00\u{e001}</p>",
+    ];
+    for (index, structure) in malformed.iter().enumerate() {
+        let mut package = Package::new();
+        package.replace("structure/index.html", structure.as_bytes());
+        let (_scratch, site) = admitted(&format!("malformed-{index}"), &package);
+        let response = address(&site, "/index.html");
+        assert_eq!(
+            response.status(),
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "{structure:?}"
+        );
+        assert!(response.body().is_empty(), "{structure:?}");
+    }
+    // A structure that is not text at all.
+    let mut bytes = Package::new();
+    bytes.replace("structure/index.html", &[0xff, 0xfe]);
+    let (_scratch, site) = admitted("not-text", &bytes);
+    assert_eq!(
+        address(&site, "/index.html").status(),
+        StatusCode::INTERNAL_SERVER_ERROR
+    );
+    // Text that is absent, is not JSON, or is not a list of strings. The
+    // other language keeps composing, because only its own text is broken.
+    for (index, text) in [
+        None,
+        Some(&b"{"[..]),
+        Some(&b"{\"0\":\"uno\"}"[..]),
+        Some(&b"[1,2]"[..]),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let mut package = Package::new();
+        match text {
+            Some(bytes) => {
+                package.replace("text/es.json", bytes);
+            }
+            None => {
+                package.stored.retain(|(path, _)| path != "text/es.json");
+                package.absent.push("text/es.json".into());
+            }
+        }
+        let (_scratch, site) = admitted(&format!("text-{index}"), &package);
+        let refused = address(&site, "/es/index.html");
+        assert_eq!(
+            refused.status(),
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "{index}"
+        );
+        assert!(refused.body().is_empty(), "{index}");
+        let apex = address(&site, "/index.html");
+        assert_eq!(apex.status(), StatusCode::OK, "{index}");
+        assert_eq!(apex.body(), VECTOR_PAGE.as_bytes(), "{index}");
+    }
+}
+
 /// Every name and extension the layout declares is served as its declared
 /// type, under a nested directory as at the root.
 #[test]
@@ -243,8 +504,7 @@ fn every_declared_name_and_extension_is_served_as_its_declared_type() {
     for (name, declared) in &expected {
         assert_eq!(media.of(name).unwrap(), declared, "{name}");
         for member in [name.clone(), format!("nested/{name}")] {
-            let uri = format!("cadrumo-docs://localhost/{member}");
-            let response = served(&site, Method::GET, &uri);
+            let response = address(&site, &format!("/{member}"));
             assert_eq!(response.status(), StatusCode::OK, "{member}");
             assert_eq!(
                 response.headers()[header::CONTENT_TYPE],
@@ -256,7 +516,7 @@ fn every_declared_name_and_extension_is_served_as_its_declared_type() {
     }
 }
 
-/// A member the table does not type is not served, and its refusal carries
+/// An address the table does not type is not served, and its refusal carries
 /// the policy and `nosniff` like every other response.
 #[test]
 fn undeclared_types_are_refused_with_the_policy_and_nosniff() {
@@ -286,7 +546,10 @@ fn undeclared_types_are_refused_with_the_policy_and_nosniff() {
         .collect();
     let (_scratch, site) = tree("undeclared", &members);
     for member in &members {
-        assert!(site.contains(&member_path(&format!("/{member}")).unwrap()));
+        assert!(
+            site.resolve(&member_path(&format!("/{member}")).unwrap())
+                .is_some()
+        );
         for method in [Method::GET, Method::HEAD] {
             let uri = format!("cadrumo-docs://localhost/{member}");
             let response = served(&site, method, &uri);
@@ -374,52 +637,76 @@ fn the_contract_must_declare_the_media_type_table() {
     }
 }
 
+/// Every address carries its own type and the length of what it answers with,
+/// composed or stored, and HEAD sends that length with no body.
 #[test]
-fn members_are_served_with_their_type_and_head_has_no_body() {
+fn addresses_are_served_with_their_type_and_head_has_no_body() {
     let (_scratch, site) = fixture("members");
-    for (uri, media) in [
+    for (path, media, body) in [
+        ("/index.html", "text/html; charset=utf-8", VECTOR_PAGE),
+        ("/", "text/html; charset=utf-8", VECTOR_PAGE),
+        ("/es/", "text/html; charset=utf-8", SPANISH_PAGE),
+        ("/es/index.html", "text/html; charset=utf-8", SPANISH_PAGE),
         (
-            "cadrumo-docs://localhost/index.html",
-            "text/html; charset=utf-8",
-        ),
-        ("cadrumo-docs://localhost/", "text/html; charset=utf-8"),
-        ("cadrumo-docs://localhost/es/", "text/html; charset=utf-8"),
-        (
-            "cadrumo-docs://localhost/_static/furo.css?v=8d1f3b",
+            "/_static/furo.css?v=8d1f3b",
             "text/css; charset=utf-8",
+            "_static/furo.css",
         ),
         (
-            "cadrumo-docs://localhost/pagefind/pagefind-worker.js",
+            "/es/_static/furo.css",
+            "text/css; charset=utf-8",
+            "_static/furo.css",
+        ),
+        (
+            "/pagefind/pagefind.js",
             "text/javascript; charset=utf-8",
+            "one index",
         ),
         (
-            "cadrumo-docs://localhost/pagefind/pagefind-entry.json",
+            "/pagefind/pagefind-worker.js",
+            "text/javascript; charset=utf-8",
+            "pagefind/pagefind-worker.js",
+        ),
+        (
+            "/pagefind/pagefind-entry.json",
             "application/json",
+            "pagefind/pagefind-entry.json",
         ),
         (
-            "cadrumo-docs://localhost/pagefind/index/en_1.pf_index",
+            "/pagefind/index/en_1.pf_index",
             "application/octet-stream",
+            "pagefind/index/en_1.pf_index",
         ),
         (
-            "cadrumo-docs://localhost/pagefind/wasm.en.pagefind",
+            "/pagefind/wasm.en.pagefind",
             "application/octet-stream",
+            "pagefind/wasm.en.pagefind",
         ),
+        ("/es/local.js", "text/javascript; charset=utf-8", "es only"),
     ] {
-        let response = served(&site, Method::GET, uri);
-        assert_eq!(response.status(), StatusCode::OK, "{uri}");
-        assert_eq!(response.headers()[header::CONTENT_TYPE], media, "{uri}");
-        let path = uri["cadrumo-docs://localhost".len()..].split('?').next();
-        let key = member_path(path.unwrap()).unwrap();
-        assert_eq!(response.body(), key.as_str().as_bytes(), "{uri}");
+        let length = body.len().to_string();
+        let response = address(&site, path);
+        assert_eq!(response.status(), StatusCode::OK, "{path}");
+        assert_eq!(response.headers()[header::CONTENT_TYPE], media, "{path}");
+        assert_eq!(response.body(), body.as_bytes(), "{path}");
         assert_eq!(
             response.headers()[header::CONTENT_LENGTH],
-            key.as_str().len().to_string().as_str()
+            length.as_str(),
+            "{path}"
+        );
+        let head = served(
+            &site,
+            Method::HEAD,
+            &format!("cadrumo-docs://localhost{path}"),
+        );
+        assert_eq!(head.status(), StatusCode::OK, "{path}");
+        assert!(head.body().is_empty(), "{path}");
+        assert_eq!(
+            head.headers()[header::CONTENT_LENGTH],
+            length.as_str(),
+            "{path}"
         );
     }
-    let head = served(&site, Method::HEAD, "cadrumo-docs://localhost/index.html");
-    assert_eq!(head.status(), StatusCode::OK);
-    assert!(head.body().is_empty());
-    assert_eq!(head.headers()[header::CONTENT_LENGTH], "10");
 }
 
 #[test]
@@ -494,7 +781,7 @@ fn refusals_carry_the_policy_and_nosniff() {
         ),
         (
             Method::GET,
-            "cadrumo-docs://localhost/missing.html",
+            "cadrumo-docs://localhost/absent.html",
             StatusCode::NOT_FOUND,
         ),
         (
@@ -543,36 +830,66 @@ fn refusals_carry_the_policy_and_nosniff() {
 }
 
 #[test]
-fn links_inside_the_tree_cannot_redirect_a_member_outside_it() {
+fn links_inside_the_tree_cannot_redirect_a_stored_read_outside_it() {
     let scratch = Scratch::new("links");
     let root = scratch.0.join("user");
     let outside = scratch.0.join("outside");
-    write(&outside, "index.html", b"outside");
-    write(&root, "index.html", b"inside");
-    link_directory(&outside, &root.join("es"));
-    write(
-        &root,
-        "manifest.json",
-        manifest(&[
-            "index.html",
-            "es/index.html",
-            "pagefind/pagefind.js",
-            "es/pagefind/pagefind.js",
-        ])
-        .to_string()
-        .as_bytes(),
-    );
+    write(&outside, "local.js", b"outside");
+    let mut package = Package::new();
+    package.add("languages/es/local.js", b"inside");
+    package.write_into(&root);
+    let spanish = root.join("languages").join("es");
+    fs::remove_dir_all(&spanish).unwrap();
+    link_directory(&outside, &spanish);
     let site = Site::open(&root, &root.join("manifest.json")).unwrap();
-    assert!(fs::read(root.join("es/index.html")).unwrap() == b"outside");
-    let escaped = served(&site, Method::GET, "cadrumo-docs://localhost/es/index.html");
-    assert_eq!(escaped.status(), StatusCode::NOT_FOUND);
-    let contained = served(&site, Method::GET, "cadrumo-docs://localhost/index.html");
-    assert_eq!(contained.body(), b"inside");
+    assert!(fs::read(root.join("languages/es/local.js")).unwrap() == b"outside");
+    assert_eq!(
+        address(&site, "/es/local.js").status(),
+        StatusCode::NOT_FOUND
+    );
+    assert_eq!(address(&site, "/index.html").body(), VECTOR_PAGE.as_bytes());
+
+    // The same containment covers a structure and a language's text, which a
+    // page is composed from and which no request names directly.
+    let other = Scratch::new("links-stored");
+    let root = other.0.join("user");
+    let outside = other.0.join("outside");
+    write(&outside, "furo.css", b"outside");
+    write(
+        &outside,
+        "es.json",
+        serde_json::to_vec(&strings("fuera", "fuera"))
+            .unwrap()
+            .as_slice(),
+    );
+    let mut package = Package::new();
+    package.shared("_static/furo.css");
+    package.write_into(&root);
+    let shared = root.join("structure").join("_static");
+    let text = root.join("text");
+    for stored in [&shared, &text] {
+        fs::remove_dir_all(stored).unwrap();
+    }
+    link_directory(&outside, &shared);
+    link_directory(&outside, &text);
+    let site = Site::open(&root, &root.join("manifest.json")).unwrap();
+    assert_eq!(
+        address(&site, "/_static/furo.css").status(),
+        StatusCode::NOT_FOUND
+    );
+    for path in ["/index.html", "/es/index.html"] {
+        assert_eq!(
+            address(&site, path).status(),
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "{path}"
+        );
+    }
 }
 
 #[cfg(windows)]
 fn link_directory(target: &Path, link: &Path) {
     // A junction needs no privilege, unlike a Windows symbolic link.
+    fs::create_dir_all(link.parent().unwrap()).unwrap();
     let status = std::process::Command::new("cmd")
         .arg("/C")
         .arg("mklink")
@@ -587,18 +904,19 @@ fn link_directory(target: &Path, link: &Path) {
 
 #[cfg(not(windows))]
 fn link_directory(target: &Path, link: &Path) {
+    fs::create_dir_all(link.parent().unwrap()).unwrap();
     std::os::unix::fs::symlink(target, link).unwrap();
 }
 
 #[test]
-fn the_manifest_must_describe_a_consistent_tree() {
-    let scratch = Scratch::new("manifest");
-    let root = scratch.0.join("user");
-    fs::create_dir_all(&root).unwrap();
+fn the_manifest_must_describe_a_consistent_stored_form() {
+    let package = rich();
+    let (_scratch, root) = staged("manifest", &package);
     let manifest_path = root.join("manifest.json");
+    fs::remove_file(&manifest_path).unwrap();
     let missing = Site::open(&root, &manifest_path).err().unwrap();
     assert_eq!(missing.code, ErrorCode::PackageUnavailable);
-    let valid = manifest(MEMBERS);
+    let valid = package.manifest();
     let mutate = |change: &dyn Fn(&mut serde_json::Value)| {
         let mut value = valid.clone();
         change(&mut value);
@@ -607,17 +925,21 @@ fn the_manifest_must_describe_a_consistent_tree() {
     };
     assert!(mutate(&|_| {}).is_ok());
     for change in [
-        &(|v: &mut serde_json::Value| v["schema"] = 2.into()) as &dyn Fn(&mut serde_json::Value),
+        &(|v: &mut serde_json::Value| v["schema"] = 1.into()) as &dyn Fn(&mut serde_json::Value),
+        &|v| v["schema"] = 3.into(),
         &|v| v["languages"] = serde_json::json!([]),
         &|v| v["languages"] = serde_json::json!(["en", "en"]),
         &|v| v["languages"] = serde_json::json!(["en", "ES"]),
         &|v| v["apex_language"] = "ca".into(),
-        &|v| v["entries"]["es"] = "es/absent.html".into(),
+        // An entry that no stored file and no page answers.
+        &|v| v["entries"]["es"] = "es/nowhere.html".into(),
         &|v| v["entries"]["es"] = "../index.html".into(),
         &|v| {
             v["entries"].as_object_mut().unwrap().remove("es");
         },
-        &|v| v["search"]["en"] = "pagefind/absent.js".into(),
+        // The apex language's site is at the top, so no entry sits under it.
+        &|v| v["entries"]["en"] = "en/index.html".into(),
+        &|v| v["search"] = "pagefind/absent.js".into(),
         &|v| v["script_hashes"] = serde_json::json!(["sha256-abc"]),
         &|v| {
             v["script_hashes"] =
@@ -628,13 +950,22 @@ fn the_manifest_must_describe_a_consistent_tree() {
                 "sha256-47DEQpj8HBSa+/TjIW5Adh6bkdwGzRRYkKlTZKN0F6g='; script-src *"
             ])
         },
+        // The text languages must be exactly the declared languages.
+        &|v| {
+            v["stored"]["text"].as_object_mut().unwrap().remove("es");
+        },
+        &|v| v["stored"]["text"]["ca"] = "text/ca.json".into(),
+        // A text file or a page's structure outside the inventory.
+        &|v| v["stored"]["text"]["es"] = "text/absent.json".into(),
+        &|v| v["stored"]["structure"] = "structures".into(),
+        &|v| v["pages"] = serde_json::json!(["index.html", "how-to/absent.html"]),
         &|v| v["files"]["a/../b.html"] = DIGEST.into(),
-        &|v| v["files"]["index.html"] = "not-a-digest".into(),
+        &|v| v["files"]["structure/index.html"] = "not-a-digest".into(),
     ] {
         let error = mutate(change).err().expect("refused");
         assert_eq!(error.code, ErrorCode::PackageUnavailable);
     }
-    let elsewhere = scratch.0.join("manifest.json");
+    let elsewhere = root.parent().unwrap().join("manifest.json");
     fs::write(&elsewhere, valid.to_string()).unwrap();
     assert!(Site::open(&root, &elsewhere).is_err());
     assert!(Site::open(Path::new("user"), Path::new("user/manifest.json")).is_err());
@@ -839,26 +1170,30 @@ fn staged_documentation_serves_pages_search_and_worker_with_the_policy() {
     for hash in &hashes {
         assert!(csp.contains(&format!("'{hash}'")));
     }
+    // The staged form holds one search index at the apex and one structure
+    // per page, so the probes are addresses and not stored paths.
+    let search = manifest["search"].as_str().unwrap().to_owned();
+    let directory = search.rsplit_once('/').map_or("", |(parent, _)| parent);
     let files = manifest["files"].as_object().unwrap();
     let first = |suffix: &str| {
         files
             .keys()
-            .find(|key| key.starts_with("pagefind/") && key.ends_with(suffix))
+            .filter_map(|key| key.rsplit_once('/'))
+            .find(|(parent, name)| parent.contains(directory) && name.ends_with(suffix))
+            .map(|(parent, name)| {
+                let kept = parent.rsplit_once(directory).unwrap().1;
+                format!("{directory}{kept}/{name}")
+            })
             .unwrap_or_else(|| panic!("no {suffix} in the staged search index"))
-            .clone()
     };
     let mut probes = vec![
-        ("index.html".to_owned(), "text/html; charset=utf-8"),
+        (search.clone(), "text/javascript; charset=utf-8"),
         (
-            "pagefind/pagefind.js".to_owned(),
+            format!("{directory}/pagefind-worker.js"),
             "text/javascript; charset=utf-8",
         ),
         (
-            "pagefind/pagefind-worker.js".to_owned(),
-            "text/javascript; charset=utf-8",
-        ),
-        (
-            "pagefind/pagefind-entry.json".to_owned(),
+            format!("{directory}/pagefind-entry.json"),
             "application/json",
         ),
         (first(".pf_index"), "application/octet-stream"),
@@ -882,11 +1217,7 @@ fn staged_documentation_serves_pages_search_and_worker_with_the_policy() {
         assert_guarded(&response, &csp);
         assert_eq!(response.status(), StatusCode::OK, "{path}");
         assert_eq!(response.headers()[header::CONTENT_TYPE], media, "{path}");
-        assert_eq!(
-            response.body(),
-            &fs::read(root.join(&path)).unwrap(),
-            "{path}"
-        );
+        assert!(!response.body().is_empty(), "{path}");
         println!("served {path} as {media}, {} bytes", response.body().len());
     }
     let refused = respond(
@@ -901,17 +1232,21 @@ fn staged_documentation_serves_pages_search_and_worker_with_the_policy() {
 
 #[test]
 fn published_entries_are_docs_origin_urls_that_map_back_to_their_members() {
+    let localized = "gu\u{ed}a de inicio#1.html";
+    let mut package = Package::new();
+    package.add(&format!("languages/es/{localized}"), b"page");
+    let described = |mut value: serde_json::Value| {
+        value["entries"]["es"] = format!("es/{localized}").into();
+        value
+    };
     let scratch = Scratch::new("published");
     let root = scratch.0.join("user");
-    let localized = "es/gu\u{ed}a de inicio#1.html";
-    let members = ["index.html", localized, "pagefind/pagefind.js"];
-    for member in members {
-        write(&root, member, b"page");
-    }
-    let mut described = manifest(&members);
-    described["entries"]["es"] = localized.into();
-    described["search"]["es"] = "pagefind/pagefind.js".into();
-    write(&root, "manifest.json", described.to_string().as_bytes());
+    package.write_into(&root);
+    write(
+        &root,
+        "manifest.json",
+        described(package.manifest()).to_string().as_bytes(),
+    );
     let site = Site::open(&root, &root.join("manifest.json")).unwrap();
     for windows in [true, false] {
         let origin = policy::origin_for(windows, false);
@@ -930,7 +1265,7 @@ fn published_entries_are_docs_origin_urls_that_map_back_to_their_members() {
             .as_array()
             .unwrap()
             .iter()
-            .zip(["index.html", localized])
+            .zip(["index.html", &format!("es/{localized}")])
         {
             let entry = tauri::Url::parse(language["entry"].as_str().unwrap()).unwrap();
             // A custom scheme has an opaque URL origin; compare the text.

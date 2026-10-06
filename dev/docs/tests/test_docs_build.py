@@ -297,13 +297,20 @@ def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
         docs_build_jobs({"CADRUMO_DOCS_JOBS": "two"})
 
 
-def test_pagefind_index_mode_defaults_to_full_and_accepts_pages() -> None:
-    """Local docs keep records; deployment may index rendered pages alone."""
+def test_pagefind_index_mode_defaults_to_full_and_accepts_pages_and_none() -> None:
+    """Local docs keep records; a deployment may index pages alone, or nothing.
+
+    ``none`` is what a build of several language roots selects for each root:
+    the site has one index, built over every root after they are all built, and
+    a root that indexed itself would write one addressed to its build directory
+    rather than to the served site.
+    """
     from ..build import pagefind_index_mode
 
     assert pagefind_index_mode({}) == "full"
     assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "full"}) == "full"
     assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}) == "pages"
+    assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "none"}) == "none"
 
 
 def test_pagefind_index_mode_rejects_unknown_values() -> None:
@@ -312,6 +319,52 @@ def test_pagefind_index_mode_rejects_unknown_values() -> None:
 
     with pytest.raises(SystemExit, match="CADRUMO_DOCS_PAGEFIND_MODE"):
         pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "records-only"})
+
+
+def test_only_the_full_contract_injects_records() -> None:
+    """``pages`` and ``none`` both inject nothing, and ``full`` injects.
+
+    The resolver is the single decision point the deployment-parity gate reads,
+    so the ``none`` contract must reach it as "no records" rather than fall
+    through the ``pages`` comparison it is not spelled as.
+    """
+    from ..build import resolve_record_injector
+
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}) is None
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "none"}) is None
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}) is not None
+
+
+def test_the_site_prefix_defaults_to_the_root_being_the_whole_site() -> None:
+    """A root is its own site unless the build says where it sits in a larger one.
+
+    The default matters: a local single-language build, and a published layout
+    whose languages are peer directories each carrying their own index, both
+    want no prefix. Only a layout that nests a root under a directory -- the
+    packaged desktop site, whose apex language sits at the top -- names one, and
+    then a page resolves the site's one index and a shared result's destination
+    against it.
+    """
+    from ..build_paths import docs_site_prefix
+
+    assert docs_site_prefix({}) == ""
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": ""}) == ""
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": "es"}) == "es/"
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": "es/"}) == "es/"
+
+
+@pytest.mark.parametrize("value", ["/es", "a/b", "..", ".", "es\\x", "/"])
+def test_the_site_prefix_refuses_anything_but_one_segment(value: str) -> None:
+    """A prefix that climbs or names several segments is refused, not normalised.
+
+    A reader's search controller walks back exactly the segments this names to
+    reach the site apex, so a value it cannot walk back would silently point
+    the one index and every shared destination at the wrong directory.
+    """
+    from ..build_paths import docs_site_prefix
+
+    with pytest.raises(ValueError, match="CADRUMO_DOCS_SITE_PREFIX"):
+        docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": value})
 
 
 def test_deployment_sitemap_uses_canonical_human_doc_urls(tmp_path: Path) -> None:

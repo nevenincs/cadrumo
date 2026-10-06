@@ -40,6 +40,7 @@ PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTI
 site_chrome = import_module("dev.docs.site_chrome").site_chrome
 site_labels = import_module("dev.docs.site_chrome").site_labels
 _DOCS_HTML_ROOT = import_module("dev.docs.build_paths").docs_html_root(_PROJECT_ROOT)
+_DOCS_SITE_PREFIX = import_module("dev.docs.build_paths").docs_site_prefix(os.environ)
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
@@ -642,6 +643,11 @@ html_context["cadrumo_docs_language_is_default"] = language == OutputLanguage.EN
 html_context["cadrumo_docs_languages"] = [
     {"code": member.value, "label": _DOCS_LANGUAGE_ENDONYMS[member]} for member in _DOCS_LANGUAGE_ORDER
 ]
+# This root's own path inside the served site, which the search controller needs
+# because the site carries ONE index, at the apex above every language root. The
+# prefix is how a page walks back from its own root to that apex, and how a
+# record shared by every language is opened inside the root being read.
+html_context["cadrumo_docs_site_prefix"] = _DOCS_SITE_PREFIX
 
 # ── Site chrome ──────────────────────────────────────────────────────────────
 # Every template-rendered label, accessible name, and interaction-layer string,

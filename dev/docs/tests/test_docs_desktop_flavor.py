@@ -327,6 +327,36 @@ def test_a_site_carries_its_search_page_and_none_of_the_unread_build_products(
     assert not [path for path in (site / "_sources").rglob("*") if path.is_file()]
 
 
+#: The head declaration the search controller reads to place a page in its site.
+_SITE_PREFIX_META = 'name="cadrumo-docs-site-prefix" content="{prefix}"'
+
+
+@pytest.mark.parametrize("flavor", ["web", "desktop"])
+def test_a_root_that_is_the_whole_site_declares_no_prefix(flavor_pages: dict[str, str], flavor: str) -> None:
+    """Every built page declares where its root sits in the served site.
+
+    The site carries ONE search index, at the apex above the language roots, so
+    the controller cannot find it or open a shared result inside the right root
+    without knowing how far back the apex is. The default build is a root that
+    IS the whole site, which declares an empty prefix -- declared rather than
+    absent, because an absent declaration and an apex root would then read the
+    same, and the first is a misconfiguration.
+    """
+    assert _SITE_PREFIX_META.format(prefix="") in flavor_pages[flavor]
+
+
+def test_a_root_under_a_directory_declares_its_directory(tmp_path: Path) -> None:
+    """A root the layout nests carries that one segment into every page's head.
+
+    This is the only link in the chain from the build's declared layout to the
+    reader's resolved address that a page itself can show, so it is read off a
+    real build through the real templates rather than from the context key.
+    """
+    page = (_built_site(tmp_path, CADRUMO_DOCS_SITE_PREFIX="en") / "fixture.html").read_text(encoding="utf-8")
+
+    assert _SITE_PREFIX_META.format(prefix="en/") in page
+
+
 def test_configuration_refuses_an_unknown_flavor(tmp_path: Path) -> None:
     """``docs/conf.py`` fails the build rather than guess a flavor."""
     _, result = _build_fixture_site(tmp_path, CADRUMO_DOCS_FLAVOR="mobile")
@@ -439,7 +469,6 @@ def _search_records() -> _Materialised:
 
 def _index_fixture_site(html: Path) -> None:
     """Write the real Pagefind index over the built page with the search records injected."""
-    shutil.copy2(_DOCS / "pagefind.yml", html / "pagefind.yml")
     materialised = _search_records()
 
     async def inject(index: PagefindIndex) -> None:

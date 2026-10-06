@@ -1,11 +1,15 @@
-"""Bundled user-documentation staging: shippable subset, manifest and refusal gates."""
+"""Bundled user-documentation staging: one stored structure, each language's text, manifest and refusal gates."""
 
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
+from typing import Any
 
 import pytest
+
+from dev.docs.shared_structure import compose_page
 
 from ..native.docs_stage import (
     DocsPackagingError,
@@ -28,6 +32,7 @@ PAGE = f"""<!doctype html><html><head>
 <script>{THEME_SNIPPET}</script>
 </head><body><a href="https://example.org/page.html">external prose link</a></body></html>
 """
+STYLESHEET = "body{margin:0}"
 
 
 def _build(tmp_path: Path) -> Path:
@@ -40,12 +45,20 @@ def _build(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _root(build: Path, language: str, page: str = PAGE, *, search: bool = True) -> Path:
+def _page(language: str, page: str = PAGE) -> str:
+    """The page as one language's build writes it: the same markup, its own text."""
+    return page.replace("<html>", f'<html lang="{language}">').replace("external prose link", f"{language} prose")
+
+
+def _root(build: Path, language: str, page: str = PAGE, *, search: bool | None = None) -> Path:
+    """Write one language's built root; only the apex language carries the search index unless told otherwise."""
     root = build / "user-docs/build/html" / language
     (root / "how-to").mkdir(parents=True)
-    (root / "index.html").write_text(page, encoding="utf-8")
-    (root / "how-to/modelo-303.html").write_text(page, encoding="utf-8")
-    if search:
+    (root / "_static").mkdir()
+    (root / "index.html").write_text(_page(language, page), encoding="utf-8")
+    (root / "how-to/modelo-303.html").write_text(_page(language, page), encoding="utf-8")
+    (root / "_static/site.css").write_text(STYLESHEET, encoding="utf-8")
+    if language == "en" if search is None else search:
         (root / "pagefind").mkdir()
         (root / "pagefind/pagefind.js").write_text("export {};", encoding="utf-8")
     for state in (".doctrees", "_sources"):
@@ -57,6 +70,16 @@ def _root(build: Path, language: str, page: str = PAGE, *, search: bool = True) 
 
 def _languages() -> tuple[str, ...]:
     return declared_languages(load_layout())
+
+
+def _staged(build: Path) -> tuple[Path, dict[str, Any]]:
+    payload = verified_stage(build / "user-docs/stage", load_layout()["user_docs"])
+    return payload, json.loads((payload / "manifest.json").read_text(encoding="utf-8"))
+
+
+def _composed(payload: Path, language: str, page: str) -> str:
+    structure = (payload / "structure" / page).read_text(encoding="utf-8", newline="")
+    return compose_page(structure, json.loads((payload / "text" / f"{language}.json").read_text(encoding="utf-8")))
 
 
 def test_csp_hash_matches_the_specification_example_and_html_newline_normalization() -> None:
@@ -72,26 +95,52 @@ def test_scan_counts_only_executing_inline_scripts() -> None:
     assert findings.refused == []
 
 
-def test_staging_ships_the_apex_layout_without_build_state(tmp_path: Path) -> None:
+def test_staging_stores_one_structure_each_language_text_and_no_build_state(tmp_path: Path) -> None:
     build = _build(tmp_path)
     for language in _languages():
         _root(build, language)
     stage_roots(build)
-    payload = verified_stage(build / "user-docs/stage", load_layout()["user_docs"])
-    manifest = json.loads((payload / "manifest.json").read_text(encoding="utf-8"))
+    payload, manifest = _staged(build)
     localized = [language for language in _languages() if language != "en"]
+    assert manifest["schema"] == 2
     assert manifest["languages"] == list(_languages())
     assert manifest["apex_language"] == "en"
     assert manifest["entries"] == {"en": "index.html"} | {language: f"{language}/index.html" for language in localized}
-    assert manifest["search"] == {"en": "pagefind/pagefind.js"} | {
-        language: f"{language}/pagefind/pagefind.js" for language in localized
-    }
+    assert manifest["search"] == "pagefind/pagefind.js"
     assert manifest["script_hashes"] == [csp_hash(THEME_SNIPPET)]
-    pages = ("index.html", "how-to/modelo-303.html", "pagefind/pagefind.js")
-    expected = {page for page in pages} | {f"{language}/{page}" for language in localized for page in pages}
+    assert manifest["stored"] == {
+        "structure": "structure",
+        "languages": "languages",
+        "text": {language: f"text/{language}.json" for language in _languages()},
+    }
+    assert manifest["pages"] == ["how-to/modelo-303.html", "index.html"]
+    expected = {
+        "structure/index.html",
+        "structure/how-to/modelo-303.html",
+        "structure/_static/site.css",
+        "languages/en/pagefind/pagefind.js",
+        *(f"text/{language}.json" for language in _languages()),
+    }
     assert set(manifest["files"]) == expected
     shipped = {path.relative_to(payload).as_posix() for path in payload.rglob("*") if path.is_file()}
     assert shipped == {"manifest.json", *expected}
+
+
+def test_every_language_page_comes_back_from_the_structure_and_its_text(tmp_path: Path) -> None:
+    build = _build(tmp_path)
+    for language in _languages():
+        _root(build, language)
+    stage_roots(build)
+    payload, _ = _staged(build)
+    structure = (payload / "structure/index.html").read_text(encoding="utf-8")
+    assert THEME_SNIPPET in structure
+    for language in _languages():
+        assert f"{language} prose" not in structure
+        for page in ("index.html", "how-to/modelo-303.html"):
+            built = (build / "user-docs/build/html" / language / page).read_text(encoding="utf-8", newline="")
+            assert f"{language} prose" in built
+            assert _composed(payload, language, page) == built
+    assert (payload / "structure/_static/site.css").read_text(encoding="utf-8") == STYLESHEET
 
 
 def test_nested_language_roots_in_the_apex_source_are_not_staged_twice(tmp_path: Path) -> None:
@@ -104,13 +153,12 @@ def test_nested_language_roots_in_the_apex_source_are_not_staged_twice(tmp_path:
             nested.mkdir()
             (nested / "index.html").write_text("nested copy inside the apex source", encoding="utf-8")
     stage_roots(build)
-    payload = verified_stage(build / "user-docs/stage", load_layout()["user_docs"])
-    manifest = json.loads((payload / "manifest.json").read_text(encoding="utf-8"))
+    payload, manifest = _staged(build)
     for language in _languages():
         if language != "en":
-            staged = (payload / language / "index.html").read_text(encoding="utf-8")
-            assert f"<p>{language} root</p>" in staged
-    assert len(manifest["files"]) == 3 * len(_languages())
+            assert f"<p>{language} root</p>" in _composed(payload, language, "index.html")
+    assert not [path for path in manifest["files"] if path.startswith(("languages/", "structure/")) and "/es/" in path]
+    assert len(manifest["files"]) == 4 + len(_languages())
 
 
 def test_staged_payload_detects_a_changed_file(tmp_path: Path) -> None:
@@ -118,7 +166,7 @@ def test_staged_payload_detects_a_changed_file(tmp_path: Path) -> None:
     for language in _languages():
         _root(build, language)
     stage_roots(build)
-    (build / "user-docs/stage/user" / package_prefix(_languages()[-1]) / "index.html").write_text("x", encoding="utf-8")
+    (build / "user-docs/stage/user/text" / f"{_languages()[-1]}.json").write_text("[]", encoding="utf-8")
     with pytest.raises(DocsPackagingError, match="changed after staging"):
         verified_stage(build / "user-docs/stage", load_layout()["user_docs"])
 
@@ -153,14 +201,30 @@ def test_staging_refuses_inline_event_handlers(tmp_path: Path) -> None:
         stage_roots(build)
 
 
-def test_staging_refuses_a_language_without_its_search_index(tmp_path: Path) -> None:
+def test_staging_refuses_an_apex_without_the_search_index(tmp_path: Path) -> None:
     build = _build(tmp_path)
-    languages = _languages()
-    _root(build, languages[0], search=False)
-    for language in languages[1:]:
-        _root(build, language)
-    with pytest.raises(DocsPackagingError, match=f"{languages[0]}: missing pagefind/pagefind.js"):
+    for language in _languages():
+        _root(build, language, search=False)
+    with pytest.raises(DocsPackagingError, match=re.escape("en: missing pagefind/pagefind.js")):
         stage_roots(build)
+
+
+def test_staging_refuses_a_second_search_index(tmp_path: Path) -> None:
+    build = _build(tmp_path)
+    for language in _languages():
+        _root(build, language, search=True)
+    with pytest.raises(DocsPackagingError, match=re.escape("es: holds its own pagefind/pagefind.js; the one")):
+        stage_roots(build)
+
+
+def test_staging_refuses_a_page_one_language_lacks(tmp_path: Path) -> None:
+    build = _build(tmp_path)
+    for language in _languages():
+        _root(build, language)
+    (build / "user-docs/build/html/hu/how-to/modelo-303.html").unlink()
+    with pytest.raises(DocsPackagingError, match=r"1 page\(s\) exist in some languages and not in others"):
+        stage_roots(build)
+    assert not (build / "user-docs/stage/ready").exists()
 
 
 @pytest.mark.parametrize("languages", [[], ["en", "en"], ["en", "xx"], "en", ["es", "ca"]])

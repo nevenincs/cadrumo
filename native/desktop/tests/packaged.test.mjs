@@ -101,8 +101,47 @@ function hostEnvironment(config, extra = {}) {
   return { env: { ...env, ...extra }, removed };
 }
 
-function htmlTitle(file) {
-  const match = /<title>([\s\S]*?)<\/title>/i.exec(readFileSync(file, "utf8"));
+/**
+ * Composes a page structure with one language's strings, as the documentation
+ * handler does: U+E000, the slot number in lowercase base 36, then U+E001.
+ */
+function composePage(structure, strings) {
+  return structure.replace(/\u{e000}([0-9a-z]+)\u{e001}/gu, (_, digits) => {
+    const text = strings[parseInt(digits, 36)];
+    assert(text !== undefined, `the structure names an absent slot ${digits}`);
+    return text;
+  });
+}
+
+/**
+ * One address out of the stored documentation, read the way the manifest says
+ * it is served: the language's own file, then its page composed from the
+ * shared structure, then the one copy every language shares. The package
+ * holds no per-language page file to read, so this is the independent
+ * expectation the frame's title is compared with.
+ */
+function storedPage(docsRoot, manifest, language, address) {
+  const sitePath =
+    language === manifest.apex_language
+      ? address
+      : address.slice(language.length + 1);
+  const own = `${manifest.stored.languages}/${language}/${sitePath}`;
+  if (manifest.files[own]) return readFileSync(resolve(docsRoot, own), "utf8");
+  const structure = readFileSync(
+    resolve(docsRoot, `${manifest.stored.structure}/${sitePath}`),
+    "utf8",
+  );
+  if (!manifest.pages.includes(sitePath)) return structure;
+  return composePage(
+    structure,
+    JSON.parse(
+      readFileSync(resolve(docsRoot, manifest.stored.text[language]), "utf8"),
+    ),
+  );
+}
+
+function htmlTitle(html) {
+  const match = /<title>([\s\S]*?)<\/title>/i.exec(html);
   if (!match) return null;
   return match[1]
     .replace(/&lt;/g, "<")
@@ -404,7 +443,14 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         );
         const relative = entry && manifest.entries[entry.code];
         const expectedTitle = relative
-          ? htmlTitle(resolve(config.packageRoot, "docs/user", relative))
+          ? htmlTitle(
+              storedPage(
+                resolve(config.packageRoot, "docs/user"),
+                manifest,
+                entry.code,
+                relative,
+              ),
+            )
           : "<the frame is not on a published language entry>";
         return framesVerdict({
           shellUrl: page.url(),

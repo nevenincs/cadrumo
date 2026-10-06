@@ -35,6 +35,7 @@ from docutils.parsers.rst import Parser as RstParser
 from docutils.utils import new_document
 from sphinx.util.nodes import make_id
 
+from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
 from ..glossary_reference import render_glossary
@@ -291,9 +292,14 @@ def test_card_summary_is_clean_single_language() -> None:
     The searchable record content folds the title, every alias, and all four
     language descriptions into one string so any surface form matches. That
     string must never reach the operator's eye: the card shows ``_summary_for``,
-    a single-language (English, falling back to Spanish) one-liner. This gate
-    proves the summary is bounded, single-line, and a real description - never
-    the multilingual token soup the palette used to render.
+    a one-liner in one language. This gate proves the summary is bounded,
+    single-line, and a real description - never the multilingual token soup the
+    palette used to render.
+
+    Every published language is checked, because the record now ships one
+    summary per language and the controller picks the one for the page being
+    read. A language whose summary came back as the blob, empty, or over the cap
+    would reach exactly the readers of that language and no others.
     """
     cards, _ = project_concept_cards()
     approved = [card for card in cards if card.is_approved]
@@ -301,14 +307,17 @@ def test_card_summary_is_clean_single_language() -> None:
 
     for card in approved:
         record = to_search_record(card)
-        summary = _summary_for(record)
-        assert summary, f"empty summary for {record.id}"
-        assert "\n" not in summary, f"multi-line summary for {record.id}"
-        assert len(summary) <= _SUMMARY_MAX_CHARS, f"summary over cap for {record.id}"
-        # The summary is one language's description verbatim (or its truncation),
-        # never the title+aliases+all-descriptions concatenation.
-        is_whole = summary in record.descriptions.values()
-        is_truncation = summary.endswith("…") and any(
-            description.startswith(summary[:-1]) for description in record.descriptions.values()
-        )
-        assert is_whole or is_truncation, f"summary is not a single description for {record.id}"
+        for language in OutputLanguage:
+            summary = _summary_for(record, language)
+            assert summary, f"empty {language.value} summary for {record.id}"
+            assert "\n" not in summary, f"multi-line {language.value} summary for {record.id}"
+            assert len(summary) <= _SUMMARY_MAX_CHARS, f"{language.value} summary over cap for {record.id}"
+            # The summary is one language's description verbatim (or its
+            # truncation), never the title+aliases+all-descriptions blob.
+            is_whole = summary in record.descriptions.values()
+            is_truncation = summary.endswith("…") and any(
+                description.startswith(summary[:-1]) for description in record.descriptions.values()
+            )
+            assert is_whole or is_truncation, (
+                f"the {language.value} summary is not a single description for {record.id}"
+            )

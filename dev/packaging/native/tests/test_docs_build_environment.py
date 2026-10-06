@@ -5,7 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from dev.docs.build import DOCS_FLAVOR_ENV, docs_build_flavor
+from dev.docs.build import DOCS_FLAVOR_ENV, docs_build_flavor, pagefind_index_mode
+from dev.docs.build_paths import docs_site_prefix
 
 from .. import docs_build
 from ..docs_build import _owner_environment
@@ -17,8 +18,32 @@ def test_owner_builds_pin_the_desktop_flavor_over_an_ambient_web_selection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv(DOCS_FLAVOR_ENV, "web")
-    environment = _owner_environment(tmp_path / "build", tmp_path / "storage", check_sequences=True, jobs=1)
+    environment = _owner_environment(
+        tmp_path / "build", tmp_path / "storage", language="en", check_sequences=True, jobs=1
+    )
     assert docs_build_flavor(environment) == "desktop"
+
+
+@pytest.mark.parametrize(("language", "prefix"), [("en", ""), ("es", "es/"), ("hu", "hu/")])
+def test_owner_builds_index_nothing_and_carry_their_place_in_the_staged_site(
+    tmp_path: Path, language: str, prefix: str
+) -> None:
+    """A root build writes no index and declares where the staged site serves it.
+
+    The packaged site has ONE index, built over every root once they are all
+    built, so a root that indexed itself would write one addressed to its build
+    directory instead of to the staged layout. The prefix is the other half: the
+    apex language is served at the top and the others under their own directory,
+    and a page resolves the one index and a shared result's destination against
+    it. Both are read back through the owners that consume them rather than by
+    comparing raw strings, so a renamed key cannot pass this.
+    """
+    environment = _owner_environment(
+        tmp_path / "build", tmp_path / "storage", language=language, check_sequences=True, jobs=1
+    )
+
+    assert pagefind_index_mode(environment) == "none"
+    assert docs_site_prefix(environment) == prefix
 
 
 @pytest.mark.parametrize("english_exit", [0, 1])

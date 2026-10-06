@@ -50,13 +50,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 # dev/deploy/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
 _BUILT_HTML = docs_html_root(_REPO_ROOT)
-_PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 
 _PAGES = 3
 
 
 def _page_corpus(tmp_path: Path, name: str) -> Path:
-    """Copy a few real built pages plus the real ``pagefind.yml`` into ``name``."""
+    """Copy a few real built pages into ``name``."""
     if not _BUILT_HTML.is_dir():
         pytest.fail(
             f"no built documentation HTML at {_BUILT_HTML}; this preflight reads a real "
@@ -69,7 +68,6 @@ def _page_corpus(tmp_path: Path, name: str) -> Path:
     site.mkdir(parents=True)
     for source in pages:
         (site / source.name).write_bytes(source.read_bytes())
-    shutil.copy(_PAGEFIND_YML, site / "pagefind.yml")
     return site
 
 
