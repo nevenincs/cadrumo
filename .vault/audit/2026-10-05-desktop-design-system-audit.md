@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:c243e59c657e68283d86d13f560bd34395047b95a3b42052d700e096449dc659'
+body_hash: 'sha256:22cdfd281a754472edaf9d26968f64df286186593f6e597f0a158c59ea58fcec'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -211,6 +211,38 @@ A refusal the person had seen came back when its surface was reopened, and a fai
 
 Resolved in `c536509aed`: profile views are an optional part of the host port at `native/desktop/frontend/src/shell/host.ts:62`. The desktop host offers none, so the product shows no button, action or page; the scenario host offers the calendar from a fixture, as design evidence only. The page is read when shown, dropped at sign-out, and a failed read is never drawn as an empty calendar. The audit engine found the month headings skipping a level, which was corrected. No row links to a Modelo: the window cannot take the TUI to a page.
 
+### Messages button | medium | the product's latest-notifications read carries no unread count
+
+Resolved for the window in `2905b2e711` and `5273a9949a`: the rail's Messages button shows what was unread at the last capture and opens the TUI. `app live notifications latest` reports a capture time and a row count only; whether a row was read is on rows that carry names and tax numbers, so the view's type at `native/desktop/frontend/src/shell/views.ts:79` is counts only and no row reaches the window. Never captured and a failed read carry a hollow pin and say which in the name and tooltip, so neither is read as none unread. No host provides the view yet.
+
+### Views review scroll | high | the focused calendar page could not be scrolled by keyboard
+
+An independent review of `3ba984d705` and `c536509aed` measured Page Down, the arrows, Space and End leaving the page where it was: focus sat on a wrapper around the element that scrolls. Resolved in `03c4d21dd0`: the page is one region that scrolls and holds focus, at `native/desktop/frontend/src/components/FilingCalendar.tsx:372`. A test presses Page Down and Home in a short window.
+
+### Views review account | medium | the calendar and the account disagreed outside the signed-in phase
+
+Withheld, the page said "Sign in" in every phase, including a locked profile, no services, and a platform that signs in inside the TUI, where it then never read. What it had read was kept by a yes or no rather than by profile. Resolved in `03c4d21dd0`: the page says the phase's own words and offers a sign-in only where one can be given; where sign-in is the TUI's it asks and shows the answer; reads are keyed to the profile, and a refused read has the account's status read again. The account-state table test now opens the calendar in each state.
+
+### Views review dead end | medium | a locked profile had no way on in settings or the palette
+
+Settings showed a badge and nothing else, the palette listed no account action, and the dialog was titled as a sign-in with no field. Resolved in `03c4d21dd0`: settings shows the refusal and offers the TUI, the palette has the same action wherever the account is not settled, and the dialog is titled in the phase's words.
+
+### Views review focus | medium | focus fell to the document in five places
+
+After refreshing a failed read; after signing out with focus in the page; after putting the sign-in dialog aside when it was opened from the calendar with the TUI hidden; when the calendar was chosen while the TUI was maximized; and a refused password took focus back from wherever the person had moved it. Resolved in `03c4d21dd0`: the failed view keeps its button through a new read, the page takes focus that its own controls lose, the dialog returns focus to what asked for it, the calendar takes focus once it is laid out, and a refusal refocuses the field only from the form. Putting the calendar away from the rail leaves focus on the rail.
+
+### Views review settle | medium | a failed sign-out came back unless settings was closed with Escape
+
+Only one of the three ways settings closes cleared it. Resolved in `03c4d21dd0`: it is cleared whenever settings is no longer open; the test closes it two ways.
+
+### Views review minor | low | settled in the same change
+
+The distance to a deadline was hidden in a pane under 448 pixels, which is every phone and a common side-by-side width; it now moves under the row's notes. The documentation's zoom and history acted on a hidden page while the calendar was shown, and the header's maximize was named for the documentation. Rows took a hover surface while leading nowhere. The header's way back shared an icon with the rail's documentation home; it is now the pane's close, as the TUI's is. Six tests that asserted less than their names said were tightened.
+
+### Views review left | low | not reproduced
+
+One run of the full suite failed a test at its first step, the sign-in dialog not appearing in the no-profile scenario; it passed in eighteen repeats and two further full runs. Recorded as seen once under load, not as fixed.
+
 ## Recommendations
 
 - From `P02 primitive API`: give Field a context that wires ids, error ids and the invalid state, so a form control cannot be mislabelled by hand.
@@ -220,3 +252,4 @@ Resolved in `c536509aed`: profile views are an optional part of the host port at
 - From `P05 names and roles` and the sign-in findings: rerun the packaged acceptance suite on a built package; nothing in these reviews exercised the Tauri host.
 - From `Calendar page`: the page reaches a real profile only once a host command exists; that waits on the proposed decision `2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr`.
 - From `Calendar page`: a row's link to its Modelo needs a decision on how the window asks the TUI for a destination.
+- From `Messages button`: decide whether the host counts unread rows or the product gains a summary read; either keeps the rows out of the window.

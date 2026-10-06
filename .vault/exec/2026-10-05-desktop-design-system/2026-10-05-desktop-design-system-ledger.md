@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:83b8d1cc619f016967cd1d14d17f1d473063b54eed6e3689e072ec24641c52da'
+body_hash: 'sha256:7d6cc425f0cb627623996087c3f1cc006294c5ce84d2b6e207c55c718fd455f6'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -257,6 +257,15 @@ related:
 - `S11` `verify:` `npm run check` -> `pass`
 - `S11` `verify:` `npm test` -> `pass`
 - `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `A` `native/desktop/frontend/src/shell/messages.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/views.ts`
+- `S11` `M` `native/desktop/frontend/src/components/ui/icon-button.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/Workspace.stories.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/FilingCalendar.stories.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/fixtures/calendar.ts`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
+- `S11` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
 
 ## Notes
 
