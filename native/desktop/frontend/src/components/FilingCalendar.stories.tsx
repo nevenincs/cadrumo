@@ -46,7 +46,15 @@ const ACCOUNTS = {
   }),
 };
 
-function Page({ state, refreshing, phase, pane, view, today }: Args) {
+function Page({
+  state,
+  refreshing,
+  phase,
+  pane,
+  view,
+  today,
+  locale,
+}: Args & { locale: string }) {
   const t = useStrings();
   return (
     <div
@@ -63,7 +71,7 @@ function Page({ state, refreshing, phase, pane, view, today }: Args) {
       />
       <FilingCalendarView
         state={state}
-        locale={document.documentElement.lang || "en"}
+        locale={locale}
         refreshing={refreshing}
         defaultView={view}
         // The fixture's day, so the catalogue reads the same on any day.
@@ -90,7 +98,11 @@ const meta = {
   title: "Shell/Filing calendar",
   parameters: { fill: true },
   args: { state: { kind: "ready", calendar: FIXTURE_CALENDAR } },
-  render: (args: Args) => <Page {...args} />,
+  // The catalogue's language is the calendar's: its dates, its week's first
+  // day and its words for distance, as well as its strings.
+  render: (args: Args, context) => (
+    <Page {...args} locale={String(context.globals.locale ?? "en")} />
+  ),
 } satisfies Meta<Args>;
 export default meta;
 type Story = StoryObj<typeof meta>;
