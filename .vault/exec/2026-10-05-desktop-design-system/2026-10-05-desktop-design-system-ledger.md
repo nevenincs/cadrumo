@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:e31480dd2f19f904e8a0b5915a1c0aef80debcbe7d4ed4b1e8232b2268f2e9e1'
+body_hash: 'sha256:0fb33e407a4046e16e245a321ad67415fb3e60481f6f6d2bc02a9ad307811389'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -269,6 +269,15 @@ related:
 - `S11` `M` `native/desktop/frontend/src/shell/calendar.ts`
 - `S11` `verify:` `npm run check` -> `pass`
 - `S11` `verify:` `npm test` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/components/ui/button.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/accountWords.ts`
+- `S11` `A` `native/desktop/frontend/src/shell/records.ts`
+- `S11` `A` `native/desktop/frontend/tests/calendar.spec.ts`
+- `S11` `M` `native/desktop/frontend/src/components/SignIn.stories.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/RecordList.stories.tsx`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
 
 ## Notes
 

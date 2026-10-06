@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:b3ba475db9e02d22747331c208d5621f528427cfac8dbd1c058b3a125152b8ca'
+body_hash: 'sha256:1ad79f13e3441f449e35bcf836a1c1662715271295140f26f4d5057aa18ed7ca'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -266,6 +266,38 @@ Status reads were compared with a number already reached before the step under t
 ### Third review left | low | one fix has no test of its own
 
 Returning focus to the calendar after a dialog opened by a session ending underneath is fixed by the same code that a pressed opener uses, but no test ends a session from outside: the scenario host has no handle for it.
+
+### Shell upkeep | low | found while measuring, settled as found
+
+The development server reloaded the whole page on every save of the sign-in and log components, because each module exported values beside its components; they have modules of their own since `3d1ee577dd`. In Spanish and Catalan a phone-width window cut the calendar's pane title, measured as 176 pixels in 148; a narrow header now gives up the split's controls, which the TUI's header keeps (`8eda21e211`). A bar that scrolls sideways with its scrollbar hidden showed nothing of what lay beyond; it fades at the edge with more, by a utility in the theme (`ed1c4476c8`). Eighty toggles of the calendar grew neither nodes nor listeners but made a read each; a calendar read within half a minute is shown again as it is (`73767c6a4a`). A probe over all seventeen scenarios with every rail button, the palette, F6 and the calendar's chord logged no console error or warning.
+
+### Fourth review dead end | medium | carrying on in the TUI could not be left when the TUI could not start
+
+An independent review of `87ccfcf7bb` to `3d1ee577dd` found no high defect. With a session that fails to start, "Open the TUI" left the window continuing in the TUI for good: no sign-in was offered in the pane, the calendar, settings or the palette. Resolved in `8fd9537360`: a session that fails to start ends that state as one that exits does, and the reason is said. The scenario `tui-unavailable` and a test hold it.
+
+### Fourth review focus | medium | three more places focus was lost or taken
+
+A sign-in that succeeded after its dialog was put aside left focus on the document. Putting the calendar away with no documentation behind it did the same. The dialog's close, which runs when its exit has finished, took focus back from wherever the person had put it meanwhile. Resolved in `8fd9537360`; the first fix at first also moved focus into the terminal at startup, which the palette's own test caught before it was committed.
+
+### Fourth review minor | low | settled in the same change
+
+A far deadline rounded to the nearest month read as further off than it is: it is now whole months that have fully to pass, with the rule at `native/desktop/frontend/src/shell/calendar.ts:42` and a test at its boundaries. A calendar shown again after a failed read said the old failure and then the new one. The head's counts were one unlabelled paragraph. The documentation's bridge ran an action without asking whether it was offered. A gate drawn in two panes announced its refusal twice. A control disabled in name looked enabled. Looking at the account again showed nothing while it ran. Five tests asserted less than their names and were tightened; the bridge's refusal on a host without views has no test, because nothing observable differs.
+
+### Log review place | high | a reader of the log lost their place in two ways
+
+The first independent check of the log view since `17c72f803c`. A filter change left the old view's scroll anchor behind: with five thousand records, scrolled up three thousand pixels, a filter typed and cleared, and a two-pixel scroll, the view landed three thousand pixels from the end. And with no current record drawn the tab stop was the last drawn row, so Tab into the list threw a reader who had scrolled to the far end of the span; after the ring dropped a focused record an arrow key jumped thirty-four thousand pixels. Resolved in `543709e5d3`: the place is taken at once whenever the end is left and dropped whenever it is returned to; a filter that still shows the reader's record keeps their place and one that hides it starts at the end; a reader who has left the end tabs onto the list itself, and an arrow goes to the record at the top of their view. Four tests reproduce the measured cases.
+
+### Log review keyboard | medium | keys that moved the view without the reader, or the reader without the view
+
+Page Up and Page Down scrolled without moving the current record, so the next arrow snapped back. An arrow up from the newest record did not stop following when its target was in view. A jump by Home was undone when a batch committed before the scroll was reported, in three trials of four. Home reached only the top of the drawn span, eleven presses from the end of five thousand records. "Clear log filters" and the logger chip left focus on the document. Resolved in `543709e5d3`, each with a test.
+
+### Log review minor | low | settled in the same change
+
+The notice of dropped records stood above every span, with thousands of older records still above it. A fast scroll hit the edge of the drawn span before the next came in. A sideways wheel with a pixel of upward jitter stopped following. A host record printed its source twice and said a warning by colour alone. The log had no name. The keyboard's menu was offset by the row's height. Under a finger at 390 by 844 the bar stayed two rows and left the records ninety-seven pixels; it is one row there now. Five of the tests the check named were tightened, and a touch drag now has a test.
+
+### Log review left | low | not changed
+
+Rows have no role of their own beneath the log. Three tests still rest on a fixed wait: the gentlest wheel, the cap on the drawn span, and focus handed to the list once. The frame times and heap the check measured are of the development build; the production figures are the benchmark's, which stayed within budget after the change.
 
 ## Recommendations
 
