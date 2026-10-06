@@ -100,6 +100,26 @@ INTENDED_DIFFERENCES: Final[tuple[IntendedDifference, ...]] = (
             "English page now reads as the other three do"
         ),
     ),
+    IntendedDifference(
+        context="attr:a.href",
+        page="how-to/filing-calendar.html",
+        built="profile-setup.html",
+        reason=(
+            "the translated link carries an anchor into the page it names "
+            "(profile-setup.md#what-the-active-profile-means) and the one compile resolves it, where a "
+            "translated build of that language resolves the same link to the page alone and drops the "
+            "anchor: the composed page lands the reader on the section, as the English page does"
+        ),
+    ),
+    IntendedDifference(
+        context="attr:span.class",
+        page="how-to/filing-calendar.html",
+        built="std std-doc",
+        reason=(
+            "the same link: a reference resolved to an anchor inside a page carries std-ref, where the "
+            "page-alone reference a translated build fell back to carries std-doc"
+        ),
+    ),
 )
 
 

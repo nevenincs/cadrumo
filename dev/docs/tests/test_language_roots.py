@@ -10,6 +10,7 @@ here, and the composed roots are compared with the files that were written.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -157,3 +158,64 @@ def test_a_layout_of_another_schema_or_another_language_set_is_refused(tmp_path:
     (stored / LAYOUT_FILE).write_text(json.dumps({**document, "schema": 2}), encoding="utf-8")
     with pytest.raises(LanguageRootsError, match="not a schema 1 layout"):
         read_layout(stored)
+
+
+#: One page in three languages, written as its lines rather than as one string.
+#: A page's own build ends each line with the terminator of the platform that
+#: writes it, and the stored form must carry neither platform's.
+_LINES: dict[str, tuple[str, ...]] = {
+    "en": ("<html>", "<h1>Filing calendar</h1>", "<p>ley:art-1</p>", "</html>"),
+    "es": ("<html>", "<h1>Calendario fiscal</h1>", "<p>ley:art-1</p>", "</html>"),
+    "ca": ("<html>", "<h1>Calendari fiscal</h1>", "<p>ley:art-1</p>", "</html>"),
+}
+
+
+def _terminated(terminator: str) -> dict[str, dict[str, bytes]]:
+    """Return one site per language whose pages end their lines with *terminator*.
+
+    A page that differs by language, a page every language shares, and an asset
+    whose line terminators are its author's rather than the writer's.
+    """
+    shared = terminator.join(("<html>", "<p>Texto oficial</p>", "</html>"))
+    return {
+        language: {
+            "index.html": (terminator.join(lines) + terminator).encode("utf-8"),
+            "legal/notice.html": shared.encode("utf-8"),
+            "_static/app.css": b"body{\r\n  margin:0\r\n}",
+        }
+        for language, lines in _LINES.items()
+    }
+
+
+def test_a_page_is_stored_without_the_terminators_of_the_platform_that_wrote_it(tmp_path: Path) -> None:
+    """Neither a composed page's structure nor a shared page carries a carriage return."""
+    stored = tmp_path / "stored"
+    factor_roots(_built(tmp_path / "built", _terminated("\r\n")), stored)
+    assert b"\r" not in (stored / STRUCTURE_DIRECTORY / "index.html").read_bytes()
+    assert b"\r" not in (stored / STRUCTURE_DIRECTORY / "legal" / "notice.html").read_bytes()
+    # An asset is not a page: its bytes are its author's, and are stored as they are.
+    assert (stored / STRUCTURE_DIRECTORY / "_static" / "app.css").read_bytes() == b"body{\r\n  margin:0\r\n}"
+
+
+def test_a_structure_stored_from_either_terminator_is_the_same_bytes(tmp_path: Path) -> None:
+    """The same site stored on two platforms is the same stored form."""
+    factor_roots(_built(tmp_path / "crlf-built", _terminated("\r\n")), tmp_path / "from-crlf")
+    factor_roots(_built(tmp_path / "lf-built", _terminated("\n")), tmp_path / "from-lf")
+    assert _tree(tmp_path / "from-crlf") == _tree(tmp_path / "from-lf")
+
+
+@pytest.mark.parametrize("stored_from", ["\r\n", "\n"])
+def test_a_page_is_composed_as_this_platform_ends_its_lines(tmp_path: Path, stored_from: str) -> None:
+    """Whichever platform stored the pages, composing gives this platform's terminators."""
+    stored = tmp_path / "stored"
+    factor_roots(_built(tmp_path / "built", _terminated(stored_from)), stored)
+    compose_root(stored, "es", tmp_path / "composed")
+    assert _tree(tmp_path / "composed") == _terminated(os.linesep)["es"]
+
+
+def test_the_gate_is_silent_on_a_structure_the_other_platform_stored(tmp_path: Path) -> None:
+    """A stored form written where lines end otherwise still gives this platform's build back."""
+    elsewhere = "\n" if os.linesep == "\r\n" else "\r\n"
+    stored = tmp_path / "stored"
+    factor_roots(_built(tmp_path / "elsewhere", _terminated(elsewhere)), stored)
+    assert differences(stored, _built(tmp_path / "here", _terminated(os.linesep))) == []

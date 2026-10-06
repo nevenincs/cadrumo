@@ -462,7 +462,20 @@ def test_generated_glossary_parses_without_duplicate_term_warning() -> None:
         docs = tmp / "docs"
         docs.mkdir()
         generate_glossary_reference(docs)
-        (docs / "conf.py").write_text('project = "t"\nextensions = []\n', encoding="utf-8")
+        # The page names the anchor its heading is published under, which is the
+        # project's own directive: a throwaway build that does not register it
+        # reports an unknown directive rather than what this gate is about.
+        (docs / "conf.py").write_text(
+            'project = "t"\n'
+            "extensions = []\n"
+            "\n"
+            "from dev.docs.section_anchors import register as _register_section_anchors\n"
+            "\n"
+            "\n"
+            "def setup(app):\n"
+            "    _register_section_anchors(app)\n",
+            encoding="utf-8",
+        )
         (docs / "index.rst").write_text(
             "Test\n====\n\n.. toctree::\n\n   _generated/glossary\n",
             encoding="utf-8",

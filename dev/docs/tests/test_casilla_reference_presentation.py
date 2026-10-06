@@ -385,6 +385,7 @@ def test_printed_box_number_wins_over_the_record_design_number() -> None:
 def _overview(**overrides: object) -> ModeloOverview:
     fields: dict[str, object] = {
         "title": "IRPF pago fraccionado",
+        "source_title": "IRPF instalment payment",
         "official_name": "Modelo 130. Pago fraccionado.",
         "definitions": {},
         "tax_domain": "irpf",

@@ -57,7 +57,7 @@ from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from dev._paths import AUTHORITY_ROOT_ENV
 from dev.product_environment import ambient_product_settings_removed
 
-from ._locale_chrome import docs_chrome, markup_page
+from ._locale_chrome import chrome_anchor, docs_chrome, markup_page, same_wording
 
 if TYPE_CHECKING:
     from cadrumo.entrypoints.cli.command_spec import CommandSpecNode
@@ -216,7 +216,16 @@ def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec:
 
     if not isinstance(spec, CommandSpec):
         raise TypeError("CLI reference received a non-CommandSpec node")
-    parts = [_rst_heading(" ".join(path), "-"), "\n", tr(spec.help_key.value), "\n\n"]
+    # A command's own help sentence is the CLI's, resolved in the language this
+    # process is pinned to (see the module's language-pinning note), so every
+    # language's page reads the same words -- and every language's build gives
+    # them its own typography (:func:`~dev.docs.compile_slots.same_wording`).
+    parts = [
+        _rst_heading(" ".join(path), "-"),
+        "\n",
+        same_wording(tr(spec.help_key.value), language),
+        "\n\n",
+    ]
     if spec.parameters:
         parts.append(docs_chrome("docs.cli.command.parameters_heading", language) + "\n\n")
     for parameter in spec.parameters:
@@ -228,7 +237,7 @@ def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec:
         # the key put dotted identifiers such as ``cli.ledger.add.description_help`` on
         # every parameter of every page of the published reference.
         described = (
-            tr(parameter.help_key.value)
+            same_wording(tr(parameter.help_key.value), language)
             if parameter.help_key
             else docs_chrome("docs.cli.command.no_description", language)
         )
@@ -264,6 +273,7 @@ def _render_index_page(
         The complete RST index content.
     """
     parts: list[str] = []
+    parts.append(chrome_anchor("docs.cli.index.title"))
     parts.append(_rst_heading(docs_chrome("docs.cli.index.title", language), "="))
     parts.append("\n")
     parts.append(".. _cli-reference-start:\n\n")
@@ -271,6 +281,7 @@ def _render_index_page(
     parts.append(docs_chrome("docs.cli.index.english_help_note", language) + "\n\n")
     parts.append(docs_chrome("docs.cli.index.start_here", language) + "\n\n")
 
+    parts.append(chrome_anchor("docs.cli.index.choose_family_heading"))
     parts.append(_rst_heading(docs_chrome("docs.cli.index.choose_family_heading", language), "-"))
     parts.append("\n")
     parts.append(".. grid:: 1 1 2 2\n")
@@ -294,6 +305,7 @@ def _render_index_page(
         parts.append("      " + docs_chrome("docs.cli.index.open_family_link", language, family="config") + "\n\n")
 
     # Global flags
+    parts.append(chrome_anchor("docs.cli.index.global_flags_heading"))
     parts.append(".. _cli-reference-global-flags:\n\n")
     parts.append(_rst_heading(docs_chrome("docs.cli.index.global_flags_heading", language), "-"))
     parts.append("\n")
@@ -313,6 +325,7 @@ def _render_index_page(
         parts.append(f"{flag}\n   {desc}\n\n")
 
     # Where to go next
+    parts.append(chrome_anchor("docs.cli.index.where_next_heading"))
     parts.append(_rst_heading(docs_chrome("docs.cli.index.where_next_heading", language), "-"))
     parts.append("\n")
     # One call per line rather than a loop over a key tuple: the locale scanner
@@ -349,11 +362,13 @@ def _render_automation_page(language: OutputLanguage) -> str:
         The complete RST page content.
     """
     parts: list[str] = []
+    parts.append(chrome_anchor("docs.cli.automation.title"))
     parts.append(_rst_heading(docs_chrome("docs.cli.automation.title", language), "="))
     parts.append("\n")
     parts.append(docs_chrome("docs.cli.automation.intro", language) + "\n\n")
 
     # Exit codes
+    parts.append(chrome_anchor("docs.cli.automation.exit_codes_heading"))
     parts.append(".. _cli-reference-exit-codes:\n\n")
     parts.append(_rst_heading(docs_chrome("docs.cli.automation.exit_codes_heading", language), "-"))
     parts.append("\n")
@@ -381,6 +396,7 @@ def _render_automation_page(language: OutputLanguage) -> str:
     parts.append("\n")
 
     # TTY contract
+    parts.append(chrome_anchor("docs.cli.automation.output_contract_heading"))
     parts.append(".. _cli-reference-output-contract:\n\n")
     parts.append(_rst_heading(docs_chrome("docs.cli.automation.output_contract_heading", language), "-"))
     parts.append("\n")
@@ -433,6 +449,7 @@ def _render_schemas_page(language: OutputLanguage, schema_registry: Mapping[str,
         The complete RST page content.
     """
     parts: list[str] = []
+    parts.append(chrome_anchor("docs.cli.schemas.title"))
     parts.append(".. _cli-reference-output-schemas:\n\n")
     parts.append(_rst_heading(docs_chrome("docs.cli.schemas.title", language), "="))
     parts.append("\n")
@@ -654,18 +671,21 @@ def _render_family_reference(
         # why it kept being pruned as an unused key.
         family_parts.extend(
             (
+                chrome_anchor("docs.cli.family.title", command=family),
                 _rst_heading(docs_chrome("docs.cli.family.title", language, command=family), "="),
                 "\n",
                 docs_chrome("docs.cli.family.intro", language, family=family) + "\n\n",
             )
         )
         if direct:
+            family_parts.append(chrome_anchor("docs.cli.family.direct_commands_heading"))
             family_parts.append(
                 _rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-") + "\n"
             )
             family_parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family) + "\n\n")
         family_parts.extend(_render_graph_command(language, node.path, node.spec) for node in direct)
         if groups:
+            family_parts.append(chrome_anchor("docs.cli.family.choose_group_heading"))
             family_parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-") + "\n")
         for group in groups:
             _render_group_reference(family, group, family_nodes, language, output_dir, rendered, family_parts)

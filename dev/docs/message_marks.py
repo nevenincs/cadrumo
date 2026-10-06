@@ -45,9 +45,9 @@ matter how many languages the compile carries.
 
 from __future__ import annotations
 
-import os
+import bisect
 import re
-from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, cast, override
@@ -330,13 +330,19 @@ def active() -> MessagePlan | None:
     return _ACTIVE
 
 
-def _read_catalogue(path: Path) -> dict[str, str]:
-    """Return one gettext catalogue as its usable singular translations, in file order."""
+def _read_catalogue(path: Path) -> tuple[dict[str, str], dict[str, tuple[tuple[str, int], ...]]]:
+    """Return one gettext catalogue's usable translations and where each was extracted.
+
+    The locations are the catalogue's own ``#:`` references, which is how the
+    source language's string is recovered from the right occurrence of a message
+    in the page's own source (:meth:`_SourceText.unfolded`).
+    """
     from babel.messages.pofile import read_po
 
     with path.open("rb") as stream:
         catalogue = read_po(stream)
     translations: dict[str, str] = {}
+    locations: dict[str, tuple[tuple[str, int], ...]] = {}
     for message in catalogue:
         if not isinstance(message.id, str) or not message.id:
             continue
@@ -349,7 +355,11 @@ def _read_catalogue(path: Path) -> dict[str, str]:
         string = message.string
         if isinstance(string, str) and string:
             translations[message.id] = string
-    return translations
+            # A reference with no line of its own says nothing about where the
+            # message stands, so it is not kept: ``line`` is zero or absent for
+            # an entry an extractor could not place.
+            locations[message.id] = tuple((str(filename), line) for filename, line in message.locations if line)
+    return translations, locations
 
 
 def _one_line(value: str) -> str:
@@ -416,8 +426,11 @@ class _SourceText:
         """Index one source file by where each character of its folded form came from."""
         self._folded: list[str] = []
         self._offsets: list[int] = []
+        self._line_starts: list[int] = [0]
         previous_space = True
         for offset, character in enumerate(text):
+            if character == "\n":
+                self._line_starts.append(offset + 1)
             space = character.isspace()
             if space and previous_space:
                 continue
@@ -427,21 +440,63 @@ class _SourceText:
         self._text = text
         self._joined = "".join(self._folded)
 
-    def unfolded(self, message: str) -> str:
+    def unfolded(self, message: str, line: int) -> str:
         """Return the source *message* was folded from, its lines left undented.
 
         A continuation line's indentation is not part of the text the parser
         builds -- the page carries the line break and nothing else -- so the
         recovered stretch carries the same.
+
+        ``line`` is the source line the catalogue says the message was
+        extracted from, and it is what tells one occurrence of the same words
+        from another. A link written as a list item of its own is also written
+        inside a paragraph a few lines above it, and the paragraph wraps where
+        the list item does not: looking the shorter message up from the top of
+        the file recovers the line break of the longer one's occurrence and
+        publishes a break the list item's own build has nowhere. So the search
+        starts at the message's own line.
+
+        A catalogue does not place every message: a table cell is referenced by
+        its file alone. There the stretch stands only where every occurrence in
+        the file was folded from the same one, because nothing says which of
+        them this message is and one recorded string cannot be two.
+
+        Args:
+            message: The message, as the catalogue holds it.
+            line: The 1-based source line it was extracted from, or 1 where the
+                catalogue does not place it.
+
+        Returns:
+            The stretch of source it was folded from, or the message itself
+            where that stretch cannot be identified.
         """
-        found = self._joined.find(_folded(message))
-        if found < 0:
+        folded = _folded(message)
+        if not folded:
             return message
-        span = self._text[self._offsets[found] : self._offsets[found + len(_folded(message)) - 1] + 1]
-        recovered = "\n".join(line.strip() for line in span.splitlines())
-        # The recovery is only trustworthy where it folds back to the message
-        # it was looked up by; where it does not, the folded message stands.
-        return recovered if _folded(recovered) == _folded(message) else message
+        if line > 1:
+            at = self._joined.find(folded, self._folded_index(line))
+            if at >= 0 and _folded(stretch := self._stretch(folded, at)) == folded:
+                return stretch
+        agreed = {stretch for stretch in self._occurrences(folded) if _folded(stretch) == folded}
+        return agreed.pop() if len(agreed) == 1 else message
+
+    def _occurrences(self, folded: str) -> Iterator[str]:
+        """Yield the stretch of source behind every occurrence of *folded*."""
+        at = self._joined.find(folded)
+        while at >= 0:
+            yield self._stretch(folded, at)
+            at = self._joined.find(folded, at + 1)
+
+    def _stretch(self, folded: str, at: int) -> str:
+        """Return the source behind the occurrence of *folded* at *at*, its lines undented."""
+        span = self._text[self._offsets[at] : self._offsets[at + len(folded) - 1] + 1]
+        return "\n".join(piece.strip() for piece in span.splitlines())
+
+    def _folded_index(self, line: int) -> int:
+        """Return where in the folded form the 1-based source *line* begins."""
+        if line <= 1:
+            return 0
+        return bisect.bisect_left(self._offsets, self._line_starts[min(line, len(self._line_starts)) - 1])
 
 
 def _fragment_source(suffix: str, blocks: Iterable[tuple[int, _Block]]) -> str:
@@ -468,20 +523,48 @@ def fragment_docname(docname: str) -> str:
     return f"{page[0]}/{FRAGMENT_PREFIX}{page[2]}" if page[0] else f"{FRAGMENT_PREFIX}{docname}"
 
 
-def _catalogues(locales: Path, domain: str, languages: Sequence[str], source: str) -> dict[str, dict[str, str]] | None:
-    """Return each language's catalogue for one page, or None if no language carries one.
+@dataclass(frozen=True)
+class _Catalogues:
+    """One page's catalogues, and where the messages they share were extracted.
 
-    The language the messages are authored in carries no catalogue, so its
-    translation of a message is the message.
+    Attributes:
+        by_language: Each language's translations, the language the messages are
+            authored in excepted: it carries no catalogue, so its translation of
+            a message is the message.
+        locations: For each message, the source references the first catalogue
+            read carries for it.
     """
+
+    by_language: dict[str, dict[str, str]]
+    locations: dict[str, tuple[tuple[str, int], ...]]
+
+
+def _catalogues(locales: Path, domain: str, languages: Sequence[str], source: str) -> _Catalogues | None:
+    """Return the catalogues for one page, or None if no language carries one."""
     found: dict[str, dict[str, str]] = {}
+    locations: dict[str, tuple[tuple[str, int], ...]] = {}
     for language in languages:
         if language == source:
             continue
         path = locales / language / "LC_MESSAGES" / f"{domain}.po"
         if path.is_file():
-            found[language] = _read_catalogue(path)
-    return found or None
+            found[language], read = _read_catalogue(path)
+            locations = locations or read
+    return _Catalogues(by_language=found, locations=locations) if found else None
+
+
+def _extracted_from(locations: Sequence[tuple[str, int]], source: Path) -> int:
+    """Return the line of *source* a message was extracted from, or its first line.
+
+    A catalogue reference names the file it was extracted from as well as the
+    line, and a message a page includes from elsewhere is extracted from that
+    other file: its line says nothing about this source, so the whole file is
+    searched instead.
+    """
+    for filename, line in locations:
+        if Path(filename).name == source.name:
+            return line
+    return 1
 
 
 def prepare(
@@ -536,11 +619,12 @@ def prepare(
         source = doc2path(docname)
         if catalogues is not None:
             authored = _SourceText(source.read_text(encoding=_UTF_8))
-            for message in next(iter(catalogues.values())):
+            for message in next(iter(catalogues.by_language.values())):
+                line = _extracted_from(catalogues.locations.get(message, ()), source)
                 translations = [
-                    authored.unfolded(message)
+                    authored.unfolded(message, line)
                     if language == source_language
-                    else _one_line(catalogues[language].get(message, ""))
+                    else _one_line(catalogues.by_language[language].get(message, ""))
                     for language in plan.languages
                 ]
                 # A message no language has translated yet is left English, which
@@ -687,14 +771,13 @@ def harvest(plan: MessagePlan, slots: CompileSlots, page_path: Callable[[str], P
             # The paragraph's own spaces around the translation are the ones
             # that let its outermost inline markup be recognised; exactly one
             # of each is given back.
-            # A recorded string is put straight into a finished page, so a line
-            # break inside it has to be the terminator that page already uses:
-            # the one the writer that wrote it used, not the one reading the
-            # fragment back through universal newlines left.
+            # A recorded string stands in a page stored without the terminators
+            # of the platform that wrote it, which is the form reading the
+            # fragment back through universal newlines already leaves.
             markup = _unwrapped(
                 found.group(2).removeprefix(" ").removesuffix(" ").replace(own, 'href="#'),
                 anchors,
-            ).replace("\n", os.linesep)
+            )
             strings = rendered.setdefault(block.mark, [None] * len(plan.languages))
             strings[block.language] = markup
         page.unlink()

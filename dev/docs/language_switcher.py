@@ -16,14 +16,12 @@ two forms of the site comparable.
 
 from __future__ import annotations
 
-import os
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.external_constants import OutputLanguage
 
 from ._locale_chrome import docs_fragment
-from .compile_slots import active
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
@@ -118,12 +116,11 @@ def switcher_of_page(
     Returns:
         The element, or the mark standing for every language's element.
     """
-    # The two line terminators are not the same terminator. A single-language
-    # build hands this to a template and the writer gives the page its own; a
-    # recorded string is put straight into a finished page, so it has to carry
-    # the one that page already uses.
-    terminator = "\n" if active() is None else os.linesep
 
+    # A line terminator is a line feed on either side of the compile: handed to
+    # a template, where the writer gives the page its own, and in a recorded
+    # string, which stands in a page stored without the terminators of the
+    # platform that wrote it (:func:`~dev.docs.language_roots.compose_root`).
     def render(carried: OutputLanguage) -> str:
         return switcher_markup(
             languages,
@@ -132,7 +129,7 @@ def switcher_of_page(
             root_uri=root_uri,
             pagename=pagename,
             aria_label=aria_label,
-            newline=terminator,
+            newline="\n",
         )
 
     return docs_fragment(render, language)

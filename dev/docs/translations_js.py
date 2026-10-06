@@ -29,7 +29,6 @@ from, because the compile writes no canonical file to take a key of.
 
 from __future__ import annotations
 
-import os
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -199,11 +198,12 @@ def _supply_tag(
     if not callable(pathto):
         raise TypeError("the page context carries no pathto resolver")
     href = str(pathto(f"_static/{TRANSLATIONS_SCRIPT}", resource=True))
-    # A recorded string is put straight into a finished page, so the line break
-    # it carries has to be the terminator that page already uses.
+    # A recorded string stands in a page stored without the terminators of the
+    # platform that wrote it, so the line break it carries is a line feed
+    # (:func:`~dev.docs.language_roots.compose_root`).
     tag = slots.mark(
         Rendering.VERBATIM,
-        [translations_js_tag(href, key, newline=os.linesep) if key else "" for key in written.keys],
+        [translations_js_tag(href, key, newline="\n") if key else "" for key in written.keys],
     )
     context["cadrumo_translations_js_tag"] = lambda script: tag if str(script) == written.anchor else ""
 

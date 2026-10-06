@@ -426,3 +426,109 @@ def test_a_message_reaching_bare_markup_is_refused(tmp_path: Path) -> None:
 
     with pytest.raises(CompileSlotsError, match="reached page markup"):
         factor_page(f"<p data-x={MARK_OPEN}0{MARK_CLOSE}>text</p>", slots)
+
+
+def _located_catalogue(root: Path, language: str, docname: str, entries: list[tuple[int, str, str]]) -> None:
+    """Write one catalogue whose entries carry the source reference gettext extracts."""
+    path = root / "locales" / language / "LC_MESSAGES" / f"{docname}.po"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    written = "".join(
+        f'\n#: ../../{docname}.md:{line}\nmsgid "{message}"\nmsgstr "{string}"\n' for line, message, string in entries
+    )
+    path.write_text(_HEADER + written, encoding="utf-8")
+
+
+def test_the_source_language_reads_the_occurrence_the_message_was_extracted_from(tmp_path: Path) -> None:
+    """A message is recovered from its own lines, not from another message's.
+
+    The same link is a list item of its own and is also written inside a
+    paragraph that wraps across lines. Both fold to the same words, so looking
+    the shorter message up from the top of the file recovers the paragraph's
+    line break and publishes a break the list item's own build has nowhere.
+    The catalogue says which lines each message came from, and that is the
+    occurrence read.
+    """
+    source = tmp_path / "guide.md"
+    source.write_text(
+        "# a page\n"
+        "\n"
+        "For the lifecycle, see [The filing\n"
+        "workflow](filing-spine.md).\n"
+        "\n"
+        "- [The filing workflow](filing-spine.md)\n",
+        encoding="utf-8",
+    )
+    _located_catalogue(
+        tmp_path,
+        "es",
+        "guide",
+        [
+            (3, "For the lifecycle, see [The filing workflow](filing-spine.md).", "Para el ciclo, ver [x](y.md)."),
+            (6, "[The filing workflow](filing-spine.md)", "[El flujo](filing-spine.md)"),
+        ],
+    )
+    _prepared(tmp_path, ["guide"])
+
+    written = (tmp_path / f"{FRAGMENT_PREFIX}guide.md").read_text(encoding="utf-8")
+
+    # The list item reads as one line, as its own line in the source does.
+    assert f"{BLOCK_OPEN}2{BLOCK_MID} [The filing workflow](filing-spine.md) {BLOCK_CLOSE}" in written
+    # The paragraph keeps the line break its own source carries.
+    assert "For the lifecycle, see [The filing\nworkflow](filing-spine.md)." in written
+
+
+def test_a_message_the_catalogue_locates_in_another_file_is_looked_up_whole(tmp_path: Path) -> None:
+    """A reference into another file says nothing about this source, so the file is searched."""
+    source = tmp_path / "guide.md"
+    source.write_text("# a page\n\nA sentence that\nwraps.\n", encoding="utf-8")
+    path = tmp_path / "locales" / "es" / "LC_MESSAGES" / "guide.po"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f'{_HEADER}\n#: ../../included/elsewhere.md:400\nmsgid "A sentence that wraps."\nmsgstr "Una frase."\n',
+        encoding="utf-8",
+    )
+    _prepared(tmp_path, ["guide"])
+
+    written = (tmp_path / f"{FRAGMENT_PREFIX}guide.md").read_text(encoding="utf-8")
+
+    assert "A sentence that\nwraps." in written
+
+
+def test_a_message_the_catalogue_does_not_place_stands_only_where_the_file_agrees(tmp_path: Path) -> None:
+    """Two occurrences folded from different lines leave the message folded.
+
+    A table cell is referenced by its file alone, so nothing says which
+    occurrence this message is. One recorded string cannot be two, and the
+    folded message is what every language's build of that cell reads.
+    """
+    source = tmp_path / "guide.md"
+    source.write_text(
+        "# a page\n\nOn a narrow terminal, use `[`\nand `]` to change page.\n\n| `[` and `]` | Page |\n",
+        encoding="utf-8",
+    )
+    path = tmp_path / "locales" / "es" / "LC_MESSAGES" / "guide.po"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f'{_HEADER}\n#: ../../guide.md\nmsgid "`[` and `]`"\nmsgstr "`[` y `]`"\n',
+        encoding="utf-8",
+    )
+    _prepared(tmp_path, ["guide"])
+
+    written = (tmp_path / f"{FRAGMENT_PREFIX}guide.md").read_text(encoding="utf-8")
+
+    assert f"{BLOCK_OPEN}0{BLOCK_MID} `[` and `]` {BLOCK_CLOSE}" in written
+
+
+def test_a_message_the_catalogue_does_not_place_is_recovered_where_the_file_has_one_answer(tmp_path: Path) -> None:
+    """A wrapped paragraph that stands once keeps its own line break."""
+    source = tmp_path / "guide.md"
+    source.write_text("# a page\n\nA sentence that\nwraps once.\n", encoding="utf-8")
+    path = tmp_path / "locales" / "es" / "LC_MESSAGES" / "guide.po"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f'{_HEADER}\n#: ../../guide.md\nmsgid "A sentence that wraps once."\nmsgstr "Una frase."\n',
+        encoding="utf-8",
+    )
+    _prepared(tmp_path, ["guide"])
+
+    assert "A sentence that\nwraps once." in (tmp_path / f"{FRAGMENT_PREFIX}guide.md").read_text(encoding="utf-8")

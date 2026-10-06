@@ -18,6 +18,7 @@ form does not give back byte for byte.
 from __future__ import annotations
 
 import json
+import os
 import zlib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -96,6 +97,28 @@ def _page_text(content: bytes) -> str | None:
     return text if text.encode(_UTF_8) == content else None
 
 
+#: What a page's own build ends each of its lines with. Sphinx writes a page as
+#: text, so the terminator is the one the writing platform uses.
+_PLATFORM_TERMINATOR: Final[str] = os.linesep
+
+
+def _without_terminators(page: str) -> str:
+    """Return one page's text with the writing platform's line terminators taken off.
+
+    The stored form has to be the same bytes whichever platform compiled it, and
+    the terminator is the one thing in a page that is not: the same compile
+    writes ``\\r\\n`` on Windows where it writes ``\\n`` on Linux. So a page is
+    stored with one line feed per line and nothing of the platform that wrote
+    it, and :func:`_with_terminators` puts the composing platform's own back.
+    """
+    return page.replace("\r\n", "\n")
+
+
+def _with_terminators(page: str) -> str:
+    """Return one page's text ended as this platform's own build ends its lines."""
+    return page if _PLATFORM_TERMINATOR == "\n" else page.replace("\n", _PLATFORM_TERMINATOR)
+
+
 def factor_roots(files: Mapping[str, Mapping[str, Path]], destination: Path) -> Layout:
     """Write the same site in every language as one structure and each language's text.
 
@@ -135,16 +158,20 @@ def factor_roots(files: Mapping[str, Mapping[str, Path]], destination: Path) -> 
                     language_files[language].append(path)
             continue
         contents = [source.read_bytes() for source in present]
-        if all(content == contents[0] for content in contents[1:]):
-            _write(_inside(destination / STRUCTURE_DIRECTORY, path), contents[0])
-            shared.append(path)
-            continue
         texts = [_page_text(content) for content in contents] if path.endswith(_PAGE_SUFFIX) else []
-        page_texts = [page for page in texts if page is not None]
+        page_texts = [_without_terminators(page) for page in texts if page is not None]
         if page_texts and len(page_texts) == len(contents):
+            if all(page == page_texts[0] for page in page_texts[1:]):
+                _write(_inside(destination / STRUCTURE_DIRECTORY, path), page_texts[0].encode(_UTF_8))
+                shared.append(path)
+                continue
             structure = text.structure(factor_page(page_texts))
             _write(_inside(destination / STRUCTURE_DIRECTORY, path), structure.encode(_UTF_8))
             pages.append(path)
+            continue
+        if all(content == contents[0] for content in contents[1:]):
+            _write(_inside(destination / STRUCTURE_DIRECTORY, path), contents[0])
+            shared.append(path)
             continue
         for language, content in zip(languages, contents, strict=True):
             _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), content)
@@ -287,14 +314,15 @@ def store_compiled_root(
         keys[f"{PurePosixPath(path).name}?v={asset_cache_key(content)}"] = tuple(written)
     for path in page_paths:
         content = compiled[path].read_bytes()
-        page = _page_text(content)
-        if page is None:  # pragma: no cover - the page text was read once already
+        text_of_page = _page_text(content)
+        if text_of_page is None:  # pragma: no cover - the page text was read once already
             raise LanguageRootsError(f"{path} stopped being a page between the two passes")
+        page = _without_terminators(text_of_page)
         factored: list[str | tuple[str, ...]] = []
         for part in _factor_compiled_page(page, slots):
             factored.extend(_cache_key_slots(part, keys) if isinstance(part, str) else [part])
         if not any(isinstance(part, tuple) for part in factored):
-            _write(_inside(destination / STRUCTURE_DIRECTORY, path), content)
+            _write(_inside(destination / STRUCTURE_DIRECTORY, path), page.encode(_UTF_8))
             shared.append(path)
             continue
         structure = text.structure(factored)
@@ -355,7 +383,12 @@ def _stored(stored: Path, kind: str, language: str, path: str, strings: Sequence
     if kind == LANGUAGES_DIRECTORY:
         return _inside(stored / LANGUAGES_DIRECTORY / language, path).read_bytes()
     content = _inside(stored / STRUCTURE_DIRECTORY, path).read_bytes()
-    return compose_page(content.decode(_UTF_8), strings).encode(_UTF_8) if kind == TEXT_DIRECTORY else content
+    if kind == TEXT_DIRECTORY:
+        return _with_terminators(compose_page(content.decode(_UTF_8), strings)).encode(_UTF_8)
+    # A page every language has the same bytes of is stored once, and stored as
+    # a page: without the terminators of the platform that wrote it.
+    page = _page_text(content) if path.endswith(_PAGE_SUFFIX) else None
+    return content if page is None else _with_terminators(page).encode(_UTF_8)
 
 
 def _kinds(layout: Layout, language: str) -> dict[str, str]:

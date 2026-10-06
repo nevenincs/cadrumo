@@ -55,6 +55,10 @@ class ModeloOverview:
     """
 
     title: str
+    #: The title as the SOURCE language reads it, which is what names the
+    #: page's anchor: the anchor is one string for every language root, and
+    #: ``title`` is the reader's own (:func:`~dev.docs._locale_chrome.chrome_anchor`).
+    source_title: str
     official_name: str
     #: Curated Handbook definitions by language tag, absent where unauthored.
     definitions: Mapping[str, str]

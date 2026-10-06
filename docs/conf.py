@@ -1987,6 +1987,13 @@ def setup(app):
 
     _register_collapsed_navigation(app)
 
+    # A generated page's heading is written in the reader's language, so the
+    # anchor its section would be named after is too. Each such heading names
+    # its own anchor instead, the same one in every language root.
+    from dev.docs.section_anchors import register as _register_section_anchors
+
+    _register_section_anchors(app)
+
     # The theme variables and the chrome strings are one file per site root
     # rather than a block in every page's head.
     from dev.docs.shared_page_assets import register as _register_shared_page_assets

@@ -24,21 +24,24 @@ written.
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
 
-from .compile_slots import CompileSlots, Rendering, active
+from .compile_slots import CompileSlots, Rendering, active, in_language
+from .section_anchors import heading_anchor, section_anchor_directive
 
 __all__ = [
+    "ANCHOR_LANGUAGE",
     "DocsChromeError",
+    "chrome_anchor",
     "docs_chrome",
     "docs_fragment",
     "docs_line",
     "markup_page",
+    "same_wording",
     "template_chrome",
     "toctree_title_chrome",
 ]
@@ -76,6 +79,40 @@ def docs_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
             surface at build time rather than reaching a reader.
     """
     return _chrome(Rendering.DOCUTILS, key, language, values)
+
+
+#: The language whose words name a generated heading's anchor. Every language
+#: root publishes the same anchor, and English is the one whose roots already
+#: shipped theirs, so they keep them.
+ANCHOR_LANGUAGE = OutputLanguage.EN
+
+
+def chrome_anchor(key: str, /, **values: object) -> str:
+    """Return the directive naming the anchor of the chrome heading that follows.
+
+    A heading resolved through :func:`docs_chrome` is written in the reader's
+    language, so the anchor docutils would name its section is written there
+    too (:mod:`dev.docs.section_anchors`). The anchor is derived here from the
+    same key's English words, which is what the English roots have published
+    all along, and the directive makes every language root publish it.
+
+    Args:
+        key: The dotted catalogue key holding the heading, as the heading's own
+            :func:`docs_chrome` call names it.
+        values: The same placeholder values that call supplies; a value that is
+            itself a mark is read in the anchor's language.
+
+    Returns:
+        The directive to write immediately before the heading.
+
+    Raises:
+        DocsChromeError: As :func:`docs_chrome` raises it.
+    """
+    read = {
+        name: in_language(value, ANCHOR_LANGUAGE.value) if isinstance(value, str) else value
+        for name, value in values.items()
+    }
+    return section_anchor_directive(heading_anchor(_authored(key, ANCHOR_LANGUAGE, read)))
 
 
 def template_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
@@ -186,6 +223,52 @@ def _chrome(rendering: Rendering, key: str, language: OutputLanguage, values: Ma
     return slots.mark(rendering, strings)
 
 
+def same_wording(value: str, language: OutputLanguage, /, *, as_source: Callable[[str], str] = str) -> str:
+    """Return one wording no language changes, as each language's own build writes it.
+
+    A value a generator reads rather than translates is data: a cataloguer's
+    note on a legal provision, a CLI command's own help sentence, a setting's
+    description. Every language's page reads the same words. What those words
+    LOOK like is not the same: the smart-quotes transform runs in the language
+    of the build, so an apostrophe closes as ``'`` where English reads the page
+    and as ``"`` where Spanish does, and one compile has one Sphinx language to
+    educate it in.
+
+    So the value is recorded as the same string for every language, and each
+    language's own reading of it is what the composed page carries. Inside
+    :func:`markup_page` that reading is the string rendered as markup of that
+    page, which is what a value carrying an inline literal or a role needs:
+    recorded as plain text it would reach the reader as the markup it was
+    written as.
+
+    The value reaches the page through the generator's own markup, where it is
+    escaped as that markup requires and the parser takes the escaping back off.
+    What is recorded is therefore the value itself.
+
+    Args:
+        value: The wording, as its own authority holds it.
+        language: The language a single-language build renders.
+        as_source: Escapes the value as the generator's own markup requires,
+            and defaults to writing it as it stands where nothing escapes it.
+
+    Returns:
+        The escaped value, or the mark standing for every language's reading.
+    """
+    slots = active()
+    # A value carrying a paragraph break is a BLOCK of markup -- one CLI help
+    # sentence carries a blockquote and a definition list -- where a recorded
+    # rendering is one inline run. Such a value stands as the generator wrote
+    # it, which is what every language's build has always read on that page.
+    if slots is None or "\n\n" in value:
+        return as_source(value)
+    strings = [value] * len(slots.languages)
+    if _PAGE is not None:
+        from .message_marks import rendered_markup
+
+        return rendered_markup(slots, _PAGE, strings)
+    return slots.mark(Rendering.DOCUTILS, strings)
+
+
 def _per_language(slots: CompileSlots, key: str, values: Mapping[str, object]) -> list[str]:
     """Return one language's authored string per language, each value's marks read in it."""
     return [
@@ -251,16 +334,14 @@ def docs_line(render: Callable[[OutputLanguage], str | None], language: OutputLa
     Returns:
         The line break and element, empty where the language has neither.
     """
-    # The two line breaks are not the same line break. Outside the compile this
-    # returns RST source, where a newline is a newline and the HTML writer gives
-    # the page its own terminator. Under the compile the recorded string is put
-    # straight into the finished page, so it has to carry the terminator that
-    # page already uses -- the one the writer that wrote it used.
-    terminator = "\n" if active() is None else os.linesep
 
+    # A line break is a line feed on either side of the compile: in RST source,
+    # where the HTML writer gives the page its own terminator, and in a recorded
+    # string, which stands in a page stored without the terminators of the
+    # platform that wrote it (:func:`~dev.docs.language_roots.compose_root`).
     def line(carried: OutputLanguage) -> str:
         element = render(carried)
-        return f"{terminator}{element}" if element else ""
+        return f"\n{element}" if element else ""
 
     return docs_fragment(line, language)
 

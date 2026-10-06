@@ -309,17 +309,16 @@ def test_resolving_leaves_a_string_with_no_marks_alone(slots: CompileSlots) -> N
 def test_an_element_only_some_languages_carry_owns_its_own_line_break(slots: CompileSlots) -> None:
     """A language without the element composes to no line, not to an empty one.
 
-    The element's line break is the one the finished page already uses, which is
-    the terminator the HTML writer wrote it with, so the page under test is
-    joined with that terminator too.
+    The element's line break is a line feed, as every line break of a stored
+    page is: the platform's own terminator is put back when the page is composed
+    (:func:`~dev.docs.language_roots.compose_root`), and nothing before that
+    knows which platform will compose it.
     """
-    import os
-
     from cadrumo.core.external_constants import OutputLanguage
 
     from .._locale_chrome import docs_line
 
-    break_ = os.linesep
+    break_ = "\n"
     titles = {OutputLanguage.EN: "<h3>Activity</h3>", OutputLanguage.ES: "<h3>Actividad</h3>"}
     lines = ["<header>", "<span>01</span>" + docs_line(titles.get, OutputLanguage.EN), "</header>"]
     composed = {}

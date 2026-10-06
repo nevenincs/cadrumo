@@ -659,6 +659,27 @@ def language_text(
     return slots.mark(rendering, [value_of(carried) for carried in slots.languages])
 
 
+def in_language(value: str, language: str) -> str:
+    """Return what *language* reads where *value* may hold marks.
+
+    A creation site that has to say something about a value in ONE language --
+    the anchor a heading is published under is derived from the source
+    language's words -- cannot read a mark, which stands for every language at
+    once. Outside the one compile the value is already that one language's.
+
+    Args:
+        value: A string that may hold marks.
+        language: The language tag to read it in.
+
+    Returns:
+        The value as that language reads it.
+    """
+    slots = _ACTIVE
+    if slots is None or MARK_OPEN not in value:
+        return value
+    return slots.resolved(value, slots.languages.index(language))
+
+
 def widest(value: str) -> int:
     """Return how many characters *value* reads as in the language that reads it longest.
 
