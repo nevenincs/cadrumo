@@ -10,7 +10,8 @@ import {
 import type { LogRecord, LogSourceState } from "../ipc/contract";
 import { useStrings } from "../shell/strings";
 import { ContextMenu } from "./ContextMenu";
-import { DEFAULT_FILTERS, RecordList, type RecordFilters } from "./RecordList";
+import { DEFAULT_FILTERS, type RecordFilters } from "../shell/records";
+import { RecordList } from "./RecordList";
 
 // The log view over fixed records, in every state its source can be in.
 type Args = {

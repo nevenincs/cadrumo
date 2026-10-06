@@ -32,21 +32,16 @@ import type {
 } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
+import { RecordList, type RecordMenuRequest } from "./components/RecordList";
 import {
   DEFAULT_FILTERS,
   LEVELS,
-  RecordList,
   recordLine,
   type RecordFilters,
-  type RecordMenuRequest,
-} from "./components/RecordList";
+} from "./shell/records";
 import { Settings } from "./components/Settings";
-import {
-  Account,
-  accountLabel,
-  SignedOut,
-  SignInDialog,
-} from "./components/SignIn";
+import { accountLabel } from "./components/accountWords";
+import { Account, SignedOut, SignInDialog } from "./components/SignIn";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useFilingCalendar } from "./shell/calendar";
 import { useMessages } from "./shell/messages";

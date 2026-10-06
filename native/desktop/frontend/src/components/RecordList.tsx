@@ -20,30 +20,14 @@ import { Spinner } from "@/components/ui/spinner";
 import type { LogLevel, LogRecord, LogSourceState } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 import { fromPointer } from "../shell/pointer";
+import {
+  DEFAULT_FILTERS,
+  LEVELS,
+  shortLogger,
+  type RecordFilters,
+} from "../shell/records";
 import type { MenuAnchor } from "./ContextMenu";
 import { useStrings } from "../shell/strings";
-
-export const LEVELS: readonly LogLevel[] = [
-  "DEBUG",
-  "INFO",
-  "WARNING",
-  "ERROR",
-  "CRITICAL",
-];
-
-export type RecordFilters = {
-  text: string;
-  minLevel: number;
-  hiddenSources: string[];
-  logger: string | null;
-};
-
-export const DEFAULT_FILTERS: RecordFilters = {
-  text: "",
-  minLevel: 1,
-  hiddenSources: [],
-  logger: null,
-};
 
 /** Where a record's menu opens, and whether a pointer asked for it. */
 export type RecordMenuRequest = {
@@ -55,12 +39,6 @@ export type RecordMenuRequest = {
 };
 
 const rank = (level: LogLevel | null) => (level ? LEVELS.indexOf(level) : 1);
-export const shortLogger = (logger: string | null) =>
-  logger ? logger.split(".").slice(-2).join(".") : "";
-
-export function recordLine(record: LogRecord): string {
-  return `${record.timestamp} [${record.level ?? "-"}] ${record.logger ?? record.source}: ${record.message}`;
-}
 
 // How many of the newest matching records are in the document at once. The
 // log holds up to ten thousand; drawing them all costs every scroll and every
