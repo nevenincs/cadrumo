@@ -226,8 +226,11 @@ exclude_patterns = [
 if _USER_SCOPE:
     # User scope excludes the generated API autodoc tree and the viewcode
     # ``_modules`` source pages from the read set entirely, so no app module is
-    # imported to render them.
-    exclude_patterns += ["api/**", "_modules/**"]
+    # imported to render them. The technical collection is excluded with them:
+    # it documents the code for the people who work on it, in English, and is
+    # no more part of what a taxpayer reads, or of what is translated and
+    # packaged, than the API reference is.
+    exclude_patterns += ["api/**", "_modules/**", "technical/**"]
 
 _DOCS_ROOT = Path(__file__).resolve().parent
 _ONLY_SOURCES = {

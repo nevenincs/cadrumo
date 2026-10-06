@@ -71,10 +71,13 @@ _LANGUAGE_DIRECTORY_TOKEN: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9]+(?:
 #: asset / template / inventory infrastructure, the executed cli-sequence
 #: contracts, and the two build-time generated surfaces (the CLI reference and
 #: the ``_generated`` glossary/casilla pages, both gitignored English build
-#: products). The authored user surface is everything else.
+#: products), and the technical collection, which documents the code for the
+#: people who work on it and is published in English with the API reference.
+#: The authored user surface is everything else.
 _EXCLUDED_TOP_DIRS: Final[frozenset[str]] = frozenset(
     {
         "api",
+        "technical",
         "_modules",
         "_build",
         "_static",
