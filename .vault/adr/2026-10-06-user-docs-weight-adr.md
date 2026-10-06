@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ef4cbb9eedb7a2247e87f077ffaa18d6243cfd63d0bc08b6a6ba860a6f25acc'
+body_hash: 'sha256:cf1fb276acc97a54ab423f68e4e40fbb09843edf84365e6c2b5a550644f1709e'
 related:
   - "[[2026-10-06-user-docs-weight-research]]"
   - "[[2026-07-18-user-docs-localization-adr]]"
@@ -13,6 +13,7 @@ related:
   - "[[2026-07-15-docs-terminology-search-adr]]"
   - "[[2026-09-27-website-repository-boundary-docs-static-delivery-adr]]"
   - '[[2026-10-04-desktop-shell-adr]]'
+  - '[[2026-06-10-docs-terminology-search-adr]]'
 ---
 
 # `user-docs-weight` adr: `one documentation structure, each language as text` | (**status:** `accepted`)
@@ -51,9 +52,9 @@ The documentation is compiled once per language and shipped once per language. E
 - D3, the desktop package: one structure tree, one text file per language, one copy of each file that is identical in every language, and per language only the files that differ and are not pages. The scheme handler composes a page on request. The staging manifest says how each address is served.
 - D4, the published site: the publisher composes each language's pages from the structure and the text into the static roots it uploads.
 - D5, the order in which C2 is reached: until a localization mechanism emits its strings directly, that mechanism's per-language build stays as the source of its strings and as the oracle for D2. The mechanisms move one at a time, each proven by D2 against the build it retires: the generated references first (casilla, legal, glossary and CLI pages, which hold most of the structure and all of the registry queries), then the site chrome, then the authored pages translated through gettext.
-- Not decided here: the search index, 63.5 MB and 60,232 files across four languages, which after C1 is the largest part of what a language adds. It needs its own decision against D4 and D5 of the terminology-search decisions.
+- D6, one search index. Operator direction 2026-10-06: "ONE index because it already carries all languages and we filter." The site has one Pagefind index, stored once at the site's apex and loaded by every language's pages. A page is one record that carries its own language as a filter. A term, casilla, legal or CLI record is indexed once, carries every language's text as it does today, and matches every language's filter. The search controller filters by the language of the page it runs on and opens a cross-language record inside that language's root. The index was 63.5 MB in 60,232 files across four languages, most of it the same casilla records four times.
 
-Affected wording in `2026-07-18-user-docs-localization-adr`: its Implementation item "Build matrix" and its Constraint on per-language `-W` builds describe the means this decision replaces, and remain in force only as D5 says, mechanism by mechanism. D4 of `2026-09-24-docs-build-performance-adr` (language roots build concurrently) lapses when the last per-language build is retired.
+Affected wording in `2026-07-18-user-docs-localization-adr`: its Implementation item "Build matrix" and its Constraint on per-language `-W` builds describe the means this decision replaces, and remain in force only as D5 says, mechanism by mechanism. D4 of `2026-09-24-docs-build-performance-adr` (language roots build concurrently) lapses when the last per-language build is retired. D6 replaces the per-language index of D5 in `2026-06-10-docs-terminology-search-adr` and the localization decision's constraint that the index is built once per language; the record kinds, their ranking tiers and their destinations stay as those decisions set them.
 
 Affected wording in `2026-10-04-desktop-shell-adr`: it places the documentation under `docs/user/` in the published layout, English at the top and the other languages under `<lang>/`, with a manifest of languages, entries and a sha256 inventory. Under D3 that layout is the layout of the addresses the scheme handler answers, which the language switcher depends on, and no longer the layout of the files stored. The inventory covers the files stored, and the manifest also says how each address is served. Its path containment, closed media-type table, script hashes and content security policy apply to the composed response as they did to the file.
 
@@ -67,4 +68,4 @@ The languages differ in text and in nothing else, so text is the only thing a la
 - The desktop's scheme handler gains composition, and the package contract changes with it.
 - Each retired per-language build removes its share of the compile; when the last is gone the documentation is compiled once.
 - A structure is not a page a browser can open; anything that reads the package's files directly must compose first.
-- The search index becomes the largest per-language cost and the next decision.
+- Search works across languages from one index: a reader sees pages in the language being read, and the term, casilla, legal and CLI records every language shares.
