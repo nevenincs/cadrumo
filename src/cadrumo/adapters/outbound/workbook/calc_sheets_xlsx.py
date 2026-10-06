@@ -64,6 +64,7 @@ from ....application.storage.calc_sheets.records import (
     column_index_to_letters,
 )
 from ....application.storage.calc_sheets.theme import (
+    FORM_SHOW_GRIDLINES,
     ROLE_STYLES,
     STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,
@@ -434,6 +435,8 @@ def _apply_views(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) 
         sheet.page_setup.fitToWidth = 1
         sheet.page_setup.fitToHeight = 0
         sheet.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    if TabName.FORM in sheets:
+        sheets[TabName.FORM].sheet_view.showGridLines = FORM_SHOW_GRIDLINES
     for frozen in plan.frozen_views:
         sheet = sheets[frozen.tab]
         sheet.freeze_panes = _cell(sheet, row=frozen.frozen_rows + 1, column=frozen.frozen_columns + 1)

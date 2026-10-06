@@ -21,6 +21,7 @@ from ....application.storage.calc_sheets.records import (
     TabName,
 )
 from ....application.storage.calc_sheets.theme import (
+    FORM_SHOW_GRIDLINES,
     ROLE_STYLES,
     STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,
@@ -283,6 +284,16 @@ def build_form_geometry_requests(
                     },
                     "properties": {"pixelSize": height.height_pixels},
                     "fields": "pixelSize",
+                }
+            }
+        )
+    form_id = sheet_id_by_tab.get(TabName.FORM.value)
+    if TabName.FORM in plan.tabs and form_id is not None:
+        requests.append(
+            {
+                "updateSheetProperties": {
+                    "properties": {"sheetId": form_id, "gridProperties": {"hideGridlines": not FORM_SHOW_GRIDLINES}},
+                    "fields": "gridProperties.hideGridlines",
                 }
             }
         )

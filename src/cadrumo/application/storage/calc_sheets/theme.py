@@ -24,6 +24,7 @@ from typing import Final, Literal
 # font rendered by the live Sheets transport.
 WORKBOOK_FONT_FAMILY: Final[str] = "Roboto Mono"
 FORM_FONT_FAMILY: Final[str] = "Arial"
+FORM_SHOW_GRIDLINES: Final[bool] = False
 WORKBOOK_FONT_SIZE: Final[int] = 11
 
 STYLED_RANGE_VERTICAL_ALIGN: Final[str] = "middle"

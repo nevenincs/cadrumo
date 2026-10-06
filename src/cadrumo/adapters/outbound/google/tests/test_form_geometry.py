@@ -74,6 +74,7 @@ def test_both_transports_preserve_form_geometry() -> None:
     assert str(next(iter(form.merged_cells.ranges))) == "B2:L2"
     assert form["B2"].value == "Liquidación"
     assert form.row_dimensions[2].height == 36
+    assert form.sheet_view.showGridLines is False
     assert form["B2"].border.top.style == "thin"
     requests = build_form_geometry_requests(plan, sheet_id_by_tab={"Modelo": 42})
     assert requests[0]["mergeCells"]["range"] == {
@@ -84,6 +85,7 @@ def test_both_transports_preserve_form_geometry() -> None:
         "endColumnIndex": 12,
     }
     assert requests[1]["updateDimensionProperties"]["properties"]["pixelSize"] == 48
+    assert requests[2]["updateSheetProperties"]["properties"]["gridProperties"]["hideGridlines"] is True
     styled = build_styled_range_requests(plan, sheet_id_by_tab={"Modelo": 42})
     assert styled[0]["repeatCell"]["cell"]["userEnteredFormat"]["borders"]["top"]["style"] == "SOLID"
 
