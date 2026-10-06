@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { nameProblem, passwordProblem, targetOf } from "../src/shell/profiles";
+import {
+  nameable,
+  nameProblem,
+  passwordProblem,
+  targetOf,
+} from "../src/shell/profiles";
 import { canSignIn, phaseOf } from "../src/shell/signIn";
 import type { ProfileList, SignInStatus } from "../src/ipc/contract";
 
@@ -37,6 +42,52 @@ test("with several profiles and none selected there is no profile to send a pass
   expect(targetOf(list(["Ana", "Berta"]), null)).toBeNull();
   expect(targetOf(list([]), null)).toBeNull();
   expect(targetOf(null, "Ana")).toBeNull();
+});
+
+test("a list that could not be read coherently names nobody", () => {
+  const stale = list(["Ana", "Berta"], 0, false);
+  expect(targetOf(stale, null)).toBeNull();
+  expect(targetOf(stale, "Berta")).toBeNull();
+  // And is not a list of profiles to sign in to.
+  expect(phaseOf(true, status(), false, stale)).toBe("no-profile");
+});
+
+test("a name the product's command line would rewrite is refused, and not passed", () => {
+  const held = list(["Ana Soler"]);
+  for (const name of [
+    "%USERNAME% y Cia",
+    "Rebajas 50%",
+    "Caja $USERNAME",
+    "Taller [2025]",
+    "Todo*",
+    "Cuál?",
+    "~",
+    "~ana",
+    "Ana\tSoler",
+    "Ana\nSoler",
+  ]) {
+    expect(nameProblem(name, held), name).toBe("characters");
+    expect(nameable(name), name).toBe(false);
+  }
+  for (const name of [
+    "Ana~Maria & Hijos (2025)",
+    "Taller Ribera, S.L.",
+    "漢á",
+    "x".repeat(160),
+  ]) {
+    expect(nameProblem(name, held), name).toBeNull();
+    expect(nameable(name), name).toBe(true);
+  }
+  for (const name of ["", " Ana", "Ana ", "-Ana", "x".repeat(161)])
+    expect(nameable(name), name).toBe(false);
+});
+
+test("two names are one by their letters, not by the system's language", () => {
+  const held = list(["ILKER", "Straße"]);
+  expect(nameProblem("ilker", held)).toBe("taken");
+  // Dotless and dotted i are different letters to the product.
+  expect(nameProblem("ılker", held)).toBeNull();
+  expect(nameProblem("STRASSE", held)).toBeNull();
 });
 
 test("a profile's name is refused when blank, hyphen-led, too long, or another profile's", () => {

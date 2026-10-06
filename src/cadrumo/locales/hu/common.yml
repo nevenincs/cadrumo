@@ -492,6 +492,8 @@ desktop:
         titkosítva.
       mismatch: A két jelszó nem egyezik.
       name: Profil neve
+      name_characters: Itt a név nem tartalmazhat * ? [ % vagy $ jelet, nem kezdődhet
+        ~ jellel, és nem tartalmazhat tabulátort.
       name_hyphen: A név nem kezdődhet kötőjellel.
       name_long: Használj rövidebb nevet.
       name_missing: Adj nevet a profilnak.
@@ -503,6 +505,8 @@ desktop:
       submit: Profil létrehozása
       submitting: Létrehozás…
       title: Profil létrehozása
+      unknown: Nem tudni, hogy a profil létrejött-e ({code}). Mielőtt újra próbálod,
+        keresd meg a profilok között.
       wait: 'Ez körülbelül fél percig tart: a profil kulcsa most készül a jelszavából.'
     create_profile: Profil beállítása
     first_run_lead: A kezdéshez hozz létre egy profilt.
@@ -715,6 +719,8 @@ desktop:
     submit: Bejelentkezés
     submitting: Bejelentkezés…
     title: Jelentkezz be a Cadrumóba
+    unnameable: Az olyan profil, amelynek nevében * ? [ % vagy $ szerepel, a TUI-ban
+      nyitható meg.
     unsupported: Ezen a rendszeren a TUI-ban jelentkezz be.
   split:
     resize: Dokumentáció és TUI átméretezése

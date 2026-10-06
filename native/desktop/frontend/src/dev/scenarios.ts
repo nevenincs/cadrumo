@@ -35,12 +35,23 @@ export type Scenario = {
     profile?: string | null;
     /** What creating a profile meets. Accepted where it is left out. */
     create?: SubmitOutcome;
+    /** The creation is made although its answer fails to arrive. */
+    createLands?: boolean;
   };
   /** The profiles the host can list: none, the one fixture profile, several,
    * or a list that cannot be read; or a host with no profile commands at
    * all, as the desktop host is today, where the shell knows only the one
    * profile the status names. */
-  profiles: "none" | "one" | "several" | "unreadable" | "absent";
+  profiles:
+    | "none"
+    | "one"
+    | "several"
+    /** Several, one of them under a name the host will not pass on. */
+    | "odd"
+    /** Read once, and unreadable from then on. */
+    | "once"
+    | "unreadable"
+    | "absent";
   /** The log subscription: fixture records, an available but empty source, a
    * missing or unreadable source, or a subscription that never answers. */
   logs: "records" | "empty" | "missing" | "unreadable" | "pending";
@@ -181,6 +192,71 @@ export const SCENARIOS: readonly Scenario[] = [
       },
     },
     profiles: "none",
+  },
+  {
+    ...base,
+    id: "create-unanswered",
+    title: "Profile creation unanswered",
+    summary:
+      "No profile exists, and a creation gets no answer and makes nothing: its outcome is not known.",
+    signIn: {
+      status: signedOut,
+      submit: { kind: "accept" },
+      profile: null,
+      create: { kind: "fail", code: "timed_out" },
+    },
+    profiles: "none",
+  },
+  {
+    ...base,
+    id: "create-lands-unanswered",
+    title: "Profile created, answer lost",
+    summary:
+      "No profile exists; a creation gets no answer, and the profile is there all the same.",
+    signIn: {
+      status: signedOut,
+      submit: { kind: "accept" },
+      profile: null,
+      create: { kind: "fail", code: "timed_out" },
+      createLands: true,
+    },
+    profiles: "none",
+  },
+  {
+    ...base,
+    id: "create-refused-other",
+    title: "Profile creation refused for another reason",
+    summary:
+      "No profile exists, and every creation is refused with a code the shell does not name.",
+    signIn: {
+      status: signedOut,
+      submit: { kind: "accept" },
+      profile: null,
+      create: {
+        kind: "refuse",
+        code: "REFUSED_PROFILE_REGISTRATION",
+        retryAfterSeconds: null,
+      },
+    },
+    profiles: "none",
+  },
+  {
+    ...base,
+    id: "profiles-read-once",
+    title: "Profiles readable once",
+    summary:
+      "Several profiles, listed by the first read and unreadable afterwards.",
+    signIn: { status: signedOut, submit: { kind: "accept" } },
+    profiles: "once",
+  },
+  {
+    ...base,
+    id: "odd-names",
+    title: "A profile the host will not name",
+    summary:
+      "Several profiles, one under a name the product's command line would rewrite: it is listed, and opened only in the TUI.",
+    signIn: { status: signedOut, submit: { kind: "accept" } },
+    profiles: "odd",
   },
   {
     ...base,

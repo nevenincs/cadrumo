@@ -31,6 +31,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import type { SignInRefusal } from "../ipc/contract";
 import {
+  nameable,
   nameProblem,
   passwordProblem,
   PASSWORD_MIN,
@@ -202,8 +203,12 @@ export function SignInDialog({
   const status = account.status;
   // With no profile on this computer the dialog is the form that makes
   // one; with some, it is that form when the person asks for it.
+  // While one is being made it stays that form, whatever else is asked.
   const creating =
-    account.canCreate && (create === true || account.phase === "no-profile");
+    account.creating ||
+    (account.canCreate &&
+      account.offering &&
+      (create === true || account.phase === "no-profile"));
   // Changing between the two forms moves the keyboard to the new one's
   // first field: what held it is gone.
   const wasCreating = useRef(creating);
@@ -237,7 +242,9 @@ export function SignInDialog({
     if (open) (nameField.current ?? input.current ?? handover.current)?.focus();
   }, [open]);
 
-  if (!status) return null;
+  // Nothing to show until the account is known: a dialog opened on a
+  // guess would put the keyboard on a way out that is about to change.
+  if (!status || account.phase === "checking") return null;
 
   const seconds = account.retrySeconds;
   const rejected = refusalCode(account.refusal) === "CREDENTIAL_REJECTED";
@@ -247,9 +254,17 @@ export function SignInDialog({
   const setUpInTui = account.phase === "no-profile" && !creating;
   const servicesDown = account.phase === "services-down";
   const answerable = !creating && status.runtimeAvailable && account.canSignIn;
-  const choices = account.profiles?.profiles ?? [];
+  // The choice is offered only while nobody is signed in, from a list
+  // that was read coherently.
+  const choices =
+    account.offering && account.profiles?.complete
+      ? account.profiles.profiles
+      : [];
   const named = account.target?.name ?? status.active_profile;
-  const mustChoose = choices.length > 0 && !account.target;
+  const mustChoose = account.mustChoose;
+  // A profile the host would not name as written can be signed in to only
+  // while it is the selected one.
+  const unnameable = choices.some((p) => !p.active && !nameable(p.name));
   // A refusal that hands over to the TUI is the explanation: no lead then
   // says it a second way.
   const lead = creating
@@ -274,6 +289,9 @@ export function SignInDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
+        // Not put aside while a profile is being made: what becomes of it
+        // is said here, and nowhere else.
+        if (!next && account.creating) return;
         if (!next) {
           setRevealed(false);
           setUnchosen(false);
@@ -397,7 +415,11 @@ export function SignInDialog({
                     </option>
                   )}
                   {choices.map((profile) => (
-                    <option key={profile.name} value={profile.name}>
+                    <option
+                      key={profile.name}
+                      value={profile.name}
+                      disabled={!profile.active && !nameable(profile.name)}
+                    >
                       {profile.name}
                     </option>
                   ))}
@@ -405,6 +427,11 @@ export function SignInDialog({
                 <FieldError id={choiceErrorId}>
                   {unchosen && mustChoose && t("desktop.signin.choose_profile")}
                 </FieldError>
+                {unnameable && (
+                  <FieldDescription className="profile-unnameable">
+                    {t("desktop.signin.unnameable")}
+                  </FieldDescription>
+                )}
               </Field>
             )}
             <Field data-invalid={rejected}>
@@ -449,7 +476,7 @@ export function SignInDialog({
         {creating ? null : answerable ? (
           <>
             <Separator />
-            {account.canCreate && (
+            {account.canCreate && account.offering && (
               <Button
                 className="new-profile w-full"
                 variant="outline"
@@ -522,6 +549,7 @@ function ProfileNamed({ name }: { name: string }) {
 const NAME_PROBLEMS: Record<NameProblem, string> = {
   missing: "desktop.account.create.name_missing",
   hyphen: "desktop.account.create.name_hyphen",
+  characters: "desktop.account.create.name_characters",
   long: "desktop.account.create.name_long",
   taken: "desktop.account.create.name_taken",
 };
@@ -693,6 +721,19 @@ function CreateProfile({
       {refused && !nameTaken(refused) && (
         <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
           {t("desktop.account.create.refused", { code: refused.code })}
+        </Alert>
+      )}
+      {/* No answer came: it is not said that there is no such profile. */}
+      {account.createUnknown && (
+        <Alert
+          className="create-unknown"
+          tone="warning"
+          role="alert"
+          icon={<Icon name="alert" />}
+        >
+          {t("desktop.account.create.unknown", {
+            code: account.createUnknown.code,
+          })}
         </Alert>
       )}
 

@@ -507,6 +507,8 @@ desktop:
         con su contraseña.
       mismatch: Las dos contraseñas no coinciden.
       name: Nombre del perfil
+      name_characters: Aquí un nombre no puede contener * ? [ % ni $, empezar por
+        ~, ni contener una tabulación.
       name_hyphen: El nombre no puede empezar con un guion.
       name_long: Usa un nombre más corto.
       name_missing: Ponle un nombre al perfil.
@@ -518,6 +520,8 @@ desktop:
       submit: Crear perfil
       submitting: Creando…
       title: Crear un perfil
+      unknown: No se sabe si el perfil se ha creado ({code}). Búscalo entre los perfiles
+        antes de volver a intentarlo.
       wait: 'Tarda alrededor de medio minuto: se está generando la clave del perfil
         a partir de su contraseña.'
     create_profile: Configurar un perfil
@@ -732,6 +736,7 @@ desktop:
     submit: Iniciar sesión
     submitting: Iniciando sesión…
     title: Inicia sesión en Cadrumo
+    unnameable: Un perfil cuyo nombre contiene * ? [ % o $ se abre en la TUI.
     unsupported: En este sistema, inicia sesión desde la TUI.
   split:
     resize: Cambiar el tamaño de documentación y TUI

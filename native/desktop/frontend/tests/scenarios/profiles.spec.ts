@@ -84,7 +84,8 @@ test("several profiles: the profile is a labelled choice with the selected one c
   await submit(target).click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(1);
-  expect(await everyCall(target)).toContain("signInProfile 1");
+  // The selected profile is not named: the product knows which it is.
+  expect(await calls(target, "signInProfile")()).toBe(0);
 });
 
 test("the password can be typed as soon as the status is known, before the profiles have been read", async ({
@@ -116,13 +117,20 @@ test("with no profile selected the window waits for the list before it says ther
   await target.goto(
     "/scenarios.html?scenario=choose-profile&latency=1200&bar=off",
   );
-  // Not the form that creates a profile, shown and then taken away.
+  // Not the form that creates a profile, shown and then taken away; and
+  // no dialog at all, whose only button would be a way out to the TUI.
   await expect(target.locator(".pane-tui")).toContainText(
     label("desktop.signin.checking"),
   );
   await expect(form(target)).toHaveCount(0);
+  await expect(dialog(target)).toHaveCount(0);
+  await target.keyboard.press("Enter");
+  expect(await calls(target, "openTerminal tui")()).toBe(0);
   await expect(choice(target).locator("option:not([disabled])")).toHaveCount(3);
   await expect(form(target)).toHaveCount(0);
+  // Arrived with the list, the dialog has the keyboard in its form.
+  await expect(password(target)).toBeFocused();
+  expect(await calls(target, "openTerminal tui")()).toBe(0);
 });
 
 test("signed in, the window does not read the profiles it has no use for", async ({
@@ -378,8 +386,18 @@ test("while a profile is being created the form says how long it takes, and noth
   );
   await expect(nameField(target)).toHaveAttribute("readonly", "");
   await expect(newPassword(target)).toHaveValue("");
+  // A second submission with every field filled again, as a script or a
+  // password manager could make it: nothing more is sent.
+  await form(target).evaluate((element) => {
+    const fields = element.querySelectorAll("input");
+    (fields[1] as HTMLInputElement).value = "correct horse";
+    (fields[2] as HTMLInputElement).value = "correct horse";
+    (element as HTMLFormElement).requestSubmit();
+  });
   await form(target).locator("button[type=submit]").click({ force: true });
-  await nameField(target).press("Enter");
+  // Nor is it put aside while the profile is being made.
+  await target.keyboard.press("Escape");
+  await expect(form(target).locator(".create-wait")).toBeVisible();
   await expect(password(target)).toBeFocused({ timeout: 10000 });
   expect(await calls(target, "createProfile")()).toBe(1);
 });
@@ -469,7 +487,17 @@ test("a profile created beside others is the one then chosen for sign-in", async
   await password(target).fill("correct horse");
   await submit(target).click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
-  expect(await everyCall(target)).toContain("signInProfile 4");
+  // Created, it is the selected profile: signed in to unnamed, and the one
+  // the window then names.
+  expect(await calls(target, "signInProfile")()).toBe(0);
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  await expect(
+    target
+      .locator(".settings")
+      .getByRole("region", { name: label("desktop.signin.profile") }),
+  ).toContainText("Marta Ruiz Ferrer");
 });
 
 test("first run: the pane, settings and the palette all lead to the form in the window", async ({
@@ -674,4 +702,136 @@ test("in forced colours the form's main action is still drawn as a button", asyn
     expect(edge.width, scenario).toBeGreaterThanOrEqual(1);
     expect(edge.style, scenario).toBe("solid");
   }
+});
+
+test("a creation that gets no answer is not said to have failed, and is not tried again", async ({
+  page: target,
+}) => {
+  await open(target, "create-unanswered");
+  await nameField(target).fill("Marta Ruiz Ferrer");
+  await newPassword(target).fill("correct horse");
+  await repeated(target).fill("correct horse");
+  await repeated(target).press("Enter");
+  await expect(form(target).locator(".create-unknown")).toHaveText(
+    label("desktop.account.create.unknown", { code: "timed_out" }),
+  );
+  // It is not known, so it is not said that nothing was created.
+  await expect(form(target)).not.toContainText(
+    label("desktop.account.create.refused", { code: "timed_out" }),
+  );
+  await expect(newPassword(target)).toHaveValue("");
+  await target.waitForTimeout(300);
+  expect(await calls(target, "createProfile")()).toBe(1);
+  expect(await calls(target, "signIn")()).toBe(0);
+});
+
+test("a profile that is there although its creation got no answer is found in the list", async ({
+  page: target,
+}) => {
+  await open(target, "create-lands-unanswered");
+  await nameField(target).fill("Marta Ruiz Ferrer");
+  await newPassword(target).fill("correct horse");
+  await repeated(target).fill("correct horse");
+  await repeated(target).press("Enter");
+  // The list is the witness: the sign-in for the profile that exists.
+  await expect(password(target)).toBeFocused();
+  await expect(dialog(target).getByRole("status")).toHaveText(
+    label("desktop.account.create.done", { name: "Marta Ruiz Ferrer" }),
+  );
+  await expect(dialog(target).locator(".create-unknown")).toHaveCount(0);
+  expect(await calls(target, "createProfile")()).toBe(1);
+});
+
+test("a refusal the shell does not name is shown with its code", async ({
+  page: target,
+}) => {
+  await open(target, "create-refused-other");
+  await nameField(target).fill("Marta Ruiz Ferrer");
+  await newPassword(target).fill("correct horse");
+  await repeated(target).fill("correct horse");
+  await repeated(target).press("Enter");
+  await expect(form(target).getByRole("alert")).toHaveText(
+    label("desktop.account.create.refused", {
+      code: "REFUSED_PROFILE_REGISTRATION",
+    }),
+  );
+  await expect(form(target).locator(".create-unknown")).toHaveCount(0);
+  expect(await calls(target, "createProfile")()).toBe(1);
+});
+
+test("a list that can no longer be read names nobody: the new profile's password goes to the selected profile, unnamed", async ({
+  page: target,
+}) => {
+  await open(target, "profiles-read-once");
+  await expect(choice(target).locator("option")).toHaveCount(3);
+  await dialog(target)
+    .getByRole("button", { name: label("desktop.account.new_profile") })
+    .click();
+  await nameField(target).fill("Marta Ruiz Ferrer");
+  await newPassword(target).fill("correct horse");
+  await repeated(target).fill("correct horse");
+  await repeated(target).press("Enter");
+  await expect(password(target)).toBeFocused();
+  // The rows that were held are older than the creation: no choice is
+  // drawn from them, and the profile named is the one the status names.
+  await expect(dialog(target).locator("select")).toHaveCount(0);
+  await expect(dialog(target)).toContainText(
+    label("desktop.signin.profiles_unread"),
+  );
+  await expect(
+    dialog(target).getByRole("group", {
+      name: label("desktop.signin.profile"),
+    }),
+  ).toContainText("Marta Ruiz Ferrer");
+  await password(target).fill("correct horse");
+  await submit(target).click();
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect.poll(calls(target, "signIn")).toBe(1);
+  expect(await calls(target, "signInProfile")()).toBe(0);
+});
+
+test("a profile under a name the command line would rewrite is listed, not offered, and said to open in the TUI", async ({
+  page: target,
+}) => {
+  await open(target, "odd-names");
+  const odd = choice(target).locator("option", { hasText: "Rebajas 50%" });
+  await expect(odd).toHaveCount(1);
+  await expect(odd).toBeDisabled();
+  await expect(dialog(target).locator(".profile-unnameable")).toHaveText(
+    label("desktop.signin.unnameable"),
+  );
+  // And such a name is refused for a new profile before anything is sent.
+  await dialog(target)
+    .getByRole("button", { name: label("desktop.account.new_profile") })
+    .click();
+  await nameField(target).fill("%USERNAME% y Cia");
+  await newPassword(target).fill("correct horse");
+  await repeated(target).fill("correct horse");
+  await repeated(target).press("Enter");
+  await expect(form(target)).toContainText(
+    label("desktop.account.create.name_characters"),
+  );
+  await expect(nameField(target)).toBeFocused();
+  expect(await calls(target, "createProfile")()).toBe(0);
+});
+
+test("where it is not known whether somebody is signed in, no other profile and no new one is offered", async ({
+  page: target,
+}) => {
+  await open(target, "error");
+  await expect(password(target)).toBeVisible();
+  await expect(dialog(target).locator("select")).toHaveCount(0);
+  await expect(dialog(target).locator(".new-profile")).toHaveCount(0);
+  // The palette offers no new profile either.
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  const palette = target.locator(".palette");
+  await palette
+    .getByRole("combobox")
+    .fill(label("desktop.account.new_profile"));
+  await expect(
+    palette.getByRole("option", { name: label("desktop.account.new_profile") }),
+  ).toHaveCount(0);
 });

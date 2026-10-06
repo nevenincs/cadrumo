@@ -44,6 +44,8 @@ export const FIXTURE_PROFILE = "Demo profile";
 
 /** The other profiles of a computer that has several. Made-up names. */
 const OTHER_PROFILES = ["Ana Soler Vidal", "Taller Ribera, S.L."];
+/** A name the product's command line would rewrite. */
+const ODD_PROFILE = "Rebajas 50%";
 
 export type ScenarioHostOptions = {
   /** The documentation fixture the environment reports, or null for none. */
@@ -101,7 +103,15 @@ export function scenarioHost(
     scenario.profiles === "none" ||
     (scenario.profiles === "absent" && scenario.signIn.profile === null)
       ? []
-      : [first, ...(scenario.profiles === "several" ? OTHER_PROFILES : [])];
+      : [
+          first,
+          ...(scenario.profiles === "several" || scenario.profiles === "once"
+            ? OTHER_PROFILES
+            : scenario.profiles === "odd"
+              ? ["Ana Soler Vidal", ODD_PROFILE]
+              : []),
+        ];
+  let listReads = 0;
   let active: string | null =
     scenario.signIn.profile === null ? null : (accounts[0] ?? null);
 
@@ -116,7 +126,12 @@ export function scenarioHost(
       say("profiles");
       // A process of the product's, as every other read is.
       await wait(options.latencyMs);
-      if (scenario.profiles === "unreadable") throw failure("timed_out", "cli");
+      listReads += 1;
+      if (
+        scenario.profiles === "unreadable" ||
+        (scenario.profiles === "once" && listReads > 1)
+      )
+        throw failure("timed_out", "cli");
       return {
         profiles: [...accounts]
           .sort((a, b) => a.localeCompare(b))
@@ -130,7 +145,15 @@ export function scenarioHost(
       const outcome = scenario.signIn.create ?? { kind: "accept" };
       if (outcome.kind === "pending") return never();
       await wait(options.latencyMs);
-      if (outcome.kind === "fail") throw failure(outcome.code, "cli");
+      if (outcome.kind === "fail") {
+        // The answer is lost; the profile may be there all the same.
+        if (scenario.signIn.createLands) {
+          accounts.push(name);
+          active = name;
+          presence = "absent";
+        }
+        throw failure(outcome.code, "cli");
+      }
       const taken = accounts.some(
         (held) => held.toLocaleLowerCase() === name.toLocaleLowerCase(),
       );

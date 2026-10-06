@@ -19,6 +19,9 @@ const DEADLINE: Duration = Duration::from_secs(30);
 /// creation takes about half a minute. A child killed part-way would leave
 /// the person not knowing whether the profile exists.
 pub const CREATION_DEADLINE: Duration = Duration::from_secs(300);
+/// How long a read waits for the command that is running: as long as the
+/// slowest of them may take. Its own deadline starts when it does.
+const SLOT_WAIT: Duration = Duration::from_secs(330);
 
 #[derive(Default)]
 struct Active {
@@ -53,7 +56,7 @@ impl Children {
     }
 
     pub fn run(&self, command: Command, secret: Option<Zeroizing<Vec<u8>>>) -> Result<Output> {
-        self.execute(command, secret, false, DEADLINE)
+        self.execute(command, secret, None, DEADLINE)
     }
 
     /// A command that is slow by design, under a deadline of its own.
@@ -63,22 +66,23 @@ impl Children {
         secret: Option<Zeroizing<Vec<u8>>>,
         deadline: Duration,
     ) -> Result<Output> {
-        self.execute(command, secret, false, deadline)
+        self.execute(command, secret, None, deadline)
     }
 
     /// Status is read-only: wait for the current command without replaying it.
     pub fn read(&self, command: Command) -> Result<Output> {
-        self.execute(command, None, true, DEADLINE)
+        self.execute(command, None, Some(SLOT_WAIT), DEADLINE)
     }
 
     fn execute(
         &self,
         mut command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
-        wait_for_slot: bool,
+        // How long to wait for a running command, or not at all.
+        slot_wait: Option<Duration>,
         deadline: Duration,
     ) -> Result<Output> {
-        let start = Instant::now();
+        let asked = Instant::now();
         command
             .stdin(if secret.is_some() {
                 Stdio::piped()
@@ -101,14 +105,14 @@ impl Children {
                 if active.closed {
                     return Err(failure(ErrorCode::SessionUnavailable));
                 }
-                if start.elapsed() >= deadline {
-                    return Err(failure(ErrorCode::TimedOut));
-                }
                 if !active.busy {
                     break active;
                 }
-                if !wait_for_slot {
+                let Some(slot_wait) = slot_wait else {
                     return Err(failure(ErrorCode::QueueFull));
+                };
+                if asked.elapsed() >= slot_wait {
+                    return Err(failure(ErrorCode::TimedOut));
                 }
                 drop(active);
                 thread::sleep(Duration::from_millis(10));
@@ -125,6 +129,8 @@ impl Children {
             active.child = Some(child);
             pipes
         };
+        // The child's own time, from its start: not the wait for its turn.
+        let start = Instant::now();
         let overflow = AtomicBool::new(false);
         let outcome = thread::scope(|scope| {
             let writer = scope.spawn(move || -> Result<()> {
@@ -378,8 +384,53 @@ mod tests {
             )
             .unwrap();
         assert_eq!(&*output.stdout, b"made");
-        // Creating a profile is allowed far longer than a read or a sign-in.
-        assert!(CREATION_DEADLINE >= DEADLINE * 5);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_read_waits_out_a_slow_command_and_then_has_its_whole_deadline() {
+        let children = Children::default();
+        thread::scope(|scope| {
+            let slow = scope.spawn(|| {
+                children.run_within(
+                    powershell("Start-Sleep -Seconds 4; [Console]::Out.Write('made')"),
+                    None,
+                    Duration::from_secs(60),
+                )
+            });
+            let seen = Instant::now() + Duration::from_secs(5);
+            while children.active.lock().unwrap().child.is_none() {
+                assert!(Instant::now() < seen);
+                thread::sleep(Duration::from_millis(10));
+            }
+            // Its deadline is shorter than the wait for its turn.
+            let read = children.execute(
+                powershell("[Console]::Out.Write('status')"),
+                None,
+                Some(Duration::from_secs(60)),
+                Duration::from_secs(3),
+            );
+            assert_eq!(&*read.unwrap().stdout, b"status");
+            assert_eq!(&*slow.join().unwrap().unwrap().stdout, b"made");
+        });
+        // And it does not wait for its turn beyond the bound it was given.
+        thread::scope(|scope| {
+            let slow = scope.spawn(|| children.run(powershell("Start-Sleep -Seconds 3"), None));
+            let seen = Instant::now() + Duration::from_secs(5);
+            while children.active.lock().unwrap().child.is_none() {
+                assert!(Instant::now() < seen);
+                thread::sleep(Duration::from_millis(10));
+            }
+            let read = children.execute(
+                powershell("[Console]::Out.Write('status')"),
+                None,
+                Some(Duration::from_millis(300)),
+                Duration::from_secs(30),
+            );
+            assert_eq!(read.err().unwrap().code, ErrorCode::TimedOut);
+            assert!(slow.join().unwrap().is_ok());
+        });
+        assert!(children.active.lock().unwrap().child.is_none());
     }
 
     #[cfg(windows)]

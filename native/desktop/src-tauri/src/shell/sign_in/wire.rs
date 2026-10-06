@@ -107,7 +107,8 @@ pub struct SignOutResult {
 #[derive(Deserialize)]
 struct Envelope {
     schema_version: String,
-    command: String,
+    /// Absent where the product refused before it knew its command.
+    command: Option<String>,
     status: String,
     active_profile: Option<String>,
     result: Option<serde_json::Value>,
@@ -138,11 +139,16 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
     };
     let envelope: Envelope =
         serde_json::from_slice(bytes).map_err(|_| failure(ErrorCode::ReadFailed))?;
-    if envelope.schema_version != "2" || envelope.command != format!("config.{leaf}") {
+    if envelope.schema_version != "2" {
         return Err(failure(ErrorCode::ReadFailed));
     }
+    // An answer carries the command's own name. A refusal may carry none:
+    // the product can refuse at startup, before it has read its command,
+    // and its typed code is still the reason to show.
+    let named = envelope.command.as_deref() == Some(format!("config.{leaf}").as_str());
+    let unnamed = envelope.command.is_none();
     match envelope.status.as_str() {
-        "success" | "warning" if output.success && envelope.error.is_none() => {
+        "success" | "warning" if named && output.success && envelope.error.is_none() => {
             Ok(Outcome::Success {
                 result: envelope
                     .result
@@ -150,7 +156,7 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
                 active_profile: envelope.active_profile,
             })
         }
-        "error" if !output.success && envelope.result.is_none() => {
+        "error" if (named || unnamed) && !output.success && envelope.result.is_none() => {
             let error = envelope
                 .error
                 .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
@@ -438,6 +444,33 @@ mod tests {
         .unwrap();
         assert_eq!(status.state, Presence::Unknown);
         assert!(!status.runtime_available);
+    }
+
+    #[test]
+    fn a_refusal_that_names_no_command_keeps_its_code_and_an_answer_must_name_its_own() {
+        let startup = serde_json::json!({"schema_version":"2","command":null,"status":"error","active_profile":null,"error":{"code":"ERROR_CALCULATIONS_REGISTRY_AUTHORITY_DESCRIPTOR_UNAVAILABLE","context":null}});
+        let Outcome::Refused { refusal, .. } =
+            decode("sign-in-status", &output(false, startup)).unwrap()
+        else {
+            panic!("refusal expected")
+        };
+        assert_eq!(
+            refusal.code,
+            "ERROR_CALCULATIONS_REGISTRY_AUTHORITY_DESCRIPTOR_UNAVAILABLE"
+        );
+        for (success, document) in [
+            // An answer with no name, and a refusal with another command's.
+            (
+                true,
+                serde_json::json!({"schema_version":"2","command":null,"status":"success","result":{"session_persisted":true}}),
+            ),
+            (
+                false,
+                serde_json::json!({"schema_version":"2","command":"config.logout","status":"error","error":{"code":"REFUSED_CLI","context":null}}),
+            ),
+        ] {
+            assert!(decode("login", &output(success, document)).is_err());
+        }
     }
 
     #[test]

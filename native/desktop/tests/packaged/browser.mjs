@@ -326,6 +326,10 @@ export function instrument(config) {
       const session = Number(header(init?.headers, "x-cadrumo-session"));
       if (Number.isInteger(session)) entry.session = session;
     }
+    // A body that is a password and nothing else leaves neither itself nor
+    // its length in the evidence.
+    if (entry.cmd === "sign_in_submit" || entry.cmd === "profile_create")
+      entry.bodyBytes = null;
     if (entry.cmd === "terminal_open" && entry.args) {
       const match = /^__CHANNEL__:(\d+)$/.exec(String(entry.args.frames ?? ""));
       if (match) channelOf(Number(match[1])).kind = entry.args.kind;

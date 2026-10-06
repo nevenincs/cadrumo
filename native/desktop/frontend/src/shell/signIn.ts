@@ -6,7 +6,7 @@ import type {
   SignOutResult,
 } from "../ipc/contract";
 import type { Host } from "./host";
-import { targetOf } from "./profiles";
+import { nameable, targetOf } from "./profiles";
 import { failureCode } from "../errors";
 
 const unknownStatus: SignInStatus = {
@@ -78,7 +78,9 @@ export function phaseOf(
   // With none selected, the profiles that exist are still there to choose
   // from: only where none is known is there nothing to sign in to. Until
   // the list has been read that is not known either way.
-  if (status.active_profile === null && !profiles?.profiles.length)
+  // A list that could not be read coherently names nobody.
+  const listed = profiles?.complete ? profiles.profiles.length : 0;
+  if (status.active_profile === null && listed === 0)
     return listPending ? "checking" : "no-profile";
   return "signed-out";
 }
@@ -139,6 +141,14 @@ export function useSignIn(host: Host) {
     null,
   );
   const [created, setCreated] = useState<string | null>(null);
+  // A creation whose answer never came: whether the profile exists is not
+  // known, which is not the same as its having been refused.
+  const [createUnknown, setCreateUnknown] = useState<SignInRefusal | null>(
+    null,
+  );
+  const [creating, setCreating] = useState(false);
+  // The list as the last read left it, for the code that has just asked.
+  const listed = useRef<ProfileList | null>(null);
   const [remaining, setRemaining] = useState<SignOutResult | null>(null);
   // A sign-out that failed is its own fact: it is not a sign-in refusal.
   const [signOutFailure, setSignOutFailure] = useState<SignInRefusal | null>(
@@ -187,11 +197,28 @@ export function useSignIn(host: Host) {
           const next = await host.signInStatus();
           if (generation !== request.current) return;
           setStatus(next);
+          // A list that names another profile as selected than the status
+          // does is older than it: not shown beside it, and never a ground
+          // for naming the profile a password goes to.
+          setProfiles((held) =>
+            held &&
+            (held.profiles.find((p) => p.active)?.name ?? null) !==
+              next.active_profile
+              ? null
+              : held,
+          );
           if (!host.profiles || next.state === "present") return;
           const list = await host.profiles.list().catch(() => null);
           if (generation !== request.current) return;
+          listed.current = list;
+          // Unread, the rows that were held are kept as what was last
+          // known, and marked as no longer to be relied on.
           setProfiles(
-            (held) => list ?? held ?? { profiles: [], complete: false },
+            (held) =>
+              list ??
+              (held
+                ? { ...held, complete: false }
+                : { profiles: [], complete: false }),
           );
         } catch (error) {
           if (generation === request.current)
@@ -219,12 +246,31 @@ export function useSignIn(host: Host) {
     };
   }, [refresh, invalidate]);
 
-  const target = targetOf(profiles, chosen);
+  const phase = phaseOf(
+    host.available,
+    status,
+    handover,
+    profiles,
+    host.profiles !== undefined && profiles === null,
+  );
+  // Another profile is offered only while nobody is signed in, and known
+  // not to be: signing in to one does not sign the other out.
+  const offering = phase === "signed-out" || phase === "no-profile";
+  const target = offering ? targetOf(profiles, chosen) : null;
+  const mustChoose =
+    offering &&
+    profiles?.complete === true &&
+    profiles.profiles.length > 0 &&
+    !target;
 
   const submit = async (password: Uint8Array) => {
     // Where there are several and none is chosen, there is nothing to send
-    // a password to.
-    if (submitting.current || (profiles?.profiles.length && !target)) {
+    // a password to; nor to a profile the host would not name as written.
+    if (
+      submitting.current ||
+      mustChoose ||
+      (target && !target.active && !nameable(target.name))
+    ) {
       password.fill(0);
       return;
     }
@@ -233,12 +279,18 @@ export function useSignIn(host: Host) {
     setBusy(true);
     setRefusal(null);
     setCreateRefusal(null);
+    setCreateUnknown(null);
     setCreated(null);
     setRemaining(null);
     setSignOutFailure(null);
     try {
       await statusRead.current?.promise;
-      const result = await host.signIn(password, target?.name);
+      // The selected profile is signed in to unnamed, as it always was: the
+      // product knows which it is. Only another one has to be named.
+      const result = await host.signIn(
+        password,
+        target && !target.active ? target.name : undefined,
+      );
       if (result.kind === "refused") setRefusal(result);
     } catch (error) {
       setRefusal(refusalFrom(error));
@@ -261,29 +313,51 @@ export function useSignIn(host: Host) {
     submitting.current = true;
     invalidate();
     setBusy(true);
+    setCreating(true);
     setRefusal(null);
     setCreateRefusal(null);
+    setCreateUnknown(null);
     setCreated(null);
     setRemaining(null);
     setSignOutFailure(null);
-    let made = false;
+    let made: string | null = null;
+    let unanswered: SignInRefusal | null = null;
     try {
       await statusRead.current?.promise;
       const result = await accounts.create(name, password);
-      if (result.kind === "created") {
-        setChosen(result.name);
-        setCreated(result.name);
-        made = true;
-      } else setCreateRefusal(result);
+      if (result.kind === "created") made = result.name;
+      else setCreateRefusal(result);
     } catch (error) {
-      setCreateRefusal(refusalFrom(error));
+      // No answer: timed out, stopped, unreadable. Not a refusal.
+      unanswered = refusalFrom(error);
     } finally {
       password.fill(0);
+      // Whatever was held is older than this creation: read again before
+      // anything is shown or named.
+      if (made !== null || unanswered) {
+        listed.current = null;
+        setProfiles(null);
+      }
       await refresh(true);
+      if (unanswered) {
+        // The list is the witness: a profile of that name now in it was
+        // created, whatever became of the answer.
+        const folded = name.toLowerCase();
+        const found = listed.current?.complete
+          ? listed.current.profiles.find((p) => p.name.toLowerCase() === folded)
+          : undefined;
+        if (found) made = found.name;
+        else setCreateUnknown(unanswered);
+      }
+      if (made !== null) {
+        setChosen(made);
+        setCreated(made);
+      }
       submitting.current = false;
+      setCreating(false);
       setBusy(false);
     }
-    return made;
+    return made !== null;
   };
 
   const signOut = async () => {
@@ -306,13 +380,6 @@ export function useSignIn(host: Host) {
     }
   };
 
-  const phase = phaseOf(
-    host.available,
-    status,
-    handover,
-    profiles,
-    host.profiles !== undefined && profiles === null,
-  );
   return {
     status,
     phase,
@@ -320,6 +387,14 @@ export function useSignIn(host: Host) {
     profiles,
     /** The profile a password would sign in to, where it is known. */
     target,
+    /** Whether another profile, or a new one, may be offered now. */
+    offering,
+    /** Several profiles and none chosen: the choice comes before a password. */
+    mustChoose,
+    /** A creation is in flight. */
+    creating,
+    /** A creation that got no answer: its outcome is not known. */
+    createUnknown,
     /** Whether this host can create a profile. */
     canCreate: host.profiles !== undefined,
     createRefusal,
@@ -350,6 +425,7 @@ export function useSignIn(host: Host) {
       );
       setSignOutFailure(null);
       setCreateRefusal(null);
+      setCreateUnknown(null);
     },
     /** Read the status again: something else has shown it may be stale. */
     recheck: () => refresh(),

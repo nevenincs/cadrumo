@@ -485,6 +485,8 @@ desktop:
         its password.
       mismatch: The two passwords are not the same.
       name: Profile name
+      name_characters: A name here cannot hold * ? [ % or $, begin with ~, or hold
+        a tab.
       name_hyphen: A name cannot start with a hyphen.
       name_long: Use a shorter name.
       name_missing: Give the profile a name.
@@ -496,6 +498,8 @@ desktop:
       submit: Create profile
       submitting: Creating…
       title: Create a profile
+      unknown: It is not known whether the profile was created ({code}). Look for
+        it among the profiles before trying again.
       wait: 'This takes about half a minute: the profile''s key is being made from
         its password.'
     create_profile: Set up a profile
@@ -707,6 +711,7 @@ desktop:
     submit: Sign in
     submitting: Signing in…
     title: Sign in to Cadrumo
+    unnameable: A profile whose name holds * ? [ % or $ is opened in the TUI.
     unsupported: Sign in from the TUI on this system.
   split:
     resize: Resize docs and TUI

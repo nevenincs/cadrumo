@@ -27,6 +27,13 @@ use wire::{ProfileCreateResult, ProfileList, SignInResult, SignInStatus, SignOut
 const PROFILE_HEADER: &str = "x-cadrumo-profile";
 /// The product's own bound on a profile label, in characters.
 const LABEL_LIMIT: usize = 160;
+/// Characters the product's command line rewrites in an argument on Windows,
+/// after the option terminator too: it expands environment variables and
+/// file-name patterns before it reads its arguments. Asked directly, a
+/// package created `%USERNAME% y Cia` as the user's name followed by "y Cia"
+/// and `Taller [2025]` as the name of a file beside it. A label holding one
+/// would name another profile, so it is not passed at all.
+const REWRITTEN: [char; 5] = ['*', '?', '[', '%', '$'];
 
 /// One command under `config`: its words, the name its answer must carry,
 /// whether it only reads, and whether it is slow by design.
@@ -270,9 +277,10 @@ pub async fn sign_out(
 }
 
 /// The label a call names, or none. Refused unless it is text the product
-/// could hold as a label: within its bound, without surrounding space or
-/// control characters, and not led by a hyphen, which the command line would
-/// read as an option.
+/// could hold as a label and its command line would read as written: within
+/// the bound, without surrounding space or control characters, not led by a
+/// hyphen, which is read as an option, nor by a tilde, which is read as a
+/// home directory, and free of the characters the command line rewrites.
 fn label(headers: &HeaderMap) -> Result<Option<String>> {
     let invalid = || failure(ErrorCode::InvalidArguments);
     let Some(value) = headers.get(PROFILE_HEADER) else {
@@ -299,7 +307,10 @@ fn label(headers: &HeaderMap) -> Result<Option<String>> {
         || length > LABEL_LIMIT
         || label != label.trim()
         || label.starts_with('-')
-        || label.chars().any(char::is_control)
+        || label.starts_with('~')
+        || label
+            .chars()
+            .any(|c| c.is_control() || REWRITTEN.contains(&c))
     {
         return Err(invalid());
     }
@@ -397,7 +408,10 @@ mod tests {
             ("Taller%20Ribera%2C%20S.L.", "Taller Ribera, S.L."),
             ("%E6%BC%A2%C3%A1", "漢á"),
             ("Ana-Maria", "Ana-Maria"),
-            ("100%25", "100%"),
+            (
+                "Ana%7EMaria%20%26%20Hijos%20%282025%29",
+                "Ana~Maria & Hijos (2025)",
+            ),
         ] {
             assert_eq!(
                 label(&named(sent)).unwrap().as_deref(),
@@ -428,6 +442,15 @@ mod tests {
             "%FF",
             "%E6%BC",
             long.as_str(),
+            // What the command line would rewrite into another label.
+            "%25USERNAME%25%20y%20Cia",
+            "Rebajas%2050%25",
+            "Caja%20%24USERNAME",
+            "Taller%20%5B2025%5D",
+            "Todo%2A",
+            "Cu%C3%A1l%3F",
+            "~",
+            "%7Eana",
         ] {
             assert_eq!(
                 label(&named(sent)).unwrap_err().code,

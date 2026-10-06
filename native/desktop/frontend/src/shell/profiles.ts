@@ -25,7 +25,28 @@ export const PASSWORD_MIN = 8;
 // characters can reach and never pass.
 export const PASSWORD_MAX = 256;
 
-export type NameProblem = "missing" | "hyphen" | "long" | "taken";
+export type NameProblem =
+  "missing" | "hyphen" | "characters" | "long" | "taken";
+
+// What the product's command line rewrites in an argument on Windows, even
+// after the option terminator: environment variables, file-name patterns and
+// a leading home directory. The host passes no label that holds one, since
+// it would name another profile; this says the same before anything is sent.
+const REWRITTEN = /[*?[%$]/;
+const CONTROL = /\p{Cc}/u;
+
+/** Whether the host will pass this label to the product as it is written. */
+export function nameable(name: string): boolean {
+  return (
+    name !== "" &&
+    name === name.trim() &&
+    [...name].length <= PROFILE_NAME_MAX &&
+    !name.startsWith("-") &&
+    !name.startsWith("~") &&
+    !REWRITTEN.test(name) &&
+    !CONTROL.test(name)
+  );
+}
 
 export function nameProblem(
   name: string,
@@ -36,9 +57,13 @@ export function nameProblem(
   // The product's command line reads a leading hyphen as an option, and
   // answers such a name with an internal error instead of a refusal.
   if (given.startsWith("-")) return "hyphen";
+  if (given.startsWith("~") || REWRITTEN.test(given) || CONTROL.test(given))
+    return "characters";
   if ([...given].length > PROFILE_NAME_MAX) return "long";
-  const folded = given.toLocaleLowerCase();
-  return list?.profiles.some((p) => p.name.toLocaleLowerCase() === folded)
+  // Not by the system's locale: its rules would call two names one that
+  // the product keeps apart. What this misses, the product refuses.
+  const folded = given.toLowerCase();
+  return list?.profiles.some((p) => p.name.toLowerCase() === folded)
     ? "taken"
     : null;
 }
@@ -55,13 +80,14 @@ export function passwordProblem(password: string): PasswordProblem | null {
  * The profile a password would sign in to: the one the person chose while
  * it is still listed, else the one the product has selected, else the only
  * one there is. Null where there are several and none is selected: the
- * person has to choose.
+ * person has to choose. Null, too, where the list could not be read
+ * coherently: its rows are then no ground for naming anybody.
  */
 export function targetOf(
   list: ProfileList | null,
   chosen: string | null,
 ): ProfileChoice | null {
-  if (!list) return null;
+  if (!list?.complete) return null;
   return (
     list.profiles.find((p) => p.name === chosen) ??
     list.profiles.find((p) => p.active) ??

@@ -34,6 +34,8 @@ export function accountFixture(
   const status = "status" in rest ? (rest.status ?? null) : SIGNED_OUT;
   const profiles = rest.profiles ?? null;
   const phase = phaseOf(true, status, handover, profiles);
+  const offering = phase === "signed-out" || phase === "no-profile";
+  const target = offering ? targetOf(profiles, null) : null;
   const refusal = rest.refusal ?? status?.refusal ?? null;
   return {
     refusal,
@@ -42,9 +44,17 @@ export function accountFixture(
     remaining: null,
     signOutFailure: null,
     createRefusal: null,
+    createUnknown: null,
+    creating: false,
     created: null,
     canCreate: profiles !== null,
-    target: targetOf(profiles, null),
+    target,
+    offering,
+    mustChoose:
+      offering &&
+      profiles?.complete === true &&
+      profiles.profiles.length > 0 &&
+      !target,
     choose: () => undefined,
     create: async () => false,
     submit: async () => undefined,

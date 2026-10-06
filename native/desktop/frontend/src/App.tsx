@@ -275,8 +275,10 @@ export function App({ host }: { host: Host }) {
   }, [switching, gated, switchFailed]);
   useEffect(() => {
     if (gated) return;
-    // Admitted: the next time the gate closes, the dialog opens again.
+    // Admitted: the next time the gate closes, the dialog opens again, and
+    // as the sign-in, whatever it was last asked to be.
     setSignInDismissed(false);
+    setCreatingProfile(false);
   }, [gated]);
   const signOutFailed = account.signOutFailure !== null;
   useEffect(() => {
@@ -352,6 +354,8 @@ export function App({ host }: { host: Host }) {
     setSignInDismissed(false);
   }, []);
   const canCreateProfile = account.canCreate;
+  // Another profile, or a new one, only while nobody is signed in.
+  const offersProfiles = account.offering;
   const askNewProfile = useCallback(() => {
     setSettingsOpen(false);
     askSignIn();
@@ -1088,9 +1092,7 @@ export function App({ host }: { host: Host }) {
         icon: canCreateProfile ? "userAdd" : "user",
         keywords: "register new account add another",
         enabled: () =>
-          canCreateProfile
-            ? phase === "no-profile" || mayEnterPassword
-            : phase === "no-profile",
+          canCreateProfile ? offersProfiles : phase === "no-profile",
         run: canCreateProfile ? askNewProfile : continueInTui,
       },
       {
@@ -1177,6 +1179,7 @@ export function App({ host }: { host: Host }) {
       askSignIn,
       askNewProfile,
       canCreateProfile,
+      offersProfiles,
       mayEnterPassword,
       continueInTui,
       signedIn,
