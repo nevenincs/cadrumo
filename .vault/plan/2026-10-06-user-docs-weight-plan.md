@@ -8,7 +8,7 @@ related:
   - '[[2026-10-06-user-docs-weight-adr]]'
 modified: '2026-10-06'
 body_schema: body-v2
-body_hash: 'sha256:5bcd29d959483c7cd4bf10b2d4f76a0c7d2fa814a550797893e6bd129d91857b'
+body_hash: 'sha256:445443b098916bfc19176fe9d4c76b71b2dc8f048bf3e7a4b5f9c9b0f6478875'
 ---
 
 # `user-docs-weight` plan
@@ -30,6 +30,9 @@ The plan reaches the decision's two commitments in its order D5. S01 to S05 chan
 - [ ] `S06` - Emit every language's strings for the generated references from one projection and retire their per-language generation; `dev/docs/casilla_reference.py, dev/docs/legal_reference.py, dev/docs/glossary_reference.py, dev/docs/cli_reference.py`.
 - [ ] `S07` - Emit the site chrome's strings for every language from the catalogues; `dev/docs/site_chrome.py, docs/_templates/`.
 - [ ] `S08` - Emit the authored pages' strings from the gettext catalogues in the one compile, retire the per-language builds, and move the strict and completeness gates onto the composed pages; `dev/docs/build.py, dev/docs/i18n.py, dev/packaging/native/docs_build.py, dev/docs/tests/`.
+- [ ] `S10` - Make the local and CI flows compile the documentation once: the language recipes, the live preview's per-language rebuilds, the docs gates that the local gate and the repository-contract lane each run again, and the prove jobs that repeat them per interpreter; `justfile, .github/workflows/release.yml, dev/docs/serve.py, dev/docs/serve_languages.py`.
+- [ ] `S11` - Run each language-independent projection once per compile: the command tree written per root and the command walk the search records repeat per language; `dev/docs/cli_tree.py, dev/docs/terminology/cli_projection.py, docs/conf.py`.
+- [ ] `S12` - Build the packaged documentation once for every platform preset and key its cache on what it reads, not on the binary directory; `native/cmake/Docs.cmake, dev/packaging/native/action_cache.py`.
 
 ## Parallelization
 
