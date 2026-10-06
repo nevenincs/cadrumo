@@ -612,3 +612,66 @@ for (const [kind, long] of [
       ).toBeInViewport({ ratio: 1 });
       expect(await inside(".settings")).toEqual([]);
     });
+
+test("one control shows both passwords of the form, and the keyboard meets each stop once", async ({
+  page: target,
+}) => {
+  await open(target, "first-run");
+  const show = form(target).getByRole("button", {
+    name: label("desktop.signin.show_password"),
+  });
+  await expect(show).toHaveCount(1);
+  await newPassword(target).fill("correct horse");
+  await repeated(target).fill("correct horse");
+  await expect(newPassword(target)).toHaveAttribute("type", "password");
+  await expect(repeated(target)).toHaveAttribute("type", "password");
+  await show.click();
+  await expect(newPassword(target)).toHaveAttribute("type", "text");
+  await expect(repeated(target)).toHaveAttribute("type", "text");
+  await form(target)
+    .getByRole("button", { name: label("desktop.signin.hide_password") })
+    .click();
+  await expect(repeated(target)).toHaveAttribute("type", "password");
+
+  // From the name, Tab by Tab: no two stops of the dialog share a name.
+  await nameField(target).focus();
+  const stops: string[] = [];
+  for (let press = 0; press < 12; press++) {
+    await target.keyboard.press("Tab");
+    const stop = await target.evaluate(() => {
+      const held = document.activeElement as HTMLElement;
+      const named = held.id
+        ? document.querySelector(`label[for="${held.id}"]`)?.textContent
+        : null;
+      return `${held.tagName}:${(held.getAttribute("aria-label") ?? named ?? held.textContent ?? "").trim()}`;
+    });
+    if (
+      stops.includes(stop) ||
+      stop.endsWith(label("desktop.account.create.name"))
+    )
+      break;
+    stops.push(stop);
+  }
+  expect(stops).toHaveLength(5);
+  expect(new Set(stops).size).toBe(stops.length);
+});
+
+test("in forced colours the form's main action is still drawn as a button", async ({
+  page: target,
+}) => {
+  await target.emulateMedia({ forcedColors: "active" });
+  for (const scenario of ["first-run", "signed-out"]) {
+    await open(target, scenario);
+    const action = dialog(target).locator("button[type=submit]");
+    await expect(action).toBeVisible();
+    const edge = await action.evaluate((button) => {
+      const style = getComputedStyle(button);
+      return {
+        width: parseFloat(style.borderTopWidth),
+        style: style.borderTopStyle,
+      };
+    });
+    expect(edge.width, scenario).toBeGreaterThanOrEqual(1);
+    expect(edge.style, scenario).toBe("solid");
+  }
+});

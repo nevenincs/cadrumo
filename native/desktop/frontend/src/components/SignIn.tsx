@@ -666,18 +666,20 @@ function CreateProfile({
         <FieldLabel htmlFor={confirmId}>
           {t("desktop.account.create.confirm")}
         </FieldLabel>
-        <PasswordInput
+        {/* Shown and hidden with the password above it, by that field's
+            one control. */}
+        <Input
           ref={second}
           id={confirmId}
+          type={revealed ? "text" : "password"}
           name="confirm-password"
           autoComplete="new-password"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
           readOnly={busy}
           aria-invalid={problem.mismatch || undefined}
           aria-describedby={problem.mismatch ? confirmErrorId : undefined}
-          revealed={revealed}
-          onRevealedChange={setRevealed}
-          showLabel={t("desktop.signin.show_password")}
-          hideLabel={t("desktop.signin.hide_password")}
         />
         <FieldError id={confirmErrorId}>
           {problem.mismatch && t("desktop.account.create.mismatch")}
