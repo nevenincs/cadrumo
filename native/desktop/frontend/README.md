@@ -379,10 +379,18 @@ to be checked in a built desktop package, on an interactive desktop, with
   packaged documentation are forwarded by its bridge script; the fixture site
   loads the same script, the packaged pages are a different build of it.
 - **WebView differences.** The benchmark and the tests run in Chromium.
-  WebKit, on macOS and Linux, has no scroll anchoring: a log that is not
-  following may creep while records arrive. Check it there, with reduced
-  motion and with the system at 200 percent.
-- **A screen reader pass** of the sign-in dialog, the palette and the log.
+  WebKit, on macOS and Linux, has no scroll anchoring, so the log puts a
+  reader's place back itself whenever what is drawn changes; check there that
+  it holds while records arrive. The fade at the edge of a sideways-scrolling
+  bar needs scroll timelines and is simply absent without them. Check both
+  with reduced motion and with the system at 200 percent.
+- **Profile views.** No host provides the filing calendar or the notification
+  counts yet, so everything about them here is scenario evidence. When one
+  does: the product's real answers against the types in `src/shell/views.ts`,
+  how long a read takes, since each is a process, what a read answers once the
+  sign-in has ended, and the calendar over a real profile's year.
+- **A screen reader pass** of the sign-in dialog, the palette, the log and the
+  calendar.
 
 ### The packaged run of 2026-10-05 20:09
 
