@@ -390,7 +390,9 @@ thousand records, and forty rounds of opening and closing the overlays to show
 that nothing accumulates. It also measures the filing calendar over a
 fixture with nine windows open at once: how long it takes to be drawn, forty
 rounds of its faces, a month drawn whole and a choice, and a drag of the
-split out to where both faces fit and back. It writes `test-results/benchmark/benchmark.json`
+split out to where both faces fit and back; and forty rounds of the sign-in
+dialog, put aside and opened again, turned into the form that creates a
+profile and back, with another profile chosen. It writes `test-results/benchmark/benchmark.json`
 in the build directory. Each number has a loose budget in the script, and
 `--check` fails the run when one is exceeded. The numbers describe the machine
 they were taken on: compare runs, not hosts.

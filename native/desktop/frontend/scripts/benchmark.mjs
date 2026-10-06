@@ -510,6 +510,53 @@ try {
     };
     await context.close();
   }
+
+  // The sign-in dialog, signed out with several profiles: put aside and
+  // opened again, turned into the form that creates a profile and back,
+  // and another profile chosen. What it leaves behind must not keep growing.
+  {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    const client = await context.newCDPSession(page);
+    await client.send("Performance.enable");
+    await page.goto(
+      `${origin}/scenarios.html?scenario=signed-out&bar=off&latency=0`,
+    );
+    const dialog = page.locator(".sign-in");
+    const choice = page.locator("#profile-choice");
+    await choice.waitFor();
+    const churn = async (count) => {
+      for (let run = 0; run < count; run++) {
+        await page.locator(".new-profile").click();
+        await page.locator(".create-profile").waitFor();
+        await page.locator(".create-profile button").last().click();
+        await choice.waitFor();
+        await choice.selectOption({ index: 2 });
+        await choice.selectOption({ index: 0 });
+        await page.keyboard.press("Escape");
+        await dialog.waitFor({ state: "detached" });
+        await page
+          .locator(".pane-tui [data-slot=empty] button")
+          .first()
+          .click();
+        await choice.waitFor();
+      }
+      return metrics(client);
+    };
+    const settled = await churn(10);
+    const later = await churn(40);
+    report.signIn = {
+      heapMB: later.heapMB,
+      churn: {
+        cycles: 40,
+        nodesGrown: later.nodes - settled.nodes,
+        listenersGrown: later.listeners - settled.listeners,
+      },
+    };
+    await context.close();
+  }
 } finally {
   await browser.close();
   server.close();
@@ -560,6 +607,16 @@ const BUDGETS = [
     34,
   ],
   ["heap with the calendar MB", report.calendar.heapMB, 24],
+  [
+    "nodes grown over 40 sign-in dialog cycles",
+    report.signIn.churn.nodesGrown,
+    1500,
+  ],
+  [
+    "listeners grown over 40 sign-in dialog cycles",
+    report.signIn.churn.listenersGrown,
+    300,
+  ],
 ];
 report.budgets = BUDGETS.map(([name, value, most]) => ({
   name,
