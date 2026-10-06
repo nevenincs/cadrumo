@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:62a3b59e3476148fb347ff462fdf9f5f940d9d97e7b51eff39201ab032123f52'
+body_hash: 'sha256:62fc1ffb40212ce9adb06e7acdcf22bcbd4dbb1b137dc0d6661dce5b8bc06178'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -289,6 +289,9 @@ related:
 - `S11` `verify:` `npm run check` -> `pass`
 - `S11` `verify:` `npm test` -> `pass`
 - `S11` `verify:` `node --test native/desktop/tests/build-paths.test.mjs` -> `pass`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
 
 ## Notes
 

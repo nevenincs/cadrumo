@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce4146ce2b78bec721978f5d05d8cb355a6bcba1f5b531b8d36a88de736b9aa1'
+body_hash: 'sha256:d75b767fada42784ea0a6056d7a9e4e38d9dc4ea64a2e04c3f36fc3d41af2390'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -306,6 +306,26 @@ Found when the benchmark, moved to the canonical build directory, failed one run
 ### Generated inputs | medium | the shell's strings and palette were written into the source tree
 
 A full Windows build by another session found that the two generated inputs were written to the frontend's source folder, so every binary directory owned the same files and concurrent builds raced on them; the same pass found the frontend's build directory was a free-form name. Resolved in `97ba357908`, after that session enrolled one binary directory per preset: the two files are outputs of the binary directory, declared at `native/cmake/BuildPaths.cmake:24` and removed by its desktop cleanup, and the shell imports them by two names that one plugin resolves, at `native/desktop/frontend/vite.config.ts:21`. A build without them stops and names the bootstrap, where it used to start and show each string's key; that was checked by removing one. The browser suite, the catalogue, the benchmark and the build-path tests pass on the enrolled directory.
+
+### Calendar today | low | nothing showed where today falls among the obligations
+
+Settled in `3c91315d2b`: a line stands just before the first obligation still ahead, at the day the product evaluated, said in the language's own word for today. The rule engine passes with it in both schemes.
+
+### Fifth review dialog | high | the sign-in dialog could reopen with focus behind it
+
+An independent review of `543709e5d3`, `8fd9537360` and `bc428c15e3`. With a TUI that cannot start, "Open the TUI" in the dialog closed and reopened the dialog within thirty milliseconds, and a focus wished for the TUI was granted to the pane's button under it: typing left the password empty and Tab cycled the pane behind the scrim. Resolved in `5c30110dc9`: no wish is granted while the dialog is up, at `native/desktop/frontend/src/App.tsx:484`, and a dialog shown again before it has finished leaving places focus in itself. Two tests type into the reopened dialog.
+
+### Fifth review calendar sign-in | medium | signing in from the calendar put the keyboard in the TUI
+
+The rule for a sign-in that succeeds after its dialog was put aside ran while an open dialog was still leaving, and got to focus before the dialog's own close. Resolved in `5c30110dc9`: that rule applies only where the dialog had been put aside. A test signs in from the calendar with the TUI beside it.
+
+### Fifth review log | medium | two more ways a log reader was moved, and a control out of reach
+
+"Show only this logger" from a record's menu, with records arriving, threw the reader to the end in three runs of four, because only the record at the top of the view was tried as the place to keep; the record the reader is on is now tried next. An arrow up and back down at the end left following off with the keyboard on the newest record. Under a finger at phone width the Follow button was off the edge of the one-row bar, which the previous change introduced; it leads the bar there now. Tab went back to a record the reader had scrolled away from, moving the view four thousand pixels. Space on a record with no detail scrolled the list. Hiding the TUI from inside it left focus on the document. Resolved in `5c30110dc9`, each with a test.
+
+### Fifth review left | low | not changed
+
+While the log follows a busy feed the focused record leaves the view within a batch and focus then falls to the list: that is what following means, and End or an arrow returns. Narrowing a filter to a list that does not overflow and clearing it shifts the place by up to two rows. The test of the account being looked at again never observes its pending state, because the scenario host answers a status read at once.
 
 ## Recommendations
 
