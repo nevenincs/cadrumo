@@ -250,6 +250,11 @@ export class SignInFixture {
         true,
         "native sign-in support must be available",
       );
+      // The form says, under a label of its own, which profile the
+      // password is for.
+      const named = session.page.locator(".sign-in .profile-named");
+      await named.waitFor({ state: "visible", timeout: 30000 });
+      assert.match(await named.innerText(), /Desktop Acceptance/);
       const rejected = await this.submit(session, this.wrong);
       assert.equal(rejected.kind, "refused");
       assert.equal(rejected.code, "CREDENTIAL_REJECTED");

@@ -470,6 +470,27 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
       "real password form signs in through the packaged CLI",
       () => signIn.signIn(session, input, hostPid),
     );
+    await check(
+      "profile-list",
+      "the host lists this storage's profiles by label through the packaged CLI",
+      async () => {
+        const listed = await session.call("profile_list");
+        assert.equal(
+          listed.ok,
+          true,
+          `profile list failed: ${listed.error?.code ?? "unknown"}`,
+        );
+        // Labels and the selection only: no identity crosses to the window.
+        assert.deepEqual(listed.value, {
+          profiles: [{ name: "Desktop Acceptance", active: true }],
+          complete: true,
+        });
+        return {
+          verdict: PASS,
+          detail: "one profile, by its label, selected and coherently read",
+        };
+      },
+    );
 
     // Terminals -------------------------------------------------------------
     await check(
