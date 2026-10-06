@@ -138,6 +138,8 @@ for (const language of ["en", "hu"])
       name: label("desktop.calendar.view_list", {}, language),
     });
     await expect(list).toBeInViewport();
+    // And the way back to today, whose name is two letters in Hungarian.
+    await expect(page.locator(".calendar-to-today")).toBeInViewport();
     await list.tap();
     await expect(page.locator(".calendar-list li[data-entry]")).toHaveCount(9);
     await fits("list");

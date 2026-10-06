@@ -308,8 +308,14 @@ is put back where it was whenever the months are laid out anew, by a pane
 resized or maximized or by coming back from the list.
 Choosing an obligation in one face marks it in the other and brings it into
 view. An obligation is one keyboard stop and one thing read aloud however
-many weeks its bar crosses. The colours of the bars are the colours of the
-counts in the page's head, and every state is also said in words.
+many weeks its bar crosses; from one, the arrow keys go to the next and the
+one before, and Home and End to the first and the last. The counts in the
+page's head are the key to the bars: each carries the colour and the mark
+its reading has among the months, and beside them stands the key to the
+marks on the days. Every state is also said in words. A control named in
+the language's word for today brings both faces back to where the calendar
+stands; it is named by the day instead where the calendar was worked out
+for another one.
 
 A new view takes its type and method in `src/shell/views.ts`, a fixture and
 an answer in the scenario host, a hook in `src/shell/` that owns when it is

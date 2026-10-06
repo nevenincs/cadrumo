@@ -33,6 +33,7 @@ import {
   deadlineDistance,
   evaluatedDay,
   evaluatedLabel,
+  evaluatedWord,
   isoDay as day,
   localDay,
   type CalendarState,
@@ -46,6 +47,7 @@ import type {
   CalendarUserState,
 } from "../shell/views";
 import { CalendarMonths } from "./CalendarMonths";
+import { EVENT_MARK, STATE_MARK } from "./calendarMarks";
 
 const STATE_TONE: Record<
   CalendarUserState,
@@ -437,6 +439,36 @@ export function FilingCalendarView({
         (wide ? 0 : kept()) + name,
       );
   }, [evaluatedOn, root, room, view, wide, selected]);
+  // Back to where the calendar stands: the month of the evaluated day among
+  // the months, and its mark in the list, each where a face first opens.
+  const toToday = () => {
+    const el = root.current;
+    if (!el || evaluatedOn === null) return;
+    const bring = (
+      scroller: HTMLElement | null,
+      to: Element | null,
+      air: number,
+    ) => {
+      if (scroller && to)
+        scroller.scrollTop +=
+          to.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top -
+          air;
+    };
+    bring(
+      el,
+      el.querySelector(
+        `.calendar-months [data-month="${evaluatedOn.slice(0, 7)}"]`,
+      ),
+      kept() + 12,
+    );
+    bring(
+      wide ? aside.current : el,
+      el.querySelector(".calendar-list .calendar-today"),
+      (wide ? 0 : kept()) +
+        (el.querySelector<HTMLElement>(".calendar-list h2")?.offsetHeight ?? 0),
+    );
+  };
   useEffect(() => {
     if (selected === null) return;
     const other = chosenIn.current === "months" ? "list" : "months";
@@ -586,6 +618,9 @@ export function FilingCalendarView({
       month: "short",
     });
     const nothing = months.length === 0;
+    const observedKinds = (["filing", "message"] as const).filter((kind) =>
+      state.calendar.events.some((event) => event.event_type === kind),
+    );
     // What the page is made from, and what it is not.
     const provenance = (
       <p className="text-sm text-muted-foreground">
@@ -708,18 +743,45 @@ export function FilingCalendarView({
               {/* The counts are also the key to the months' colours. With
                   nothing to count, the sentence takes their place. */}
               {standing.length > 0 ? (
-                <ul className="calendar-standing flex flex-wrap gap-1.5 px-4 pt-2.5 @md:group-data-[head=whole]/calendar:p-0">
-                  {standing.map(([kind, count]) => (
-                    <li key={kind} className="flex">
-                      <Badge variant={STATE_TONE[kind]}>
-                        {t(`desktop.calendar.state.${kind}`)}{" "}
-                        <span className="font-semibold tabular-nums">
-                          {count}
-                        </span>
-                      </Badge>
-                    </li>
-                  ))}
-                </ul>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 pt-2.5 @md:group-data-[head=whole]/calendar:p-0">
+                  <ul className="calendar-standing flex flex-wrap gap-1.5">
+                    {standing.map(([kind, count]) => (
+                      <li key={kind} className="flex">
+                        <Badge variant={STATE_TONE[kind]}>
+                          {/* The same mark the reading has among the months. */}
+                          {STATE_MARK[kind] && (
+                            <Icon name={STATE_MARK[kind] ?? "info"} size="xs" />
+                          )}
+                          {t(`desktop.calendar.state.${kind}`)}{" "}
+                          <span className="font-semibold tabular-nums">
+                            {count}
+                          </span>
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                  {/* What the marks on the months' days are, where the months
+                    are shown and have any. */}
+                  {(wide || view === "months") && observedKinds.length > 0 && (
+                    <ul
+                      className="calendar-key flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground"
+                      aria-label={t("desktop.calendar.observed")}
+                    >
+                      {observedKinds.map((kind) => (
+                        <li key={kind} className="flex items-center gap-1.5">
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              "size-2 rounded-full",
+                              EVENT_MARK[kind],
+                            )}
+                          />
+                          {t(`desktop.calendar.event.${kind}`)}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               ) : (
                 <div className="px-4 pt-2.5 @md:group-data-[head=whole]/calendar:p-0">
                   {provenance}
@@ -746,6 +808,18 @@ export function FilingCalendarView({
                       {t("desktop.calendar.view_list")}
                     </SegmentedControlItem>
                   </SegmentedControl>
+                )}
+                {/* The way back to where the calendar stands, from
+                    wherever the reader has gone in it. */}
+                {!nothing && today && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="calendar-to-today min-w-control-sm"
+                    onClick={toToday}
+                  >
+                    {evaluatedWord(today, here, locale)}
+                  </Button>
                 )}
                 <IconButton
                   label={t("desktop.calendar.refresh")}
@@ -833,12 +907,20 @@ export function FilingCalendarView({
         const edge = el.getBoundingClientRect().top;
         const under = edge + kept() - 1;
         let on: { key: string; top: number } | null = null;
+        let row: number | null = null;
         for (const month of el.querySelectorAll<HTMLElement>(
           ".calendar-month",
         )) {
           const top = month.getBoundingClientRect().top;
-          on = { key: month.dataset.month ?? "", top: top - edge };
-          if (top >= under) break;
+          // Past the first row in view: nothing further is nearer.
+          if (row !== null && top > row + 1) break;
+          const key = month.dataset.month ?? "";
+          // Of the months of that row, the current one where it is among
+          // them: a view left where it opened stays on the current month
+          // however its row is made up next.
+          if (row === null || key === evaluatedOn?.slice(0, 7))
+            on = { key, top: top - edge };
+          if (top >= under) row ??= top;
         }
         if (on) anchor.current = on;
       }}

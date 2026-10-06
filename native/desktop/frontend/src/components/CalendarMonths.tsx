@@ -1,7 +1,7 @@
 import { useId, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import {
   calendarMonths,
   crowded,
@@ -17,11 +17,8 @@ import {
 } from "../shell/calendarGrid";
 import { evaluatedDay, evaluatedLabel, isoDay as day } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
-import type {
-  CalendarEvent,
-  CalendarUserState,
-  FilingCalendar,
-} from "../shell/views";
+import { EVENT_MARK, STATE_MARK } from "./calendarMarks";
+import type { CalendarUserState, FilingCalendar } from "../shell/views";
 
 // How a filing window is drawn for each of the product's readings: a wash
 // and an edge in the reading's colour, with the words in ink, so the colour
@@ -34,20 +31,6 @@ const BAR_TONE: Record<CalendarUserState, string> = {
   late: "border-dashed border-destructive/60 bg-destructive/10",
   filed: "border-success/60 bg-success/10",
   unknown: "border-dotted border-warning/60 bg-warning/10",
-};
-
-const BAR_MARK: Record<CalendarUserState, IconName | null> = {
-  due: null,
-  late: "alert",
-  filed: "check",
-  unknown: "info",
-};
-
-// A filing made is a filled mark, a message a hollow one: told apart by
-// shape, with or without colour.
-const EVENT_TONE: Record<CalendarEvent["event_type"], string> = {
-  filing: "bg-success forced-colors:bg-[CanvasText]",
-  message: "border-2 border-muted-foreground",
 };
 
 function Month({
@@ -205,7 +188,7 @@ function Month({
                               data-event={event.event_type}
                               className={cn(
                                 "calendar-event size-2 rounded-full",
-                                EVENT_TONE[event.event_type],
+                                EVENT_MARK[event.event_type],
                               )}
                             />
                           );
@@ -267,9 +250,9 @@ function Month({
                         ?.focus({ preventScroll: true });
                   }}
                 >
-                  {BAR_MARK[bar.entry.user_state] && (
+                  {STATE_MARK[bar.entry.user_state] && (
                     <Icon
-                      name={BAR_MARK[bar.entry.user_state] ?? "info"}
+                      name={STATE_MARK[bar.entry.user_state] ?? "info"}
                       size="xs"
                       className="mr-1 @max-[4.5rem]:hidden"
                     />
@@ -384,7 +367,40 @@ export function CalendarMonths({
     [months, asked, chosenIn],
   );
   return (
-    <div className="calendar-months grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-x-4 gap-y-5 p-2 @md:p-4">
+    <div
+      className="calendar-months grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-x-4 gap-y-5 p-2 @md:p-4"
+      // From one obligation the arrow keys go to the next and the one
+      // before, and Home and End to the first and the last: each is one
+      // stop, in the order of the days. Tab still goes through them all.
+      onKeyDown={(event) => {
+        const from =
+          event.target instanceof HTMLElement
+            ? event.target.closest<HTMLElement>(".calendar-bar")
+            : null;
+        if (!from) return;
+        const stops = [
+          ...event.currentTarget.querySelectorAll<HTMLElement>(
+            '.calendar-bar:not([tabindex="-1"])',
+          ),
+        ];
+        const at = stops.indexOf(from);
+        const to =
+          at < 0
+            ? undefined
+            : event.key === "ArrowRight" || event.key === "ArrowDown"
+              ? stops[at + 1]
+              : event.key === "ArrowLeft" || event.key === "ArrowUp"
+                ? stops[at - 1]
+                : event.key === "Home"
+                  ? stops[0]
+                  : event.key === "End"
+                    ? stops.at(-1)
+                    : undefined;
+        if (!to || to === from) return;
+        event.preventDefault();
+        to.focus();
+      }}
+    >
       {months.map((month) => (
         <Month
           key={month.key}

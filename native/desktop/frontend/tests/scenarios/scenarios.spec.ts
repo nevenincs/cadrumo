@@ -2540,6 +2540,170 @@ test("the calendar's mark stands where the past ends in each shape of range, and
   await expect(found.page.locator('[data-today="true"]')).toHaveCount(0);
 });
 
+test("the calendar says what its marks are, and has a way back to where it stands", async ({
+  page: target,
+}) => {
+  await target.clock.setFixedTime(FIXTURE_DAY);
+  await target.setViewportSize({ width: 1280, height: 640 });
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  // The key to the marks on the days, by the counts that are the key to
+  // the windows: a filled mark for a filing, a hollow one for a message.
+  const key = page.locator(".calendar-key");
+  await expect(key).toHaveAccessibleName(label("desktop.calendar.observed"));
+  await expect(key.getByRole("listitem")).toHaveText([
+    label("desktop.calendar.event.filing"),
+    label("desktop.calendar.event.message"),
+  ]);
+  const shape = (item: number) =>
+    key
+      .getByRole("listitem")
+      .nth(item)
+      .locator("span")
+      .evaluate((mark) => {
+        const style = getComputedStyle(mark);
+        return {
+          filled: style.backgroundColor !== "rgba(0, 0, 0, 0)",
+          edge: style.borderTopWidth,
+        };
+      });
+  expect(await shape(0)).toEqual({ filled: true, edge: "0px" });
+  expect(await shape(1)).toEqual({ filled: false, edge: "2px" });
+  // Each count carries the mark its reading has among the months; what is
+  // simply due has none.
+  const counts = page.locator(".calendar-standing [data-slot=badge]");
+  await expect(counts).toHaveCount(4);
+  expect(
+    await counts.evaluateAll((badges) =>
+      badges.map((badge) => badge.querySelector("[data-slot=icon]") !== null),
+    ),
+  ).toEqual([true, false, true, true]);
+
+  // The way back is named in the language's word for today, since the
+  // calendar was worked out today.
+  const said = new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+    0,
+    "day",
+  );
+  const back = page.getByRole("button", {
+    name: new RegExp(`^${said}$`, "i"),
+  });
+  const october = page.locator('.calendar-month[data-month="2026-10"] h2');
+  await expect(october).toBeInViewport();
+  const opened = await page.evaluate((element) => element.scrollTop);
+  await page.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(october).not.toBeInViewport();
+  await back.click();
+  await expect(october).toBeInViewport();
+  expect(await page.evaluate((element) => element.scrollTop)).toBe(opened);
+  await expect(back).toBeFocused();
+  // In the list it goes to the list's own mark for today, and the key to
+  // the months' marks is put away with the months.
+  await page
+    .getByRole("radio", { name: label("desktop.calendar.view_list") })
+    .click();
+  await expect(key).toHaveCount(0);
+  const mark = page.getByRole("separator");
+  await page.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(mark).not.toBeInViewport();
+  await back.click();
+  await expect(mark).toBeInViewport();
+  // Beside the list it brings both back.
+  await target
+    .locator(".pane-docs .pane-head")
+    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .click();
+  const aside = page.locator(".calendar-aside");
+  await expect(aside).toBeVisible();
+  await page.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await aside.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(october).not.toBeInViewport();
+  await expect(aside.getByRole("separator")).not.toBeInViewport();
+  await back.click();
+  await expect(october).toBeInViewport();
+  await expect(aside.getByRole("separator")).toBeInViewport();
+
+  // A calendar worked out for another day names the way back by that day.
+  await target.clock.setFixedTime(new Date(2026, 9, 7, 9));
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  await expect(
+    page.getByRole("button", {
+      name: new Intl.DateTimeFormat("en", {
+        day: "numeric",
+        month: "short",
+      }).format(FIXTURE_DAY),
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(back).toHaveCount(0);
+});
+
+test("the arrow keys go from one obligation to the next among the months", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const stops = page.locator('.calendar-bar:not([tabindex="-1"])');
+  await expect(stops).toHaveCount(9);
+  const entry = () =>
+    target.evaluate(() =>
+      (document.activeElement as HTMLElement).getAttribute("data-entry"),
+    );
+  const order = await stops.evaluateAll((bars) =>
+    bars.map((bar) => bar.getAttribute("data-entry")),
+  );
+  await stops.first().focus();
+  expect(await entry()).toBe(order[0]);
+  // Right and down go on, left and up go back, each to an obligation's one
+  // stop and never to another week of the same window.
+  await target.keyboard.press("ArrowRight");
+  expect(await entry()).toBe(order[1]);
+  await target.keyboard.press("ArrowDown");
+  expect(await entry()).toBe(order[2]);
+  await target.keyboard.press("ArrowLeft");
+  expect(await entry()).toBe(order[1]);
+  await target.keyboard.press("ArrowUp");
+  expect(await entry()).toBe(order[0]);
+  // End and Home go to the last and the first, and the view goes with the
+  // keyboard: the last obligation of the range is far below.
+  await target.keyboard.press("End");
+  expect(await entry()).toBe(order.at(-1));
+  await expect(stops.last()).toBeInViewport();
+  await target.keyboard.press("Home");
+  expect(await entry()).toBe(order[0]);
+  await expect(stops.first()).toBeInViewport();
+  // Not covered by the head that stays at the top.
+  const head = (await page.locator(".calendar-head").boundingBox())!;
+  expect((await stops.first().boundingBox())!.y).toBeGreaterThanOrEqual(
+    head.y + head.height,
+  );
+  // Enter chooses, as on any of them.
+  await target.keyboard.press("Enter");
+  await expect(stops.first()).toHaveAttribute("aria-pressed", "true");
+  // From the page itself the arrows still scroll it.
+  await page.focus();
+  const before = await page.evaluate((element) => element.scrollTop);
+  await target.keyboard.press("ArrowDown");
+  await expect
+    .poll(() => page.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(before);
+});
+
 test("a calendar read again after a sign-out opens on the current month, as the first did", async ({
   page: target,
 }) => {

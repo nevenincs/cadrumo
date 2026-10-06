@@ -80,6 +80,27 @@ export function evaluatedLabel(
 }
 
 /**
+ * The name of the way back to the evaluated day: the language's word for
+ * today where that day is today here, and the day itself where it is not.
+ */
+export function evaluatedWord(
+  on: string,
+  today: string,
+  locale: string,
+): string {
+  if (on !== today)
+    return new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "short",
+    }).format(isoDay(on));
+  const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
+    0,
+    "day",
+  );
+  return `${word.charAt(0).toLocaleUpperCase(locale)}${word.slice(1)}`;
+}
+
+/**
  * The local day, kept current: looked at again just after each midnight, and
  * whenever the window is returned to, since a machine that slept through
  * midnight ran no timer.
