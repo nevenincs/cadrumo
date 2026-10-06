@@ -37,6 +37,9 @@ const STATE_ORDER: readonly CalendarUserState[] = [
 ];
 
 const DAY_MS = 86_400_000;
+/** Beyond this many days ahead, a distance is said in months. */
+const FAR_DAYS = 60;
+const MONTH_DAYS = 365.25 / 12;
 
 /** An ISO date as a local calendar day: no time, so no zone can move it. */
 function day(iso: string): Date {
@@ -67,14 +70,16 @@ function Entry({
       : Math.round(
           (closes.getTime() - day(entry.evaluated_on).getTime()) / DAY_MS,
         );
-  // A filed obligation has no distance left to say.
+  // A filed obligation has no distance left to say. Lateness is said in
+  // the product's own days. A date far ahead is said in months, as it is
+  // read: the day itself is beside it.
+  const distance = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const relative =
     entry.user_state === "filed"
       ? null
-      : new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
-          away,
-          "day",
-        );
+      : entry.days_overdue === null && away > FAR_DAYS
+        ? distance.format(Math.round(away / MONTH_DAYS), "month")
+        : distance.format(away, "day");
   const name = t("desktop.calendar.modelo", { modelo: entry.modelo });
   const notes = [
     t(`desktop.calendar.local.${entry.local_filing_state}`),

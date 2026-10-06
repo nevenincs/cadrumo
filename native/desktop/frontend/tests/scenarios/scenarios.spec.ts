@@ -1134,6 +1134,16 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
       ([kind, count]) => `${label(`desktop.calendar.state.${kind}`)}${count}`,
     ),
   );
+  // How far each is: lateness in the product's own days, a near date in
+  // days, a far one in months.
+  const said = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  await expect(late).toContainText(said.format(-78, "day"));
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "2026-3T" }).last(),
+  ).toContainText(said.format(14, "day"));
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "2026-4T" }),
+  ).toContainText(said.format(4, "month"));
   // What could not be determined is said, not left out.
   await expect(page).toContainText("347");
   await expect.poll(calendarReads(target)).toBe(1);

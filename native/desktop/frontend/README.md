@@ -309,7 +309,9 @@ these, so a redesign keeps them. They are contracts, not styling.
 The browser tests also select `.pane-tui`, `.pane-head`, `section.panel`,
 `.main-area`, `.tabstrip`, `.split` with `split-row` or `split-column`,
 `.split-separator`, `.logview`, `.filter-text`, `.record`, `.source-banner`,
-`.terminal-note`, `.terminal-host`, `.rail` and `.calendar-page`.
+`.terminal-note`, `.terminal-host`, `.rail`, `[data-pin]` on a rail button,
+and in the calendar `.calendar-page`, `.calendar-standing` and
+`.calendar-distance`.
 
 ## What only the desktop window can show
 
