@@ -7,22 +7,16 @@
   var IS_MAC = /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);
 
   /* ── Chrome strings ────────────────────────────────────────────────────
-   * Sphinx renders one inline <script type="application/json"
-   * id="cadrumo-chrome-strings"> payload per page, holding this site root's
-   * chrome resolved in the root's own language. Every string this file writes
-   * into the DOM is read from it, so a localized root never shows an English
-   * control around translated content. The English literal stays at each call
-   * site as the value used when no payload is present, which happens only
-   * outside a Sphinx build. */
+   * The build writes one cadrumo-chrome-strings.js per site root, loaded
+   * before this file, which publishes the root's chrome resolved in the root's
+   * own language. Every string this file writes into the DOM is read from it,
+   * so a localized root never shows an English control around translated
+   * content. The English literal stays at each call site as the value used
+   * when no strings were published, which happens only outside a Sphinx
+   * build. */
   var CHROME = (function () {
-    var node = document.getElementById("cadrumo-chrome-strings");
-    if (!node) return {};
-    try {
-      var parsed = JSON.parse(node.textContent);
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch (e) {
-      return {};
-    }
+    var strings = window.cadrumoChromeStrings;
+    return strings && typeof strings === "object" ? strings : {};
   })();
 
   function chromeText(name, english) {

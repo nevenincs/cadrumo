@@ -14,8 +14,8 @@ through :func:`~dev.docs._locale_chrome.docs_chrome`, the same strict resolver
 the generated reference surfaces use: a key with no authored value in the build
 language raises instead of degrading to English.  ``docs/conf.py`` calls the two
 functions below once when the configuration loads and hands the results to the
-templates through ``html_context``; the templates serialise the
-:func:`site_chrome` mapping into one inline JSON payload that the interaction
+templates through ``html_context``; the build publishes the
+:func:`site_chrome` mapping once per site root as the script the interaction
 layer reads, so the browser-side strings come from the same catalogue as the
 server-rendered ones.
 

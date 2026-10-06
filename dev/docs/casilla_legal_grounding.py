@@ -159,8 +159,10 @@ def _legal_list(refs: tuple[str, ...], links: dict[str, _LegalLink], label: str)
             )
             continue
         resolved += 1
+        # No class: a large modelo carries tens of thousands of these, and the
+        # stylesheet reaches a resolved citation through the list it sits in.
         anchor = (
-            f'<a class="casilla-legal-ref" href="{html.escape(link.target, quote=True)}"'
+            f'<a href="{html.escape(link.target, quote=True)}"'
             f' title="{html.escape(ref, quote=True)}">{html.escape(link.provision or link.instrument)}</a>'
         )
         grouped.setdefault(link.instrument, []).append(anchor)

@@ -67,7 +67,8 @@ if not isinstance(_PROJECT_URLS, dict):
 #     may load from the network. It drops the hoverxref extension, whose glossary
 #     tooltips fetch the Read the Docs embed API and whose always-include asset
 #     policy is what puts the MathJax CDN script on every page (no page renders
-#     math), carries no web base URL, and loads the frame bridge before
+#     math), and the Open Graph extension, whose tags only a link preview
+#     reads; it carries no web base URL, and loads the frame bridge before
 #     ``cadrumo-docs.js``.
 _DOCS_FLAVOR = os.environ.get("CADRUMO_DOCS_FLAVOR", "web")
 if _DOCS_FLAVOR not in {"web", "desktop"}:
@@ -158,7 +159,9 @@ if _USER_SCOPE:
 if _DESKTOP_FLAVOR:
     # The tooltips load from ``/_/api/v3/embed/``, an endpoint only Read the
     # Docs serves; ``:term:`` references stay ordinary links to the glossary.
-    extensions = [name for name in extensions if name != "hoverxref.extension"]
+    # Open Graph tags describe a page to a site that previews its link; a
+    # packaged page has no public address to share.
+    extensions = [name for name in extensions if name not in {"hoverxref.extension", "sphinxext.opengraph"}]
 else:
     # Hover tooltip cards on :term: cross-references to the generated glossary.
     # One term per glossary entry (the shared-entry rendering bug); aliases ride
@@ -402,6 +405,14 @@ html_meta = {"description": _SITE_LABELS["meta_description"]}
 html_favicon = "_static/cadrumo-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
+# Search is Pagefind, so Sphinx builds no index of its own (see
+# ``_skip_stock_search_index``) and the search page is rendered as an ordinary
+# additional page from the same template.
+html_additional_pages = {"search": "search.html"}
+# The theme's view and edit buttons link to the repository (``source_repository``
+# below), so no page links the ``_sources`` copy Sphinx would write of every
+# source file into every site root.
+html_copy_source = False
 html_css_files = [
     "cadrumo-docs.css",
     # The generated reference surfaces carry their own stylesheets so the
@@ -423,6 +434,10 @@ html_sidebars = {
         "sidebar/scroll-end.html",
     ],
 }
+# The legal reference is one page per official document. Its index lists them
+# all, so a provision page's sidebar names the section and the document being
+# read rather than repeating every other document on every one of them.
+cadrumo_navigation_listed_on_index = [f"{import_module('dev.docs.legal_reference_routing').LEGAL_REFERENCE_DIR}/index"]
 html_theme_options = {
     "light_logo": "cadrumo-mark-light.svg",
     "dark_logo": "cadrumo-mark-dark.svg",
@@ -631,8 +646,8 @@ html_context["cadrumo_docs_languages"] = [
 # ── Site chrome ──────────────────────────────────────────────────────────────
 # Every template-rendered label, accessible name, and interaction-layer string,
 # flat and resolved for this root's language. The templates read it by name and
-# serialise it once per page as the payload docs/_static/cadrumo-docs.js reads,
-# so the server-rendered and browser-written chrome share one authority.
+# the build publishes it once per root as the script docs/_static/cadrumo-docs.js
+# reads, so the server-rendered and browser-written chrome share one authority.
 html_context["cadrumo_chrome"] = site_chrome(
     _BUILD_LANGUAGE,
     language_endonym=_DOCS_LANGUAGE_ENDONYMS[_BUILD_LANGUAGE],
@@ -1714,6 +1729,21 @@ def setup(app):
 
         emit_cli_tree(app, specific_sources=_specific_build_sources())
 
+    def _skip_stock_search_index(app):
+        """Build no Sphinx search index, which nothing in the site reads.
+
+        The search page and the command palette query the Pagefind index the
+        post-build pass writes. Sphinx's own ``searchindex.js`` was two megabytes
+        in every site root and a pass over every page to build.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        from sphinx.builders.html import StandaloneHTMLBuilder
+
+        if isinstance(app.builder, StandaloneHTMLBuilder):
+            app.builder.search = False
+
     def _check_cli_sequences(app):
         """Fail the build on any cli-sequence golden divergence.
 
@@ -1754,6 +1784,7 @@ def setup(app):
     app.connect("builder-inited", _generate_legal_reference)
     app.connect("builder-inited", _emit_cli_tree)
     app.connect("builder-inited", _check_cli_sequences)
+    app.connect("builder-inited", _skip_stock_search_index)
     # Priority 700 runs after intersphinx (which resolves external targets at the
     # default priority) so the short-name bridge only fires for genuinely
     # unresolved in-tree references.
@@ -1779,4 +1810,10 @@ def setup(app):
     from dev.docs.navigation import register as _register_collapsed_navigation
 
     _register_collapsed_navigation(app)
+
+    # The theme variables and the chrome strings are one file per site root
+    # rather than a block in every page's head.
+    from dev.docs.shared_page_assets import register as _register_shared_page_assets
+
+    _register_shared_page_assets(app)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

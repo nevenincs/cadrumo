@@ -1,6 +1,6 @@
 # Cadrumo documentation
 
-```{image} _static/index-header.png
+```{image} index-header.png
 :alt: Paper tax forms, an envelope, a keyboard, and a calculator arranged on a desk
 :class: cadrumo-index-header
 :width: 100%

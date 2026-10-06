@@ -76,7 +76,7 @@ def _fill_explanation(
             anchor = casilla_page_anchor(record.modelo, casilla_id)
             text = number if number is not None else casilla_id
             references.append(
-                f'<a class="casilla-derives-from__ref" href="#{html.escape(anchor, quote=True)}"'
+                f'<a href="#{html.escape(anchor, quote=True)}"'
                 f' title="{html.escape(casilla_id, quote=True)}">{html.escape(text)}</a>',
             )
         derived = docs_chrome("docs.casilla.chrome.derived_from", language)

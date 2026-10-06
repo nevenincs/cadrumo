@@ -6,6 +6,10 @@ siblings, the top-level sections and its own children, and must not carry the
 nested pages of a section it is not in. The same site built without the
 collapsed navigation carries every page on every page, which is the cost this
 exists to remove, and doubles as proof that the check can see a full tree.
+
+A third section stands for a generated reference set: its index lists its
+members, so its sidebars name the section and the member being read and leave
+the other members to the index.
 """
 
 from __future__ import annotations
@@ -23,7 +27,9 @@ from dev._paths import REPO_ROOT
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _PAGES = {
-    "index": "Home\n====\n\n.. toctree::\n   :caption: Guide\n\n   section-a/index\n   section-b/index\n",
+    "index": (
+        "Home\n====\n\n.. toctree::\n   :caption: Guide\n\n   section-a/index\n   section-b/index\n   section-c/index\n"
+    ),
     "section-a/index": "Section A\n=========\n\n.. toctree::\n\n   a1\n   a2\n",
     "section-a/a1": "Page A1\n=======\n\n.. toctree::\n\n   a1x\n",
     "section-a/a1x": "Page A1X\n========\n\nLeaf.\n",
@@ -31,10 +37,15 @@ _PAGES = {
     "section-b/index": "Section B\n=========\n\n.. toctree::\n\n   b1\n",
     "section-b/b1": "Page B1\n=======\n\n.. toctree::\n\n   b1x\n",
     "section-b/b1x": "Page B1X\n========\n\nLeaf.\n",
+    "section-c/index": "Section C\n=========\n\n.. toctree::\n\n   c1\n   c2\n   c3\n",
+    "section-c/c1": "Page C1\n=======\n\nLeaf.\n",
+    "section-c/c2": "Page C2\n=======\n\n.. toctree::\n\n   c2x\n",
+    "section-c/c2x": "Page C2X\n========\n\nLeaf.\n",
+    "section-c/c3": "Page C3\n=======\n\nLeaf.\n",
 }
 
 
-def _build(tmp_path: Path, *, collapsed: bool) -> str:
+def _build(tmp_path: Path, *, collapsed: bool, read: str = "section-a/a1") -> str:
     source = tmp_path / ("collapsed" if collapsed else "full") / "src"
     for name, text in _PAGES.items():
         page = source / f"{name}.rst"
@@ -48,6 +59,7 @@ def _build(tmp_path: Path, *, collapsed: bool) -> str:
             sys.path.insert(0, {str(REPO_ROOT)!r})
             project = "fixture"
             html_theme = "furo"
+            cadrumo_navigation_listed_on_index = ["section-c/index"]
             """
         )
         + register,
@@ -62,7 +74,7 @@ def _build(tmp_path: Path, *, collapsed: bool) -> str:
         timeout=300,
     )
     assert completed.returncode == 0, completed.stdout + completed.stderr
-    return (out / "section-a" / "a1.html").read_text(encoding="utf-8")
+    return (out / f"{read}.html").read_text(encoding="utf-8")
 
 
 def _sidebar_titles(page: str) -> set[str]:
@@ -75,6 +87,27 @@ def test_a_page_sidebar_is_its_collapsed_branch(tmp_path: Path) -> None:
     titles = _sidebar_titles(_build(tmp_path, collapsed=True))
     assert {"Section A", "Section B", "Page A1", "Page A2", "Page A1X"} <= titles
     assert not titles & {"Page B1", "Page B1X"}, f"a non-ancestor branch was expanded: {sorted(titles)}"
+
+
+def test_a_listed_section_names_only_the_member_being_read(tmp_path: Path) -> None:
+    page = _build(tmp_path, collapsed=True, read="section-c/c2x")
+    titles = _sidebar_titles(page)
+    assert {"Section A", "Section B", "Section C", "Page C2", "Page C2X"} <= titles
+    assert not titles & {"Page C1", "Page C3"}, f"the other members were enumerated: {sorted(titles)}"
+    tree = BeautifulSoup(page, "html.parser").select_one("div.sidebar-tree")
+    assert tree is not None
+    current = [link.get_text(strip=True) for link in tree.select("li.current > a.reference.internal")]
+    assert current == ["Section C", "Page C2", "Page C2X"], current
+
+
+def test_a_listed_section_index_leaves_its_members_to_the_page(tmp_path: Path) -> None:
+    page = _build(tmp_path, collapsed=True, read="section-c/index")
+    titles = _sidebar_titles(page)
+    assert "Section C" in titles
+    assert not titles & {"Page C1", "Page C2", "Page C2X", "Page C3"}, sorted(titles)
+    tree = BeautifulSoup(page, "html.parser").select_one("div.sidebar-tree")
+    assert tree is not None
+    assert not tree.select("li.current ul"), "the section entry kept an empty member list"
 
 
 def test_the_theme_alone_embeds_every_page_on_every_page(tmp_path: Path) -> None:

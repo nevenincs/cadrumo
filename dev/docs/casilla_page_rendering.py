@@ -78,10 +78,7 @@ def _casilla_index(
             anchor = casilla_page_anchor(record.modelo, record.casilla_id)
             title = html.escape(" ".join((label or str(record.casilla_id)).split()), quote=True)
             box = _box_number(record, facts)
-            chip = (
-                f'<a class="casilla-index__chip" href="#{html.escape(anchor, quote=True)}" title="{title}">'
-                f"{html.escape(box)}</a>"
-            )
+            chip = f'<a href="#{html.escape(anchor, quote=True)}" title="{title}">{html.escape(box)}</a>'
             # A casilla with no printed number falls back to its id, which is
             # five times the width of a number and would tear the grid apart.
             # The two kinds get two affordances rather than one clamped chip.

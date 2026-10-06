@@ -20,3 +20,7 @@ exclude_selectors:
   - "div.related"
   - ".sidebar-tree"
   - "a.copybtn"
+  # A recorded JSON envelope is machine output. Its keys and identifiers match
+  # almost any query and were most of the indexed text of the pages that show
+  # one; the command line and the human-readable output beside it stay indexed.
+  - 'pre.cadrumo-frame-output[data-format="json"]'

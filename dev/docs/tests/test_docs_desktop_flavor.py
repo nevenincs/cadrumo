@@ -43,8 +43,11 @@ from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
 
+from ..desktop_palette import theme_variables
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
+from ..shared_page_assets import CHROME_STRINGS_GLOBAL, CHROME_STRINGS_SCRIPT, THEME_VARIABLES_STYLESHEET
+from ..site_chrome import site_chrome
 from ..terminology.search_record import ResultDisplayClass, SearchRecordKind
 from ..terminology.unified_record import (
     RankingTier,
@@ -88,8 +91,9 @@ The {_SEARCH_TERM} paragraph compares a < b & c for the search excerpt.
 Closing paragraph.
 """
 
-#: The scripts the web flavor rendered on this page before the desktop flavor
-#: existed, in order. The web flavor must keep shipping exactly these.
+#: The scripts the web flavor renders on this page, in order: what it shipped
+#: before the desktop flavor existed, and the root's chrome strings ahead of the
+#: page script that reads them. The web flavor must keep shipping exactly these.
 _WEB_SCRIPTS = [
     "_static/jquery.js",
     "_static/_sphinx_javascript_frameworks_compat.js",
@@ -104,6 +108,7 @@ _WEB_SCRIPTS = [
     "_static/js/micromodal.min.js",
     "_static/design-tabs.js",
     "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
+    "_static/cadrumo-chrome-strings.js",
     "_static/cadrumo-docs.js",
 ]
 
@@ -169,10 +174,10 @@ def _build_fixture_site(work: Path, **env_overrides: str) -> tuple[Path, Command
     return html, result
 
 
-def _built_page(work: Path, **env_overrides: str) -> str:
+def _built_site(work: Path, **env_overrides: str) -> Path:
     html, result = _build_fixture_site(work, **env_overrides)
     assert result.returncode == 0, result.stdout + result.stderr
-    return (html / "fixture.html").read_text(encoding="utf-8")
+    return html
 
 
 def _script_tags(page: str) -> list[dict[str, str]]:
@@ -219,12 +224,18 @@ def _without_version(src: str) -> str:
 
 
 @pytest.fixture(scope="module")
-def flavor_pages(tmp_path_factory: pytest.TempPathFactory) -> dict[str, str]:
-    """The fixture page built once per flavor with the default configuration."""
+def flavor_sites(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
+    """The fixture site built once per flavor with the default configuration."""
     return {
-        "web": _built_page(tmp_path_factory.mktemp("web-flavor")),
-        "desktop": _built_page(tmp_path_factory.mktemp("desktop-flavor"), CADRUMO_DOCS_FLAVOR="desktop"),
+        "web": _built_site(tmp_path_factory.mktemp("web-flavor")),
+        "desktop": _built_site(tmp_path_factory.mktemp("desktop-flavor"), CADRUMO_DOCS_FLAVOR="desktop"),
     }
+
+
+@pytest.fixture(scope="module")
+def flavor_pages(flavor_sites: dict[str, Path]) -> dict[str, str]:
+    """The fixture page of each flavor's site."""
+    return {flavor: (site / "fixture.html").read_text(encoding="utf-8") for flavor, site in flavor_sites.items()}
 
 
 def test_desktop_page_loads_nothing_remote(flavor_pages: dict[str, str]) -> None:
@@ -251,6 +262,69 @@ def test_web_page_keeps_its_scripts(flavor_pages: dict[str, str]) -> None:
     """The published flavor still ships the scripts it did before, and no bridge."""
     sources = [_without_version(tag["src"]) for tag in _script_tags(flavor_pages["web"])]
     assert sources == _WEB_SCRIPTS
+
+
+@pytest.mark.parametrize("flavor", ["web", "desktop"])
+def test_theme_variables_are_one_stylesheet_not_a_block_in_every_page(
+    flavor_sites: dict[str, Path], flavor_pages: dict[str, str], flavor: str
+) -> None:
+    """Every variable ``docs/conf.py`` sets reaches the page through one linked sheet, last in the cascade."""
+    page = flavor_pages[flavor]
+    head = page[: page.index("</head>")]
+    assert "<style" not in head, "the head still declares styles inline"
+    sheets = [_without_version(url) for url in _loaded_resource_urls(head) if ".css" in url]
+    assert sheets[-1] == f"_static/{THEME_VARIABLES_STYLESHEET}", sheets
+    light_rule, print_guard, dark_rule, dark_preference_rule, closing = (
+        (flavor_sites[flavor] / "_static" / THEME_VARIABLES_STYLESHEET).read_text(encoding="utf-8").splitlines()
+    )
+    assert (print_guard, closing) == ("@media not print{", "}")
+    assert light_rule.startswith("body{")
+    assert dark_rule.startswith('body[data-theme="dark"]{')
+    assert dark_preference_rule.startswith('@media (prefers-color-scheme:dark){body:not([data-theme="light"]){')
+    expected = theme_variables((_DOCS / "conf.py").read_text(encoding="utf-8"))
+    assert expected.light and expected.dark, "the configuration declares no theme variable; the check would be vacuous"
+    for rule, variables in (
+        (light_rule, expected.light),
+        (dark_rule, expected.dark),
+        (dark_preference_rule, expected.dark),
+    ):
+        missing = [name for name, value in variables.items() if f"--{name}:{value};" not in rule]
+        assert missing == []
+        assert "--color-code-background:" in rule
+        assert "--color-code-foreground:" in rule
+
+
+@pytest.mark.parametrize("flavor", ["web", "desktop"])
+def test_chrome_strings_are_published_once_ahead_of_the_page_script(
+    flavor_sites: dict[str, Path], flavor_pages: dict[str, str], flavor: str
+) -> None:
+    """The root's chrome strings are one script the page loads, not a payload inside it."""
+    page = flavor_pages[flavor]
+    assert "cadrumo-chrome-strings" not in page.replace(f"_static/{CHROME_STRINGS_SCRIPT}", "")
+    sources = [_without_version(tag["src"]) for tag in _script_tags(page)]
+    assert sources.index(f"_static/{CHROME_STRINGS_SCRIPT}") < sources.index("_static/cadrumo-docs.js")
+    script = (flavor_sites[flavor] / "_static" / CHROME_STRINGS_SCRIPT).read_text(encoding="utf-8")
+    prefix, suffix = f"window.{CHROME_STRINGS_GLOBAL}=", ";\n"
+    assert script.startswith(prefix)
+    assert script.endswith(suffix)
+    assert json.loads(script[len(prefix) : -len(suffix)]) == site_chrome(OutputLanguage.EN, language_endonym="English")
+
+
+def test_only_the_published_flavor_describes_its_pages_to_link_previews(flavor_pages: dict[str, str]) -> None:
+    """A packaged page has no address to share, so it carries no Open Graph tag."""
+    assert 'property="og:' in flavor_pages["web"]
+    assert 'property="og:' not in flavor_pages["desktop"]
+
+
+@pytest.mark.parametrize("flavor", ["web", "desktop"])
+def test_a_site_carries_its_search_page_and_none_of_the_unread_build_products(
+    flavor_sites: dict[str, Path], flavor: str
+) -> None:
+    """Search is Pagefind and sources are linked in the repository; Sphinx's own copies are not built."""
+    site = flavor_sites[flavor]
+    assert 'id="pagefind-search"' in (site / "search.html").read_text(encoding="utf-8")
+    assert not (site / "searchindex.js").exists()
+    assert not [path for path in (site / "_sources").rglob("*") if path.is_file()]
 
 
 def test_configuration_refuses_an_unknown_flavor(tmp_path: Path) -> None:
