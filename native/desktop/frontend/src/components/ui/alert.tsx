@@ -43,7 +43,7 @@ function Alert({
       {...props}
     >
       {icon}
-      <div className="grid min-w-0 flex-1 gap-0.5 text-foreground">
+      <div className="grid min-w-0 flex-1 grid-cols-1 gap-0.5 text-foreground [overflow-wrap:anywhere]">
         {children}
       </div>
     </div>

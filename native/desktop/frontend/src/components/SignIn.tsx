@@ -334,7 +334,7 @@ export function SignInDialog({
 
         {creating ? null : answerable ? (
           <form
-            className="grid gap-4"
+            className="grid grid-cols-1 gap-4"
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
@@ -501,7 +501,7 @@ function ProfileNamed({ name }: { name: string }) {
   const id = useId();
   return (
     <div
-      className="profile-named grid gap-1.5"
+      className="profile-named grid grid-cols-1 gap-1.5"
       role="group"
       aria-labelledby={id}
     >
@@ -510,7 +510,10 @@ function ProfileNamed({ name }: { name: string }) {
       </Label>
       <span className="flex min-w-0 items-center gap-2">
         <Icon name="user" className="text-muted-foreground" />
-        <span className="truncate font-medium">{name}</span>
+        {/* Cut where it is long: the whole of it is its title. */}
+        <span className="truncate font-medium" title={name}>
+          {name}
+        </span>
       </span>
     </div>
   );
@@ -574,7 +577,7 @@ function CreateProfile({
   const taken = problem.name ?? (nameTaken(refused) ? "taken" : null);
   return (
     <form
-      className="create-profile grid gap-4"
+      className="create-profile grid grid-cols-1 gap-4"
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
@@ -863,7 +866,7 @@ export function Account({
   return (
     <>
       {profile && (
-        <section className="grid gap-2" aria-labelledby={profileId}>
+        <section className="grid grid-cols-1 gap-2" aria-labelledby={profileId}>
           <h3
             id={profileId}
             className="text-sm font-medium text-muted-foreground"
@@ -879,6 +882,7 @@ export function Account({
                     ? "truncate font-medium"
                     : "text-muted-foreground"
                 }
+                title={status.active_profile ?? undefined}
               >
                 {status.active_profile ?? t("desktop.account.no_profile")}
               </span>
@@ -899,7 +903,10 @@ export function Account({
           </div>
         </section>
       )}
-      <section className="account grid gap-2" aria-labelledby={sessionId}>
+      <section
+        className="account grid grid-cols-1 gap-2"
+        aria-labelledby={sessionId}
+      >
         <h3
           id={sessionId}
           className="text-sm font-medium text-muted-foreground"

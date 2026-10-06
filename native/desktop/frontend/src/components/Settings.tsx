@@ -105,7 +105,7 @@ export function Settings({
         side="right"
         align="end"
         aria-label={t("desktop.settings.title")}
-        className="settings grid w-settings gap-3"
+        className="settings grid w-settings grid-cols-1 gap-3"
         onOpenAutoFocus={(event) => {
           // The current appearance, not whatever control happens to be first.
           const chosen = content.current?.querySelector<HTMLElement>(

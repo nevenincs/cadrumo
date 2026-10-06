@@ -532,3 +532,83 @@ test("signed out with profiles: the palette's new profile opens the form, not th
     label("desktop.account.create.title"),
   );
 });
+
+// The longest a label may be, in words and as one unbroken run: every
+// control of the surfaces that show it stays inside them.
+for (const [kind, long] of [
+  [
+    "of many words",
+    "Explotaciones Agropecuarias y Ganaderas del Valle Medio del Guadalquivir, Sociedad Cooperativa Andaluza de Segundo Grado y Compañía"
+      .padEnd(160, " y Compañía")
+      .slice(0, 160)
+      .trim(),
+  ],
+  ["of one unbroken run", "Contribuyente".repeat(12).slice(0, 150)],
+] as const)
+  for (const size of [
+    { width: 1280, height: 800 },
+    { width: 640, height: 450 },
+  ])
+    test(`a very long profile name ${kind} keeps every control inside its surface (${size.width}x${size.height})`, async ({
+      page: target,
+    }) => {
+      await target.setViewportSize(size);
+      await open(target, "signed-out");
+      const inside = (surface: string) =>
+        target.evaluate((selector) => {
+          const frame = document.querySelector(selector);
+          if (!frame) return [`no ${selector}`];
+          const box = frame.getBoundingClientRect();
+          const out: string[] = [];
+          if (box.left < 0 || box.right > innerWidth)
+            out.push(`${selector} leaves the window`);
+          for (const control of frame.querySelectorAll(
+            "button, input, select, [role=radio]",
+          )) {
+            if (!(control as HTMLElement).offsetParent) continue;
+            const at = control.getBoundingClientRect();
+            if (at.width === 0) continue;
+            if (at.left < box.left - 1 || at.right > box.right + 1)
+              out.push(
+                `${(control.getAttribute("aria-label") ?? control.textContent ?? control.tagName).trim().slice(0, 24)}: ${Math.round(at.left)}-${Math.round(at.right)} outside ${Math.round(box.left)}-${Math.round(box.right)}`,
+              );
+          }
+          return out;
+        }, surface);
+
+      await dialog(target)
+        .getByRole("button", { name: label("desktop.account.new_profile") })
+        .click();
+      await nameField(target).fill(long);
+      await newPassword(target).fill("correct horse");
+      await repeated(target).fill("correct horse");
+      await repeated(target).press("Enter");
+      await expect(password(target)).toBeFocused();
+      // Created: said in the notice and chosen in the choice, both inside.
+      await expect(dialog(target).getByRole("status")).toContainText(
+        long.slice(0, 40),
+      );
+      expect(await inside(".sign-in")).toEqual([]);
+
+      await password(target).fill("correct horse");
+      await submit(target).click();
+      await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+      await target
+        .getByRole("button", { name: label("desktop.rail.settings") })
+        .click();
+      const settings = target.locator(".settings");
+      // The name is cut, with the whole of it as its title; signing out
+      // and switching are where they can be pressed.
+      await expect(settings.locator(`[title="${long}"]`)).toBeVisible();
+      await expect(
+        settings.getByRole("button", {
+          name: label("desktop.account.sign_out"),
+        }),
+      ).toBeInViewport({ ratio: 1 });
+      await expect(
+        settings.getByRole("button", {
+          name: label("desktop.account.switch_profile"),
+        }),
+      ).toBeInViewport({ ratio: 1 });
+      expect(await inside(".settings")).toEqual([]);
+    });
