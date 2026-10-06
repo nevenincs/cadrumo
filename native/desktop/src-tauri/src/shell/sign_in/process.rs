@@ -14,6 +14,11 @@ use zeroize::Zeroizing;
 
 const OUTPUT_LIMIT: usize = 64 * 1024;
 const DEADLINE: Duration = Duration::from_secs(30);
+/// How long the creation of a profile may run. The product derives the
+/// profile's key from its password, deliberately slowly: asked directly, a
+/// creation takes about half a minute. A child killed part-way would leave
+/// the person not knowing whether the profile exists.
+pub const CREATION_DEADLINE: Duration = Duration::from_secs(300);
 
 #[derive(Default)]
 struct Active {
@@ -48,12 +53,22 @@ impl Children {
     }
 
     pub fn run(&self, command: Command, secret: Option<Zeroizing<Vec<u8>>>) -> Result<Output> {
-        self.execute(command, secret, false)
+        self.execute(command, secret, false, DEADLINE)
+    }
+
+    /// A command that is slow by design, under a deadline of its own.
+    pub fn run_within(
+        &self,
+        command: Command,
+        secret: Option<Zeroizing<Vec<u8>>>,
+        deadline: Duration,
+    ) -> Result<Output> {
+        self.execute(command, secret, false, deadline)
     }
 
     /// Status is read-only: wait for the current command without replaying it.
     pub fn read(&self, command: Command) -> Result<Output> {
-        self.execute(command, None, true)
+        self.execute(command, None, true, DEADLINE)
     }
 
     fn execute(
@@ -61,6 +76,7 @@ impl Children {
         mut command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
         wait_for_slot: bool,
+        deadline: Duration,
     ) -> Result<Output> {
         let start = Instant::now();
         command
@@ -85,7 +101,7 @@ impl Children {
                 if active.closed {
                     return Err(failure(ErrorCode::SessionUnavailable));
                 }
-                if start.elapsed() >= DEADLINE {
+                if start.elapsed() >= deadline {
                     return Err(failure(ErrorCode::TimedOut));
                 }
                 if !active.busy {
@@ -122,7 +138,7 @@ impl Children {
             });
             let out = scope.spawn(|| read(stdout, &overflow));
             let err = scope.spawn(|| read(stderr, &overflow));
-            let status = self.wait(&overflow, start);
+            let status = self.wait(&overflow, start, deadline);
             // Always terminate/reap before joining pipe threads, including limit,
             // timeout and window-close paths. No child bytes enter diagnostics.
             let cleanup = {
@@ -165,7 +181,7 @@ impl Children {
         outcome
     }
 
-    fn wait(&self, overflow: &AtomicBool, start: Instant) -> Result<bool> {
+    fn wait(&self, overflow: &AtomicBool, start: Instant, deadline: Duration) -> Result<bool> {
         loop {
             let mut active = self
                 .active
@@ -186,7 +202,7 @@ impl Children {
             {
                 return Ok(status.success());
             }
-            if start.elapsed() >= DEADLINE {
+            if start.elapsed() >= deadline {
                 return Err(failure(ErrorCode::TimedOut));
             }
             drop(active);
@@ -337,6 +353,33 @@ mod tests {
         });
         assert!(children.active.lock().unwrap().child.is_none());
         assert!(children.run(powershell("exit 0"), None).is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_child_is_given_its_own_deadline_and_reaped_when_it_passes() {
+        let children = Children::default();
+        // Longer than the one it is given: stopped, reaped, and said so.
+        let start = Instant::now();
+        let late = children.run_within(
+            powershell("Start-Sleep -Seconds 60"),
+            None,
+            Duration::from_millis(400),
+        );
+        assert_eq!(late.err().unwrap().code, ErrorCode::TimedOut);
+        assert!(start.elapsed() < Duration::from_secs(10));
+        assert!(children.active.lock().unwrap().child.is_none());
+        // Within the one it is given: it runs to its end.
+        let output = children
+            .run_within(
+                powershell("Start-Sleep -Milliseconds 900; [Console]::Out.Write('made')"),
+                None,
+                Duration::from_secs(30),
+            )
+            .unwrap();
+        assert_eq!(&*output.stdout, b"made");
+        // Creating a profile is allowed far longer than a read or a sign-in.
+        assert!(CREATION_DEADLINE >= DEADLINE * 5);
     }
 
     #[cfg(windows)]

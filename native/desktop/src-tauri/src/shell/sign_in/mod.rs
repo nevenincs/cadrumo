@@ -29,36 +29,42 @@ const PROFILE_HEADER: &str = "x-cadrumo-profile";
 const LABEL_LIMIT: usize = 160;
 
 /// One command under `config`: its words, the name its answer must carry,
-/// and whether it only reads.
+/// whether it only reads, and whether it is slow by design.
 struct Call {
     words: &'static [&'static str],
     leaf: &'static str,
     reads: bool,
+    slow: bool,
 }
 const STATUS: Call = Call {
     words: &["sign-in-status"],
     leaf: "sign-in-status",
     reads: true,
+    slow: false,
 };
 const LOGIN: Call = Call {
     words: &["login"],
     leaf: "login",
     reads: false,
+    slow: false,
 };
 const LOGOUT: Call = Call {
     words: &["logout"],
     leaf: "logout",
     reads: false,
+    slow: false,
 };
 const LIST: Call = Call {
     words: &["profile", "list"],
     leaf: "profile.list",
     reads: true,
+    slow: false,
 };
 const CREATE: Call = Call {
     words: &["profile", "create", "--quiet"],
     leaf: "profile.create",
     reads: false,
+    slow: true,
 };
 
 fn failure(code: ErrorCode) -> ApplicationError {
@@ -117,6 +123,9 @@ impl SignIn {
         command.args(arguments(call, label, secret.is_some()));
         if call.reads {
             self.children.read(command)
+        } else if call.slow {
+            self.children
+                .run_within(command, secret, process::CREATION_DEADLINE)
         } else {
             self.children.run(command, secret)
         }

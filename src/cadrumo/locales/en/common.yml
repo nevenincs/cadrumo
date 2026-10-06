@@ -496,6 +496,8 @@ desktop:
       submit: Create profile
       submitting: Creating…
       title: Create a profile
+      wait: 'This takes about half a minute: the profile''s key is being made from
+        its password.'
     create_profile: Set up a profile
     first_run_lead: Create a profile to start.
     in_tui: Continuing in the TUI

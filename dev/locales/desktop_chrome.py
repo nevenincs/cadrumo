@@ -77,6 +77,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.account.create.submitting",
         "desktop.account.create.title",
         "desktop.account.create_profile",
+        "desktop.account.create.wait",
         "desktop.account.first_run_lead",
         "desktop.account.in_tui",
         "desktop.account.new_profile",

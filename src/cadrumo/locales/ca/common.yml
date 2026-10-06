@@ -512,6 +512,8 @@ desktop:
       submit: Crea el perfil
       submitting: S'està creant…
       title: Crea un perfil
+      wait: 'Triga al voltant de mig minut: s''està generant la clau del perfil a
+        partir de la contrasenya.'
     create_profile: Configura un perfil
     first_run_lead: Crea un perfil per començar.
     in_tui: Continues a la TUI

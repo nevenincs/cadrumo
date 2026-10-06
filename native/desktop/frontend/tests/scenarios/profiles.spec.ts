@@ -253,6 +253,26 @@ test("first run: one submission creates the profile, and only its password then 
   expect(made).toContain("createProfile 17 characters");
 });
 
+test("while a profile is being created the form says how long it takes, and nothing can be sent twice", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=first-run&latency=1500&bar=off");
+  await nameField(target).fill("Marta Ruiz Ferrer");
+  await newPassword(target).fill("correct horse");
+  await repeated(target).fill("correct horse");
+  await repeated(target).press("Enter");
+  // Pending: the wait is said, and the fields hold without being disabled.
+  await expect(form(target).locator(".create-wait")).toHaveText(
+    label("desktop.account.create.wait"),
+  );
+  await expect(nameField(target)).toHaveAttribute("readonly", "");
+  await expect(newPassword(target)).toHaveValue("");
+  await form(target).locator("button[type=submit]").click({ force: true });
+  await nameField(target).press("Enter");
+  await expect(password(target)).toBeFocused({ timeout: 10000 });
+  expect(await calls(target, "createProfile")()).toBe(1);
+});
+
 test("a refused creation is said once, clears both passwords and is not tried again", async ({
   page: target,
 }) => {

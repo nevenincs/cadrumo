@@ -698,6 +698,16 @@ function CreateProfile({
             : "desktop.account.create.submit",
         )}
       </Button>
+      {/* The product takes its time over this on purpose: said while it
+          does, so that the wait is not read as a window that has hung. */}
+      {busy && (
+        <p
+          className="create-wait text-center text-sm text-muted-foreground"
+          role="status"
+        >
+          {t("desktop.account.create.wait")}
+        </p>
+      )}
       {onBack && (
         <Button
           variant="ghost"

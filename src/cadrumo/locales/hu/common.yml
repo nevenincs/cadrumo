@@ -503,6 +503,7 @@ desktop:
       submit: Profil létrehozása
       submitting: Létrehozás…
       title: Profil létrehozása
+      wait: 'Ez körülbelül fél percig tart: a profil kulcsa most készül a jelszavából.'
     create_profile: Profil beállítása
     first_run_lead: A kezdéshez hozz létre egy profilt.
     in_tui: A TUI-ban folytatod
