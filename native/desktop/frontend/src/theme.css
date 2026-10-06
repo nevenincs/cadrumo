@@ -16,6 +16,48 @@
    row to keep its content. */
 @custom-variant panel-short (@container panel (height < 11rem));
 
+/* A row that scrolls sideways with its scrollbar hidden fades at whichever
+   edge has more beyond it, so it is seen to continue. The fade follows the
+   scroll position without script. A row with nothing beyond it has no
+   timeline and draws no fade, and neither does an engine without scroll
+   timelines. */
+@property --scroll-cue-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-cue-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@utility scroll-cue-x {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--scroll-cue-start),
+    #000 calc(100% - var(--scroll-cue-end)),
+    transparent
+  );
+  animation: scroll-cue-x linear both;
+  animation-timeline: scroll(self inline);
+}
+@keyframes scroll-cue-x {
+  from {
+    --scroll-cue-start: 0px;
+    --scroll-cue-end: calc(var(--spacing) * 8);
+  }
+  8%,
+  92% {
+    --scroll-cue-start: calc(var(--spacing) * 8);
+    --scroll-cue-end: calc(var(--spacing) * 8);
+  }
+  to {
+    --scroll-cue-start: calc(var(--spacing) * 8);
+    --scroll-cue-end: 0px;
+  }
+}
+
 @layer base {
   :root,
   [data-scheme] {

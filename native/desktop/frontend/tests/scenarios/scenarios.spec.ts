@@ -444,6 +444,56 @@ test("the smallest window keeps the newest record in view", async ({
   ).toBeLessThanOrEqual(1);
 });
 
+test("a bar that scrolls sideways shows that it goes on", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 520, height: 400 });
+  await open(target, "signed-in");
+  await openLogs(target);
+  const bar = target.locator(".logview > div").first();
+  const state = () =>
+    bar.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        more: element.scrollWidth > element.clientWidth,
+        start: parseFloat(style.getPropertyValue("--scroll-cue-start")),
+        end: parseFloat(style.getPropertyValue("--scroll-cue-end")),
+      };
+    });
+  // At its start there is more to the right only, and only that edge fades.
+  expect(await state()).toMatchObject({ more: true, start: 0 });
+  expect((await state()).end).toBeGreaterThan(0);
+  // Part way along, both edges do.
+  await bar.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth / 3;
+  });
+  await expect.poll(async () => (await state()).start).toBeGreaterThan(0);
+  expect((await state()).end).toBeGreaterThan(0);
+  // At its end, only the left.
+  await bar.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
+  await expect.poll(async () => (await state()).end).toBe(0);
+  expect((await state()).start).toBeGreaterThan(0);
+  // A bar with nothing beyond it fades nowhere.
+  await target.setViewportSize({ width: 1440, height: 900 });
+  await expect
+    .poll(async () => {
+      const wide = await target
+        .locator(".logview > div")
+        .first()
+        .evaluate((element) => {
+          const style = getComputedStyle(element);
+          return (
+            parseFloat(style.getPropertyValue("--scroll-cue-start") || "0") +
+            parseFloat(style.getPropertyValue("--scroll-cue-end") || "0")
+          );
+        });
+      return wide;
+    })
+    .toBe(0);
+});
+
 test("a reader who has left the end keeps their place while records arrive", async ({
   page: target,
 }) => {
