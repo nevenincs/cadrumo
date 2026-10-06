@@ -1024,10 +1024,13 @@ test-test-policy:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
     @uv run --no-sync pytest -v -n0 -m "integration and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
 
-[doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, and capability populations.')]
+# `docs-check` owns the documentation build's tests. They compile the whole
+# site several times over, on the one interpreter that builds it; this lane
+# runs once per supported interpreter and would compile it again on each.
+[doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, documentation-build, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
     @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
@@ -1569,7 +1572,7 @@ docs-availability-check:
 [doc('Run blocking read-only documentation checks; stream failure identities as they happen.')]
 [group('docs')]
 docs-check workers="auto":
-    @uv run --no-sync pytest -v -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m "docs or unit or (integration and not serial)"
+    @uv run --no-sync pytest -v -n {{workers}} dev/docs/tests dev/docs/apidocs/tests -m "docs or unit or (integration and not serial)"
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 
