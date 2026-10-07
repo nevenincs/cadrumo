@@ -14,6 +14,7 @@ from cadrumo.adapters.local_runtime.tests.process_support import fixture_environ
 from cadrumo.application.runtime.contracts import RuntimeExitReason, RuntimeRefusalCode
 from cadrumo.application.runtime.login import RuntimeLoginInventory
 
+from ..arguments import parse_runtime_arguments
 from ..main import run
 from ..profile_connections import RuntimeProfileConnections
 from ..shutdown import RuntimeStop, request_runtime_stop
@@ -103,7 +104,7 @@ def test_startup_refusal_exits_with_its_reason_and_writes_only_the_code(
     reason: RuntimeExitReason,
 ) -> None:
     root = tmp_path if storage_root == "absolute" else Path("relative-runtime-root")
-    code = run(
+    options = parse_runtime_arguments(
         [
             "--storage-root",
             str(root),
@@ -113,6 +114,7 @@ def test_startup_refusal_exits_with_its_reason_and_writes_only_the_code(
             expected_version or version("cadrumo"),
         ]
     )
+    code = run(options)
     assert code == reason.value
     assert capsys.readouterr().err == refusal.value + "\n"
     assert not tuple(tmp_path.iterdir())

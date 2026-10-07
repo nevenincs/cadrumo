@@ -3071,6 +3071,7 @@
         "cadrumo.entrypoints.runtime",
         "cadrumo.entrypoints.runtime.__main__",
         "cadrumo.entrypoints.runtime.access_management",
+        "cadrumo.entrypoints.runtime.arguments",
         "cadrumo.entrypoints.runtime.automation_execution",
         "cadrumo.entrypoints.runtime.bootstrap",
         "cadrumo.entrypoints.runtime.bootstrap_delete",

@@ -30,6 +30,7 @@ from cadrumo.adapters.local_runtime.windows_token_elevation import WindowsTokenE
 from cadrumo.application.runtime.contracts import RuntimeExitReason
 from cadrumo.core.logging import get_logger
 from cadrumo.entrypoints.runtime import main as runtime_main
+from cadrumo.entrypoints.runtime.arguments import parse_runtime_arguments
 from cadrumo.entrypoints.runtime.shutdown import RuntimeStop
 from cadrumo.entrypoints.runtime.supervised_channel import (
     SupervisedRuntime,
@@ -119,7 +120,7 @@ def _failure(arguments: list[str]) -> None:
     # No real launch reaches a non-refusal failure, so the owner is replaced
     # in this disposable process; the mapping under test stays real.
     vars(runtime_main)["_run_runtime_owner"] = failing_owner
-    raise SystemExit(runtime_main.run(arguments))
+    raise SystemExit(runtime_main.run(parse_runtime_arguments(arguments)))
 
 
 def _elevated(root: Path, arguments: list[str]) -> None:
@@ -136,7 +137,7 @@ def _elevated(root: Path, arguments: list[str]) -> None:
     # read is replaced in this disposable process; the refusal routing is real.
     vars(runtime_main)["current_process_token_elevation_type"] = lambda: WindowsTokenElevationType.FULL
     vars(runtime_main)["_run_runtime_owner"] = recording_owner
-    raise SystemExit(runtime_main.run(arguments))
+    raise SystemExit(runtime_main.run(parse_runtime_arguments(arguments)))
 
 
 def main() -> None:

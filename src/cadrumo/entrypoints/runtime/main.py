@@ -55,21 +55,6 @@ from .supervised_protocol import RuntimeReady
 _LOGGER = get_logger(__name__)
 
 
-def parse_runtime_arguments(arguments: list[str] | None = None) -> argparse.Namespace:
-    """Parse the explicit runtime owner binding."""
-    parser = argparse.ArgumentParser(prog="cadrumo-runtime", allow_abbrev=False)
-    parser.add_argument("--storage-root", required=True, type=Path)
-    parser.add_argument("--storage-identity", required=True)
-    parser.add_argument("--expected-version", required=True)
-    parser.add_argument(
-        "--supervised",
-        action="store_true",
-        help="Answer the launching supervisor over standard input and output.",
-    )
-    options = parser.parse_args(arguments)
-    return options
-
-
 def _accept_console_interrupts() -> None:
     """Clear an inherited Windows "ignore Ctrl+C" flag so a console stop reaches the drain."""
     if sys.platform != "win32":
@@ -256,12 +241,12 @@ def _run_runtime_owner(
     return stop.reason or RuntimeExitReason.UNEXPECTED_FAILURE
 
 
-def run(arguments: list[str] | None = None) -> int:
+def run(options: argparse.Namespace) -> int:
     """Run one user/root owner with independent profile admission; return its exit reason code."""
     with diagnostic_process("runtime"), diagnostic_scope():
         diagnostic_event(_LOGGER, "runtime_process_started")
         try:
-            exit_code = _run_process(arguments)
+            exit_code = _run_process(options)
         except BaseException as error:
             diagnostic_event(
                 _LOGGER,
@@ -283,8 +268,7 @@ def run(arguments: list[str] | None = None) -> int:
         return exit_code
 
 
-def _run_process(arguments: list[str] | None) -> int:
-    options = parse_runtime_arguments(arguments)
+def _run_process(options: argparse.Namespace) -> int:
     _accept_console_interrupts()
     stop = RuntimeStop()
     if not options.supervised:

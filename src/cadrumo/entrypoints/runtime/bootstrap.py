@@ -36,10 +36,10 @@ def _launch_isolated_interpreter(environment: Mapping[str, str]) -> None:
     )
 
 
-def _run_posix_runtime() -> None:
+def _run_posix_runtime(options: Namespace) -> None:
     from .main import run
 
-    raise SystemExit(run())
+    raise SystemExit(run(options))
 
 
 def main() -> None:
@@ -49,12 +49,15 @@ def main() -> None:
         _launch_isolated_interpreter(environment)
     os.environ.clear()
     os.environ.update(environment)
+    from .arguments import parse_runtime_arguments
+
+    options = parse_runtime_arguments()
     if sys.platform != "win32":
-        _run_posix_runtime()
-    _run_isolated_windows_runtime(environment)
+        _run_posix_runtime(options)
+    _run_isolated_windows_runtime(options)
 
 
-def _run_isolated_windows_runtime(environment: Mapping[str, str]) -> None:
+def _run_isolated_windows_runtime(options: Namespace) -> None:
     started = time.monotonic()
     from ...core.logging import defer_logging_configuration, get_logger, resume_logging_configuration
     from ...core.startup_phase_log import log_startup_phase
@@ -65,9 +68,8 @@ def _run_isolated_windows_runtime(environment: Mapping[str, str]) -> None:
     defer_logging_configuration()
     try:
         log_startup_phase(logger, "bootstrap", "enter", 0.0)
-        parse_runtime_arguments, run = _import_runtime_main(logger, started, log_startup_phase)
-        parse_runtime_arguments()
-        raise SystemExit(run())
+        run = _import_runtime_main(logger, started, log_startup_phase)
+        raise SystemExit(run(options))
     finally:
         resume_logging_configuration()
 
@@ -76,12 +78,12 @@ def _import_runtime_main(
     logger: logging.Logger,
     started: float,
     log_startup_phase: Callable[..., None],
-) -> tuple[Callable[[], Namespace], Callable[[], int]]:
+) -> Callable[[Namespace], int]:
     importing = time.monotonic()
     primary: list[BaseException] = []
     log_startup_phase(logger, "main_import", "enter", 0.0)
     try:
-        from .main import parse_runtime_arguments, run
+        from .main import run
     except BaseException as error:
         primary.append(error)
         raise
@@ -90,4 +92,4 @@ def _import_runtime_main(
         log_startup_phase(logger, "main_import", "leave", elapsed, primary_error=primary[0] if primary else None)
         elapsed = time.monotonic() - started
         log_startup_phase(logger, "bootstrap", "leave", elapsed, primary_error=primary[0] if primary else None)
-    return parse_runtime_arguments, run
+    return run

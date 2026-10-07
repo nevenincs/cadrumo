@@ -27,6 +27,7 @@ from cadrumo.core.config import override_settings
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .. import main
+from ..arguments import parse_runtime_arguments
 from ..profile_connections import RuntimeProfileConnections
 from .test_profile_connections import LoginObservation, connect, login
 
@@ -322,14 +323,16 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
     with override_settings(cadrumo_dev_runtime_session_override="0"):
         assert (
             main.run(
-                [
-                    "--storage-root",
-                    str(tmp_path),
-                    "--storage-identity",
-                    "unit-storage",
-                    "--expected-version",
-                    "unit-version",
-                ]
+                parse_runtime_arguments(
+                    [
+                        "--storage-root",
+                        str(tmp_path),
+                        "--storage-identity",
+                        "unit-storage",
+                        "--expected-version",
+                        "unit-version",
+                    ]
+                )
             )
             == RuntimeExitReason.LOGIN_WITNESS_LOSS
         )

@@ -138,9 +138,10 @@ def _interrupt(mode: str, root: Path) -> dict[str, object]:
 
 def _runtime_without_reenable(arguments: list[str]) -> None:
     from cadrumo.entrypoints.runtime import main as runtime_main
+    from cadrumo.entrypoints.runtime.arguments import parse_runtime_arguments
 
     vars(runtime_main)["_accept_console_interrupts"] = lambda: None
-    raise SystemExit(runtime_main.run(arguments))
+    raise SystemExit(runtime_main.run(parse_runtime_arguments(arguments)))
 
 
 def main() -> None:
