@@ -6,12 +6,12 @@ from datetime import datetime
 
 from ...core.hex import Hex64Str
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ._supervisor_settlement import SupervisorSettlementMixin
 from .models import OperationId, OperationReconciliationOutcome, OperationTerminalReceipt
 from .persistence.events import OperationReconciliationEvent, OperationTerminalEvent
 from .persistence.journal import OperationJournal, OperationLeaseRepository
 from .persistence.leases import OperationLeaseObservationDisposition, operation_conflict_scope_reference
 from .registry import OperationRegistry
+from .settlement_snapshot import settlement_successor
 
 
 async def settle_terminated_operation(
@@ -83,7 +83,7 @@ async def settle_terminated_operation(
             receipt=receipt,
         ),
     )
-    successor = SupervisorSettlementMixin._settlement_successor(snapshot, receipt, events)
+    successor = settlement_successor(snapshot, receipt, events)
     # Journal revision and complete lease are checked in one exclusion before
     # terminal persistence and release. A raced takeover cannot be deleted.
     await journal.commit_settlement(successor, expected_revision=snapshot.revision, lease=lease)

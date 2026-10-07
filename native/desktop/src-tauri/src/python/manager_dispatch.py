@@ -9,21 +9,25 @@ import sys
 def dispatch(executable: str) -> None:
     """Use Explorer's desktop-view automation object, not an in-process Shell object."""
     import pythoncom
+    import pywintypes
     import win32api
     import win32con
     import win32security
     from win32com.client import dynamic
     from win32com.shell import shell, shellcon
 
-    with win32security.OpenProcessToken(win32api.GetCurrentProcess(), win32con.TOKEN_QUERY) as token:
+    token = win32security.OpenProcessToken(win32api.GetCurrentProcess(), win32con.TOKEN_QUERY)
+    try:
         if (
             win32security.GetTokenInformation(token, win32security.TokenElevationType)
             == win32security.TokenElevationTypeFull
         ):
             raise PermissionError("elevated_desktop")
+    finally:
+        win32api.CloseHandle(token)
     windows = dynamic.Dispatch(
         pythoncom.CoCreateInstance(
-            "{9BA05972-F6A8-11CF-A442-00A0C90A8F39}",
+            pywintypes.IID("{9BA05972-F6A8-11CF-A442-00A0C90A8F39}"),
             None,
             pythoncom.CLSCTX_LOCAL_SERVER,
             pythoncom.IID_IDispatch,

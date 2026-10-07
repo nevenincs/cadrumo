@@ -41,10 +41,9 @@ def main() -> None:
     """Keep exact process ownership until the parent closes the control pipe."""
     if any(name.upper() == "CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE" for name in os.environ):
         raise RuntimeError("development session override is not acceptance")
-    root: Path | None = None
+    root = effective_storage_root().resolve(strict=True)
     profile_id: UUID | None = None
     try:
-        root = effective_storage_root().resolve(strict=True)
         with profile_free_adapter_composition():
             profile_id = UUID(observe_active_profile_pointer().bucket_id or "")
         runtime = Path(sys.argv[1]).resolve(strict=True)
@@ -115,7 +114,7 @@ def main() -> None:
         # Narrow fixture teardown, as in the secure-storage integration fixtures:
         # address only the new profile under this fresh root, after runtime exit.
         # Normal acceptance signs out through the canonical host command first.
-        if root is not None and profile_id is not None:
+        if profile_id is not None:
             delete_profile_session(storage_root=root, profile_id=profile_id)
             receipt_path = profile_session_path(storage_root=root, profile_id=profile_id)
             if receipt_path.exists() or receipt_path.is_symlink():

@@ -15,12 +15,12 @@ import runpy
 import subprocess
 import sys
 import time
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable
+    from collections.abc import Awaitable, Iterator
 
     from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 
@@ -161,6 +161,35 @@ async def _recover_exact_failed_tui_review(client: RuntimeFrontendClient) -> dic
         await asyncio.sleep(0.2)
 
 
+@contextmanager
+def _owned_runtime_job() -> Iterator[int]:
+    """Keep the native kill-on-close handle owned through setup and teardown."""
+    if sys.platform != "win32":
+        raise RuntimeError("owned runtime jobs require Windows")
+    import ctypes
+
+    import win32api
+    import win32job
+
+    # CreateJobObject is misdeclared as returning None in pywin32's stubs.
+    # The configured native signature returns this runner's owned HANDLE.
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    create_job = kernel.CreateJobObjectW
+    create_job.argtypes = (ctypes.c_void_p, ctypes.c_wchar_p)
+    create_job.restype = ctypes.c_void_p
+    native_job = create_job(None, None)
+    if not native_job:
+        raise OSError(ctypes.get_last_error(), "owned runtime job creation failed")
+    job = int(native_job)
+    try:
+        limits = win32job.QueryInformationJobObject(job, win32job.JobObjectExtendedLimitInformation)
+        limits["BasicLimitInformation"]["LimitFlags"] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        win32job.SetInformationJobObject(job, win32job.JobObjectExtendedLimitInformation, limits)
+        yield job
+    finally:
+        win32api.CloseHandle(job)
+
+
 def main() -> None:
     if sys.platform != "win32":
         raise RuntimeError("this live runner requires the Windows desktop")
@@ -223,11 +252,7 @@ def main() -> None:
     if mode in {"oauth", "resume"} and not sys.stdin.isatty():
         raise RuntimeError("OAuth requires the real controlling terminal")
     endpoint = WindowsRuntimeEndpoint(storage_root=root)
-    job = win32job.CreateJobObject(None, "")
-    limits = win32job.QueryInformationJobObject(job, win32job.JobObjectExtendedLimitInformation)
-    limits["BasicLimitInformation"]["LimitFlags"] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
-    win32job.SetInformationJobObject(job, win32job.JobObjectExtendedLimitInformation, limits)
-    with (private / "runtime.log").open("ab") as log:
+    with _owned_runtime_job() as job, (private / "runtime.log").open("ab") as log:
         log_offset = log.tell()
         process = subprocess.Popen(  # noqa: S603 -- exact supported runtime path and fixed arguments; no shell.
             [
@@ -250,7 +275,7 @@ def main() -> None:
             try:
                 win32job.AssignProcessToJobObject(job, process_handle)
             finally:
-                process_handle.Close()
+                win32api.CloseHandle(process_handle)
             ready = False
             readiness_deadline = time.monotonic() + 600
             while time.monotonic() < readiness_deadline:
@@ -474,7 +499,6 @@ def main() -> None:
                 except subprocess.TimeoutExpired:
                     win32job.TerminateJobObject(job, 1)
                     process.wait(timeout=10)
-            job.Close()
             print(json.dumps({"stage": "runtime_stopped", "exit_code": process.returncode}), flush=True)
 
 

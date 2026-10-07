@@ -31,7 +31,7 @@ def resolve_form_projection_fields(
     elif record.repeat != "projection_rows":
         raise RegistryValidationError("projected form columns require a projection_rows or single export record")
     fields = {field.id: field for field in record.fields}
-    selected = []
+    selected: list[ExportFieldDefinition] = []
     for column in block.columns:
         field = fields.get(column.export_field_id) if column.export_field_id is not None else None
         if field is None or field.kind is not CasillaFieldKind.PROJECTION or field.projection_ref is None:

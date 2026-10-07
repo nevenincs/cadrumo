@@ -25,6 +25,7 @@ from .persistence.events import (
 )
 from .persistence.journal import OperationPersistedSnapshot
 from .persistence.leases import OperationOwnerLease
+from .settlement_snapshot import settlement_successor
 
 if TYPE_CHECKING:
     pass
@@ -207,27 +208,6 @@ class SupervisorSettlementMixin(SupervisorHost):
         )
         return (diagnostic_event, terminal_event) if diagnostic_event is not None else (terminal_event,)
 
-    @staticmethod
-    def _settlement_successor(
-        snapshot: OperationPersistedSnapshot,
-        receipt: OperationTerminalReceipt,
-        events: tuple[OperationEvent, ...],
-    ) -> OperationPersistedSnapshot:
-        """Materialize the terminal snapshot from the committed receipt events."""
-        return snapshot.model_copy(
-            update={
-                "revision": receipt.revision,
-                "lifecycle": OperationLifecycle.TERMINAL,
-                "terminal_condition": receipt.condition,
-                "effect": receipt.effect,
-                "updated_at": receipt.settled_at,
-                "event_cursor": events[-1].sequence,
-                "events": events,
-                "terminal_receipt": receipt,
-                "pending_interaction": None,
-            }
-        )
-
     async def _commit_settlement(
         self,
         operation_id: OperationId,
@@ -246,7 +226,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         except TimeoutError:
             return None, True
         events = self._settlement_events(snapshot, receipt, receipt.settled_at)
-        successor = self._settlement_successor(snapshot, receipt, events)
+        successor = settlement_successor(snapshot, receipt, events)
         await self._journal.commit_settlement(successor, expected_revision=snapshot.revision, lease=lease)
         self._leases_by_operation.pop(operation_id, None)
         self._ephemeral_secrets.discard(operation_id)

@@ -16,10 +16,29 @@ import sys
 from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 from uuid import UUID, uuid4
 
+from pydantic import TypeAdapter
+
 _PROFILE = "Session02 Google Review"
+_JSON_OBJECT: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
+_JSON_OBJECT_ROWS: TypeAdapter[list[dict[str, object]]] = TypeAdapter(list[dict[str, object]])
+_TEXT_LIST: TypeAdapter[list[str]] = TypeAdapter(list[str])
+_TEXT_MAP: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str])
+
+
+def _text_field(document: dict[str, object], key: str) -> str:
+    value = document[key]
+    if not isinstance(value, str) or not value:
+        raise RuntimeError(f"acceptance field {key!r} requires nonempty text")
+    return value
+
+
+def _cli_result(stdout: str, stage: str) -> dict[str, object]:
+    envelope = _JSON_OBJECT.validate_json(stdout, strict=True)
+    if envelope.get("active_profile") != _PROFILE:
+        raise RuntimeError(f"{stage}: unexpected CLI profile/result")
+    return _JSON_OBJECT.validate_python(envelope["result"], strict=True)
 
 
 def _write_json(path: Path, value: dict[str, object]) -> None:
@@ -93,10 +112,7 @@ def run_protected_live_cli(root: Path, logs: Path, stage: str, arguments: Sequen
         raise RuntimeError(f"{stage}: protected-input output check failed")
     if completed.returncode:
         raise RuntimeError(f"{stage}: CLI refused (exit {completed.returncode}); inspect acceptance logs")
-    envelope = json.loads(stdout)
-    if envelope.get("active_profile") != _PROFILE or not isinstance(envelope.get("result"), dict):
-        raise RuntimeError(f"{stage}: unexpected CLI profile/result")
-    return cast(dict[str, object], envelope["result"])
+    return _cli_result(stdout, stage)
 
 
 def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str, object]:
@@ -114,33 +130,40 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
     logs = root / "logs/live-export-acceptance"
     logs.mkdir(parents=True, exist_ok=True)
     journal_path = logs / "acceptance-journal.json"
+    journal: dict[str, object]
     if journal_path.exists():
-        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        journal = _JSON_OBJECT.validate_json(journal_path.read_text(encoding="utf-8"), strict=True)
     else:
         run_id = uuid4()
-        source = json.loads((root / "session03-driver/work-create-130.json").read_text(encoding="utf-8"))["result"]
-        if source["modelo"] != "130" or source["filing_year"] != 2025 or source["period"]["code"] != "4T":
+        source_envelope = _JSON_OBJECT.validate_json(
+            (root / "session03-driver/work-create-130.json").read_text(encoding="utf-8"), strict=True
+        )
+        source = _JSON_OBJECT.validate_python(source_envelope["result"], strict=True)
+        period = _JSON_OBJECT.validate_python(source["period"], strict=True)
+        if source["modelo"] != "130" or source["filing_year"] != 2025 or period["code"] != "4T":
             raise RuntimeError("synthetic work selection no longer matches its original coordinates")
         journal = {
             "version": 1,
             "run_id": str(run_id),
             "publication_id": str(uuid4()),
-            "work_unit_id": source["work_unit_id"],
+            "work_unit_id": _text_field(source, "work_unit_id"),
             "synthetic_input": str(Decimal(100000 + run_id.int % 90000000) / 100),
         }
         _write_json(journal_path, journal)
-    UUID(journal["publication_id"])
-    evidence = logs / journal["run_id"]
+    publication_id = _text_field(journal, "publication_id")
+    UUID(publication_id)
+    evidence = logs / _text_field(journal, "run_id")
     evidence.mkdir(exist_ok=True)
-    work_id = journal["work_unit_id"]
+    work_id = _text_field(journal, "work_unit_id")
     if "calculation_revision_id" not in journal:
         if "previous_revision_ids" not in journal:
             previous = run_protected_live_cli(
                 root, evidence, "previous-revisions", ["app", "modelo", "work", "revisions", work_id]
             )
-            journal["previous_revision_ids"] = [row["calculation_revision_id"] for row in previous["revisions"]]
+            previous_rows = _JSON_OBJECT_ROWS.validate_python(previous["revisions"], strict=True)
+            journal["previous_revision_ids"] = [_text_field(row, "calculation_revision_id") for row in previous_rows]
             _write_json(journal_path, journal)
-        old_ids = set(journal["previous_revision_ids"])
+        old_ids = set(_TEXT_LIST.validate_python(journal["previous_revision_ids"], strict=True))
         calculated = run_protected_live_cli(
             root,
             evidence,
@@ -152,7 +175,7 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
                 "calculate",
                 work_id,
                 "--casilla",
-                f"05={journal['synthetic_input']}",
+                f"05={_text_field(journal, 'synthetic_input')}",
                 "--casilla",
                 "06=0.00",
                 "--binding",
@@ -161,23 +184,23 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
                 "modelo-130-resultados-negativos-anteriores=0",
             ],
         )
-        revision_id = calculated["calculation_revision_id"]
+        revision_id = _text_field(calculated, "calculation_revision_id")
         if revision_id in old_ids or calculated.get("saved") is not True:
             raise RuntimeError("calculation did not save a new synthetic revision")
         journal["calculation_revision_id"] = revision_id
         _write_json(journal_path, journal)
-    revision_id = journal["calculation_revision_id"]
+    revision_id = _text_field(journal, "calculation_revision_id")
     baseline = run_protected_live_cli(
         root, evidence, "saved-revision", ["app", "modelo", "work", "revision", revision_id]
     )
     if baseline["calculation_revision_id"] != revision_id or baseline["work_unit_id"] != work_id:
         raise RuntimeError("saved revision differs from the selected synthetic calculation")
-    inputs = baseline["input_values_by_casilla_id"]
-    if not any(Decimal(value) == Decimal(journal["synthetic_input"]) for value in inputs.values()):
+    inputs = _TEXT_MAP.validate_python(baseline["input_values_by_casilla_id"], strict=True)
+    if not any(Decimal(value) == Decimal(_text_field(journal, "synthetic_input")) for value in inputs.values()):
         raise RuntimeError("retained synthetic input did not round-trip")
     output = evidence / "saved-calculation-review.xlsx"
     if "xlsx" not in journal:
-        local = run_protected_live_cli(
+        local_result = run_protected_live_cli(
             root,
             evidence,
             "local-export",
@@ -192,7 +215,8 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
                 str(output),
                 "--replace",
             ],
-        )["publication"]
+        )
+        local = _JSON_OBJECT.validate_python(local_result["publication"], strict=True)
         if local["calculation_revision_id"] != revision_id:
             raise RuntimeError("local export selected a different revision")
         journal["xlsx"] = local
@@ -208,10 +232,11 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
         sheet_count = len(workbook.sheetnames)
     finally:
         workbook.close()
-    if hashlib.sha256(output.read_bytes()).hexdigest() != journal["xlsx"]["file_sha256"]:
+    xlsx = _JSON_OBJECT.validate_python(journal["xlsx"], strict=True)
+    if hashlib.sha256(output.read_bytes()).hexdigest() != _text_field(xlsx, "file_sha256"):
         raise RuntimeError("published XLSX bytes differ from the registered receipt")
     if "google" not in journal:
-        native = run_protected_live_cli(
+        native_result = run_protected_live_cli(
             root,
             evidence,
             "native-publish",
@@ -223,28 +248,30 @@ def run_live_export_acceptance(workspace: Path, storage_root: Path) -> dict[str,
                 "--calculation-revision-id",
                 revision_id,
                 "--publication-id",
-                journal["publication_id"],
+                publication_id,
                 "--accept-readable-export",
             ],
-        )["publication"]
-        if native["publication_id"] != journal["publication_id"]:
+        )
+        native = _JSON_OBJECT.validate_python(native_result["publication"], strict=True)
+        if native["publication_id"] != publication_id:
             raise RuntimeError("native publication returned another idempotency identity")
-        if native["snapshot_digest"] != journal["xlsx"]["snapshot_digest"]:
+        if _text_field(native, "snapshot_digest") != _text_field(xlsx, "snapshot_digest"):
             raise RuntimeError("local and native exports used different retained snapshots")
         journal["google"] = native
         _write_json(journal_path, journal)
     package = importlib.util.find_spec("cadrumo")
     if package is None or package.origin is None:
         raise RuntimeError("CLI package origin cannot be established")
+    google = _JSON_OBJECT.validate_python(journal["google"], strict=True)
     result = {
         "python_executable": sys.executable,
         "package_origin": package.origin,
         "profile_label": _PROFILE,
         "work_unit_id": work_id,
         "calculation_revision_id": revision_id,
-        "publication_id": journal["publication_id"],
-        "spreadsheet_url": journal["google"]["spreadsheet_url"],
-        "spreadsheet_id": journal["google"]["spreadsheet_id"],
+        "publication_id": publication_id,
+        "spreadsheet_url": _text_field(google, "spreadsheet_url"),
+        "spreadsheet_id": _text_field(google, "spreadsheet_id"),
         "xlsx_path": str(output),
         "evidence_directory": str(evidence),
         "checks": {

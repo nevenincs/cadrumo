@@ -447,14 +447,14 @@ class WithholdingObservation(BaseModel):
     transfer, or E a temporary transfer with repurchase. Never inferred from
     whether the transaction generated a gain or loss.
     """
-    financial_asset_acquisition_value: Decimal | None = Field(default=None, ge=0, allow_inf_nan=False)
+    financial_asset_acquisition_value: Decimal | None = Field(default=None, ge=Decimal("0"), allow_inf_nan=False)
     """Modelo 194 acquisition/subscription value (118-130), before incidental costs.
 
     Unknown and inapplicable remain absent. In particular, origin D does not
     supply this field; its filing zero is a transport rule, not an observed
     acquisition at zero cost. This transaction detail is not an annual sum.
     """
-    financial_asset_disposal_value: Decimal | None = Field(default=None, ge=0, allow_inf_nan=False)
+    financial_asset_disposal_value: Decimal | None = Field(default=None, ge=Decimal("0"), allow_inf_nan=False)
     """Modelo 194 transfer/redemption/exchange value (131-143), before incidental costs.
 
     This is supplied independently from acquisition value and the declared tax
@@ -1114,7 +1114,7 @@ def _selected_grouped_rows(
     rows = _group_withholding_observations(_selector_grouping(selector), observations)
     if selector.base_sign is None:
         return rows
-    selected = []
+    selected: list[tuple[WithholdingObservation, ...]] = []
     for row in rows:
         base = _resolve_withholding_row_field(row, row_field="base_retenciones")
         if not isinstance(base, Decimal):
