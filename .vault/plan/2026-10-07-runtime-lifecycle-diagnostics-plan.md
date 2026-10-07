@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:88318fe620eeefcffbebc8074efff409c11371a4653e6f3f2c665d8c76e84030'
+body_hash: 'sha256:f5f68387b76aca43d3c8bab61d9db9d3847f7f28ba50ea885027c5e05a83d418'
 ---
 
 <!-- RETIRED: S08 -->
@@ -56,7 +56,7 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S25` - Keep projection migration implementation models out of runtime registry construction while preserving guarded migration behavior and measuring the dependency cut; `canonical stateless migration adapter module, calculation_revision_override_migration.py, projection_migration_ports.py, operation_composition.py, owning migration and fresh-process import tests, module enrollment and guarded performance evidence`.
 - [x] `S26` - Settle a failed KDF worker before closing pipe descriptors that may be held by blocked reader threads; `KDF supervisor cleanup ordering and retained ownership on termination failure, existing process termination seam, bounded real blocked-reader regression and lifecycle checks`.
 - [x] `S27` - Defer concrete ledger LLM and AEAT identity acquisition imports until their existing operation callbacks execute, preserving public contracts and measuring the removed startup work; `operation_composition.py concrete execution import sites, owning fresh registry exclusion and callback tests, existing offline LLM and verification integration cases, guarded source performance evidence`.
-- [ ] `S28` - Avoid repeated annotation-tree expansion within one schema-graph snapshot while preserving fresh mutation detection and measuring registry construction work; `registry_schema_validation.py traversal-local annotation snapshot ownership, owning mutation and alias-isolation tests, guarded registry CPU and call-count comparison`.
+- [x] `S28` - Evaluate traversal-local annotation memoization against mutation safety and measured registry construction cost, retaining only an evidenced improvement; `registry_schema_validation.py candidate and owning tests, guarded before-after comparison, rejected-candidate preservation and exact source restoration`.
 
 ## Parallelization
 

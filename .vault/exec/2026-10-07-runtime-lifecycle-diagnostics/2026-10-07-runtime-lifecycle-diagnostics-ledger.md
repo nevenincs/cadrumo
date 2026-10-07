@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:d60938309df2222f6020fdddfaf67d1ef64becaab39fb18a9ada8fc7ba7274a2'
+body_hash: 'sha256:1cc4008a4b22c11538564028cd094ffadb1166591f4235a75a4f5975c5b6917d'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -396,6 +396,13 @@ related:
 - `S27` `verify:` `Root reviewed unchanged production import edges with prior complete stable graph evidence` -> `pass`
 - `S27` `verify:` `Six guarded source children twelve identical public registry observations and five fewer model constructions` -> `pass`
 - `S27` `by:` `root`
+- `S28` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S28` `M` `.vault/plan/2026-10-07-runtime-lifecycle-diagnostics-plan.md`
+- `S28` `verify:` `168 candidate correctness cases and configured static scopes` -> `pass`
+- `S28` `verify:` `Six timing children and two separate count children with exact public identity and source guards` -> `pass`
+- `S28` `verify:` `Performance acceptance` -> `fail`
+- `S28` `verify:` `Candidate archived and exact before source restored with empty source diff` -> `pass`
+- `S28` `by:` `root`
 
 ## Notes
 
@@ -434,3 +441,4 @@ related:
 - `S26` Existing outer and termination-helper waits unchanged; root reviewed real child/thread settlement. Startup stall and broader native handle/launch ownership remain open.
 - `S25` Live-tree full gate failed solely on source mutation and is retained. Frozen complete gate passed with unchanged budgets. Instrumented source medians are not packaged SLO evidence. Only generated canonical-module enrollment is owned; foreign dev target rows remain unstaged.
 - `S27` Measured source variants only; shared-host stall retained; packaged startup and enrollment targets remain unresolved.
+- `S28` Evaluated and rejected: 65.16 percent fewer `get_args` calls did not produce a CPU improvement. No production optimization retained and no timeout changed.
