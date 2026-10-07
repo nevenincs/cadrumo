@@ -1,8 +1,7 @@
 import type { ITheme } from "@xterm/xterm";
 
 // ANSI palettes for the terminals, tuned to the documentation's warm ink and
-// paper hues and checked for legibility on their own backgrounds. The TUI paints
-// its own theme, so it always uses the dark palette.
+// paper hues and checked for legibility on their own backgrounds.
 export const DARK_TERMINAL: ITheme = {
   background: "#1c1a17",
   foreground: "#e9e4da",
@@ -48,5 +47,55 @@ export const LIGHT_TERMINAL: ITheme = {
   brightBlue: "#2d4770",
   brightMagenta: "#643b60",
   brightCyan: "#235450",
+  brightWhite: "#1c1a17",
+};
+
+// Dedicated Textual palette: ANSI slots represent presentation roles, not
+// shell color names. Keep them paired with CADRUMO_TERMINAL in theme.py.
+export const DARK_TUI: ITheme = {
+  background: "#1a1815",
+  foreground: "#ece7dd",
+  cursor: "#7fb3e0",
+  cursorAccent: "#1a1815",
+  selectionBackground: "#3d382e",
+  black: "#1a1815",
+  red: "#f26c52",
+  green: "#7fb096",
+  yellow: "#d9a441",
+  blue: "#7fb3e0",
+  magenta: "#9ab8d8",
+  cyan: "#a89e90",
+  white: "#ece7dd",
+  brightBlack: "#232019",
+  brightRed: "#f26c52",
+  brightGreen: "#7fb096",
+  brightYellow: "#d9a441",
+  brightBlue: "#3d382e",
+  brightMagenta: "#2e2a22",
+  brightCyan: "#4d4739",
+  brightWhite: "#ece7dd",
+};
+
+export const LIGHT_TUI: ITheme = {
+  background: "#faf8f4",
+  foreground: "#1c1a17",
+  cursor: "#2b5f8a",
+  cursorAccent: "#faf8f4",
+  selectionBackground: "#d8cec0",
+  black: "#faf8f4",
+  red: "#a33322",
+  green: "#3f6f5b",
+  yellow: "#845d1d",
+  blue: "#2b5f8a",
+  magenta: "#35587a",
+  cyan: "#6b655c",
+  white: "#1c1a17",
+  brightBlack: "#f1eee7",
+  brightRed: "#a33322",
+  brightGreen: "#3f6f5b",
+  brightYellow: "#845d1d",
+  brightBlue: "#d8cec0",
+  brightMagenta: "#e9e3da",
+  brightCyan: "#c9bcaa",
   brightWhite: "#1c1a17",
 };

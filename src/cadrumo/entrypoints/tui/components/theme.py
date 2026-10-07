@@ -1,15 +1,18 @@
-"""The Cadrumo terminal design system: one palette, two appearances.
+"""The Cadrumo terminal design system and desktop palette binding.
 
 This module owns the presentation tokens and stylesheet shared by every
 full-screen surface.  It does not read application settings or retain screen
-state; callers resolve an appearance and pass it to the installation helper.
+state; callers pass an appearance to the installation helper. The dedicated
+desktop terminal identifies itself through TERM_PROGRAM and owns its palette.
 Reusable Textual widgets that consume these tokens live in
 :mod:`cadrumo.entrypoints.tui.components.widgets`.
 """
 
 from __future__ import annotations
 
+import os
 import re
+import sys
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
@@ -100,6 +103,54 @@ CADRUMO_DARK: Final[Theme] = Theme(
 )
 
 CADRUMO_THEMES: Final[tuple[Theme, ...]] = (CADRUMO_LIGHT, CADRUMO_DARK)
+
+# The dedicated desktop terminal owns these ANSI slots. Keeping cell colors
+# indexed lets a palette change repaint even existing and hidden content.
+CADRUMO_TERMINAL: Final[Theme] = Theme(
+    name="cadrumo-terminal",
+    ansi=True,
+    primary="ansi_blue",
+    secondary="ansi_cyan",
+    accent="ansi_magenta",
+    success="ansi_green",
+    warning="ansi_yellow",
+    error="ansi_red",
+    background="ansi_default",
+    foreground="ansi_default",
+    variables={
+        "ansi-background": "ansi_black",
+        "ansi-foreground": "ansi_white",
+        "surface": "ansi_bright_black",
+        "panel": "ansi_bright_magenta",
+        "text-muted": "ansi_cyan",
+        "text-disabled": "ansi_cyan",
+        "border": "ansi_blue",
+        "border-blurred": "ansi_bright_blue",
+        "footer-key-foreground": "ansi_blue",
+        "block-cursor-background": "ansi_blue",
+        "block-cursor-foreground": "ansi_black",
+        "block-cursor-text-style": "none",
+        "block-hover-background": "ansi_bright_magenta",
+        "input-cursor-background": "ansi_blue",
+        "input-cursor-foreground": "ansi_black",
+        "input-cursor-text-style": "none",
+        "input-selection-background": "ansi_blue",
+        "input-selection-foreground": "ansi_black",
+        "screen-selection-background": "ansi_blue",
+        "screen-selection-foreground": "ansi_black",
+        "button-color-foreground": "ansi_black",
+        "scrollbar": "ansi_bright_blue",
+        "scrollbar-hover": "ansi_bright_cyan",
+        "scrollbar-active": "ansi_blue",
+        "scrollbar-background": "ansi_bright_black",
+        "scrollbar-background-hover": "ansi_bright_black",
+        "scrollbar-background-active": "ansi_bright_black",
+        "scrollbar-corner-color": "ansi_bright_black",
+        "link-color": "ansi_blue",
+        "link-color-hover": "ansi_black",
+        "link-background-hover": "ansi_blue",
+    },
+)
 
 CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
     {
@@ -354,6 +405,7 @@ BASE_CSS: Final[str] = tokenised("""
         text-style: bold;
         padding: $cadrumo-space-0 $cadrumo-gutter;
     }
+    .cadrumo-banner:ansi { color: ansi_black; }
 
     .cadrumo-panel {
         border: $cadrumo-radius $primary;
@@ -411,6 +463,7 @@ BASE_CSS: Final[str] = tokenised("""
         background: $accent;
         text-style: bold;
     }
+    Button:ansi:focus, Button:ansi.-primary { color: ansi_black; }
 
     Input {
         width: 100%;
@@ -458,19 +511,26 @@ def install_cadrumo_themes[ReturnT](
     *,
     appearance: str | None = None,
 ) -> None:
-    """Register both themes on ``app`` and activate the resolved one.
+    """Register the themes and select the desktop palette or standalone choice.
 
     The component has no settings or application-state authority.  A caller
     that omits an appearance receives the neutral ``AUTO`` resolution.
     """
     selected = "auto" if appearance is None else appearance
-    for theme in CADRUMO_THEMES:
+    for theme in (*CADRUMO_THEMES, CADRUMO_TERMINAL):
         app.register_theme(theme)
-    app.theme = resolve_theme_name(selected)
+    app.theme = CADRUMO_TERMINAL.name if os.environ.get("TERM_PROGRAM") == "cadrumo" else resolve_theme_name(selected)
 
 
 def toggle_appearance[ReturnT](app: App[ReturnT]) -> str:
     """Flip the active surface between the light and dark appearance."""
+    if app.theme == CADRUMO_TERMINAL.name:
+        # Bypass Textual's captured print stream: this is terminal control,
+        # not widget content or diagnostics. No response enters stdin.
+        if sys.__stdout__ is not None and not app.is_headless:
+            sys.__stdout__.write("\x1b]777;cadrumo;appearance;toggle\x1b\\")
+            sys.__stdout__.flush()
+        return str(app.theme)
     app.theme = CADRUMO_LIGHT_THEME_NAME if app.theme == CADRUMO_DARK_THEME_NAME else CADRUMO_DARK_THEME_NAME
     return str(app.theme)
 
@@ -482,6 +542,7 @@ __all__ = [
     "CADRUMO_DARK_THEME_NAME",
     "CADRUMO_LIGHT",
     "CADRUMO_LIGHT_THEME_NAME",
+    "CADRUMO_TERMINAL",
     "CADRUMO_THEMES",
     "NOTICE_BAND_CSS",
     "install_cadrumo_themes",

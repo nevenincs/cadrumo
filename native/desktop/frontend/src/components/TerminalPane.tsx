@@ -44,6 +44,7 @@ type Props = {
   isShellChord: (event: KeyboardEvent) => boolean;
   onStatus: (kind: TerminalKind, status: TerminalStatus) => void;
   onMenu: (event: MouseEvent, kind: TerminalKind) => void;
+  onAppearanceToggle: () => void;
   register: (kind: TerminalKind, api: TerminalApi) => void;
   /** Render as the bottom panel's tab panel for this kind. */
   tabPanel?: boolean;
@@ -59,6 +60,7 @@ export function TerminalPane({
   isShellChord,
   onStatus,
   onMenu,
+  onAppearanceToggle,
   register,
   tabPanel,
 }: Props) {
@@ -74,6 +76,7 @@ export function TerminalPane({
     isShellChord,
     onStatus,
     onMenu,
+    onAppearanceToggle,
     register,
     theme,
     fontSize,
@@ -84,6 +87,7 @@ export function TerminalPane({
     isShellChord,
     onStatus,
     onMenu,
+    onAppearanceToggle,
     register,
     theme,
     fontSize,
@@ -114,6 +118,8 @@ export function TerminalPane({
       fontSize: live.current.fontSize,
       lineHeight: 1,
       rescaleOverlappingGlyphs: true,
+      // The TUI's bright slots are semantic surfaces, not bold text colors.
+      drawBoldTextInBrightColors: kind !== "tui",
       scrollback: 5000,
       theme: live.current.theme,
     });
@@ -225,6 +231,11 @@ export function TerminalPane({
         return false;
       },
     );
+    const appearance = term.parser.registerOscHandler(777, (data) => {
+      if (kind !== "tui" || data !== "cadrumo;appearance;toggle") return false;
+      live.current.onAppearanceToggle();
+      return true;
+    });
     const resized = term.onResize(
       ({ cols, rows }) => void session?.resize(cols, rows),
     );
@@ -267,6 +278,7 @@ export function TerminalPane({
       binary.dispose();
       modes.dispose();
       modesOff.dispose();
+      appearance.dispose();
       resized.dispose();
       // Close at once: closing stops any write still waiting on the host's
       // queue, so it cannot hold the session open.

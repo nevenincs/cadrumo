@@ -821,6 +821,17 @@ unit line height. Unsupported graphics or unrecovered context loss falls back
 to xterm's DOM renderer without replacing the PTY. Hidden font-size changes
 defer fitting until the pane has dimensions again.
 
+The dedicated TUI uses native ANSI color roles, with light and dark Cadrumo
+palettes owned by the desktop. Changing appearance recolors existing content
+and hidden panes without restarting a process or writing to its input. The
+console and Python panes follow appearance unless their explicit always-dark
+preference is selected. The TUI pane and its header follow desktop appearance.
+Only the dedicated TUI launch sets `TERM_PROGRAM=cadrumo`; standalone Textual
+surfaces retain their own RGB themes. The embedded TUI's appearance action
+emits `OSC 777;cadrumo;appearance;toggle ST`. Only the TUI pane recognizes that
+exact presentation request and toggles the frontend preference. Other OSC
+payloads and terminal kinds cannot invoke it; it carries no runtime state.
+
 `src-tauri/src/terminal/` keeps at most one live PTY session per kind:
 
 | Kind | Program | Starts in | Process role |

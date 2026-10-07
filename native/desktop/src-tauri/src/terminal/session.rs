@@ -180,6 +180,14 @@ impl Session {
         }
         command.env("TERM", "xterm-256color");
         command.env("COLORTERM", "truecolor");
+        command.env(
+            "TERM_PROGRAM",
+            if program.role == ProcessRole::Tui {
+                "cadrumo"
+            } else {
+                "cadrumo-shell"
+            },
+        );
         command.cwd(&program.directory);
         command.args(&program.arguments);
         let mut reader = pair.master.try_clone_reader().map_err(|cause| {

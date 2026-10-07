@@ -535,6 +535,70 @@ fn chatty_program() -> Program {
     }
 }
 
+#[test]
+fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
+    for role in [ProcessRole::Tui, ProcessRole::Console, ProcessRole::Repl] {
+        let mut program = chatty_program();
+        program.role = role;
+        program.environment.insert(
+            "TERM_PROGRAM".into(),
+            if role == ProcessRole::Tui {
+                "OtherTerminal"
+            } else {
+                "cadrumo"
+            }
+            .into(),
+        );
+        let arguments = if cfg!(windows) {
+            vec!["/d", "/c", "set TERM_PROGRAM"]
+        } else {
+            vec!["-c", "printf '%s' \"$TERM_PROGRAM\""]
+        };
+        program.arguments = arguments.into_iter().map(OsString::from).collect();
+        let captured = Arc::new(Mutex::new(Vec::new()));
+        let output = captured.clone();
+        let sink: Sink = Arc::new(move |frame| {
+            if frame.first() == Some(&0) {
+                output.lock().unwrap().extend_from_slice(&frame[1..]);
+            }
+            Ok(())
+        });
+        let mut session =
+            Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
+        let began = Instant::now();
+        let mut answered = 0;
+        while session.live() && began.elapsed() < Duration::from_secs(10) {
+            let bytes = captured.lock().unwrap();
+            let queries = bytes
+                .windows(4)
+                .filter(|window| *window == b"\x1b[6n")
+                .count();
+            session.acknowledge(bytes.len() as u64).unwrap();
+            drop(bytes);
+            while answered < queries {
+                session.write(b"\x1b[1;1R").unwrap();
+                answered += 1;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(!session.live(), "terminal identity probe did not exit");
+        session.stop().unwrap();
+        let bytes = captured.lock().unwrap();
+        let text = String::from_utf8_lossy(&bytes);
+        if role == ProcessRole::Tui {
+            assert!(!text.contains("cadrumo-shell"), "{text:?}");
+        }
+        assert!(
+            text.contains(if role == ProcessRole::Tui {
+                "cadrumo"
+            } else {
+                "cadrumo-shell"
+            }),
+            "{text:?}"
+        );
+    }
+}
+
 /// When frames stop reaching the webview the session stops itself: the child
 /// is terminated and every worker joined without anyone closing it.
 #[test]

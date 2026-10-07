@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ffe7f35addcb6a7c6c9f71c2c9b352d67c061417d33c67eeddff9cb2d6b8adf'
+body_hash: 'sha256:e6b65d8817e2b1fdd8f05ce40604d3604307f896cec8095053f09d2a7a940b8e'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -235,6 +235,14 @@ shell to documentation:
 - Window size, position and maximized state go through a host window-state module. It stores them as `window-state.json` in the declared webview location, restores them on window ready within the visible monitors, and saves them atomically on close, with no JavaScript command. The window-state plugin was set aside because it creates an undeclared `%APPDATA%` directory, which `2026-10-04-canonical-environment-adr` forbids.
 - Settings, the split ratio, whether the TUI is shown, panel open, panel share, active tab and documentation zoom go in shell localStorage.
 - Every read is guarded, so the layout falls back to defaults.
+
+### Embedded terminal appearance amendment (2026-10-07)
+
+Authorized by the user's request that desktop theme switching restyle the TUI and shells. Source inspection found the TUI pane pinned to DARK_TERMINAL and Textual themes emitting fixed RGB colors (`native/desktop/frontend/src/App.tsx`, `src/cadrumo/entrypoints/tui/components/theme.py`). Changing xterm's background cannot recolor those cells.
+
+The dedicated desktop TUI uses native ANSI color roles backed by desktop-owned light/dark Cadrumo palettes. Its launch identifies the terminal through TERM_PROGRAM=cadrumo; this is terminal capability metadata, alongside TERM and COLORTERM, not a product Settings variable. Standalone TUI appearances are unchanged. Desktop preference changes recolor existing terminal cells without input, restart, polling, or runtime IPC. The TUI pane follows desktop appearance; the console and Python panes retain their explicit always-dark override. The TUI's own appearance action emits only OSC 777;cadrumo;appearance;toggle, which the dedicated TUI pane may interpret as a frontend preference toggle; console/Python panes cannot invoke it. The payload carries no application state, and goes through ordinary PTY output, never diagnostics. No arbitrary commands or values are admitted by this presentation request.
+
+ANSI roles retain background, surface, panel, foreground, muted text, primary, accent, status and border distinctions. Native ANSI rendering has fewer shade levels than the standalone RGB themes; verify actual widgets and contrast in both appearances. Reconsider this mechanism if future UI needs require additional color roles or a bidirectional presentation protocol.
 
 ## Rationale
 

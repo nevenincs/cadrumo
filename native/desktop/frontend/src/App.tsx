@@ -85,7 +85,12 @@ import {
   translator,
   type Translate,
 } from "./shell/strings";
-import { DARK_TERMINAL, LIGHT_TERMINAL } from "./shell/terminalThemes";
+import {
+  DARK_TERMINAL,
+  LIGHT_TERMINAL,
+  DARK_TUI,
+  LIGHT_TUI,
+} from "./shell/terminalThemes";
 import { failureCode } from "./errors";
 import { identity } from "virtual:desktop-content";
 
@@ -1759,6 +1764,12 @@ export function App({ host }: { host: Host }) {
         if (s.phase === "exited" || s.phase === "failed") account.tuiExited();
       }}
       onMenu={terminalMenu}
+      onAppearanceToggle={() =>
+        setPrefs((previous) => ({
+          ...previous,
+          appearance: scheme === "dark" ? "light" : "dark",
+        }))
+      }
       register={(k, api) => {
         terminals.current[k] = api;
       }}
@@ -1883,8 +1894,7 @@ export function App({ host }: { host: Host }) {
     </div>
   );
   const tuiPane = (
-    // The TUI paints its own dark theme, so its whole area is a dark scheme.
-    <div className={cn(pane, "pane-tui")} data-scheme="dark">
+    <div className={cn(pane, "pane-tui")} data-scheme={scheme}>
       <PaneHeader
         title={t("desktop.pane.tui")}
         // While the account withholds the TUI there is no session: the
@@ -1923,7 +1933,11 @@ export function App({ host }: { host: Host }) {
           signInButton={signInButton}
         />
       ) : (
-        terminalPane("tui", tuiVisible, DARK_TERMINAL)
+        terminalPane(
+          "tui",
+          tuiVisible,
+          scheme === "dark" ? DARK_TUI : LIGHT_TUI,
+        )
       )}
     </div>
   );
