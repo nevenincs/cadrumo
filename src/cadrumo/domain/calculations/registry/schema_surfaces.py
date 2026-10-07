@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import StrEnum
@@ -590,8 +591,8 @@ def _validate_manifest_population(casillas: tuple[CalculationCompletenessCasilla
 
 def _validate_manifest_casilla_ids(casillas: tuple[CalculationCompletenessCasilla, ...]) -> None:
     """Reject duplicate canonical casilla ids in a completeness manifest."""
-    casilla_ids = [casilla.casilla_id for casilla in casillas]
-    duplicate_ids = sorted({casilla_id for casilla_id in casilla_ids if casilla_ids.count(casilla_id) > 1})
+    casilla_ids = Counter(casilla.casilla_id for casilla in casillas)
+    duplicate_ids = sorted(casilla_id for casilla_id, count in casilla_ids.items() if count > 1)
     if duplicate_ids:
         rendered_ids = ", ".join(repr(casilla_id) for casilla_id in duplicate_ids)
         raise RegistryValidationError(
@@ -601,8 +602,8 @@ def _validate_manifest_casilla_ids(casillas: tuple[CalculationCompletenessCasill
 
 def _validate_manifest_record_design_metadata(casillas: tuple[CalculationCompletenessCasilla, ...]) -> None:
     """Reject duplicate reviewed segment/number metadata in a manifest."""
-    metadata_pairs = [casilla.record_design_metadata() for casilla in casillas]
-    duplicates = sorted({pair for pair in metadata_pairs if metadata_pairs.count(pair) > 1})
+    metadata_pairs = Counter(casilla.record_design_metadata() for casilla in casillas)
+    duplicates = sorted(pair for pair, count in metadata_pairs.items() if count > 1)
     if duplicates:
         rendered = ", ".join(
             f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
@@ -713,7 +714,7 @@ def validate_family_identity_uniqueness(family: str, identities: Sequence[str]) 
     Raises:
         RegistryValidationError: Two or more members share an identity.
     """
-    duplicates = sorted({identity for identity in identities if identities.count(identity) > 1})
+    duplicates = sorted(identity for identity, count in Counter(identities).items() if count > 1)
     if duplicates:
         rendered = ", ".join(repr(identity) for identity in duplicates)
         raise RegistryValidationError(f"{family} declares duplicate ids: {rendered}")

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:663c03fd4dfe48315a2cda06add1094a5b4d86cf2bf67de4d91d6b66033f1a02'
+body_hash: 'sha256:fafad7ef45f99ce30d0782518c68b2abbf4b61a277dbc89d1c1a53a1e809825b'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
   - "[[2026-10-07-blocking-code-quality-repair-audit]]"
@@ -50,6 +50,10 @@ S05 retains one repository-validated calculation catalogue only as a local value
 ### bounded-startup-and-selector-route-evidence | low | Original double journey completes with more margin and measured startup boundaries
 
 S06 adds scoped real synchronous CLI, worker creation, native launch/connect, frontend/worker password admission and custody-unlock measurements. Arguments, return values, exceptions, cached CLI identity and native ownership remain unchanged; nested failure tests prove full restoration. Sixteen focused cases and final cache-case rerun pass; Ruff/format/ty pass. Manifest .tmp/modelo-performance-startup-observability.json records exact public targets and limitations: observer preimports are outside the default benchmark sequence clock, and parent worker construction includes child bootstrap before the child composition recorder begins. A subsequent original double-run canonical fixture with S05/S06 passed all three assertions at 260.66 s setup, 267.60 s total pytest; observed scope 262.00 s and process-tree CPU 238.06 s. First profile edit 13.10 s, worker creation 5.95 s, native CreateProcess 0.010 s, frontend admission 10.10 s including construction/registry, child password proof 0.41 s and existing-envelope unwrap 0.38 s. The earlier 45 s extra startup wait did not recur and is not assigned an unproved cause. Calculation frame had additional wall variation (45.53 s versus 25.09 s earlier), while actual calculation body was 9.42 s wall/6.20 s CPU. Completion and catalogue repetition remain final uninstrumented S04 obligations after S07. Evidence .tmp/modelo-runtime-canonical-startup and .tmp/m100-performance-canonical-startup.txt; durable log var/storage/development/.logs/test-runs/2026-10-07/20261007T115931.317558Z-pytest-31056-026f3357/run.log.
+
+### linear-duplicate-validation-repair | low | Complete registry identity validation removes measured quadratic scans
+
+S07 replaces repeated list.count traversals with a single Counter pass in three typed string or segment/number duplicate validators, keeping sorted duplicate sets, exact messages and strict Pydantic caller validation. Actual M100 manifest has 695 entries and continuity evolution family has 2,403 IDs; evolution validation falls from 58–60 ms to 0.15–0.18 ms in alternating isolated calls. A full encrypted-load profile confirms all original helper checks execute and 7,614 list.count hot calls disappear (0.132 s own profile time). Profiled load CPU falls 1.672 s to 1.563 s; noisy unprofiled complete-load pairs do not establish a separate route gain. Forty-five focused tests pass, including exact M100/303/131/720 saved bytes/digests and encrypted evidence/parent/custody refusals plus 15 strict duplicate, scalar, empty and segment cases. Focused Ruff/format/ty/pyrefly/basedpyright pass. Evidence .tmp/s07-runtime-performance-manifest.json and .tmp/s07-runtime-performance.patch; log var/storage/development/.logs/test-runs/2026-10-07/20261007T120512.829706Z-pytest-63760-c71305c8/run.log. The proposed same-call revision-object reuse was neutral/slower and was not implemented; no new schema, representation, dependency or cache is added.
 
 ## Recommendations
 
