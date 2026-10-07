@@ -13,10 +13,11 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from copy import deepcopy
 from dataclasses import dataclass, field, is_dataclass
-from typing import TypeAliasType, get_args, get_origin
+from typing import TypeAliasType, get_args, get_origin, override
 
 from pydantic import BaseModel, PydanticInvalidForJsonSchema
 from pydantic.fields import FieldInfo
+from pydantic.json_schema import DefsRef, GenerateJsonSchema, JsonRef
 
 from ...core.hex import HEX_PATTERN_64
 from ...core.type_guards import is_object_dict, is_object_list, is_object_list_or_tuple, is_str_keyed_dict
@@ -100,6 +101,47 @@ _SCHEMA_COMPILATION_MEMO: ContextVar[_SchemaCompilationMemo | None] = ContextVar
     "operation_schema_compilation_memo", default=None
 )
 _SCHEMA_ATOMIC_TYPES = frozenset((str, int, float, bool, bytes, type(None)))
+
+
+class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
+    """Avoid definition deduplication only when every preferred name is unique.
+
+    Pydantic's naming fixed point hashes each definition under multiple aliases.
+    If no other definition owns any alias matching a preferred name, its first
+    choice cannot change during that fixed point. Ambiguity uses Pydantic's
+    original algorithm, including deduplication of equivalent definitions.
+    """
+
+    @override
+    def _build_definitions_remapping(self):
+        choices = self._prioritized_defsref_choices
+        owners: dict[DefsRef, DefsRef | None] = {}
+        for original in self.definitions:
+            alternatives = choices.get(original)
+            if not alternatives:
+                return super()._build_definitions_remapping()
+            for alternative in alternatives:
+                if alternative in owners and owners[alternative] != original:
+                    owners[alternative] = None
+                else:
+                    owners[alternative] = original
+        if any(owners[choices[original][0]] != original for original in self.definitions):
+            return super()._build_definitions_remapping()
+        definitions: dict[DefsRef, DefsRef] = {}
+        references: dict[JsonRef, JsonRef] = {}
+        for original in self.definitions:
+            alternatives = choices[original]
+            preferred = alternatives[0]
+            definitions[original] = preferred
+            preferred_ref = JsonRef(self.ref_template.format(model=preferred))
+            for alternative in alternatives:
+                references[JsonRef(self.ref_template.format(model=alternative))] = preferred_ref
+        # Let the base hook construct its own remapping type. An empty
+        # generator has no definitions to hash or disambiguate.
+        remapping = GenerateJsonSchema()._build_definitions_remapping()
+        remapping.defs_remapping.update(definitions)
+        remapping.json_remapping.update(references)
+        return remapping
 
 
 @contextmanager
@@ -487,8 +529,19 @@ def _generate_closed_model_schema(model_type: type[BaseModel]) -> dict[str, obje
     validation_schema: object
     serialization_schema: object
     try:
-        validation_schema = model_type.model_json_schema(mode="validation")
-        serialization_schema = model_type.model_json_schema(mode="serialization")
+        if getattr(model_type.model_json_schema, "__func__", None) is getattr(
+            BaseModel.model_json_schema, "__func__", None
+        ):
+            validation_schema = model_type.model_json_schema(
+                mode="validation", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+            )
+            serialization_schema = model_type.model_json_schema(
+                mode="serialization", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+            )
+        else:
+            # An overridden or decorated model method remains authoritative.
+            validation_schema = model_type.model_json_schema(mode="validation")
+            serialization_schema = model_type.model_json_schema(mode="serialization")
     except PydanticInvalidForJsonSchema as error:
         raise ValueError("public operation schema model must have a closed JSON schema") from error
     if validation_schema != serialization_schema:
