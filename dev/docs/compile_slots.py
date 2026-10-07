@@ -72,6 +72,17 @@ MARK_CLOSE: Final[str] = ""
 MARK: Final[re.Pattern[str]] = re.compile(f"{MARK_OPEN}([0-9a-z]+){MARK_CLOSE}")
 _DIGITS: Final[str] = "0123456789abcdefghijklmnopqrstuvwxyz"
 
+#: Private-use characters delimiting one rendered translation inside a fragment
+#: document, which :mod:`dev.docs.message_marks` writes and reads back. They are
+#: declared here, beside the mark's own delimiters, because what they have in
+#: common is that no root a reader is served may carry one: one registry of the
+#: characters the compile reserves is what lets every artefact of it be refused
+#: together (:data:`dev.docs.language_roots._RESERVED`), rather than each
+#: delimiter being remembered where it happens to be used.
+BLOCK_OPEN: Final[str] = ""
+BLOCK_MID: Final[str] = ""
+BLOCK_CLOSE: Final[str] = ""
+
 #: The characters a docutils HTML writer replaces in text and in attribute
 #: values (``docutils.writers._html_base.HTMLTranslator.special_characters``).
 _DOCUTILS_SPECIAL: Final[dict[int, str]] = {
@@ -935,6 +946,63 @@ def refuse_escaped_marks(content: str, where: str) -> None:
             f"{where} is not a page and carries an escaped mark delimiter, "
             f"around {content[max(at - 60, 0) : at + 20]!r}; "
             "its creation site must record the whole string rather than escape the mark"
+        )
+
+
+def _percent_encoded(character: str) -> str:
+    """Return one character as a URL carries it: its UTF-8 bytes, each per cent."""
+    return "".join(f"%{byte:02x}" for byte in character.encode("utf-8"))
+
+
+def _character_reference(character: str) -> str:
+    """Return the HTML numeric character references, decimal and hexadecimal, for one character."""
+    return f"&#0*{ord(character)};|&#[xX]0*{ord(character):x};"
+
+
+#: A whole mark as something downstream of the writer re-encoded it: percent
+#: encoded into a URL, or written as HTML numeric character references. Each
+#: encoding is matched whole -- the opening delimiter, the number, the closing
+#: delimiter -- and both delimiters in the same encoding, because that is what
+#: distinguishes a re-encoded mark from a lone escape standing for itself: the
+#: vendored ``mermaid.min.js`` carries ``\\uE010`` and ``\\uE011`` in a KaTeX
+#: table, and a refusal of single encoded characters would refuse that file for
+#: naming two private-use characters of its own.
+_ENCODED_MARK: Final[re.Pattern[str]] = re.compile(
+    "|".join(
+        (
+            f"{_percent_encoded(MARK_OPEN)}([0-9a-z]+){_percent_encoded(MARK_CLOSE)}",
+            f"(?:{_character_reference(MARK_OPEN)})[0-9a-z]+(?:{_character_reference(MARK_CLOSE)})",
+        )
+    ),
+    re.IGNORECASE,
+)
+
+
+def refuse_encoded_marks(content: str, where: str) -> None:
+    """Refuse a file carrying a whole mark that something re-encoded.
+
+    A mark is factored by the two private-use characters around its number, so a
+    mark that reached the written site as an address's per-cent escapes or as
+    HTML character references is a mark nothing will factor: every language
+    would be served the number the compile wrote, standing for a string it can
+    no longer reach. Both forms are the ordinary output of a writer handed a
+    private-use character -- a URL quoter and an XML serializer -- so a creation
+    site that lands in one must record its whole string rather than a mark.
+
+    Args:
+        content: One page, or one text file of the compiled site.
+        where: The path inside the site, for the refusal.
+
+    Raises:
+        CompileSlotsError: If *content* carries a whole mark in either encoding.
+    """
+    found = _ENCODED_MARK.search(content)
+    if found is not None:
+        at = found.start()
+        raise CompileSlotsError(
+            f"{where} carries a re-encoded mark, around {content[max(at - 60, 0) : at + 40]!r}; "
+            "nothing factors a mark whose delimiters were escaped, so its creation site must record "
+            "the whole string instead"
         )
 
 

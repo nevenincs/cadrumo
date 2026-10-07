@@ -26,12 +26,16 @@ from pathlib import Path, PurePosixPath
 from typing import Final
 
 from .compile_slots import (
+    BLOCK_CLOSE,
+    BLOCK_MID,
+    BLOCK_OPEN,
     MARK,
     MARK_CLOSE,
     MARK_OPEN,
     CompileSlots,
     Rendering,
     read_escaped_marks,
+    refuse_encoded_marks,
     refuse_escaped_marks,
     refuse_stray_delimiters,
 )
@@ -290,7 +294,8 @@ def store_compiled_root(
             carries a mark it cannot answer, or a page carries a slot delimiter
             of its own.
         CompileSlotsError: If a file that is not a page carries an escaped mark
-            delimiter, or one that is not part of a whole mark.
+            delimiter, or one that is not part of a whole mark, or any file
+            carries a whole mark something re-encoded.
     """
     languages = slots.languages
     if destination.exists() and any(destination.iterdir()):
@@ -308,6 +313,9 @@ def store_compiled_root(
             if source is None:
                 continue
             content = source.read_bytes()
+            decoded = _file_text(content)
+            if decoded is not None:
+                refuse_encoded_marks(decoded, f"{language}/{path}")
             _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), content)
             own[language].append(path)
             written.append(asset_cache_key(content))
@@ -336,6 +344,8 @@ def store_compiled_root(
                 "the compile's own"
             )
         decoded = _file_text(content)
+        if decoded is not None:
+            refuse_encoded_marks(decoded, path)
         if decoded is None or MARK_OPEN not in decoded:
             if decoded is not None:
                 refuse_escaped_marks(decoded, path)
@@ -362,6 +372,7 @@ def store_compiled_root(
         # as its own escape, which is the delimiter and has to be read as one
         # before the page is factored (:func:`read_escaped_marks`).
         page = read_escaped_marks(_without_terminators(text_of_page))
+        refuse_encoded_marks(page, path)
         factored: list[str | tuple[str, ...]] = []
         for part in _factor_compiled_page(page, slots, path=path):
             factored.extend(_cache_key_slots(part, keys) if isinstance(part, str) else [part])
@@ -383,6 +394,53 @@ def store_compiled_root(
     )
     _write(destination / LAYOUT_FILE, (json.dumps(layout.document(), indent=1) + "\n").encode(_UTF_8))
     return layout
+
+
+def refuse_uneven_language_files(layout: Layout, *, absent: Mapping[str, Sequence[str]]) -> None:
+    """Refuse a stored form whose languages do not hold the same files.
+
+    Every root of the site is the same site, so every language holds the same
+    paths. The pages cannot be uneven: :func:`store_compiled_root` factors one
+    compiled page into one structure, and :func:`factor_roots` refuses a page
+    some language has and another does not. What is not a page carries no such
+    construction -- it is stored per language because its BYTES differ -- so a
+    language can quietly end up with one file fewer than its peers, and the root
+    composed for it is then a site missing a script, an index or an inventory
+    that every other root serves.
+
+    An absence is legitimate only when it is declared, and a declaration that
+    nothing matches is refused too: a language that has since gained the file,
+    or a path no language stores at all, leaves a standing permission for the
+    next absence rather than a fact about this site.
+
+    Args:
+        layout: How each path of the stored form is stored.
+        absent: For each language, the paths it legitimately holds none of.
+
+    Raises:
+        LanguageRootsError: If a language holds a file another holds and no
+            declaration covers it, if it holds one declared absent, or if a
+            declaration names a path no language holds.
+    """
+    every_path = {path for language in layout.languages for path in layout.language_files[language]}
+    found: list[str] = []
+    for path in sorted({path for paths in absent.values() for path in paths} - every_path):
+        found.append(f"{path}: declared absent, and no language stores it")
+    for language in layout.languages:
+        held = set(layout.language_files[language])
+        declared = set(absent.get(language, ()))
+        found.extend(
+            f"{language}/{path}: declared absent for this language, and stored for it all the same"
+            for path in sorted(declared & held)
+        )
+        found.extend(
+            f"{language}/{path}: held by another language and absent here undeclared"
+            for path in sorted(every_path - declared - held)
+        )
+    if found:
+        raise LanguageRootsError(
+            f"{len(found)} per-language file(s) are not the same set in every language:\n  " + "\n  ".join(found)
+        )
 
 
 def _string_list(value: object, where: str) -> tuple[str, ...]:
@@ -445,13 +503,21 @@ def _kinds(layout: Layout, language: str) -> dict[str, str]:
 
 
 #: Every private-use character the compile's own artefacts are delimited by: a
-#: structure's slots and a compiled page's marks. A composed root is what a
-#: reader is served, so none of them may still be in any of its text.
+#: structure's slots, a compiled page's marks, and a fragment document's
+#: rendered translation blocks. A composed root is what a reader is served, so
+#: none of them may still be in any of its text. The blocks are here because a
+#: fragment document's written page is deleted rather than composed, so nothing
+#: else would ever notice one that reached a page the compile kept: the registry
+#: names every reserved character rather than the two whose own reader happens
+#: to run last.
 _RESERVED: Final[tuple[tuple[str, str], ...]] = (
     (SLOT_OPEN, "an opening slot"),
     (SLOT_CLOSE, "a closing slot"),
     (MARK_OPEN, "an opening mark"),
     (MARK_CLOSE, "a closing mark"),
+    (BLOCK_OPEN, "an opening translation block"),
+    (BLOCK_MID, "a translation block's separator"),
+    (BLOCK_CLOSE, "a closing translation block"),
 )
 
 

@@ -62,6 +62,13 @@ def compile_command(html_root: Path, build_root: Path) -> list[str]:
 
     The compile's own flags carry what used to be an environment per root: the
     flavour the package ships, where the roots go and where the compile works.
+
+    Strictly (Sphinx ``-n -W``), because this is the only compile of the
+    DESKTOP flavour anything runs: the docs lane's own compile builds the web
+    flavour, which is the one the measurement needs, so a warning that only the
+    packaged copy's pages raise -- a reference the desktop flavour resolves
+    differently, a page it leaves out -- would otherwise reach a release with
+    nothing having refused it.
     """
     return [
         sys.executable,
@@ -73,6 +80,7 @@ def compile_command(html_root: Path, build_root: Path) -> list[str]:
         str(build_root),
         "--flavor",
         "desktop",
+        "--strict",
     ]
 
 

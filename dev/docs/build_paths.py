@@ -101,7 +101,8 @@ def docs_site_prefixes(
       of its own is the published one, which serves every language under its own
       code and nothing at its apex, while a site with no address of its own is
       the packaged copy, whose apex serves the language the pages are authored
-      in.
+      in. The authored language given a directory of its own is therefore the
+      first kind as well: no root is left to stand at the apex.
 
     Each language's own prefix is therefore the one its own build is given, and
     ``prefixes[build_language]`` is what :func:`docs_site_prefix` returns.
@@ -122,8 +123,13 @@ def docs_site_prefixes(
     environment = os.environ if environ is None else environ
     if not docs_site_prefix(environment):
         at_apex = build_language
+    elif environment.get(DOCS_BASE_URL_ENV, "").strip() or build_language == source_language:
+        # A root told its own directory is never the apex, whatever else is
+        # known: the authored language given a directory says, as an address
+        # does, that no root stands above the directories.
+        at_apex = None
     else:
-        at_apex = None if environment.get(DOCS_BASE_URL_ENV, "").strip() else source_language
+        at_apex = source_language
     return {language: "" if language == at_apex else f"{language}/" for language in languages}
 
 

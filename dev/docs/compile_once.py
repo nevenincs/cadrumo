@@ -4,15 +4,24 @@ One Sphinx build, with the multilingual compile active, writes a site whose
 pages carry a mark wherever a string depends on the language
 (:mod:`dev.docs.compile_slots`). This module runs that build, factors its output
 into the stored form :mod:`dev.docs.language_roots` writes, composes every
-language's site back from it, and -- while per-language builds still exist --
-measures each composed site against the one that language's own build produced.
+language's site back from it, and measures ONE composed site against the one
+that language's own build produced: the WITNESS (:data:`WITNESS_LANGUAGE`).
 
 The measurement is the point of the module as much as the compile is. A
-mechanism that has not yet been moved leaves the language it could not speak
-reading English, so a composed site differs from its oracle in exactly the
-places the unmoved mechanisms own. Reporting those differences by the kind of
-markup they sit in turns the remaining work into a count that falls as each
+mechanism that has not been moved leaves the language it could not speak
+reading English, so a composed site differs from the witness build in exactly
+the places the unmoved mechanisms own. Reporting those differences by the kind
+of markup they sit in turns the remaining work into a count that falls as each
 mechanism moves, instead of one gate that is red until the last of them does.
+
+One witness rather than one build per language, because a build per language is
+exactly the cost the compile exists to retire, and because the languages are not
+independent evidence: a composed root is the one structure plus one language's
+strings, so what a second translated language's build could show that the first
+did not is a defect in that language's own strings, which the catalogue gates
+own. What a translated witness shows and an English one cannot is a mechanism
+that silently follows the Sphinx ``language`` or was never marked at all: those
+read correctly in English by accident.
 
 A difference kept on purpose is declared in :data:`INTENDED_DIFFERENCES` with
 its reason and is reported apart from the rest, never folded into the count. A
@@ -41,9 +50,11 @@ import time
 import zlib
 from collections import Counter
 from collections.abc import Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Final
+from urllib.parse import urlsplit
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
@@ -52,16 +63,26 @@ if not __package__:
     __package__ = "dev.docs"
 
 
+from dev.packaging.command_execution import run_command
+
 from .build import DOCS_FLAVOR_ENV, write_deployment_sitemap
 from .build import main as build_documentation
-from .build_paths import DOCS_BASE_URL_ENV, DOCS_BUILD_ROOT_ENV, DOCS_SITE_PREFIX_ENV
+from .build_paths import DOCS_BASE_URL_ENV, DOCS_BUILD_ROOT_ENV, DOCS_SITE_PREFIX_ENV, docs_site_prefixes
 from .compile_slots import SLOTS_FILE, CompileSlots, context_at, markup_contexts, read_slots
 from .i18n import DEFAULT_SOURCE_LANGUAGE
-from .language_roots import compose_root, store_compiled_root
+from .language_roots import (
+    STRUCTURE_DIRECTORY,
+    Layout,
+    compose_root,
+    read_text,
+    refuse_uneven_language_files,
+    store_compiled_root,
+)
+from .language_switcher import carries_switcher, unresolved_cross_root_links
 from .message_marks import FRAGMENT_PREFIX
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from .shared_page_assets import CHROME_STRINGS_SCRIPT, language_chrome_strings
-from .shared_structure import compare_page
+from .shared_structure import compare_page, slot_numbers
 from .translations_js import TRANSLATIONS_SCRIPT, language_translations_js
 
 #: The environment key ``docs/conf.py`` reads to carry every language.
@@ -74,16 +95,38 @@ COMPILE_LANGUAGE: Final[str] = DEFAULT_SOURCE_LANGUAGE
 
 #: The documentation settings a compile does not own, and therefore keeps from
 #: the environment it is run in: whether the network may be reached, where the
-#: repository stands, and whether the CLI tree the live command surface writes
-#: is emitted. A caller builds hermetically by setting these; everything else a
-#: ``CADRUMO_DOCS_`` key could say about the site is the compile's own
-#: (:func:`_pin_build_environment`).
+#: repository stands, whether the CLI tree the live command surface writes is
+#: emitted, and how wide the read may run. A caller builds hermetically by
+#: setting these; everything else a ``CADRUMO_DOCS_`` key could say about the
+#: site is the compile's own (:func:`_pin_build_environment`).
+#:
+#: Read parallelism is here because it is a property of the host and not of the
+#: site: it changes how long a build takes and nothing it writes, and a host
+#: that has to bound it -- a gate sharing its cores with the rest of a lane --
+#: says so once for every build it runs.
 HOST_SELECTORS: Final[tuple[str, ...]] = (
     "CADRUMO_DOCS_OFFLINE",
     "CADRUMO_DOCS_PROJECT_ROOT",
     "CADRUMO_DOCS_SKIP_CLI_TREE",
+    "CADRUMO_DOCS_JOBS",
     SEQUENCE_CHECK_SKIP_ENV,
 )
+
+#: The language whose own build is the proof that a composed root is faithful.
+#:
+#: It is a TRANSLATED language on purpose. The compile builds in
+#: :data:`COMPILE_LANGUAGE`, so anything that silently follows the Sphinx
+#: ``language``, or that was never marked at all, is correct in English by
+#: accident: every defect of that kind in this mechanism's history showed in a
+#: translated root and in no English one.
+#:
+#: Catalan among the three: it is not the compile's own language, it sits in the
+#: middle of the carried order rather than at either end -- so a mechanism that
+#: always reads the first language's string, or the last one's, is wrong here
+#: too -- Sphinx ships both a message catalogue and compiled interface strings
+#: for it, and its prose is apostrophe-dense, which exercises the typographic
+#: education hundreds of times on one page set.
+WITNESS_LANGUAGE: Final[str] = "ca"
 
 #: Where each language's own object inventory is written out of the compiled
 #: one, inside the compiled site and taken out of the files it is read as.
@@ -109,6 +152,20 @@ _INVENTORY_COMPRESSION: Final[int] = 9
 #: from an address of its own. It is the one reader-facing file of a compiled
 #: site that belongs to one root rather than to all of them.
 SITEMAP_FILE: Final[str] = "sitemap.xml"
+
+#: Where a measuring run keeps the one build it measures a composed root
+#: against, inside the directory it was given.
+_WITNESS_DIRECTORY: Final[str] = "witness"
+
+#: The files one language legitimately holds none of, and which therefore do
+#: not make its root uneven (:func:`dev.docs.language_roots.refuse_uneven_language_files`).
+#: Sphinx ships compiled interface strings for every language it has a
+#: catalogue for, and English is the language its own strings are written in: an
+#: English build writes neither the file nor the tag that loads it, so the
+#: composed English root holds neither either.
+_DECLARED_ABSENCES: Final[Mapping[str, tuple[str, ...]]] = {
+    DEFAULT_SOURCE_LANGUAGE: (f"_static/{TRANSLATIONS_SCRIPT}",)
+}
 
 #: Where :func:`compile_language_roots` keeps the stored form while it composes
 #: the roots from it, for a caller that did not ask to keep it. Inside the
@@ -150,17 +207,6 @@ class IntendedDifference:
 #: nobody has decided to keep is a defect, so each one here names its page, its
 #: markup and the exact bytes it covers.
 INTENDED_DIFFERENCES: Final[tuple[IntendedDifference, ...]] = (
-    IntendedDifference(
-        context="markup:p",
-        page="_release_notes_template.html",
-        built='<input class="task-list-item-checkbox" disabled="disabled" type="checkbox">',
-        reason=(
-            "Sphinx translates a paragraph by replacing its children, which drops the checkbox a "
-            "task list item carries: every language whose build translates this page already loses "
-            "it, and the one compile reads the source language through a catalogue as well, so the "
-            "English page now reads as the other three do"
-        ),
-    ),
     IntendedDifference(
         context="attr:a.href",
         page="how-to/filing-calendar.html",
@@ -212,6 +258,33 @@ class UnwitnessedChange:
 #: change here is not excused by the comparison: it is kept out of its reach,
 #: and its own gates are the ones that prove it.
 UNWITNESSED_CHANGES: Final[tuple[UnwitnessedChange, ...]] = (
+    UnwitnessedChange(
+        mechanism="myst_parser task lists",
+        change=(
+            "the English release-notes template loses the checkbox each of its task list items "
+            "carried, so it reads as the other three languages' copies of it already did"
+        ),
+        reason=(
+            "Sphinx translates a paragraph by replacing its children, which drops the checkbox, and the "
+            "one compile reads the source language through a catalogue like every other language. The "
+            "witness is a translated language, whose own build loses the checkbox as well, so there is no "
+            "longer a build of the one language this was visible in for the comparison to report it"
+        ),
+    ),
+    UnwitnessedChange(
+        mechanism="dev.docs.message_marks",
+        change=(
+            "a source-language string is the stretch of the page's own source its message was folded "
+            "from, line breaks and all, rather than the folded message the catalogue holds"
+        ),
+        reason=(
+            "a build of the language the pages are authored in consults no catalogue, so its pages keep "
+            "the line breaks the source wraps at, while the one compile reaches every language through a "
+            "catalogue. The recovery (``_SourceText.unfolded``) is what keeps the composed English root "
+            "equal to that build, and the witness is a translated language whose own build folds the "
+            "breaks exactly as the compile does: nothing in the comparison reads English prose any more"
+        ),
+    ),
     UnwitnessedChange(
         mechanism="dev.docs.untranslated_typesetting",
         change=(
@@ -535,6 +608,142 @@ def _pin_build_environment(
             os.environ[SEQUENCE_CHECK_SKIP_ENV] = "1"
 
 
+def witness_root(destination: Path, language: str) -> Path:
+    """Return where a measuring run under *destination* keeps one language's own build."""
+    return destination / _WITNESS_DIRECTORY / language
+
+
+def witness_build(
+    language: str,
+    out_dir: Path,
+    *,
+    flavor: str,
+    base_url: str | None,
+    build_root: Path,
+    base: Mapping[str, str] | None = None,
+) -> tuple[list[str], dict[str, str]]:
+    """Return the command and environment of one language's OWN documentation root.
+
+    The witness is a real strict build of one language at the user scope, which
+    is what the composed root of that language is measured against. Its
+    selectors are the ones the website publisher gives a per-root build
+    (:mod:`dev.deploy.docs_site_languages`), because a root is only comparable
+    to a compile that was told the same things about where it is served: the
+    address of its own directory, that directory's name, and that the site's one
+    search index is built over every root afterwards rather than by this build.
+
+    It is declared here, beside :func:`_pin_build_environment`, so the compile
+    and the build it is proven against take their selectors from one authority.
+    A difference between the two that neither the compile nor the build owns is
+    a difference the measurement would report as a defect of the compile.
+
+    Args:
+        language: The language to build, which is the language measured.
+        out_dir: Where the built root goes.
+        flavor: Who the pages are for, as ``dev.docs.build`` means it, and as
+            the compile being measured was given.
+        base_url: The site's address above the language directories, or None for
+            a site served from no address of its own.
+        build_root: A documentation build root of this build's own. Pinned
+            rather than left to the host because a strict build reads the
+            inventory of whatever root stands there and resolves its own
+            references against it: two builds given different build roots are
+            not the same build.
+        base: The environment to build on; the process environment by default.
+
+    Returns:
+        The command line, and the whole environment to run it under.
+    """
+    carried = base if base is not None else os.environ
+    # Every documentation selector is dropped and then pinned, exactly as
+    # :func:`_pin_build_environment` does it for the compile, so an ambient key
+    # cannot reshape one of the two builds and not the other. What is not a
+    # documentation selector is kept: where product storage goes is the
+    # caller's, and both builds need it.
+    environment = {key: value for key, value in carried.items() if not key.startswith("CADRUMO_DOCS_")}
+    environment.update({key: carried[key] for key in HOST_SELECTORS if key in carried})
+    environment.update(
+        {
+            DOCS_FLAVOR_ENV: flavor,
+            DOCS_BUILD_ROOT_ENV: str(build_root),
+            DOCS_SITE_PREFIX_ENV: language,
+            "CADRUMO_DOCS_PAGEFIND_MODE": "none",
+            "PYTHONIOENCODING": _UTF_8,
+        }
+    )
+    if base_url is not None:
+        environment[DOCS_BASE_URL_ENV] = f"{base_url.rstrip('/')}/{language}"
+    command = [
+        sys.executable,
+        "-m",
+        "dev.docs.build",
+        "--strict",
+        "--isolated-source",
+        "--scope",
+        "user",
+        "--language",
+        language,
+        "--out-dir",
+        str(out_dir),
+    ]
+    return command, environment
+
+
+def _refuse_unresolved_cross_root_links(
+    stored: Path,
+    layout: Layout,
+    prefixes: Mapping[str, str],
+    site_path: str,
+) -> None:
+    """Refuse a stored form whose language switcher addresses a page no root holds.
+
+    Read off the stored form rather than off the composed roots: the switcher is
+    one recorded string per language, so each page's structure is scanned once
+    and then only the few strings that carry the element are looked at, instead
+    of every page being read again in every language.
+
+    The pages stored whole carry none: the element names the language of the
+    root it stands in, so a page every language reads the same bytes of has no
+    switcher on it at all.
+
+    Raises:
+        SystemExit: If any page's switcher names an address its target root does
+            not hold (:func:`dev.docs.language_switcher.unresolved_cross_root_links`).
+    """
+    files = {
+        language: {*layout.pages, *layout.shared, *layout.language_files[language]} for language in layout.languages
+    }
+    strings = {language: read_text(stored, language) for language in layout.languages}
+    # The slots whose string carries a switcher, found once per language rather
+    # than page by page: a page then only has to say which slots it uses.
+    carrying = {
+        language: {number for number, value in enumerate(text) if carries_switcher(value)}
+        for language, text in strings.items()
+    }
+    found: list[str] = []
+    for path in layout.pages:
+        numbers = slot_numbers((stored / STRUCTURE_DIRECTORY / path).read_text(encoding=_UTF_8))
+        for language in layout.languages:
+            for number in dict.fromkeys(numbers):
+                if number not in carrying[language]:
+                    continue
+                found.extend(
+                    unresolved_cross_root_links(
+                        strings[language][number],
+                        language=language,
+                        page=path,
+                        prefixes=prefixes,
+                        files=files,
+                        site_path=site_path,
+                    )
+                )
+    if found:
+        raise SystemExit(
+            f"{len(found)} language-switcher link(s) address a page the root they name does not hold:\n  "
+            + "\n  ".join(found[:20])
+        )
+
+
 def _compile_and_compose(
     compiled: Path,
     stored: Path,
@@ -602,7 +811,25 @@ def _compile_and_compose(
     # site's own sitemap belongs to no root: each is written from its own
     # composed root below, where the language is known.
     files.pop(SITEMAP_FILE, None)
-    store_compiled_root(files, slots, stored, language_files=language_files)
+    layout = store_compiled_root(files, slots, stored, language_files=language_files)
+    # The stored form is checked here rather than in each root, because these
+    # three refusals are about the SITE and not about one language's copy of it:
+    # every root of every flavour comes through this function, and what each
+    # refusal names is invisible in a single composed root.
+    refuse_uneven_language_files(layout, absent=_DECLARED_ABSENCES)
+    _refuse_unresolved_cross_root_links(
+        stored,
+        layout,
+        docs_site_prefixes(
+            layout.languages,
+            build_language=COMPILE_LANGUAGE,
+            source_language=DEFAULT_SOURCE_LANGUAGE,
+        ),
+        # The error page's own links are absolute, because it is served for an
+        # address that does not exist: what they are absolute to is the path the
+        # site is served under, which only the address above the roots says.
+        urlsplit(base_url).path.rstrip("/") if base_url is not None else "",
+    )
     roots: dict[str, Path] = {}
     for language in roots_to_write(slots.languages, only):
         roots[language] = roots_in / language
@@ -650,6 +877,7 @@ def compile_once(
     flavor: str = "desktop",
     jobs: int | None = None,
     base_url: str | None = None,
+    strict: bool = False,
 ) -> CompileOnceResult:
     """Compile the documentation once, store it, and compose every language back.
 
@@ -667,8 +895,11 @@ def compile_once(
             :func:`compile_language_roots` means it. The measurement needs it
             too: a root the publisher builds from its own address differs from
             one built from none wherever a page states where it is served, so
-            an oracle built that way is only comparable to a compile given the
+            a witness built that way is only comparable to a compile given the
             same address.
+        strict: Whether the compile refuses a warning (Sphinx ``-n -W``). The
+            witness build always does, so a measurement of a compile that does
+            not is measuring two builds that were not held to one standard.
 
     Returns:
         What the compile produced.
@@ -683,7 +914,7 @@ def compile_once(
         build_root=destination / "build",
         flavor=flavor,
         jobs=jobs,
-        strict=False,
+        strict=strict,
         check_sequences=None,
         base_url=base_url,
     )
@@ -867,15 +1098,6 @@ def _decoded_pair(built: bytes, composed: bytes) -> tuple[str, str] | None:
         return None
 
 
-def _oracle_roots(oracle: Path, languages: Sequence[str]) -> dict[str, Path]:
-    """Return each language's own built root under *oracle*, refusing an absent one."""
-    roots = {language: oracle / language for language in languages}
-    absent = sorted(language for language, root in roots.items() if not root.is_dir())
-    if absent:
-        raise SystemExit(f"the oracle holds no built root for {', '.join(absent)} under {oracle}")
-    return roots
-
-
 def main(argv: list[str] | None = None) -> int:
     """Compile once, store, compose, and report what still differs."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -897,9 +1119,7 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Documentation build root for --html-root; the parent of the HTML root by default.",
     )
-    parser.add_argument(
-        "--strict", action="store_true", help="Refuse a warning in the compile (Sphinx -n -W); --html-root only."
-    )
+    parser.add_argument("--strict", action="store_true", help="Refuse a warning in the compile (Sphinx -n -W).")
     parser.add_argument(
         "--stored",
         type=Path,
@@ -921,10 +1141,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Write only these languages' roots; --html-root only. Every language is written by default.",
     )
     parser.add_argument(
-        "--oracle",
-        type=Path,
+        "--witness",
         default=None,
-        help="Directory holding one built root per language, named by its language tag, to measure against.",
+        metavar="LANG",
+        help=(
+            "Measure the composed root of this language against a build of that language's own, which this "
+            f"run makes under <out>/{_WITNESS_DIRECTORY}/<LANG>; --out only. {WITNESS_LANGUAGE} is the one "
+            "the gate witnesses."
+        ),
     )
     parser.add_argument("--flavor", default="desktop", help="Who the pages are for (web or desktop).")
     parser.add_argument("--jobs", type=int, default=None, help="Sphinx read parallelism.")
@@ -963,6 +1187,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     destination = arguments.out
+    witness = arguments.witness
     if arguments.compare_only:
         stored = destination / "stored"
         languages = json.loads((stored / "layout.json").read_text(encoding=_UTF_8))["languages"]
@@ -970,34 +1195,64 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Measuring the roots already composed under {destination}")
     else:
         destination.mkdir(parents=True, exist_ok=True)
-        for leftover in ("compiled", "stored", "roots"):
+        for leftover in ("compiled", "stored", "roots", _WITNESS_DIRECTORY):
             if (destination / leftover).exists():
                 raise SystemExit(f"{destination / leftover} exists; give an empty --out or pass --compare-only")
-        result = compile_once(
-            destination,
-            flavor=arguments.flavor,
-            jobs=arguments.jobs,
-            base_url=arguments.base_url,
-        )
-        languages, roots = list(result.languages), dict(result.roots)
-        stored_size = sum(path.stat().st_size for path in result.stored.rglob("*") if path.is_file())
-        print(
-            f"One compile of {len(languages)} language(s) in {result.seconds:.0f} s: "
-            f"{result.marks} distinct mark(s), stored as {stored_size / 1_000_000:.1f} MB in {result.stored}",
-            flush=True,
-        )
+        # The witness is started beside the compile rather than after it, so
+        # the one build the measurement needs costs the longer of the two
+        # rather than their sum. The compile runs here, in this process, which
+        # is where the marks are recorded, so it is the witness that goes to a
+        # thread and a child.
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            building = None
+            if witness is not None:
+                command, environment = witness_build(
+                    witness,
+                    witness_root(destination, witness),
+                    flavor=arguments.flavor,
+                    base_url=arguments.base_url,
+                    build_root=destination / _WITNESS_DIRECTORY / "build",
+                )
+                print(f"Building the {witness} root of its own, beside the compile", flush=True)
+                building = pool.submit(
+                    run_command, command, cwd=_ROOT_FOR_DIRECT_INVOCATION, environment=environment, errors="replace"
+                )
+            result = compile_once(
+                destination,
+                flavor=arguments.flavor,
+                jobs=arguments.jobs,
+                base_url=arguments.base_url,
+                strict=arguments.strict,
+            )
+            languages, roots = list(result.languages), dict(result.roots)
+            stored_size = sum(path.stat().st_size for path in result.stored.rglob("*") if path.is_file())
+            print(
+                f"One compile of {len(languages)} language(s) in {result.seconds:.0f} s: "
+                f"{result.marks} distinct mark(s), stored as {stored_size / 1_000_000:.1f} MB in {result.stored}",
+                flush=True,
+            )
+            if building is not None:
+                built_witness = building.result()
+                print(f"The {witness} build of its own took {built_witness.duration_seconds:.0f} s", flush=True)
+                if built_witness.returncode != 0:
+                    print(built_witness.stdout[-4000:] + built_witness.stderr[-4000:], flush=True)
+                    raise SystemExit(
+                        f"the {witness} build the measurement is against failed: exit {built_witness.returncode}"
+                    )
 
-    if arguments.oracle is None:
-        print("No oracle given; nothing was measured.")
+    if witness is None:
+        print("No witness language given; nothing was measured.")
         return 0
-    oracle = _oracle_roots(arguments.oracle, languages)
-    comparisons = [compare(roots[language], oracle[language], language) for language in languages]
-    for comparison in comparisons:
-        print(comparison.report(), flush=True)
-    total = sum(comparison.differences for comparison in comparisons)
-    absent = sum(comparison.absent for comparison in comparisons)
+    if witness not in languages:
+        raise SystemExit(f"the compile carries {', '.join(languages)}, and was asked to witness {witness}")
+    built = witness_root(destination, witness)
+    if not built.is_dir():
+        raise SystemExit(f"no {witness} build to measure the composed {witness} root against at {built}")
+    comparison = compare(roots[witness], built, witness)
+    print(comparison.report(), flush=True)
     print(
-        f"\n{total} differing stretch(es) and {absent} missing or extra file(s) over {len(languages)} language(s)",
+        f"\n{comparison.differences} differing stretch(es) and "
+        f"{comparison.absent} missing or extra file(s) in the {witness} root",
         flush=True,
     )
     print(unwitnessed_report(), flush=True)
@@ -1015,7 +1270,6 @@ def main(argv: list[str] | None = None) -> int:
                         "by_context": dict(comparison.by_context.most_common()),
                         "intended": dict(comparison.intended.most_common()),
                     }
-                    for comparison in comparisons
                 },
                 indent=1,
             )
@@ -1025,7 +1279,7 @@ def main(argv: list[str] | None = None) -> int:
     # A composed root missing a page, or carrying one no build wrote, fails the
     # run as a differing stretch does: a site that is not the same set of files
     # is not the same site, whatever the files it does share read like.
-    return 0 if total == 0 and absent == 0 else 1
+    return 0 if comparison.differences == 0 and comparison.absent == 0 else 1
 
 
 if __name__ == "__main__":

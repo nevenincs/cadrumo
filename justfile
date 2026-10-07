@@ -1523,13 +1523,14 @@ docs-synonyms-maintain OBSERVATIONS:
     uv run --no-sync python -m dev.docs.terminology.synonyms mine {{quote(OBSERVATIONS)}}
 
 # Build the user-scope documentation in one language (es/en/ca/hu) into that
-# language's own root, with a Sphinx build of its own. This is the build the one
-# compile behind `docs-langs` is proven against, and a way to look at a single
-# language; it is not how the languages are produced. `--out-dir` is what puts a
-# build in a per-language subdirectory; `--language` alone only selects the
-# catalogue, so without it the localized pages render into the canonical English
-# root itself, leaving no language root at all and an English root full of
-# translated pages.
+# language's own root, with a Sphinx build of its own. This is the witness's
+# build: the documentation tests build one translated language this way and
+# require the one compile's root for it to be the same bytes. It is also a way
+# to look at a single language; it is not how the languages are produced.
+# `--out-dir` is what puts a build in a per-language subdirectory; `--language`
+# alone only selects the catalogue, so without it the localized pages render
+# into the canonical English root itself, leaving no language root at all and an
+# English root full of translated pages.
 [doc('Build one localized documentation root with its own Sphinx build into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-lang LANG:

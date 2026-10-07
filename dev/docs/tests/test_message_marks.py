@@ -18,6 +18,9 @@ from pathlib import Path
 import pytest
 
 from ..compile_slots import (
+    BLOCK_CLOSE,
+    BLOCK_MID,
+    BLOCK_OPEN,
     MARK,
     MARK_CLOSE,
     MARK_OPEN,
@@ -27,9 +30,6 @@ from ..compile_slots import (
     factor_page,
 )
 from ..message_marks import (
-    BLOCK_CLOSE,
-    BLOCK_MID,
-    BLOCK_OPEN,
     FRAGMENT_PREFIX,
     PSEUDO_LOCALE_DIR,
     MessageMarksError,

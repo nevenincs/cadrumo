@@ -55,15 +55,24 @@ from typing import Final, cast, override
 from sphinx.transforms import SphinxTransform
 from sphinx.transforms.post_transforms import SphinxPostTransform
 
-from .compile_slots import MARK, MARK_CLOSE, MARK_OPEN, CompileSlots, Rendering, mark_number, plain_text
+from .compile_slots import (
+    BLOCK_CLOSE,
+    BLOCK_MID,
+    BLOCK_OPEN,
+    MARK,
+    MARK_CLOSE,
+    MARK_OPEN,
+    CompileSlots,
+    Rendering,
+    mark_number,
+    plain_text,
+)
 
-#: Private-use characters delimiting one rendered translation inside a
-#: fragment document. Deliberately distinct from the mark and the slot
-#: delimiters, so the three artefacts can never be read as one another.
-BLOCK_OPEN: Final[str] = ""
-BLOCK_MID: Final[str] = ""
-BLOCK_CLOSE: Final[str] = ""
-
+#: The delimiters of one rendered translation inside a fragment document, in
+#: the order a block writes them. The characters themselves are declared in
+#: :mod:`dev.docs.compile_slots`, beside the mark's own, so one registry names
+#: every private-use character the compile reserves and a composed root can be
+#: refused for carrying any of them.
 _BLOCK: Final[tuple[str, str, str]] = (BLOCK_OPEN, BLOCK_MID, BLOCK_CLOSE)
 
 #: One rendered translation inside a fragment document's written page: the

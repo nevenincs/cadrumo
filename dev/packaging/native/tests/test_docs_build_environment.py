@@ -37,7 +37,7 @@ def test_the_compile_carries_product_storage_and_no_documentation_selector(
     assert not carried, f"the packaging driver carried documentation selectors the compile owns: {carried}"
 
 
-def test_the_compile_command_names_the_desktop_flavor_and_both_roots(
+def test_the_compile_command_names_the_desktop_flavor_strictly_and_both_roots(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The command is read back through the compile's own argument parser.
@@ -71,6 +71,9 @@ def test_the_compile_command_names_the_desktop_flavor_and_both_roots(
     assert recorded["build_root"] == build_root
     assert recorded["flavor"] == "desktop"
     assert recorded["stored"] is None, "the package ships the roots, so the stored form is an intermediate"
+    # The docs lane compiles the web flavour, so nothing else holds the pages
+    # the packaged copy builds to a warnings-as-errors standard.
+    assert recorded["strict"] is True, "the only compile of the desktop flavour tolerates warnings"
 
 
 def test_a_failed_compile_stops_the_packaging_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

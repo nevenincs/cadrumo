@@ -4,9 +4,10 @@ Asserts the docs build machinery's hygiene contracts and the focused rendered
 surfaces (identity page, sequence widget), each in a ``tmp_path`` with
 ``CADRUMO_DOCS_OFFLINE`` set so intersphinx inventories are not fetched. The
 heavy whole-tree ``-n -W`` builds live one-per-module beside this file
-(``test_docs_build_full_scope``, ``test_docs_build_user_scope``, and one
-``test_docs_build_localized_<lang>`` per translation target) so pytest-xdist's
-per-file distribution runs them concurrently; their shared machinery is
+(``test_docs_build_full_scope``, and ``test_docs_build_localized_compile``
+carrying the one compile of every language with the one language build it is
+measured against) so pytest-xdist's per-file distribution runs them
+concurrently; their shared machinery is
 :mod:`dev.docs.tests._sphinx_build_harness`.
 """
 
@@ -406,6 +407,47 @@ def test_the_layout_places_every_root_and_agrees_with_this_root_s_own_prefix() -
         "ca": "",
         "hu": "hu/",
     }
+    # The authored language told its own directory and no address: it cannot be
+    # the apex it was just placed below, so no root is.
+    assert (
+        docs_site_prefixes(
+            languages,
+            build_language="en",
+            source_language="en",
+            environ={"CADRUMO_DOCS_SITE_PREFIX": "en"},
+        )
+        == published
+    )
+
+
+@pytest.mark.parametrize("build_language", ["en", "es", "ca", "hu"])
+@pytest.mark.parametrize(
+    "environ",
+    [
+        {},
+        {"CADRUMO_DOCS_SITE_PREFIX": "own"},
+        {"CADRUMO_DOCS_SITE_PREFIX": "own", "CADRUMO_DOCS_BASE_URL": "https://example.test/docs"},
+        {"CADRUMO_DOCS_BASE_URL": "https://example.test/docs"},
+    ],
+    ids=["no-prefix", "prefix", "prefix-and-address", "address-only"],
+)
+def test_a_build_given_a_directory_is_never_placed_at_the_apex(build_language: str, environ: dict[str, str]) -> None:
+    """The layout's entry for this build and the prefix this build was given are one fact.
+
+    A page resolves the site's one search index by walking back out of its own
+    root's directory, and the switcher walks out of it the same way. If the
+    layout placed a root at the apex that was told it sits in a directory, every
+    page of that root would look for the index, and for the other languages, one
+    level too low.
+    """
+    from ..build_paths import docs_site_prefix, docs_site_prefixes
+
+    environment = {key: (build_language if value == "own" else value) for key, value in environ.items()}
+    layout = docs_site_prefixes(
+        ("en", "es", "ca", "hu"), build_language=build_language, source_language="en", environ=environment
+    )
+
+    assert layout[build_language] == docs_site_prefix(environment)
 
 
 @pytest.mark.parametrize("value", ["/es", "a/b", "..", ".", "es\\x", "/"])

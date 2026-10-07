@@ -38,6 +38,7 @@ from ..compile_slots import (
     mark_positions,
     read_escaped_marks,
     read_slots,
+    refuse_encoded_marks,
     refuse_escaped_marks,
 )
 from ..shared_structure import LanguageText, compose_page
@@ -257,6 +258,42 @@ def test_a_file_that_is_not_a_page_cannot_carry_an_escaped_mark() -> None:
     """Stored whole, its escape is a language-dependent string nothing would resolve."""
     with pytest.raises(CompileSlotsError, match=r"_static/app\.js is not a page and carries an escaped mark"):
         refuse_escaped_marks('const root = "/docs/\\ue002k\\ue003/";', "_static/app.js")
+
+
+@pytest.mark.parametrize(
+    ("encoding", "page"),
+    [
+        # A mark that reached an address: a URL quoter writes each byte of the
+        # delimiter's UTF-8 per cent.
+        ("per cent", '<a href="/docs/%EE%80%82k%EE%80%83/index.html">x</a>'),
+        # A mark that reached a serialiser writing XML character references,
+        # which both forms of are written here because either is valid.
+        ("decimal references", "<p>&#57346;k&#57347;</p>"),
+        ("hexadecimal references", "<p>&#xE002;k&#xe003;</p>"),
+    ],
+)
+def test_a_whole_mark_something_re_encoded_is_refused(encoding: str, page: str) -> None:
+    """Nothing factors a mark whose delimiters are no longer the characters they were.
+
+    The expected forms are written by hand from the delimiters' own code points
+    (U+E002 and U+E003, 57346 and 57347 in decimal), as the writer that produced
+    them would: a page carrying one would otherwise be stored with the compile's
+    own number in it and every language served that.
+    """
+    with pytest.raises(CompileSlotsError, match=r"how-to/index\.html carries a re-encoded mark"):
+        refuse_encoded_marks(page, "how-to/index.html")
+
+
+def test_a_lone_encoded_delimiter_is_not_a_re_encoded_mark() -> None:
+    """A vendored file naming one private-use character of its own is not ours.
+
+    ``mermaid.min.js`` carries ``\\uE010`` and ``\\uE011`` in a KaTeX symbol
+    table, which are the fragment-block delimiters as a JavaScript escape. A
+    refusal of single encoded characters would refuse that file; a whole mark is
+    the two delimiters with a number between them, and that is what is refused.
+    """
+    refuse_encoded_marks('V(H,we,Ee,"\\\\uE010","\\\\@nleqslant");', "_static/mermaid.min.js")
+    refuse_encoded_marks("<p>&#xE002; alone, and %EE%80%83 alone</p>", "how-to/index.html")
 
 
 def test_a_page_carrying_half_a_mark_is_refused_by_name(slots: CompileSlots) -> None:

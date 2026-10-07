@@ -1,8 +1,10 @@
 """Shared harness for the real nitpicky Sphinx build gates.
 
-The docs lane's dominant cost is its set of real ``-n -W`` Sphinx builds (full
-scope, user scope, and one per translation language). Two structural choices
-keep the lane fast without weakening any check:
+The docs lane's dominant cost is its real ``-n -W`` Sphinx builds: the
+full-scope read, the one compile that carries every language, and the one
+language's own build the compile is measured against
+(``test_docs_build_localized_compile``). Two structural choices keep the lane
+fast without weakening any check:
 
 * **One heavy build per test module.** pytest-xdist distributes by file
   (``--dist=loadfile``), so a module that carries several multi-minute builds

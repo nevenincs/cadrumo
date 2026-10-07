@@ -33,7 +33,12 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
-from ..language_switcher import page_in_other_roots
+from ..language_switcher import (
+    carries_switcher,
+    page_in_other_roots,
+    switcher_markup,
+    unresolved_cross_root_links,
+)
 from ..site_chrome import site_chrome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -377,3 +382,181 @@ def test_conf_hands_the_switcher_the_layout_the_build_is_producing() -> None:
         _conf_switcher_context("ca", site_prefix="ca", base_url="https://example.test/docs")["prefixes"]
         == _PER_LANGUAGE_LAYOUT
     )
+
+
+#: What each root of the site holds, for the resolution gates below: three pages
+#: in English, and the two every language publishes in each other root.
+_ROOT_FILES = {
+    "en": {"index.html", "how-to/quickstart.html", "api/ledger.html"},
+    "es": {"index.html", "how-to/quickstart.html"},
+    "ca": {"index.html", "how-to/quickstart.html"},
+    "hu": {"index.html", "how-to/quickstart.html"},
+}
+
+#: Every language the site publishes, as the switcher takes them.
+_SWITCHER_LANGUAGES = [{"code": code, "label": label} for code, label in _LANGUAGE_LABELS.items()]
+
+
+#: The path the site is served under in the gates below, above the language
+#: directories: the shape the error page's own absolute links are resolved from.
+_SITE_PATH = "/docs"
+
+
+def _element(
+    layout: dict[str, str],
+    language: str,
+    page: str,
+    *,
+    pagename: str | None = None,
+    root_uri: str | None = None,
+) -> str:
+    """Return the switcher one page of one root carries, from the real renderer.
+
+    *pagename* overrides the page each other language's link opens, which is
+    :func:`page_in_other_roots`' answer by default. *root_uri* overrides the
+    path back to this page's own root, which the error page states absolutely.
+    """
+    docname = page.removesuffix(".html")
+    return switcher_markup(
+        _SWITCHER_LANGUAGES,
+        build_language=language,
+        prefixes=layout,
+        root_uri=root_uri if root_uri is not None else "../" * docname.count("/"),
+        pagename=pagename
+        if pagename is not None
+        else page_in_other_roots(docname, entry_page="index", english_only=_ENGLISH_ONLY_PAGES),
+        aria_label="Language",
+        newline="\n",
+    )
+
+
+@pytest.mark.parametrize("layout", [_APEX_LAYOUT, _PER_LANGUAGE_LAYOUT], ids=["apex-layout", "per-language-layout"])
+@pytest.mark.parametrize("language", sorted(_ROOT_FILES))
+@pytest.mark.parametrize("page", ["index.html", "how-to/quickstart.html"])
+def test_every_switcher_link_resolves_to_a_page_the_root_it_names_holds(
+    layout: dict[str, str], language: str, page: str
+) -> None:
+    """The baseline: the real renderer's links all land on a file in the root they name.
+
+    The element comes from the renderer the pages carry and the resolution from
+    the checker the compile runs, so neither side is the other's expectation.
+    """
+    assert (
+        unresolved_cross_root_links(
+            _element(layout, language, page),
+            language=language,
+            page=page,
+            prefixes=layout,
+            files=_ROOT_FILES,
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize("layout", [_APEX_LAYOUT, _PER_LANGUAGE_LAYOUT], ids=["apex-layout", "per-language-layout"])
+def test_a_link_to_a_page_only_the_english_root_publishes_is_reported(layout: dict[str, str]) -> None:
+    """Detector teeth: the defect :func:`page_in_other_roots` exists to prevent.
+
+    An English-only page named in the other roots' links is the exact wrong
+    answer, and nothing else notices it: the links are relative, so no build
+    warns and a reader finds the 404 page. The element is rendered with that
+    substitution suppressed, which is what the switcher wrote before the
+    substitution existed.
+    """
+    found = unresolved_cross_root_links(
+        _element(layout, "en", "api/ledger.html", pagename="api/ledger"),
+        language="en",
+        page="api/ledger.html",
+        prefixes=layout,
+        files=_ROOT_FILES,
+    )
+
+    assert len(found) == 3, found
+    assert all("does not hold" in message for message in found), found
+    assert any("es/api/ledger.html" in message for message in found), found
+
+
+def test_a_link_that_climbs_out_of_the_served_site_is_reported() -> None:
+    """A link written for a deeper root than the page sits in leaves the site entirely.
+
+    Written by hand, because what produces it is a root_uri and a prefix that
+    disagree about how deep the page is -- the defect that put a Spanish link
+    relative to the English root rather than to the base above it.
+    """
+    element = _element(_PER_LANGUAGE_LAYOUT, "en", "index.html", pagename="index").replace("../", "../../")
+
+    found = unresolved_cross_root_links(
+        element,
+        language="en",
+        page="index.html",
+        prefixes=_PER_LANGUAGE_LAYOUT,
+        files=_ROOT_FILES,
+    )
+
+    assert len(found) == 3, found
+    assert all("outside the served site" in message for message in found), found
+
+
+def test_a_link_into_a_language_the_site_publishes_no_root_for_is_reported() -> None:
+    """A switcher naming a retired language addresses a directory nothing serves."""
+    element = _element(_PER_LANGUAGE_LAYOUT, "en", "index.html").replace('lang="hu"', 'lang="fr"', 1)
+
+    found = unresolved_cross_root_links(
+        element,
+        language="en",
+        page="index.html",
+        prefixes=_PER_LANGUAGE_LAYOUT,
+        files=_ROOT_FILES,
+    )
+
+    assert found == ["en/index.html -> ../hu/index.html: names 'fr', which the site publishes no root for"]
+
+
+def test_the_error_pages_absolute_links_resolve_from_the_path_the_site_is_served_under() -> None:
+    """The error page is served for an address that does not exist, so its links are absolute.
+
+    It therefore states the path the site is served under, which a relative
+    link never has to: ``/docs/es/../ca/404.html``. Resolved against the page's
+    own directory that address would land outside every root, which is why the
+    served path is a fact of the check rather than of the page.
+    """
+    files = {language: {*pages, "404.html"} for language, pages in _ROOT_FILES.items()}
+
+    assert (
+        unresolved_cross_root_links(
+            _element(_PER_LANGUAGE_LAYOUT, "es", "404.html", root_uri=f"{_SITE_PATH}/es/"),
+            language="es",
+            page="404.html",
+            prefixes=_PER_LANGUAGE_LAYOUT,
+            files=files,
+            site_path=_SITE_PATH,
+        )
+        == []
+    )
+
+
+def test_an_absolute_link_outside_the_path_the_site_is_served_under_is_reported() -> None:
+    """An absolute link built from the wrong served path leaves the site entirely.
+
+    Nothing on the page says where the site is served, so a link that states it
+    wrongly points at another site's address and resolves to nothing here.
+    """
+    files = {language: {*pages, "404.html"} for language, pages in _ROOT_FILES.items()}
+
+    found = unresolved_cross_root_links(
+        _element(_PER_LANGUAGE_LAYOUT, "es", "404.html", root_uri="/handbook/es/"),
+        language="es",
+        page="404.html",
+        prefixes=_PER_LANGUAGE_LAYOUT,
+        files=files,
+        site_path=_SITE_PATH,
+    )
+
+    assert len(found) == 3, found
+    assert all(f"outside the site served at {_SITE_PATH}/" in message for message in found), found
+
+
+def test_a_recorded_string_is_recognised_as_a_switcher_only_when_it_is_one() -> None:
+    """The compile reads only the few strings that carry the element, so it has to know them."""
+    assert carries_switcher(_element(_PER_LANGUAGE_LAYOUT, "en", "index.html"))
+    assert not carries_switcher('<a class="reference internal" href="../ca/index.html">Català</a>')

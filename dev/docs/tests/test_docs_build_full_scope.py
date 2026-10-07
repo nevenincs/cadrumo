@@ -3,14 +3,14 @@
 One real ``-b dummy -n -W`` Sphinx build over the full documentation set — the
 ~1,200 ``automodule`` stubs that import the entire application plus every
 narrative page. This is the single most expensive build in the docs lane, so it
-lives alone in this module: pytest-xdist distributes by file, and the sibling
-scope/language builds (``test_docs_build_user_scope`` and one
-``test_docs_build_localized_<lang>`` per translation target) run concurrently
-instead of queueing behind it.
+lives alone in this module: pytest-xdist distributes by file, and the compile
+of every language with its witness build
+(``test_docs_build_localized_compile``) runs concurrently instead of queueing
+behind it.
 Shared machinery and the hook-dedupe rationale live in
 :mod:`dev.docs.tests._sphinx_build_harness`.
 
-The 1800 s timeout matches the sibling build modules: the project-wide 300 s
+The 1800 s timeout matches the sibling build module: the project-wide 300 s
 per-test ceiling exists to fail a DEADLOCKED test fast, and a legitimately
 long real build is not a deadlock (letting it trip the ceiling produced a
 faulthandler dump carrying no docs diagnostic at all).

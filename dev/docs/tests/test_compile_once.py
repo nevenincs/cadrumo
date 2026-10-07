@@ -14,9 +14,22 @@ import zlib
 from pathlib import Path
 
 import pytest
+import sphinx
+from docutils.utils.smartquotes import smartchars
+from sphinx.config import Config
 
-from ..compile_once import IntendedDifference, _per_language_inventory, compare, main, roots_to_write
+from ..compile_once import (
+    COMPILE_LANGUAGE,
+    WITNESS_LANGUAGE,
+    IntendedDifference,
+    _per_language_inventory,
+    compare,
+    main,
+    roots_to_write,
+    witness_root,
+)
 from ..compile_slots import Rendering, activate, deactivate
+from ..i18n import DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
 from ..message_marks import FRAGMENT_PREFIX
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -254,14 +267,17 @@ def _measured(tmp_path: Path, composed: dict[str, str], built: dict[str, str]) -
 
     The run is entered through the module's own entry, in the mode that
     measures roots a previous run left behind, because the verdict a measuring
-    run reports is what is under test and not the counts alone.
+    run reports is what is under test and not the counts alone. That mode is
+    also what puts the witness build in reach of a test: a run that was not
+    told to skip the compile builds the witness root itself, which is the one
+    real build of the whole documentation the measurement costs.
     """
     out = tmp_path / "out"
     _site(out / "roots" / "es", composed)
     (out / "stored").mkdir(parents=True, exist_ok=True)
     (out / "stored" / "layout.json").write_text('{"languages": ["es"]}', encoding="utf-8")
-    oracle = _site(tmp_path / "oracle" / "es", built).parent
-    return main(["--out", str(out), "--oracle", str(oracle), "--compare-only"])
+    _site(witness_root(out, "es"), built)
+    return main(["--out", str(out), "--witness", "es", "--compare-only"])
 
 
 _ROOT = {"index.html": "<body><p>Ley 37/1992</p></body>"}
@@ -303,3 +319,65 @@ def test_a_root_asked_for_in_a_language_the_compile_does_not_carry_is_refused() 
     """Writing the others would leave a site missing a root its caller counts on."""
     with pytest.raises(SystemExit, match="asked for the root of fr"):
         roots_to_write(("es", "en"), ("es", "fr"))
+
+
+def _shipped_by_sphinx(language: str, filename: str) -> bool:
+    """Return whether Sphinx ships one of its own interface files for a language."""
+    return (Path(sphinx.package_dir) / "locale" / language / "LC_MESSAGES" / filename).is_file()
+
+
+def test_the_witness_is_a_translated_language_at_neither_end_of_the_carried_order() -> None:
+    """What the one real build proves depends entirely on which language it builds.
+
+    Three properties, each of which a defect this mechanism has produced would
+    otherwise pass. The compile builds in one language, so a string that was
+    never marked, or a mechanism that still reads the Sphinx ``language``,
+    reaches that language's page correctly and every other language's page
+    wrongly: a witness in the compile's own language sees neither. And the
+    strings are carried in one order, so a mechanism that reads the first
+    language's string, or the last one's, for every language is invisible at
+    whichever end it reads from.
+    """
+    assert WITNESS_LANGUAGE != COMPILE_LANGUAGE, (
+        f"the witness builds in {WITNESS_LANGUAGE}, which is the language the compile itself builds in: "
+        "a mechanism that never left the Sphinx language reads correctly in it"
+    )
+    carried = list(SITE_ROOT_LANGUAGES)
+    assert WITNESS_LANGUAGE in carried, f"the compile carries {carried} and the witness is {WITNESS_LANGUAGE}"
+    assert carried.index(WITNESS_LANGUAGE) not in {0, len(carried) - 1}, (
+        f"the witness is at an end of the carried order {carried}, where a mechanism that always reads "
+        "one end's string would read it correctly"
+    )
+    assert _shipped_by_sphinx(WITNESS_LANGUAGE, "sphinx.mo"), (
+        f"Sphinx ships no message catalogue for {WITNESS_LANGUAGE}, so its own build leaves the interface "
+        "in English and the witness proves nothing about the translated chrome"
+    )
+
+
+@pytest.mark.parametrize("language", SITE_ROOT_LANGUAGES)
+def test_every_carried_language_can_be_typeset_and_spoken_by_the_writers(language: str) -> None:
+    """A language the compile carries but a writer cannot speak is served the wrong bytes silently.
+
+    The compile records one string per language and writes each as that
+    language's own build would. Three of the writers it imitates answer per
+    language, and each has a way of not answering at all rather than failing:
+    docutils educates with the English quotation marks for a language it has no
+    table for, Sphinx skips the education entirely for an excluded language, and
+    a language Sphinx ships no catalogue for reads its interface in English.
+    """
+    assert language in smartchars.quotes, (
+        f"docutils has no smart-quote table for {language}, so its text would be educated with another "
+        "language's quotation marks"
+    )
+    excluded = Config().smartquotes_excludes["languages"]
+    assert language not in excluded, (
+        f"Sphinx excludes {language} from the smart-quotes transform ({excluded}), so its own build "
+        "educates nothing and the recorded strings would be educated all the same"
+    )
+    translated = language != DEFAULT_SOURCE_LANGUAGE
+    shipped = {name: _shipped_by_sphinx(language, name) for name in ("sphinx.mo", "sphinx.js")}
+    assert shipped == dict.fromkeys(shipped, translated), (
+        f"Sphinx ships {shipped} for {language}. Every language it translates its own interface into has "
+        "both, and the source language is the one language with neither -- Sphinx's interface strings ARE "
+        "that language -- which is why its composed root holds no translations.js and every other root does"
+    )

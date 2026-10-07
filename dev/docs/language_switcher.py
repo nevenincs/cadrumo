@@ -29,7 +29,9 @@ page instead of an address its root does not hold.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+import posixpath
+import re
+from collections.abc import Collection, Mapping, Sequence
 from typing import TYPE_CHECKING, Final
 
 from sphinx.util.matching import Matcher
@@ -41,7 +43,25 @@ from ._locale_chrome import docs_fragment
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
-__all__ = ["page_in_other_roots", "register", "switcher_markup", "switcher_of_page"]
+__all__ = [
+    "carries_switcher",
+    "page_in_other_roots",
+    "register",
+    "switcher_markup",
+    "switcher_of_page",
+    "unresolved_cross_root_links",
+]
+
+#: The class every language's own entry in the switcher carries, the current
+#: language's span and every other language's link alike. Named once because
+#: :func:`unresolved_cross_root_links` finds the links by it: a renamed class
+#: would otherwise leave that check reading every page and finding nothing.
+_ITEM_CLASS: Final[str] = "cadrumo-header-lang-item"
+
+#: One language's link inside a written switcher: where it points and whose
+#: root it points into. Built from :data:`_ITEM_CLASS` and the attribute order
+#: :func:`switcher_markup` writes, so the two cannot drift apart.
+_SWITCHER_LINK: Final[re.Pattern[str]] = re.compile(f'<a class="{_ITEM_CLASS}" href="([^"]*)" lang="([^"]*)"')
 
 #: The disclosure caret, which no fact of the page or the language reaches.
 _CARET: Final[str] = (
@@ -95,13 +115,12 @@ def switcher_markup(
         code, label = entry["code"], entry["label"]
         if code == build_language:
             items.append(
-                f'<li><span class="cadrumo-header-lang-item is-current" aria-current="true" '
-                f'lang="{code}">{label}</span></li>'
+                f'<li><span class="{_ITEM_CLASS} is-current" aria-current="true" lang="{code}">{label}</span></li>'
             )
             continue
         directory = prefixes[code]
         items.append(
-            f'<li><a class="cadrumo-header-lang-item" href="{base}{directory}{pagename}.html" '
+            f'<li><a class="{_ITEM_CLASS}" href="{base}{directory}{pagename}.html" '
             f'lang="{code}" hreflang="{code}">{label}</a></li>'
         )
     return newline.join(
@@ -131,6 +150,95 @@ def page_in_other_roots(pagename: str, *, entry_page: str, english_only: Sequenc
         English root does.
     """
     return entry_page if Matcher(english_only)(pagename) else pagename
+
+
+def carries_switcher(value: str) -> bool:
+    """Return whether one stretch of markup holds a switcher's own entries.
+
+    A caller with many recorded strings and one check to run over the few that
+    are switchers asks this rather than matching the class itself, which keeps
+    the element's markup the business of this module alone.
+    """
+    return _ITEM_CLASS in value
+
+
+def unresolved_cross_root_links(
+    element: str,
+    *,
+    language: str,
+    page: str,
+    prefixes: Mapping[str, str],
+    files: Mapping[str, Collection[str]],
+    site_path: str = "",
+) -> list[str]:
+    """Return one message per switcher link of *element* that no root answers.
+
+    The switcher is the one element of a page that addresses a file outside the
+    root it is written in, and the address is built from three facts that each
+    belong to someone else: how deep the page sits, where the layout serves the
+    target root, and whether the target root publishes that page at all
+    (:func:`page_in_other_roots` answers the last, by sending a reader of an
+    English-only page to the other language's entry page). Nothing downstream
+    notices a wrong answer: the link is a relative address, so a build warns
+    about none of it and a reader finds the 404 page.
+
+    So each link is resolved here the way a reader's browser resolves it --
+    against the page's own address inside the served site -- and the result is
+    required to be a file the root it names actually holds. This is the one
+    check of the compile that can see a defect present in a composed root and in
+    a single-language build alike, because both write this element from the same
+    facts: a comparison between them would call the two equally wrong pages
+    equal.
+
+    One page's links are absolute: the error page is served for an address that
+    does not exist, so nothing on it may be relative to where the reader asked.
+    Such a link is resolved from the site's own path instead, which is the one
+    fact a page cannot carry and a reader's address does.
+
+    Args:
+        element: The switcher as one page of one root carries it. A stretch of
+            markup carrying none is simply no links.
+        language: The language of the root the page belongs to.
+        page: The page's path inside that root, as a POSIX path ending in
+            ``.html``.
+        prefixes: Each language's own path inside the served site, as
+            :func:`dev.docs.build_paths.docs_site_prefixes` returns them.
+        files: For each language, every path its own root holds.
+        site_path: The path the site is served under, above the language
+            directories, without its trailing slash; empty for a site served at
+            the apex of its host. Only an absolute link reads it.
+
+    Returns:
+        One message per link that climbs out of the served site, lands outside
+        the root whose language it names, or names a file that root does not
+        hold. Empty when every link resolves.
+    """
+    found: list[str] = []
+    inside_site = posixpath.dirname(f"{prefixes[language]}{page}")
+    served = f"{site_path}/"
+    for link in _SWITCHER_LINK.finditer(element):
+        href, target = link.group(1), link.group(2)
+        where = f"{language}/{page} -> {href}"
+        if href.startswith("/"):
+            if not href.startswith(served):
+                found.append(f"{where}: addresses a path outside the site served at {served}")
+                continue
+            resolved = posixpath.normpath(href[len(served) :])
+        else:
+            resolved = posixpath.normpath(posixpath.join(inside_site, href))
+        if resolved.startswith(".."):
+            found.append(f"{where}: resolves to {resolved}, which is outside the served site")
+            continue
+        if target not in prefixes or target not in files:
+            found.append(f"{where}: names {target!r}, which the site publishes no root for")
+            continue
+        directory = prefixes[target]
+        if not resolved.startswith(directory):
+            found.append(f"{where}: resolves to {resolved}, outside the {target} root at {directory or '/'}")
+            continue
+        if resolved[len(directory) :] not in files[target]:
+            found.append(f"{where}: resolves to {resolved}, which the {target} root does not hold")
+    return found
 
 
 def switcher_of_page(

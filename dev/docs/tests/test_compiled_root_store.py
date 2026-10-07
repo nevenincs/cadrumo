@@ -15,14 +15,27 @@ from pathlib import Path
 
 import pytest
 
-from ..compile_slots import MARK_CLOSE, MARK_OPEN, CompileSlots, CompileSlotsError, Rendering, activate, deactivate
+from ..compile_slots import (
+    BLOCK_CLOSE,
+    BLOCK_MID,
+    BLOCK_OPEN,
+    MARK_CLOSE,
+    MARK_OPEN,
+    CompileSlots,
+    CompileSlotsError,
+    Rendering,
+    activate,
+    deactivate,
+)
 from ..language_roots import (
     LANGUAGES_DIRECTORY,
     STRUCTURE_DIRECTORY,
     LanguageRootsError,
+    Layout,
     asset_cache_key,
     compose_root,
     read_layout,
+    refuse_uneven_language_files,
     store_compiled_root,
 )
 from ..shared_structure import SLOT_CLOSE, SLOT_OPEN
@@ -177,6 +190,12 @@ def test_the_stored_form_reads_the_same_however_it_was_written(slots: CompileSlo
         (MARK_CLOSE, "a closing mark"),
         (SLOT_OPEN, "an opening slot"),
         (SLOT_CLOSE, "a closing slot"),
+        # A fragment document's own delimiters. Its written page is deleted
+        # rather than composed, so nothing else would ever notice one that
+        # reached a page the compile kept.
+        (BLOCK_OPEN, "an opening translation block"),
+        (BLOCK_MID, "a translation block's separator"),
+        (BLOCK_CLOSE, "a closing translation block"),
     ],
 )
 @pytest.mark.parametrize("path", ["page.html", "_static/chrome.js"])
@@ -251,6 +270,70 @@ def test_a_file_that_is_not_a_page_and_carries_a_lone_delimiter_is_refused(slots
     compiled = _written(tmp_path / "compiled", {"_static/chrome.js": f'x="cut{MARK_CLOSE}";'.encode()})
     with pytest.raises(CompileSlotsError, match="not part of a whole mark"):
         store_compiled_root(compiled, slots, tmp_path / "stored", language_files={"en": {}, "es": {}})
+
+
+@pytest.mark.parametrize(
+    ("path", "content"),
+    [
+        ("index.html", b'<a href="/docs/%EE%80%82k%EE%80%83/index.html">x</a>'),
+        ("_static/chrome.js", b'const root = "/docs/&#xE002;k&#xE003;/";'),
+    ],
+)
+def test_a_file_carrying_a_re_encoded_mark_is_refused(
+    slots: CompileSlots, tmp_path: Path, path: str, content: bytes
+) -> None:
+    """A mark whose delimiters were re-encoded is a mark the factoring never sees.
+
+    The page and the script are written by hand with the delimiters as a URL
+    quoter and an XML serialiser write them, because that is what the refusal is
+    about: the factoring finds no mark, the file is stored as shared text, and
+    every language is served the number the compile wrote.
+    """
+    compiled = _written(tmp_path / "compiled", {path: content})
+    with pytest.raises(CompileSlotsError, match=f"{path} carries a re-encoded mark"):
+        store_compiled_root(compiled, slots, tmp_path / "stored", language_files={"en": {}, "es": {}})
+
+
+def _layout(language_files: dict[str, tuple[str, ...]]) -> Layout:
+    """Return a layout whose only interesting fact is which files each language holds."""
+    return Layout(languages=tuple(language_files), pages=(), shared=(), language_files=language_files)
+
+
+def test_per_language_files_that_are_the_same_set_in_every_language_pass() -> None:
+    """The baseline the three refusals below are refusals against."""
+    refuse_uneven_language_files(
+        _layout({"en": ("objects.inv",), "es": ("objects.inv", "_static/translations.js")}),
+        absent={"en": ("_static/translations.js",)},
+    )
+
+
+def test_a_language_missing_a_file_its_peers_hold_is_refused() -> None:
+    """A root short one file is a site missing a script, an index or an inventory.
+
+    Pages cannot be uneven by construction; a file stored per language because
+    its BYTES differ can be, and the root composed for that language is then
+    served to a reader with the file simply absent.
+    """
+    with pytest.raises(LanguageRootsError, match=r"es/objects\.inv: held by another language and absent here"):
+        refuse_uneven_language_files(_layout({"en": ("objects.inv",), "es": ()}), absent={})
+
+
+def test_a_declared_absence_the_language_holds_all_the_same_is_refused() -> None:
+    """A declaration that nothing matches is a standing permission for the next absence."""
+    with pytest.raises(LanguageRootsError, match=r"en/_static/translations\.js: declared absent"):
+        refuse_uneven_language_files(
+            _layout({"en": ("_static/translations.js",), "es": ("_static/translations.js",)}),
+            absent={"en": ("_static/translations.js",)},
+        )
+
+
+def test_a_declared_absence_of_a_file_no_language_holds_is_refused() -> None:
+    """A stale declaration excuses an absence nobody is weighing any more."""
+    with pytest.raises(LanguageRootsError, match=r"_static/retired\.js: declared absent, and no language"):
+        refuse_uneven_language_files(
+            _layout({"en": ("objects.inv",), "es": ("objects.inv",)}),
+            absent={"en": ("_static/retired.js",)},
+        )
 
 
 def test_a_page_whose_bytes_are_not_text_is_refused(slots: CompileSlots, tmp_path: Path) -> None:

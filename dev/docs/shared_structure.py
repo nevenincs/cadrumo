@@ -246,6 +246,16 @@ class LanguageText:
         )
 
 
+def slot_numbers(structure: str) -> list[int]:
+    """Return the slots one structure names, in the order it names them.
+
+    A reader of the stored form that needs only some of a page's strings -- a
+    check over the switcher each language's page carries, say -- gets them from
+    this rather than by composing the whole page in every language.
+    """
+    return [int(match.group(1), len(_DIGITS)) for match in _SLOT.finditer(structure)]
+
+
 def compose_page(structure: str, strings: Sequence[str]) -> str:
     """Return the page a structure reads as in the language ``strings`` belongs to.
 
