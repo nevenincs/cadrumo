@@ -1096,6 +1096,11 @@ test-ci-contracts-serial:
 test-ci-perf:
     @uv run --no-sync pytest -v -n0 -m "perf" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_ty_fix_boundary.py
 
+[doc('Measure one real native Modelo sequence with payload-free phase and process-tree CPU evidence.')]
+[group('audit')]
+benchmark-modelo-runtime *ARGS:
+    @uv run --no-sync python -m dev.ci.modelo_runtime_benchmark {{ARGS}}
+
 # Change-scoped merge gate: `dev.ci.change_scope` selects the pytest targets a
 # diff since BASE can affect. A selection it cannot narrow honestly comes back
 # `too_broad`, with `targets` already collapsed to the fixed contract set --

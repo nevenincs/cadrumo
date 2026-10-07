@@ -56,8 +56,8 @@ import shutil
 import time
 import warnings
 from base64 import b64encode
-from collections.abc import Generator, Mapping, Sequence
-from contextlib import chdir, contextmanager, nullcontext
+from collections.abc import Callable, Generator, Mapping, Sequence
+from contextlib import AbstractContextManager, chdir, contextmanager, nullcontext
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -133,9 +133,25 @@ __all__ = [
     "executed_sequence_sandbox",
     "live_aeat_tokens",
     "m303_filing_evidence_fixture_name",
+    "observe_sequence_frames",
     "refuse_live_frames",
     "sequence_sandbox",
 ]
+
+_FRAME_OBSERVER: ContextVar[Callable[[int], AbstractContextManager[None]] | None] = ContextVar(
+    "sequence_frame_observer", default=None
+)
+
+
+@contextmanager
+def observe_sequence_frames(observer: Callable[[int], AbstractContextManager[None]]) -> Generator[None]:
+    """Observe invocation durations without exposing arguments or captured outputs."""
+    token = _FRAME_OBSERVER.set(observer)
+    try:
+        yield
+    finally:
+        _FRAME_OBSERVER.reset(token)
+
 
 #: The deterministic injected profile identity (a fixed valid UUIDv4 shape,
 #: distinct from the shared test-fixture bucket ids). With the clock frozen and
@@ -1246,7 +1262,9 @@ def _execute_frame(
     """Execute one frame, enforce its exit code, and thread its captures."""
     argv = _resolved_argv(frame, captures)
     _record_frame_progress(sequence, frame, frame_index=frame_index, argv=argv)
-    result = _invoke_frame(argv[1:])
+    observer = _FRAME_OBSERVER.get()
+    with observer(frame_index) if observer is not None else nullcontext():
+        result = _invoke_frame(argv[1:])
     # The runner records the two streams separately: ``Result.output`` under
     # this Click version is the COMBINED capture, so read the split
     # ``stdout``/``stderr`` properties — a refusal's error document (which

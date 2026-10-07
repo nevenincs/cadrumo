@@ -13,7 +13,7 @@ import sys
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
-from contextvars import copy_context
+from contextvars import ContextVar, copy_context
 from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
@@ -69,6 +69,17 @@ SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
 
 _EXPORT_VERSION_FILE = "docs-export-version.json"
 _EXPORT_VERSION_BYTES = 256
+_WORKER_SCRIPT: ContextVar[Path | None] = ContextVar("sequence_worker_script", default=None)
+
+
+@contextmanager
+def sequence_worker_script(script: Path) -> Generator[None]:
+    """Select a trusted instrumented copy for this developer sequence scope."""
+    token = _WORKER_SCRIPT.set(script.resolve(strict=True))
+    try:
+        yield
+    finally:
+        _WORKER_SCRIPT.reset(token)
 
 
 class _RecordedExportVersion(BaseModel):
@@ -208,7 +219,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
             stop=stop,
             capture_login=lambda channel: _SequenceLoginObservation(channel.peer.os_owner_id, str(boot)),
             secret_store=_UnavailableSecretStore,
-            worker_script=Path(__file__).resolve(),
+            worker_script=_WORKER_SCRIPT.get() or Path(__file__).resolve(),
             wall_clock=lambda: SANDBOX_INSTANT,
         )
         profiles.prepare_registry()

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:1cf0c0cfa64072836bf0ddde758eb4b704240bd81817fd927f377a55495d0221'
+body_hash: 'sha256:665474f77426b3a663cc2bbd623ea92f987a59923b5931ed29f8ced9ac1115af'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -50,3 +50,16 @@ related:
 - `S02` `verify:` `uv run --no-sync ruff check src/cadrumo/application/operations/registry_schema_validation.py src/cadrumo/application/operations/tests/test_schema_generator_parity.py src/cadrumo/entrypoints/tests/test_operation_registry_schema_parity.py` -> `pass`
 - `S02` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/operations/registry_schema_validation.py src/cadrumo/application/operations/tests/test_schema_generator_parity.py src/cadrumo/entrypoints/tests/test_operation_registry_schema_parity.py` -> `pass`
 - `S02` `verify:` `actual alternating production-registry wall median 3.151s to 2.484s; CPU3.109s to 2.438s with identical contracts` -> `pass`
+- `S01` `A` `dev/ci/modelo_runtime_benchmark.py`
+- `S01` `A` `dev/ci/tests/test_modelo_runtime_benchmark.py`
+- `S01` `A` `dev/ci/tests/test_modelo_runtime_benchmark_process.py`
+- `S01` `M` `dev/docs/sequences/runner.py`
+- `S01` `M` `dev/docs/sequences/runtime_fixture.py`
+- `S01` `A` `dev/docs/sequences/tests/test_benchmark_scopes.py`
+- `S01` `M` `justfile`
+- `S01` `verify:` `uv run --no-sync pytest -n 0 --basetemp=.tmp/pytest-modelo-benchmark-observability-1 -m 'unit or integration' dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py dev/docs/sequences/tests/test_benchmark_scopes.py dev/docs/sequences/tests/test_runtime_fixture.py --tb=line` -> `pass`
+- `S01` `verify:` `uv run --no-sync ruff check dev/ci/modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py dev/docs/sequences/runner.py dev/docs/sequences/runtime_fixture.py dev/docs/sequences/tests/test_benchmark_scopes.py` -> `pass`
+- `S01` `verify:` `uv run --no-sync ruff format --check dev/ci/modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py dev/docs/sequences/runner.py dev/docs/sequences/runtime_fixture.py dev/docs/sequences/tests/test_benchmark_scopes.py` -> `pass`
+- `S01` `verify:` `uv run --no-sync ty check dev/ci/modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py dev/docs/sequences/runner.py dev/docs/sequences/runtime_fixture.py dev/docs/sequences/tests/test_benchmark_scopes.py --output-format concise` -> `pass`
+- `S01` `verify:` `just benchmark-modelo-runtime --help` -> `pass`
+- `S01` `verify:` `uv run --no-sync pytest -n 0 --basetemp=.tmp/pytest-modelo-performance-probe-3 -m integration .tmp/test_modelo_perf_probe.py --tb=line` -> `pass`
