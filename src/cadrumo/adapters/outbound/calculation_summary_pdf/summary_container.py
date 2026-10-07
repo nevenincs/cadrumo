@@ -25,11 +25,8 @@ from __future__ import annotations
 import io
 import uuid
 from collections.abc import Iterable, Mapping
-from typing import Final
+from typing import TYPE_CHECKING, Final
 from xml.sax.saxutils import escape
-
-import pikepdf
-from pikepdf import Array, Dictionary, Name, String
 
 from ....application.modelo.calculation_report_certification import (
     CALCULATION_SUMMARY_PDF_RENDER_PROFILE,
@@ -49,8 +46,9 @@ from ....application.modelo.calculation_summary_pdf_ports import (
 from ....core.optional_extras import PDF_EXTRA, require_optional_extra
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.resources.bundled_data import packaged_data
-from .structure_tagging import tag_summary_pages
-from .summary_reading import visible_layer_digest
+
+if TYPE_CHECKING:
+    import pikepdf
 
 OUTPUT_INTENT_PROFILE: Final[tuple[str, ...]] = ("calculation_summary_pdf", "color", "sRGB-IEC61966-2.1.icc")
 """The fixed sRGB profile every summary declares as its output intent.
@@ -182,6 +180,9 @@ def build_summary_xmp(
 
 
 def _attach(pdf: pikepdf.Pdf, files: Mapping[str, bytes], *, date: str) -> None:
+    import pikepdf
+    from pikepdf import Array, Name
+
     associated = Array()
     for attachment in CALCULATION_SUMMARY_ATTACHMENTS:
         specification = pikepdf.AttachedFileSpec(
@@ -200,6 +201,8 @@ def _attach(pdf: pikepdf.Pdf, files: Mapping[str, bytes], *, date: str) -> None:
 
 
 def _output_intent(pdf: pikepdf.Pdf) -> None:
+    from pikepdf import Array, Dictionary, Name, String
+
     profile = pdf.make_stream(packaged_data(*OUTPUT_INTENT_PROFILE).read_bytes())
     profile.N = 3
     pdf.Root.OutputIntents = Array(
@@ -244,7 +247,12 @@ def write_calculation_summary_pdf(
             layout's plan.
     """
     require_optional_extra(PDF_EXTRA)
+    import pikepdf
+    from pikepdf import Name
+
+    from .structure_tagging import tag_summary_pages
     from .summary_layout import draw_summary_pages, lay_out_summary
+    from .summary_reading import visible_layer_digest
 
     presentation = request.presentation
     drawn = draw_summary_pages(lay_out_summary(presentation), language=presentation.language.value)

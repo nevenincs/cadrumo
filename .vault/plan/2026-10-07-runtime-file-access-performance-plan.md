@@ -10,7 +10,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:3c789cd43b15d421c73c0927038c856889faf77f9cde87839da570b99a58e5f1'
+body_hash: 'sha256:71b2a531ccd3f51178e155f77cb782c45831eff5caa4b17f31f2f51bc967fda2'
 ---
 
 # `runtime-file-access-performance` plan
@@ -26,7 +26,7 @@ This work owns new developer file-access diagnostics and bounded measured produc
 ## Steps
 
 - [x] `S01` - Measure runtime file access and attribute repeated opens to their callers; `dev/ci/runtime_file_access.py, dev/ci/tests/test_runtime_file_access.py, CLI-generated dev/quality/metadata/import_load_targets.dev.json and import_load_targets.json enrollment, plus ignored build/runtime-file-access measurements`.
-- [ ] `S02` - Remove measured redundant work at the owning call-stack boundaries; `local_observation_spreadsheet.py, inbound financial/providers/xlsx.py, inbound pdf/page_text_extraction.py, outbound calculation_summary_pdf/summary_container.py, calculation_review_xlsx_operation_composition.py, reconciliation_export_operation_composition.py and entrypoints/tests/test_operation_registry_imports.py`.
+- [x] `S02` - Remove measured redundant work at the owning call-stack boundaries; `local_observation_spreadsheet.py, inbound financial/providers/xlsx.py, inbound pdf/page_text_extraction.py, outbound calculation_summary_pdf/summary_container.py, calculation_review_xlsx_operation_composition.py, reconciliation_export_operation_composition.py and entrypoints/tests/test_operation_registry_imports.py`.
 - [ ] `S03` - Compare source and executable file access and review justified cache opportunities; `Fresh-process measurements, configured checks and the runtime-file-access-performance audit and ledger`.
 
 ## Parallelization

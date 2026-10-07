@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:36ce70933b69b9fdb7957dc8abda151fc17f2d7aadf448b9908b846dd16cc134'
+body_hash: 'sha256:fbb0e9b7aa43e38de1d0ec83788aea93ac0c1a82e4c3e446fe969c84632ee713'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -51,6 +51,22 @@ related:
 - `S01` `verify:` `just check-import-boundaries` -> `pass`
 - `S01` `verify:` `vaultspec-core vault plan check runtime-file-access-performance` -> `pass`
 - `S01` `verify:` `vaultspec-core vault check all` -> `pass`
+- `S02` `M` `src/cadrumo/application/modelo/local_observation_spreadsheet.py`
+- `S02` `M` `src/cadrumo/adapters/inbound/financial/providers/xlsx.py`
+- `S02` `M` `src/cadrumo/adapters/inbound/pdf/page_text_extraction.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`
+- `S02` `M` `src/cadrumo/entrypoints/calculation_review_xlsx_operation_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/reconciliation_export_operation_composition.py`
+- `S02` `A` `src/cadrumo/entrypoints/tests/test_operation_registry_imports.py`
+- `S02` `verify:` `pytest PDF extraction and local observation spreadsheet` -> `pass`
+- `S02` `verify:` `pytest financial XLSX, PDF summary writer/verification, schema parity and spreadsheet composition` -> `pass`
+- `S02` `verify:` `pytest fresh-process operation registry import guard` -> `pass`
+- `S02` `verify:` `pytest runtime startup arguments` -> `pass`
+- `S02` `verify:` `pytest headless runtime and operation composition -m ''` -> `pass`
+- `S02` `verify:` `just check-format` -> `pass`
+- `S02` `verify:` `just check-style` -> `pass`
+- `S02` `verify:` `just check-types` -> `pass`
+- `S02` `verify:` `just check-import-boundaries` -> `pass`
 
 ## Notes
 

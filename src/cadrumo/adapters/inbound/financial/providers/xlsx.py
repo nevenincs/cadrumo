@@ -19,11 +19,7 @@ import io
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, override
-
-from openpyxl import load_workbook
-from openpyxl.workbook import Workbook
-from openpyxl.worksheet.worksheet import Worksheet
+from typing import TYPE_CHECKING, Any, override
 
 from .....core.logging import get_logger
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
@@ -43,6 +39,10 @@ from .workbook_layout import (
     best_layout_match,
     iter_worksheet_rows,
 )
+
+if TYPE_CHECKING:
+    from openpyxl.workbook import Workbook
+    from openpyxl.worksheet.worksheet import Worksheet
 
 _logger = get_logger(__name__)
 
@@ -95,6 +95,8 @@ class XlsxProvider(FinancialProvider):
         Returns:
             A :class:`ProviderValidation` with the validation outcome.
         """
+        from openpyxl.workbook import Workbook
+
         # Keep the workbook as an object until the locator has returned.  The
         # locator owns its failure teardown, but a successful return still
         # needs this method's validation teardown in its ``finally`` block.
@@ -257,6 +259,8 @@ def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatc
 
 def _open_workbook_or_refuse(source_bytes: bytes) -> Workbook:
     """Open the guarded workbook bytes with formulas visible or re-wrap the parse failure."""
+    from openpyxl import load_workbook
+
     try:
         return load_workbook(filename=io.BytesIO(source_bytes), read_only=True, data_only=False)
     except Exception as exc:  # pragma: no cover - exercised via validation path
