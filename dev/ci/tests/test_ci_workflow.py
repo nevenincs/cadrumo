@@ -458,8 +458,10 @@ def test_the_merge_gate_runs_the_goldens_gate_as_its_own_step_with_a_persistent_
     step = next((step for step in job["steps"] if step.get("name") == "Committed sequence goldens"), None)
     assert step is not None, "the merge gate no longer runs the committed-goldens gate"
 
-    assert step["run"].split()[:2] == ["just", "test-sequence-goldens-gate"]
-    assert '"$GATE_BASE"' in step["run"], "the gate must select from the same base as the scoped tests"
+    assert 'just test-sequence-goldens-gate --changed-files "$CHANGED_FILES"' in step["run"]
+    scoped = next(item for item in job["steps"] if item.get("name") == "Scoped tests")
+    assert step["env"]["CHANGED_FILES"] == scoped["env"]["CHANGED_FILES"]
+    assert "else" in step["run"] and "just test-sequence-goldens-gate\n" in step["run"]
     assert names.index("Set up toolchain") < names.index("Committed sequence goldens"), (
         "the goldens gate reads the published authority the setup step provides"
     )
@@ -473,7 +475,7 @@ def test_the_merge_gate_runs_the_goldens_gate_as_its_own_step_with_a_persistent_
     )
 
     commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-sequence-goldens-gate")
-    assert any("python -m dev.ci.sequence_goldens_gate --base" in command for command in commands), (
+    assert any("python -m dev.ci.sequence_goldens_gate" in command for command in commands), (
         f"the recipe the step delegates to must run the goldens gate entry point: {commands}"
     )
 

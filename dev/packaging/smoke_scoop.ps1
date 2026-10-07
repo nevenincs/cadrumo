@@ -215,9 +215,7 @@ function Install-ScoopIfRequested {
     }
     Set-CadrumoScoopShimsFirst -ScoopRoot $scoopRoot
     Assert-CadrumoScoopCommandRoot -ScoopRoot $scoopRoot
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        Invoke-Native -FilePath "scoop" -ArgumentList @("install", "git", "--no-update-scoop")
-    }
+
 }
 
 function Get-ExecutionIdentity {
@@ -440,17 +438,6 @@ function Invoke-HostSmoke {
         -SourceManifest $resolvedManifest `
         -SourceCohort $resolvedCohort `
         -Destination $candidateManifest
-    Invoke-Native -FilePath "git" -ArgumentList @("-C", $bucketRoot, "init", "--quiet")
-    Invoke-Native -FilePath "git" -ArgumentList @(
-        "-C", $bucketRoot, "-c", "user.name=Cadrumo packaging smoke",
-        "-c", "user.email=packaging-smoke@invalid.example",
-        "add", "bucket/${PackageName}.json"
-    )
-    Invoke-Native -FilePath "git" -ArgumentList @(
-        "-C", $bucketRoot, "-c", "user.name=Cadrumo packaging smoke",
-        "-c", "user.email=packaging-smoke@invalid.example",
-        "commit", "--quiet", "-m", "stage immutable Cadrumo cohort"
-    )
 
     $startedAt = [DateTimeOffset]::UtcNow
     $installed = $false
@@ -458,9 +445,9 @@ function Invoke-HostSmoke {
     $evidence = $null
     try {
         $bucketUrl = ([Uri]$bucketRoot).AbsoluteUri
-        Invoke-Native -FilePath "scoop" -ArgumentList @(
-            "bucket", "add", $bucketName, $bucketUrl
-        )
+        # Scoop reads local bucket directories directly; no repository is needed.
+        New-Item -ItemType Directory -Path $bucketRegistrationRoot -ErrorAction Stop | Out-Null
+        Copy-Item -LiteralPath (Join-Path $bucketRoot "bucket") -Destination $bucketRegistrationRoot -Recurse -ErrorAction Stop
         $bucketRegistered = $true
         Invoke-Native -FilePath "scoop" -ArgumentList @(
             "install", "${bucketName}/${PackageName}", "--no-cache", "--no-update-scoop"

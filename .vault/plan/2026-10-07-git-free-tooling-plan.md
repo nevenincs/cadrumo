@@ -8,7 +8,7 @@ related:
   - '[[2026-10-07-git-free-tooling-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:72b6ad3ef62863b9ba01b7553e7658d2b433c54b577587ed5ba09c0664c97e4a'
+body_hash: 'sha256:297be9e9e0669da260fcaac40b569a9f862e3496f4b4ab74ab566e194b89dfbf'
 ---
 
 # `git-free-tooling` plan
@@ -22,7 +22,7 @@ The user's explicit prohibition authorizes removing every repository-owned Git C
 ## Steps
 
 - [x] `S01` - Remove Git dependencies and Git-specific tests from local tooling and native build metadata; `dev/env, dev/registry/edition_round_trip.py, dev/deploy/docs_delivery_policy.py, native/cmake/BuildNumber.cmake, dev/packaging/native/tests/test_cmake_build_number.py`.
-- [ ] `S02` - Replace Git calls in CI selection and release packaging with explicit inputs and forge APIs; `dev/ci, dev/packaging/smoke_homebrew.py, dev/packaging/smoke_scoop.ps1, justfile, .github/workflows`.
+- [x] `S02` - Replace Git calls in CI selection and release packaging with explicit inputs and forge APIs; `dev/ci, dev/packaging/smoke_homebrew.py, dev/packaging/smoke_scoop.ps1, justfile, .github/workflows`.
 - [ ] `S03` - Enforce zero Git CLI calls and verify audit coverage and integrated behavior; `dev/quality/tests, .vault/audit, .vaultspec/rules`.
 
 ## Parallelization

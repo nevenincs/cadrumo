@@ -299,29 +299,45 @@ def test_declared_targets_exist_in_the_repository() -> None:
     assert sorted(target for target in declared if not (REPO_ROOT / target).exists()) == []
 
 
-def test_cli_prints_targets_one_per_line(capsys: pytest.CaptureFixture[str]) -> None:
-    requested: list[str] = []
-
-    def source(base: str) -> tuple[str, ...]:
-        requested.append(base)
-        return ("justfile",)
-
-    assert main(["--base", "origin/main"], changed_files_source=source) == 0
-
-    assert requested == ["origin/main"]
+def test_cli_prints_targets_one_per_line(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    manifest = tmp_path / "changed.txt"
+    manifest.write_text("justfile\n", encoding="utf-8")
+    assert main(["--changed-files", str(manifest)]) == 0
     lines = capsys.readouterr().out.splitlines()
     assert len(lines) == len(set(lines))
     assert set(lines) == {*CONTRACT_TARGETS, *_rule_targets("justfile")}
 
 
-def test_cli_json_reports_the_full_selection(capsys: pytest.CaptureFixture[str]) -> None:
-    exit_code = main(["--base", "main", "--json"], changed_files_source=lambda _base: ("uv.lock", ".github/x.yml"))
-
+def test_cli_json_reports_the_full_selection(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    manifest = tmp_path / "changed.txt"
+    manifest.write_text("uv.lock\n.github/x.yml\n", encoding="utf-8")
+    assert main(["--changed-files", str(manifest), "--json"]) == 0
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
-    assert exit_code == 0
     assert payload["targets"] == list(CONTRACT_TARGETS)
     assert payload["ci_contracts"] is True
     assert payload["too_broad"] is True
     assert "uv.lock" in payload["reason"]
     assert "too broad" in captured.err
+
+
+def test_cli_without_a_manifest_selects_every_test_root(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert set(payload["targets"]) == {"src/cadrumo", "src/cadrumo_harness", "dev", "native", "packaging"}
+    assert payload["ci_contracts"] and payload["sequence_goldens"]
+
+
+@pytest.mark.parametrize("content", ["/src/module.py", "C:/src/module.py", "../module.py", "src/../module.py"])
+def test_cli_refuses_non_relative_changed_paths(tmp_path: Path, content: str) -> None:
+    manifest = tmp_path / "changed.txt"
+    manifest.write_text(content, encoding="utf-8")
+    with pytest.raises(SystemExit) as refused:
+        main(["--changed-files", str(manifest)])
+    assert refused.value.code == 2
+
+
+def test_cli_refuses_an_unreadable_manifest(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit) as refused:
+        main(["--changed-files", str(tmp_path / "missing.txt")])
+    assert refused.value.code == 2

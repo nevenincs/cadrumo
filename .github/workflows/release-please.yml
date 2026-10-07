@@ -41,6 +41,7 @@ jobs:
           manifest-file: .release-please-manifest.json
 
       - name: Check out the release branch
+        id: release-branch-checkout
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -61,11 +62,11 @@ jobs:
         id: branch-lock
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
         run: |
-          uv lock
-          if git diff --quiet uv.lock; then
+          if uv lock --locked; then
             echo "uv.lock is already up to date"
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
+            uv lock
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -73,18 +74,17 @@ jobs:
         if: steps.branch-lock.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+          CHECKOUT_COMMIT: ${{ steps.release-branch-checkout.outputs.commit }}
         run: |
           set -euo pipefail
-          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
-          echo "::add-mask::${auth}"
-          export GIT_CONFIG_COUNT=1
-          export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
-          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add uv.lock
-          git commit -m "chore: update uv.lock for release"
-          git push
+          test -n "$HEAD_BRANCH" && test -n "$CHECKOUT_COMMIT"
+          sha="$(gh api --method GET "repos/${GITHUB_REPOSITORY}/contents/uv.lock" -f "ref=$CHECKOUT_COMMIT" --jq .sha)"
+          jq -n --rawfile content uv.lock --arg branch "$HEAD_BRANCH" --arg sha "$sha" \
+            '{message: "chore: update uv.lock for release", content: ($content | @base64), branch: $branch, sha: $sha}' \
+            > "$RUNNER_TEMP/release-lock-request.json"
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/uv.lock" \
+            --input "$RUNNER_TEMP/release-lock-request.json" > /dev/null
 
       # The lockfile push lands after release-please makes the pull request
       # mergeable. A release merged inside that window ships the previous
@@ -92,6 +92,7 @@ jobs:
       # at dependency install. Reconcile through a pull request rather than
       # assuming the window was missed.
       - name: Check out main to verify the released lockfile
+        id: main-checkout
         if: steps.release.outputs.release_created == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -124,23 +125,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.release.outputs.tag_name }}
+          CHECKOUT_COMMIT: ${{ steps.main-checkout.outputs.commit }}
         run: |
           set -euo pipefail
-          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
-          echo "::add-mask::${auth}"
-          export GIT_CONFIG_COUNT=1
-          export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
-          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}"
+          test -n "$CHECKOUT_COMMIT"
           BRANCH="chore/reconcile-uv-lock-${TAG}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "${BRANCH}"
-          git add uv.lock
-          git commit -m "chore(deps): reconcile uv.lock with ${TAG}"
-          git push --set-upstream origin "${BRANCH}"
-          gh pr create --base main --head "${BRANCH}" \
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+            -f "ref=refs/heads/$BRANCH" -f "sha=$CHECKOUT_COMMIT" > /dev/null
+          sha="$(gh api --method GET "repos/${GITHUB_REPOSITORY}/contents/uv.lock" -f "ref=$CHECKOUT_COMMIT" --jq .sha)"
+          jq -n --rawfile content uv.lock --arg branch "$BRANCH" --arg sha "$sha" --arg tag "$TAG" \
+            '{message: ("chore(deps): reconcile uv.lock with " + $tag), content: ($content | @base64), branch: $branch, sha: $sha}' \
+            > "$RUNNER_TEMP/main-lock-request.json"
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/uv.lock" \
+            --input "$RUNNER_TEMP/main-lock-request.json" > /dev/null
+          gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" \
             --title "chore(deps): reconcile uv.lock with ${TAG}" \
-            --body "Main carries the previous version's \`uv.lock\`. Every job installing with \`--frozen\` fails until this merges."
+            --body "Reconcile the released version's frozen dependency lock."
 
       # The default token's pushes and pull requests start no workflow runs,
       # so the release pull request would never report the required merge
@@ -171,7 +171,7 @@ jobs:
             echo "::error::could not read the proposed version from the release branch manifest"
             exit 1
           fi
-          gh workflow run release.yml --ref "${HEAD_BRANCH}" \
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "${HEAD_BRANCH}" \
             -f phase=prove -f "ref=${HEAD_BRANCH}" -f "version=${version}"
           echo "Dispatched release proof for ${version} on ${HEAD_BRANCH}" >> "$GITHUB_STEP_SUMMARY"
 
@@ -186,7 +186,7 @@ jobs:
             echo "::error::release_created is true but the tag or version is empty"
             exit 1
           fi
-          gh workflow run release.yml --ref "${TAG}" \
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "${TAG}" \
             -f phase=publish -f "ref=${TAG}" -f "version=${VERSION}"
           echo "Dispatched release publication for ${VERSION} at ${TAG}" >> "$GITHUB_STEP_SUMMARY"
 

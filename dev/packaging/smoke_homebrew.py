@@ -1,12 +1,4 @@
-"""Install and exercise one generated Cadrumo Homebrew formula from source.
-
-This module is the single sanctioned use of the ``git`` executable anywhere
-under ``dev/``: a Homebrew tap is, by Homebrew's own design, a git
-repository, so exercising the real update flow (``git pull --ff-only``
-against a tap a formula bump was pushed to) tests an external tool's
-required format rather than anything this project's own tooling depends on
-git for.
-"""
+"""Install and exercise a staged Cadrumo Homebrew formula without a VCS fixture."""
 
 from __future__ import annotations
 
@@ -374,36 +366,19 @@ def run_homebrew_smoke(
     started_at = datetime.now(UTC)
     evidence: dict[str, object] = {}
     try:
-        _run(["git", "init", "--quiet"], cwd=tap_repo, log_dir=logs, label="tap-git-init")
         _run(
-            ["git", "add", "Formula/cadrumo.rb"],
-            cwd=tap_repo,
-            log_dir=logs,
-            label="tap-git-add-original",
-        )
-        _run(
-            [
-                "git",
-                "-c",
-                "user.name=Cadrumo packaging smoke",
-                "-c",
-                "user.email=packaging-smoke@invalid.example",
-                "commit",
-                "--quiet",
-                "-m",
-                "stage immutable Cadrumo formula",
-            ],
-            cwd=tap_repo,
-            log_dir=logs,
-            label="tap-git-commit-original",
-        )
-        _run(
-            [str(brew), "tap", tap_name, tap_repo.as_uri()],
+            [str(brew), "tap-new", "--no-git", tap_name],
             cwd=run_root,
             log_dir=logs,
-            label="brew-tap",
+            label="brew-tap-new",
         )
         tap_registered = True
+        tapped_repo = Path(
+            _run([str(brew), "--repo", tap_name], cwd=run_root, log_dir=logs, label="brew-tap-repo").stdout.strip(),
+        ).resolve(strict=True)
+        tapped_formula = tapped_repo / "Formula" / "cadrumo.rb"
+        tapped_formula.parent.mkdir(parents=True, exist_ok=True)
+        tapped_formula.write_text(original_formula, encoding=_UTF_8, newline="\n")
         _run(
             [str(brew), "audit", "--strict", "--formula", qualified],
             cwd=run_root,
@@ -412,42 +387,7 @@ def run_homebrew_smoke(
         )
 
         staged_formula.write_text(localized_formula, encoding=_UTF_8, newline="\n")
-        _run(
-            ["git", "add", "Formula/cadrumo.rb"],
-            cwd=tap_repo,
-            log_dir=logs,
-            label="tap-git-add-localized",
-        )
-        _run(
-            [
-                "git",
-                "-c",
-                "user.name=Cadrumo packaging smoke",
-                "-c",
-                "user.email=packaging-smoke@invalid.example",
-                "commit",
-                "--quiet",
-                "-m",
-                "localize cohort acquisition for smoke",
-            ],
-            cwd=tap_repo,
-            log_dir=logs,
-            label="tap-git-commit-localized",
-        )
-        tapped_repo = Path(
-            _run(
-                [str(brew), "--repo", tap_name],
-                cwd=run_root,
-                log_dir=logs,
-                label="brew-tap-repo",
-            ).stdout.strip(),
-        ).resolve(strict=True)
-        _run(
-            ["git", "pull", "--ff-only"],
-            cwd=tapped_repo,
-            log_dir=logs,
-            label="brew-tap-pull-localized",
-        )
+        tapped_formula.write_text(localized_formula, encoding=_UTF_8, newline="\n")
         _run(
             [str(brew), "install", "--build-from-source", qualified],
             cwd=run_root,

@@ -25,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   # One group per pull request AND per trigger. A dispatched run is a
@@ -90,17 +91,42 @@ jobs:
     timeout-minutes: 180
     env:
       CADRUMO_PYTEST_WORKERS: "8"
-      GATE_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'origin/main' }}
     steps:
-      # The scope is `GATE_BASE...HEAD`. A pull request checks out the merge of
-      # its head into the base, whose first parent IS the base, so two commits
-      # already hold the merge base; the full history cost about a minute per
-      # run. Every other event compares against origin/main and needs it.
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
+          fetch-depth: 1
           persist-credentials: false
+
+      - name: Read changed paths from the pull request
+        id: changes
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_BASE: ${{ github.event.pull_request.base.sha }}
+          EXPECTED_FILES: ${{ github.event.pull_request.changed_files }}
+        run: |
+          set -euo pipefail
+          mkdir -p var/ci
+          # The API caps this listing at 3,000 files. Incomplete or stale
+          # metadata must leave the path unset so both gates run in full.
+          if [ "$EXPECTED_FILES" -ge 3000 ]; then
+            echo "Change listing exceeds the API limit; selecting the full gate"
+            exit 0
+          fi
+          gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+            > var/ci/changed-files.json
+          actual_files="$(jq '[.[][]] | length' var/ci/changed-files.json)"
+          current="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.head.sha + ":" + .base.sha')"
+          if [ "$actual_files" != "$EXPECTED_FILES" ] || [ "$current" != "${EXPECTED_HEAD}:${EXPECTED_BASE}" ]; then
+            echo "Change listing is incomplete or belongs to another revision; selecting the full gate"
+            exit 0
+          fi
+          jq -r '.[][] | .filename, (.previous_filename // empty)' var/ci/changed-files.json \
+            > var/ci/changed-paths.txt
+          echo "path=var/ci/changed-paths.txt" >> "$GITHUB_OUTPUT"
 
       - name: Set up just
         uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
@@ -138,7 +164,9 @@ jobs:
       - name: Scoped tests
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
-        run: just test-gate "$GATE_BASE"
+        env:
+          CHANGED_FILES: ${{ steps.changes.outputs.path }}
+        run: just test-gate "$CHANGED_FILES"
 
       # Its own step because a cache miss executes every documented CLI
       # sequence, minutes the scoped tests' step budget cannot absorb. The
@@ -150,7 +178,13 @@ jobs:
         shell: bash
         env:
           CADRUMO_DEV_CACHE_ROOT: ${{ runner.tool_cache }}/cadrumo-dev-cache
-        run: just test-sequence-goldens-gate "$GATE_BASE"
+          CHANGED_FILES: ${{ steps.changes.outputs.path }}
+        run: |
+          if [ -n "$CHANGED_FILES" ]; then
+            just test-sequence-goldens-gate --changed-files "$CHANGED_FILES"
+          else
+            just test-sequence-goldens-gate
+          fi
 
   verdict:
     name: "Check: Merge gate (Linux)"

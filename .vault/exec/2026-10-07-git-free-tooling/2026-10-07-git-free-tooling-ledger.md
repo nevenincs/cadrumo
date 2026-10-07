@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:96ff87efc272c177a8e325ccc8e97a80c16aaaa59b1fbc41d1724897139d19c6'
+body_hash: 'sha256:d49af1fbe2893cdbbe92784247ef81f31e24ac88937f36dda4e62f3978b765ba'
 related:
   - "[[2026-10-07-git-free-tooling-plan]]"
 ---
@@ -52,3 +52,25 @@ related:
 - `S01` `verify:` `focused tests: 44 passed` -> `pass`
 - `S01` `verify:` `scoped ruff lint and format` -> `pass`
 - `S01` `verify:` `scoped ty` -> `pass`
+- `S02` `M` `dev/ci/change_scope.py`
+- `S02` `M` `dev/ci/sequence_goldens_gate.py`
+- `S02` `M` `dev/ci/tests/test_change_scope.py`
+- `S02` `M` `dev/ci/tests/test_sequence_goldens_gate.py`
+- `S02` `M` `dev/ci/tests/test_ci_workflow.py`
+- `S02` `M` `dev/packaging/smoke_homebrew.py`
+- `S02` `M` `dev/packaging/smoke_scoop.ps1`
+- `S02` `M` `dev/packaging/acquire_scoop.ps1`
+- `S02` `M` `justfile`
+- `S02` `M` `.github/workflows/merge-gate.yml`
+- `S02` `M` `.github/workflows/release-please.yml`
+- `S02` `M` `.github/workflows/release.yml`
+- `S02` `verify:` `focused tests plus executable-call gate: 157 passed` -> `pass`
+- `S02` `verify:` `actionlint` -> `pass`
+- `S02` `verify:` `workflow data quality` -> `pass`
+- `S02` `verify:` `PowerShell syntax` -> `pass`
+- `S02` `verify:` `scoped Ruff lint and format` -> `pass`
+- `S02` `verify:` `scoped ty` -> `pass`
+
+## Notes
+
+- `S02` Existing `test_the_harness_real_proof_outruns_the_default_per_test_wall_ceiling` still requires the removed global pytest timeout; the initial run recorded that failure, the final focused run explicitly excludes it. No release publication or full Homebrew/Scoop installation was performed on this Windows host.

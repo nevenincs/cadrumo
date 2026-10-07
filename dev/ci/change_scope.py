@@ -28,12 +28,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
-import subprocess
 import sys
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Final
 
 import grimp
@@ -51,8 +49,8 @@ __all__ = [
     "ChangeClassRule",
     "ChangeScope",
     "compute_change_scope",
-    "git_changed_files",
     "main",
+    "read_changed_files",
     "selects_sequence_goldens",
 ]
 
@@ -67,7 +65,6 @@ FANOUT_PACKAGES: Final = ("cadrumo.core",)
 
 _SOURCE_ROOT: Final = "src"
 _TESTS_DIR: Final = "tests"
-_GIT_TIMEOUT_SECONDS: Final = 60
 
 
 def _select_path_owner(
@@ -226,22 +223,14 @@ def _contract_targets(rules: Sequence[ChangeClassRule]) -> tuple[str, ...]:
 CONTRACT_TARGETS: Final = _contract_targets(CHANGE_CLASS_RULES)
 
 
-def git_changed_files(base: str, root: Path = REPO_ROOT) -> tuple[str, ...]:
-    """Return the files changed between the merge base of ``base`` and ``HEAD``."""
-    git = shutil.which("git")
-    if git is None:
-        raise RuntimeError("git executable not found on PATH")
-    command = [git, "--no-optional-locks", "diff", "--name-only", f"{base}...HEAD"]
-    completed = subprocess.run(
-        command,
-        cwd=root,
-        check=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=_GIT_TIMEOUT_SECONDS,
-    )
-    return tuple(line.strip() for line in completed.stdout.splitlines() if line.strip())
+def read_changed_files(path: Path) -> tuple[str, ...]:
+    """Read an explicit repository-relative changed-path list."""
+    paths = tuple(line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+    for name in paths:
+        relative = PurePosixPath(name.replace("\\", "/"))
+        if relative.is_absolute() or PureWindowsPath(name).drive or ".." in relative.parts:
+            raise ValueError(f"changed path must be repository-relative: {name!r}")
+    return paths
 
 
 def _normalise(path: str) -> str:
@@ -375,19 +364,26 @@ def compute_change_scope(
     )
 
 
-def main(
-    argv: Sequence[str] | None = None,
-    *,
-    changed_files_source: Callable[[str], Sequence[str]] | None = None,
-) -> int:
-    """Print the selection for the changes since ``--base``; always exit 0."""
+def main(argv: Sequence[str] | None = None) -> int:
+    """Select tests from supplied paths, or select the full tree when absent."""
     parser = argparse.ArgumentParser(prog="python -m dev.ci.change_scope", description=__doc__)
-    parser.add_argument("--base", required=True, help="git ref the pull request merges into")
+    parser.add_argument("--changed-files", type=Path, help="file of repository-relative changed paths")
     parser.add_argument("--json", action="store_true", help="emit the full selection as JSON")
     arguments = parser.parse_args(argv)
-
-    source = changed_files_source if changed_files_source is not None else git_changed_files
-    scope = compute_change_scope(source(arguments.base))
+    if arguments.changed_files is None:
+        scope = ChangeScope(
+            targets=("src/cadrumo", "src/cadrumo_harness", "dev", "native", "packaging"),
+            ci_contracts=True,
+            sequence_goldens=True,
+            too_broad=False,
+            reason=None,
+        )
+    else:
+        try:
+            changed = read_changed_files(arguments.changed_files)
+        except (OSError, ValueError) as error:
+            parser.error(str(error))
+        scope = compute_change_scope(changed)
     if arguments.json:
         print(json.dumps(scope.to_json(), indent=2))
     else:

@@ -149,9 +149,7 @@ function Install-ScoopIfRequested {
     }
     Set-CadrumoScoopShimsFirst -ScoopRoot $scoopRoot
     Assert-CadrumoScoopCommandRoot -ScoopRoot $scoopRoot
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        Invoke-Native -FilePath "scoop" -ArgumentList @("install", "git", "--no-update-scoop")
-    }
+
 }
 
 function Get-ScoopCommandPath {

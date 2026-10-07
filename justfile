@@ -236,7 +236,7 @@ doctor-browser:
 # output. Do not wire either recipe into a gate, a hook, or a pre-commit step.
 # Neither recipe is a dependency of any aggregate.
 
-# READ-ONLY. Report reclaimable disk across worktree output, var/ build scratch and temp storage, plus git-directory bloat. Deletes nothing, always exits 0.
+# READ-ONLY. Report reclaimable disk across worktree output, var/ build scratch and temp storage. Deletes nothing, always exits 0.
 [group('maintenance')]
 clean *ARGS:
     uv run --no-sync python -m dev.env.clean {{ARGS}}
@@ -1102,7 +1102,7 @@ benchmark-modelo-runtime *ARGS:
     @uv run --no-sync python -m dev.ci.modelo_runtime_benchmark {{ARGS}}
 
 # Change-scoped merge gate: `dev.ci.change_scope` selects the pytest targets a
-# diff since BASE can affect. A selection it cannot narrow honestly comes back
+# supplied changed-path list can affect. Without a list, select the full tree. A selection it cannot narrow honestly comes back
 # `too_broad`, with `targets` already collapsed to the fixed contract set --
 # this recipe prints that as a visible advisory rather than silently narrowing
 # further. `ci_contracts` additionally gates the tooling/workflow contract
@@ -1113,10 +1113,12 @@ benchmark-modelo-runtime *ARGS:
 [doc('Run the change-scoped merge gate: targeted or contract-only tests, optional CI contracts, and the harness verdict.')]
 [group('test')]
 [unix]
-test-gate base="origin/main":
+test-gate changed_files="":
     #!/usr/bin/env bash
     set -euo pipefail
-    scope_json=$(uv run --no-sync python -m dev.ci.change_scope --base {{base}} --json)
+    scope_args=(--json)
+    [ -z "{{changed_files}}" ] || scope_args+=(--changed-files "{{changed_files}}")
+    scope_json=$(uv run --no-sync python -m dev.ci.change_scope "${scope_args[@]}")
     parsed=$(printf '%s' "$scope_json" | uv run --no-sync python -c '
     import json, sys
     data = json.load(sys.stdin)
@@ -1155,10 +1157,12 @@ test-gate base="origin/main":
 [doc('Run the change-scoped merge gate: targeted or contract-only tests, optional CI contracts, and the harness verdict.')]
 [group('test')]
 [windows]
-test-gate base="origin/main":
+test-gate changed_files="":
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    $scopeJson = uv run --no-sync python -m dev.ci.change_scope --base {{base}} --json
+    $scopeArgs = @('--json')
+    if ('{{changed_files}}') { $scopeArgs += @('--changed-files', '{{changed_files}}') }
+    $scopeJson = uv run --no-sync python -m dev.ci.change_scope @scopeArgs
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $scope = $scopeJson | ConvertFrom-Json
     if ($scope.too_broad) {
@@ -1188,10 +1192,10 @@ test-gate base="origin/main":
 test-registry-conformance:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
-[doc('Run the committed cli-sequence goldens gate when changes since BASE can alter documented output; reuses a recorded clean verdict.')]
+[doc('Run the committed cli-sequence goldens gate for supplied changed paths or the full tree; reuses a recorded clean verdict.')]
 [group('test')]
-test-sequence-goldens-gate base="origin/main":
-    uv run --no-sync python -m dev.ci.sequence_goldens_gate --base {{base}}
+test-sequence-goldens-gate *ARGS:
+    uv run --no-sync python -m dev.ci.sequence_goldens_gate {{ARGS}}
 
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('test')]
