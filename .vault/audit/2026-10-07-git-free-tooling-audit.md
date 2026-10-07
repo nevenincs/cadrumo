@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa9ab260854aa6b6b92b1e4e3b16656ce074d614fecf238be79b56b6ee5a1ab3'
+body_hash: 'sha256:10a25ffcba17cc6b636ea5221ca616109819a6c23369f814f965414408df0e08'
 related:
   - "[[2026-10-07-git-free-tooling-plan]]"
 ---
@@ -75,6 +75,12 @@ Actual remote API writes and complete package-manager installs were not performe
 
 The final owning gate checked 11,386 executable source/configuration files and found zero Git CLI offenders. All 25 detector, inventory and refusal/acceptance controls passed in 76.01 seconds. The source count includes the two Node package manifests in addition to Python, shell/PowerShell, native/build/frontend and YAML command sources. Scoped lint, formatting and ty passed after the final coverage changes. Canonical architecture rule, canonical startup reference, generated Codex rule and generated startup reference have identical bodies across all four surfaces.
 
+### timeout-policy-follow-up | low | Retired global-timeout requirement is resolved
+
+Resolved by the user's authorized direct follow-up after S01-S03 closure. `dev/ci/tests/test_ci_workflow.py` no longer requires a shared pytest timeout or compares the harness deadline against a workstation-derived default. The renamed test verifies the harness's explicitly requested 900-second deadline and that its collection preflights do not receive that override. The recipe, ordinary correctness-test completion policy, pytest-timeout dependency and plain assertions are preserved. The 2026-10-07 test-completion amendment in `2026-07-20-ci-speed-redesign-adr` governs this correction; no new decision or plan is needed.
+
+All 49 workflow integration tests passed in `.logs/timeout-policy-ci-workflow-tests.log`. The final narrowed correction passed its focused rerun in `.logs/timeout-policy-focused-test.log`; the other 48 test bodies and their inputs are unchanged. Scoped Ruff lint, formatting and ty passed after that correction. Direct review found no remaining in-scope issue. The timeout-policy failure recorded above is historical and no longer outstanding.
+
 ## Recommendations
 
-Keep the absolute invocation guard and plain pytest assertions. Resolve the separate timeout-policy mismatch with its owning concurrent work. Preserve the native/build dead-code scope disclosure and run the existing installation/publication lanes on their designated hosts before claiming live release verification.
+Keep the absolute invocation guard and plain pytest assertions. The timeout-policy mismatch is resolved; keep the harness's explicitly owned deadline independent of shared pytest defaults. Preserve the native/build dead-code scope disclosure and run the existing installation/publication lanes on their designated hosts before claiming live release verification.
