@@ -12,9 +12,10 @@ async function signInHost(
   target: Page,
   supported = true,
   deferInitial = false,
+  deferInitialList = false,
 ) {
   await target.addInitScript(
-    ({ supported, docs, deferInitial }) => {
+    ({ supported, docs, deferInitial, deferInitialList }) => {
       const state = {
         presence: "absent",
         supported,
@@ -29,6 +30,7 @@ async function signInHost(
         statusReads: 0,
         statusError: "",
         activeStatusReads: 0,
+        activeListReads: 0,
         signOuts: 0,
         tuiStarts: 0,
         tuiCloses: 0,
@@ -47,6 +49,8 @@ async function signInHost(
         createdSecretCleared: false,
         deferStatus: deferInitial,
         releaseStatus: null as (() => void) | null,
+        deferList: deferInitialList,
+        releaseList: null as (() => void) | null,
         exitTui: null as (() => void) | null,
       };
       let id = 0;
@@ -73,12 +77,15 @@ async function signInHost(
                 };
               case "sign_in_status": {
                 ++state.statusReads;
-                if (state.activeStatusReads > 0) throw { code: "queue_full" };
+                if (state.activeStatusReads + state.activeListReads > 0)
+                  throw { code: "queue_full" };
                 ++state.activeStatusReads;
                 const snapshot = {
                   supported: state.supported,
                   state: state.presence,
-                  active_profile: "Test profile",
+                  active_profile:
+                    state.profiles.find((profile) => profile.active)?.name ??
+                    null,
                   runtimeAvailable: state.runtimeAvailable,
                   refusal: state.refusal,
                 };
@@ -113,11 +120,44 @@ async function signInHost(
                     retryAfterSeconds: state.retryAfterSeconds,
                   };
                 state.presence = "present";
-                return { kind: "signed-in" };
+                if (state.profileHeader !== null) {
+                  const selected = decodeURIComponent(state.profileHeader);
+                  state.profiles = state.profiles.map((profile) => ({
+                    ...profile,
+                    active: profile.name === selected,
+                  }));
+                }
+                return {
+                  kind: "signed-in",
+                  status: {
+                    supported: state.supported,
+                    state: "present",
+                    active_profile:
+                      state.profiles.find((profile) => profile.active)?.name ??
+                      null,
+                    runtimeAvailable: true,
+                    refusal: null,
+                  },
+                };
               }
-              case "profile_list":
+              case "profile_list": {
                 ++state.listReads;
-                return { profiles: state.profiles, complete: true };
+                if (state.activeStatusReads + state.activeListReads > 0)
+                  throw { code: "queue_full" };
+                ++state.activeListReads;
+                const snapshot = {
+                  profiles: state.profiles.map((profile) => ({ ...profile })),
+                  complete: true,
+                };
+                if (state.deferList) {
+                  state.deferList = false;
+                  await new Promise<void>((resolve) => {
+                    state.releaseList = resolve;
+                  });
+                }
+                --state.activeListReads;
+                return snapshot;
+              }
               case "profile_create": {
                 ++state.creations;
                 state.createdHeader =
@@ -186,7 +226,7 @@ async function signInHost(
         },
       });
     },
-    { supported, docs: DOCS, deferInitial },
+    { supported, docs: DOCS, deferInitial, deferInitialList },
   );
   await serveDocs(target);
   await target.goto("/");
@@ -321,7 +361,7 @@ test("a failed status read releases its slot for the next focus refresh", async 
   expect((await signInState(target)).submissions).toBe(0);
 });
 
-test("explicit sign-in waits for a pending status read and submits once", async ({
+test("explicit sign-in dispatches beside a pending status read and submits once", async ({
   page: target,
 }) => {
   await signInHost(target);
@@ -345,7 +385,7 @@ test("explicit sign-in waits for a pending status read and submits once", async 
   // Pending: the field holds, without leaving the tab order.
   await expect(password).toHaveAttribute("readonly", "");
   await expect(target.locator(".sign-in").locator(":focus")).toHaveCount(1);
-  expect((await signInState(target)).submissions).toBe(0);
+  expect((await signInState(target)).submissions).toBe(1);
   await target.evaluate(() =>
     (
       window as unknown as { __signInTest: { releaseStatus: () => void } }
@@ -392,6 +432,157 @@ test("sign-in gates TUI, sends a raw secret once, clears it and refreshes refusa
     await target.evaluate(() => JSON.stringify(localStorage)),
   ).not.toContain("secret á漢");
 });
+
+for (const pending of ["status", "list"] as const)
+  test(`persisted sign-in displays immediately beside a held ${pending} read without another status call`, async ({
+    page: target,
+  }) => {
+    await signInHost(target, true, false, pending === "list");
+    const password = target.getByLabel(label("desktop.signin.password"), {
+      exact: true,
+    });
+    await expect(password).toBeVisible();
+    await target.evaluate((pending) => {
+      const state = (
+        window as unknown as { __signInTest: Record<string, unknown> }
+      ).__signInTest;
+      state.submitCode = "";
+      if (pending === "status") {
+        state.deferStatus = true;
+        state.runtimeAvailable = false;
+        window.dispatchEvent(new Event("focus"));
+      }
+    }, pending);
+    await expect
+      .poll(
+        async () =>
+          (await signInState(target))[
+            pending === "status" ? "activeStatusReads" : "activeListReads"
+          ],
+      )
+      .toBe(1);
+    const reads = (await signInState(target)).statusReads;
+    await target.evaluate(() => {
+      (
+        window as unknown as { __signInTest: { runtimeAvailable: boolean } }
+      ).__signInTest.runtimeAvailable = true;
+    });
+    await password.fill("secret á漢");
+    await target
+      .getByRole("button", {
+        name: label("desktop.signin.submit"),
+        exact: true,
+      })
+      .click();
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+    await expect(password).toHaveCount(0);
+    await expect
+      .poll(async () => (await signInState(target)).secretCleared)
+      .toBe(true);
+    expect((await signInState(target)).submissions).toBe(1);
+    expect((await signInState(target)).statusReads).toBe(reads);
+    expect(
+      (await signInState(target))[
+        pending === "status" ? "activeStatusReads" : "activeListReads"
+      ],
+    ).toBe(1);
+    await target.evaluate(async (pending) => {
+      const state = (
+        window as unknown as {
+          __signInTest: { releaseStatus: () => void; releaseList: () => void };
+        }
+      ).__signInTest;
+      if (pending === "status") state.releaseStatus();
+      else state.releaseList();
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
+    }, pending);
+    // An older absent/unavailable snapshot cannot undo the acknowledged login.
+    expect((await signInState(target)).statusReads).toBe(reads);
+    expect((await signInState(target)).tuiStarts).toBe(1);
+    expect((await signInState(target)).tuiCloses).toBe(0);
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+    await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await expect
+      .poll(async () => (await signInState(target)).statusReads)
+      .toBe(Number(reads) + 1);
+    await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+    expect((await signInState(target)).submissions).toBe(1);
+  });
+
+for (const pending of ["status", "list"] as const)
+  test(`profile creation dispatches before a held ${pending} read and refreshes the selected new profile coherently`, async ({
+    page: target,
+  }) => {
+    await signInHost(target, true, false, pending === "list");
+    const dialog = target.locator(".sign-in");
+    await expect(dialog).toBeVisible();
+    if (pending === "status")
+      await target.evaluate(() => {
+        (
+          window as unknown as { __signInTest: { deferStatus: boolean } }
+        ).__signInTest.deferStatus = true;
+        window.dispatchEvent(new Event("focus"));
+      });
+    await expect
+      .poll(
+        async () =>
+          (await signInState(target))[
+            pending === "status" ? "activeStatusReads" : "activeListReads"
+          ],
+      )
+      .toBe(1);
+    const reads = (await signInState(target)).statusReads;
+    await dialog
+      .getByRole("button", { name: label("desktop.account.new_profile") })
+      .click();
+    const form = dialog.locator(".create-profile");
+    await form
+      .getByLabel(label("desktop.account.create.name"), { exact: true })
+      .fill("Marta Ruiz á漢");
+    await form
+      .getByLabel(label("desktop.signin.password"), { exact: true })
+      .fill("secret á漢");
+    await form
+      .getByLabel(label("desktop.account.create.confirm"), { exact: true })
+      .fill("secret á漢");
+    await form
+      .getByRole("button", { name: label("desktop.account.create.submit") })
+      .click();
+    await expect
+      .poll(async () => (await signInState(target)).creations)
+      .toBe(1);
+    await expect
+      .poll(async () => (await signInState(target)).createdSecretCleared)
+      .toBe(true);
+    expect((await signInState(target)).statusReads).toBe(reads);
+    expect(
+      (await signInState(target))[
+        pending === "status" ? "activeStatusReads" : "activeListReads"
+      ],
+    ).toBe(1);
+    await target.evaluate((pending) => {
+      const state = (
+        window as unknown as {
+          __signInTest: { releaseStatus: () => void; releaseList: () => void };
+        }
+      ).__signInTest;
+      if (pending === "status") state.releaseStatus();
+      else state.releaseList();
+    }, pending);
+    await expect(dialog.locator("#profile-password")).toBeFocused();
+    await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
+      "Marta Ruiz á漢",
+    );
+    const state = await signInState(target);
+    expect(state.creations).toBe(1);
+    expect(state.statusReads).toBe(Number(reads) + 1);
+    expect(state.submissions).toBe(0);
+    expect(state.createdHeader).toBe("Marta%20Ruiz%20%C3%A1%E6%BC%A2");
+    expect(state.createdRawPassword).toBe(true);
+    expect(state.createdTokenHeader).toBe(true);
+  });
 
 test("a chosen profile is named to the host by its label, percent-encoded in a header", async ({
   page: target,

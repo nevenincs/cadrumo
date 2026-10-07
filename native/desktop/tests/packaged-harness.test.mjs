@@ -683,6 +683,179 @@ test("sign-in submission retains its 75-second answer deadline and clicks only o
   await rejected;
   assert.equal(clicks, 1);
 });
+test("sign-in submission separates monotonic form duration and exact-index host timing", async (t) => {
+  let clock = 0;
+  const utc = Date.UTC(2026, 9, 7, 10, 0);
+  t.mock.method(performance, "now", () => clock);
+  t.mock.method(Date, "now", () => utc + clock);
+  const { fixture } = signInControlFixture();
+  const artifacts = [];
+  fixture.results.evidence = (_name, value) => artifacts.push(value);
+  let reads = 0;
+  let clicks = 0;
+  const session = {
+    shell: async (_read, index) => {
+      if (reads++ === 0) {
+        clock += 10;
+        return 3;
+      }
+      assert.equal(index, 3, "only the captured sign-in request index is read");
+      clock += 600;
+      return {
+        at: utc + 100,
+        ms: 450,
+        ok: true,
+        args: null,
+        answer: { kind: "signed-in", privatePayload: fixture.secret },
+      };
+    },
+    page: {
+      locator: () => ({
+        waitFor: async () => (clock += 20),
+        fill: async () => (clock += 30),
+        click: async () => {
+          clock += 40;
+          clicks++;
+        },
+      }),
+    },
+  };
+  assert.equal(
+    (await fixture.submit(session, fixture.secret)).kind,
+    "signed-in",
+  );
+  assert.equal(clicks, 1);
+  assert.deepEqual(fixture.timingStats().submissions, [
+    {
+      phase: "valid-password",
+      outcome: "signed-in",
+      startedMs: 0,
+      elapsedMs: 700,
+      formStartedAt: "2026-10-07T10:00:00.000Z",
+      dispatchObserved: true,
+      hostStartedAt: "2026-10-07T10:00:00.100Z",
+      hostElapsedMs: 450,
+      formToDispatchUtcMs: 100,
+    },
+  ]);
+  assert.equal(artifacts.length, 1);
+  assert(!JSON.stringify(artifacts).includes(fixture.secret));
+});
+
+test("sign-in submission timeout preserves cached pending timing without a cleanup RPC", async (t) => {
+  let clock = 0;
+  const utc = Date.UTC(2026, 9, 7, 10, 0);
+  t.mock.method(performance, "now", () => clock);
+  t.mock.method(Date, "now", () => utc + clock);
+  const { fixture } = signInControlFixture();
+  fixture.results.evidence = () => {
+    throw new Error("evidence refusal must not replace timeout");
+  };
+  let reads = 0;
+  let clicks = 0;
+  const session = {
+    shell: async (_read, index) => {
+      if (reads++ === 0) return 1;
+      assert.equal(index, 1);
+      assert.equal(reads, 2, "failure recording adds no browser lookup");
+      clock += 75001;
+      return { at: utc + 100, ms: null, ok: null, args: null };
+    },
+    page: {
+      locator: () => ({
+        waitFor: async () => {},
+        fill: async () => {},
+        click: async () => {
+          clicks++;
+        },
+      }),
+    },
+  };
+  await assert.rejects(
+    fixture.submit(session, fixture.wrong, "wrong-password"),
+    /Timed out after 75000 ms waiting for the canonical sign-in host answer/,
+  );
+  assert.equal(reads, 2);
+  assert.equal(clicks, 1);
+  const stats = fixture.timingStats();
+  assert.equal(stats.evidenceWriteFailed, true);
+  assert.deepEqual(stats.submissions, [
+    {
+      phase: "wrong-password",
+      outcome: "failed",
+      startedMs: 0,
+      elapsedMs: 75001,
+      formStartedAt: "2026-10-07T10:00:00.000Z",
+      dispatchObserved: true,
+      hostStartedAt: "2026-10-07T10:00:00.100Z",
+      hostElapsedMs: null,
+      formToDispatchUtcMs: 100,
+    },
+  ]);
+});
+
+test("sign-in submission evidence is bounded, closed and refuses invalid clock metadata", async (t) => {
+  const utc = Date.UTC(2026, 9, 7, 10, 0);
+  t.mock.method(Date, "now", () => utc);
+  const { fixture } = signInControlFixture();
+  const answers = [
+    { kind: "refused", code: "CREDENTIAL_REJECTED" },
+    { kind: "refused", code: "THROTTLED" },
+    { kind: "refused", code: fixture.secret },
+    { kind: "signed-in", privatePayload: fixture.secret },
+    { kind: "signed-in" },
+  ];
+  for (const [number, answer] of answers.entries()) {
+    let read = false;
+    const session = {
+      shell: async () => {
+        if (!read) {
+          read = true;
+          return 0;
+        }
+        return {
+          at: number === 0 ? utc - 1 : fixture.secret,
+          ms: number === 0 ? Infinity : fixture.secret,
+          ok: true,
+          args: null,
+          answer,
+          privatePayload: fixture.secret,
+        };
+      },
+      page: {
+        locator: () => ({
+          waitFor: async () => {},
+          fill: async () => {},
+          click: async () => {},
+        }),
+      },
+    };
+    await fixture.submit(session, fixture.secret);
+  }
+  const stats = fixture.timingStats();
+  assert.equal(stats.submissionLimit, 4);
+  assert.equal(stats.submissions.length, 4);
+  assert.equal(stats.submissionsDropped, 1);
+  assert.deepEqual(
+    stats.submissions.map((row) => row.outcome),
+    ["credential-rejected", "throttled", "failed", "signed-in"],
+  );
+  assert.equal(stats.submissions[0].formToDispatchUtcMs, null);
+  assert.equal(stats.submissions[0].hostElapsedMs, null);
+  for (const row of stats.submissions.slice(1)) {
+    assert.equal(row.dispatchObserved, false);
+    assert.equal(row.hostStartedAt, null);
+    assert.equal(row.hostElapsedMs, null);
+    assert.equal(row.formToDispatchUtcMs, null);
+  }
+  assert(!JSON.stringify(stats).includes(fixture.secret));
+  await assert.rejects(
+    fixture.submit({}, fixture.secret, fixture.secret),
+    /unknown sign-in submission phase/,
+  );
+  assert.equal(fixture.timingStats().submissionsDropped, 1);
+});
+
 after(async () => {
   const failures = [];
   for (const cleanup of cleanups.reverse()) {

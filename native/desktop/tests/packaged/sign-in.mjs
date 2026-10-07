@@ -22,6 +22,8 @@ const TIMING_PHASES = new Set([
   "runtime-cleanup",
 ]);
 const TIMING_LIMIT = 16;
+const SUBMISSION_LIMIT = 4;
+const SUBMISSION_PHASES = new Set(["wrong-password", "valid-password"]);
 
 /** Retain typed failure identifiers only, never arbitrary diagnostic payloads. */
 export function canonicalFailure(stderr, secrets = []) {
@@ -85,6 +87,8 @@ export class SignInFixture {
     this.timingOrigin = performance.now();
     this.timingOriginAt = new Date().toISOString();
     this.phaseTimings = [];
+    this.submissionTimings = [];
+    this.submissionTimingsDropped = 0;
     this.timingsDropped = 0;
     this.timingEvidenceFailed = false;
   }
@@ -97,6 +101,11 @@ export class SignInFixture {
     return {
       originAt: this.timingOriginAt,
       phases: this.phaseTimings.map((phase) => ({ ...phase })),
+      submissions: this.submissionTimings.map((submission) => ({
+        ...submission,
+      })),
+      submissionsDropped: this.submissionTimingsDropped,
+      submissionLimit: SUBMISSION_LIMIT,
       dropped: this.timingsDropped,
       limit: TIMING_LIMIT,
       evidenceWriteFailed: this.timingEvidenceFailed,
@@ -109,6 +118,15 @@ export class SignInFixture {
         ),
       },
     };
+  }
+
+  /** Evidence refusal must never replace the measured action's original result. */
+  writeTimingEvidence() {
+    try {
+      this.results.evidence?.("sign-in-phase-timings.json", this.timingStats());
+    } catch {
+      this.timingEvidenceFailed = true;
+    }
   }
 
   /** Measure an existing boundary without retaining its arguments or result. */
@@ -131,15 +149,7 @@ export class SignInFixture {
           Number.MAX_SAFE_INTEGER,
           this.timingsDropped + 1,
         );
-      try {
-        this.results.evidence?.(
-          "sign-in-phase-timings.json",
-          this.timingStats(),
-        );
-      } catch {
-        // Evidence never replaces the operation's answer or cleanup failure.
-        this.timingEvidenceFailed = true;
-      }
+      this.writeTimingEvidence();
     };
     const completed = (value) => {
       try {
@@ -335,34 +345,93 @@ export class SignInFixture {
     };
   }
 
-  async submit(session, password) {
-    const before = await session.shell(
-      () =>
-        window.__s10.ipc.filter((row) => row.cmd === "sign_in_submit").length,
-    );
-    const field = session.page.locator("#profile-password");
-    await field.waitFor({ state: "visible", timeout: 30000 });
-    await field.fill(password);
-    await session.page.locator(".sign-in button[type=submit]").click();
-    const answer = await waitFor(
-      () =>
-        session.shell((index) => {
-          const row = window.__s10.ipc.filter(
-            (entry) => entry.cmd === "sign_in_submit",
-          )[index];
+  async submit(session, password, phase = "valid-password") {
+    assert(SUBMISSION_PHASES.has(phase), "unknown sign-in submission phase");
+    const started = performance.now();
+    const formAt = Date.now();
+    let observed = null;
+    let outcome = "failed";
+    try {
+      const before = await session.shell(
+        () =>
+          window.__s10.ipc.filter((row) => row.cmd === "sign_in_submit").length,
+      );
+      const field = session.page.locator("#profile-password");
+      await field.waitFor({ state: "visible", timeout: 30000 });
+      await field.fill(password);
+      await session.page.locator(".sign-in button[type=submit]").click();
+      const answer = await waitFor(
+        async () => {
+          const row = await session.shell((index) => {
+            const request = window.__s10.ipc.filter(
+              (entry) => entry.cmd === "sign_in_submit",
+            )[index];
+            return request ?? null;
+          }, before);
+          // Cache scalar timestamps during existing polling, including pending
+          // requests. Failure cleanup needs no additional browser roundtrip.
+          if (row) observed = { at: row.at, ms: row.ms };
           return row?.answer || row?.ok === false ? row : null;
-        }, before),
-      // One accepted submission may wait 30 s behind a read, then owns a
-      // separate 30 s child deadline. This does not retry the password.
-      { timeout: 75000, what: "the canonical sign-in host answer" },
-    );
-    assert.equal(answer.ok, true, `sign-in host refused: ${answer.code}`);
-    assert.equal(
-      answer.args,
-      null,
-      "password body must not be recorded in IPC evidence",
-    );
-    return answer.answer;
+        },
+        // One accepted submission may wait 30 s behind a read, then owns a
+        // separate 30 s child deadline. This does not retry the password.
+        { timeout: 75000, what: "the canonical sign-in host answer" },
+      );
+      if (answer.ok !== true) outcome = "host-refused";
+      assert.equal(answer.ok, true, `sign-in host refused: ${answer.code}`);
+      assert.equal(
+        answer.args,
+        null,
+        "password body must not be recorded in IPC evidence",
+      );
+      if (answer.answer?.kind === "signed-in") outcome = "signed-in";
+      else if (answer.answer?.kind === "refused") {
+        if (answer.answer.code === "CREDENTIAL_REJECTED")
+          outcome = "credential-rejected";
+        else if (answer.answer.code === "THROTTLED") outcome = "throttled";
+      }
+      return answer.answer;
+    } finally {
+      const elapsedMs = performance.now() - started;
+      const hostAt =
+        Number.isSafeInteger(observed?.at) &&
+        observed.at >= 0 &&
+        observed.at <= 8640000000000000
+          ? observed.at
+          : null;
+      const dispatchMs = hostAt === null ? null : hostAt - formAt;
+      if (this.submissionTimings.length < SUBMISSION_LIMIT)
+        this.submissionTimings.push({
+          phase,
+          outcome,
+          startedMs: started - this.timingOrigin,
+          elapsedMs,
+          formStartedAt: new Date(formAt).toISOString(),
+          dispatchObserved: hostAt !== null,
+          hostStartedAt:
+            hostAt === null ? null : new Date(hostAt).toISOString(),
+          hostElapsedMs:
+            Number.isFinite(observed?.ms) &&
+            observed.ms >= 0 &&
+            observed.ms <= Number.MAX_SAFE_INTEGER
+              ? observed.ms
+              : null,
+          // Both timestamps use same-machine UTC Date.now. This includes form
+          // filling/clicking; browser and Node performance clocks are not mixed.
+          formToDispatchUtcMs:
+            dispatchMs !== null &&
+            dispatchMs >= 0 &&
+            dispatchMs <= elapsedMs + 1000
+              ? dispatchMs
+              : null,
+        });
+      else
+        this.submissionTimingsDropped = Math.min(
+          Number.MAX_SAFE_INTEGER,
+          this.submissionTimingsDropped + 1,
+        );
+      this.writeTimingEvidence();
+    }
   }
 
   async signIn(session, input, hostPid) {
@@ -410,7 +479,7 @@ export class SignInFixture {
       assert.match(await named.innerText(), /Desktop Acceptance/);
       const rejected = await this.measure(
         "ui-wrong-password",
-        () => this.submit(session, this.wrong),
+        () => this.submit(session, this.wrong, "wrong-password"),
         (answer) =>
           answer.kind === "refused" && answer.code === "CREDENTIAL_REJECTED",
       );

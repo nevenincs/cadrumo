@@ -220,10 +220,9 @@ export function useSignIn(host: Host) {
       const generation = ++request.current;
       const promise = Promise.resolve().then(async () => {
         try {
-          // Each read is a process of the product's, and takes seconds:
-          // the status is shown as soon as it is known. The profiles are
-          // read only while there is a sign-in to prepare, after it; a
-          // list that cannot be read is not an empty one.
+          // Show the independent canonical CLI status read before the
+          // optional profile list. Read profiles only while there is a
+          // sign-in to prepare; an unreadable list is not an empty one.
           const next = await boundedRead(host.signInStatus());
           if (generation !== request.current) return;
           statusReadFailed.current = false;
@@ -404,8 +403,8 @@ export function useSignIn(host: Host) {
     setCreated(null);
     setRemaining(null);
     setSignOutFailure(null);
+    let signedIn = false;
     try {
-      await statusRead.current?.promise;
       // The selected profile is signed in to unnamed, as it always was: the
       // product knows which it is. Only another one has to be named.
       const result = await host.signIn(
@@ -413,11 +412,22 @@ export function useSignIn(host: Host) {
         target && !target.active ? target.name : undefined,
       );
       if (result.kind === "refused") setRefusal(result);
+      else {
+        // The canonical persisted-login acknowledgement already observes
+        // presence and names the authenticated profile. Older reads belong to
+        // the invalidated generation; no second CLI call is needed to display it.
+        signedIn = true;
+        statusReadFailed.current = false;
+        latestStatus.current = result.status;
+        setStatus(result.status);
+        listed.current = null;
+        setProfiles(null);
+      }
     } catch (error) {
       setRefusal(refusalFrom(error));
     } finally {
       password.fill(0);
-      await refresh(true);
+      if (!signedIn) await refresh(true);
       submitting.current = false;
       setBusy(false);
     }
@@ -444,7 +454,6 @@ export function useSignIn(host: Host) {
     let made: string | null = null;
     let unanswered: SignInRefusal | null = null;
     try {
-      await statusRead.current?.promise;
       const result = await accounts.create(name, password);
       if (result.kind === "created") made = result.name;
       else setCreateRefusal(result);

@@ -1,9 +1,11 @@
+pub mod helper;
 pub mod lifecycle;
 pub mod logging;
 pub mod webview;
 
 use crate::{
     diagnostics::{
+        helper::HelperTiming,
         lifecycle::LifecycleFact,
         logging::{LogFile, LogPaths},
         webview::WebviewFailure,
@@ -31,6 +33,7 @@ pub enum EventKind {
     ChildStarted,
     ChildExited,
     ChildTerminated,
+    HelperTiming,
     Failure,
     HostStopped,
 }
@@ -88,6 +91,8 @@ pub struct Event {
     pub lifecycle: Option<LifecycleFact>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub webview_failure: Option<WebviewFailure>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub helper_timing: Option<HelperTiming>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -121,6 +126,7 @@ struct Context {
     host_exit_code: Option<i32>,
     lifecycle: Option<LifecycleFact>,
     webview_failure: Option<WebviewFailure>,
+    helper_timing: Option<HelperTiming>,
 }
 #[derive(Default)]
 pub struct Diagnostics {
@@ -213,6 +219,7 @@ impl Diagnostics {
             host_exit_code: context.host_exit_code,
             lifecycle: context.lifecycle,
             webview_failure: context.webview_failure,
+            helper_timing: context.helper_timing,
         };
         if let Some(file) = &state.file
             && let Err(error) = file.append(&event)
@@ -223,6 +230,18 @@ impl Diagnostics {
             state.events.pop_front();
         }
         state.events.push_back(event);
+    }
+    pub fn helper_timing(&self, process: Option<u64>, fact: HelperTiming) {
+        self.record(
+            EventKind::HelperTiming,
+            process,
+            None,
+            Context {
+                role: Some(ProcessRole::SignIn),
+                helper_timing: Some(fact),
+                ..Context::default()
+            },
+        );
     }
     pub fn failure(&self, error: ApplicationError) {
         self.event(EventKind::Failure, None, Some(error));

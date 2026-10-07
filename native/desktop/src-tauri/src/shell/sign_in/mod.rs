@@ -36,7 +36,7 @@ const LABEL_LIMIT: usize = 160;
 const REWRITTEN: [char; 5] = ['*', '?', '[', '%', '$'];
 
 /// One command under `config`: its words, the name its answer must carry,
-/// whether it only reads, and whether it is slow by design.
+/// whether it only reads, and whether it uses the enrollment deadline.
 struct Call {
     words: &'static [&'static str],
     leaf: &'static str,

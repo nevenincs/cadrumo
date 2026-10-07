@@ -54,7 +54,9 @@ impl SignInStatus {
 #[derive(Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum SignInResult {
-    SignedIn,
+    /// Public observation from the canonical persisted-login acknowledgement.
+    /// It grants no runtime capability and carries no receipt or identity.
+    SignedIn { status: SignInStatus },
     Refused {
         #[serde(flatten)]
         refusal: Refusal,
@@ -254,15 +256,35 @@ pub fn status(outcome: Outcome) -> Result<SignInStatus> {
 pub fn login(outcome: Outcome) -> Result<SignInResult> {
     match outcome {
         Outcome::Refused { refusal, .. } => Ok(SignInResult::Refused { refusal }),
-        Outcome::Success { result, .. } => {
+        Outcome::Success {
+            result,
+            active_profile,
+        } => {
             #[derive(Deserialize)]
             struct Login {
                 session_persisted: bool,
+                active_profile: String,
             }
             let result: Login =
                 serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
             if result.session_persisted {
-                Ok(SignInResult::SignedIn)
+                if result.active_profile.is_empty()
+                    || result.active_profile.chars().count() > super::LABEL_LIMIT
+                    || active_profile
+                        .as_ref()
+                        .is_some_and(|label| label != &result.active_profile)
+                {
+                    return Err(failure(ErrorCode::ReadFailed));
+                }
+                Ok(SignInResult::SignedIn {
+                    status: SignInStatus {
+                        supported: true,
+                        state: Presence::Present,
+                        active_profile: Some(result.active_profile),
+                        runtime_available: true,
+                        refusal: None,
+                    },
+                })
             } else {
                 Ok(SignInResult::Refused {
                     refusal: Refusal {
@@ -488,13 +510,13 @@ mod tests {
     #[test]
     fn login_requires_a_persisted_sign_in_and_logout_keeps_automation_unknown() {
         let signed_in = login(Outcome::Success {
-            result: serde_json::json!({"session_persisted":true}),
+            result: serde_json::json!({"session_persisted":true,"active_profile":"Profile"}),
             active_profile: None,
         })
         .unwrap();
-        assert!(matches!(signed_in, SignInResult::SignedIn));
+        assert!(matches!(signed_in, SignInResult::SignedIn { .. }));
         let refused = login(Outcome::Success {
-            result: serde_json::json!({"session_persisted":false}),
+            result: serde_json::json!({"session_persisted":false,"active_profile":"Profile"}),
             active_profile: None,
         })
         .unwrap();

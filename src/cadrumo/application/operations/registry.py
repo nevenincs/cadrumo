@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from enum import StrEnum
 from functools import cached_property
 from typing import Literal, Protocol, runtime_checkable
@@ -12,7 +13,10 @@ from pydantic import (
     ConfigDict,
     Field,
     JsonValue,
+    ModelWrapValidatorHandler,
     TypeAdapter,
+    ValidationInfo,
+    ValidatorFunctionWrapHandler,
     field_validator,
     model_validator,
 )
@@ -231,22 +235,77 @@ class OperationEffectReceipt(BaseModel):
         return self
 
 
+@dataclass(frozen=True, slots=True)
+class _SchemaBindingIdentitySeed:
+    schema_id: OperationPublicSchemaId
+    schema_version: int
+
+
 class OperationSchemaBindingV1(BaseModel):
     """Runtime-only binding from a public schema identity to its exact model."""
 
     model_config = _STRICT_RUNTIME_BINDING_CONFIG
 
-    identity: OperationSchemaIdentityV1
     model_type: type[BaseModel]
+    identity: OperationSchemaIdentityV1
 
-    @model_validator(mode="after")
+    @field_validator("identity", mode="wrap")
+    @classmethod
     @pydantic_validation_boundary
-    def _validate_fingerprint(self) -> OperationSchemaBindingV1:
-        schema = strict_model_json_schema(self.model_type)
-        fingerprint = content_hash_hex(schema)
-        if fingerprint != self.identity.schema_fingerprint:
+    def _validate_identity(
+        cls,
+        value: object,
+        handler: ValidatorFunctionWrapHandler,
+        info: ValidationInfo,
+    ) -> OperationSchemaIdentityV1:
+        model_type = (info.data or {}).get("model_type")
+        if not isinstance(model_type, type) or not issubclass(model_type, BaseModel):
+            if type(value) is _SchemaBindingIdentitySeed:
+                raise ValueError("operation schema identity requires a valid model type")
+            identity = handler(value)
+            if not isinstance(identity, OperationSchemaIdentityV1):
+                raise ValueError("operation schema identity validator must return a validated identity")
+            return identity
+
+        if type(value) is _SchemaBindingIdentitySeed:
+            fingerprint = content_hash_hex(strict_model_json_schema(model_type))
+            # The seed carries only metadata: the ordinary concrete identity
+            # constructor validates it, and no supplied fingerprint is trusted.
+            identity = handler(
+                OperationSchemaIdentityV1(
+                    schema_id=value.schema_id,
+                    schema_version=value.schema_version,
+                    schema_fingerprint=fingerprint,
+                )
+            )
+        else:
+            # Supplied identity validators may affect the model graph. Admit
+            # the current model only after those validators have completed.
+            identity = handler(value)
+            fingerprint = content_hash_hex(strict_model_json_schema(model_type))
+        if not isinstance(identity, OperationSchemaIdentityV1):
+            raise ValueError("operation schema identity validator must return a validated identity")
+        if fingerprint != identity.schema_fingerprint:
             raise ValueError("registered operation schema fingerprint does not match its exact model")
-        return self
+        return identity
+
+    @model_validator(mode="wrap")
+    @classmethod
+    @pydantic_validation_boundary
+    def _validate_existing_fingerprint(
+        cls,
+        value: object,
+        handler: ModelWrapValidatorHandler[OperationSchemaBindingV1],
+    ) -> OperationSchemaBindingV1:
+        binding = handler(value)
+        # Pydantic skips field validators for existing model instances. Preserve
+        # current-model admission when a binding is reused or a subclass adds
+        # field validators after the canonical identity field validator.
+        if isinstance(value, OperationSchemaBindingV1) or cls is not OperationSchemaBindingV1:
+            fingerprint = content_hash_hex(strict_model_json_schema(binding.model_type))
+            if fingerprint != binding.identity.schema_fingerprint:
+                raise ValueError("registered operation schema fingerprint does not match its exact model")
+        return binding
 
     @classmethod
     def bind(
@@ -257,13 +316,11 @@ class OperationSchemaBindingV1(BaseModel):
         model_type: type[BaseModel],
     ) -> OperationSchemaBindingV1:
         """Bind one stable identity to the model that produces its fingerprint."""
-        return cls(
-            identity=OperationSchemaIdentityV1.from_model(
-                schema_id=schema_id,
-                schema_version=schema_version,
-                model_type=model_type,
-            ),
-            model_type=model_type,
+        return cls.model_validate(
+            {
+                "model_type": model_type,
+                "identity": _SchemaBindingIdentitySeed(schema_id=schema_id, schema_version=schema_version),
+            }
         )
 
 

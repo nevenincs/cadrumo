@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:44e3ea2ffe8a354b256c5441a812ea0368a35b5462f1759eafa1cc5e768781f6'
+body_hash: 'sha256:ad1bffe5dda7072a06a9f1251766265511a82ed519ab78c11d6cc61661c0df96'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -261,6 +261,35 @@ related:
 - `S12` `verify:` `Windows SDK provisioning5tests` -> `pass`
 - `S12` `verify:` `scoped Ruff lint format diff` -> `pass`
 - `S12` `verify:` `cmake build python_sdk Release` -> `pass`
+- `S14` `M` `src/cadrumo/application/operations/registry.py`
+- `S14` `A` `src/cadrumo/application/operations/tests/test_schema_binding.py`
+- `S14` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S14` `verify:` `schema binding and registry regressions 172 tests` -> `pass`
+- `S14` `verify:` `desktop held-read browser scenarios 15 tests` -> `pass`
+- `S14` `verify:` `canonical sign-in wire projection 17 tests` -> `pass`
+- `S14` `verify:` `real helper lanes process suite 18 tests` -> `pass`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/process/admission_tests.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S14` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S14` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S14` `verify:` `current standalone desktop full203 unit suite` -> `pass`
+- `S14` `verify:` `desktop all-target Clippy warnings denied` -> `pass`
+- `S14` `verify:` `scoped frontend types ESLint formatting and Rustfmt` -> `pass`
+- `S14` `by:` `root architectural review; Sol6.1 coding workers`
+- `S13` `A` `native/application/src/diagnostics/helper.rs`
+- `S13` `A` `native/application/tests/helper_diagnostics.rs`
+- `S13` `M` `native/application/src/diagnostics/mod.rs`
+- `S13` `M` `native/application/tests/diagnostics.rs`
+- `S13` `M` `native/desktop/src-tauri/src/logs/host.rs`
+- `S13` `M` `native/manager/tests/runtime_identity.rs`
+- `S13` `M` `native/desktop/tests/packaged/sign-in.mjs`
+- `S13` `M` `native/desktop/tests/packaged-harness.test.mjs`
+- `S13` `verify:` `safe helper timing application tests and Clippy` -> `pass`
+- `S13` `verify:` `bounded submission timing harness 13 tests` -> `pass`
+- `S13` `verify:` `real oldpayload manager shutdown disposition` -> `pass`
 
 ## Notes
 
@@ -286,3 +315,6 @@ related:
 - `S10` r6 current host with old payload; wrong-password23.93s,valid-password18.98s; noautomaticretry. Whole run13PASS1INFO4FAIL from Console comparison and docs failures; runtime/profile cleanup passed and89observed identities absent.
 - `S07` Timing evidence survives failures; normalized full paths prevent mixed-separator false refusal. r6 whole acceptance remains failed on old-package docs navigation/crash; fresh build pending.
 - `S12` Real target8.63s including configure and pinned download/extraction; root verified output and unchanged origin/hash/path checks. Full package still refused by documentation reference gate.
+- `S14` No deadline increases. Binding-only paired wall/CPU reduced49.5/46.9percent; no full-registry warm CPU improvement established. Browser21s,wire0.10s,process15.80s bodies exclude compilation. Root integrated review and full backend final checks pending; no fresh package latency acceptance.
+- `S14` Final source review PASS. Full203 bodies45.52s incremental compile0.54s; prior pending shared-check note resolved. Runtime startup, calibration and packaged latency remain open.
+- `S13` Closed phase facts omit arguments output passwords and identifiers; helper completed means native output returned only. Measured oldpayload startup, registry, KDF calibration and current binding CPU; empty-root CLI attribution remains in flight. Exact sources/logs archived in s14-helper-lanes-verification.json and sign-in-submission-timings-verification.json.

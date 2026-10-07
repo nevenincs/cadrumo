@@ -104,6 +104,23 @@ pub(super) fn entry(event: &Event) -> Entry {
     if let Some(fact) = event.webview_failure {
         webview_context(fact, &mut context);
     }
+    if let Some(fact) = event.helper_timing {
+        context.insert("helper_kind".into(), Value::from(token(fact.helper_kind)));
+        context.insert("outcome".into(), Value::from(token(fact.outcome)));
+        context.insert(
+            "admission_wait_ms".into(),
+            Value::from(fact.admission_wait_ms),
+        );
+        context.insert("total_ms".into(), Value::from(fact.total_ms));
+        for (name, elapsed) in [
+            ("spawn_ms", fact.spawn_ms),
+            ("execution_ms", fact.execution_ms),
+            ("cleanup_ms", fact.cleanup_ms),
+            ("output_join_ms", fact.output_join_ms),
+        ] {
+            context.insert(name.into(), elapsed.map_or(Value::Null, Value::from));
+        }
+    }
     let mut message = token(event.kind);
     if let Some(fact) = event.lifecycle {
         let encoded = serde_json::to_value(fact).expect("closed lifecycle fact serializes");
@@ -244,9 +261,78 @@ fn utc(epoch_ms: u64) -> String {
 mod tests {
     use super::*;
     use cadrumo_application::{
+        diagnostics::helper::{HelperKind, HelperOutcome, HelperTiming},
         error::application::{ApplicationError, ErrorCode, Operation},
         process::status::{ProcessPhase, ProcessRole, Stream},
     };
+
+    #[test]
+    fn helper_phase_durations_project_as_closed_scalars_without_child_output() {
+        let diagnostics = Diagnostics::default();
+        let id = diagnostics.start(4242, ProcessRole::SignIn);
+        diagnostics.capture(id, Stream::Stdout, b"private-helper-output-canary");
+        diagnostics.finish(id, Some(7), ProcessPhase::Exited);
+        diagnostics.helper_timing(
+            Some(id),
+            HelperTiming {
+                helper_kind: HelperKind::Mutation,
+                outcome: HelperOutcome::Completed,
+                admission_wait_ms: 250,
+                spawn_ms: Some(20),
+                execution_ms: Some(900),
+                cleanup_ms: Some(1),
+                output_join_ms: Some(2),
+                total_ms: 1180,
+            },
+        );
+        diagnostics.helper_timing(
+            None,
+            HelperTiming {
+                helper_kind: HelperKind::Read,
+                outcome: HelperOutcome::AdmissionRefused,
+                admission_wait_ms: 30000,
+                spawn_ms: None,
+                execution_ms: None,
+                cleanup_ms: None,
+                output_join_ms: None,
+                total_ms: 30001,
+            },
+        );
+        let mut host = HostEvents::default();
+        let entries = host.poll(&diagnostics);
+        let completed = &entries[2];
+        assert!(
+            completed
+                .message
+                .starts_with("helper_timing: sign_in pid 4242")
+        );
+        assert_eq!(completed.context["helper_kind"], "mutation");
+        assert_eq!(completed.context["outcome"], "completed");
+        assert_eq!(completed.context["process_ref"], id);
+        assert_eq!(completed.context["exit_code"], 7);
+        assert_eq!(completed.context["admission_wait_ms"], 250);
+        assert_eq!(completed.context["spawn_ms"], 20);
+        assert_eq!(completed.context["execution_ms"], 900);
+        assert_eq!(completed.context["cleanup_ms"], 1);
+        assert_eq!(completed.context["output_join_ms"], 2);
+        assert_eq!(completed.context["total_ms"], 1180);
+        let refused = &entries[3];
+        assert_eq!(refused.context["outcome"], "admission_refused");
+        assert!(refused.context["spawn_ms"].is_null());
+        assert!(!refused.context.contains_key("process_ref"));
+        assert_eq!(refused.context["requested_role"], "sign_in");
+        assert!(host.poll(&diagnostics).is_empty());
+        for entry in entries {
+            assert!(!format!("{entry:?}").contains("private-helper-output-canary"));
+            assert!(entry.context.len() <= 32);
+            assert!(
+                entry
+                    .context
+                    .values()
+                    .all(|value| !value.is_array() && !value.is_object())
+            );
+        }
+    }
 
     #[test]
     fn utc_text_matches_known_instants() {

@@ -426,6 +426,7 @@ export type DiagnosticsEventKind =
   | "child_started"
   | "child_exited"
   | "child_terminated"
+  | "helper_timing"
   | "failure"
   | "host_stopped";
 
@@ -470,6 +471,20 @@ export type DiagnosticsEvent = {
     | "unavailable";
   hostExitCode?: number;
   webviewFailure?: WebviewFailure;
+  helperTiming?: HelperTiming;
+};
+
+/** One native helper attempt; CLI envelope decoding happens after this summary. */
+export type HelperTiming = {
+  helperKind: "read" | "mutation";
+  outcome:
+    "admission_refused" | "spawn_failed" | "execution_failed" | "completed";
+  admissionWaitMs: number;
+  spawnMs: number | null;
+  executionMs: number | null;
+  cleanupMs: number | null;
+  outputJoinMs: number | null;
+  totalMs: number;
 };
 
 /** Closed WebView2 telemetry. No page text, URLs, paths or failed renderer PID. */
@@ -566,7 +581,8 @@ export type SignInStatus = {
 
 /** sign_in_submit uses a raw UTF-8 password body and x-cadrumo-token header. */
 export type SignInResult =
-  { kind: "signed-in" } | ({ kind: "refused" } & SignInRefusal);
+  | { kind: "signed-in"; status: SignInStatus }
+  | ({ kind: "refused" } & SignInRefusal);
 
 export type SignOutResult = {
   remainingAccess: {

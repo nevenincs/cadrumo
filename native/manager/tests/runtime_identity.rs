@@ -173,6 +173,25 @@ fn start_packaged_runtime(
     if ended.is_ok() {
         running.join().unwrap();
     }
+    for event in running.events.try_iter() {
+        match event {
+            Event::StopRequested { cause, path, .. } => eprintln!(
+                "runtime_fixture shutdown_event=stop_requested cause={cause:?} path={path:?}"
+            ),
+            Event::TerminationRequested { .. } => {
+                eprintln!("runtime_fixture shutdown_event=termination_requested");
+            }
+            Event::Terminated { .. } => {
+                eprintln!("runtime_fixture shutdown_event=terminated");
+            }
+            Event::Exited {
+                exit, announced, ..
+            } => eprintln!(
+                "runtime_fixture shutdown_event=exited exit={exit:?} announced={announced:?}"
+            ),
+            _ => {}
+        }
+    }
     eprintln!(
         "runtime_fixture phase=session_end elapsed_ms={:.3} settled={}",
         shutdown_started.elapsed().as_secs_f64() * 1000.0,

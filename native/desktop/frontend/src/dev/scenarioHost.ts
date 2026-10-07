@@ -287,7 +287,7 @@ export function scenarioHost(
       // A sign-in that is accepted is what selects the profile.
       if (named >= 0) active = accounts[named] ?? active;
       presence = "present";
-      return { kind: "signed-in" };
+      return { kind: "signed-in", status: status() };
     },
 
     async signOut() {

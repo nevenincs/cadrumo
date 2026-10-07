@@ -121,7 +121,16 @@ fn python_login_warning_does_not_claim_a_persisted_session() {
     assert_eq!(
         serde_json::to_value(login(from_document(fixture("login-true")).unwrap()).unwrap())
             .unwrap(),
-        json!({"kind":"signed-in"})
+        json!({
+            "kind":"signed-in",
+            "status": {
+                "supported":true,
+                "state":"present",
+                "active_profile":"Test profile",
+                "runtimeAvailable":true,
+                "refusal":null
+            }
+        })
     );
     assert_eq!(
         serde_json::to_value(login(from_document(fixture("login-false")).unwrap()).unwrap())
@@ -130,6 +139,46 @@ fn python_login_warning_does_not_claim_a_persisted_session() {
             "kind":"refused", "code":"session_not_persisted", "retryAfterSeconds":null
         })
     );
+}
+
+#[test]
+fn persisted_login_observation_requires_a_coherent_authenticated_label() {
+    let mut absent_outer = fixture("login-true");
+    absent_outer["active_profile"] = Value::Null;
+    let accepted = login(from_document(absent_outer).unwrap()).unwrap();
+    assert_eq!(
+        serde_json::to_value(accepted).unwrap()["status"]["active_profile"],
+        "Test profile"
+    );
+
+    for label in [Value::Null, json!(""), json!("x".repeat(161)), json!(12)] {
+        let mut document = fixture("login-true");
+        document["result"]["active_profile"] = label;
+        assert!(login(from_document(document).unwrap()).is_err());
+    }
+    let mut missing = fixture("login-true");
+    missing["result"]
+        .as_object_mut()
+        .unwrap()
+        .remove("active_profile");
+    assert!(login(from_document(missing).unwrap()).is_err());
+
+    let mut different_outer = fixture("login-true");
+    different_outer["active_profile"] = json!("Another profile");
+    assert!(login(from_document(different_outer).unwrap()).is_err());
+    for persisted in [Value::Null, json!("true"), json!(1)] {
+        let mut document = fixture("login-true");
+        document["result"]["session_persisted"] = persisted;
+        assert!(login(from_document(document).unwrap()).is_err());
+    }
+
+    let mut boundary = fixture("login-true");
+    boundary["active_profile"] = Value::Null;
+    boundary["result"]["active_profile"] = json!("漢".repeat(160));
+    assert!(matches!(
+        login(from_document(boundary).unwrap()).unwrap(),
+        SignInResult::SignedIn { .. }
+    ));
 }
 
 #[test]
