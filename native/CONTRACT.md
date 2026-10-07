@@ -418,7 +418,8 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | default / `zip` | Build the full application and its install-based ZIP |
 | `bundle` | Build native hosts, product wheels and complete staged package |
 | `setup-native-builder` | Converge the configure-owned builder or validate the selected external interpreter |
-| `registry_authority` | Run the canonical publisher, reusing current legal inputs after the same compiler succeeds |
+| `registry_authority` | Reuse the existing publication; compile when its descriptor or selected database is missing |
+| `registry_authority_rebuild` | Explicitly recompile and publish authority, even when it exists |
 | `native_contract`, `native_metadata` | Generate content-stable C/Rust contracts and executable resources |
 | `rust_platform_static`, `rust_platform_shared`, `rust_platform_consumer` | Build one platform library format or its Rust consumer; `rust_platform` groups the libraries |
 | `rust_application`, `rust_manager`, `desktop-host-build` | Build each application library, manager executable or desktop executable |
@@ -463,10 +464,17 @@ compilers and Cargo retain their normal source timestamp rules: touching a raw
 C/Rust source may rebuild its owning binary. Changes to shared code correctly
 rebuild its consumers. Individual Cargo clean targets remove public outputs;
 `clean-native` and `clean-desktop` also clear the shared compiler caches.
-Authority publication retains its canonical conservative compiler fingerprint:
-changes anywhere in its enrolled core, domain, application or compiler trees,
-or in dependency manifests, can rerun publication. This does not establish
-minimal invalidation inside that compiler.
+Authority publication is an explicitly selected build input. Normal CMake and
+wheel builds reuse its descriptor and selected database when present, and compile
+when either is missing. Source or compiler changes do not trigger republication.
+After registry or compiler edits, run
+`cmake --build build/windows-x64 --config Release --target registry_authority_rebuild`
+(select the appropriate binary directory), or `just registry-publish-authority`.
+Malformed descriptors and altered database bytes still fail artifact validation.
+`just init` retains its explicit source-currency publication step. Fresh CI
+checkouts compile the missing authority; jobs restoring a published authority
+must explicitly republish if they require a fresh compile. Registry currency
+checks remain separate from ordinary builds.
 
 `clean-setup-native-builder` removes a CMake-owned builder and forces configure
 to restore it before the next individual build. An explicitly selected external
