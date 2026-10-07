@@ -16,6 +16,8 @@ from ...application.export.google_review_operation_contracts import (
     GoogleReviewResult,
 )
 from ...application.export.publication_receipt import ReadablePayloadCategory
+from ...application.operations.frontend_projection import OperationReviewProjectionReferenceV1
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.json_contract import OutputSchema
 from ...core.operations import profile_operation_subject
@@ -29,6 +31,14 @@ class GoogleReviewPublicationResult(OutputSchema):
     """A confirmed native review publication, not a template or local export."""
 
     publication: GoogleReviewResult
+
+
+def _require_google_review_reference(
+    review: GoogleReviewProjection, reference: OperationReviewProjectionReferenceV1
+) -> None:
+    """Refuse a disclosure from another invocation or revision before readable publication."""
+    if review.identity.operation_id != reference.operation_id or review.revision != reference.revision:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
 
 def accept_google_review(request: GoogleReviewRequest, review: GoogleReviewProjection) -> Literal["apply"]:
@@ -90,6 +100,7 @@ def publish_google_review_cli(
             review_schema=GOOGLE_REVIEW_REVIEW_SCHEMA_BINDING.identity,
             response_schema=GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity,
             decide=decide,
+            validate_reference=_require_google_review_reference,
         ),
     )
     if not isinstance(completed, RegisteredOperationCompletion):

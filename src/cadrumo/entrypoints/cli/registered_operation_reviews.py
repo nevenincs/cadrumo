@@ -145,6 +145,8 @@ def handle_registered_review[ReviewT: BaseModel](
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     review = registered_review_projection(reply.document, handler, contract)
+    if handler.validate_reference is not None:
+        handler.validate_reference(review, pending.review_reference)
     decision = handler.decide(review)
     if decision is None:
         return detach_registered_review(review, pending, profile_id, session_id, exchange)

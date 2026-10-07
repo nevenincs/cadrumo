@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ...application.operations.events import OperationEventCode
+from ...application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from ...application.operations.models import OperationId
 from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...core.operations import OperationEffect, OperationTerminalCondition
@@ -43,6 +44,7 @@ class RegisteredOperationReviewHandler[ReviewT: BaseModel]:
     response_schema: OperationSchemaIdentityV1
     decide: Callable[[ReviewT], Literal["apply", "reject"] | None]
     reject_reason_code: OperationEventCode | None = None
+    validate_reference: Callable[[ReviewT, OperationReviewProjectionReferenceV1], None] | None = None
 
 
 @dataclass(frozen=True, slots=True)

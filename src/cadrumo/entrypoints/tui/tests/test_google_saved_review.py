@@ -177,6 +177,12 @@ class _Controller:
         review = self.review
         if self.defect == "review":
             review = review.model_copy(update={"calculation_revision_id": "9" * 64})
+        elif self.defect == "review-operation":
+            review = review.model_copy(
+                update={"identity": review.identity.model_copy(update={"operation_id": "9" * 64})}
+            )
+        elif self.defect == "review-revision":
+            review = review.model_copy(update={"revision": 3})
         return OperationReviewProjectionSuccessV1[GoogleReviewProjection](
             projection_schema=reference.review_projection_schema,
             definition_contract_digest=reference.definition_contract_digest,
@@ -240,7 +246,9 @@ async def _until(pilot: Pilot[None], predicate: Callable[[], bool]) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("defect", ["none", "receipt", "session", "review", "reject", "click"])
+@pytest.mark.parametrize(
+    "defect", ["none", "receipt", "session", "review", "review-operation", "review-revision", "reject", "click"]
+)
 async def test_installed_screen_requires_exact_human_review_before_showing_registered_link(
     monkeypatch: pytest.MonkeyPatch, defect: str
 ) -> None:
@@ -272,7 +280,7 @@ async def test_installed_screen_requires_exact_human_review_before_showing_regis
             pilot,
             lambda: bool(
                 modal.query_one(
-                    "#operation-modal-status" if defect == "review" else "#operation-modal-review", Static
+                    "#operation-modal-status" if defect.startswith("review") else "#operation-modal-review", Static
                 ).content
             ),
         )
@@ -280,7 +288,7 @@ async def test_installed_screen_requires_exact_human_review_before_showing_regis
         assert controller.request.calculation_revision_id == "c" * 64
         assert controller.request.filing_record_id == "6" * 64
         assert controller.starts == 1 and controller.applies == controller.reads == 0
-        if defect == "review":
+        if defect.startswith("review"):
             assert modal.query_one("#btn-operation-apply", Button).disabled
             assert not screen.query_one(Link).url
             return

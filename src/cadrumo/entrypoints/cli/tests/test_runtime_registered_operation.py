@@ -6,6 +6,7 @@ import asyncio
 import json
 import time
 from contextvars import ContextVar
+from dataclasses import replace
 from datetime import UTC, datetime
 from threading import Thread, get_ident
 from typing import Any, Literal, cast, override
@@ -369,6 +370,36 @@ def test_registered_review_responds_or_detaches_without_fabricating_terminal_suc
         assert len(manages) == 2 and type(manages[0]) is OperationResponseControlRequestV1
         assert isinstance(manages[1], OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1)
         assert manages[1].response_action == decision
+
+
+@pytest.mark.parametrize("refuse", [False, True])
+def test_review_reference_validation_precedes_decision_and_response_control(refuse: bool) -> None:
+    wire = ReviewWire()
+    calls: list[str] = []
+
+    def validate(review: CensalReviewProjectionV1, reference: OperationReviewProjectionReferenceV1) -> None:
+        assert review == wire.review
+        assert reference.operation_id == _OPERATION and reference.revision == 4
+        calls.append("validate")
+        if refuse:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+    def decide(_: CensalReviewProjectionV1) -> Literal["apply"]:
+        calls.append("decide")
+        return "apply"
+
+    handler = replace(_handler("apply"), decide=decide, validate_reference=validate)
+    if refuse:
+        with pytest.raises(CliRefusedBoundaryError):
+            _run(wire, handler)
+        assert calls == ["validate"]
+        assert wire.action is None and wire.result_reads == 0
+        assert not any(isinstance(item, RuntimeOperationManage) for item in wire.requests)
+    else:
+        completion = _run(wire, handler)
+        assert isinstance(completion, RegisteredOperationCompletion)
+        assert calls == ["validate", "decide"]
+        assert wire.action == "apply" and wire.result_reads == 1
 
 
 @pytest.mark.parametrize("fault", ["review-schema", "reply-id", "session", "control-revision", "no-authority"])
