@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e42cc4d85eb67010b1d8a38342bac4231c33bcc2eed755c96ec7d7761b74046d'
+body_hash: 'sha256:c5e72faf4b02bc8289d56e61244f30b8ae6fbb9cd656524c532550411c6304cc'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -361,6 +361,13 @@ related:
 - `S23` `verify:` `configured platform ty Ruff and format` -> `pass`
 - `S23` `verify:` `root ownership review` -> `pass`
 - `S23` `by:` `root`
+- `S24` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`
+- `S24` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_worker_exit.py`
+- `S24` `verify:` `64 distinct focused cases across retained corrected runs` -> `pass`
+- `S24` `verify:` `real nonzero-exit regressions` -> `pass`
+- `S24` `verify:` `configured platform ty Ruff format and whitespace` -> `pass`
+- `S24` `verify:` `root integrated admission and diagnostic review` -> `pass`
+- `S24` `by:` `root`
 
 ## Notes
 
@@ -395,3 +402,4 @@ related:
 - `S19` Private consumed current-installation proof avoids second package inspection; no cross-process cache or timeout changes. Integrated final input guards stable; build/s19-admission-proof/integrated-final/verification.json.
 - `S20` Implementation already included in shared checkpoint 3b063e7d50. Current registration-hint integration evidence reused from distribution owner; no duplicate Cargo run. Timings are finite loaded-host observations, not production SLO or hard OS-I/O cancellation bounds.
 - `S21` Implementation already checkpointed in 3b063e7d50. Before comparison remains censored at unchanged30s bound. Current direct-base interpreter baseline differs from native packaged launch and does not establish a speedup or production latency target. Foreign filing-test edit during owning tests did not change production or owned inputs.
+- `S24` Initial startup outlier remains open under S13; corrected original module entrypoint cases pass without deadline change.

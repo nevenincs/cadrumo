@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:6c68cce636b1607969547c31a4ad02f1710c4c691affe4021a9c61d595bf8057'
+body_hash: 'sha256:239d326b3b7a5ab6f2687b52c2d778008be14f214d87d680ea481a98412fffcf'
 ---
 
 <!-- RETIRED: S08 -->
@@ -52,10 +52,13 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S21` - Defer TUI automation contract composition until a requester screen needs it, preserving one validated graph per installed session and measuring avoided startup work; `src/cadrumo/entrypoints/tui/installed_session.py, owning installed-session and requester tests, import and startup evidence`.
 - [x] `S22` - Emit one bounded KDF worker lifecycle diagnostic with phase timings and truthful failure/cleanup outcome, preserving custody and deadlines; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py, fixed diagnostic scalar allowlist, owning logging/supervision tests and measured diagnostic overhead`.
 - [x] `S23` - Close every partially acquired KDF pipe exactly once on startup failure without changing worker deadlines or termination policy; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py partial-start ownership and owning real-descriptor failure tests`.
-- [ ] `S24` - Reject nonzero KDF worker exits before admitting returned results; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py clean-exit admission and owning real-process regressions`.
+- [x] `S24` - Reject nonzero KDF worker exits before admitting returned results; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py clean-exit admission and owning real-process regressions`.
 - [ ] `S25` - Keep projection migration implementation models out of runtime registry construction while preserving guarded migration behavior and measuring the dependency cut; `canonical stateless migration adapter module, calculation_revision_override_migration.py, projection_migration_ports.py, operation_composition.py, owning migration and fresh-process import tests, module enrollment and guarded performance evidence`.
+- [ ] `S26` - Settle a failed KDF worker before closing pipe descriptors that may be held by blocked reader threads; `KDF supervisor cleanup ordering and retained ownership on termination failure, existing process termination seam, bounded real blocked-reader regression and lifecycle checks`.
 
 ## Parallelization
+
+S26 follows S24 in the native worker lane. Root reproduced Windows CRT descriptor-close blocking behind another thread's pipe read: a close waited 0.300235 seconds until the independent writer was released, and both threads settled. This is a distinct defect from the S24 fixture's 67-second startup stall, whose retained log attributes 67.459 seconds to start and only 13.025 milliseconds to cleanup. Stop and confirm the tracked worker through existing termination/wait attempts before closing parent pipe descriptors. Retain process/job/descriptor references until successful settlement; if existing attempts cannot confirm exit, refuse without entering a blocking descriptor close. Do not add or enlarge any waits. Cover actual blocked-reader cleanup with bounded owned rescue containment and repeated/failed cleanup ownership tests. No new asynchronous ownership API, custody behavior, child reuse or broader cleanup-policy change is authorized. Root owns integrated architecture review; the broader unreturned-process and native Job-handle failure finding remains open.
 
 S25 is a root-designed dependency cut, implemented by the existing manager-diagnostics Sol 6.1 worker after its bounded source analysis. Move the stateless GuardedCalculationRevisionMigration to its sole canonical narrow adapter module, hard-update all consumers and remove its old export. Keep heavy rekey imports inside prepare/assert_current and retain exact guarded write, refusal key and context. Move only plain dataclass/protocol annotations in projection_migration_ports behind TYPE_CHECKING. Public model schemas, operation registrations and all validation remain eager and unchanged. No shim, result cache, deadline or readiness change is authorized. Own the migration modules, operation_composition import, dedicated tests and required module enrollment. The package worker owns a guarded before/after source measurement, serialized with expensive native-worker checks. S25 is disjoint from S23/S24 custody lifecycle files. Root owns architecture, integrated review, records and commits. Existing tests and unrelated shared-tree edits must be preserved.
 

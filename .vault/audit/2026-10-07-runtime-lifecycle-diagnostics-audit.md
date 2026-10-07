@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:efd86f2e438d859616de4f50187d471ad52a810488e29ecb270e5a971f9e4c59'
+body_hash: 'sha256:98553d06798140ab4b7e4c08c384f39d7d4c757ce61d3ef4445e16cd1352b322'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -371,3 +371,17 @@ The import-only corrective attribution records 3,286 model-construction calls ac
 Root reviewed S23 acquisition and cleanup ownership. An ExitStack owns each child-side descriptor immediately after allocation; the supervisor owns each parent-side descriptor immediately. The launch-error branch no longer closes parent descriptors behind the supervisor's back. Existing launch exception translation, process policy and deadlines are unchanged. The regression uses actual pipe descriptors and verifies exact-once closure, invalidity after cleanup, cleared owners and harmless repeated cleanup across second-pipe, directory, temporary-directory and launch failures, including interruption.
 
 The unchanged baseline fails seven of eight new cases in 2.10 seconds; launch interruption already passes. After the fix all eight pass within 54 focused tests in 14.58 seconds, including real supervised KDF and S22 diagnostic behavior. Ruff, formatting, configured platform ty and whitespace checks pass. A subsequent formatting-only line wrap does not change test semantics. Evidence: diagnostics-review/s23-kdf-pipe-ownership/verification.json and source-hashes.json. Root verdict PASS for partial descriptor ownership. Nonzero process exit admission and broader retained-process cleanup remain separate open work.
+
+### kdf-start-stall-and-pipe-close | high | Distinct measured startup stall and cleanup ordering defect
+
+The first S24 combined run passes 62 of 64 cases. One new handled-refusal fixture used an incorrect short-password assumption and is corrected to a genuinely handled invalid-DEK failure. The other exceeds its unchanged 30-second fixture budget. Its retained S22 event identifies 67.459119 seconds in start, 0.0128 milliseconds in ready_wait, and 13.0248 milliseconds in cleanup; total is 67.472209 seconds. This is startup delay before readiness reading, not evidence of blocked cleanup or slow cryptography. Exact child CPU/PID attribution was not captured. Preserve that failure independently of later reruns; changing the fixture's module entrypoint does not resolve it. Evidence: diagnostics-review/s24-kdf-zero-exit/initial-degraded-events.json.
+
+Separately, root ran a direct isolated Python 3.13 Windows pipe experiment: one thread blocks in os.read, a second closes the writer after 0.300 seconds, and the main thread's os.close of the read descriptor blocks 0.300235 seconds until that release. Both threads settle. The supervisor currently closes its parent descriptors before stopping the child, so its timeout cleanup can wait on a reader whose EOF depends on that still-running child. S26 will correct this ordering with bounded real-descriptor/process evidence, preserving existing wait budgets. This probe establishes the blocking mechanism, not the cause of the 67-second startup event.
+
+### kdf-zero-exit-admission | low | PASS for real result admission with startup outlier retained
+
+Root reviewed S24 production and actual-child regressions. The supervisor admits a returned frame only after process.wait reports zero, retaining the existing EOF check. Its one post-cleanup diagnostic records the tracked child's cached exit code without another poll or wait. Real contained and attested children perform calibration, unwrap and wrap before a forced exit seven: all three baseline tests fail because the old supervisor accepts their responses. The corrected supervisor refuses them. Zero-exit success, actual handled invalid-DEK and wrong-password refusals, trailing bytes and a later cleanup failure remain covered.
+
+There are 64 distinct passing cases across retained focused runs: 62 in the initial suite, then both corrected refusal cases using the original module entrypoint in 10.54 seconds. The initial wrong fixture assumption and 67-second startup failure remain recorded; an intervening command-entrypoint variant is separate evidence and does not waive either. The two original-entrypoint cases confirm exited and attested children. Ruff, formatting, configured Linux/Windows/Darwin ty and whitespace checks pass. Initializing two observation locals for type checking is nonbehavioral. Evidence: diagnostics-review/s24-kdf-zero-exit/verification.json and source-hashes.json. Root verdict PASS for zero-exit admission. The startup outlier remains open under S13 and blocked-reader cleanup under S26.
+
+A three-sample host observation at 20:13:24–26 UTC records 99.87/97.47/98.21 percent total CPU utilization, 54,144/53,566/53,113 MiB available memory, 0.000156/0.000869/0.001783 seconds average disk transfer time and disk queue counts 0/2/0. These are contemporaneous host conditions, not retrospective proof of the earlier stall's cause. A corrected refusal case takes 6.409472 seconds in start although its separately observed Popen call takes 0.010919 seconds, locating that delay outside process creation itself without distinguishing directory, Job creation or assignment. No deadline or launcher-path workaround is accepted.

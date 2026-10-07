@@ -246,13 +246,23 @@ class _SupervisedKdfWorker:
             with self._phase("cleanup"):
                 self._close(failed=failed)
         except BaseException as cleanup_error:
-            self._emit_diagnostic(cleanup_status="failed", cleanup_error=cleanup_error, primary_error=cleanup_error)
+            self._emit_diagnostic(
+                cleanup_status="failed",
+                cleanup_error=cleanup_error,
+                primary_error=cleanup_error,
+                exit_code=process.returncode if process is not None else None,
+            )
             raise
         if process is None:
             cleanup_status = "unconfirmed" if self._launch_attempted or self._failure_stage == "start" else "completed"
         else:
             cleanup_status = "unconfirmed" if process.returncode is None else "completed"
-        self._emit_diagnostic(cleanup_status=cleanup_status, cleanup_error=None, primary_error=primary_error)
+        self._emit_diagnostic(
+            cleanup_status=cleanup_status,
+            cleanup_error=None,
+            primary_error=primary_error,
+            exit_code=process.returncode if process is not None else None,
+        )
 
     def _emit_diagnostic(
         self,
@@ -260,6 +270,7 @@ class _SupervisedKdfWorker:
         cleanup_status: _KdfCleanupStatus,
         cleanup_error: BaseException | None,
         primary_error: BaseException | None,
+        exit_code: int | None = None,
     ) -> None:
         """Attempt one summary after cleanup; elapsed time excludes this emission."""
         if self._diagnostic_emitted:
@@ -283,6 +294,7 @@ class _SupervisedKdfWorker:
             cleanup_status=cleanup_status,
             cleanup_incomplete=cleanup_status != "completed",
             cleanup_error_type=type(cleanup_error).__name__ if cleanup_error is not None else None,
+            exit_code=exit_code,
         )
         diagnostic_event(
             logger,
@@ -376,9 +388,11 @@ class _SupervisedKdfWorker:
         if remaining <= 0:
             raise TimeoutError("profile KDF worker deadline elapsed")
         try:
-            process.wait(timeout=remaining)
+            exit_code = process.wait(timeout=remaining)
         except subprocess.TimeoutExpired:
             raise TimeoutError("profile KDF worker did not exit after its response") from None
+        if exit_code != 0:
+            raise _supervision_refusal()
         try:
             if os.read(result_fd, 1) != b"":
                 raise _supervision_refusal()
