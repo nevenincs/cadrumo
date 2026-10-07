@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from contextvars import copy_context
 from copy import deepcopy
-from typing import Any, ClassVar, Literal, cast, override
+from typing import Annotated, Any, ClassVar, Literal, cast, override
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
-from pydantic.fields import ModelPrivateAttr
+from pydantic.fields import FieldInfo, ModelPrivateAttr
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaMode
 
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -84,6 +84,39 @@ def test_nested_scopes_own_fresh_memos_and_restore_parent(payload_type: type[_Co
             assert strict_model_json_schema(payload_type) == expected
         assert strict_model_json_schema(payload_type) == expected
     assert payload_type.schema_generations == 4
+
+
+def test_cached_schema_copies_preserve_aliases_and_isolate_custom_metadata() -> None:
+    class Description(str):
+        notes: list[str]
+
+    description = Description("Initial")
+    description.notes = ["initial"]
+    shared = {"labels": ["initial"]}
+
+    class Payload(_CountedPayload):
+        @classmethod
+        @override
+        def model_json_schema(cls, *args: Any, **kwargs: Any) -> dict[str, Any]:
+            schema = super().model_json_schema(*args, **kwargs)
+            schema["description"] = description
+            schema["examples"] = [shared, shared]
+            return schema
+
+    with operation_schema_compilation_scope():
+        first = strict_model_json_schema(Payload)
+        first_examples = cast(list[dict[str, list[str]]], first["examples"])
+        assert first_examples[0] is first_examples[1]
+        first_examples[0]["labels"].append("poison")
+        cast(Description, first["description"]).notes.append("poison")
+        second = strict_model_json_schema(Payload)
+        second_examples = cast(list[dict[str, list[str]]], second["examples"])
+        assert second_examples == [{"labels": ["initial"]}, {"labels": ["initial"]}]
+        assert second_examples[0] is second_examples[1]
+        assert second_examples[0] is not first_examples[0]
+        second_description = second["description"]
+        assert isinstance(second_description, Description)
+        assert second_description.notes == ["initial"]
 
 
 def test_exception_resets_scope_and_inherited_context(payload_type: type[_CountedPayload]) -> None:
@@ -198,6 +231,56 @@ def test_scalar_subclass_metadata_remains_mutation_guarded(payload_type: type[_C
         description.notes.append("changed")
         with pytest.raises(ValueError, match="model graph changed"):
             strict_model_json_schema(payload_type)
+
+
+@pytest.mark.parametrize("change", ["default_to_none", "empty_description", "false_repr", "empty_examples"])
+def test_falsey_field_attribute_edits_are_refused_during_compilation(change: str) -> None:
+    class Payload(BaseModel):
+        model_config = STRICT_FROZEN_CONFIG
+        value: str | None = Field(default="initial", description="Initial", examples=["initial"], repr=True)
+
+    with operation_schema_compilation_scope():
+        strict_model_json_schema(Payload)
+        field = Payload.model_fields["value"]
+        if change == "default_to_none":
+            field.default = None
+        elif change == "empty_description":
+            field.description = ""
+        elif change == "false_repr":
+            field.repr = False
+        else:
+            assert field.examples is not None
+            field.examples.clear()
+        with pytest.raises(ValueError, match="model graph changed"):
+            strict_model_json_schema(Payload)
+
+
+def test_nested_annotation_metadata_edits_are_refused_during_compilation() -> None:
+    metadata = FieldInfo(description="Initial", examples=["initial"])
+    type Item = Annotated[str, metadata]
+
+    class Payload(BaseModel):
+        model_config = STRICT_FROZEN_CONFIG
+        values: tuple[Item, ...]
+
+    with operation_schema_compilation_scope():
+        strict_model_json_schema(Payload)
+        assert metadata.examples is not None
+        metadata.examples.append("changed")
+        with pytest.raises(ValueError, match="model graph changed"):
+            strict_model_json_schema(Payload)
+
+
+def test_annotation_types_and_tuple_metadata_have_distinct_snapshot_states() -> None:
+    class Payload(BaseModel):
+        model_config = STRICT_FROZEN_CONFIG
+        values: tuple[Annotated[str, tuple[str]], ...]
+
+    with operation_schema_compilation_scope():
+        strict_model_json_schema(Payload)
+        Payload.model_fields["values"].annotation = tuple[Annotated[str, (str,)], ...]
+        with pytest.raises(ValueError, match="model graph changed"):
+            strict_model_json_schema(Payload)
 
 
 def test_model_mutation_during_schema_generation_is_refused() -> None:
