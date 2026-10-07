@@ -31,7 +31,7 @@ class _JoinedKdfWorker(_SupervisedKdfWorker):
         return self
 
     @override
-    def __exit__(self, exc_type: object, _exc_value: object, _traceback: object) -> None:
+    def __exit__(self, exc_type: object, exc_value: object, _traceback: object) -> None:
         try:
             self.settle()
         except BaseException as error:

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:625d2c98d7e8f048e49ff7ffa34af7adcc2eff2e9986942d35d062382614ee52'
+body_hash: 'sha256:0720521a3b00b6656063bf9e75cbc3cb2af330eab640daba5f59a7d82abb4a4e'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -99,6 +99,352 @@ related:
 - `S04` `verify:` `just check-import-boundaries` -> `pass`
 - `S04` `verify:` `mcp__vaultspec_core__check feature=modelo-runtime-performance fix=false` -> `pass`
 - `S04` `verify:` `vaultspec-core --target Y:/code/cadrumo-worktrees/tui vault plan check modelo-runtime-performance --json` -> `pass`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
+- `S11` `A` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
+- `S11` `verify:` `uv run --no-sync pytest -n 0 -m unit src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/operations/tests/test_access_resolution.py --basetemp=.tmp/s11-scope-read-final -q` -> `pass`
+- `S11` `verify:` `uv run --no-sync pytest -n 0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py src/cadrumo/entrypoints/runtime/tests/test_password_rotation_authority.py src/cadrumo/entrypoints/runtime/tests/test_approval_task_authority.py --tb=short` -> `pass`
+- `S11` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/runtime/operation_authority.py src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py` -> `pass`
+- `S11` `verify:` `uv run --no-sync basedpyright src/cadrumo/entrypoints/runtime/operation_authority.py src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py` -> `pass`
+- `S11` `verify:` `uv run --no-sync pyrefly check src/cadrumo/entrypoints/runtime/operation_authority.py src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py` -> `pass`
+- `S11` `by:` `executor`
+- `S12` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S12` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S12` `M` `src/cadrumo/application/modelo/work_review.py`
+- `S12` `M` `src/cadrumo/application/modelo/_work_review_assembly.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_form_loading.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_work_review.py`
+- `S12` `verify:` `uv run --no-sync pytest -v -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py src/cadrumo/entrypoints/tests/test_modelo_work_form_loading.py src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_work_review.py` -> `pass`
+- `S12` `verify:` `uv run --no-sync python .tmp/s12-form-read-probe.py` -> `pass`
+- `S12` `verify:` `S12 scoped Ruff and formatting on seven stable owned files (manifest exact commands)` -> `pass`
+- `S12` `verify:` `S12 scoped ty, basedpyright and pyrefly on seven stable owned files (manifest exact commands)` -> `pass`
+- `S12` `by:` `executor`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/bucket/output_language_hint.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/bucket/tests/test_output_language_hint.py`
+- `S13` `verify:` `uv run --no-sync pytest -n0 -m unit src/cadrumo/adapters/persistence/storage/bucket/tests/test_output_language_hint.py src/cadrumo/application/user_profile/tests/test_language_resolver_diagnostics.py src/cadrumo/application/user_profile/tests/test_language_resolver_snapshot.py --tb=short` -> `pass`
+- `S13` `verify:` `ruff check and format owning S13 files` -> `pass`
+- `S13` `verify:` `ty pyrefly basedpyright scoped S13 files` -> `pass`
+- `S13` `by:` `executor`
+- `S10` `M` `dev/docs/sequences/runtime_fixture.py`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-bindings.json`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-requires.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S10` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S10` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-catalogue.json`
+- `S10` `M` `docs/_sequences/how-to/file-at-aeat/file-at-aeat-chain.json`
+- `S10` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-formulas.json`
+- `S10` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-report.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-address-by-id.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-file.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-history.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-select.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-expenses-exceed-income.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-export-file.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S10` `M` `docs/_sequences/how-to/manage-invoices/invoices-catalogue-and-349.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-dependencies.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-inspect-boxes.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-manual-casilla.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-inspect-boxes.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-revision.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-export.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-file.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-export.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-file.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-revision.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-bindings.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-manual-casilla.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-language.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-missing-values.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-period-grammar.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-blocked.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-export-check.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete-report.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-modelo-303.json`
+- `S10` `verify:` `uv run --no-sync python -m ruff check dev/docs/sequences/runtime_fixture.py` -> `pass`
+- `S10` `verify:` `uv run --no-sync python -m ruff format --check dev/docs/sequences/runtime_fixture.py` -> `pass`
+- `S10` `verify:` `uv run --no-sync pytest -n0 -m 'unit or integration' dev/docs/tests/test_sequence_goldens.py::TestCommittedGoldensCleanGate dev/docs/tests/test_sequence_goldens.py::TestPageCoherenceGate --tb=short` -> `fail`
+- `S10` `by:` `executor`
+- `S09` `M` `.vault/adr/2026-07-20-ci-speed-redesign-adr.md`
+- `S09` `M` `dev/acceptance/iva/tests/test_annual_cli_journey.py`
+- `S09` `M` `dev/acceptance/iva/tests/test_cli_journey.py`
+- `S09` `M` `dev/audit/tests/test_duplication_scan.py`
+- `S09` `M` `dev/audit/tests/test_security_scan.py`
+- `S09` `M` `dev/audit/tests/test_unreachable_code_scan.py`
+- `S09` `M` `dev/ci/prove_check_set_guards.py`
+- `S09` `M` `dev/ci/tests/test_ci_workflow.py`
+- `S09` `M` `dev/ci/tests/test_machine_aware_load.py`
+- `S09` `M` `dev/ci/tests/test_modelo_runtime_benchmark_process.py`
+- `S09` `M` `dev/ci/tests/test_perf_gate_policy.py`
+- `S09` `M` `dev/docs/sequences/checks.py`
+- `S09` `M` `dev/docs/sequences/tests/test_cli.py`
+- `S09` `M` `dev/docs/sequences/tests/test_export_version_fixture.py`
+- `S09` `M` `dev/docs/sequences/tests/test_published_verdict_key.py`
+- `S09` `M` `dev/docs/sequences/tests/test_receipt_fixture.py`
+- `S09` `M` `dev/docs/sequences/tests/test_runtime_fixture.py`
+- `S09` `M` `dev/docs/tests/_sphinx_build_harness.py`
+- `S09` `M` `dev/docs/tests/test_built_site_resolvability_sweep.py`
+- `S09` `M` `dev/docs/tests/test_cli_tree.py`
+- `S09` `M` `dev/docs/tests/test_docs_build.py`
+- `S09` `M` `dev/docs/tests/test_docs_build_full_scope.py`
+- `S09` `M` `dev/docs/tests/test_docs_build_localized_compile.py`
+- `S09` `M` `dev/docs/tests/test_docs_catalogue_drift.py`
+- `S09` `M` `dev/docs/tests/test_docs_desktop_flavor.py`
+- `S09` `M` `dev/docs/tests/test_navigation.py`
+- `S09` `M` `dev/docs/tests/test_sequence_build_gate.py`
+- `S09` `M` `dev/docs/tests/test_sequence_goldens.py`
+- `S09` `M` `dev/locales/tests/test_contract.py`
+- `S09` `M` `dev/locales/tests/test_language_flag_help_honesty.py`
+- `S09` `M` `dev/packaging/build_scratch_reclaim.py`
+- `S09` `M` `dev/packaging/campaign.py`
+- `S09` `M` `dev/packaging/conftest.py`
+- `S09` `M` `dev/packaging/native/tests/test_archive_decoder.py`
+- `S09` `M` `dev/packaging/native/tests/test_assembly_tools.py`
+- `S09` `M` `dev/packaging/native/tests/test_cmake_package_inputs.py`
+- `S09` `M` `dev/packaging/native/tests/test_cpp_abi_inputs.py`
+- `S09` `M` `dev/packaging/native/tests/test_desktop_workspace.py`
+- `S09` `M` `dev/packaging/native/tests/test_storage_path_vectors.py`
+- `S09` `M` `dev/packaging/native/tests/test_storage_root_vectors.py`
+- `S09` `M` `dev/packaging/tests/test_anthropic_optional_extra_boundary.py`
+- `S09` `M` `dev/packaging/tests/test_campaign.py`
+- `S09` `M` `dev/packaging/tests/test_command_spec_distribution_lanes.py`
+- `S09` `M` `dev/packaging/tests/test_gnome_login_observer.py`
+- `S09` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S09` `M` `dev/packaging/tests/test_missing_llm_extra_refuses_instructively.py`
+- `S09` `M` `dev/packaging/tests/test_native_installation_windows.py`
+- `S09` `M` `dev/packaging/tests/test_overview_provisioning_action_recovery.py`
+- `S09` `M` `dev/packaging/tests/test_preflight_recipe_selection.py`
+- `S09` `M` `dev/packaging/tests/test_release_cohort_integration.py`
+- `S09` `M` `dev/packaging/tests/test_sdist_test_tree_exclusion.py`
+- `S09` `M` `dev/packaging/tests/test_smoke_core_payload.py`
+- `S09` `M` `dev/packaging/tests/test_smoke_scoop_harness.py`
+- `S09` `M` `dev/packaging/tests/test_verdict_cache_not_distributed.py`
+- `S09` `M` `dev/quality/tests/test_shard.py`
+- `S09` `M` `dev/quality/tests/test_types_gate.py`
+- `S09` `M` `dev/readme/tests/test_readme_cli_demo.py`
+- `S09` `M` `dev/registry/compiler/tests/test_validation_verdict_lock.py`
+- `S09` `M` `dev/registry/conformance/tests/test_closure.py`
+- `S09` `M` `dev/registry/pipeline/tests/test_generated_form_bridge.py`
+- `S09` `M` `dev/registry/pipeline/tests/test_generated_tree_cli.py`
+- `S09` `M` `dev/registry/tests/test_authority_publication_launcher_independence.py`
+- `S09` `M` `dev/registry/tests/test_filing_export_two_channel_proof.py`
+- `S09` `M` `dev/registry/tests/test_ledger_membership_generation_pinning.py`
+- `S09` `M` `dev/registry/tests/test_loader_cache_isolation.py`
+- `S09` `M` `dev/registry/tests/test_mutable_tree_fingerprint_invalidation.py`
+- `S09` `M` `dev/registry/tests/test_registry_identity_stamp_concurrency.py`
+- `S09` `M` `dev/release/tests/test_version_identity_probes.py`
+- `S09` `M` `dev/tests/test_import_quality_gate.py`
+- `S09` `M` `dev/tests/test_just_exit_forwarding.py`
+- `S09` `M` `dev/tests/test_native_build_recipes.py`
+- `S09` `M` `dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py`
+- `S09` `M` `dev/tests/test_no_unbounded_subprocess_wait.py`
+- `S09` `M` `dev/tests/test_registry_conformance_gate.py`
+- `S09` `M` `dev/tests/test_storage_bootstrap_parity.py`
+- `S09` `M` `dev/tests/test_write_path_coverage_gate.py`
+- `S09` `M` `justfile`
+- `S09` `M` `pyproject.toml`
+- `S09` `M` `src/cadrumo/adapters/inbound/financial/providers/tests/test_ofx_optional_extra.py`
+- `S09` `M` `src/cadrumo/adapters/inbound/financial/providers/tests/test_tabular_extra_split.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_client_imports.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_startup.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_flow.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_login_atomicity.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/llm/tests/subprocess_classifier_support.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/llm/tests/test_init.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_journal.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_lease.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_persistence_integration.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_lifecycle.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_concurrent_registration_cannot_duplicate_a_label.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_lock_order.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_reset_subprocess_matrix.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_root_lock_exclusion.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_transactions.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_child_console.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_macos_keychain_native.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/profile_process_support.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_exit_seal_without_sql_import.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_interpreter_exit_seals_live_sessions.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_binding_imports.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_registration_retires_displaced_profile.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/tests/test_config_reset_concurrency.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/tests/test_config_reset_recovery.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/tests/test_diagnostics.py`
+- `S09` `M` `src/cadrumo/application/aggregation/tests/test_per_modelo_service.py`
+- `S09` `M` `src/cadrumo/application/calculations/tests/test_first_year_modalidad_cuota_no_wizard_catalogue.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_effective_deadline_parity.py`
+- `S09` `M` `src/cadrumo/application/tests/test_cli_provisioning.py`
+- `S09` `M` `src/cadrumo/application/tests/test_config_reset_repository.py`
+- `S09` `M` `src/cadrumo/application/tests/test_repository_port_imports.py`
+- `S09` `M` `src/cadrumo/application/tests/test_workbench_generation_operation.py`
+- `S09` `M` `src/cadrumo/application/user_profile/tests/test_pointer_transition_authority.py`
+- `S09` `M` `src/cadrumo/core/tests/test_atomic_write.py`
+- `S09` `M` `src/cadrumo/core/tests/test_file_permissions.py`
+- `S09` `M` `src/cadrumo/core/tests/test_pointer_read_survives_a_concurrent_writer.py`
+- `S09` `M` `src/cadrumo/core/tests/test_pointer_write_survives_a_concurrent_reader.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_domain_required_check_guard.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_m130_retenciones_gate_registration.py`
+- `S09` `M` `src/cadrumo/domain/deadlines/tests/test_profile_projection_without_wizard.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/tests/live_export_acceptance.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/tests/test_custody_enrollment_prompt_guard.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/tests/test_scripted_profile_creation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/tests/test_secure_input_echo_guard.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/_machine_secret_channels_support.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/cli_performance.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/subprocess_cli.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_a_new_profile_is_locked_to_other_processes.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_capability_family_isolation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_resolution_cost_budget.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_startup_smoke.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_cold_start_wizard_registration.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_command_surface_beside_retired_state.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_corrupt_pointer_repair_is_reachable.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_custody_payloads.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_educational_docs_conformance.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_google_operation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_help_without_secrets.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_metadata_only_cli_contract.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_action_recovery.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_free_commands_without_keychain.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_malformed_pointer_language.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_profile_free_cli.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_refusal_names_its_profile.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_refused_verb_import_floor.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_sign_in_native.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_s423_selected_language_cli.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_state_free_capability_isolation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_stdio.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_work_calculate_row_flag.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_admission_cancellation.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_approval_task_authority.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_console_interrupt.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_custody_rotation.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_exit_reasons.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_human_login_receipt.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_lease_retirement_storage.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_startup_arguments.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_google_effect_imports.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_admission_scope.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_apply_refusal_settlement.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_operator_work.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_preflight.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_operator_layer_recording.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_recalculation_keeps_operator_work.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_form_loading.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_operation_registry_imports.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_installed_create.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_lifecycle_edit_door.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_bulk_confirm_real.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_check_route_real.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_deadline_parity.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_export_state.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_production_edits.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_workbench.py`
+- `S09` `M` `src/cadrumo/tests/test_collection_storage_root_log_lock.py`
+- `S09` `M` `src/cadrumo/tests/test_console_script_imports.py`
+- `S09` `M` `src/cadrumo/tests/test_deselection_hook.py`
+- `S09` `M` `src/cadrumo/tests/test_env_scope_storage_lifetime.py`
+- `S09` `M` `src/cadrumo/tests/test_fixture_resolution_hook.py`
+- `S09` `M` `src/cadrumo/tests/test_marker_contract_enforcement.py`
+- `S09` `M` `src/cadrumo/tests/test_numbered_dir_reaper.py`
+- `S09` `M` `src/cadrumo/tests/test_serial_marker_enforcement.py`
+- `S09` `M` `src/cadrumo/tests/test_worker_count_hook_harness.py`
+- `S09` `M` `src/cadrumo_harness/tests/test_plugin_workspace.py`
+- `S09` `verify:` `uv run --no-sync python .tmp/s09-deadline-static-verification.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -n0 -m unit dev/tests/test_no_unbounded_subprocess_wait.py --tb=short` -> `pass`
+- `S09` `verify:` `S09 optional-helper owning regressions (20261007T170957.997151Z-pytest-44900-f4cf32d2)` -> `pass`
+- `S09` `verify:` `S09 pytest invocation policy owning regressions (20261007T174341.083122Z-pytest-67880-c8a2d419)` -> `pass`
+- `S09` `by:` `executor`
+- `S09` `M` `dev/ci/tests/test_core_pid_liveness.py`
+- `S09` `M` `dev/packaging/tests/test_build_scratch_reclaim.py`
+- `S09` `M` `dev/registry/pipeline/tests/test_candidate_compile_process.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/llm/tests/test_wired_reading_against_a_loopback_reader.py`
+- `S09` `M` `src/cadrumo/application/tests/test_provisioning_model_removal.py`
+- `S09` `M` `src/cadrumo/application/tests/test_provisioning_hardware_contention.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_review_package_signing.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_review_package_recipient_encryption.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_review_package_recipient_replay_guard.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_usage_ratios_concurrency.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_active_session_thread_isolation.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_live_session_registry.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_sign_in_generation.py`
+- `S09` `M` `dev/registry/compiler/tests/test_record_design_cache.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/llm/tests/test_on_host_inference_admission.py`
+- `S09` `A` `src/cadrumo/tests/process_results.py`
+- `S09` `A` `src/cadrumo/tests/test_process_results.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/google/tests/test_oauth_security.py`
+- `S09` `verify:` `uv run --no-sync pytest -n0 -m unit src/cadrumo/tests/test_process_results.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check src/cadrumo/tests/process_results.py src/cadrumo/tests/test_process_results.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check src/cadrumo/tests/process_results.py src/cadrumo/tests/test_process_results.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync basedpyright src/cadrumo/tests/process_results.py src/cadrumo/tests/test_process_results.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff check src/cadrumo/tests/process_results.py src/cadrumo/tests/test_process_results.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check src/cadrumo/tests/process_results.py src/cadrumo/tests/test_process_results.py` -> `pass`
+- `S14` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/portable_password_custody.py`
+- `S14` `verify:` `frozen just check-code before quality overlays` -> `fail`
+- `S14` `verify:` `focused ty on three subsequent live type owners` -> `pass`
+- `S14` `verify:` `Ruff lint and format on repaired portable custody fixture` -> `pass`
+- `S14` `verify:` `46-owner reviewed source and frozen preimage overlay` -> `pass`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/worker_arguments.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/linux_worker_process.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/macos_worker_process.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_arguments.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker_cleanup.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_worker_process.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_worker_containment.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_linux_worker_launch_contract.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_macos_worker_guardian.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/macos_worker_parent_fixture.py`
+- `S15` `verify:` `12-path guarded source and frozen overlay` -> `pass`
+- `S15` `verify:` `161 focused worker storage startup cleanup and package-bytecode tests, 20261007T195121.660620Z-pytest-14328-dc45c156` -> `pass`
+- `S15` `verify:` `S15 twelve-postimage Ruff lint and format` -> `pass`
+- `S09` `verify:` `current 220-path selective staging readiness at HEAD70b0476` -> `pass`
+- `S09` `verify:` `git apply --cached --check .tmp/s09-final-staging-refresh-1934/policy-only.patch` -> `pass`
+- `S09` `verify:` `three-owner stale timeout prose syntax and Ruff artifact checks` -> `pass`
+- `S16` `M` `dev/docs/sequences/checks.py`
+- `S16` `M` `dev/docs/sequences/tests/test_reader_frame_output_advisory.py`
+- `S16` `verify:` `two-path guarded original source apply and exact existing test AST` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest -n0 -m unit dev/docs/sequences/tests/test_reader_frame_output_advisory.py --tb=short, 20261007T204122.301501Z-pytest-41504-65bd2493` -> `pass`
+- `S16` `verify:` `two exact postimage Ruff lint and format artifact checks` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest -n0 -m integration dev/docs/sequences/tests/test_reader_frame_output_advisory.py --tb=short` -> `pass`
+- `S14` `verify:` `just check-code` -> `pass`
 
 ## Notes
 
@@ -106,3 +452,15 @@ related:
 - `S04` Two contract digest assertion lines are repaired in a new peer-owned TUI test without staging that peer-authored file. Fresh generated enrollment for peer `runtime_file_access` remains in the peer working diff; root stages only its own benchmark enrollment entry.
 - `S04` All twelve blocking gates have passing evidence: eleven in the fourth full aggregate, with its sole concurrent-source import snapshot refusal resolved by the fresh stable import-gate pass. The aggregate exit 7 remains recorded as failed; no timeout or snapshot guard is relaxed.
 - `S04` Final feature checks report zero errors and warnings and all eight Steps are checked. Plan check succeeds with PLAN022: follow-up Steps S05-S08 were inserted before the original final verification S04 through the owning CLI. This is the intended execution order; immutable canonical Step identifiers are preserved rather than renumbered.
+- `S11` Partial verification checkpoint only: 60 pure and 6 native tests pass; Step remains open for complete native corpus and shared blocking gates. Retained remaining runtime refusal evidence is in the audit.
+- `S12` Partial verification checkpoint: owning34tests and encrypted parity/read-count proof pass, shared final gates and corpus remain pending. Synthetic direct M130 timings are diagnostic and admission `baseline_id/issued_at/expires_at` are separately issued; remaining admission fields and form/action facts match exactly.
+- `S13` Partial verification only: 18 owning/upstream pure tests pass and all three scoped type checkers pass. S13 remains open for stable blocking gates and actual native corpus acceptance; the pure missing-hint probe does not establish end-to-end native timeout causation.
+- `S10` Partial S10 checkpoint: 53 reviewed intended canonical golden changes traced to saved-rendering/operator-layer identity, current registry inputs, and intended derived values; financial assertions and masks preserved. Final 20261007T171120.156456Z corpus run failed two tests in 1582.81s: genuine native refusal paths plus source/catalogue changes and stale authority during concurrent peer edits. Default readiness now waits until ready or actual terminal serve failure. Product custody/IPC/cleanup deadlines unchanged. S10 remains open pending stable captured-candidate native golden/coherence and profile-delete clock proofs; no completion claim.
+- `S09` Partial S09 checkpoint: remove global300s,105ordinary markers,187ordinary child caps and one adaptive cap, seven helper defaults,13additional registry/harness caps, eight ordinary invocation defaults plus fiveJust tokens; retain explicit feature/KDF/IPC/custody/kill-reap/event-order/cleanup proofs. Historical139-owner AST proof preserves3437assertions; marker proof preserves282assertions. Focused optionalhelpers11PASS, completionownership41PASS, invocation6PASS. Integrated review found additional ordinary completed-process/thread/result-queue caps previously misclassified; repair remains in progress. S09 is OPEN pending corrected classified coverage, finalcapturedcandidate gates and required native uncapped completion evidence; no zero-global-cap or productionresilience claim.
+- `S09` Additional root-applied reviewed33-path policy repair removes60ordinary caps plusobsolete1s handler join;1111assertions/74otherfeature-cleanup timers preserved. Sharedtestonly0.1s Queue polling detectsactualowner exit withoutaggregate elapsed ceiling; every startedreceiver owner remainsjoined afteroptional termination. Actual5realspawn tests PASS4.60s in frozen candidate `afterrequiredhex_core` marker correction; initialrunwascollectionrefusal, no behaviorran. All33exact correctedpostimages andRuff/staticproofs reviewed. Mandatoryaggregate currentlyrunningfrozen source; nativecorpus/requiredcontrols stillpending. S09remainsOPEN.
+- `S14` Partial S14 checkpoint: original frozen aggregate passed nine gates and failed style, format and types. Shared source already fixed all 46 captured owners and subsequent registry/KDF/diagnostic formatting findings. Root applied only the remaining inherited keyword-parameter repair. Reviewed source captures were overlaid after all native/import controls completed; full final gates and native acceptance remain pending. Exact evidence is under .tmp/final-blocking-style-repair and .tmp/final-live-type-repair.
+- `S15` Partial S15 checkpoint: source workers align with the accepted packaged `write_bytecode-disabled` interpreter policy; exact argv admission and both POSIX trusted-script selectors updated together. Matched fresh-prefix import probe preserved 2272 project modules: 3013 atomic writes took 74.37s in the write-enabled case versus zero with writes disabled; total imports were 88.59s versus 35.22s on this host. Normal cache reads, invalidation and source compilation remain. Timings are diagnostic and packaged runtime already had this policy. Full native corpus and final blocking gates remain pending; native POSIX execution unavailable on Windows.
+- `S09` Root actual selective-index apply check passed without staging or writing the index. Final comment repair preserves109assertions and executable AST. Latest220-path ownership patch excludes15peer residues. Native captured-candidate corpus remains running with actual connection and deadline failures; no complete native or final gate acceptance claim. Golden refresh was separately found to skip declared business expectations despite correct contracts; S16 records its owning repair.
+- `S16` Partial S16 checkpoint: canonical expectations now run before evidence and golden writes. Nine selected pure tests pass, including three new no-write/prior-byte-preservation/valid-nonzero cases; five existing integration checks were deselected and have no new acceptance evidence. Corrected canonical missing-path assertion before application. Captured checkout remains unchanged during active native baseline. Scoped types, integration, final full gates and native acceptance pending.
+- `S16` Frozen guarded S16 overlay2PASS. First integration run setup failed missing explicit checkout Playwright directory; materialized owned empty configured directory and independent rerun5PASS93.08s,9unitdeselected. Original9unitPASS remains applicable. Full live12gates session52562pending. Frozen34pagecapture5PASS29FAIL retained; no runtime refusal golden accepted; current original authority differs so frozen generation deltas not authorized for live refresh.
+- `S14` Actual original sharedworkspace full12blockinggates session52562 completed0 at21:19UTC after S16guard and currentpeerqualityrepairs. Includes style,format,dataformat,ty/pyrefly/basedpyright across3platforms,import/dependency,module/symbol/export,writepaths,docrefs. Real34page frozen native capture remains5PASS29FAIL; originalcurrent authority019 differsfrozen007. No fullnative/resilience oratomicshared-source snapshotclaim.
