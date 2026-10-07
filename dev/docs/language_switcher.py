@@ -20,12 +20,19 @@ So the element is built here instead, from the facts rather than from a Jinja
 template, and the one compile records each language's whole element. A
 single-language build renders exactly the same bytes, which is what keeps the
 two forms of the site comparable.
+
+Not every page exists in every root. The API reference and the technical
+collection are published in English only, so from one of those pages another
+language's link cannot name the same page: it opens that language's own entry
+page instead of an address its root does not hold.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Final
+
+from sphinx.util.matching import Matcher
 
 from cadrumo.core.external_constants import OutputLanguage
 
@@ -34,7 +41,7 @@ from ._locale_chrome import docs_fragment
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
-__all__ = ["register", "switcher_markup", "switcher_of_page"]
+__all__ = ["page_in_other_roots", "register", "switcher_markup", "switcher_of_page"]
 
 #: The disclosure caret, which no fact of the page or the language reaches.
 _CARET: Final[str] = (
@@ -110,6 +117,22 @@ def switcher_markup(
     )
 
 
+def page_in_other_roots(pagename: str, *, entry_page: str, english_only: Sequence[str]) -> str:
+    """Return the page another language's link opens from *pagename*.
+
+    Args:
+        pagename: The page the switcher is written on.
+        entry_page: The site's entry page, which every root has.
+        english_only: Patterns of the pages only the English root publishes,
+            as the build's own exclusion list writes them.
+
+    Returns:
+        *pagename* where every root has it, and the entry page where only the
+        English root does.
+    """
+    return entry_page if Matcher(english_only)(pagename) else pagename
+
+
 def switcher_of_page(
     languages: Sequence[Mapping[str, str]],
     *,
@@ -130,7 +153,8 @@ def switcher_of_page(
             single-language build read the same layout, so both write the same
             element for the same page.
         root_uri: The path from this page back to its own language root.
-        pagename: This page's docname.
+        pagename: The page each other language's link opens, as
+            :func:`page_in_other_roots` settles it.
         aria_label: The summary's accessible name. Under the one compile this
             is itself a mark, which the recording resolves per language.
 
@@ -185,7 +209,11 @@ def register(app: Sphinx) -> None:
             language=OutputLanguage(app.config.language),
             prefixes=declared["cadrumo_docs_site_prefixes"],
             root_uri=f"{root.rsplit('/', 1)[0]}/" if "/" in root else "",
-            pagename=pagename,
+            pagename=page_in_other_roots(
+                pagename,
+                entry_page=app.config.root_doc,
+                english_only=declared["cadrumo_docs_english_only_pages"],
+            ),
             aria_label=declared["cadrumo_chrome"]["aria_language"],
         )
 

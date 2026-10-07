@@ -238,14 +238,17 @@ exclude_patterns = [
     "**/_test_*.py",
     "USERDOCS-KICKOFF-BRIEF.md",
 ]
+# The pages only the English full-scope root publishes: the generated API
+# reference, the viewcode ``_modules`` source pages and the technical collection.
+# They document the code for the people who work on it, in English, and are not
+# part of what a taxpayer reads, of what is translated, or of what is packaged.
+# No other language's root has them, so this one list decides both what the user
+# scope leaves out and where the language switcher sends a reader from one.
+_ENGLISH_ONLY_SOURCES = ("api/**", "_modules/**", "technical/**")
 if _USER_SCOPE:
-    # User scope excludes the generated API autodoc tree and the viewcode
-    # ``_modules`` source pages from the read set entirely, so no app module is
-    # imported to render them. The technical collection is excluded with them:
-    # it documents the code for the people who work on it, in English, and is
-    # no more part of what a taxpayer reads, or of what is translated and
-    # packaged, than the API reference is.
-    exclude_patterns += ["api/**", "_modules/**", "technical/**"]
+    # Excluded from the read set entirely, so no app module is imported to
+    # render them.
+    exclude_patterns += list(_ENGLISH_ONLY_SOURCES)
 
 _DOCS_ROOT = Path(__file__).resolve().parent
 
@@ -741,6 +744,9 @@ html_context["cadrumo_docs_site_prefix"] = _per_language_template_value(lambda c
 # the layout and not of the language, and it is the same mapping in every root,
 # so it is carried as itself rather than as one value per language.
 html_context["cadrumo_docs_site_prefixes"] = _SITE_PREFIXES
+# The Python module index is written only where modules are documented, which
+# is the English full-scope root, so it joins the pages no other root has.
+html_context["cadrumo_docs_english_only_pages"] = (*_ENGLISH_ONLY_SOURCES, "py-modindex")
 
 # ── Site chrome ──────────────────────────────────────────────────────────────
 # Every template-rendered label, accessible name, and interaction-layer string,

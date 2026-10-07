@@ -33,6 +33,7 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
+from ..language_switcher import page_in_other_roots
 from ..site_chrome import site_chrome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -52,11 +53,17 @@ _APEX_LAYOUT = {"en": "", "es": "es/", "ca": "ca/", "hu": "hu/"}
 _PER_LANGUAGE_LAYOUT = {"en": "en/", "es": "es/", "ca": "ca/", "hu": "hu/"}
 
 
+#: The pages only the English root publishes, written as the production
+#: configuration writes them.
+_ENGLISH_ONLY_PAGES = ("api/**", "_modules/**", "technical/**", "py-modindex")
+
+
 def _switcher_context(language: str, prefixes: dict[str, str]) -> dict[str, object]:
     """Return the switcher html_context for one build language in one layout."""
     order = ["en", *[member.value for member in OutputLanguage if member is not OutputLanguage.EN]]
     return {
         "cadrumo_docs_site_prefixes": prefixes,
+        "cadrumo_docs_english_only_pages": _ENGLISH_ONLY_PAGES,
         "cadrumo_docs_languages": [{"code": code, "label": _LANGUAGE_LABELS[code]} for code in order],
         # The switcher's accessible name is resolved chrome, so the real mapping
         # the build hands the template is supplied here rather than a stub.
@@ -65,15 +72,17 @@ def _switcher_context(language: str, prefixes: dict[str, str]) -> dict[str, obje
 
 
 def _build_switcher_site(tmp_path: Path, language: str, prefixes: dict[str, str]) -> dict[str, str]:
-    """Build a two-page Furo site with the real switcher template; return both pages' HTML.
+    """Build a three-page Furo site with the real switcher template; return each page's HTML.
 
-    Both pages, because the links are relative to the page carrying them: a
-    page at a root and a page one directory down resolve the same counterpart
-    through different paths, and only one of the two would catch a switcher
-    that counted the wrong number of directories.
+    A page at the root and a page one directory down, because the links are
+    relative to the page carrying them: the two resolve the same counterpart
+    through different paths, and only one of them would catch a switcher that
+    counted the wrong number of directories. And a page of the API reference,
+    which no other language's root holds.
     """
     site = tmp_path / "site"
     (site / "how-to").mkdir(parents=True)
+    (site / "api").mkdir()
     context = _switcher_context(language, prefixes)
     conf = (
         "import sys\n"
@@ -99,8 +108,9 @@ def _build_switcher_site(tmp_path: Path, language: str, prefixes: dict[str, str]
         "    _translations_js(app)\n"
     )
     (site / "conf.py").write_text(conf, encoding="utf-8")
-    (site / "index.md").write_text("# Home\n\n```{toctree}\nhow-to/quickstart\n```\n", encoding="utf-8")
+    (site / "index.md").write_text("# Home\n\n```{toctree}\nhow-to/quickstart\napi/ledger\n```\n", encoding="utf-8")
     (site / "how-to" / "quickstart.md").write_text("# Quickstart\n\nBody text.\n", encoding="utf-8")
+    (site / "api" / "ledger.md").write_text("# Ledger module\n\nReference text.\n", encoding="utf-8")
     out = tmp_path / "out"
     result = subprocess.run(
         [sys.executable, "-m", "sphinx", "-b", "html", "-j", "1", str(site), str(out)],
@@ -113,6 +123,7 @@ def _build_switcher_site(tmp_path: Path, language: str, prefixes: dict[str, str]
     return {
         "index.html": (out / "index.html").read_text(encoding="utf-8"),
         "how-to/quickstart.html": (out / "how-to" / "quickstart.html").read_text(encoding="utf-8"),
+        "api/ledger.html": (out / "api" / "ledger.html").read_text(encoding="utf-8"),
     }
 
 
@@ -175,6 +186,7 @@ def _assert_dropdown_shape(html: str, language: str) -> None:
                     "ca": "../ca/how-to/quickstart.html",
                     "hu": "../hu/how-to/quickstart.html",
                 },
+                "api/ledger.html": {"es": "../es/index.html", "ca": "../ca/index.html", "hu": "../hu/index.html"},
             },
         ),
         # The same layout from a root in a directory of its own: the base is one
@@ -190,6 +202,7 @@ def _assert_dropdown_shape(html: str, language: str) -> None:
                     "ca": "../../ca/how-to/quickstart.html",
                     "hu": "../../hu/how-to/quickstart.html",
                 },
+                "api/ledger.html": {"en": "../../index.html", "ca": "../../ca/index.html", "hu": "../../hu/index.html"},
             },
         ),
         # The website's layout, where English is a directory like every other:
@@ -205,6 +218,14 @@ def _assert_dropdown_shape(html: str, language: str) -> None:
                     "ca": "../../ca/how-to/quickstart.html",
                     "hu": "../../hu/how-to/quickstart.html",
                 },
+                # What the published English root really carries: an API page,
+                # whose Spanish link opens the Spanish entry page, because the
+                # Spanish root holds no API reference to open instead.
+                "api/ledger.html": {
+                    "es": "../../es/index.html",
+                    "ca": "../../ca/index.html",
+                    "hu": "../../hu/index.html",
+                },
             },
         ),
         (
@@ -216,6 +237,11 @@ def _assert_dropdown_shape(html: str, language: str) -> None:
                     "en": "../../en/how-to/quickstart.html",
                     "ca": "../../ca/how-to/quickstart.html",
                     "hu": "../../hu/how-to/quickstart.html",
+                },
+                "api/ledger.html": {
+                    "en": "../../en/index.html",
+                    "ca": "../../ca/index.html",
+                    "hu": "../../hu/index.html",
                 },
             },
         ),
@@ -241,6 +267,33 @@ def test_the_switcher_links_each_root_where_the_layout_serves_it(
         _assert_dropdown_shape(html, language)
 
 
+@pytest.mark.parametrize(
+    ("pagename", "opened"),
+    [
+        ("how-to/quickstart", "how-to/quickstart"),
+        ("index", "index"),
+        ("api/cadrumo.core.casilla_id", "index"),
+        ("api/index", "index"),
+        ("_modules/cadrumo/core/casilla_id", "index"),
+        ("technical/architecture/overview", "index"),
+        ("py-modindex", "index"),
+        # A page that merely starts with the same letters is everyone's page.
+        ("apidocs-notes", "apidocs-notes"),
+        ("genindex", "genindex"),
+    ],
+)
+def test_a_page_only_the_english_root_publishes_opens_the_entry_page_elsewhere(pagename: str, opened: str) -> None:
+    """The API reference and the technical collection exist in English only."""
+    assert page_in_other_roots(pagename, entry_page="index", english_only=_ENGLISH_ONLY_PAGES) == opened
+
+
+def test_conf_names_the_pages_only_the_english_root_publishes() -> None:
+    """The switcher reads the same list the user scope leaves out, plus the module index."""
+    context = _conf_switcher_context("en")
+
+    assert context["english_only"] == ["api/**", "_modules/**", "technical/**", "py-modindex"]
+
+
 def _conf_switcher_context(
     language: str,
     *,
@@ -261,6 +314,7 @@ def _conf_switcher_context(
         "print('SWITCHER=' + json.dumps({"
         "'language': ctx['language'],"
         "'prefixes': ctx['cadrumo_docs_site_prefixes'],"
+        "'english_only': list(ctx['cadrumo_docs_english_only_pages']),"
         "'languages': ctx['cadrumo_docs_languages']}))"
     )
     with tempfile.TemporaryDirectory(prefix="cadrumo-switcher-ctx-") as storage_root:
