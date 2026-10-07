@@ -4,8 +4,10 @@ The audit observer records open attempts and code locations, never file contents
 It does not count reads. Process Monitor CSV supplies native ReadFile counts and
 reported lengths, including SQLite and the packaged host. These are file API
 bytes, which Windows may satisfy from memory; they are not physical disk bytes.
-Capture before launching the target, export without filters, and select its PIDs
-with ``summarize``. Recorder imports precede the audit scope and output follows it.
+Capture target file operations only and filter before exporting or inspecting:
+native traces can also contain process environment records with credentials.
+Select target PIDs with ``summarize``. Recorder imports precede the audit scope
+and output follows it.
 """
 
 from __future__ import annotations

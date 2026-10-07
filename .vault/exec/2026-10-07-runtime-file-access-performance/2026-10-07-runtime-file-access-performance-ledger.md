@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbb0e9b7aa43e38de1d0ec83788aea93ac0c1a82e4c3e446fe969c84632ee713'
+body_hash: 'sha256:03f94a1eef4705d27b01afc81b8ee20e36b7c5664de718f04a1bd1262f2f4b21'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -67,9 +67,13 @@ related:
 - `S02` `verify:` `just check-style` -> `pass`
 - `S02` `verify:` `just check-types` -> `pass`
 - `S02` `verify:` `just check-import-boundaries` -> `pass`
+- `S01` `M` `dev/ci/runtime_file_access.py`
+- `S01` `verify:` `just check-format` -> `pass`
+- `S01` `by:` `Codex`
 
 ## Notes
 
 - `S01` Semantic RAG remains unavailable; profile caller identities and bounded defining-module reads provided discovery.
 - `S01` Raw Process Monitor exports include process environments. Only target file operations were retained; raw exports and PML captures were deleted. One earlier tool output inadvertently included environment records.
 - `S01` Native counters cover observed imports and admission; the capture lacks a process-exit record. ReadFile bytes are file API transfers, not physical media reads.
+- `S01` Review correction: replace the unsafe unfiltered-export guidance with target file-operation filtering before export or inspection; no diagnostic behavior changed.
