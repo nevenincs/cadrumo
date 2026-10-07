@@ -13,7 +13,7 @@ import tempfile
 import threading
 import time
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import Literal, cast
 
@@ -293,31 +293,29 @@ class _SupervisedKdfWorker:
         )
 
     def _start(self) -> None:
-        request_read, request_write = os.pipe()
-        result_read, result_write = os.pipe()
-        if sys.platform != "win32":
-            self._expected_posix_file_descriptors = (request_read, result_write)
-        self._request_fd = request_write
-        self._result_fd = result_read
-        self._temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        self._neutral_directory = tempfile.TemporaryDirectory(
-            prefix="cadrumo-profile-kdf-",
-            dir=self._temporary_root,
-        )
-        try:
-            self._launch_attempted = True
-            self._process, self._job = _launch_worker(
-                neutral_root=Path(self._neutral_directory.name),
-                request_read=request_read,
-                result_write=result_write,
+        with ExitStack() as child_descriptors:
+            request_read, request_write = os.pipe()
+            child_descriptors.callback(_close_fd, request_read)
+            self._request_fd = request_write
+            result_read, result_write = os.pipe()
+            child_descriptors.callback(_close_fd, result_write)
+            self._result_fd = result_read
+            if sys.platform != "win32":
+                self._expected_posix_file_descriptors = (request_read, result_write)
+            self._temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+            self._neutral_directory = tempfile.TemporaryDirectory(
+                prefix="cadrumo-profile-kdf-",
+                dir=self._temporary_root,
             )
-        except (OSError, subprocess.SubprocessError, ValueError):
-            os.close(request_write)
-            os.close(result_read)
-            raise _supervision_refusal() from None
-        finally:
-            _close_fd(request_read)
-            _close_fd(result_write)
+            try:
+                self._launch_attempted = True
+                self._process, self._job = _launch_worker(
+                    neutral_root=Path(self._neutral_directory.name),
+                    request_read=request_read,
+                    result_write=result_write,
+                )
+            except (OSError, subprocess.SubprocessError, ValueError):
+                raise _supervision_refusal() from None
 
     def _write_request(self, payload: dict[str, object]) -> None:
         if self._request_fd is None:

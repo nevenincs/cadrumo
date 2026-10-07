@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:9405b4d7f2c2071c8bfcd6950ceb57a93647cc6c01f8acade05e3d8f3d549574'
+body_hash: 'sha256:6c68cce636b1607969547c31a4ad02f1710c4c691affe4021a9c61d595bf8057'
 ---
 
 <!-- RETIRED: S08 -->
@@ -51,10 +51,13 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S20` - Cancel desktop-owned package discovery during shutdown and settle its worker without launching a manager after close; `native/application package and discovery cancellation, existing Cancellation type, native/desktop/src-tauri/src/manager.rs and owning cancellation tests`.
 - [x] `S21` - Defer TUI automation contract composition until a requester screen needs it, preserving one validated graph per installed session and measuring avoided startup work; `src/cadrumo/entrypoints/tui/installed_session.py, owning installed-session and requester tests, import and startup evidence`.
 - [x] `S22` - Emit one bounded KDF worker lifecycle diagnostic with phase timings and truthful failure/cleanup outcome, preserving custody and deadlines; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py, fixed diagnostic scalar allowlist, owning logging/supervision tests and measured diagnostic overhead`.
-- [ ] `S23` - Close every partially acquired KDF pipe exactly once on startup failure without changing worker deadlines or termination policy; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py partial-start ownership and owning real-descriptor failure tests`.
+- [x] `S23` - Close every partially acquired KDF pipe exactly once on startup failure without changing worker deadlines or termination policy; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py partial-start ownership and owning real-descriptor failure tests`.
 - [ ] `S24` - Reject nonzero KDF worker exits before admitting returned results; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py clean-exit admission and owning real-process regressions`.
+- [ ] `S25` - Keep projection migration implementation models out of runtime registry construction while preserving guarded migration behavior and measuring the dependency cut; `canonical stateless migration adapter module, calculation_revision_override_migration.py, projection_migration_ports.py, operation_composition.py, owning migration and fresh-process import tests, module enrollment and guarded performance evidence`.
 
 ## Parallelization
+
+S25 is a root-designed dependency cut, implemented by the existing manager-diagnostics Sol 6.1 worker after its bounded source analysis. Move the stateless GuardedCalculationRevisionMigration to its sole canonical narrow adapter module, hard-update all consumers and remove its old export. Keep heavy rekey imports inside prepare/assert_current and retain exact guarded write, refusal key and context. Move only plain dataclass/protocol annotations in projection_migration_ports behind TYPE_CHECKING. Public model schemas, operation registrations and all validation remain eager and unchanged. No shim, result cache, deadline or readiness change is authorized. Own the migration modules, operation_composition import, dedicated tests and required module enrollment. The package worker owns a guarded before/after source measurement, serialized with expensive native-worker checks. S25 is disjoint from S23/S24 custody lifecycle files. Root owns architecture, integrated review, records and commits. Existing tests and unrelated shared-tree edits must be preserved.
 
 S24 follows S23 in the same worker lane. Root found that the method named require-clean-worker-exit currently waits and checks EOF but accepts a nonzero process status. Legitimate worker refusals already write the closed failure frame and exit zero. Require zero termination before admitting any returned result, preserving the existing supervision refusal, EOF check, termination and timeout behavior. Exercise a real nonzero child exit after a syntactically valid response, plus zero-exit success and the existing handled refusal. This is enforcement of the existing supervised result boundary, not a new cryptographic or process policy.
 

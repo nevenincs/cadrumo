@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:981d8647d6dac54b2673ef8a7d123840c9f14936191b18a9e0ea9e4ee046b823'
+body_hash: 'sha256:efd86f2e438d859616de4f50187d471ad52a810488e29ecb270e5a971f9e4c59'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -365,3 +365,9 @@ Serial unit verification passes 70 tests in 23.55 seconds and owning wire integr
 The separately rebuilt runtime-only extracted Release package passes thirteen bundle checks and final admission. Its manifest SHA-256 is d0102f2b319a9af010a7fb81483ee87e07dcb2bb67943f4de1a27862759f5ef4 and runtime image SHA-256 is 410a37d6cdcb66e82a368f69f0d9894b2b5f55277f9ce49d34b606a1e35481eb. Authenticated readiness takes 32.470557/14.959738/9.756628 seconds, with actual runtime CPU 11.84375/11.3125/9.546875 seconds. The fastest run attributes 5.371790 seconds to main import, 3.761074 to registry preparation and 0.003974 to listener opening, leaving approximately 0.620 seconds outside those spans. Bundled dependency bytecode is present and profiling observes zero source compilation. The remaining delay cannot be explained by listener setup or absent bytecode alone.
 
 The import-only corrective attribution records 3,286 model-construction calls across 773 static module namespaces, with 6.242361 seconds of disjoint instrumented construction spans. It executes neither the registry builder nor runtime main, audits forbidden effects and file reads, uses a fresh explicit root, and preserves all 3,271 product-source guards plus six image/dependency guards. Instrumented wall time is not an uninstrumented baseline. Model construction spans both public DTOs and persistence/domain implementation records; semantic unusedness requires source review. The earlier attempt misclassified dict-subclass namespaces and remains explicitly incomplete. Evidence: runtime-latency-investigation/20261007T193913Z-packaged-model-construction/results.json (SHA-256 31ad2f8d9d72bb14220a6f0ffd1c787dc9c51db7c8b84f3d6a0b82986e545562) and build/runtime-file-access/rebuild-published measurement artifacts. The rebuilt source snapshot changed during assembly, although the measured artifact itself is immutable and admitted: no isolated before/after speedup is claimed. This package excludes the desktop image and documentation and cannot close installed GUI acceptance.
+
+### kdf-partial-pipe-ownership | low | PASS with reproduced leaks and duplicate closes
+
+Root reviewed S23 acquisition and cleanup ownership. An ExitStack owns each child-side descriptor immediately after allocation; the supervisor owns each parent-side descriptor immediately. The launch-error branch no longer closes parent descriptors behind the supervisor's back. Existing launch exception translation, process policy and deadlines are unchanged. The regression uses actual pipe descriptors and verifies exact-once closure, invalidity after cleanup, cleared owners and harmless repeated cleanup across second-pipe, directory, temporary-directory and launch failures, including interruption.
+
+The unchanged baseline fails seven of eight new cases in 2.10 seconds; launch interruption already passes. After the fix all eight pass within 54 focused tests in 14.58 seconds, including real supervised KDF and S22 diagnostic behavior. Ruff, formatting, configured platform ty and whitespace checks pass. A subsequent formatting-only line wrap does not change test semantics. Evidence: diagnostics-review/s23-kdf-pipe-ownership/verification.json and source-hashes.json. Root verdict PASS for partial descriptor ownership. Nonzero process exit admission and broader retained-process cleanup remain separate open work.
