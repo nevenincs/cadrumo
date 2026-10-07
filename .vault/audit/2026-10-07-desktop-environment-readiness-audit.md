@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:d4812817aa67fe74f61e117e17fec2e8d42f23ca43777d914a0a792a6e5d8f65'
+body_hash: 'sha256:798f4450ac025c53c3ee420a00c28f465e6593519901f39c0113f52e5b839b7c'
 related:
   - "[[2026-10-07-desktop-environment-readiness-plan]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -42,6 +42,10 @@ Review status: source PASS with no unresolved findings; repository verification 
 Configured uv import-gate rerun completed: dependency graph contracts passed (10648 files, 80198 dependencies), but overall gate failed because the shared import-load target metadata is stale. Full log: build/desktop-windows-x64/environment-import-gate.log. This is retained as an open repository verification limitation, not a passing check.
 
 The same import-gate snapshot also reports six subordinate findings outside this patch: one noncanonical CalculationRevisionCatalogue import in dev/ci/tests/test_modelo_runtime_benchmark.py and five unresolved custody_payloads imports in CLI custody and tests during concurrent edits. These prevent a clean integrated repository verdict; no source review or runtime availability claim overrides them.
+
+Follow-up ownership: user explicitly requested resolving every finding regardless of origin. Reconciled current shared worktree before edits: benchmark lint and canonical defining-module imports are corrected; native packaged runtime fixture imports authority_location; custody_payloads now exists with all moved consumers; import-load metadata is regenerated. No duplicate source edits were necessary for those existing corrections. Full uv Ruff check and format passed (11929 files); configured dev.quality.types passed. Focused custody/benchmark tests passed 24/24, and current CLI/TUI/runtime admission tests passed 33/33. Import gate still running under supervisor ownership. Live packaged runner's prerequisite was checked: current Windows SessionId is 0, which the canonical run-packaged.ps1 explicitly refuses for interactive GUI acceptance.
+
+Follow-up final verdict: PASS for code findings and required automated verification. Configured uv import gate completed exit 0 with classification clean; graph, loadability and subordinate checks all passed. Evidence: build/desktop-windows-x64/environment-import-followup.log. All previously reported lint, type and import failures are resolved in the current shared worktree, with 57 focused tests passing on this follow-up. Reviewed corrected defining-module imports and custody result ownership; no further findings. S03 can close under the plan's isolated-integration alternative. Interactive packaged GUI acceptance remains an explicit Session 0 infrastructure limitation, not a tested success.
 
 ## Recommendations
 

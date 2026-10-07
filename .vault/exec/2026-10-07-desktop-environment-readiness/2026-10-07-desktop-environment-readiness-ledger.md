@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a40702d05a30a4c53b8c961681dc607d113d63bdd0f73478f8b53bc80cbf4aa'
+body_hash: 'sha256:1ea6be5ff892b45ffdf4dd928cf8efdc6663a0884458a452e082a918ec0cfcfd'
 related:
   - "[[2026-10-07-desktop-environment-readiness-plan]]"
 ---
@@ -44,6 +44,12 @@ related:
 - `S03` `verify:` `configured dev.quality.types` -> `fail`
 - `S03` `M` `.vault/audit/2026-10-07-desktop-environment-readiness-audit.md`
 - `S03` `verify:` `uv run --no-sync python -m dev.quality.import_gate` -> `fail`
+- `S03` `verify:` `uv run --no-sync ruff check .` -> `pass`
+- `S03` `verify:` `uv run --no-sync ruff format --check .` -> `pass`
+- `S03` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S03` `verify:` `uv run --no-sync python -m dev.quality.import_gate` -> `pass`
+- `S03` `verify:` `focused custody benchmark pytest (24 tests)` -> `pass`
+- `S03` `verify:` `focused CLI TUI runtime admission pytest (33 tests)` -> `pass`
 
 ## Notes
 
@@ -51,3 +57,4 @@ related:
 - `S01` Native test log build/desktop-windows-x64/environment-unit-tests.log. Full packaged live acceptance not run. Added fixed taxonomy exclusions regression to keep operator workspace out of replay drift fingerprints.
 - `S03` No unresolved source review findings. Global lint/type findings concern concurrent benchmark and authority migration files outside this change. Live authenticated packaged acceptance not run; isolated owner integration covers this plan's verification alternative. Import check pending configured rerun.
 - `S03` Graph contracts passed; shared import-load metadata stale. S03 stays open for clean repository-wide verification.
+- `S03` All reported code findings resolved in current shared worktree, preserving existing concurrent fixes. Current Windows SessionId0 prevents interactive packaged GUI acceptance; no claim of live GUI verification.
