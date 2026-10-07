@@ -11,6 +11,7 @@ from contextlib import AbstractContextManager, contextmanager
 from datetime import timedelta
 from pathlib import Path
 from threading import Event, RLock
+from typing import NoReturn
 from uuid import uuid4
 
 import pytest
@@ -49,6 +50,7 @@ from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.runtime.session_owner import ProfileWorkerSessionOwner
 
 pytestmark = [
     pytest.mark.integration,
@@ -57,6 +59,22 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker containment"),
     pytest.mark.usefixtures("authority_operation"),
 ]
+
+
+def _no_activity_authority(_: object) -> NoReturn:
+    raise AssertionError("activity observation must not request credentials or authority")
+
+
+def _activity_owner(worker: ProfileWorkerProcess, root: Path) -> ProfileWorkerSessionOwner:
+    owner = ProfileWorkerSessionOwner(
+        worker.identity,
+        storage_root=root,
+        observe=_no_activity_authority,
+        human_secret=_no_activity_authority,
+        guard=RLock(),
+    )
+    owner._worker = worker
+    return owner
 
 
 def _profile_baseline(profile_id: object) -> tuple[int, str]:
@@ -151,9 +169,16 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
         expected_revision, expected_digest = _profile_baseline(identity.binding.profile_id)
         authority = BoundaryAuthority(deny_commit=deny_commit)
         worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
+        activity = _activity_owner(worker, root)
         try:
             admitted = lease(identity)
             worker.install(admitted, bytearray(key))
+            assert activity.in_flight_operation_count(deadline=time.monotonic() + 3) == 0
+            with worker._lock:
+                assert activity.in_flight_operation_count(deadline=time.monotonic() + 0.05) is None
+                assert not worker.stopping
+            assert activity._activity_guard.acquire(timeout=3)
+            activity._activity_guard.release()
             request = OperationRequest(
                 definition_id="user-profile.field-mutation",
                 subject_ref=f"profile:{identity.binding.profile_id}",
@@ -179,6 +204,7 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
             assert observed_lease.current is not None
             assert observed_lease.current.owner_id == identity.operation_owner_id
             assert worker.status().in_flight_operations == 1
+            assert activity.in_flight_operation_count(deadline=time.monotonic() + 3) == 1
             with pytest.raises(ProfileAccessRefusedError):
                 worker.start(uuid4(), receipt.operation_id)
             worker.retire(admitted.session_id)
@@ -207,6 +233,7 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
             assert authority.calls.count(AccessAction.START) >= 2
             assert authority.calls.count(AccessAction.COMMIT) == 1
             assert observation.projection.terminal_condition is expected
+            assert activity.in_flight_operation_count(deadline=time.monotonic() + 3) == 0
             reconnected = lease(identity)
             worker.install(reconnected, bytearray(key))
             worker.retire(admitted.session_id)

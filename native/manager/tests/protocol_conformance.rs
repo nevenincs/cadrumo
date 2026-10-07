@@ -53,7 +53,7 @@ fn spelled(line: &str) -> Announcement {
             seq: number("seq"),
             tick_age_ms: value["tick_age_ms"].as_u64(),
             frontends: number("frontends"),
-            hosted_profiles: number("hosted_profiles"),
+            in_flight_operations: value["in_flight_operations"].as_u64(),
         }),
         "stopping" => Announcement::Stopping(
             ExitReason::from_code(u32::try_from(number("reason")).expect("u32"))

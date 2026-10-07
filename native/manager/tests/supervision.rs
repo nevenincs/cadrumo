@@ -5,6 +5,9 @@
 //! are removed afterwards; every fixture process is ended during teardown.
 #![cfg(windows)]
 
+#[path = "startup_cases/mod.rs"]
+mod startup_cases;
+
 use cadrumo_manager::contract::{
     CLEARED_NAMES, CLEARED_PREFIXES, HOST_INHERITED_ENV, NAMESPACE_PREFIX, PINNED_ENV,
     RESERVED_ENV, ROOT_VARIABLE,

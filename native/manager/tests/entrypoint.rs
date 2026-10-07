@@ -18,24 +18,32 @@ fn version_reports_the_projected_manager_name_and_version() {
 }
 
 #[test]
-fn bare_start_never_reports_success_without_runtime_composition() {
-    let output = Command::new(MANAGER).output().expect("run the manager");
+fn bare_start_refuses_noninteractive_or_unsupported_hosts() {
     #[cfg(windows)]
-    if let Err(refusal) = cadrumo_manager::admission::require_current() {
+    {
+        let Err(refusal) = cadrumo_manager::admission::require_current() else {
+            // Ordinary tests never start a manager against the interactive
+            // user's real storage. Admitted package acceptance is opt-in.
+            return;
+        };
+        let output = Command::new(MANAGER).output().expect("run the manager");
         assert_eq!(output.status.code(), Some(77), "{output:?}");
         assert!(output.stdout.is_empty(), "{output:?}");
         assert_eq!(
             String::from_utf8(output.stderr).unwrap(),
             format!("{}\n", refusal.code())
         );
-        return;
     }
-    assert_eq!(output.status.code(), Some(69), "{output:?}");
-    assert!(output.stdout.is_empty(), "{output:?}");
-    assert_eq!(
-        String::from_utf8(output.stderr).unwrap(),
-        "manager_composition_unavailable\n"
-    );
+    #[cfg(not(windows))]
+    {
+        let output = Command::new(MANAGER).output().expect("run the manager");
+        assert_eq!(output.status.code(), Some(69), "{output:?}");
+        assert!(output.stdout.is_empty(), "{output:?}");
+        assert_eq!(
+            String::from_utf8(output.stderr).unwrap(),
+            "manager_platform_unavailable\n"
+        );
+    }
 }
 
 #[test]

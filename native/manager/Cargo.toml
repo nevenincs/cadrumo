@@ -9,11 +9,15 @@ publish = false
 # Lets the supervision core launch a fixture image and builds the fixture runtime and its
 # tests. Release builds refuse the feature; the release CMake build never sets it.
 fixture-test-mode = []
+# Explicit opt-in: consumes a previously assembled package; never rebuilds it.
+live-package-tests = []
 
 [dependencies]
+cadrumo-application = { path = "../application" }
 cadrumo-platform = { path = "../platform" }
 serde = "1"
 serde_json = "1"
+tokio = { version = "1", features = ["rt", "time", "process"] }
 
 [target.'cfg(unix)'.dependencies]
 # Descriptor-relative, no-follow calls for the custody primitives.

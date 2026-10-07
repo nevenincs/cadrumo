@@ -9,9 +9,9 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
-modified: '2026-10-05'
+modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:98174c317d89469b15e128fff4d6b3ad085c985d8b69d5b8d7384410de248a3f'
+body_hash: 'sha256:879a945fddae5d183d110a3b62ac3a44f8ec0cba71e142ee9405a1b5b63741f8'
 ---
 
 # `runtime-manager-architecture` plan
@@ -59,10 +59,10 @@ Runtime-side supervised mode, boot record, settle and exit reasons from the supe
 - [x] `P01.S01` - Add the runtime exit-reason table with reserved ranges and project it to Rust through the contract generator; `src/cadrumo/application/runtime/contracts.py, contract generator projection, owning tests`.
 - [x] `P01.S02` - Add the --supervised mode with private non-inheritable protocol streams, fd 0/1/2 rewired to null, hooks routed through redacted logging, and the ready/heartbeat/stopping protocol with ping/stop/stop-if-idle/session-end; `src/cadrumo/entrypoints/runtime/main.py, new supervised-channel module under src/cadrumo/entrypoints/runtime/, src/cadrumo/adapters/local_runtime/server.py, owning tests`.
 - [x] `P01.S03` - Publish and remove the non-private boot record with custody local-record primitives and register it with the manager records in the storage taxonomy; `src/cadrumo/adapters/local_runtime/installation.py neighbour module, storage taxonomy owner, owning tests`.
-- [ ] `P01.S04` - Implement the ordered session-end settle: fence admissions, terminate and confirm the worker job, record ORPHANED or UNKNOWN and release only confirmed leases, then exit; `src/cadrumo/application/operations/_supervisor_drain.py, src/cadrumo/entrypoints/runtime/profile_connection_drain.py, owning tests`.
+- [x] `P01.S04` - Implement the ordered session-end settle: fence admissions, terminate and confirm the worker job, record ORPHANED or UNKNOWN and release only confirmed leases, then exit; `src/cadrumo/application/operations/_supervisor_drain.py, src/cadrumo/entrypoints/runtime/profile_connection_drain.py, owning tests`.
 - [x] `P01.S05` - Re-enable Ctrl+C processing at startup, give non-worker children their own console under --supervised, and refuse a full elevated token under --supervised; `src/cadrumo/entrypoints/runtime/main.py, src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py, src/cadrumo/adapters/outbound/browser_runtime/installer.py, owning tests`.
 - [x] `P01.S06` - Rename manager_commands.py to containment_commands.py with NativeManagerCommand, ManagerCommandResult and run_manager_command_sync, updating all consumers atomically; `src/cadrumo/adapters/local_runtime/manager_commands.py, linux_worker_process.py, macos_worker_process.py, their tests and fixtures`.
-- [ ] `P01.S22` - Report exact in-flight operation counts from profile workers to the supervisor heartbeat and stop-if-idle, replacing the hosted-profile upper bound; `src/cadrumo/entrypoints/runtime/profile_connections.py, profile worker status request, supervised_channel.py, owning tests`.
+- [x] `P01.S22` - Report exact in-flight operation counts from profile workers to the supervisor heartbeat and stop-if-idle, replacing the hosted-profile upper bound; `src/cadrumo/entrypoints/runtime/profile_connections.py, profile worker status request, supervised_channel.py, owning tests`.
 
 ### Phase `P02` - Manager core on Windows
 

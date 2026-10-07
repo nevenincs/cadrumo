@@ -1135,6 +1135,30 @@ access, so no other account can create or reach them.
 
 macOS runs no desktop GUI and takes no lock.
 
+## Manager startup and supervision
+
+The Windows manager admits an unelevated interactive session, escapes a parent
+job once when permitted, and retains its session lock while its hidden top-level
+window runs. Startup verifies the selected package and queries its installed
+interpreter for the canonical physical storage identity and application version.
+The query uses the same strict child environment as runtime launch and acquires
+no runtime endpoint. Ownership supplies either a start permit, direct same-session
+adoption, or an observer/wait role; observers never signal another session's runtime.
+
+Supervisor heartbeat messages carry required `in_flight_operations`, an exact
+nonnegative operation count or JSON `null` when observation is unavailable. A
+hosted profile is not an in-flight operation, and unknown counts never prove idle.
+Python and Rust readers share conformance vectors in
+`manager/tests/protocol_vectors.json`. Session-end fences admissions before
+settling workers; cancellation waits for that supervisor to finish before restart.
+
+This startup composition supports the selected complete package. Version cutover,
+manager IPC and tray controls remain separate plan work. A failed-version marker
+blocks startup/adoption conservatively until the installation catalogue can
+interpret it. GUI-subsystem startup failure is visible after interactive admission;
+session 0 remains refused without UI. Tests of the hidden window's own queue do
+not constitute real session-1 logoff or desktop package acceptance.
+
 ## Native distribution definitions
 
 `native/cmake/distribution` packages an already assembled payload. Its shared

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-05'
+modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c82f06a47e94c1ada8884fd079a3ef4628ef6f735619367f0a2f4247541ed984'
+body_hash: 'sha256:e29e2565146fd9e0785d4645ff86fcc33fca38484acc0b4cd6a008c3f9d373a7'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -216,6 +216,52 @@ related:
 - `S10` `M` `native/manager/tests/fixture/runtime.rs`
 - `S10` `verify:` `scratch/provisioning-state-map/verify-principal-manager.ps1` -> `pass`
 - `S10` `verify:` `scratch/provisioning-state-map/verify-principal-manager.ps1 -Check clippy` -> `pass`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/profile_connection_drain.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_session_end_settlement.py`
+- `S04` `A` `src/cadrumo/entrypoints/runtime/tests/test_session_end_native.py`
+- `S04` `verify:` `targeted ordered settlement pytest (4 tests, 2026-10-07)` -> `pass`
+- `S04` `verify:` `real Windows worker settlement with retained process handle and durable journal/lease assertions (20261007T041629.642461Z-pytest-11728-8c3fe090)` -> `pass`
+- `S04` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S04` `by:` `root`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/session_owner.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/supervised_channel.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/supervised_protocol.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_channel.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_protocol.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_runtime.py`
+- `S22` `M` `native/manager/src/supervision/protocol.rs`
+- `S22` `M` `native/manager/tests/fixture/runtime.rs`
+- `S22` `M` `native/manager/tests/protocol_conformance.rs`
+- `S22` `M` `native/manager/tests/protocol_vectors.json`
+- `S22` `verify:` `focused runtime protocol/admission unit tests (51 tests)` -> `pass`
+- `S22` `verify:` `real runtime/worker/persistence integration (17 tests)` -> `pass`
+- `S22` `verify:` `native mutation counts 0-to-1-to-0 and timeout-preserves-worker recheck` -> `pass`
+- `S22` `verify:` `uv run --no-sync pytest -q -n0 dev/packaging/tests/test_native_manager_protocol.py (13 tests)` -> `pass`
+- `S22` `verify:` `manager Windows fixture suite (139 tests; build/manager-startup-fixture.log)` -> `pass`
+- `S22` `verify:` `manager all-target all-test-feature Clippy -D warnings` -> `pass`
+- `S22` `by:` `root`
+- `S08` `A` `native/application/src/runtime.rs`
+- `S08` `A` `native/application/src/runtime_identity.py`
+- `S08` `M` `native/application/src/lib.rs`
+- `S08` `A` `native/manager/src/installed.rs`
+- `S08` `A` `native/manager/tests/runtime_identity.rs`
+- `S08` `verify:` `live packaged identity/deadline plus composed native runtime Ready/SessionEnd test (build/manager-startup-live-runtime.log; 25.16 seconds)` -> `pass`
+- `S08` `verify:` `manager and application scoped Clippy -D warnings` -> `pass`
+- `S08` `verify:` `optimized manager-only build (build/manager-startup-release.log; 26.53 seconds)` -> `pass`
+- `S08` `by:` `root`
+- `S10` `A` `native/manager/src/startup.rs`
+- `S10` `A` `native/manager/src/background.rs`
+- `S10` `A` `native/manager/src/windows_lifecycle.rs`
+- `S10` `A` `native/manager/tests/startup_cases/mod.rs`
+- `S10` `M` `native/CONTRACT.md`
+- `S10` `verify:` `manager native fixture suite (139 tests, including four startup composition cases and real hidden-window messages)` -> `pass`
+- `S10` `verify:` `release binary version/session-zero/private-argument admission checks (build/manager-startup-binary.json)` -> `pass`
+- `S10` `verify:` `release Windows manifest verifier` -> `pass`
+- `S10` `verify:` `manager all-target Clippy with both test features and rustfmt` -> `pass`
+- `S10` `by:` `root`
 
 ## Notes
 
@@ -233,3 +279,7 @@ related:
 - `S08` Partial S08 checkpoint: canonical native/platform installed-default resolver and Strict child environment replace manager's duplicated allowlist. Only filtered output is lazily cached for restarts, authority is package-pinned, and diagnostics omit environment values. Final 85 affected tests and release checks passed on Windows in build/b5-manager-cargo with B1-generated contract/identity; executor completion 22caa0 and 7edfba. S08 stays open for bounded interpreter identity/version probes and shared Settings projection; production entrypoint composition and B4 shutdown/count/schema contracts remain absent.
 - `S10` Partial S10 only: bare startup checks native session, full-token elevation and interactive desktop evidence before state or child work; --version remains available. Job escape, session-end and real runtime composition remain unimplemented. B4 ordered settle, exact operation counts and manager record grammars are still prerequisites.
 - `S10` Principal partial implementation: private session-end request, synchronized restart suppression, deadline escalation and truthful uncomposed entrypoint refusal. 133 Rust tests pass. OS window/session integration and installed discovery are unfinished; S10 stays open. No final bundle or real OS logout acceptance claimed.
+- `S04` Reuse existing ordered containment implementation; cap `SESSION_END_SETTLE` at three seconds. Real worker death, INTERRUPTED/ORPHANED journal settlement and exact lease release verified in synthetic encrypted profiles. No package compilation or session-1 logout test.
+- `S22` Heartbeat field is required `in_flight_operations:` integer|null on both sides; unknown never proves idle. Admission retains pre-fence requests, and late observations are not reused. Shared Git index lock initially rejected S04 checkpoint; no lock removed and no hook bypassed.
+- `S08` Partial S08: installed identity/version query now implemented and tested against the pre-existing packaged interpreter, complete inventory admission and fail-closed failed-version marker. Shared Settings projection remains open. No full package/docs/frontend rebuild. Native source and binary hashes, exact package distinction and limits are in build/manager-startup-verification.json.
+- `S10` Partial S10: production startup now composes admission, single breakaway attempt, session lock, inspected installed runtime, ownership/adoption and supervisor under a hidden top-level Windows window. Session-end cancellation waits for supervisor completion. Startup failure has visible notification only after interactive admission. Real session-1 GUI/logoff and shell-dispatch fallback remain unverified/unimplemented respectively. All remaining Rust implementation/review/testing performed by root after user's no-delegation instruction. Initial checkpoint commit rejected by another shared Git index lock; no lock removed or hook bypassed.

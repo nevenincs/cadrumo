@@ -50,7 +50,7 @@ class SupervisorStop(BaseModel):
 
 
 class SupervisorStopIfIdle(BaseModel):
-    """Ask for the normal drain only when no profile worker can hold work."""
+    """Ask for the normal drain only when no operation is in flight."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     type: Literal["stop-if-idle"] = "stop-if-idle"
@@ -85,9 +85,9 @@ class RuntimeHeartbeat(BaseModel):
 
     ``tick_age_ms`` is the time since the accept loop last turned, absent
     before the runtime serves. ``frontends`` counts open verified transport
-    connections. ``hosted_profiles`` counts profile hosts, each owning the
-    worker in which that profile's operations run. It is not an operation
-    count or an idle decision: bootstrap custody may run without a worker.
+    connections. ``in_flight_operations`` sums exact worker observations, or
+    is null when any worker cannot be observed within the heartbeat budget.
+    It is not an idle decision: bootstrap custody may run without a worker.
     The runtime's stop-if-idle admission fence owns the final decision.
     """
 
@@ -96,7 +96,7 @@ class RuntimeHeartbeat(BaseModel):
     seq: ProtocolSequence
     tick_age_ms: ProtocolCount | None
     frontends: ProtocolCount
-    hosted_profiles: ProtocolCount
+    in_flight_operations: ProtocolCount | None
 
 
 class RuntimeStopping(BaseModel):

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from threading import BoundedSemaphore, Event, RLock
@@ -103,6 +104,8 @@ class RuntimeProfileConnections(
         self._events = RuntimeSessionEvents()
         self._logins: dict[str, RuntimeLoginEvidence] = {}
         self._closed = False
+        self._idle_fenced = False
+        self._operation_requests = 0
         self._last_poll = 0.0
         self._last_sign_in_sweep = 0.0
         self._enrollments = RuntimeEnrollmentConnections(prepare=self._prepare_enrollment, admitting=self._admitting)
@@ -181,10 +184,46 @@ class RuntimeProfileConnections(
         )
 
     def _private_work_available(self) -> bool:
-        return self._admitting() and (self._login_inventory is None or self._login_lifecycle_available)
+        # An idle probe fences new requests, not authority for work already
+        # admitted. A busy reply must not revoke that work's callbacks.
+        return (
+            not self._closed
+            and not self.stop.is_set()
+            and (self._login_inventory is None or self._login_lifecycle_available)
+        )
 
     def _admitting(self) -> bool:
-        return not self._closed and not self.stop.is_set()
+        return not self._closed and not self._idle_fenced and not self.stop.is_set()
+
+    @contextmanager
+    def operation_admission(self) -> Generator[None]:
+        """Retain pre-fence submissions until their worker exchange has finished."""
+        with self._guard:
+            if not self._admitting():
+                raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            self._operation_requests += 1
+        try:
+            yield
+        finally:
+            with self._guard:
+                self._operation_requests -= 1
+
+    def in_flight_operation_count(self, *, timeout: float) -> int | None:
+        """Sum worker observations within one bound; unavailable is never zero."""
+        deadline = time.monotonic() + timeout
+        if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
+            return None
+        try:
+            hosts = tuple(self._profiles.values())
+        finally:
+            self._guard.release()
+        total = 0
+        for host in hosts:
+            count = host.owner.in_flight_operation_count(deadline=deadline)
+            if count is None:
+                return None
+            total += count
+        return total
 
     def hosted_profile_count(self) -> int:
         """Return the number of profile hosts, each owning the worker its operations run in."""
@@ -192,23 +231,26 @@ class RuntimeProfileConnections(
         return len(self._profiles)
 
     def stop_if_idle(self, reason: RuntimeExitReason, *, timeout: float) -> bool:
-        """Stop for ``reason`` only when no profile worker exists; otherwise keep admitting.
-
-        Every operation runs inside a hosted profile's worker, and a host is
-        registered only under this guard after an admission check. Holding the
-        guard therefore fences admission; the stop is requested inside that
-        fence, and releasing it without a stop reopens admission unchanged.
-        A guard that stays busy past ``timeout`` counts as possible work.
-        """
-        if not self._guard.acquire(timeout=timeout):
+        """Fence new submissions and stop only with a confirmed empty work inventory."""
+        deadline = time.monotonic() + timeout
+        if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
             return False
         try:
-            if self._profiles or self._custody_mutations:
+            if self._idle_fenced or self._operation_requests or self._custody_mutations:
+                return False
+            self._idle_fenced = True
+        finally:
+            self._guard.release()
+        try:
+            # Worker callbacks borrow the admission guard: never hold it while
+            # waiting for status. The separate fence rejects new submissions.
+            count = self.in_flight_operation_count(timeout=max(0.0, deadline - time.monotonic()))
+            if count != 0:
                 return False
             request_runtime_stop(self.stop, reason)
             return True
         finally:
-            self._guard.release()
+            self._idle_fenced = False
 
     def prepare_registry(self) -> OperationRegistry:
         """Validate the public operation graph before transport readiness.

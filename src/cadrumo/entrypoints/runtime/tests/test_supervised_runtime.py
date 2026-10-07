@@ -237,7 +237,7 @@ async def test_ready_heartbeat_and_stop_reach_only_the_supervisor(tmp_path: Path
                 assert heartbeat.seq == 7
                 assert heartbeat.tick_age_ms is not None and heartbeat.tick_age_ms < 5000
                 assert heartbeat.frontends == 1
-                assert heartbeat.hosted_profiles == 0
+                assert heartbeat.in_flight_operations == 0
             finally:
                 client.close()
             await _send(process, b'{"type":"stop"}\n')

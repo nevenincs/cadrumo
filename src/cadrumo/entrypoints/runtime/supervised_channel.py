@@ -82,12 +82,12 @@ class SupervisedServing(Protocol):
 class SupervisedProfiles(Protocol):
     """The profile facts a heartbeat reports and the idle-only stop."""
 
-    def hosted_profile_count(self) -> int:
-        """Return the number of profile hosts."""
+    def in_flight_operation_count(self, *, timeout: float) -> int | None:
+        """Return exact worker counts, or unknown within the observation bound."""
         ...
 
     def stop_if_idle(self, reason: RuntimeExitReason, *, timeout: float) -> bool:
-        """Stop only when no profile worker exists."""
+        """Stop only when no operation is in flight under the admission fence."""
         ...
 
 
@@ -362,7 +362,9 @@ class SupervisedRuntime:
             seq=seq,
             tick_age_ms=None if age is None else int(age * 1000),
             frontends=0 if serving is None else serving.open_connection_count(),
-            hosted_profiles=0 if profiles is None else profiles.hosted_profile_count(),
+            in_flight_operations=(
+                0 if profiles is None else profiles.in_flight_operation_count(timeout=_IDLE_FENCE_SECONDS)
+            ),
         )
 
     def _stop_if_idle(self) -> None:

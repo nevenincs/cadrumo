@@ -384,7 +384,7 @@ mod fixture {
                     answered += 1;
                     announcer.line(&format!(
                         "{{\"type\":\"heartbeat\",\"seq\":{seq},\"tick_age_ms\":{tick_age},\
-                         \"frontends\":0,\"hosted_profiles\":{}}}",
+                         \"frontends\":0,\"in_flight_operations\":{}}}",
                         u8::from(busy)
                     ));
                 }

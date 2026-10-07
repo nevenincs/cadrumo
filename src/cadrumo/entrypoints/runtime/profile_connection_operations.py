@@ -149,6 +149,7 @@ class ProfileConnectionOperationMixin:
         deadline = time.monotonic() + 5
         with ExitStack() as release_guard:
             try:
+                release_guard.enter_context(self.operation_admission())
                 connection, host = self._operation_target(context, channel, request)
                 if isinstance(request, RuntimeOperationFinancialInput):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

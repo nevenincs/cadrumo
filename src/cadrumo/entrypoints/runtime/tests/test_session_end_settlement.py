@@ -57,6 +57,7 @@ def test_session_end_settles_only_after_native_confirmation(tmp_path: Path, conf
         @override
         def close(self, *, deadline: float) -> None:
             assert profiles._closed and stop.is_set()
+            assert deadline - time.monotonic() <= 3.0
             phases.append("contain")
             if not confirmed:
                 raise RuntimeError("native containment unconfirmed")
@@ -77,7 +78,7 @@ def test_session_end_settles_only_after_native_confirmation(tmp_path: Path, conf
         ),
     )
     stop.request(RuntimeExitReason.SESSION_END_SETTLE)
-    result = profiles.drain(deadline=time.monotonic() + 2)
+    result = profiles.drain(deadline=time.monotonic() + 15)
     assert result.receipts == ()
     assert result.missing_receipts == (profile_id,)
     if confirmed:

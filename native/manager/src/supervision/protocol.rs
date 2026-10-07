@@ -52,7 +52,8 @@ pub struct Heartbeat {
     /// Milliseconds since the accept loop last turned; absent before the runtime serves.
     pub tick_age_ms: Option<u64>,
     pub frontends: u64,
-    pub hosted_profiles: u64,
+    /// Exact admitted work count; unknown is never evidence of idleness.
+    pub in_flight_operations: Option<u64>,
 }
 
 /// Why one line was refused; the line itself is never kept.
@@ -167,7 +168,10 @@ fn heartbeat(object: &mut FlatObject) -> Option<Heartbeat> {
         seq,
         tick_age_ms,
         frontends: count(object.take("frontends")?)?,
-        hosted_profiles: count(object.take("hosted_profiles")?)?,
+        in_flight_operations: match object.take("in_flight_operations")? {
+            Value::Null => None,
+            value => Some(count(value)?),
+        },
     })
 }
 

@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
 from threading import Event
+from types import SimpleNamespace
 from typing import cast
 from uuid import uuid4
 
@@ -20,7 +21,7 @@ from cadrumo.adapters.local_runtime.boot_record import (
     RuntimeBootRecordUnavailable,
     read_runtime_boot_record,
 )
-from cadrumo.application.runtime.contracts import RuntimeExitReason
+from cadrumo.application.runtime.contracts import RuntimeExitReason, RuntimeRefusalError
 from cadrumo.core.logging import get_logger
 
 from ..profile_connections import RuntimeProfileConnections
@@ -143,12 +144,63 @@ def _publication(root: Path, ready: RuntimeReady) -> RuntimeBootRecordPublicatio
     return RuntimeBootRecordPublication(storage_root=root, record=record)
 
 
-def test_idle_fence_stops_only_without_hosted_profiles(tmp_path: Path) -> None:
+def _host(count: int | None) -> RuntimeProfileHost:
+    return cast(RuntimeProfileHost, SimpleNamespace(owner=SimpleNamespace(in_flight_operation_count=lambda **_: count)))
+
+
+@pytest.mark.parametrize("count", [0, 1, 3, None])
+def test_idle_probe_observes_operations_not_host_count(tmp_path: Path, count: int | None) -> None:
+    stop = RuntimeStop()
+    profiles = _profiles(tmp_path, stop)
+    profiles._profiles[uuid4()] = _host(count)
+    assert profiles.in_flight_operation_count(timeout=1) == count
+    assert profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1) is (count == 0)
+    assert stop.is_set() is (count == 0)
+    if count != 0:
+        assert profiles._admitting()
+
+
+def test_idle_fence_retains_requests_that_have_not_reached_the_worker(tmp_path: Path) -> None:
+    stop = RuntimeStop()
+    profiles = _profiles(tmp_path, stop)
+    with profiles.operation_admission():
+        assert not profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1)
+        assert profiles._admitting()
+    assert profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1)
+
+
+def test_idle_fence_rejects_new_requests_without_revoking_existing_authority(tmp_path: Path) -> None:
+    stop = RuntimeStop()
+    profiles = _profiles(tmp_path, stop)
+
+    def observe(*, deadline: float) -> int:
+        assert profiles._private_work_available()
+        with pytest.raises(RuntimeRefusalError), profiles.operation_admission():
+            raise AssertionError("new request crossed the idle fence")
+        return 1
+
+    profiles._profiles[uuid4()] = cast(
+        RuntimeProfileHost, SimpleNamespace(owner=SimpleNamespace(in_flight_operation_count=observe))
+    )
+    assert not profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1)
+    assert profiles._admitting() and profiles._private_work_available()
+
+
+def test_heartbeat_sums_operations_across_workers(tmp_path: Path) -> None:
+    profiles = _profiles(tmp_path, RuntimeStop())
+    profiles._profiles[uuid4()] = _host(2)
+    profiles._profiles[uuid4()] = _host(3)
+    assert profiles.in_flight_operation_count(timeout=1) == 5
+    profiles._profiles[uuid4()] = _host(None)
+    assert profiles.in_flight_operation_count(timeout=1) is None
+
+
+def test_idle_fence_stops_only_without_operations(tmp_path: Path) -> None:
     stop = RuntimeStop()
     profiles = _profiles(tmp_path, stop)
     profile_id = uuid4()
-    # Any registered host owns a worker that may run an operation.
-    profiles._profiles[profile_id] = cast("RuntimeProfileHost", object())
+    # A hosted worker with unknown activity cannot prove idle.
+    profiles._profiles[profile_id] = _host(None)
     assert profiles.hosted_profile_count() == 1
     assert not profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1)
     assert not stop.is_set() and profiles._admitting()
@@ -203,12 +255,12 @@ def test_supervisor_commands_drive_ready_heartbeat_busy_and_stop(tmp_path: Path)
         assert isinstance(published, RuntimeBootRecord) and published.boot_id == ready.boot_id
 
         profile_id = uuid4()
-        profiles._profiles[profile_id] = cast("RuntimeProfileHost", object())
+        profiles._profiles[profile_id] = _host(2)
         pipes.send(b'{"type":"stop-if-idle"}\n')
         assert pipes.receive() == RuntimeBusy()
         assert not stop.is_set()
         pipes.send(b'{"type":"ping","seq":3}\n')
-        assert pipes.receive() == RuntimeHeartbeat(seq=3, tick_age_ms=250, frontends=2, hosted_profiles=1)
+        assert pipes.receive() == RuntimeHeartbeat(seq=3, tick_age_ms=250, frontends=2, in_flight_operations=2)
         pipes.send(b'{"type":"ping","seq":3,"tick":1}\n')
         assert pipes.receive() == RuntimeRefused(code=SupervisorLineRefusal.MALFORMED)
 
@@ -272,7 +324,7 @@ def test_heartbeat_before_serving_has_no_tick_and_session_end_names_its_reason()
     with _channel(stop) as (pipes, channel):
         SupervisedRuntime(stop, channel).start()
         pipes.send(b'{"type":"ping","seq":0}\n')
-        assert pipes.receive() == RuntimeHeartbeat(seq=0, tick_age_ms=None, frontends=0, hosted_profiles=0)
+        assert pipes.receive() == RuntimeHeartbeat(seq=0, tick_age_ms=None, frontends=0, in_flight_operations=0)
         pipes.send(b'{"type":"session-end"}\n')
         assert pipes.receive() == RuntimeStopping(reason=RuntimeExitReason.SESSION_END_SETTLE)
         assert stop.reason is RuntimeExitReason.SESSION_END_SETTLE

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-manager-architecture'
 date: '2026-10-05'
-modified: '2026-10-05'
+modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:822ecb9ab3f57369b7f1c2620b66e0e1afe3610d44cfc9a75cf13f399276d323'
+body_hash: 'sha256:a553acc6e17babfc683c5d4df5edc5cd5f94da575e182c3f642d4d5a4a23ff72'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -34,6 +34,16 @@ The production `native/manager/src/main.rs` still accepts only `--version` and p
 ### native-manager-admission | low | 2026-10-05
 
 Reviewed B5 bounded entrypoint admission using existing process identity and B2 desktop evidence. Session zero, missing session/elevation, full UAC token and unavailable desktop fail before state or launch; version inspection remains available. Eight tests pass in Session 0; fixture-feature all-target Clippy and fmt pass. This is partial S10: bare admitted startup still does not compose or launch the runtime. B4 ordered shutdown, exact operation counts and record grammar remain unavailable, and S08 shared Python-owned identity/version projection is still required.
+
+### windows-startup-checkpoint | low | scoped startup and runtime prerequisites pass
+
+2026-10-07 root review covers S04/S22 and partial S08/S10. Exact nullable worker counts replace hosted-profile bounds; idle fencing retains pre-fence requests and never reuses a late observation as proof of idleness. Real Windows tests independently retain a process handle and confirm death, INTERRUPTED/ORPHANED durable settlement and confirmed lease release within the session-end bound. S04/S22 have applicable passing evidence.
+
+Root personally reviewed and completed Rust startup: bounded installed-interpreter identity/version queries under strict environment, physical-root checks, ownership-permit transfer, direct same-session adoption, foreign-owner refusal, one breakaway attempt and the hidden Windows session-end window. The review's visible-refusal finding is fixed by an admitted-interactive native diagnostic; any failed-version marker now conservatively blocks startup/adoption. Ordinary tests avoid launching admitted managers against real interactive-user storage. No remaining Rust work was delegated after the operator's explicit instruction.
+
+PASS for the implemented subset: 139 native manager tests, including four composed startup cases and actual hidden-window queue delivery; a real packaged native runtime launched by the new Rust composition reached Ready and exited on SessionEnd with its boot record removed (25.16 seconds); 13 cross-language protocol tests; 51 Python unit, four ordered-settlement, 17 runtime integration and three final native worker/count cases. Manager/application Clippy, formatting, scoped Python quality checks, optimized manager-only build and release Windows manifest/admission checks pass. See build/manager-startup-verification.json for source/binary hashes and exact logs.
+
+PENDING for full S08/S10 and desktop acceptance: shared Settings projection, shell-dispatch fallback, actual session-1 GUI/logoff and installed-package acceptance. IPC/tray and version catalogue/cutover remain later work. The pre-existing desktop package was not rebuilt or updated. Git initially rejected the checkpoint because another process held the shared index lock; no lock was removed and no hook bypassed.
 
 ## Recommendations
 

@@ -82,6 +82,8 @@ class ProfileConnectionDrainMixin:
     def drain(self: RuntimeProfileConnections, *, deadline: float) -> RuntimeProfileDrainResult:
         """Resume the original fenced shutdown under this attempt's absolute deadline."""
         self.stop.set()
+        if isinstance(self.stop, RuntimeStop) and self.stop.reason is RuntimeExitReason.SESSION_END_SETTLE:
+            deadline = min(deadline, time.monotonic() + 3.0)
         if not self._drain_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
             raise RuntimeShutdownIncompleteError()
         try:

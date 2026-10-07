@@ -7,7 +7,7 @@ from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
 from datetime import datetime
 from pathlib import Path
-from threading import Event, Lock, RLock, get_ident
+from threading import Event, Lock, RLock, Thread, get_ident
 from uuid import UUID
 
 from ...adapters.local_runtime.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
@@ -53,6 +53,7 @@ class ProfileWorkerSessionOwner:
         self._wall_clock = wall_clock
         self._retiring: list[ProfileWorkerProcess] = []
         self._lifecycle_guard = RLock()
+        self._activity_guard = Lock()
         self._stopping = Event()
         self._construction_done = Event()
         self._construction_done.set()
@@ -115,6 +116,41 @@ class ProfileWorkerSessionOwner:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             self._worker.require_alive()
             return self._worker
+
+    def in_flight_operation_count(self, *, deadline: float) -> int | None:
+        """Observe the exact worker count without constructing or renewing custody."""
+        if not self._lifecycle_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
+            return None
+        try:
+            if self._lost or self._stopping.is_set() or self._retiring or not self._construction_done.is_set():
+                return None
+            worker = self._worker
+        finally:
+            self._lifecycle_guard.release()
+        if worker is None:
+            return 0
+        if time.monotonic() >= deadline or not self._activity_guard.acquire(blocking=False):
+            return None
+        finished = Event()
+        result: list[int | None] = [None]
+
+        def observe() -> None:
+            try:
+                # Preserve the worker's own control-exchange budget. A short
+                # heartbeat timeout must not kill a healthy busy worker. Only
+                # one observation may remain pending; its late answer is never
+                # reused as proof that a subsequent admission fence was idle.
+                result[0] = worker.status().in_flight_operations
+            except (RuntimeRefusalError, AutomationCustodyError):
+                pass
+            finally:
+                self._activity_guard.release()
+                finished.set()
+
+        Thread(target=observe, name="profile-worker-activity", daemon=True).start()
+        if not finished.wait(max(0.0, deadline - time.monotonic())):
+            return None
+        return result[0]
 
     @contextmanager
     def _custody(self) -> Generator[ProfileWorkerProcess]:

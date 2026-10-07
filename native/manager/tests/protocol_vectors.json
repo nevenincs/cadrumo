@@ -29,9 +29,9 @@
     "canonical": [
       "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":4242,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
       "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":9007199254740991,\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"development\"}",
-      "{\"type\":\"heartbeat\",\"seq\":0,\"tick_age_ms\":null,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":7,\"tick_age_ms\":12,\"frontends\":2,\"hosted_profiles\":1}",
-      "{\"type\":\"heartbeat\",\"seq\":9007199254740991,\"tick_age_ms\":9007199254740991,\"frontends\":9007199254740991,\"hosted_profiles\":9007199254740991}",
+      "{\"type\":\"heartbeat\",\"seq\":0,\"tick_age_ms\":null,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":7,\"tick_age_ms\":12,\"frontends\":2,\"in_flight_operations\":1}",
+      "{\"type\":\"heartbeat\",\"seq\":9007199254740991,\"tick_age_ms\":9007199254740991,\"frontends\":9007199254740991,\"in_flight_operations\":9007199254740991}",
       "{\"type\":\"stopping\",\"reason\":64}",
       "{\"type\":\"stopping\",\"reason\":65}",
       "{\"type\":\"stopping\",\"reason\":66}",
@@ -44,13 +44,14 @@
       "{\"type\":\"stopping\",\"reason\":73}",
       "{\"type\":\"busy\"}",
       "{\"type\":\"refused\",\"code\":\"malformed\"}",
-      "{\"type\":\"refused\",\"code\":\"oversized\"}"
+      "{\"type\":\"refused\",\"code\":\"oversized\"}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":0,\"frontends\":0,\"in_flight_operations\":null}"
     ],
     "accepted": [
       " {\"type\":\"busy\"} \r",
       "{\"admission\":\"native\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"version\":\"0.5.1\",\"pid\":1,\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"type\":\"ready\"}",
       "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"\\u00e9\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
-      "{\"type\": \"heartbeat\", \"seq\": 1, \"tick_age_ms\": null, \"frontends\": 0, \"hosted_profiles\": 0}"
+      "{\"type\": \"heartbeat\", \"seq\": 1, \"tick_age_ms\": null, \"frontends\": 0, \"in_flight_operations\": 0}"
     ],
     "refused": [
       "",
@@ -65,21 +66,21 @@
       "{\"type\":\"busy\",\"x\":{}}",
       "{\"type\":\"busy\",\"x\":[]}",
       "{\"type\":\"busy\"} {}",
-      "{\"type\":\"busy\"}é",
+      "{\"type\":\"busy\"}\u00c3\u00a9",
       "{\"type\":\"BUSY\"}",
-      "{\"type\":\"heartbeat\",\"seq\":1,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":3,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":3,\"in_flight_operations\":0}",
       "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":3,\"frontends\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":1.0,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":true,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":-1,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":9007199254740992,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":\"1\",\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":-5,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":3,\"frontends\":9007199254740992,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":NaN,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
-      "{\"type\":\"heartbeat\",\"seq\":1e0,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1.0,\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":true,\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":-1,\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":9007199254740992,\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":\"1\",\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":-5,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":3,\"frontends\":9007199254740992,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":NaN,\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1e0,\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}",
       "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":0,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
       "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":-1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
       "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":9007199254740992,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
@@ -105,14 +106,18 @@
       "{\"type\":\"refused\",\"code\":\"other\"}",
       "{\"type\":\"refused\"}",
       "{\"type\":\"busy\",\"code\":\"malformed\"}",
-      "{\"type\":\"busy\"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              }"
+      "{\"type\":\"busy\"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              }",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":0,\"frontends\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":0,\"frontends\":0,\"in_flight_operations\":true}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":0,\"frontends\":0,\"in_flight_operations\":-1}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":0,\"frontends\":0,\"in_flight_operations\":1.5}"
     ],
     "refused_by_manager_only": [
       "{\"type\":\"ready\",\"boot_id\":\"0F8FAD5B-D9CB-469F-A165-70867728950E\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
       "{\"type\":\"ready\",\"boot_id\":\"0f8fad5bd9cb469fa16570867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
       "{\"type\":\"ready\",\"boot_id\":\"{0f8fad5b-d9cb-469f-a165-70867728950e}\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
       "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\" 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \",\"admission\":\"native\"}",
-      "{\"type\":\"heartbeat\",\"seq\":-0,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}"
+      "{\"type\":\"heartbeat\",\"seq\":-0,\"tick_age_ms\":3,\"frontends\":0,\"in_flight_operations\":0}"
     ]
   },
   "boot_records": {

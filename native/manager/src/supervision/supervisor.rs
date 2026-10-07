@@ -497,7 +497,15 @@ impl Supervisor {
 
     /// Supervise until a requested stop, a stand-down, a foreign owner or the ceiling.
     pub fn run(&mut self) -> Outcome {
-        let outcome = self.run_owned();
+        let outcome = self.run_owned(false);
+        self.restart_permit = None;
+        outcome
+    }
+
+    /// Inspect and adopt an existing same-session owner without first launching
+    /// a competing process. Identity checks remain the adoption owner's.
+    pub fn run_adopting(&mut self) -> Outcome {
+        let outcome = self.run_owned(true);
         self.restart_permit = None;
         outcome
     }
@@ -517,8 +525,7 @@ impl Supervisor {
         Ok(self.run())
     }
 
-    fn run_owned(&mut self) -> Outcome {
-        let mut adopting = false;
+    fn run_owned(&mut self, mut adopting: bool) -> Outcome {
         let mut prior_effects = Effects::Settled;
         loop {
             if self.session_ending.load(Ordering::SeqCst) {
