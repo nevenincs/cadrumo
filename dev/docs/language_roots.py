@@ -106,6 +106,21 @@ def _page_text(content: bytes) -> str | None:
     return text if text.encode(_UTF_8) == content else None
 
 
+def _file_text(content: bytes) -> str | None:
+    """Return a file's text, or None when its bytes are not text at all.
+
+    Read strictly, never with replacement characters: what is read here decides
+    whether a file carries a mark or a reserved delimiter, and a replacement
+    character stands for bytes that are no longer known. A file that does not
+    decode is not text -- an image, a font, a search bundle -- and holds
+    neither.
+    """
+    try:
+        return content.decode(_UTF_8)
+    except UnicodeDecodeError:
+        return None
+
+
 #: What a page's own build ends each of its lines with. Sphinx writes a page as
 #: text, so the terminator is the one the writing platform uses.
 _PLATFORM_TERMINATOR: Final[str] = os.linesep
@@ -270,9 +285,12 @@ def store_compiled_root(
         How each path was stored.
 
     Raises:
-        LanguageRootsError: If ``destination`` is not empty, a file that is not
-            a page carries a mark it cannot answer, or a page carries a slot
-            delimiter of its own.
+        LanguageRootsError: If ``destination`` is not empty, a page's bytes are
+            not the text a page is written as, a file that is not a page
+            carries a mark it cannot answer, or a page carries a slot delimiter
+            of its own.
+        CompileSlotsError: If a file that is not a page carries an escaped mark
+            delimiter, or one that is not part of a whole mark.
     """
     languages = slots.languages
     if destination.exists() and any(destination.iterdir()):
@@ -311,9 +329,20 @@ def store_compiled_root(
         if path.endswith(_PAGE_SUFFIX) and _page_text(content) is not None:
             page_paths.append(path)
             continue
-        decoded = content.decode(_UTF_8, errors="replace")
-        if MARK_OPEN not in decoded:
-            refuse_escaped_marks(decoded, path)
+        if path.endswith(_PAGE_SUFFIX):
+            raise LanguageRootsError(
+                f"{path} is a page whose bytes are not the UTF-8 text a page is written as; "
+                "nothing can read the marks on it, and storing it whole would give every language "
+                "the compile's own"
+            )
+        decoded = _file_text(content)
+        if decoded is None or MARK_OPEN not in decoded:
+            if decoded is not None:
+                refuse_escaped_marks(decoded, path)
+                # A lone closing delimiter is a mark whose opening something cut
+                # off, so no mark is found here and the file would be stored once
+                # and shipped to every language with half a delimiter in it.
+                refuse_stray_delimiters(decoded, path)
             _write(_inside(destination / STRUCTURE_DIRECTORY, path), content)
             shared.append(path)
             continue
@@ -416,8 +445,8 @@ def _kinds(layout: Layout, language: str) -> dict[str, str]:
 
 
 #: Every private-use character the compile's own artefacts are delimited by: a
-#: structure's slots and a compiled page's marks. A composed page is what a
-#: reader is served, so none of them may still be in it.
+#: structure's slots and a compiled page's marks. A composed root is what a
+#: reader is served, so none of them may still be in any of its text.
 _RESERVED: Final[tuple[tuple[str, str], ...]] = (
     (SLOT_OPEN, "an opening slot"),
     (SLOT_CLOSE, "a closing slot"),
@@ -427,24 +456,31 @@ _RESERVED: Final[tuple[tuple[str, str], ...]] = (
 
 
 def _refuse_reserved(language: str, path: str, content: bytes) -> None:
-    """Refuse a composed page still carrying a slot or mark delimiter.
+    """Refuse a composed file still carrying a slot or mark delimiter.
 
     Composition replaces every slot the structure names with one language's
     string, and the strings were factored out of a page whose marks were all
-    read. So a delimiter left in a composed page means one of the two was not:
-    the page would reach a reader carrying a private-use character where its
+    read. So a delimiter left in a composed file means one of the two was not:
+    the file would reach a reader carrying a private-use character where its
     text belongs, which is the one failure of this mechanism nothing downstream
     could notice.
 
+    Every text file of the root is checked and not the pages alone, because a
+    mark reaches a stylesheet, a script or an inventory the same way it reaches
+    a page, and such a file is stored whole: a delimiter in one would be shipped
+    to every language at once.
+
     Raises:
-        LanguageRootsError: If the page carries any of them.
+        LanguageRootsError: If the file carries any of them.
     """
-    text = content.decode(_UTF_8, errors="replace")
+    text = _file_text(content)
+    if text is None:
+        return
     for delimiter, name in _RESERVED:
         at = text.find(delimiter)
         if at >= 0:
             raise LanguageRootsError(
-                f"the composed {language} page {path} still carries {name} delimiter, "
+                f"the composed {language} file {path} still carries {name} delimiter, "
                 f"around {text[max(at - 60, 0) : at + 20]!r}"
             )
 
@@ -454,7 +490,7 @@ def compose_root(stored: Path, language: str, destination: Path) -> None:
 
     Raises:
         LanguageRootsError: If the stored form holds no such language, or a
-            composed page still carries a slot or mark delimiter.
+            composed file still carries a slot or mark delimiter.
     """
     layout = read_layout(stored)
     if language not in layout.languages:
@@ -462,8 +498,7 @@ def compose_root(stored: Path, language: str, destination: Path) -> None:
     strings = read_text(stored, language)
     for path, kind in _kinds(layout, language).items():
         content = _stored(stored, kind, language, path, strings)
-        if path.endswith(_PAGE_SUFFIX):
-            _refuse_reserved(language, path, content)
+        _refuse_reserved(language, path, content)
         _write(_inside(destination, path), content)
 
 

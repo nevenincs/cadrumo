@@ -39,6 +39,10 @@ def test_the_one_strict_compile_is_nitpicky_clean_in_every_language(tmp_path: Pa
         tmp_path: Pytest-provided isolated output directory.
     """
     html_root, build_root = tmp_path / "html", tmp_path / "build"
+    # The stored form is the roots' own intermediate, removed once they are
+    # composed from it, so the gate that reads what the compile carried asks
+    # for it to be kept.
+    stored = build_root / "compiled-text"
     result = run_command(
         [
             sys.executable,
@@ -48,6 +52,8 @@ def test_the_one_strict_compile_is_nitpicky_clean_in_every_language(tmp_path: Pa
             str(html_root),
             "--build-root",
             str(build_root),
+            "--stored",
+            str(stored),
             "--flavor",
             "desktop",
             "--strict",
@@ -67,9 +73,9 @@ def test_the_one_strict_compile_is_nitpicky_clean_in_every_language(tmp_path: Pa
     # The published set is the OutputLanguage closed set, and the compile's own
     # stored form declares what it carried: a language the product publishes but
     # the compile left out would otherwise be merely absent from the output.
-    stored = json.loads((build_root / "compiled-text" / "layout.json").read_text(encoding="utf-8"))
-    assert stored["languages"] == list(SITE_ROOT_LANGUAGES), (
-        f"the compile carried {stored['languages']}, and the product publishes {list(SITE_ROOT_LANGUAGES)}"
+    carried = json.loads((stored / "layout.json").read_text(encoding="utf-8"))
+    assert carried["languages"] == list(SITE_ROOT_LANGUAGES), (
+        f"the compile carried {carried['languages']}, and the product publishes {list(SITE_ROOT_LANGUAGES)}"
     )
     absent = [language for language in SITE_ROOT_LANGUAGES if not (html_root / language / "index.html").is_file()]
     assert not absent, f"the compile wrote no entry page for {absent} under {html_root}"

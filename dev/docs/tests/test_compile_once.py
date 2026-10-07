@@ -3,7 +3,9 @@
 Two small sites are written by hand -- one standing for a language's own build,
 one for the site composed from the one compile -- with a difference in each kind
 of markup a page offers, plus a file only the built site has. The counts and the
-contexts they are filed under are stated here.
+contexts they are filed under are stated here, and so is the verdict a measuring
+run reports: a count of zero is not a pass while the two roots are not the same
+set of files.
 """
 
 from __future__ import annotations
@@ -13,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ..compile_once import IntendedDifference, _per_language_inventory, compare, roots_to_write
+from ..compile_once import IntendedDifference, _per_language_inventory, compare, main, roots_to_write
 from ..compile_slots import Rendering, activate, deactivate
 from ..message_marks import FRAGMENT_PREFIX
 
@@ -41,10 +43,14 @@ _COMPOSED = {
 
 
 def _site(root: Path, files: dict[str, str]) -> Path:
+    return _byte_site(root, {path: content.encode() for path, content in files.items()})
+
+
+def _byte_site(root: Path, files: dict[str, bytes]) -> Path:
     for path, content in files.items():
         target = root.joinpath(*path.split("/"))
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding="utf-8", newline="")
+        target.write_bytes(content)
     return root
 
 
@@ -122,6 +128,7 @@ def test_each_remaining_difference_is_counted_under_the_markup_it_sits_in(tmp_pa
     assert (found.pages, found.equal) == (2, 1)
     assert found.missing == ["_static/translations.js"]
     assert found.extra == []
+    assert found.absent == 1
     assert dict(found.by_context) == {"attr:h1.id": 1, "attr:a.title": 1, "attr:script.src": 1}
     assert found.differences == 3
     assert found.intended == {}
@@ -186,9 +193,12 @@ def test_a_declared_difference_covers_the_page_and_the_bytes_it_names_and_no_oth
 ) -> None:
     """A markup context covers a whole site, so a declaration must not excuse one.
 
-    The same context on another page, and the same page's own other bytes in
-    that context, stay in the count: a declaration excusing them would be a
-    standing permission for every later difference of that kind.
+    The same context on another page, the same page's own other bytes in that
+    context, and a part of the bytes it names, all stay in the count: a
+    declaration excusing any of them would be a standing permission for every
+    later difference of that kind. The built page's anchor is
+    ``calendario-fiscal``, so a declaration naming ``calendario`` names part of
+    one difference and no whole difference at all.
     """
     monkeypatch.setattr(
         "dev.docs.compile_once.INTENDED_DIFFERENCES",
@@ -205,6 +215,12 @@ def test_a_declared_difference_covers_the_page_and_the_bytes_it_names_and_no_oth
                 built="something-else",
                 reason="the same page's other bytes",
             ),
+            IntendedDifference(
+                context="attr:h1.id",
+                page="index.html",
+                built="calendario",
+                reason="part of the bytes that differ, which is not a difference",
+            ),
         ),
     )
     found = compare(
@@ -214,6 +230,65 @@ def test_a_declared_difference_covers_the_page_and_the_bytes_it_names_and_no_oth
     )
     assert found.intended == {}
     assert found.differences == 3
+
+
+def test_two_pages_of_different_undecodable_bytes_are_not_equal(tmp_path: Path) -> None:
+    """Read with replacement characters, two different invalid pages read the same.
+
+    Both byte sequences below become the replacement character, so a lenient
+    decode would compare the two pages equal and the proof would say a composed
+    page is byte for byte what its own build wrote while it is not.
+    """
+    found = compare(
+        _byte_site(tmp_path / "composed", {"notice.html": b"<p>\xfe</p>"}),
+        _byte_site(tmp_path / "built", {"notice.html": b"<p>\xff</p>"}),
+        "es",
+    )
+    assert (found.pages, found.equal) == (1, 0)
+    assert dict(found.by_context) == {"undecodable": 1}
+    assert found.differences == 1
+
+
+def _measured(tmp_path: Path, composed: dict[str, str], built: dict[str, str]) -> int:
+    """Measure one hand-written composed root against one hand-written build; return the exit code.
+
+    The run is entered through the module's own entry, in the mode that
+    measures roots a previous run left behind, because the verdict a measuring
+    run reports is what is under test and not the counts alone.
+    """
+    out = tmp_path / "out"
+    _site(out / "roots" / "es", composed)
+    (out / "stored").mkdir(parents=True, exist_ok=True)
+    (out / "stored" / "layout.json").write_text('{"languages": ["es"]}', encoding="utf-8")
+    oracle = _site(tmp_path / "oracle" / "es", built).parent
+    return main(["--out", str(out), "--oracle", str(oracle), "--compare-only"])
+
+
+_ROOT = {"index.html": "<body><p>Ley 37/1992</p></body>"}
+
+
+def test_a_measuring_run_of_the_same_files_passes(tmp_path: Path) -> None:
+    """The baseline the two refusals below are refusals against."""
+    assert _measured(tmp_path, _ROOT, _ROOT) == 0
+
+
+@pytest.mark.parametrize(
+    ("absent", "content"),
+    [("gone.html", "<body><p>Ley 37/1992</p></body>"), ("_static/chrome.js", "x=1;")],
+)
+def test_a_composed_root_missing_a_file_fails_the_measuring_run(tmp_path: Path, absent: str, content: str) -> None:
+    """A site that is not the same set of files is not the same site.
+
+    A missing page and a missing asset are each a failure, and neither is a
+    differing stretch: the files the two roots share can all match while a
+    whole page or the script every page loads is absent.
+    """
+    assert _measured(tmp_path, _ROOT, {**_ROOT, absent: content}) == 1
+
+
+def test_a_composed_root_carrying_a_file_no_build_wrote_fails_the_measuring_run(tmp_path: Path) -> None:
+    """A file no language's build wrote is served to a reader all the same."""
+    assert _measured(tmp_path, {**_ROOT, "left-over.html": "<body><p>x</p></body>"}, _ROOT) == 1
 
 
 def test_only_the_named_roots_are_written_in_the_order_the_compile_carries_them() -> None:

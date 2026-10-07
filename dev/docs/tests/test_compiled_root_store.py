@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ..compile_slots import MARK_CLOSE, MARK_OPEN, CompileSlots, Rendering, activate, deactivate
+from ..compile_slots import MARK_CLOSE, MARK_OPEN, CompileSlots, CompileSlotsError, Rendering, activate, deactivate
 from ..language_roots import (
     LANGUAGES_DIRECTORY,
     STRUCTURE_DIRECTORY,
@@ -179,34 +179,86 @@ def test_the_stored_form_reads_the_same_however_it_was_written(slots: CompileSlo
         (SLOT_CLOSE, "a closing slot"),
     ],
 )
-def test_a_composed_page_still_carrying_a_delimiter_is_refused(
+@pytest.mark.parametrize("path", ["page.html", "_static/chrome.js"])
+def test_a_composed_file_still_carrying_a_delimiter_is_refused(
     delimiter: str,
     named: str,
+    path: str,
     tmp_path: Path,
 ) -> None:
-    """A reader is served composed pages, so a private-use delimiter must not reach one.
+    """A reader is served the composed root, so no private-use delimiter may reach any of it.
 
     The stored form is written by hand, because the refusal is about a
     structure or a string that something upstream left a delimiter in: a
     structure composed from strings this module factored itself would carry
     none, which is exactly what makes the check worth having.
+
+    A script or a stylesheet is checked as a page is: a mark reaches one the
+    same way, and such a file is stored once, so a delimiter left in it would
+    be shipped to every language at once.
     """
     stored = tmp_path / "stored"
     _written(
         stored,
         {
-            f"{STRUCTURE_DIRECTORY}/page.html": f"<p>cut{delimiter}</p>".encode(),
+            f"{STRUCTURE_DIRECTORY}/{path}": f"<p>cut{delimiter}</p>".encode(),
             "text/en.json": b"[]",
             "layout.json": json.dumps(
                 {
                     "schema": 1,
                     "languages": ["en"],
                     "pages": [],
-                    "shared": ["page.html"],
+                    "shared": [path],
                     "language_files": {"en": []},
                 }
             ).encode(),
         },
     )
-    with pytest.raises(LanguageRootsError, match=f"composed en page page.html still carries {named} delimiter"):
+    with pytest.raises(LanguageRootsError, match=f"composed en file {path} still carries {named} delimiter"):
         compose_root(stored, "en", tmp_path / "root")
+
+
+def test_a_composed_file_whose_bytes_are_not_text_is_composed(tmp_path: Path) -> None:
+    """An image carries no text for a delimiter to be in, and is not read as if it did."""
+    stored = tmp_path / "stored"
+    image = b"\x89PNG\r\n\x1a\n\xff\xfe\x00\x01"
+    _written(
+        stored,
+        {
+            f"{STRUCTURE_DIRECTORY}/_static/mark.png": image,
+            "text/en.json": b"[]",
+            "layout.json": json.dumps(
+                {
+                    "schema": 1,
+                    "languages": ["en"],
+                    "pages": [],
+                    "shared": ["_static/mark.png"],
+                    "language_files": {"en": []},
+                }
+            ).encode(),
+        },
+    )
+    compose_root(stored, "en", tmp_path / "root")
+    assert (tmp_path / "root" / "_static" / "mark.png").read_bytes() == image
+
+
+def test_a_file_that_is_not_a_page_and_carries_a_lone_delimiter_is_refused(slots: CompileSlots, tmp_path: Path) -> None:
+    """A mark whose opening was cut off leaves no mark to find, and the file is stored once.
+
+    Nothing in the file looks language dependent, so the ordinary rule would
+    store it as shared and ship the stray delimiter to every language.
+    """
+    compiled = _written(tmp_path / "compiled", {"_static/chrome.js": f'x="cut{MARK_CLOSE}";'.encode()})
+    with pytest.raises(CompileSlotsError, match="not part of a whole mark"):
+        store_compiled_root(compiled, slots, tmp_path / "stored", language_files={"en": {}, "es": {}})
+
+
+def test_a_page_whose_bytes_are_not_text_is_refused(slots: CompileSlots, tmp_path: Path) -> None:
+    """A page read with replacement characters is a page whose marks are lost.
+
+    Stored whole, it would give every language the compile's own text; read
+    with replacement characters, two different pages would read the same.
+    """
+    compiled = _written(tmp_path / "compiled", {"index.html": b"<p>\xff\xfe</p>"})
+    with pytest.raises(LanguageRootsError, match=r"index\.html is a page whose bytes are not the UTF-8 text"):
+        store_compiled_root(compiled, slots, tmp_path / "stored", language_files={"en": {}, "es": {}})

@@ -1538,9 +1538,9 @@ docs-lang LANG:
 # Write the user-scope documentation for every language, each into its own root
 # under the English one, from ONE compile: the pages are read once however many
 # languages there are, and each root is composed from the shared structure and
-# that language's text. This is a plain local build: for the deploy-faithful
-# multi-root artefact (strict, record-injected index, per-root canonical URLs)
-# use `docs-site-preview`.
+# that language's text. This is a plain local build and it carries no search
+# index: for the deploy-faithful multi-root artefact (strict, record-injected
+# index, per-root canonical URLs) use `docs-site-preview`.
 [doc('Write every localized documentation root from one compile into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-langs:

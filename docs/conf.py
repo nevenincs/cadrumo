@@ -682,12 +682,13 @@ if _USER_SCOPE:
     html_context["cadrumo_nav"] = [entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/index"]
 
 # ── Language switcher ────────────────────────────────────────────────────────
-# The deploy publisher emits per-language site roots (``/`` = en, ``/es/``,
-# ``/ca/``, ``/hu/``). The header language switcher (docs/_templates) links the
-# current page to its counterpart under each language root. The set derives from
-# OutputLanguage (English first as the authoring source, then the translation
-# targets in enum order) - never a second hand-listed set - and each entry
-# carries its endonym, the language's own name, which is the same in every build.
+# The header language switcher (docs/_templates) links the current page to its
+# counterpart under each language root. The set derives from OutputLanguage
+# (English first as the authoring source, then the translation targets in enum
+# order) - never a second hand-listed set - and each entry carries its endonym,
+# the language's own name, which is the same in every build. Where each of those
+# roots is served is the layout's own fact, which the switcher reads from the
+# prefixes below rather than from the language.
 _DOCS_LANGUAGE_ENDONYMS = {
     OutputLanguage.EN: "English",
     OutputLanguage.ES: "Español",
@@ -695,7 +696,6 @@ _DOCS_LANGUAGE_ENDONYMS = {
     OutputLanguage.HU: "Magyar",
 }
 _DOCS_LANGUAGE_ORDER = (OutputLanguage.EN, *(member for member in OutputLanguage if member is not OutputLanguage.EN))
-html_context["cadrumo_docs_default_language"] = OutputLanguage.EN.value
 html_context["cadrumo_docs_languages"] = [
     {"code": member.value, "label": _DOCS_LANGUAGE_ENDONYMS[member]} for member in _DOCS_LANGUAGE_ORDER
 ]
@@ -732,9 +732,15 @@ html_context["language"] = _per_language_template_value(lambda carried: carried)
 _SITE_PREFIXES = _DOCS_SITE_PREFIXES(
     [member.value for member in OutputLanguage],
     build_language=language,
+    source_language=OutputLanguage.EN.value,
     environ=os.environ,
 )
 html_context["cadrumo_docs_site_prefix"] = _per_language_template_value(lambda carried: _SITE_PREFIXES[carried])
+# The whole layout, which the language switcher needs because it writes a link
+# from this page to every other root: where each one is served is a property of
+# the layout and not of the language, and it is the same mapping in every root,
+# so it is carried as itself rather than as one value per language.
+html_context["cadrumo_docs_site_prefixes"] = _SITE_PREFIXES
 
 # ── Site chrome ──────────────────────────────────────────────────────────────
 # Every template-rendered label, accessible name, and interaction-layer string,

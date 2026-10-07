@@ -80,21 +80,37 @@ def docs_site_prefixes(
     languages: Sequence[str],
     *,
     build_language: str,
+    source_language: str,
     environ: Mapping[str, str] | None = None,
 ) -> dict[str, str]:
-    """Return every language's own path inside the served site, for one compile of all of them.
+    """Return every language's own path inside the served site: the whole layout.
 
-    A single-language build is told its own prefix and needs no other
-    (:func:`docs_site_prefix`). One compile carrying every language writes every
-    root at once, so it needs the whole layout -- and the configured value still
-    decides it, for the same reason: a build given no prefix is the apex of the
-    layout being produced, so the language it builds in carries no directory and
-    every other language carries its own; a build given a prefix is one root in
-    a layout where each sits under its own code.
+    A single-language build is told its own prefix and needs no other to resolve
+    the site's one index (:func:`docs_site_prefix`). The language switcher needs
+    the whole layout, because it writes a link from the page it is on to every
+    other root, and one compile of every language needs it for the same reason.
+
+    The configured prefix decides this root's own place, and two layouts put
+    the other roots in different places:
+
+    - A build given no prefix is the apex of what it produces, so the language
+      it builds in carries no directory and every other language carries its
+      own. A local single-language build is its own whole site this way.
+    - A build given a prefix sits in a directory of its own, and what stands at
+      the apex beside it is the site's address: a site served from an address
+      of its own is the published one, which serves every language under its own
+      code and nothing at its apex, while a site with no address of its own is
+      the packaged copy, whose apex serves the language the pages are authored
+      in.
+
+    Each language's own prefix is therefore the one its own build is given, and
+    ``prefixes[build_language]`` is what :func:`docs_site_prefix` returns.
 
     Args:
-        languages: The languages the compile carries.
-        build_language: The language the compile builds in.
+        languages: The languages the site publishes.
+        build_language: The language this build or compile builds in.
+        source_language: The language the pages are authored in, which is the
+            one a packaged copy serves at its apex.
         environ: The environment to read; the process environment by default.
 
     Returns:
@@ -103,8 +119,12 @@ def docs_site_prefixes(
     Raises:
         ValueError: As :func:`docs_site_prefix` raises it.
     """
-    at_apex = not docs_site_prefix(environ)
-    return {language: "" if at_apex and language == build_language else f"{language}/" for language in languages}
+    environment = os.environ if environ is None else environ
+    if not docs_site_prefix(environment):
+        at_apex = build_language
+    else:
+        at_apex = None if environment.get(DOCS_BASE_URL_ENV, "").strip() else source_language
+    return {language: "" if language == at_apex else f"{language}/" for language in languages}
 
 
 def pin_docs_build_root(repo_root: Path | None = None) -> Path:

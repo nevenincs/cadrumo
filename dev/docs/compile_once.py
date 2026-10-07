@@ -15,7 +15,11 @@ markup they sit in turns the remaining work into a count that falls as each
 mechanism moves, instead of one gate that is red until the last of them does.
 
 A difference kept on purpose is declared in :data:`INTENDED_DIFFERENCES` with
-its reason and is reported apart from the rest, never folded into the count.
+its reason and is reported apart from the rest, never folded into the count. A
+change made to every build at once moves both sides of the comparison together
+and so leaves no difference to declare: those are named in
+:data:`UNWITNESSED_CHANGES`, which every measuring run prints beside the counts,
+because a reader of the report would otherwise read silence as evidence.
 
 There are two entries, and they differ only in what they keep.
 :func:`compile_language_roots` is the one every caller that wants the language
@@ -106,6 +110,11 @@ _INVENTORY_COMPRESSION: Final[int] = 9
 #: site that belongs to one root rather than to all of them.
 SITEMAP_FILE: Final[str] = "sitemap.xml"
 
+#: Where :func:`compile_language_roots` keeps the stored form while it composes
+#: the roots from it, for a caller that did not ask to keep it. Inside the
+#: build root, and removed with the compiled site once the roots are written.
+_STORED_SCRATCH: Final[str] = ".compiled-text"
+
 _UTF_8: Final[str] = "utf-8"
 
 
@@ -175,9 +184,80 @@ INTENDED_DIFFERENCES: Final[tuple[IntendedDifference, ...]] = (
 )
 
 
+@dataclass(frozen=True)
+class UnwitnessedChange:
+    """One deliberate change to what EVERY build of the documentation writes.
+
+    A mechanism moved for the composed roots alone shows up as a difference
+    from the per-language build, which is what the comparison counts. A
+    mechanism that changed both forms of the site at once moves both sides
+    together, so the comparison stays silent about it by construction and the
+    silence is not evidence of anything. Each such change is named here and
+    printed beside the counts, so a reader of the report is told what the
+    report cannot witness.
+
+    Attributes:
+        mechanism: The module that owns the change.
+        change: What every build now writes that it did not write before.
+        reason: Why the change belongs to every build rather than to the
+            composed roots alone.
+    """
+
+    mechanism: str
+    change: str
+    reason: str
+
+
+#: Changes to what every build writes, which the comparison cannot witness. A
+#: change here is not excused by the comparison: it is kept out of its reach,
+#: and its own gates are the ones that prove it.
+UNWITNESSED_CHANGES: Final[tuple[UnwitnessedChange, ...]] = (
+    UnwitnessedChange(
+        mechanism="dev.docs.untranslated_typesetting",
+        change=(
+            "a generated page that nobody translates is typeset in the language it is authored in, "
+            "so its quotation marks, dashes and ellipses are the English ones in every root"
+        ),
+        reason=(
+            "educating English prose with another language's quotation marks is not a translation, and a "
+            "page read identically in four languages would otherwise cost a stored string per language "
+            "for each of them: the per-language builds were changed with the compile so that the one "
+            "typesetting both produce is the authored one"
+        ),
+    ),
+    UnwitnessedChange(
+        mechanism="dev.docs.section_anchors",
+        change=(
+            "a generated heading's own anchor is the English one in every language, declared by the "
+            "page's generator rather than slugged from the translated heading"
+        ),
+        reason=(
+            "one structure cannot hold four spellings of one id, and an anchor that moved with the "
+            "language was already a permalink whose target depended on which root the reader stood in: "
+            "the per-language builds publish the same declared anchor, which is the one they shipped "
+            "in English"
+        ),
+    ),
+)
+
+
+def unwitnessed_report() -> str:
+    """Return the lines a measuring run prints for :data:`UNWITNESSED_CHANGES`."""
+    lines = [f"{len(UNWITNESSED_CHANGES)} change(s) to every build, which the comparison cannot witness:"]
+    for entry in UNWITNESSED_CHANGES:
+        lines.append(f"  {entry.mechanism}: {entry.change}")
+        lines.append(f"    because {entry.reason}")
+    return "\n".join(lines)
+
+
 #: The context a difference in a file that is not a page is counted under.
 #: Such a file holds no markup, so the whole file is what differs.
 _WHOLE_FILE: Final[str] = "file"
+
+#: The context a file neither side can be read as text in is counted under. A
+#: page is compared by the markup it is written in, so one whose bytes are not
+#: the text it claims to be has no context of its own to be filed under.
+_UNDECODABLE: Final[str] = "undecodable"
 
 
 @dataclass
@@ -210,6 +290,18 @@ class Comparison:
     def differences(self) -> int:
         """How many stretches still differ, intended ones excluded."""
         return sum(self.by_context.values())
+
+    @property
+    def absent(self) -> int:
+        """How many files one of the two sites has and the other does not.
+
+        Reported and judged apart from :attr:`differences`, which counts
+        stretches inside the files both sites have: a composed root missing a
+        page is not a page that differs, and folding the two together would
+        let one hide in the other's count. Both have to be nothing for a
+        measuring run to pass.
+        """
+        return len(self.missing) + len(self.extra)
 
     def report(self, *, contexts: int = 25) -> str:
         """Return the comparison as the lines a run prints."""
@@ -262,14 +354,16 @@ class CompiledLanguageRoots:
         roots: Each language's own root, by language tag.
         stored: The structure and each language's text the roots were composed
             from, which is what a caller ships instead of the roots where it
-            can compose them later.
+            can compose them later; None when the caller asked for the roots
+            alone and the stored form was removed with the rest of the
+            compile's scaffolding.
         languages: The languages the compile carried, in the stored order.
         seconds: Wall time of the Sphinx compile alone.
     """
 
     html_root: Path
     roots: Mapping[str, Path]
-    stored: Path
+    stored: Path | None
     languages: tuple[str, ...]
     seconds: float
 
@@ -429,10 +523,10 @@ def _pin_build_environment(
     if base_url is not None:
         os.environ[DOCS_BASE_URL_ENV] = base_url
         # A site with an address of its own serves every language under its own
-        # code, English included, so no language is at the apex of this layout:
-        # the compile says so by carrying a prefix itself, which is what
-        # :func:`dev.docs.build_paths.docs_site_prefixes` reads
-        # (the desktop package is the other layout, and carries none).
+        # code, English included, so no language is at the apex of this layout.
+        # The address and this root's own directory are what say so, and
+        # :func:`dev.docs.build_paths.docs_site_prefixes` reads both: the
+        # desktop package is the other layout, with neither.
         os.environ[DOCS_SITE_PREFIX_ENV] = f"{COMPILE_LANGUAGE}/"
     if check_sequences is not None:
         if check_sequences:
@@ -632,8 +726,10 @@ def compile_language_roots(
             ``https://example.test/docs``; None for a site served from no
             address of its own, which is what the packaged copy is.
         stored: Where to keep the structure and each language's text, or None
-            to keep it beneath *build_root*. A caller that stages or ships the
-            stored form rather than the composed roots names it.
+            to compose the roots from it and remove it again. A caller that
+            stages or ships the stored form rather than the composed roots
+            names a directory; one that wants the roots gets no second copy of
+            the site in its build directory.
         languages: The languages whose roots are written, or None for every
             language the compile carries. A caller whose site already has a
             root from another build -- the published site's English root, which
@@ -650,7 +746,7 @@ def compile_language_roots(
     """
     result = _compile_and_compose(
         build_root / "compiled",
-        stored if stored is not None else build_root / "compiled-text",
+        stored if stored is not None else build_root / _STORED_SCRATCH,
         html_root,
         build_root=build_root,
         flavor=flavor,
@@ -666,10 +762,16 @@ def compile_language_roots(
     # sees the roots and the text, not a third copy of the site and its doctree
     # cache. The measuring entry keeps it, which is what it exists for.
     shutil.rmtree(result.compiled)
+    # The stored form is the roots' own intermediate unless a caller asked to
+    # keep it: a caller that wanted the roots composed is handed the roots, and
+    # a second copy of the whole site left beside them would be inventoried,
+    # cached and shipped by every build directory that holds one.
+    if stored is None:
+        shutil.rmtree(result.stored)
     return CompiledLanguageRoots(
         html_root=html_root,
         roots=result.roots,
-        stored=result.stored,
+        stored=stored,
         languages=result.languages,
         seconds=result.seconds,
     )
@@ -711,16 +813,33 @@ def compare(composed: Path, built: Path, language: str, *, samples: int = 3) -> 
         if built_bytes == composed_bytes:
             found.equal += 1
             continue
-        built_page = built_bytes.decode(_UTF_8, errors="replace")
+        # Decoded strictly, because a page read with replacement characters is
+        # not the page: two different invalid byte sequences both read as the
+        # replacement character and would compare equal, which is the one way a
+        # byte-for-byte proof could call two different pages the same.
+        pages = _decoded_pair(built_bytes, composed_bytes)
+        if pages is None:
+            found.by_context[_UNDECODABLE] += 1
+            kept = found.samples.setdefault(_UNDECODABLE, [])
+            if len(kept) < samples:
+                kept.append((path, f"{len(built_bytes)} byte(s)", f"{len(composed_bytes)} byte(s)"))
+            continue
+        built_page, composed_page = pages
         contexts = markup_contexts(built_page)
         starts = [start for start, _ in contexts]
-        for difference in compare_page(built_page, composed_bytes.decode(_UTF_8, errors="replace")):
+        for difference in compare_page(built_page, composed_page):
             context = context_at(starts, contexts, difference.offset)
             declared = next(
                 (
                     entry
                     for entry in INTENDED_DIFFERENCES
-                    if entry.context == context and entry.page == path and entry.built in difference.base
+                    # The whole differing stretch, not a part of it: a
+                    # declaration matched on a substring would excuse every
+                    # other stretch of that context on that page that happens
+                    # to contain the bytes it names -- a wrong anchor, or
+                    # another language's root -- which is a standing permission
+                    # rather than one difference kept on purpose.
+                    if entry.context == context and entry.page == path and entry.built == difference.base
                 ),
                 None,
             )
@@ -732,6 +851,20 @@ def compare(composed: Path, built: Path, language: str, *, samples: int = 3) -> 
             if len(kept) < samples:
                 kept.append((path, difference.base[:90], difference.other[:90]))
     return found
+
+
+def _decoded_pair(built: bytes, composed: bytes) -> tuple[str, str] | None:
+    """Return both pages as text, or None when either one's bytes are not UTF-8.
+
+    A page the compile wrote and a page composed from the stored form are both
+    UTF-8 by construction, so neither can be read any other way: a page that
+    cannot be decoded is a difference the comparison reports, and never a page
+    silently read with replacement characters in it.
+    """
+    try:
+        return built.decode(_UTF_8), composed.decode(_UTF_8)
+    except UnicodeDecodeError:
+        return None
 
 
 def _oracle_roots(oracle: Path, languages: Sequence[str]) -> dict[str, Path]:
@@ -766,6 +899,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--strict", action="store_true", help="Refuse a warning in the compile (Sphinx -n -W); --html-root only."
+    )
+    parser.add_argument(
+        "--stored",
+        type=Path,
+        default=None,
+        help=(
+            "Keep the structure and each language's text here; --html-root only. It is the roots' own "
+            "intermediate by default, removed once they are composed from it."
+        ),
     )
     parser.add_argument(
         "--base-url",
@@ -809,11 +951,13 @@ def main(argv: list[str] | None = None) -> int:
             # does not overrule it.
             check_sequences=os.environ.get(SEQUENCE_CHECK_SKIP_ENV) != "1",
             base_url=arguments.base_url,
+            stored=arguments.stored,
             languages=arguments.languages,
         )
+        kept = f", stored in {arguments.stored}" if arguments.stored is not None else ""
         print(
             f"One compile of {len(written.languages)} language(s) in {written.seconds:.0f} s: "
-            f"wrote {', '.join(written.roots)} under {written.html_root}",
+            f"wrote {', '.join(written.roots)} under {written.html_root}{kept}",
             flush=True,
         )
         return 0
@@ -851,7 +995,12 @@ def main(argv: list[str] | None = None) -> int:
     for comparison in comparisons:
         print(comparison.report(), flush=True)
     total = sum(comparison.differences for comparison in comparisons)
-    print(f"\n{total} differing stretch(es) over {len(languages)} language(s)", flush=True)
+    absent = sum(comparison.absent for comparison in comparisons)
+    print(
+        f"\n{total} differing stretch(es) and {absent} missing or extra file(s) over {len(languages)} language(s)",
+        flush=True,
+    )
+    print(unwitnessed_report(), flush=True)
     if arguments.json is not None:
         arguments.json.write_text(
             json.dumps(
@@ -860,6 +1009,7 @@ def main(argv: list[str] | None = None) -> int:
                         "pages": comparison.pages,
                         "equal": comparison.equal,
                         "differences": comparison.differences,
+                        "absent": comparison.absent,
                         "missing": comparison.missing,
                         "extra": comparison.extra,
                         "by_context": dict(comparison.by_context.most_common()),
@@ -872,7 +1022,10 @@ def main(argv: list[str] | None = None) -> int:
             + "\n",
             encoding=_UTF_8,
         )
-    return 0 if total == 0 else 1
+    # A composed root missing a page, or carrying one no build wrote, fails the
+    # run as a differing stretch does: a site that is not the same set of files
+    # is not the same site, whatever the files it does share read like.
+    return 0 if total == 0 and absent == 0 else 1
 
 
 if __name__ == "__main__":

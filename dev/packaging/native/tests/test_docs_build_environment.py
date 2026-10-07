@@ -53,7 +53,16 @@ def test_the_compile_command_names_the_desktop_flavor_and_both_roots(
 
     def record(root: Path, **settings: object) -> object:
         recorded.update(settings, html_root=root)
-        return SimpleNamespace(languages=_LANGUAGES, roots=dict.fromkeys(_LANGUAGES, root), seconds=0.0, html_root=root)
+        # The packaging command asks for the roots and not for the stored form,
+        # so the result it is handed reports none: the compile composes the
+        # roots from it and removes it again.
+        return SimpleNamespace(
+            languages=_LANGUAGES,
+            roots=dict.fromkeys(_LANGUAGES, root),
+            stored=None,
+            seconds=0.0,
+            html_root=root,
+        )
 
     monkeypatch.setattr(compile_once, "compile_language_roots", record)
     assert compile_main(command[3:]) == 0
@@ -61,6 +70,7 @@ def test_the_compile_command_names_the_desktop_flavor_and_both_roots(
     assert recorded["html_root"] == html_root
     assert recorded["build_root"] == build_root
     assert recorded["flavor"] == "desktop"
+    assert recorded["stored"] is None, "the package ships the roots, so the stored form is an intermediate"
 
 
 def test_a_failed_compile_stops_the_packaging_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

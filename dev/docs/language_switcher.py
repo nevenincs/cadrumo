@@ -3,10 +3,18 @@
 The switcher is the piece of site chrome that varies the most between language
 roots. Three facts change at once: the current language is a span where every
 other language is a link, the path from a page to the shared base holding every
-language root is one level deeper when the root is not the apex, and the closed
-state shows the current language's own code. A template cannot carry one mark
-through all three (:mod:`dev.docs.compile_slots`), because the page's own path
-sits between them and belongs to no language.
+language root is one level deeper for every directory this root sits in, and the
+closed state shows the current language's own code. A template cannot carry one
+mark through all three (:mod:`dev.docs.compile_slots`), because the page's own
+path sits between them and belongs to no language.
+
+Where each root sits is the LAYOUT's own fact and not the language's, so it is
+read from one authority, :func:`dev.docs.build_paths.docs_site_prefixes`: the
+desktop package serves one language at its apex and the rest under their own
+code, while the published site serves every language under its own code and
+nothing at the apex. A switcher that assumed the first layout wrote, from the
+published English root, a Spanish link relative to the English root rather than
+to the base above it.
 
 So the element is built here instead, from the facts rather than from a Jinja
 template, and the one compile records each language's whole element. A
@@ -40,7 +48,7 @@ def switcher_markup(
     languages: Sequence[Mapping[str, str]],
     *,
     build_language: str,
-    default_language: str,
+    prefixes: Mapping[str, str],
     root_uri: str,
     pagename: str,
     aria_label: str,
@@ -52,8 +60,10 @@ def switcher_markup(
         languages: Every language root the site publishes, in display order,
             each as its ``code`` and the ``label`` it reads in itself.
         build_language: The language of the root this page belongs to.
-        default_language: The language served at the shared base, whose root
-            carries no directory of its own.
+        prefixes: Each language's own path inside the served site, as
+            :func:`dev.docs.build_paths.docs_site_prefixes` returns them: empty
+            for a root at the site's apex, and one segment ending in ``/`` for
+            a root in a directory of its own.
         root_uri: The path from this page back to its own language root, empty
             for a page at the root itself.
         pagename: This page's docname, which is its path inside every root.
@@ -63,8 +73,16 @@ def switcher_markup(
     Returns:
         The element, from its ``<details>`` to its ``</details>`` and no
         surrounding whitespace.
+
+    Raises:
+        KeyError: If a published language has no prefix, since the layout then
+            does not say where that root is served and no link to it could be
+            written.
     """
-    base = root_uri if build_language == default_language else f"{root_uri}../"
+    # The base every language root is a peer under: this page's own root, then
+    # back out of each directory the root itself sits in. A root at the apex
+    # sits in none, which is the one case where the base is the root.
+    base = root_uri + "../" * prefixes[build_language].count("/")
     items: list[str] = []
     for entry in languages:
         code, label = entry["code"], entry["label"]
@@ -74,7 +92,7 @@ def switcher_markup(
                 f'lang="{code}">{label}</span></li>'
             )
             continue
-        directory = "" if code == default_language else f"{code}/"
+        directory = prefixes[code]
         items.append(
             f'<li><a class="cadrumo-header-lang-item" href="{base}{directory}{pagename}.html" '
             f'lang="{code}" hreflang="{code}">{label}</a></li>'
@@ -96,7 +114,7 @@ def switcher_of_page(
     languages: Sequence[Mapping[str, str]],
     *,
     language: OutputLanguage,
-    default_language: str,
+    prefixes: Mapping[str, str],
     root_uri: str,
     pagename: str,
     aria_label: str,
@@ -107,7 +125,10 @@ def switcher_of_page(
         languages: Every language root the site publishes, as
             :func:`switcher_markup` takes them.
         language: The language a single-language build renders.
-        default_language: The language served at the shared base.
+        prefixes: Each language's own path inside the served site, as
+            :func:`switcher_markup` takes them. One compile and a
+            single-language build read the same layout, so both write the same
+            element for the same page.
         root_uri: The path from this page back to its own language root.
         pagename: This page's docname.
         aria_label: The summary's accessible name. Under the one compile this
@@ -125,7 +146,7 @@ def switcher_of_page(
         return switcher_markup(
             languages,
             build_language=carried.value,
-            default_language=default_language,
+            prefixes=prefixes,
             root_uri=root_uri,
             pagename=pagename,
             aria_label=aria_label,
@@ -143,7 +164,8 @@ def register(app: Sphinx) -> None:
 
     Args:
         app: The Sphinx application, whose ``html_context`` carries the
-            languages, the apex language and this root's resolved chrome.
+            languages, where each of their roots is served in this layout, and
+            this root's resolved chrome.
     """
 
     def render(
@@ -161,7 +183,7 @@ def register(app: Sphinx) -> None:
         context["cadrumo_language_switcher"] = switcher_of_page(
             declared["cadrumo_docs_languages"],
             language=OutputLanguage(app.config.language),
-            default_language=declared["cadrumo_docs_default_language"],
+            prefixes=declared["cadrumo_docs_site_prefixes"],
             root_uri=f"{root.rsplit('/', 1)[0]}/" if "/" in root else "",
             pagename=pagename,
             aria_label=declared["cadrumo_chrome"]["aria_language"],

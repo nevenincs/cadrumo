@@ -353,6 +353,61 @@ def test_the_site_prefix_defaults_to_the_root_being_the_whole_site() -> None:
     assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": "es/"}) == "es/"
 
 
+def test_the_layout_places_every_root_and_agrees_with_this_root_s_own_prefix() -> None:
+    """The whole layout, which a link from one root to another is written against.
+
+    Four configurations, each with the places it serves the four roots stated by
+    hand: the packaged copy compiled in English, one root of that copy built on
+    its own, the published site, and a local single-language build that is its
+    own whole site. In every one of them the build's own entry is the prefix the
+    build was given, because the two are the same fact read twice.
+    """
+    from ..build_paths import docs_site_prefixes
+
+    languages = ("en", "es", "ca", "hu")
+    apex = {"en": "", "es": "es/", "ca": "ca/", "hu": "hu/"}
+    published = {"en": "en/", "es": "es/", "ca": "ca/", "hu": "hu/"}
+
+    # The packaged copy, compiled in the language it is authored in: that root
+    # is the apex and is given no directory of its own.
+    assert docs_site_prefixes(languages, build_language="en", source_language="en", environ={}) == apex
+    # One root of the same packaged copy, built on its own in its own directory.
+    # Nothing says the site has an address, so its apex is still the authored
+    # language and not this root.
+    assert (
+        docs_site_prefixes(
+            languages,
+            build_language="es",
+            source_language="en",
+            environ={"CADRUMO_DOCS_SITE_PREFIX": "es"},
+        )
+        == apex
+    )
+    # The published site, served from an address of its own: every language sits
+    # under its own code, the authored one included, and no root is at the apex.
+    for build_language in languages:
+        assert (
+            docs_site_prefixes(
+                languages,
+                build_language=build_language,
+                source_language="en",
+                environ={
+                    "CADRUMO_DOCS_SITE_PREFIX": build_language,
+                    "CADRUMO_DOCS_BASE_URL": "https://example.test/docs",
+                },
+            )
+            == published
+        ), build_language
+    # A local single-language build, which is its own whole site: the root it
+    # builds is the apex whichever language it is.
+    assert docs_site_prefixes(languages, build_language="ca", source_language="en", environ={}) == {
+        "en": "en/",
+        "es": "es/",
+        "ca": "",
+        "hu": "hu/",
+    }
+
+
 @pytest.mark.parametrize("value", ["/es", "a/b", "..", ".", "es\\x", "/"])
 def test_the_site_prefix_refuses_anything_but_one_segment(value: str) -> None:
     """A prefix that climbs or names several segments is refused, not normalised.
