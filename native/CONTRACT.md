@@ -678,8 +678,8 @@ set and otherwise from its own directory. It checks the package manifest's
 platform and ABI against the generated contract and the interpreter against its
 manifest digest. On Windows, default member settings use the shared native
 platform preparation and generated canonical Settings, storage and logging
-defaults, without starting Python. Explicit nonblank member overrides or an
-unusual home-directory configuration use the fixed query below. Profile and
+defaults, without starting Python. Explicit nonblank member overrides use the
+fixed query below. Profile and
 pointer validation stays with the canonical account CLI read after the window
 opens. Other platforms always use the query.
 
@@ -689,8 +689,8 @@ deadline, 1 MiB of standard output and 64 KiB of standard error. The output is
 parsed and never retained, because the environment can hold credentials.
 
 The query reports the child environment, the storage root, the log directory,
-log file, line format and rotation limits, the output language and the user's
-home directory. The child environment carries `CADRUMO_LOCAL_STORAGE_ROOT` set to
+log file, line format and rotation limits, the output language and the canonical
+console workspace. The child environment carries `CADRUMO_LOCAL_STORAGE_ROOT` set to
 the absolute root that `configured_storage_root()` resolved, and the query refuses
 with `storage_root_disagreement` when Settings resolves a different root. The host
 refuses a projection with a relative path, a log file outside the log directory,
@@ -883,15 +883,18 @@ payloads and terminal kinds cannot invoke it; it carries no runtime state.
 
 | Kind | Program | Starts in | Process role |
 | --- | --- | --- | --- |
-| `console` | Windows: `PowerShell\7\pwsh.exe` under `ProgramW6432` or `ProgramFiles`, else `System32\WindowsPowerShell\v1.0\powershell.exe` under `SystemRoot`, with `-NoLogo`; Linux: the account's login shell from `/etc/passwd` | User home | `console` |
-| `python` | `P/python.exe` with no arguments | User home | `repl` |
-| `tui` | `P/python.exe -m cadrumo.entrypoints.tui` | Storage root | `tui` |
+| `console` | Windows: `PowerShell\7\pwsh.exe` under `ProgramW6432` or `ProgramFiles`, else `System32\WindowsPowerShell\v1.0\powershell.exe` under `SystemRoot`, with `-NoLogo`; Linux: the account's login shell from `/etc/passwd` | Console workspace | `console` |
+| `python` | `P/python.exe` with no arguments | Console workspace | `repl` |
+| `tui` | `P/python.exe -m cadrumo.entrypoints.tui` | Console workspace | `tui` |
 
-Every kind receives the same pinned child environment; `console` also gets
-`P/bin/` first on `PATH`. The shell program is resolved as an absolute path from
-fixed system locations, never through `PATH`. `console` and `python` refuse to
-start when the home directory is not an absolute directory or lies inside the
-storage root, so a relative write cannot land a plaintext file in custody. On
+Every kind receives the same pinned child environment, with the package's native
+entrypoint directory and bundled interpreter directory ahead of inherited `PATH`
+entries. This also applies to subprocesses launched from the Python REPL or TUI.
+The shell program is resolved as an absolute path from fixed system locations,
+never through `PATH`. The taxonomy-owned console workspace is created under the
+canonical storage root for operator scripts and scratch files; it is separate
+from encrypted profile custody. Shell startup profiles still run and may apply
+the operator's own cwd or search-path customizations. On
 Windows the host clears the inherited "ignore Ctrl+C" attribute before starting
 any terminal child, so Ctrl+C reaches it.
 
@@ -1033,8 +1036,31 @@ with exit status 1.
 The desktop holds no runtime connection and no runtime authority, and keeps no
 session, receipt or credential. The TUI tab runs the TUI process and shows only
 its output, including the reason the TUI writes on standard error and its exit
-when no runtime admits it. Starting or reaching a runtime manager is not
-implemented: the desktop starts and stops nothing.
+when no runtime admits it. On supported managed Windows installations, the desktop
+requests the independent manager at startup and observes runtime availability
+through the canonical account-status command. A launch acknowledgement is not a
+readiness or authentication claim. The manager alone starts and supervises the
+runtime; closing a console or desktop window does not stop it. Development runs
+with explicit storage overrides use an explicitly started runtime for that root.
+
+The console starts with the same storage identity as desktop sign-in. Interactive
+CLI commands resume the selected profile's keychain-held receipt through verified
+native IPC, and the TUI attempts the same receipt for its preselected profile.
+No profile identifier, passphrase or receipt is added to the environment. A
+missing runtime, expired receipt or incompatible runtime version remains a typed
+refusal. Piped/noninteractive commands retain their explicit credential-channel
+requirements; they do not borrow a human receipt merely because the console is
+signed in.
+
+From the console, `aeat config sign-in-status` observes availability and sign-in,
+`python` opens the bundled interpreter, and
+`python -m cadrumo.entrypoints.tui` opens the runtime-backed workbench. Standalone
+CLI and interpreter invocations retain the caller's cwd so relative file arguments
+keep their meaning; their storage root remains pinned independently of cwd.
+The optional `python_d` is the instrumented packaged interpreter, not a source
+checkout. Repository `dev` commands require a checkout; they preserve the inherited
+storage pin, but their product version and authority generation must match the
+running runtime. Development clients do not start or replace that runtime.
 
 Sign-in and profiles go through the packaged command line
 (`src-tauri/src/shell/sign_in/`). Each command below spawns one short-lived
@@ -1133,7 +1159,7 @@ unless the run should use the default root, build `desktop-run`, and check:
 
 - The window opens on the documentation index in the output language, and a
   documentation search returns results.
-- The Console tab shows a PowerShell prompt in the home directory and the Python
+- The Console tab shows a PowerShell prompt in the console workspace and the Python
   tab shows `>>>`. The TUI pane shows the TUI, or its refusal line and exit when
   no runtime admits it.
 - The Logs tab lists host events and Python records and no terminal text.
