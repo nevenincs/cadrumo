@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:0886ff5dd9349cb86b879f9f467855d11ad5ff306ec5799a1e5e7e508e43f60a'
+body_hash: 'sha256:8ea6708e1be96f50ee3f202c1b3d70b119498d3c3216ca1825a7e51594e04543'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -115,6 +115,22 @@ related:
 - `S07` `verify:` `vaultspec-core vault check --feature application-distribution (0 errors, 1 stale-index warning)` -> `pass`
 - `S07` `verify:` `git diff --check on S07 paths` -> `pass`
 - `S07` `by:` `Codex`
+- `S08` `A` `dev/packaging/native/windows_msi.py`
+- `S08` `A` `dev/packaging/tests/test_windows_msi.py`
+- `S08` `A` `native/cmake/distribution/WindowsMsiGate.cmake.in`
+- `S08` `M` `dev/packaging/native/windows_msi_identity.py`
+- `S08` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S08` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S08` `M` `native/CONTRACT.md`
+- `S08` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S08` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S08` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/tests/test_windows_msi.py dev/packaging/native/tests/test_distribution_prepare.py dev/packaging/tests/test_windows_msi_identity.py dev/packaging/tests/test_distribution_identity.py (51 passed)` -> `pass`
+- `S08` `verify:` `WiX 5.0.2 PATH, DOTNET_ROLL_FORWARD=Major, uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/tests/test_windows_msi.py (2 passed; eight MSI builds and database readbacks)` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check changed MSI Python modules and tests` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check changed MSI Python modules and tests` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check changed MSI Python modules and tests` -> `pass`
+- `S08` `verify:` `git diff --check scoped S08 files` -> `pass`
+- `S08` `by:` `Codex`
 
 ## Notes
 
@@ -123,3 +139,4 @@ related:
 - `S05` Extended CMake path ownership to desktop and native installation staging. Removed development-status labels from build-framework documentation. Existing physical clutter remains blocked by the previously recorded deletion rejection; S05 remains open.
 - `S04` S04 remains open: forty-eight passing fixture tests do not establish live MSI/release acceptance. S03 reopened for the high current-template Removing major-upgrade finding. Proposed two-product MSI ownership and transaction contract requires acceptance before dependent implementation. Requested a disposable interactive Windows runner; current host is Session 0, has no VM, Sandbox disabled, Docker linux. No real install/registry/login/reboot/logoff action.
 - `S06` S06 covers format setup only. No native installer creation/install or release lifecycle acceptance; S03/S04 remain open for ownership, manager integration and disposable native runner gates.
+- `S08` Source/database authoring only. Every product retains the literal-false installation gate; S09 native transaction/scope admission and safe maintenance remain unimplemented. No product installed or release upgrade acceptance claimed.

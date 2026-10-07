@@ -67,6 +67,8 @@ configure_file("${CADRUMO_SOURCE_ROOT}/LICENSE" "${CMAKE_BINARY_DIR}/LICENSE.txt
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
 if(CADRUMO_TARGET STREQUAL "windows-x86-64")
   set(CPACK_GENERATOR WIX)
+  configure_file(WindowsMsiGate.cmake.in "${CMAKE_BINARY_DIR}/WindowsMsiGate.cmake" @ONLY)
+  set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_BINARY_DIR}/WindowsMsiGate.cmake")
   set(CPACK_WIX_VERSION 4)
   set(CPACK_WIX_ARCHITECTURE x64)
   set(CPACK_WIX_INSTALL_SCOPE perMachine)
@@ -120,13 +122,26 @@ endif()
 set(distribution_archive "${CADRUMO_PATH_PACKAGES}/${CPACK_PACKAGE_FILE_NAME}.zip")
 include(CPack)
 function(cadrumo_distribution_package target generator)
+  set(msi_guard)
+  if(generator STREQUAL "WIX")
+    set(msi_guard COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}"
+      "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi
+      reject-combined --build "${CMAKE_BINARY_DIR}")
+  endif()
   add_custom_target(${target}
+    ${msi_guard}
     COMMAND "${CMAKE_CPACK_COMMAND}" --config "${CMAKE_BINARY_DIR}/CPackConfig.cmake"
       -C "$<CONFIG>" -G "${generator}"
     DEPENDS installation_prepare USES_TERMINAL VERBATIM)
 endfunction()
 if(CADRUMO_TARGET STREQUAL "windows-x86-64")
   cadrumo_distribution_package(msi WIX)
+  add_custom_target(msi-author
+    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi author
+      --build "${CMAKE_BINARY_DIR}" --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args}
+    DEPENDS installation_prepare
+    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+  cadrumo_register_clean(TARGET msi-author PATHS "${CADRUMO_PATH_INSTALLATION_METADATA}/wix")
 elseif(CADRUMO_TARGET MATCHES "^linux-")
   cadrumo_distribution_package(deb DEB)
   cadrumo_distribution_package(rpm RPM)

@@ -1309,11 +1309,14 @@ not constitute real session-1 logoff or desktop package acceptance.
 
 `native/cmake/distribution` packages an already assembled payload. Its shared
 identity projection covers Windows x64, Linux x64/ARM64 and macOS ARM64. The
-application ID is `md.neve.cadrumo`; the preview channel adds `.preview`. Upgrade
-UUIDs are deterministic per application/channel, target and machine installation
-scope. They do not change with the version. MSI product/package codes retain their
-separate release lifetimes. Publisher, license, version and names come from the
-existing Python product and project metadata owners.
+application ID is `md.neve.cadrumo`; the preview channel adds `.preview`.
+The legacy combined MSI family retains its published UUID. New MSI families
+separate application/channel, target, user/machine scope and version/registration
+ownership role. Their family UUIDs do not change with the version. Product codes
+identify releases; shared registration components keep their resource identities
+across releases, while version components have distinct release ownership. WiX
+generates package codes for individual MSI builds. Publisher, license, version
+and names come from the existing Python product and project metadata owners.
 
 Configure with CMake 4.4.3, `-S native/cmake/distribution`, the target's preset and
 `-DCADRUMO_PAYLOAD=<absolute-payload>`. The presets are `distribution-windows-x64`,
@@ -1339,7 +1342,7 @@ the corresponding distribution preset on the native packaging host:
 
 | Platform | Build command | Output |
 | --- | --- | --- |
-| Windows x64 | `cmake --build --preset distribution-windows-msi` | `.msi` |
+| Windows x64 | `cmake --build --preset distribution-windows-msi` | `.msi`; manager payloads are currently gated |
 | Linux x64 | `cmake --build --preset distribution-linux-x86-64-deb` | `.deb` |
 | Linux x64 | `cmake --build --preset distribution-linux-x86-64-rpm` | `.rpm` |
 | Linux ARM64 | `cmake --build --preset distribution-linux-aarch64-deb` | `.deb` |
@@ -1366,13 +1369,37 @@ Windows payloads declaring the manager stage under `versions/<version>` with the
 stable entry at the installation prefix. The desktop shortcut targets that
 version's root-level desktop image; installer-added notices stay outside its
 immutable inventory. Payloads without a manager retain the existing `app` layout.
-MSI owns Start menu/uninstall registration. Its existing major-upgrade policy,
-dual-scope authoring and disposable-host upgrade acceptance remain rollout work;
-the catalogue alone does not implement manager cutover or obsolete-version removal.
+Manager payloads are refused by the legacy combined CPack MSI route, including
+direct CPack invocation. That product's removing major upgrade cannot preserve
+older runtime versions. The explicit `zip` target remains available.
+
+Build `msi-author` to validate the stage and emit `user-version.wxs`,
+`machine-version.wxs`, `user-registration.wxs` and `machine-registration.wxs`
+under `installation/metadata/wix`. `clean-msi-author` owns those generated sources.
+Version sources own only the immutable release subtree. Registration sources own
+the stable manager, marker, notices, shortcuts and scoped login registration,
+including which versions supply the manager and desktop anchors. User sources
+use HKCU and LocalAppData; machine sources use HKLM and Program Files. No installer
+launches the manager or runtime during installation. Explicit `UpgradeStrategy`
+authoring requires WiX 5 or newer: version products disable automatic major
+upgrades; registration uses its own family and shared component identities.
+
+These are source definitions, with `installable: false` in their authoring
+descriptor and a literal-false launch condition. Native transaction publication,
+scope admission, same-version byte checks, retained anchors and safe in-use
+maintenance must be implemented and validated before replacing that condition.
+The explicit Windows compiler test lane uses a configured WiX tool on `PATH`:
+`uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/tests/test_windows_msi.py`.
+It compiles all four sources for desktop and runtime-only payloads with warnings
+treated as errors, then reads the MSI databases back to verify product identities,
+the install block and the absence of version-removal upgrades. This verifies the
+generated ownership definitions. Disposable-host install/upgrade acceptance remains
+pending.
+The catalogue alone does not implement manager cutover or obsolete-version removal.
 Linux installs under `/opt/cadrumo` with desktop/icon registrations
 under `/usr/share`. Preview uses separate names. macOS packages a CADRUMO.app
 bundle for the Applications folder. Runtime storage remains owned by Settings;
-these definitions add no services, scheduled tasks or automatic launch.
+current packaging adds no services, scheduled tasks or automatic launch.
 
 For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
 relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact

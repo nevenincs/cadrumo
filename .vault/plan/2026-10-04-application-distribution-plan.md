@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:700e14c45ad88a1cbdd248f5178475e7b59359974336bf03160ce81092f0dfeb'
+body_hash: 'sha256:eb5affd751314aed85b03e8ea735f90ba75bee0403473f985233b9b78b87b81e'
 ---
 
 # Application distribution
@@ -28,13 +28,17 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 
 2026-10-07 format selection: the operator specified Windows MSI and macOS DMG and authorized setting them up now. Linux uses DEB and RPM through the existing accepted application-distribution decision. S06 exposes these as native default outputs and independently selectable build targets/presets, while ZIP remains explicit auxiliary delivery. This format setup executes under accepted authority and does not depend on the proposed Windows product-ownership protocol. S03/S04 retain their separate ownership and live acceptance gates.
 
+2026-10-07 S07/S08 checkpoint: role/scope/release ownership identities and all four verified-stage WiX source definitions are implemented. The canonical CMake graph exposes msi-author and its cleanup; both the build target and direct CPack route refuse the unsafe combined manager MSI. The source definitions deliberately retain a literal-false install condition until S09 implements native transaction publication, scope admission, same-version byte checks, anchor retention and startup/removal exclusion. WiX 5.0.2 compiled and decompiled all four roles/scopes for desktop and runtime-only synthetic payloads, with warnings treated as errors; this establishes source/database authoring, not live release acceptance. S08 can close on that scoped evidence. S09 and the cross-plan manager lifecycle dependencies remain open implementation work. Its scope work must carry typed user/machine registration origin through the shared catalogue so the accepted this-user fallback is enforceable; the present untyped prefix list selects the globally newest valid version. No native product was installed.
+
 ## Steps
 
 - [x] `S01` - Generate canonical product publisher channel and platform identities for all supported targets; `src/cadrumo/core/product_identity.py and dev/packaging/native/identity.py`.
 - [x] `S02` - Project canonical identity into CMake project and platform packaging configuration; `CMakeLists.txt and native/cmake`.
 - [x] `S06` - Expose native MSI, DMG and DEB/RPM delivery targets and presets with archives as explicit auxiliary outputs; `native/cmake/distribution, dev/packaging/native/tests/test_distribution_prepare.py and native/CONTRACT.md`.
 - [x] `S07` - Separate Windows MSI product and component identities by ownership role, installation scope and release without changing legacy identities; `dev/packaging/native/identity.py, dev/packaging/native/windows_msi_identity.py and dev/packaging/tests/test_windows_msi_identity.py`.
-- [ ] `S08` - Author separate immutable version and shared registration WiX products for both scopes, with combined manager MSI refused until native maintenance is integrated; `dev/packaging/native/windows_msi.py, native/cmake/distribution and dev/packaging/tests/test_windows_msi.py`.
+- [x] `S08` - Author separate immutable version and shared registration WiX products for both scopes, with combined manager MSI refused until native maintenance is integrated; `dev/packaging/native/windows_msi.py, dev/packaging/native/windows_msi_identity.py, native/cmake/distribution, dev/packaging/tests/test_windows_msi.py, dev/packaging/native/tests/test_distribution_prepare.py and native/CONTRACT.md`.
+- [ ] `S10` - Preserve native registry scope in discovery and enforce verified this-user fallback before newer machine installations; `native/platform/src/installation.rs, native/application installation catalogue and tests, native/manager/src/installation.rs, native/desktop/src-tauri manager consumers and tests, and native/CONTRACT.md`.
+- [ ] `S09` - Integrate native MSI transaction publication and scope admission with catalogue startup and removal exclusion; `native/application installation catalogue, native installer maintenance adapter and native/cmake/distribution`.
 - [ ] `S03` - Implement native installation registration and ownership-aware uninstall; `native/cmake, native/desktop build identity, and dev/packaging/native installation helpers`.
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.
 - [ ] `S05` - Centralize build output paths and generation ownership in CMake and remove unowned build clutter; `native/cmake, native/desktop, dev/packaging/native, dev/packaging/tests, and build`.

@@ -8,6 +8,7 @@ from typing import Literal
 from uuid import NAMESPACE_DNS, UUID, uuid5
 
 from .identity import DistributionIdentity, validate_native_version
+from .layout import load_layout
 
 InstallationScope = Literal["user", "machine"]
 ProductRole = Literal["version", "registration"]
@@ -25,6 +26,7 @@ class MsiIdentity:
     install_scope: str
     registry_root: str
     root_directory: str
+    version_directory: str
 
     def component_code(self, relative: str) -> str:
         """Bind ownership to a canonical relative resource and its actual release location."""
@@ -40,7 +42,7 @@ class MsiIdentity:
             raise ValueError("MSI component requires a canonical prefix-relative resource")
         resource = relative.casefold()
         if self.role == "version":
-            resource = f"versions/{self.version}/{resource}"
+            resource = f"{self.version_directory}/{self.version}/{resource}"
         return str(uuid5(UUID(self.upgrade_code), f"component/{resource}")).upper()
 
 
@@ -61,4 +63,5 @@ def msi_identity(value: DistributionIdentity, scope: InstallationScope, role: Pr
         install_scope="perUser" if scope == "user" else "perMachine",
         registry_root="HKCU" if scope == "user" else "HKLM",
         root_directory="LocalAppDataFolder" if scope == "user" else "ProgramFiles64Folder",
+        version_directory=load_layout("windows-x64")["installation"]["versions"],
     )

@@ -78,6 +78,7 @@ def _configure_distribution(tmp_path: Path, target: str, *, manager: bool = Fals
     )
     (source / "CMakeLists.txt").write_text(text, encoding="utf-8")
     shutil.copy2(module / "VerifyInstall.cmake.in", source / "VerifyInstall.cmake.in")
+    shutil.copy2(module / "WindowsMsiGate.cmake.in", source / "WindowsMsiGate.cmake.in")
     bootstrap = cmake_projection(identity(target))
     bootstrap += f'set(CADRUMO_SOURCE_ROOT "{REPO_ROOT.as_posix()}")\n'
     bootstrap += f'set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
@@ -115,6 +116,27 @@ def test_distribution_build_presets_are_host_bound() -> None:
         assert f'"{name}"' in presets
     for name in (windows | linux | macos) - visible:
         assert f'"{name}"' not in presets
+
+
+@pytest.mark.parametrize("manager", [False, True])
+def test_distribution_wix_guard_and_authoring_are_in_the_real_graph(tmp_path: Path, manager: bool) -> None:
+    _, source, build = _configure_distribution(tmp_path, "windows-x86-64", manager=manager)
+    _cmake(source, "--build", str(build), "--target", "msi-author" if manager else "installation_prepare")
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    result = run_command([cmake, "-DCPACK_GENERATOR=WIX", "-P", str(build / "WindowsMsiGate.cmake")], cwd=source)
+    if manager:
+        assert result.returncode != 0
+        assert "separate version and registration" in result.stdout + result.stderr, result.stdout + result.stderr
+        assert len(list((build / "installation/metadata/wix").glob("*.wxs"))) == 4
+        result = run_command([cmake, "--build", str(build), "--target", "msi"], cwd=source)
+        assert result.returncode != 0
+        assert "separate version and registration" in result.stdout + result.stderr, result.stdout + result.stderr
+        assert not list((build / "packages").glob("*.msi"))
+    else:
+        assert result.returncode == 0, result.stdout + result.stderr
+    _cmake(source, "--build", str(build), "--target", "zip")
+    assert list((build / "packages").glob("*.zip"))
 
 
 @pytest.mark.parametrize(
