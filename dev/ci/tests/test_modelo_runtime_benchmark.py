@@ -14,7 +14,7 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.domain.modelos.calculation_repository import CalculationRevisionCatalogue
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from cadrumo.entrypoints.cli.tests import cli_runner
 from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 

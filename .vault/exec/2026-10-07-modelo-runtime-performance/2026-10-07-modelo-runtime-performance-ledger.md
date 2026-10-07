@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:30c8b70918a596a532738e5c9434cf69269d8e1e848ce1e6cd783291bd1b21d5'
+body_hash: 'sha256:567476e5d5e68bcd515f5a4e2ad7ae4783ce11ba3a0b85f183290751701568ed'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -72,3 +72,17 @@ related:
 - `S07` `verify:` `uv run --no-sync ty check src/cadrumo/domain/calculations/registry/schema_surfaces.py src/cadrumo/domain/calculations/registry/tests/test_schema_surface_duplicate_identities.py` -> `pass`
 - `S07` `verify:` `uv run --no-sync pyrefly check src/cadrumo/domain/calculations/registry/schema_surfaces.py` -> `pass`
 - `S07` `verify:` `uv run --no-sync basedpyright src/cadrumo/domain/calculations/registry/schema_surfaces.py` -> `pass`
+- `S04` `verify:` `just generate-import-load-targets` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -n 0 -m 'unit or integration' dev/docs/tests/test_sequence_goldens.py::TestModeloExportReleaseMaskHonesty --tb=short` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -n 0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py src/cadrumo/application/modelo/tests/test_export_evidence_gate.py src/cadrumo/application/modelo/tests/test_verification_m131_advisory.py src/cadrumo/application/modelo/tests/test_verification_report_read_operation.py --tb=short` -> `pass`
+- `S04` `verify:` `just check-code` -> `fail`
+- `S08` `M` `dev/audit/unreachable_frameworks.py`
+- `S08` `M` `dev/audit/tests/test_unreachable_frameworks.py`
+- `S08` `M` `dev/ci/tests/test_modelo_runtime_benchmark.py`
+- `S08` `verify:` `uv run --no-sync pytest -n 0 --basetemp=.tmp/pytest-modelo-framework-contract-1 -m unit dev/audit/tests/test_unreachable_frameworks.py dev/audit/tests/test_unreachable_schemas.py --tb=line` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check dev/audit/unreachable_frameworks.py dev/audit/tests/test_unreachable_frameworks.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check dev/audit/unreachable_frameworks.py dev/audit/tests/test_unreachable_frameworks.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check dev/audit/unreachable_frameworks.py dev/audit/tests/test_unreachable_frameworks.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check dev/ci/tests/test_modelo_runtime_benchmark.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check dev/ci/tests/test_modelo_runtime_benchmark.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check dev/ci/tests/test_modelo_runtime_benchmark.py` -> `pass`

@@ -90,10 +90,53 @@ class Lookup(ColumnType[bytes]):
     assert definitions == {"Lookup", "Lookup.UNUSED", "Lookup.unused"}
 
 
-def test_undeclared_dependency_module_refuses_instead_of_silently_dropping_its_contract() -> None:
-    module = _module("pkg.unknown", "from textual.unknown import Base\nclass Child(Base): pass")
-    with pytest.raises(ValueError, match=r"explicitly declared installed module: textual\.unknown"):
+@pytest.mark.parametrize("dependency", ["textual", "pydantic"])
+def test_undeclared_dependency_module_refuses_instead_of_silently_dropping_its_contract(dependency: str) -> None:
+    module = _module("pkg.unknown", f"from {dependency}.unknown import Base\nclass Child(Base): pass")
+    with pytest.raises(ValueError, match=rf"explicitly declared installed module: {dependency}\.unknown"):
         framework_contracts({module.name: module})
+
+
+def test_schema_generator_override_is_bound_without_model_validator_registration() -> None:
+    module = _module(
+        "pkg.schemas",
+        """
+from pydantic.json_schema import GenerateJsonSchema as SchemaGenerator
+from pydantic import field_validator
+class Generator(SchemaGenerator):
+    def _build_definitions_remapping(self): pass
+    @field_validator('value')
+    def validate_value(self): pass
+    def unused(self): pass
+class Plain:
+    def _build_definitions_remapping(self): pass
+raise RuntimeError('product modules must never execute')
+""",
+    )
+    contracts = framework_contracts({module.name: module})
+    contract = contracts[module.name]["Generator"]
+    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+
+    assert "_build_definitions_remapping" in contract.members
+    assert not contract.pydantic
+    assert definitions == {
+        "Generator",
+        "Generator.validate_value",
+        "Generator.unused",
+        "Plain",
+        "Plain._build_definitions_remapping",
+    }
+
+
+def test_live_schema_generator_override_uses_the_installed_framework_contract() -> None:
+    path = REPO_ROOT / "src/cadrumo/application/operations/registry_schema_validation.py"
+    tree = ast.parse(path.read_bytes())
+    module = ShippedModule("cadrumo.application.operations.registry_schema_validation", path, False, tree)
+    contracts = framework_contracts({module.name: module})
+    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+
+    assert not contracts[module.name]["_UnambiguousDefinitionsSchemaGenerator"].pydantic
+    assert "_UnambiguousDefinitionsSchemaGenerator._build_definitions_remapping" not in definitions
 
 
 def test_live_checkbox_override_is_bound_and_a_renamed_member_is_reported() -> None:

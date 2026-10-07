@@ -19,6 +19,7 @@ _INSTALLED_FRAMEWORK_MODULES: Final = (
     "ctypes",
     "logging",
     "pydantic",
+    "pydantic.json_schema",
     "pydantic.main",
     "pydantic_settings",
     "sqlalchemy",
