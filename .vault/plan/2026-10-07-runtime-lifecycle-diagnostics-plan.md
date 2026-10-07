@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:239d326b3b7a5ab6f2687b52c2d778008be14f214d87d680ea481a98412fffcf'
+body_hash: 'sha256:1fd8d103f3975d6e2ec787d39c7ef552be650a7de9799a01d2608a493f3fa7ae'
 ---
 
 <!-- RETIRED: S08 -->
@@ -54,7 +54,7 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S23` - Close every partially acquired KDF pipe exactly once on startup failure without changing worker deadlines or termination policy; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py partial-start ownership and owning real-descriptor failure tests`.
 - [x] `S24` - Reject nonzero KDF worker exits before admitting returned results; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py clean-exit admission and owning real-process regressions`.
 - [ ] `S25` - Keep projection migration implementation models out of runtime registry construction while preserving guarded migration behavior and measuring the dependency cut; `canonical stateless migration adapter module, calculation_revision_override_migration.py, projection_migration_ports.py, operation_composition.py, owning migration and fresh-process import tests, module enrollment and guarded performance evidence`.
-- [ ] `S26` - Settle a failed KDF worker before closing pipe descriptors that may be held by blocked reader threads; `KDF supervisor cleanup ordering and retained ownership on termination failure, existing process termination seam, bounded real blocked-reader regression and lifecycle checks`.
+- [x] `S26` - Settle a failed KDF worker before closing pipe descriptors that may be held by blocked reader threads; `KDF supervisor cleanup ordering and retained ownership on termination failure, existing process termination seam, bounded real blocked-reader regression and lifecycle checks`.
 
 ## Parallelization
 

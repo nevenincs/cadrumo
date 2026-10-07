@@ -402,25 +402,28 @@ class _SupervisedKdfWorker:
     def _close(self, *, failed: bool) -> None:
         process = self._process
         job = self._job
-        self._process = None
-        self._job = None
+        if process is not None:
+            if failed or process.poll() is None:
+                _terminate_process_tree(process, job)
+            elif job is not None:
+                job.close()
+            try:
+                process.wait(timeout=1.0)
+            except subprocess.TimeoutExpired:
+                _terminate_process_tree(process, job)
+            if process.returncode is None:
+                raise _supervision_refusal()
+            self._process = None
+            self._job = None
+        # A Windows reader may hold the CRT descriptor lock while blocked in
+        # os.read. Settle its writer before closing the parent pipe ends.
         _close_fd(self._request_fd)
         _close_fd(self._result_fd)
         self._request_fd = None
         self._result_fd = None
-        if process is None:
-            if job is not None:
-                job.close()
-            self._cleanup_neutral_directory()
-            return
-        if failed or process.poll() is None:
-            _terminate_process_tree(process, job)
-        elif job is not None:
+        if process is None and job is not None:
             job.close()
-        try:
-            process.wait(timeout=1.0)
-        except subprocess.TimeoutExpired:
-            _terminate_process_tree(process, job)
+            self._job = None
         self._cleanup_neutral_directory()
 
     def _cleanup_neutral_directory(self) -> None:

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5e72faf4b02bc8289d56e61244f30b8ae6fbb9cd656524c532550411c6304cc'
+body_hash: 'sha256:fec92f0dab81328af61e94e3575fbebb6e01700f1a4cd860e0be581e3c00a75b'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -368,6 +368,13 @@ related:
 - `S24` `verify:` `configured platform ty Ruff format and whitespace` -> `pass`
 - `S24` `verify:` `root integrated admission and diagnostic review` -> `pass`
 - `S24` `by:` `root`
+- `S26` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`
+- `S26` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_worker_cleanup.py`
+- `S26` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S26` `verify:` `70 focused custody cases in27.30s` -> `pass`
+- `S26` `verify:` `exact original close regression requires rescue and fails admission assertion` -> `pass`
+- `S26` `verify:` `Ruff format ty Linux Windows Darwin and diff checks` -> `pass`
+- `S26` `by:` `root`
 
 ## Notes
 
@@ -403,3 +410,4 @@ related:
 - `S20` Implementation already included in shared checkpoint 3b063e7d50. Current registration-hint integration evidence reused from distribution owner; no duplicate Cargo run. Timings are finite loaded-host observations, not production SLO or hard OS-I/O cancellation bounds.
 - `S21` Implementation already checkpointed in 3b063e7d50. Before comparison remains censored at unchanged30s bound. Current direct-base interpreter baseline differs from native packaged launch and does not establish a speedup or production latency target. Foreign filing-test edit during owning tests did not change production or owned inputs.
 - `S24` Initial startup outlier remains open under S13; corrected original module entrypoint cases pass without deadline change.
+- `S26` Existing outer and termination-helper waits unchanged; root reviewed real child/thread settlement. Startup stall and broader native handle/launch ownership remain open.
