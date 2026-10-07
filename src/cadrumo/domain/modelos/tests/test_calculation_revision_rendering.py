@@ -3,16 +3,119 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 
 import pytest
-from pydantic import ValidationError
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializerFunctionWrapHandler,
+    TypeAdapter,
+    ValidationError,
+    computed_field,
+    model_serializer,
+)
+from pydantic_core import SchemaSerializer
 
 from ....core.hashing import content_hash_hex
+from ....core.models import STRICT_FROZEN_CONFIG
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
-from ..calculation_revision_rendering import CalculationRenderingSnapshot
+from ..calculation_revision_rendering import CalculationRenderingSnapshot, _retain_registry_schema_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+class _PresentationFields(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    concealed: int = Field(alias="presented", exclude=True)
+    conditional: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    predecessor: NoPredecessor
+
+    @computed_field
+    @property
+    def displayed(self) -> str:
+        return str(self.concealed)
+
+    @model_serializer(mode="wrap")
+    def _present(self, handler: SerializerFunctionWrapHandler) -> dict[str, object]:
+        return {"presentation": handler(self)}
+
+
+def test_complete_schema_retains_conditional_fields_and_authored_predecessors() -> None:
+    original = _PresentationFields(
+        presented=7,
+        predecessor=NoPredecessor(
+            reason="Grounded root",
+            legal_refs=("ley-35-2006:art-96",),
+            source_refs=("aeat-modelo-131-instrucciones-2026",),
+        ),
+    )
+    presentation = original.model_dump(mode="json")
+    adapter = TypeAdapter(_PresentationFields)
+    adapter.rebuild()
+    schema = deepcopy(adapter.core_schema)
+    _retain_registry_schema_fields(schema)
+    serializer = SchemaSerializer(schema, _use_prebuilt=False)
+
+    assert serializer.to_python(original, mode="json", by_alias=False, exclude_computed_fields=True) == {
+        "concealed": 7,
+        "conditional": None,
+        "predecessor": {
+            "none": {
+                "reason": "Grounded root",
+                "legal_refs": ["ley-35-2006:art-96"],
+                "source_refs": ["aeat-modelo-131-instrucciones-2026"],
+            }
+        },
+    }
+    assert original.model_dump(mode="json") == presentation
+    assert "presentation" in presentation
+
+
+@pytest.mark.parametrize(
+    ("modelo_id", "period"),
+    (("100", "0A"), ("303", "1T"), ("131", "1T"), ("720", "0A")),
+)
+def test_saved_rendering_keeps_complete_json_bytes_after_class_serializers_are_ready(
+    modelo_id: str, period: str
+) -> None:
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot(modelo_id, filing_year=2026, period=period)
+        ordinary = snapshot.model_dump(mode="json")
+        assert "localization_key" not in ordinary["revision"]
+        original = CalculationRenderingSnapshot.capture(
+            snapshot, authority_generation=operation.pin().logical_generation
+        )
+        assert CalculationRenderingSnapshot.model_validate_json(original.model_dump_json()) == original
+
+    # The Python projection retains the established complete-field traversal.
+    # Its JSON encoding independently fixes the saved bytes and digest contract.
+    adapter = TypeAdapter(dict[str, object])
+    complete = original.model_dump(mode="python")
+    assert original.model_dump_json().encode() == adapter.dump_json(complete)
+    expected = adapter.validate_python(adapter.dump_python(complete, mode="json"))
+    assert original.rendering_digest == content_hash_hex(
+        {
+            "registry": expected["registry_snapshot"],
+            "labels": expected["labels"],
+            "revision_directory_ids": expected["revision_directory_ids"],
+        }
+    )
+
+
+def test_saved_rendering_refuses_tampered_fields_hidden_by_ordinary_registry_serialization() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot("131", filing_year=2026, period="1T")
+        original = CalculationRenderingSnapshot.capture(
+            snapshot, authority_generation=operation.pin().logical_generation
+        )
+        payload = original.model_dump(mode="json")
+        payload["registry_snapshot"]["revision"]["localization_key"] += ".tampered"
+
+        with pytest.raises(ValidationError, match="saved rendering metadata digest"):
+            CalculationRenderingSnapshot.model_validate_json(json.dumps(payload))
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:9090741b5280c68784975acc6b605e4f2cca1705cb96000ab4fe47cb91885fa9'
+body_hash: 'sha256:0526cc2e1299932adf02c11f2143718ed9394b9741f1ace9b8899864701a4981'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
   - "[[2026-10-07-blocking-code-quality-repair-audit]]"
@@ -30,6 +30,14 @@ Fresh current-fixture instrumentation completed one genuine five-frame M100 sequ
 ### schema-generation-repair | low | Exact operation contracts are retained with a measured faster naming path
 
 S02 adds a collision-free Pydantic definition-remapping fast path and delegates ambiguous names to the original algorithm. Both schema modes and all strict/frozen/closed checks still run; decorated model methods, live model graph/config/metadata/core rebuild checks and build-scoped memo lifetime remain authoritative. In matched alternating production builds, median wall time fell from 3.151 s to 2.484 s and CPU from 3.109 s to 2.438 s. All 481 real closed schemas, 266 definitions and canonical validated public digests are identical. The 297 focused cases and three configured focused type engines plus Ruff/format passed on stable source; exact commands and log are `.tmp/perf-s02-schema-evidence.txt` and `var/storage/development/.logs/test-runs/2026-10-07/20261007T111711.080535Z-pytest-49756-c27374b1/run.log`. The protected Pydantic remapping extension is a bounded implementation coupling; durable default-generator parity, naming collision and mode/recursive/generic/alias/decoration cases cover dependency upgrades. No private type import, suppression, mutable/global schema cache, dependency or public identity change is added. The earlier public paired-generation candidate was slower and was discarded. Whole native-route and aggregate verification remain S04.
+
+### complete-registry-serialization-repair | low | Full saved registry JSON retains parity with less Python traversal
+
+S03 replaces recursive Python JSON projection with an isolated copied-core-schema serializer. It retains every persisted registry field, preserves authored predecessor serialization, ignores presentation-only model serializers exactly as the previous traversal did, and leaves Python-mode behavior unchanged. There is no shared snapshot cache or input schema mutation. Thirty full saved-rendering and repository round-trip tests passed, including exact 100/303/131/720 bytes and digests, computed/excluded/alias/prebuilt-serializer cases and existing refusal coverage. Focused Ruff/format/ty/pyrefly/basedpyright checks passed. Production alternating median catalogue load fell from 2.147 s to 1.600 s; revisioned load from 1.917 s to 1.702 s. Profiled full M100 load fell from 2.972 s to 1.553 s; Python projection from 1.527 s to 0.228 s, removing 453,979 Python visits. Profiling and normal timings are separate evidence. The existing independently declared pydantic-core>=2.46 floor supports the serializer flag; the actual floor was verified without changing dependencies. Evidence: .tmp/s03-runtime-performance-manifest.json and .tmp/s03-runtime-performance.patch; pytest log var/storage/development/.logs/test-runs/2026-10-07/20261007T111740.282034Z-pytest-61148-cec89111/run.log.
+
+### canonical-completion-still-unresolved | high | Faster one-run evidence does not establish double-run completion
+
+The ordinary unchanged 300-second canonical after run still timed out during verification reply wait in the shared double-run fixture. Command and stack are .tmp/m100-performance-after.txt; durable log var/storage/development/.logs/test-runs/2026-10-07/20261007T112521.912299Z-pytest-5328-e2966a37/run.log. Original retained metadata cannot identify which iteration was waiting. A subsequent unprofiled promoted native benchmark completed one full M100 journey in 128.59 s with process-tree CPU 123.19 s: profile edit 14.80 s, work creation 10.37 s, calculation 25.39 s, verification 37.42 s and export 34.74 s. Worker schema-call snapshots show only 1,277 calls and 2.59 s cumulatively; compilation is no longer a dominant repeated cost. Both fixture and benchmark preserve normal settings and native custody; benchmark preimports some production modules before its whole-sequence clock, and pytest collection has distinct GC/authority pinning. These are source-supported context differences, not measured causes. Exact canonical per-iteration observation is required before completion closure. Evidence .tmp/modelo-runtime-after-current; no timer increase, skip or validation bypass.
 
 ## Recommendations
 

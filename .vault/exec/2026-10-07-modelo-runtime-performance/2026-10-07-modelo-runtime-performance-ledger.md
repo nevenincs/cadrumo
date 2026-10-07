@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:665474f77426b3a663cc2bbd623ea92f987a59923b5931ed29f8ced9ac1115af'
+body_hash: 'sha256:06ad063e0fc66ffaa50d338ad312df9afa7be22dc55317deb0a8e6d26a804fce'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -63,3 +63,13 @@ related:
 - `S01` `verify:` `uv run --no-sync ty check dev/ci/modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py dev/docs/sequences/runner.py dev/docs/sequences/runtime_fixture.py dev/docs/sequences/tests/test_benchmark_scopes.py --output-format concise` -> `pass`
 - `S01` `verify:` `just benchmark-modelo-runtime --help` -> `pass`
 - `S01` `verify:` `uv run --no-sync pytest -n 0 --basetemp=.tmp/pytest-modelo-performance-probe-3 -m integration .tmp/test_modelo_perf_probe.py --tb=line` -> `pass`
+- `S03` `M` `src/cadrumo/domain/modelos/calculation_revision_rendering.py`
+- `S03` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py`
+- `S03` `verify:` `uv run --no-sync pytest -v -n0 src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py` -> `pass`
+- `S03` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/modelos/calculation_revision_rendering.py src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py` -> `pass`
+- `S03` `verify:` `uv run --no-sync ruff format --check src/cadrumo/domain/modelos/calculation_revision_rendering.py src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py` -> `pass`
+- `S03` `verify:` `uv run --no-sync ty check src/cadrumo/domain/modelos/calculation_revision_rendering.py src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py` -> `pass`
+- `S03` `verify:` `uv run --no-sync pyrefly check src/cadrumo/domain/modelos/calculation_revision_rendering.py` -> `pass`
+- `S03` `verify:` `uv run --no-sync basedpyright src/cadrumo/domain/modelos/calculation_revision_rendering.py` -> `pass`
+- `S03` `verify:` `actual encrypted M100 load median2.147s to1.600s with identical saved JSON and digests` -> `pass`
+- `S03` `verify:` `isolated admitted dependency floor pydantic-core2.46.0 serializer constructor and explicit copied-schema serialization` -> `pass`

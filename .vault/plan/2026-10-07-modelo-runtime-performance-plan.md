@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:ad100a296163303d563e6518ade57c5db54bac7e3a155568c434aa0a15b1e1af'
+body_hash: 'sha256:9db59962919622a7cbf9a1f97e616f55612977983f14d46205bbec2a6a655c3e'
 ---
 
 # `modelo-runtime-performance` plan
@@ -32,7 +32,7 @@ The baseline is current HEAD f0be8532f5 plus existing peer edits. Root owns the 
 
 - [x] `S01` - Measure current real Modelo100 startup calculation and export and retain bounded phase and load profiling; `dev/ci/modelo_runtime_benchmark.py (new), justfile benchmark invocation, dev/docs/sequences runtime fixture benchmark seams and owning tests`.
 - [x] `S02` - Reduce measured operation schema generation and graph snapshot work while preserving exact public fingerprints and live mutation refusal; `src/cadrumo/application/operations/registry_schema_validation.py, _model_contract.py, schema_identity.py, owning operation registry tests and src/cadrumo/entrypoints/tests/test_operation_registry_schema_parity.py`.
-- [ ] `S03` - Optimize measured calculation revision decode and read paths without stale authority or cross-load private caches; `src/cadrumo/adapters/persistence/profile/modelos_calculation.py and owning calculation revision, rendering, verification and readback consumers/tests`.
+- [x] `S03` - Optimize measured calculation revision decode and read paths without stale authority or cross-load private caches; `src/cadrumo/adapters/persistence/profile/modelos_calculation.py and owning calculation revision, rendering, verification and readback consumers/tests`.
 - [ ] `S04` - Prove real Modelo100 completion and core loading improvement with regression controls and all blocking quality gates; `dev/docs/tests/test_sequence_goldens.py real runtime fixtures, focused Modelo100/303/131 and currentness/custody tests, generated import enrollment, feature audit and ledger`.
 
 ## Parallelization

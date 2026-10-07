@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from copy import deepcopy
 from typing import Literal, Self
 
 from pydantic import (
@@ -15,12 +16,13 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from pydantic_core import SchemaSerializer
 
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.type_guards import is_object_mapping
+from ...core.type_guards import is_object_dict, is_object_list_or_tuple, is_object_mapping
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
 from ..calculations.registry.schema import (
@@ -48,9 +50,37 @@ def _complete_registry_value(value: object) -> object:
     return value
 
 
+def _retain_registry_schema_fields(value: object, *, predecessor: bool = False) -> None:
+    """Retain every declared field in a private copy of the registry serialization schema."""
+    if is_object_dict(value):
+        if value.get("type") == "model":
+            model = value.get("cls")
+            predecessor = model is DeclaredPredecessor or model is NoPredecessor
+            if not predecessor:
+                value.pop("serialization", None)
+        if value.get("type") == "model-field" and not predecessor:
+            value.pop("serialization_exclude", None)
+            value.pop("serialization_exclude_if", None)
+        for item in value.values():
+            _retain_registry_schema_fields(item, predecessor=predecessor)
+    elif is_object_list_or_tuple(value):
+        for item in value:
+            _retain_registry_schema_fields(item, predecessor=predecessor)
+
+
 def _registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
-    complete = _STRING_MAPPING_ADAPTER.validate_python(_complete_registry_value(snapshot))
-    return _STRING_MAPPING_ADAPTER.validate_python(_STRING_MAPPING_ADAPTER.dump_python(complete, mode="json"))
+    # Compile from the live public schema for this call. Neither the original
+    # schema nor a decoded private snapshot is mutated or retained between reads.
+    adapter = TypeAdapter(RegistrySnapshot)
+    adapter.rebuild()
+    schema = deepcopy(adapter.core_schema)
+    _retain_registry_schema_fields(schema)
+    # The original prebuilt serializers omit presentation fields. Reusing them
+    # here would silently discard the modifications on this schema copy.
+    serializer = SchemaSerializer(schema, _use_prebuilt=False)
+    return _STRING_MAPPING_ADAPTER.validate_python(
+        serializer.to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
+    )
 
 
 class SavedRenderingLabel(BaseModel):
