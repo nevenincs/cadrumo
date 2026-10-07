@@ -21,71 +21,89 @@ export async function docsUiChecks({
       await visit(shown);
       await rail.nth(0).click();
       const palette = page.locator(".palette");
-      // Observe the real bridge reply; never replace the page's search provider.
-      await session.shell((origin) => {
-        window.__s14SearchResults = null;
-        const receive = (event) => {
-          const data = event.data;
-          if (
-            event.origin !== origin ||
-            event.source !==
-              document.querySelector(".docs-frame")?.contentWindow ||
-            data?.channel !== "cadrumo-desktop" ||
-            data?.type !== "search-results"
-          )
-            return;
-          window.__s14SearchResults = data.results;
-          window.removeEventListener("message", receive);
-          clearTimeout(timer);
-        };
-        const timer = setTimeout(
-          () => window.removeEventListener("message", receive),
-          30000,
+      let failed = false;
+      try {
+        // Observe the real bridge reply; never replace the page's search provider.
+        await session.shell((origin) => {
+          window.__s14SearchResults = null;
+          const receive = (event) => {
+            const data = event.data;
+            if (
+              event.origin !== origin ||
+              event.source !==
+                document.querySelector(".docs-frame")?.contentWindow ||
+              data?.channel !== "cadrumo-desktop" ||
+              data?.type !== "search-results"
+            )
+              return;
+            window.__s14SearchResults = data.results;
+            window.removeEventListener("message", receive);
+            clearTimeout(timer);
+          };
+          const timer = setTimeout(
+            () => window.removeEventListener("message", receive),
+            30000,
+          );
+          window.addEventListener("message", receive);
+        }, docsOrigin);
+        await palette.getByRole("combobox").fill("modelo");
+        const rows = palette
+          .locator(".palette-results > section")
+          .first()
+          .getByRole("option");
+        await rows.first().waitFor({ state: "visible", timeout: 30000 });
+        const count = await rows.count();
+        const title = await rows.first().locator(".palette-title").innerText();
+        assert(count > 0);
+        const results = await waitFor(
+          () => session.shell(() => window.__s14SearchResults),
+          {
+            timeout: 30000,
+            what: "the real documentation search bridge reply",
+          },
         );
-        window.addEventListener("message", receive);
-      }, docsOrigin);
-      await palette.getByRole("combobox").fill("modelo");
-      const rows = palette
-        .locator(".palette-results > section")
-        .first()
-        .getByRole("option");
-      await rows.first().waitFor({ state: "visible", timeout: 30000 });
-      const count = await rows.count();
-      const title = await rows.first().locator(".palette-title").innerText();
-      assert(count > 0);
-      const results = await waitFor(
-        () => session.shell(() => window.__s14SearchResults),
-        { timeout: 30000, what: "the real documentation search bridge reply" },
-      );
-      const order = ["concept", "casilla", "cli", "page"];
-      const rank = (kind) =>
-        order.includes(kind) ? order.indexOf(kind) : order.length;
-      const selected = [...results].sort(
-        (a, b) => rank(a.kind) - rank(b.kind),
-      )[0];
-      assert(selected && title.startsWith(selected.title));
-      const expectedUrl = new URL(selected.url, shown).href;
-      assert(expectedUrl.startsWith(`${docsOrigin}/`));
-      // Documentation rows have no action shortcut; the first section is docs.
-      assert.equal(await rows.first().locator(".palette-chord").count(), 0);
-      await rows.first().click();
-      await palette.waitFor({ state: "hidden" });
-      const destination = await waitFor(
-        () => {
-          const url = session.docsFrame()?.url();
-          return url === expectedUrl ? url : null;
-        },
-        {
-          timeout: 30000,
-          what: "the selected documentation result navigation",
-        },
-      );
-      await session.waitDocs();
-      assert(await session.docs(() => document.body.innerText.length > 0));
-      return {
-        verdict: PASS,
-        detail: `${count} live documentation results; clicked ${title}; navigated to ${destination}`,
-      };
+        const order = ["concept", "casilla", "cli", "page"];
+        const rank = (kind) =>
+          order.includes(kind) ? order.indexOf(kind) : order.length;
+        const selected = [...results].sort(
+          (a, b) => rank(a.kind) - rank(b.kind),
+        )[0];
+        assert(selected && title.startsWith(selected.title));
+        const expectedUrl = new URL(selected.url, shown).href;
+        assert(expectedUrl.startsWith(`${docsOrigin}/`));
+        // Documentation rows have no action shortcut; the first section is docs.
+        assert.equal(await rows.first().locator(".palette-chord").count(), 0);
+        await rows.first().click();
+        await palette.waitFor({ state: "hidden" });
+        const destination = await waitFor(
+          () => {
+            const url = session.docsFrame()?.url();
+            return url === expectedUrl ? url : null;
+          },
+          {
+            timeout: 30000,
+            what: "the selected documentation result navigation",
+          },
+        );
+        await session.waitDocs();
+        assert(await session.docs(() => document.body.innerText.length > 0));
+        return {
+          verdict: PASS,
+          detail: `${count} live documentation results; clicked ${title}; navigated to ${destination}`,
+        };
+      } catch (error) {
+        failed = true;
+        throw error;
+      } finally {
+        try {
+          if (await palette.isVisible()) {
+            await page.keyboard.press("Escape");
+            await palette.waitFor({ state: "hidden", timeout: 5000 });
+          }
+        } catch (error) {
+          if (!failed) throw error;
+        }
+      }
     },
   );
 

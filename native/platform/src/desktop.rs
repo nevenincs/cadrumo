@@ -10,6 +10,9 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(feature = "webview2")]
+pub mod webview_process;
+
 #[repr(C)]
 struct UserObjectFlags {
     inherit: i32,

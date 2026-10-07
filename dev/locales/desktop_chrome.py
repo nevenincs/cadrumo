@@ -149,6 +149,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.logs.clear_logger",
         "desktop.logs.details",
         "desktop.logs.dropped",
+        "desktop.logs.rejected",
         "desktop.logs.empty",
         "desktop.logs.errors",
         "desktop.logs.filter",

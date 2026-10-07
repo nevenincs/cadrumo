@@ -31,6 +31,7 @@ struct DesktopDefaults {
     webview: RelativePath,
     logs: RelativePath,
     log_file: RelativePath,
+    manager_log_file: RelativePath,
     log_format: String,
     log_max_bytes: u64,
     log_backups: u32,
@@ -67,6 +68,7 @@ struct Projection {
     webview: PathBuf,
     logs: PathBuf,
     log_file: PathBuf,
+    manager_log_file: PathBuf,
     log_format: String,
     log_max_bytes: u64,
     log_backups: u32,
@@ -89,6 +91,7 @@ pub struct Launch {
     pub docs_manifest: PathBuf,
     /// The Python log file and the line format Python writes it with.
     pub log_file: PathBuf,
+    pub manager_log_file: PathBuf,
     pub log_format: String,
     /// The output language Settings resolved, for the shell chrome.
     pub output_language: String,
@@ -156,6 +159,7 @@ pub async fn resolve(
         docs_root,
         docs_manifest,
         log_file: projection.log_file,
+        manager_log_file: projection.manager_log_file,
         log_format: projection.log_format,
         output_language: projection.output_language,
     })
@@ -372,6 +376,7 @@ fn default_projection(
         webview: path(&defaults.webview)?,
         logs: path(&defaults.logs)?,
         log_file: path(&defaults.log_file)?,
+        manager_log_file: path(&defaults.manager_log_file)?,
         environment,
         storage,
         storage_variable: ROOT_VARIABLE.to_owned(),
@@ -393,6 +398,7 @@ fn admissible(projection: &Projection, settings_storage_names: &[String]) -> boo
         &projection.storage,
         &projection.logs,
         &projection.log_file,
+        &projection.manager_log_file,
         &projection.home,
     ]
     .iter()
@@ -541,6 +547,7 @@ mod tests {
             webview,
             logs,
             log_file,
+            manager_log_file,
             log_format,
             log_max_bytes,
             log_backups,
@@ -645,6 +652,7 @@ mod tests {
             "webview": "C:/state/var/storage/webview",
             "logs": "C:/state/var/storage/logs",
             "log_file": "C:/state/var/storage/logs/cadrumo.log",
+            "manager_log_file": "C:/state/var/storage/logs/cadrumo-manager.log",
             "log_format": "%(message)s",
             "log_max_bytes": 1,
             "log_backups": 1,
@@ -686,11 +694,15 @@ mod tests {
         }));
         admitted.logs = storage.join("logs");
         admitted.log_file = admitted.logs.join("cadrumo.log");
+        admitted.manager_log_file = admitted.logs.join("cadrumo-manager.log");
         admitted.home = std::env::temp_dir();
         admitted.webview = storage.join("webview");
         admitted.storage = storage;
         assert!(admissible(&admitted, &owned));
         let mut relative = admitted;
+        relative.manager_log_file = PathBuf::from("manager.log");
+        assert!(!admissible(&relative, &owned));
+        relative.manager_log_file = relative.logs.join("cadrumo-manager.log");
         relative.webview = PathBuf::from("webview");
         assert!(!admissible(&relative, &owned));
     }

@@ -80,6 +80,63 @@ frame.src = environment.docs.languages[0].entry;
 document.body.append(frame);
 `;
 
+/** Optional DOM fixture for the real rail/tab navigation contract. */
+const PANEL_NAVIGATION = `
+const labels = [
+  ["console", "Consola [CMD]"],
+  ["python", "Pitón (á+)"],
+  ["logs", "Registros (2)"],
+];
+const rail = document.createElement("nav");
+rail.className = "rail";
+const panel = document.createElement("section");
+panel.className = "panel";
+panel.hidden = true;
+const panes = new Map();
+let selected = "console";
+window.standin.panelClicks = [];
+for (const [kind, label] of labels) {
+  const tab = document.createElement("button");
+  tab.id = "tab-" + kind;
+  tab.title = label;
+  tab.textContent = label;
+  tab.setAttribute("role", "tab");
+  panel.append(tab);
+  const pane = document.createElement("div");
+  pane.id = "panel-" + kind;
+  pane.setAttribute("role", "tabpanel");
+  pane.setAttribute("aria-labelledby", tab.id);
+  pane.hidden = true;
+  if (kind === "logs") {
+    pane.className = "logview";
+    pane.textContent = "A visible log record";
+  } else pane.dataset.terminal = kind;
+  panes.set(kind, pane);
+  panel.append(pane);
+  const opener = document.createElement("button");
+  opener.setAttribute("aria-label", label + (kind === "logs" ? ", 4 errores" : ""));
+  opener.textContent = label;
+  opener.addEventListener("click", () => {
+    window.standin.panelClicks.push(kind);
+    const show = panel.hidden || selected !== kind;
+    panel.hidden = !show;
+    selected = kind;
+    for (const [key, value] of panes) value.hidden = !show || key !== kind;
+    if (show && kind !== "logs" && !pane.querySelector(".xterm-screen")) {
+      const screen = document.createElement("div");
+      screen.className = "xterm-screen";
+      screen.style.cssText = "width:200px;height:80px";
+      const input = document.createElement("textarea");
+      input.className = "xterm-helper-textarea";
+      screen.addEventListener("click", () => input.focus());
+      pane.append(screen, input);
+    }
+  });
+  rail.append(opener);
+}
+document.body.prepend(rail, panel);
+`;
+
 function listen(server, host) {
   return new Promise((resolve) =>
     server.listen(0, host, () => resolve(server.address().port)),
@@ -90,7 +147,10 @@ function listen(server, host) {
  * Starts the three origins. `variant` is "refusing", "leaking" or "violating".
  * The returned state records what reached the stand-in IPC origin.
  */
-export async function startStandin({ variant = "refusing" } = {}) {
+export async function startStandin({
+  variant = "refusing",
+  panels = false,
+} = {}) {
   const token = "0123456789abcdef".repeat(4);
   const state = {
     variant,
@@ -143,7 +203,12 @@ export async function startStandin({ variant = "refusing" } = {}) {
     if (path === "/internals.js")
       return send(response, 200, "text/javascript", INTERNALS(ipcOrigin));
     if (path === "/app.js")
-      return send(response, 200, "text/javascript", SHELL_APP);
+      return send(
+        response,
+        200,
+        "text/javascript",
+        SHELL_APP + (panels ? PANEL_NAVIGATION : ""),
+      );
     if (path === "/nav-204") return send(response, 204, "text/plain", "");
     if (path === "/nav-200")
       return send(

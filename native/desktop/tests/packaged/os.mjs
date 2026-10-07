@@ -7,6 +7,15 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT = fileURLToPath(new URL("./desktop-input.ps1", import.meta.url));
 
+/** The managed input helper needs no inherited native compiler search paths. */
+export function desktopInputEnvironment(inherited = process.env) {
+  return Object.fromEntries(
+    Object.entries(inherited).filter(
+      ([name]) => !["LIB", "LIBPATH"].includes(name.toUpperCase()),
+    ),
+  );
+}
+
 export class DesktopInput {
   constructor() {
     this.child = spawn(
@@ -19,7 +28,11 @@ export class DesktopInput {
         "-File",
         SCRIPT,
       ],
-      { stdio: ["pipe", "pipe", "pipe"], windowsHide: true },
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+        env: desktopInputEnvironment(),
+      },
     );
     this.pending = new Map();
     this.next = 0;

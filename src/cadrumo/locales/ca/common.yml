@@ -616,6 +616,7 @@ desktop:
     loading: S'està carregant el registre…
     minimum_level: Nivell mínim
     no_match: Cap registre no coincideix amb aquests filtres.
+    rejected: S'han omès {count} registres amb un format de diagnòstic no vàlid.
     source_host: Escriptori
     source_python: Python
     sources: Orígens

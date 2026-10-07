@@ -1,4 +1,4 @@
-//! Follows `cadrumo.log` and its numbered rotations by polling.
+//! Follows an appended log and its numbered rotations by polling.
 //!
 //! Several Python processes append to one `RotatingFileHandler` file. On
 //! Windows a rotation fails while another process holds the file, so rotation
@@ -24,7 +24,12 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// Lines longer than this are truncated.
+enum LineParser {
+    Python(LinePattern),
+    Manager,
+}
+
+/// Python lines longer than this are truncated; manager JSONL rows are refused.
 pub const LINE_BYTES: usize = 16 * 1024;
 /// Continuation lines beyond this are not attached to a record's detail.
 const DETAIL_BYTES: usize = 64 * 1024;
@@ -104,6 +109,7 @@ struct Tracked {
     draft: Option<Draft>,
     progressed: Instant,
     seen: u64,
+    rejected: u64,
 }
 
 impl Tracked {
@@ -121,10 +127,11 @@ impl Tracked {
             draft: None,
             progressed: now,
             seen: 0,
+            rejected: 0,
         }
     }
 
-    fn feed(&mut self, bytes: &[u8], pattern: &LinePattern, out: &mut Vec<Entry>) {
+    fn feed(&mut self, bytes: &[u8], parser: &LineParser, out: &mut Vec<Entry>) {
         let mut rest = bytes;
         while !rest.is_empty() {
             let (segment, ended) = match rest.iter().position(|byte| *byte == b'\n') {
@@ -137,12 +144,12 @@ impl Tracked {
                 .extend_from_slice(&segment[..segment.len().min(room)]);
             self.truncated |= segment.len() > room;
             if ended {
-                self.end_line(pattern, out);
+                self.end_line(parser, out);
             }
         }
     }
 
-    fn end_line(&mut self, pattern: &LinePattern, out: &mut Vec<Entry>) {
+    fn end_line(&mut self, parser: &LineParser, out: &mut Vec<Entry>) {
         let mut line = std::mem::take(&mut self.partial);
         let truncated = std::mem::take(&mut self.truncated);
         if std::mem::take(&mut self.skip_line) {
@@ -151,6 +158,16 @@ impl Tracked {
         if !truncated && line.last() == Some(&b'\r') {
             line.pop();
         }
+        let pattern = match parser {
+            LineParser::Python(pattern) => pattern,
+            LineParser::Manager => {
+                match (!truncated).then(|| super::manager::parse(&line)).flatten() {
+                    Some(entry) => out.push(entry),
+                    None => self.rejected += 1,
+                }
+                return;
+            }
+        };
         let text = String::from_utf8_lossy(&line);
         match pattern.head(&text) {
             Some(head) => {
@@ -196,14 +213,17 @@ impl Tracked {
         }
     }
 
-    /// Completes the pending record and any unterminated line once the file
-    /// has been quiet for [`SETTLE`].
-    fn settle(&mut self, now: Instant, pattern: &LinePattern, out: &mut Vec<Entry>) {
+    /// Completes Python records after [`SETTLE`]. Manager JSONL rows require
+    /// their newline, even when an append pauses for longer than that.
+    fn settle(&mut self, now: Instant, parser: &LineParser, out: &mut Vec<Entry>) {
+        if matches!(parser, LineParser::Manager) {
+            return;
+        }
         if now.saturating_duration_since(self.progressed) < SETTLE {
             return;
         }
         if !self.partial.is_empty() {
-            self.end_line(pattern, out);
+            self.end_line(parser, out);
         }
         if let Some(draft) = self.draft.take() {
             out.push(draft.entry());
@@ -213,7 +233,7 @@ impl Tracked {
 
 pub struct Tail {
     file: PathBuf,
-    pattern: Result<LinePattern, ApplicationError>,
+    parser: Result<LineParser, ApplicationError>,
     tracked: Vec<Tracked>,
     polls: u64,
     /// Consecutive polls with a read failure. One failure can be a racing
@@ -224,6 +244,7 @@ pub struct Tail {
     current: Option<u64>,
     deferred: u32,
     next_id: u64,
+    rejected: u64,
     #[cfg(test)]
     pub io: std::sync::Arc<Io>,
 }
@@ -252,9 +273,11 @@ impl Tail {
     pub fn new(file: PathBuf, format: &str) -> Self {
         Self {
             file,
-            pattern: LinePattern::compile(format).map_err(|_| {
-                ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Logging)
-            }),
+            parser: LinePattern::compile(format)
+                .map(LineParser::Python)
+                .map_err(|_| {
+                    ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Logging)
+                }),
             tracked: Vec::new(),
             polls: 0,
             failing: 0,
@@ -262,14 +285,21 @@ impl Tail {
             current: None,
             deferred: 0,
             next_id: 0,
+            rejected: 0,
             #[cfg(test)]
             io: Default::default(),
         }
     }
 
+    pub fn manager(file: PathBuf) -> Self {
+        let mut tail = Self::new(file, "%(message)s");
+        tail.parser = Ok(LineParser::Manager);
+        tail
+    }
+
     /// Why the configured line format cannot be followed, if it cannot.
     pub fn refusal(&self) -> Option<ApplicationError> {
-        self.pattern.as_ref().err().cloned()
+        self.parser.as_ref().err().cloned()
     }
 
     /// Forgets every file and record in progress, so the next poll starts
@@ -281,18 +311,21 @@ impl Tail {
         self.reported = None;
         self.current = None;
         self.deferred = 0;
+        self.rejected = 0;
     }
 
     fn state(&self, kind: SourceKind, failure: Option<ApplicationError>) -> LogSourceState {
-        state(&self.file, kind, failure)
+        let mut state = state(&self.file, kind, failure);
+        state.rejected = self.rejected;
+        state
     }
 
     /// Reads what was appended since the previous poll and returns the
     /// completed records with the source state.
     pub fn poll(&mut self, now: Instant) -> (Vec<Entry>, LogSourceState) {
         let mut out = Vec::new();
-        let pattern = match &self.pattern {
-            Ok(pattern) => pattern,
+        let parser = match &self.parser {
+            Ok(parser) => parser,
             Err(error) => {
                 let failure = error.clone();
                 return (out, self.state(SourceKind::Unreadable, Some(failure)));
@@ -388,7 +421,7 @@ impl Tail {
             }
             if file.length < tracked.offset {
                 // Not how a log file changes; read it again as a new file.
-                tracked.settle(now + SETTLE, pattern, &mut out);
+                tracked.settle(now + SETTLE, parser, &mut out);
                 let id = tracked.id;
                 *tracked = Tracked::new(id, 0, now);
                 tracked.seen = polls;
@@ -414,7 +447,9 @@ impl Tail {
                 let tracked = &mut self.tracked[index];
                 tracked.offset += bytes.len() as u64;
                 tracked.progressed = now;
-                tracked.feed(&bytes, pattern, &mut out);
+                let rejected = tracked.rejected;
+                tracked.feed(&bytes, parser, &mut out);
+                self.rejected += tracked.rejected - rejected;
             }
             // A rotated file's last record ends before anything a newer file
             // holds, so it is completed now to keep records in file order.
@@ -425,7 +460,7 @@ impl Tail {
             }
         }
         for tracked in &mut self.tracked {
-            tracked.settle(now, pattern, &mut out);
+            tracked.settle(now, parser, &mut out);
         }
         self.forget(present);
         self.failing = if failure.is_some() {
@@ -433,7 +468,7 @@ impl Tail {
         } else {
             0
         };
-        let state = match failure {
+        let mut state = match failure {
             Some(_) if self.failing == 1 && self.reported.is_some() => self
                 .reported
                 .clone()
@@ -442,6 +477,7 @@ impl Tail {
             None if present == 0 => self.state(SourceKind::Missing, None),
             None => self.state(SourceKind::Available, None),
         };
+        state.rejected = self.rejected;
         self.reported = Some(state.clone());
         (out, state)
     }
@@ -489,6 +525,7 @@ fn state(file: &Path, kind: SourceKind, failure: Option<ApplicationError>) -> Lo
         kind,
         detail: file.display().to_string(),
         failure,
+        rejected: 0,
     }
 }
 

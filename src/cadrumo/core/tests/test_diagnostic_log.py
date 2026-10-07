@@ -88,6 +88,36 @@ def test_context_is_bounded_and_never_renders_non_scalar_extras() -> None:
     assert not {"opaque", "nested", "run_event", "run_id", "profile_label", "tax_amount"}.intersection(context)
 
 
+def test_login_witness_context_allows_only_fixed_scalar_counts_and_spans() -> None:
+    fields = {
+        "inventory_complete": False,
+        "inventory_login_count": 2,
+        "retained_peer_witness_count": 1,
+        "observed_active_count": 2,
+        "observed_eligible_count": 0,
+        "observed_unknown_count": 1,
+        "inventory_elapsed_ms": 0.125,
+        "observation_elapsed_ms": 1.5,
+    }
+    record = _record()
+    record.__dict__.update(fields)
+    record.__dict__["os_owner_id"] = "synthetic-private-owner-canary"
+    record.__dict__["login_id"] = "synthetic-private-login-canary"
+    record.__dict__["native_observation"] = {"sid": "synthetic-private-sid-canary"}
+    record.__dict__["luid"] = 12345
+    stamp_diagnostic_scalar_fields(record)
+
+    _, context = _context(record)
+
+    assert context == {"process_id": os.getpid(), "process_role": "python", **fields}
+    assert "canary" not in record.__dict__["diagnostic_context"]
+
+    record.__dict__["observed_unknown_count"] = {"private": "synthetic-private-canary"}
+    record.__dict__["inventory_elapsed_ms"] = object()
+    _, context = _context(record)
+    assert "observed_unknown_count" not in context and "inventory_elapsed_ms" not in context
+
+
 def test_suffix_escapes_newlines_and_scrubs_allowed_field_values_before_truncation() -> None:
     record = _record()
     record.__dict__["error_origin"] = 'module.py:4:function\n[ERROR] forged | {"outcome":"forged"}'

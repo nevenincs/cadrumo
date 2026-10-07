@@ -599,6 +599,7 @@ desktop:
     loading: Loading the log…
     minimum_level: Minimum level
     no_match: No records match these filters.
+    rejected: '{count} records omitted because their diagnostic format was invalid.'
     source_host: Desktop
     source_python: Python
     sources: Sources

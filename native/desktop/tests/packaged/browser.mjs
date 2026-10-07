@@ -124,6 +124,23 @@ export function instrument(config) {
   const ipc = [];
   const channels = {};
   const sessions = {};
+  const latest = {};
+  const observation = [];
+  const bounds = config.observationLimits ?? {
+    bytes: 2 * 1024 * 1024,
+    records: 4096,
+    batchBytes: 64 * 1024,
+    batchRecords: 64,
+  };
+  const captureStats = {
+    bytes: 0,
+    records: 0,
+    peakBytes: 0,
+    peakRecords: 0,
+    captured: 0,
+    drained: 0,
+    batches: 0,
+  };
   const logs = { batches: 0, records: [] };
   state.ipc = ipc;
   state.channels = channels;
@@ -136,6 +153,8 @@ export function instrument(config) {
   const channelOf = (id) =>
     (channels[id] ??= {
       kind: null,
+      generation: null,
+      observationLoss: null,
       session: null,
       frames: 0,
       seen: 0,
@@ -153,6 +172,77 @@ export function instrument(config) {
       altScreen: false,
       tail: "",
     });
+  const current = (id) => {
+    const channel = channels[id];
+    return channel && latest[channel.kind] === id ? channel : null;
+  };
+  const lose = (id, code) => {
+    const channel = current(id);
+    if (channel) channel.observationLoss ??= code;
+  };
+  const capture = (id, record, bytes = null) => {
+    const channel = current(id);
+    if (!channel || channel.observationLoss) return;
+    const size = bytes?.length ?? 0;
+    if (
+      captureStats.bytes + size > bounds.bytes ||
+      observation.length >= bounds.records
+    ) {
+      lose(id, "TerminalObservationCaptureLimit");
+      return;
+    }
+    observation.push({
+      ...record,
+      kind: channel.kind,
+      generation: channel.generation,
+      ...(bytes ? { bytes: Array.from(bytes) } : {}),
+    });
+    captureStats.bytes += size;
+    captureStats.records = observation.length;
+    captureStats.captured += 1;
+    captureStats.peakBytes = Math.max(
+      captureStats.peakBytes,
+      captureStats.bytes,
+    );
+    captureStats.peakRecords = Math.max(
+      captureStats.peakRecords,
+      captureStats.records,
+    );
+  };
+  state.drainVT = () => {
+    const records = [];
+    let size = 0;
+    while (observation.length && records.length < bounds.batchRecords) {
+      const next = observation[0];
+      const bytes = next.bytes?.length ?? 0;
+      // A single larger frame drains alone; the Node parser splits its writes.
+      if (records.length && size + bytes > bounds.batchBytes) break;
+      records.push(observation.shift());
+      size += bytes;
+      if (size >= bounds.batchBytes) break;
+    }
+    captureStats.bytes -= size;
+    captureStats.records = observation.length;
+    captureStats.drained += records.length;
+    captureStats.batches += 1;
+    return {
+      document: state.marker,
+      records,
+      more: observation.length > 0,
+      losses: Object.entries(latest).flatMap(([kind, id]) =>
+        channels[id].observationLoss
+          ? [
+              {
+                kind,
+                generation: channels[id].generation,
+                code: channels[id].observationLoss,
+              },
+            ]
+          : [],
+      ),
+      captureStats: { ...captureStats },
+    };
+  };
   const ALT_SCREEN = "\x1b[?1049h";
   const observe = (id, data) => {
     if (!data || typeof data !== "object" || !("index" in data)) return;
@@ -171,6 +261,8 @@ export function instrument(config) {
       return;
     }
     const channel = channelOf(id);
+    if (data.end === true)
+      capture(id, { type: "frame", index: data.index, end: true });
     channel.frames += 1;
     channel.seen += 1;
     if (data.index !== channel.next) channel.outOfOrder += 1;
@@ -184,8 +276,18 @@ export function instrument(config) {
         message.byteOffset,
         message.byteLength,
       );
-    else if (Array.isArray(message)) bytes = Uint8Array.from(message);
-    if (!bytes || !bytes.length) return;
+    else if (Array.isArray(message)) {
+      if (message.length > bounds.bytes) {
+        lose(id, "TerminalObservationCaptureLimit");
+        return;
+      }
+      bytes = Uint8Array.from(message);
+    }
+    if (!bytes || !bytes.length) {
+      if (data.end !== true) lose(id, "TerminalObservationFrameInvalid");
+      return;
+    }
+    capture(id, { type: "frame", index: data.index }, bytes);
     const payload = bytes.subarray(1);
     const json = () => {
       try {
@@ -332,9 +434,37 @@ export function instrument(config) {
       entry.bodyBytes = null;
     if (entry.cmd === "terminal_open" && entry.args) {
       const match = /^__CHANNEL__:(\d+)$/.exec(String(entry.args.frames ?? ""));
-      if (match) channelOf(Number(match[1])).kind = entry.args.kind;
       entry.channel = match ? Number(match[1]) : null;
+      if (
+        match &&
+        by === "shell" &&
+        ["console", "python", "tui"].includes(entry.args.kind)
+      ) {
+        const id = entry.channel;
+        const channel = channelOf(id);
+        channel.kind = entry.args.kind;
+        channel.generation = entry.seq;
+        latest[channel.kind] = id;
+        // Retiring a session discards only that kind's old observation records.
+        for (let i = observation.length - 1; i >= 0; i -= 1) {
+          if (observation[i].kind !== channel.kind) continue;
+          captureStats.bytes -= observation[i].bytes?.length ?? 0;
+          observation.splice(i, 1);
+        }
+        captureStats.records = observation.length;
+        capture(id, {
+          type: "open",
+          cols: entry.args.cols,
+          rows: entry.args.rows,
+        });
+      }
     }
+    if (entry.cmd === "terminal_resize" && by === "shell" && entry.args)
+      capture(sessions[entry.args.session], {
+        type: "resize",
+        cols: entry.args.cols,
+        rows: entry.args.rows,
+      });
     if (entry.cmd === "terminal_ack" && by === "shell" && held)
       await held.promise;
     if (entry.cmd === "open_external" && by === "shell") {
@@ -352,7 +482,14 @@ export function instrument(config) {
       }
     }
     const started = performance.now();
-    const response = await realFetch(input, init);
+    let response;
+    try {
+      response = await realFetch(input, init);
+    } catch (error) {
+      if (entry.cmd === "terminal_open")
+        lose(entry.channel, "TerminalObservationOpenFailed");
+      throw error;
+    }
     entry.ms = Math.round(performance.now() - started);
     entry.ok = response.headers.get("Tauri-Response") === "ok";
     const json = (response.headers.get("content-type") || "").startsWith(
@@ -371,6 +508,11 @@ export function instrument(config) {
           if (entry.channel !== null && entry.channel !== undefined) {
             channelOf(entry.channel).session = entry.session;
             sessions[entry.session] = entry.channel;
+            capture(entry.channel, {
+              type: "bind",
+              ok: true,
+              session: entry.session,
+            });
           }
         } else if (entry.ok && entry.cmd === "sign_in_submit") {
           entry.answer = {
@@ -383,6 +525,8 @@ export function instrument(config) {
         entry.code = "unreadable";
       }
     }
+    if (entry.cmd === "terminal_open" && (!entry.ok || entry.session === null))
+      lose(entry.channel, "TerminalObservationOpenFailed");
     if (
       entry.ok &&
       entry.cmd === "terminal_ack" &&
@@ -390,8 +534,14 @@ export function instrument(config) {
       entry.args
     ) {
       const id = sessions[entry.args.session];
-      if (id !== undefined)
+      if (id !== undefined) {
         channels[id].acked = Math.max(channels[id].acked, entry.args.offset);
+        capture(id, {
+          type: "ack",
+          session: entry.args.session,
+          offset: entry.args.offset,
+        });
+      }
     }
     return response;
   };
@@ -430,18 +580,30 @@ export function instrument(config) {
     held = null;
   };
   state.channelFor = (kind) => {
-    const ids = Object.keys(channels)
-      .map(Number)
-      .filter((id) => channels[id].kind === kind);
-    return ids.length ? Math.max(...ids) : null;
+    return latest[kind] ?? null;
   };
 }
 
-/** The visible rows of one terminal, as text. */
-export function terminalRows(kind) {
-  const rows = document.querySelector(`[data-terminal="${kind}"] .xterm-rows`);
-  if (!rows) return null;
-  return [...rows.children].map((row) => row.textContent ?? "").join("\n");
+/** A bounded batch of wire observations, consumed by the Node-owned parser. */
+export function drainTerminalObservation() {
+  return window.__s10?.drainVT?.() ?? null;
+}
+
+/** Renderer presence and pane visibility; this does not inspect GPU pixels. */
+export function terminalPresentation(kind) {
+  const pane = document.querySelector(`[data-terminal="${kind}"]`);
+  const visible = (element) =>
+    !!element &&
+    element.getClientRects().length > 0 &&
+    getComputedStyle(element).visibility !== "hidden";
+  return {
+    visible: visible(pane),
+    renderer: visible(pane?.querySelector(".xterm-screen canvas"))
+      ? "canvas"
+      : visible(pane?.querySelector(".xterm-rows"))
+        ? "dom"
+        : null,
+  };
 }
 
 /** The shell's view of one terminal kind's latest channel and session. */

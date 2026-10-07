@@ -380,6 +380,7 @@ fn unit_launch() -> crate::environment::Launch {
         docs_root: directory.clone(),
         docs_manifest: directory.join("manifest.json"),
         log_file: directory.join("cadrumo.log"),
+        manager_log_file: directory.join("cadrumo-manager.log"),
         log_format: String::new(),
         output_language: "en".into(),
     }

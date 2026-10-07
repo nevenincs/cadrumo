@@ -622,6 +622,7 @@ desktop:
     loading: Cargando el registro…
     minimum_level: Nivel mínimo
     no_match: Ningún registro coincide con estos filtros.
+    rejected: Se han omitido {count} registros con un formato de diagnóstico no válido.
     source_host: Escritorio
     source_python: Python
     sources: Orígenes

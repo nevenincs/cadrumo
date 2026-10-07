@@ -1,11 +1,15 @@
-//! WebView2 settings the shell needs from every webview: no browser
-//! accelerator keys (reload, print, find, zoom, developer tools) and no
-//! default context menus, so the shell's keymap and native menus own both.
+//! Restrict browser features and observe failures of each shell WebView.
+//! The shell's keymap and native menus own browser accelerator keys and
+//! context menus; process-failure callbacks carry only numeric telemetry.
 //!
 //! The COM calls live in the platform crate; this module reports their
-//! outcome and refuses to keep running a webview it could not restrict.
+//! outcome and refuses a webview it could not restrict. Missing failure
+//! telemetry is reported without terminating or reloading the shell.
 use cadrumo_application::{
-    diagnostics::Diagnostics,
+    diagnostics::{
+        Diagnostics,
+        webview::{MonitorOperation, ReadFailures, WebviewFailure},
+    },
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
 use std::{io, sync::Arc};
@@ -64,6 +68,53 @@ pub fn restrict<R: Runtime>(webview: &Webview<R>, diagnostics: Arc<Diagnostics>)
     });
 }
 
+/// Observe process failures independently of browser-feature admission. Missing
+/// telemetry is recorded but does not end or reload an otherwise usable shell.
+pub fn observe<R: Runtime>(webview: &Webview<R>, diagnostics: Arc<Diagnostics>) {
+    use cadrumo_platform::desktop::webview_process::{self, MonitorOperation as PlatformOperation};
+    let reporter = diagnostics.clone();
+    let dispatched = webview.with_webview(move |platform| {
+        let sink = reporter.clone();
+        let result = webview_process::monitor(&platform.controller(), move |failure| {
+            sink.webview_failure(process_fact(failure));
+        });
+        if let Err(failure) = result {
+            let operation = match failure.operation {
+                PlatformOperation::CoreWebview => MonitorOperation::CoreWebview,
+                PlatformOperation::Register => MonitorOperation::Register,
+            };
+            reporter.webview_failure(WebviewFailure::MonitorUnavailable {
+                operation,
+                hresult: Some(failure.hresult),
+            });
+        }
+    });
+    if dispatched.is_err() {
+        diagnostics.webview_failure(WebviewFailure::MonitorUnavailable {
+            operation: MonitorOperation::Dispatch,
+            hresult: None,
+        });
+    }
+}
+
+fn process_fact(
+    failure: cadrumo_platform::desktop::webview_process::ProcessFailure,
+) -> WebviewFailure {
+    let reads = failure.read_failures;
+    WebviewFailure::process(
+        failure.kind,
+        failure.reason,
+        failure.exit_code,
+        ReadFailures {
+            arguments_hresult: reads.arguments_hresult,
+            kind_hresult: reads.kind_hresult,
+            details_hresult: reads.details_hresult,
+            reason_hresult: reads.reason_hresult,
+            exit_code_hresult: reads.exit_code_hresult,
+        },
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -79,5 +130,36 @@ mod tests {
         assert_eq!(failed.code, ErrorCode::WebviewFailed);
         assert_eq!(failed.operation, Operation::Webview);
         assert!(std::error::Error::source(&failed).is_some());
+    }
+
+    #[test]
+    fn process_observations_preserve_partial_metadata_without_claiming_a_child_exit() {
+        use cadrumo_platform::desktop::webview_process::{ProcessFailure, ReadFailures as Reads};
+        let fact = process_fact(ProcessFailure {
+            kind: Some(2),
+            reason: None,
+            exit_code: Some(259),
+            read_failures: Reads {
+                reason_hresult: Some(-2_147_467_259),
+                ..Reads::default()
+            },
+        });
+        let diagnostics = Diagnostics::default();
+        diagnostics.webview_failure(fact);
+        let snapshot = diagnostics.snapshot(u64::MAX);
+        assert!(snapshot.processes.is_empty() && snapshot.output.is_empty());
+        let event = &snapshot.events[0];
+        assert!(event.process.is_none() && event.status.is_none());
+        assert_eq!(event.webview_failure, Some(fact));
+        let serialized = serde_json::to_value(event).unwrap();
+        assert_eq!(
+            serialized["webviewFailure"]["kind"],
+            "render_process_unresponsive"
+        );
+        assert_eq!(serialized["webviewFailure"]["exitCode"], 259);
+        assert_eq!(
+            serialized["webviewFailure"]["readFailures"]["reasonHresult"],
+            -2_147_467_259_i32
+        );
     }
 }

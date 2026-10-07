@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
@@ -38,6 +39,7 @@ from ...application.user_profile.automation_custody_port import (
     AutomationCustodyError,
     AutomationSecretStore,
 )
+from ...core.diagnostic_log import diagnostic_event
 from ...core.logging import get_logger
 from ...core.time.clock import now
 from ..operation_composition import build_production_operation_registry
@@ -136,12 +138,16 @@ class RuntimeProfileConnections(
             peers = tuple(self._logins.values())
         if self._login_inventory is None:
             return peers
+        inventory_started = time.monotonic()
         inventory = self._login_inventory()
+        inventory_elapsed_ms = round((time.monotonic() - inventory_started) * 1000, 3)
         logins = {login.login_id: login for login in inventory.logins}
         # Preserve the original captured incarnation for human/attended leases.
         # A fresh login cannot replace their originating native proof.
         logins.update((login.login_id, login) for login in peers)
+        observation_started = time.monotonic()
         observed = tuple(login.observe(credential_facilities=Availability.UNAVAILABLE) for login in logins.values())
+        observation_elapsed_ms = round((time.monotonic() - observation_started) * 1000, 3)
         eligible = any(login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed)
         instant = time.monotonic()
         if not eligible or instant - self._last_sign_in_sweep >= 1.0:
@@ -156,7 +162,26 @@ class RuntimeProfileConnections(
                 # absence is UNKNOWN. This availability choice does not prove
                 # logout or change grants; positive locked witnesses survive.
                 # The existing server owns bounded drain and custody release.
-                _LOGGER.warning("no eligible login witness remains; stopping the runtime")
+                diagnostic_event(
+                    _LOGGER,
+                    "no eligible login witness remains; stopping the runtime",
+                    level=logging.WARNING,
+                    fields={
+                        "reason_code": "login_witness_loss",
+                        "inventory_complete": inventory.complete,
+                        "inventory_login_count": len(inventory.logins),
+                        "retained_peer_witness_count": len(peers),
+                        "observed_active_count": sum(login.active for login in observed),
+                        "observed_eligible_count": sum(
+                            login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed
+                        ),
+                        "observed_unknown_count": sum(
+                            login.unattended is LoginEligibility.UNKNOWN for login in observed
+                        ),
+                        "inventory_elapsed_ms": inventory_elapsed_ms,
+                        "observation_elapsed_ms": observation_elapsed_ms,
+                    },
+                )
                 request_runtime_stop(self.stop, RuntimeExitReason.LOGIN_WITNESS_LOSS)
         return tuple(logins.values())
 

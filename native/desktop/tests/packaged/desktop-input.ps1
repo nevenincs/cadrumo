@@ -207,7 +207,8 @@ function Invoke-Request($request) {
         }
         'post' {
             $messages = @{ 'close' = 0x0010; 'cancelmode' = 0x001F }
-            $target = if ($request.hwnd) { [IntPtr][long]$request.hwnd } else { Get-Window $request.pid }
+            $handle = $request.PSObject.Properties['hwnd']
+            $target = if ($handle -and $handle.Value) { [IntPtr][long]$handle.Value } else { Get-Window $request.pid }
             return @{ posted = [CadrumoDesktopInput]::Post($target, [uint32]$messages[[string]$request.message]) }
         }
         'processes' {

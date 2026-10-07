@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import json
+import logging
+import os
 import subprocess
+from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
+from types import SimpleNamespace
+from typing import override
 from uuid import uuid4
 
 import pytest
@@ -13,7 +19,16 @@ import pytest
 from cadrumo.adapters.local_runtime.tests.process_support import fixture_environment, native_python
 from cadrumo.application.runtime.contracts import RuntimeExitReason, RuntimeRefusalCode
 from cadrumo.application.runtime.login import RuntimeLoginInventory
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
+from cadrumo.core.diagnostic_log import DiagnosticFormatter, diagnostic_process
+from cadrumo.core.logging import LOG_FILE_FORMAT
 
+from .. import profile_connections
 from ..arguments import parse_runtime_arguments
 from ..main import run
 from ..profile_connections import RuntimeProfileConnections
@@ -30,6 +45,23 @@ with RuntimeShutdownWatchdog(stop, timeout=0.2):
     stop.set()
     Event().wait(20)
 """
+
+
+@dataclass(repr=False)
+class _DiagnosticLoginWitness:
+    context: OsLoginContext
+
+    @property
+    def login_id(self) -> str:
+        return self.context.login_id
+
+    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
+        assert credential_facilities is Availability.UNAVAILABLE
+        return self.context
+
+    @override
+    def __repr__(self) -> str:
+        raise AssertionError("native witness objects must never be rendered in diagnostics")
 
 
 @pytest.mark.unit
@@ -77,6 +109,83 @@ def test_login_witness_loss_names_its_reason_unless_a_stop_came_first(
     profiles._login_contexts()
     assert stop.is_set()
     assert stop.reason is (earlier or RuntimeExitReason.LOGIN_WITNESS_LOSS)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("complete", [False, True])
+@pytest.mark.parametrize("earlier", [None, RuntimeExitReason.SIGNAL_STOP])
+def test_login_witness_loss_logs_only_counts_and_measured_spans_without_changing_stop(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    complete: bool,
+    earlier: RuntimeExitReason | None,
+) -> None:
+    private_owner = "synthetic-private-owner-canary"
+    native = LoginObservation(private_owner, login_id="synthetic-initial-login-canary")
+    current = RuntimeLoginInventory((native,), complete=True)
+    stop = RuntimeStop()
+    profiles = RuntimeProfileConnections(
+        storage_root=tmp_path,
+        storage_identity="synthetic-private-storage-canary",
+        runtime_boot_id=uuid4(),
+        stop=stop,
+        login_inventory=lambda: current,
+    )
+    profiles._login_contexts()
+    assert not stop.is_set()
+    if earlier is not None:
+        stop.request(earlier)
+
+    def witness(identifier: str, *, active: bool, eligibility: LoginEligibility) -> _DiagnosticLoginWitness:
+        return _DiagnosticLoginWitness(
+            OsLoginContext(
+                login_id=identifier,
+                os_owner_id=private_owner,
+                active=active,
+                lock_state=OsLockState.UNKNOWN,
+                unattended=eligibility,
+                credential_facilities=Availability.UNAVAILABLE,
+            )
+        )
+
+    unknown = witness("synthetic-unknown-login-canary", active=True, eligibility=LoginEligibility.UNKNOWN)
+    stale = witness("synthetic-stale-login-canary", active=False, eligibility=LoginEligibility.ELIGIBLE)
+    peer = witness("synthetic-retained-login-canary", active=True, eligibility=LoginEligibility.INELIGIBLE)
+    current = RuntimeLoginInventory((unknown, stale), complete=complete)
+    profiles._logins[peer.login_id] = peer
+    instants = iter((10.0, 10.25, 10.5, 10.875, 11.0))
+    monkeypatch.setattr(profile_connections, "time", SimpleNamespace(monotonic=lambda: next(instants)))
+
+    with diagnostic_process("runtime"), caplog.at_level(logging.WARNING, logger=profile_connections.__name__):
+        remaining = profiles._login_contexts()
+
+    assert len(remaining) == 3
+    assert remaining[0] is unknown and remaining[1] is stale and remaining[2] is peer
+    assert stop.is_set() and not profiles._private_work_available()
+    assert stop.reason is (earlier or RuntimeExitReason.LOGIN_WITNESS_LOSS)
+    records = [record for record in caplog.records if record.name == profile_connections.__name__]
+    assert len(records) == 1
+    record = records[0]
+    assert record.getMessage() == "no eligible login witness remains; stopping the runtime"
+    assert not record.args and record.exc_info is None
+    rendered = DiagnosticFormatter(LOG_FILE_FORMAT).format(record)
+    context = json.loads(rendered.split(" | ", 1)[1])
+    assert context == {
+        "process_id": os.getpid(),
+        "process_role": "runtime",
+        "reason_code": "login_witness_loss",
+        "inventory_complete": complete,
+        "inventory_login_count": 2,
+        "retained_peer_witness_count": 1,
+        "observed_active_count": 2,
+        "observed_eligible_count": 0,
+        "observed_unknown_count": 1,
+        "inventory_elapsed_ms": 250.0,
+        "observation_elapsed_ms": 375.0,
+    }
+    assert "canary" not in rendered
+    assert str(profiles.boot) not in rendered and str(tmp_path) not in rendered
 
 
 @pytest.mark.unit

@@ -325,19 +325,19 @@ export function scenarioHost(
                 {
                   records: FIXTURE_RECORDS.slice(0, split),
                   dropped: 0,
-                  state: AVAILABLE,
+                  states: AVAILABLE,
                 },
                 {
                   records: FIXTURE_RECORDS.slice(split),
                   dropped: FIXTURE_DROPPED,
-                  state: AVAILABLE,
+                  states: AVAILABLE,
                 },
               ]
             : [
                 {
                   records: [],
                   dropped: 0,
-                  state:
+                  states:
                     scenario.logs === "empty"
                       ? AVAILABLE
                       : scenario.logs === "missing"
@@ -346,6 +346,25 @@ export function scenarioHost(
                 },
               ];
       let subscribed = true;
+      if (scenario.managerLog) {
+        for (const batch of batches) {
+          batch.states = {
+            ...batch.states,
+            manager: {
+              ...AVAILABLE.manager,
+              kind:
+                scenario.managerLog === "rejected"
+                  ? "available"
+                  : scenario.managerLog,
+              failure:
+                scenario.managerLog === "unreadable"
+                  ? UNREADABLE.python.failure
+                  : null,
+              rejected: scenario.managerLog === "rejected" ? 2 : 0,
+            },
+          };
+        }
+      }
       let feed = 0;
       window.setTimeout(() => {
         for (const batch of batches) if (subscribed) listener(batch);

@@ -55,6 +55,7 @@ export type Scenario = {
   /** The log subscription: fixture records, an available but empty source, a
    * missing or unreadable source, or a subscription that never answers. */
   logs: "records" | "empty" | "missing" | "unreadable" | "pending";
+  managerLog?: "missing" | "unreadable" | "rejected";
   /** Terminal sessions: fixture output, a session that starts and prints
    * nothing, one that starts and then fails, one that fails to start, or one
    * that never starts. */
@@ -552,6 +553,42 @@ export const SCENARIOS: readonly Scenario[] = [
       submit: { kind: "accept" },
     },
     logs: "missing",
+  },
+  {
+    ...base,
+    id: "manager-log-missing",
+    title: "Manager log missing",
+    summary:
+      "Python records remain available while the manager log is missing.",
+    managerLog: "missing",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "manager-log-unreadable",
+    title: "Manager log unreadable",
+    summary:
+      "Python records remain available while the manager log cannot be read.",
+    managerLog: "unreadable",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "manager-log-rejected",
+    title: "Manager log rows rejected",
+    summary:
+      "The manager log reports refused diagnostic rows without revealing their content.",
+    managerLog: "rejected",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
   },
   {
     ...base,

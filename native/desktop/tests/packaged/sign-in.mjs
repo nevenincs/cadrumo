@@ -4,11 +4,24 @@ import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { resolve } from "node:path";
+import { performance } from "node:perf_hooks";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
 import { waitFor, sleep } from "./session.mjs";
 import { PASS } from "./verdicts.mjs";
+
+const TIMING_PHASES = new Set([
+  "runtime-readiness",
+  "profile-create",
+  "profile-binding",
+  "initial-cli-status",
+  "ui-wrong-password",
+  "ui-valid-password",
+  "ui-throttle-wait",
+  "runtime-cleanup",
+]);
+const TIMING_LIMIT = 16;
 
 /** Retain typed failure identifiers only, never arbitrary diagnostic payloads. */
 export function canonicalFailure(stderr, secrets = []) {
@@ -68,6 +81,87 @@ export class SignInFixture {
     this.cliSamples = 0;
     this.argvLeak = false;
     this.created = false;
+    this.profileBound = false;
+    this.timingOrigin = performance.now();
+    this.timingOriginAt = new Date().toISOString();
+    this.phaseTimings = [];
+    this.timingsDropped = 0;
+    this.timingEvidenceFailed = false;
+  }
+
+  /** Closed scalar facts only: fixture messages and identity never leave here. */
+  timingStats() {
+    const exit = this.messages.find(
+      (message) => message.kind === "runtime-exited-before-cleanup",
+    )?.exitCode;
+    return {
+      originAt: this.timingOriginAt,
+      phases: this.phaseTimings.map((phase) => ({ ...phase })),
+      dropped: this.timingsDropped,
+      limit: TIMING_LIMIT,
+      evidenceWriteFailed: this.timingEvidenceFailed,
+      lifecycle: {
+        readySeen: this.messages.some((message) => message.kind === "ready"),
+        profileBound: this.profileBound,
+        runtimeExitBeforeCleanup: Number.isSafeInteger(exit) ? exit : null,
+        cleanupStopped: this.messages.some(
+          (message) => message.kind === "stopped",
+        ),
+      },
+    };
+  }
+
+  /** Measure an existing boundary without retaining its arguments or result. */
+  measure(phase, run, successful = () => true) {
+    assert(TIMING_PHASES.has(phase), "unknown fixture timing phase");
+    const started = performance.now();
+    let recorded = false;
+    const record = (outcome) => {
+      if (recorded) return;
+      recorded = true;
+      if (this.phaseTimings.length < TIMING_LIMIT)
+        this.phaseTimings.push({
+          phase,
+          outcome,
+          startedMs: started - this.timingOrigin,
+          elapsedMs: performance.now() - started,
+        });
+      else
+        this.timingsDropped = Math.min(
+          Number.MAX_SAFE_INTEGER,
+          this.timingsDropped + 1,
+        );
+      try {
+        this.results.evidence?.(
+          "sign-in-phase-timings.json",
+          this.timingStats(),
+        );
+      } catch {
+        // Evidence never replaces the operation's answer or cleanup failure.
+        this.timingEvidenceFailed = true;
+      }
+    };
+    const completed = (value) => {
+      try {
+        record(successful(value) ? "success" : "failure");
+      } catch (error) {
+        record("failure");
+        throw error;
+      }
+      return value;
+    };
+    const failed = (error) => {
+      record("failure");
+      throw error;
+    };
+    try {
+      const value = run();
+      return typeof value?.then === "function"
+        ? value.then(completed, failed)
+        : completed(value);
+    } catch (error) {
+      return failed(error);
+    }
   }
 
   cliCall(args, input, revealIdentifiers = false, timeout = 120000) {
@@ -105,27 +199,7 @@ export class SignInFixture {
     return envelope;
   }
 
-  async start() {
-    const setupStarted = performance.now();
-    const created = this.cliCall(
-      [
-        "config",
-        "profile",
-        "create",
-        "Desktop Acceptance",
-        "--quiet",
-        "--secrets-stdin",
-      ],
-      {
-        passphrase: this.secret,
-        passphrase_confirmation: this.secret,
-      },
-      false,
-      300000, // Cold profile enrollment includes calibration and initial storage.
-    );
-    const profileCreateSeconds = (performance.now() - setupStarted) / 1000;
-    assert.equal(created.command, "config.profile.create");
-    this.created = true;
+  async startRuntime() {
     const script = fileURLToPath(
       new URL("./runtime_fixture.py", import.meta.url),
     );
@@ -140,6 +214,12 @@ export class SignInFixture {
     );
     this.child.on("error", () =>
       this.messages.push({ kind: "failed", errorType: "SpawnFailed" }),
+    );
+    this.child.stdin.on("error", () =>
+      this.messages.push({
+        kind: "failed",
+        errorType: "FixtureControlWriteFailed",
+      }),
     );
     createInterface({ input: this.child.stdout }).on("line", (line) => {
       try {
@@ -156,27 +236,98 @@ export class SignInFixture {
       this.stderr += data.toString().slice(0, remaining);
       if (this.stderr.length >= 1024 * 1024) this.child.stdin.end();
     });
+    await this.waitMessage("ready");
+  }
+
+  async waitMessage(kind) {
     const deadline = Date.now() + 120000;
-    while (!this.messages.some((m) => m.kind === "ready")) {
+    for (;;) {
       const failed = this.messages.find((m) => m.kind === "failed");
       assert(!failed, `runtime fixture: ${failed?.errorType}`);
       assert(
         this.child.exitCode === null,
-        "runtime fixture exited before readiness",
+        `runtime fixture exited before ${kind}`,
       );
-      assert(
-        Date.now() < deadline,
-        "real packaged runtime handshake timed out",
-      );
+      const message = this.messages.find((m) => m.kind === kind);
+      if (message) return message;
+      assert(Date.now() < deadline, `real packaged runtime ${kind} timed out`);
       await sleep(50);
     }
-    const before = this.cliCall(["config", "sign-in-status"]);
-    assert.equal(before.command, "config.sign-in-status");
-    assert.equal(before.result.status.presence, "absent");
+  }
+
+  async start() {
+    const setupStarted = performance.now();
+    await this.measure("runtime-readiness", () => this.startRuntime());
+    const profileCreateStarted = performance.now();
+    this.measure("profile-create", () => {
+      const created = this.cliCall(
+        [
+          "config",
+          "profile",
+          "create",
+          "Desktop Acceptance",
+          "--quiet",
+          "--secrets-stdin",
+        ],
+        {
+          passphrase: this.secret,
+          passphrase_confirmation: this.secret,
+        },
+        false,
+        300000, // Cold profile enrollment includes calibration and initial storage.
+      );
+      assert.equal(created.command, "config.profile.create");
+      return created;
+    });
+    const profileCreateSeconds =
+      (performance.now() - profileCreateStarted) / 1000;
+    this.created = true;
+    await this.measure("profile-binding", async () => {
+      await new Promise((done, reject) => {
+        const refused = () => {
+          this.messages.push({
+            kind: "failed",
+            errorType: "FixtureControlWriteFailed",
+          });
+          reject(new Error("runtime fixture: FixtureControlWriteFailed"));
+        };
+        const control = this.child.stdin;
+        if (
+          control.destroyed ||
+          control.writableEnded ||
+          this.child.exitCode !== null
+        ) {
+          refused();
+          return;
+        }
+        try {
+          control.write("profile-created\n", (error) => {
+            if (error) refused();
+            else done();
+          });
+        } catch {
+          refused();
+        }
+      });
+      const profile = await this.waitMessage("profile-ready");
+      assert(
+        typeof profile.profileId === "string" &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
+            profile.profileId,
+          ),
+        "the runtime fixture must bind its exact new profile",
+      );
+      this.profileBound = true;
+    });
+    this.measure("initial-cli-status", () => {
+      const before = this.cliCall(["config", "sign-in-status"]);
+      assert.equal(before.command, "config.sign-in-status");
+      assert.equal(before.result.status.presence, "absent");
+    });
     return {
       verdict: PASS,
       detail:
-        "canonical CLI created fresh profile; contained packaged runtime completed verified handshake",
+        "contained packaged runtime completed verified handshake; canonical CLI then created fresh profile",
       data: {
         profileCreateSeconds,
         setupSeconds: (performance.now() - setupStarted) / 1000,
@@ -201,7 +352,9 @@ export class SignInFixture {
           )[index];
           return row?.answer || row?.ok === false ? row : null;
         }, before),
-      { timeout: 45000, what: "the canonical sign-in host answer" },
+      // One accepted submission may wait 30 s behind a read, then owns a
+      // separate 30 s child deadline. This does not retry the password.
+      { timeout: 75000, what: "the canonical sign-in host answer" },
     );
     assert.equal(answer.ok, true, `sign-in host refused: ${answer.code}`);
     assert.equal(
@@ -255,7 +408,12 @@ export class SignInFixture {
       const named = session.page.locator(".sign-in .profile-named");
       await named.waitFor({ state: "visible", timeout: 30000 });
       assert.match(await named.innerText(), /Desktop Acceptance/);
-      const rejected = await this.submit(session, this.wrong);
+      const rejected = await this.measure(
+        "ui-wrong-password",
+        () => this.submit(session, this.wrong),
+        (answer) =>
+          answer.kind === "refused" && answer.code === "CREDENTIAL_REJECTED",
+      );
       assert.equal(rejected.kind, "refused");
       assert.equal(rejected.code, "CREDENTIAL_REJECTED");
       const count = await session.shell(
@@ -270,15 +428,23 @@ export class SignInFixture {
         count,
         "no automatic password retry",
       );
-      let admitted = await this.submit(session, this.secret);
+      const admit = () =>
+        this.measure(
+          "ui-valid-password",
+          () => this.submit(session, this.secret),
+          (answer) => answer.kind === "signed-in",
+        );
+      let admitted = await admit();
       if (admitted.kind === "refused" && admitted.code === "THROTTLED") {
         assert(
           Number.isFinite(admitted.retryAfterSeconds) &&
             admitted.retryAfterSeconds <= 120,
         );
-        await sleep(admitted.retryAfterSeconds * 1000 + 500);
+        await this.measure("ui-throttle-wait", () =>
+          sleep(admitted.retryAfterSeconds * 1000 + 500),
+        );
         // A new explicit form submission after observing the actual countdown.
-        admitted = await this.submit(session, this.secret);
+        admitted = await admit();
       }
       assert.equal(admitted.kind, "signed-in");
       const present = await waitFor(
@@ -309,7 +475,7 @@ export class SignInFixture {
   async signOut(session) {
     const before = this.cliCall(["config", "sign-in-status"], undefined, true);
     const profileId = this.messages.find(
-      (message) => message.kind === "ready",
+      (message) => message.kind === "profile-ready",
     )?.profileId;
     assert(
       profileId,
@@ -390,30 +556,47 @@ export class SignInFixture {
   }
 
   async stop() {
-    if (!this.child)
+    return this.measure("runtime-cleanup", async () => {
+      if (!this.child)
+        return {
+          verdict: "INFO",
+          detail:
+            "runtime fixture never started; no profile creation was attempted",
+        };
+      if (!this.child.stdin.destroyed && !this.child.stdin.writableEnded)
+        this.child.stdin.end();
+      let deadline;
+      let code;
+      try {
+        code = await Promise.race([
+          this.exited,
+          new Promise((done) => {
+            deadline = setTimeout(() => done("timeout"), 15000);
+          }),
+        ]);
+      } finally {
+        clearTimeout(deadline);
+      }
+      if (code === "timeout") this.child.kill();
+      assert.equal(
+        code,
+        0,
+        "runtime fixture must settle its contained runtime and exact-profile keychain teardown",
+      );
+      assert(this.messages.some((m) => m.kind === "stopped"));
+      const cleaned = this.messages.some((m) => m.kind === "profile-cleaned");
+      assert(
+        cleaned ||
+          (!this.created &&
+            this.messages.some((m) => m.kind === "setup-incomplete")),
+        "the new profile must be cleaned, or failed enrollment must leave no selected profile",
+      );
       return {
-        verdict: "INFO",
-        detail: this.created
-          ? "profile creation completed, but runtime helper never started; no sign-in attempt ran and no human receipt was minted"
-          : "runtime fixture never started; profile creation did not report success",
+        verdict: PASS,
+        detail: cleaned
+          ? "runtime process scope terminated; exact-profile receipt absence verified after cleanup"
+          : "runtime process scope terminated; failed enrollment left no selected profile",
       };
-    this.child.stdin.end();
-    const code = await Promise.race([
-      this.exited,
-      sleep(15000).then(() => "timeout"),
-    ]);
-    if (code === "timeout") this.child.kill();
-    assert.equal(
-      code,
-      0,
-      "runtime fixture must settle its contained runtime and exact-profile keychain teardown",
-    );
-    assert(this.messages.some((m) => m.kind === "stopped"));
-    assert(this.messages.some((m) => m.kind === "profile-cleaned"));
-    return {
-      verdict: PASS,
-      detail:
-        "runtime process scope terminated; exact-profile receipt absence verified after cleanup",
-    };
+    });
   }
 }

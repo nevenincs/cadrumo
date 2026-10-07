@@ -1,5 +1,5 @@
-//! The Logs view: Python records tailed from `cadrumo.log` and its rotations,
-//! merged with desktop-host diagnostics events, delivered in paced batches.
+//! The Logs view: Python records and manager diagnostics tailed from their
+//! logs and rotations, merged with desktop-host events in paced batches.
 //!
 //! Records are read, never written: nothing here creates, truncates, rotates
 //! or deletes a log file, and nothing is persisted. Terminal bytes and
@@ -10,6 +10,7 @@
 //! take a lock that is never held across file I/O or a delivery.
 mod format;
 mod host;
+mod manager;
 mod record;
 mod tail;
 #[cfg(test)]
@@ -21,7 +22,7 @@ use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
-use record::{Aggregate, LogBatch, LogSourceState, Prepared, Sink, SourceKind};
+use record::{Aggregate, LogBatch, LogSourceState, LogSourceStates, Prepared, Sink, SourceKind};
 use serde::Serialize;
 use std::{
     path::PathBuf,
@@ -38,7 +39,7 @@ const TICK: Duration = Duration::from_millis(100);
 
 struct Inner {
     aggregate: Aggregate,
-    /// A poll completed since the hub last went idle, so `aggregate.state`
+    /// A poll completed since the hub last went idle, so `aggregate.states`
     /// describes the files.
     polled: bool,
     /// The ring and the tail were cleared for the current idle period.
@@ -64,6 +65,7 @@ impl Shared {
 pub struct LogHub {
     shared: Arc<Shared>,
     file: PathBuf,
+    manager_file: PathBuf,
     refusal: Option<ApplicationError>,
 }
 
@@ -71,6 +73,7 @@ pub struct LogHub {
 pub struct Poller {
     shared: Arc<Shared>,
     tail: tail::Tail,
+    manager_tail: tail::Tail,
     host: host::HostEvents,
     diagnostics: Arc<Diagnostics>,
 }
@@ -78,18 +81,29 @@ pub struct Poller {
 impl LogHub {
     pub fn new(
         log_file: PathBuf,
+        manager_log_file: PathBuf,
         log_format: &str,
         diagnostics: Arc<Diagnostics>,
     ) -> (Self, Poller) {
         let tail = tail::Tail::new(log_file.clone(), log_format);
+        let manager_tail = tail::Tail::manager(manager_log_file.clone());
         let state = LogSourceState {
             kind: SourceKind::Missing,
             detail: log_file.display().to_string(),
             failure: None,
+            rejected: 0,
         };
         let shared = Arc::new(Shared {
             inner: Mutex::new(Inner {
-                aggregate: Aggregate::new(state),
+                aggregate: Aggregate::new(LogSourceStates {
+                    python: state,
+                    manager: LogSourceState {
+                        kind: SourceKind::Missing,
+                        detail: manager_log_file.display().to_string(),
+                        failure: None,
+                        rejected: 0,
+                    },
+                }),
                 polled: false,
                 resting: true,
                 closed: false,
@@ -99,11 +113,13 @@ impl LogHub {
         let hub = Self {
             shared: shared.clone(),
             file: log_file,
+            manager_file: manager_log_file,
             refusal: tail.refusal(),
         };
         let poller = Poller {
             shared,
             tail,
+            manager_tail,
             host: host::HostEvents::default(),
             diagnostics,
         };
@@ -120,20 +136,24 @@ impl LogHub {
             self.shared.wake.notify_all();
             (
                 subscription,
-                inner.polled.then(|| inner.aggregate.state.clone()),
+                inner.polled.then(|| inner.aggregate.states.clone()),
             )
         };
-        let state = polled.unwrap_or_else(|| match &self.refusal {
-            Some(refusal) => LogSourceState {
-                kind: SourceKind::Unreadable,
-                detail: self.file.display().to_string(),
-                failure: Some(refusal.clone()),
+        let states = polled.unwrap_or_else(|| LogSourceStates {
+            python: match &self.refusal {
+                Some(refusal) => LogSourceState {
+                    kind: SourceKind::Unreadable,
+                    detail: self.file.display().to_string(),
+                    failure: Some(refusal.clone()),
+                    rejected: 0,
+                },
+                None => tail::probe(&self.file),
             },
-            None => tail::probe(&self.file),
+            manager: tail::probe(&self.manager_file),
         });
         Subscribed {
             subscription,
-            state,
+            states,
         }
     }
 
@@ -195,6 +215,7 @@ impl Poller {
             inner.polled = false;
             inner.aggregate.clear_records();
             self.tail.reset();
+            self.manager_tail.reset();
             self.host = host::HostEvents::default();
         }
     }
@@ -217,14 +238,16 @@ impl Poller {
             .into_iter()
             .map(Prepared::new)
             .collect();
-        let (entries, state) = self.tail.poll(now);
+        let (entries, python) = self.tail.poll(now);
+        prepared.extend(entries.into_iter().map(Prepared::new));
+        let (entries, manager) = self.manager_tail.poll(now);
         prepared.extend(entries.into_iter().map(Prepared::new));
         let deliveries = {
             let mut inner = shared.lock();
             for record in prepared {
                 inner.aggregate.push(record);
             }
-            inner.aggregate.state = state;
+            inner.aggregate.states = LogSourceStates { python, manager };
             inner.polled = true;
             inner.aggregate.deliver(now)
         };
@@ -238,7 +261,7 @@ impl Poller {
 #[derive(Serialize)]
 struct Subscribed {
     subscription: u64,
-    state: LogSourceState,
+    states: LogSourceStates,
 }
 
 /// A subscription's sink. It ends the subscription when the channel refuses
@@ -277,6 +300,7 @@ async fn logs_unsubscribe(hub: State<'_, Arc<LogHub>>, subscription: u64) -> Res
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let (hub, poller) = LogHub::new(
         launch.log_file.clone(),
+        launch.manager_log_file.clone(),
         &launch.log_format,
         launch.diagnostics.clone(),
     );

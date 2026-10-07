@@ -229,9 +229,14 @@ test("error: refusals are shown, not swallowed", async ({ page: target }) => {
 test("a missing log file is not an empty log", async ({ page: target }) => {
   await open(target, "logs-missing");
   await openLogs(target);
-  await expect(target.locator(".source-banner.state-missing")).toHaveText(
-    label("desktop.logs.state_missing_detail"),
+  await expect(
+    target.locator('.source-banner.state-missing[data-source="python"]'),
+  ).toHaveText(
+    `${label("desktop.logs.source_python")}: ${label("desktop.logs.state_missing_detail")}`,
   );
+  await expect(
+    target.locator('.source-banner[data-source="manager"]'),
+  ).toHaveCount(0);
   await expect(target.locator(".logview-list")).not.toContainText(
     label("desktop.logs.empty"),
   );

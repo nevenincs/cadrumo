@@ -8,7 +8,7 @@ use std::{
     io::{Read, Write},
     process::{Child, Command, ExitStatus, Stdio},
     sync::{
-        Arc, Mutex,
+        Arc, Condvar, Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
     },
     thread,
@@ -26,11 +26,21 @@ pub const CREATION_DEADLINE: Duration = Duration::from_secs(300);
 /// How long a read waits for the command that is running: as long as the
 /// slowest of them may take. Its own deadline starts when it does.
 const SLOT_WAIT: Duration = Duration::from_secs(330);
+const MUTATION_WAIT: Duration = Duration::from_secs(30);
+const PENDING_READERS: usize = 8;
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum HelperKind {
+    Read,
+    Mutation,
+}
 
 #[derive(Default)]
 struct Active {
     closed: bool,
-    busy: bool,
+    busy: Option<HelperKind>,
+    pending_mutation: bool,
+    pending_readers: usize,
     child: Option<Child>,
     process: Option<u64>,
 }
@@ -38,6 +48,7 @@ struct Active {
 #[derive(Default)]
 pub struct Children {
     active: Mutex<Active>,
+    changed: Condvar,
     diagnostics: Arc<Diagnostics>,
 }
 
@@ -75,17 +86,34 @@ impl Children {
     }
     /// Permanently fence new commands, kill the current child and reap it.
     pub fn stop(&self) -> Result<()> {
+        self.close_with(|active| self.settle_active(active))
+    }
+
+    fn close_with(&self, settle_current: impl FnOnce(&mut Active) -> Result<()>) -> Result<()> {
+        // Also wake poisoned-lock waiters if acquiring the fence itself fails.
+        self.changed.notify_all();
         let mut active = self
             .active
             .lock()
             .map_err(|_| failure(ErrorCode::LockPoisoned))?;
         active.closed = true;
-        self.settle_active(&mut active)?;
-        Ok(())
+        active.pending_mutation = false;
+        self.changed.notify_all();
+        let outcome = settle_current(&mut active);
+        drop(active);
+        // Cleanup failure must not strand admission waiters behind the fence.
+        self.changed.notify_all();
+        outcome
     }
 
     pub fn run(&self, command: Command, secret: Option<Zeroizing<Vec<u8>>>) -> Result<Output> {
-        self.execute(command, secret, None, DEADLINE)
+        self.execute(
+            command,
+            secret,
+            HelperKind::Mutation,
+            MUTATION_WAIT,
+            DEADLINE,
+        )
     }
 
     /// A command that is slow by design, under a deadline of its own.
@@ -95,23 +123,98 @@ impl Children {
         secret: Option<Zeroizing<Vec<u8>>>,
         deadline: Duration,
     ) -> Result<Output> {
-        self.execute(command, secret, None, deadline)
+        self.execute(
+            command,
+            secret,
+            HelperKind::Mutation,
+            MUTATION_WAIT,
+            deadline,
+        )
     }
 
     /// Status is read-only: wait for the current command without replaying it.
     pub fn read(&self, command: Command) -> Result<Output> {
-        self.execute(command, None, Some(SLOT_WAIT), DEADLINE)
+        self.execute(command, None, HelperKind::Read, SLOT_WAIT, DEADLINE)
+    }
+
+    fn admit(&self, kind: HelperKind, slot_wait: Duration) -> Result<MutexGuard<'_, Active>> {
+        let asked = Instant::now();
+        let mut active = self
+            .active
+            .lock()
+            .map_err(|_| failure(ErrorCode::LockPoisoned))?;
+        let mut pending = None;
+        loop {
+            if active.closed {
+                Self::release_pending(&mut active, &mut pending);
+                self.changed.notify_all();
+                return Err(failure(ErrorCode::SessionUnavailable));
+            }
+            if pending.is_some() && asked.elapsed() >= slot_wait {
+                Self::release_pending(&mut active, &mut pending);
+                self.changed.notify_all();
+                return Err(failure(ErrorCode::CliWaitTimedOut));
+            }
+            if active.busy.is_none()
+                && (!active.pending_mutation || pending == Some(HelperKind::Mutation))
+            {
+                Self::release_pending(&mut active, &mut pending);
+                return Ok(active);
+            }
+            if pending.is_none() {
+                match kind {
+                    HelperKind::Mutation => {
+                        // A password waits only behind one read, never behind
+                        // another mutation or an already reserved mutation.
+                        if active.busy != Some(HelperKind::Read) || active.pending_mutation {
+                            return Err(failure(ErrorCode::CliBusy));
+                        }
+                        active.pending_mutation = true;
+                    }
+                    HelperKind::Read => {
+                        if active.pending_readers >= PENDING_READERS {
+                            return Err(failure(ErrorCode::CliBusy));
+                        }
+                        active.pending_readers += 1;
+                    }
+                }
+                pending = Some(kind);
+                self.changed.notify_all();
+            }
+            let remaining = slot_wait.saturating_sub(asked.elapsed());
+            if remaining.is_zero() {
+                Self::release_pending(&mut active, &mut pending);
+                self.changed.notify_all();
+                return Err(failure(ErrorCode::CliWaitTimedOut));
+            }
+            match self.changed.wait_timeout(active, remaining) {
+                Ok((next, _)) => active = next,
+                Err(poisoned) => {
+                    let (mut active, _) = poisoned.into_inner();
+                    Self::release_pending(&mut active, &mut pending);
+                    self.changed.notify_all();
+                    return Err(failure(ErrorCode::LockPoisoned));
+                }
+            }
+        }
+    }
+
+    fn release_pending(active: &mut Active, pending: &mut Option<HelperKind>) {
+        match pending.take() {
+            Some(HelperKind::Read) => active.pending_readers -= 1,
+            Some(HelperKind::Mutation) => active.pending_mutation = false,
+            None => {}
+        }
     }
 
     fn execute(
         &self,
         mut command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
-        // How long to wait for a running command, or not at all.
-        slot_wait: Option<Duration>,
+        kind: HelperKind,
+        slot_wait: Duration,
         deadline: Duration,
     ) -> Result<Output> {
-        let asked = Instant::now();
         command
             .stdin(if secret.is_some() {
                 Stdio::piped()
@@ -125,47 +228,39 @@ impl Children {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x08000000);
         }
-        let (process, stdin, stdout, stderr) = {
-            let mut active = loop {
-                let active = self
-                    .active
-                    .lock()
-                    .map_err(|_| failure(ErrorCode::LockPoisoned))?;
-                if active.closed {
-                    return Err(failure(ErrorCode::SessionUnavailable));
+        let (process, stdin, stdout, stderr, start) = {
+            let mut active = match self.admit(kind, slot_wait) {
+                Ok(active) => active,
+                Err(error) => {
+                    // No OS spawn was attempted. Only the closed admission
+                    // refusal leaves this boundary, never command or password.
+                    self.diagnostics.failure(error.clone());
+                    return Err(error);
                 }
-                if !active.busy {
-                    break active;
-                }
-                let Some(slot_wait) = slot_wait else {
-                    return Err(failure(ErrorCode::QueueFull));
-                };
-                if asked.elapsed() >= slot_wait {
-                    return Err(failure(ErrorCode::TimedOut));
-                }
-                drop(active);
-                thread::sleep(Duration::from_millis(10));
             };
             let mut child = command.spawn().map_err(|cause| {
                 let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
                 self.diagnostics
                     .spawn_failure(ProcessRole::SignIn, error.clone());
+                self.changed.notify_all();
                 error
             })?;
+            let start = Instant::now();
             let process = self.diagnostics.start(child.id(), ProcessRole::SignIn);
             let pipes = (
                 process,
                 child.stdin.take(),
                 child.stdout.take().unwrap(),
                 child.stderr.take().unwrap(),
+                start,
             );
-            active.busy = true;
+            active.busy = Some(kind);
             active.child = Some(child);
             active.process = Some(process);
+            self.changed.notify_all();
             pipes
         };
         // The child's own time, from its start: not the wait for its turn.
-        let start = Instant::now();
         let overflow = AtomicBool::new(false);
         let outcome: Result<Output> = thread::scope(|scope| {
             let writer = scope.spawn(move || -> Result<()> {
@@ -221,7 +316,8 @@ impl Children {
                     .finish(process, status.code(), ProcessPhase::Exited);
             }
             active.child = None;
-            active.busy = false;
+            active.busy = None;
+            self.changed.notify_all();
         }
         if let Err(error) = &outcome {
             self.diagnostics.failure_for(process, error.clone());
@@ -326,7 +422,7 @@ mod tests {
     }
 
     #[cfg(windows)]
-    fn powershell(script: &str) -> Command {
+    pub(super) fn powershell(script: &str) -> Command {
         let root = std::env::var_os("SystemRoot").unwrap();
         let mut command = Command::new(
             std::path::Path::new(&root).join("System32/WindowsPowerShell/v1.0/powershell.exe"),
@@ -393,7 +489,7 @@ mod tests {
                     .err()
                     .unwrap()
                     .code,
-                ErrorCode::QueueFull
+                ErrorCode::CliBusy
             );
             assert_eq!(&*mutation.join().unwrap().unwrap().stdout, b"one-password");
             assert_eq!(&*status.join().unwrap().unwrap().stdout, b"status");
@@ -484,7 +580,8 @@ mod tests {
             let read = children.execute(
                 powershell("[Console]::Out.Write('status')"),
                 None,
-                Some(Duration::from_secs(60)),
+                HelperKind::Read,
+                Duration::from_secs(60),
                 Duration::from_secs(3),
             );
             assert_eq!(&*read.unwrap().stdout, b"status");
@@ -501,10 +598,11 @@ mod tests {
             let read = children.execute(
                 powershell("[Console]::Out.Write('status')"),
                 None,
-                Some(Duration::from_millis(300)),
+                HelperKind::Read,
+                Duration::from_millis(300),
                 Duration::from_secs(30),
             );
-            assert_eq!(read.err().unwrap().code, ErrorCode::TimedOut);
+            assert_eq!(read.err().unwrap().code, ErrorCode::CliWaitTimedOut);
             assert!(slow.join().unwrap().is_ok());
         });
         assert!(children.active.lock().unwrap().child.is_none());
@@ -522,3 +620,6 @@ mod tests {
         assert!(children.active.lock().unwrap().child.is_none());
     }
 }
+
+#[cfg(all(test, windows))]
+mod admission_tests;

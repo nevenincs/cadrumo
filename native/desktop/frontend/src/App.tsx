@@ -28,7 +28,7 @@ import type {
   DocsTheme,
   HostFailure,
   LogRecord,
-  LogSourceState,
+  LogSourceStates,
 } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
@@ -207,8 +207,8 @@ export function App({ host }: { host: Host }) {
     dropped: number;
   }>({ records: null, dropped: 0 });
   const { records, dropped } = log;
-  const [sourceState, setSourceState] = useState<
-    LogSourceState | "unavailable" | null
+  const [sourceStates, setSourceStates] = useState<
+    LogSourceStates | "unavailable" | null
   >(null);
   const [filters, setFilters] = useState<RecordFilters>(DEFAULT_FILTERS);
   const docs = useRef<DocsFrameApi>(null);
@@ -410,7 +410,7 @@ export function App({ host }: { host: Host }) {
     host
       .subscribeLogs((batch) => {
         if (!current) return;
-        setSourceState(batch.state);
+        setSourceStates(batch.states);
         setLog((held) => {
           const next = [...(held.records ?? []), ...batch.records];
           const over = Math.max(0, next.length - RECORD_CAP);
@@ -424,17 +424,8 @@ export function App({ host }: { host: Host }) {
         if (current) unsubscribe = stop;
         else stop();
       })
-      .catch((error: unknown) => {
-        if (current)
-          setSourceState(
-            error instanceof HostUnavailable
-              ? "unavailable"
-              : {
-                  kind: "unreadable",
-                  detail: "",
-                  failure: isHostFailure(error) ? error : null,
-                },
-          );
+      .catch(() => {
+        if (current) setSourceStates("unavailable");
       });
     return () => {
       current = false;
@@ -2110,7 +2101,7 @@ export function App({ host }: { host: Host }) {
                 {terminalPane("python", tabOpen("python"))}
                 <RecordList
                   records={records}
-                  sourceState={sourceState}
+                  sourceStates={sourceStates}
                   dropped={dropped}
                   filters={filters}
                   setFilters={setFilters}

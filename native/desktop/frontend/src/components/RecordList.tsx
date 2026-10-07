@@ -18,7 +18,7 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
-import type { LogLevel, LogRecord, LogSourceState } from "../ipc/contract";
+import type { LogLevel, LogRecord, LogSourceStates } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 import { fromPointer } from "../shell/pointer";
 import {
@@ -217,7 +217,7 @@ const Row = memo(function Row({
 // same menu a right-click does.
 export const RecordList = memo(function RecordList({
   records,
-  sourceState,
+  sourceStates,
   dropped,
   filters,
   setFilters,
@@ -226,7 +226,7 @@ export const RecordList = memo(function RecordList({
 }: {
   /** null until the host's subscription answers. */
   records: LogRecord[] | null;
-  sourceState: LogSourceState | "unavailable" | null;
+  sourceStates: LogSourceStates | "unavailable" | null;
   dropped: number;
   filters: RecordFilters;
   setFilters: (filters: RecordFilters) => void;
@@ -497,8 +497,10 @@ export const RecordList = memo(function RecordList({
       : source === "host"
         ? t("desktop.logs.source_host")
         : source;
-  const state =
-    sourceState && sourceState !== "unavailable" ? sourceState : null;
+  const states =
+    sourceStates && sourceStates !== "unavailable"
+      ? Object.entries(sourceStates)
+      : [];
 
   // Stable across batches, so memoized rows are not re-rendered by them.
   const live = useRef({ onMenu, visible });
@@ -677,8 +679,11 @@ export const RecordList = memo(function RecordList({
     }
   };
 
-  const loading = records === null && sourceState === null;
-  const empty = state?.kind === "available" && visible.length === 0;
+  const loading = records === null && sourceStates === null;
+  const empty =
+    states.length > 0 &&
+    states.every(([, state]) => state.kind === "available") &&
+    visible.length === 0;
   const chip = "shrink-0 rounded-full";
   // Follow stands where each shape of the bar wants it: last in a wide bar,
   // after the level in a narrow one, and first in the one-row bar of a short
@@ -811,11 +816,12 @@ export const RecordList = memo(function RecordList({
             </Button>
           )}
           <span className="flex-1" />
-          {state?.kind === "available" && (
-            <span className="shrink-0 text-xs text-faint">
-              {t("desktop.logs.state_available")}
-            </span>
-          )}
+          {states.length > 0 &&
+            states.every(([, state]) => state.kind === "available") && (
+              <span className="shrink-0 text-xs text-faint">
+                {t("desktop.logs.state_available")}
+              </span>
+            )}
           {counts.errors > 0 && (
             <Badge variant="danger" className="shrink-0">
               {t("desktop.logs.errors", { count: counts.errors })}
@@ -829,7 +835,7 @@ export const RecordList = memo(function RecordList({
           {followButton("hidden @4xl:inline-flex panel-short:hidden!")}
         </div>
       </div>
-      {sourceState === "unavailable" && (
+      {sourceStates === "unavailable" && (
         <Alert
           className="source-banner state-unavailable mx-2.5 mt-2 w-auto"
           icon={<Icon name="unplug" />}
@@ -839,29 +845,49 @@ export const RecordList = memo(function RecordList({
           </AlertTitle>
         </Alert>
       )}
-      {state?.kind === "missing" && (
-        <Alert
-          tone="warning"
-          className="source-banner state-missing mx-2.5 mt-2 w-auto"
-          icon={<Icon name="alert" />}
-        >
-          <AlertTitle className="font-normal">
-            {t("desktop.logs.state_missing_detail")}
-          </AlertTitle>
-        </Alert>
+      {states.map(([source, state]) =>
+        state.kind === "missing" ? (
+          <Alert
+            key={source}
+            data-source={source}
+            tone="warning"
+            className="source-banner state-missing mx-2.5 mt-2 w-auto"
+            icon={<Icon name="alert" />}
+          >
+            <AlertTitle className="font-normal">
+              {`${sourceLabel(source)}: ${t("desktop.logs.state_missing_detail")}`}
+            </AlertTitle>
+          </Alert>
+        ) : state.kind === "unreadable" ? (
+          <Alert
+            key={source}
+            data-source={source}
+            tone="danger"
+            className="source-banner state-unreadable mx-2.5 mt-2 w-auto"
+            icon={<Icon name="alert" />}
+          >
+            <AlertTitle className="font-normal">
+              {state.detail
+                ? `${sourceLabel(source)}: ${t("desktop.logs.state_unreadable")}: ${state.detail}`
+                : `${sourceLabel(source)}: ${t("desktop.logs.state_unreadable")}`}
+            </AlertTitle>
+          </Alert>
+        ) : null,
       )}
-      {state?.kind === "unreadable" && (
-        <Alert
-          tone="danger"
-          className="source-banner state-unreadable mx-2.5 mt-2 w-auto"
-          icon={<Icon name="alert" />}
-        >
-          <AlertTitle className="font-normal">
-            {state.detail
-              ? `${t("desktop.logs.state_unreadable")}: ${state.detail}`
-              : t("desktop.logs.state_unreadable")}
-          </AlertTitle>
-        </Alert>
+      {states.map(([source, state]) =>
+        state.rejected > 0 ? (
+          <Alert
+            key={source}
+            data-source={source}
+            tone="warning"
+            className="source-banner state-rejected mx-2.5 mt-2 w-auto"
+            icon={<Icon name="alert" />}
+          >
+            <AlertTitle className="font-normal">
+              {`${sourceLabel(source)}: ${t("desktop.logs.rejected", { count: state.rejected })}`}
+            </AlertTitle>
+          </Alert>
+        ) : null,
       )}
       <div
         className="logview-list min-h-0 flex-1 overflow-auto pt-1 pb-2 font-mono text-sm leading-relaxed select-text focus-visible:-outline-offset-2"

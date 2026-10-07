@@ -3,7 +3,11 @@
 
 use cadrumo_application::{child::ChildConfiguration, runtime};
 use cadrumo_manager::{contract, supervision::environment::runtime_environment};
-use std::{fs, path::PathBuf, time::Duration};
+use std::{
+    fs,
+    path::PathBuf,
+    time::{Duration, Instant},
+};
 
 #[test]
 fn packaged_identity_is_stable_and_does_not_acquire_runtime_ownership() {
@@ -32,12 +36,22 @@ fn packaged_identity_is_stable_and_does_not_acquire_runtime_ownership() {
         .enable_all()
         .build()
         .unwrap();
+    let first_started = Instant::now();
     let first = executor
         .block_on(runtime::identity(&configuration, Duration::from_secs(30)))
         .unwrap();
+    eprintln!(
+        "runtime_fixture phase=first_identity elapsed_ms={:.3}",
+        first_started.elapsed().as_secs_f64() * 1000.0
+    );
+    let repeat_started = Instant::now();
     let second = executor
         .block_on(runtime::identity(&configuration, Duration::from_secs(30)))
         .unwrap();
+    eprintln!(
+        "runtime_fixture phase=repeat_identity elapsed_ms={:.3}",
+        repeat_started.elapsed().as_secs_f64() * 1000.0
+    );
     assert_eq!(
         fs::canonicalize(first.storage).unwrap(),
         fs::canonicalize(&root).unwrap()
@@ -117,6 +131,7 @@ fn start_packaged_runtime(
         Box::new(Active),
         Box::new(BootRecordLocator::new(root)),
     );
+    let startup_started = Instant::now();
     let Start::Running(mut running) = startup::start(
         target,
         SupervisorConfig::default(),
@@ -139,16 +154,30 @@ fn start_packaged_runtime(
             .recv_timeout(deadline.saturating_duration_since(std::time::Instant::now()))
         {
             Ok(Event::Ready { .. }) => break true,
+            Ok(Event::Launched { .. }) if std::time::Instant::now() < deadline => eprintln!(
+                "runtime_fixture phase=child_launched elapsed_ms={:.3}",
+                startup_started.elapsed().as_secs_f64() * 1000.0
+            ),
             Ok(_) if std::time::Instant::now() < deadline => {}
             _ => break false,
         }
     };
     // Always request cleanup before asserting, including failed readiness.
+    eprintln!(
+        "runtime_fixture phase=runtime_ready elapsed_ms={:.3} ready={ready}",
+        startup_started.elapsed().as_secs_f64() * 1000.0
+    );
+    let shutdown_started = Instant::now();
     running.handle.request(Request::SessionEnd);
     let ended = running.ended.recv_timeout(Duration::from_secs(12));
     if ended.is_ok() {
         running.join().unwrap();
     }
+    eprintln!(
+        "runtime_fixture phase=session_end elapsed_ms={:.3} settled={}",
+        shutdown_started.elapsed().as_secs_f64() * 1000.0,
+        ended.is_ok()
+    );
     assert!(ready, "packaged native runtime did not become ready");
     assert!(matches!(ended.unwrap().unwrap(), Outcome::Stopped { .. }));
     assert!(

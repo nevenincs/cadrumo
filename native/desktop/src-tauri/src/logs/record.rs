@@ -73,14 +73,29 @@ pub struct LogSourceState {
     /// The log file the state describes.
     pub detail: String,
     pub failure: Option<ApplicationError>,
+    /// Complete file rows refused by the diagnostics schema since polling resumed.
+    pub rejected: u64,
 }
 
 impl LogSourceState {
     fn same(&self, other: &Self) -> bool {
         self.kind == other.kind
+            && self.rejected == other.rejected
             && self.detail == other.detail
             && self.failure.as_ref().map(|f| (f.code, f.operation))
                 == other.failure.as_ref().map(|f| (f.code, f.operation))
+    }
+}
+
+#[derive(Clone, Serialize)]
+pub struct LogSourceStates {
+    pub python: LogSourceState,
+    pub manager: LogSourceState,
+}
+
+impl LogSourceStates {
+    fn same(&self, other: &Self) -> bool {
+        self.python.same(&other.python) && self.manager.same(&other.manager)
     }
 }
 
@@ -89,7 +104,7 @@ pub struct LogBatch {
     pub records: Vec<LogRecord>,
     /// Records this subscription lost to ring overflow since its previous batch.
     pub dropped: u64,
-    pub state: LogSourceState,
+    pub states: LogSourceStates,
 }
 
 /// Receives a subscription's batches; returning false ends the subscription.
@@ -164,7 +179,7 @@ struct Subscriber {
     /// subscription that starts before the first poll begins with the backlog.
     next: Option<u64>,
     last_sent: Option<Instant>,
-    sent_state: Option<LogSourceState>,
+    sent_states: Option<LogSourceStates>,
     dropped: u64,
 }
 
@@ -189,7 +204,7 @@ pub struct Aggregate {
     next_seq: u64,
     subscribers: Vec<Subscriber>,
     next_subscription: u64,
-    pub state: LogSourceState,
+    pub states: LogSourceStates,
 }
 
 /// Subscriptions beyond this evict the oldest; a reloaded shell that never
@@ -197,13 +212,13 @@ pub struct Aggregate {
 const SUBSCRIBERS: usize = 8;
 
 impl Aggregate {
-    pub fn new(state: LogSourceState) -> Self {
+    pub fn new(states: LogSourceStates) -> Self {
         Self {
             ring: VecDeque::with_capacity(RING),
             next_seq: 1,
             subscribers: Vec::new(),
             next_subscription: 1,
-            state,
+            states,
         }
     }
 
@@ -249,7 +264,7 @@ impl Aggregate {
             sink,
             next: None,
             last_sent: None,
-            sent_state: None,
+            sent_states: None,
             dropped: 0,
         });
         id
@@ -292,13 +307,13 @@ impl Aggregate {
                 next = oldest;
             }
             let changed = subscriber
-                .sent_state
+                .sent_states
                 .as_ref()
-                .is_none_or(|sent| !sent.same(&self.state));
+                .is_none_or(|sent| !sent.same(&self.states));
             let mut batch = LogBatch {
                 records: Vec::new(),
                 dropped: subscriber.dropped,
-                state: self.state.clone(),
+                states: self.states.clone(),
             };
             // The envelope without records, then each record and its comma.
             let mut bytes = json_len(&batch);
@@ -321,7 +336,7 @@ impl Aggregate {
             }
             subscriber.dropped = 0;
             subscriber.last_sent = Some(now);
-            subscriber.sent_state = Some(self.state.clone());
+            subscriber.sent_states = Some(self.states.clone());
             deliveries.push(Delivery {
                 subscription: subscriber.id,
                 sink: subscriber.sink.clone(),
@@ -351,11 +366,16 @@ mod tests {
         })
     }
 
-    fn available() -> LogSourceState {
-        LogSourceState {
+    fn available() -> LogSourceStates {
+        let state = LogSourceState {
             kind: SourceKind::Available,
             detail: "cadrumo.log".into(),
             failure: None,
+            rejected: 0,
+        };
+        LogSourceStates {
+            python: state.clone(),
+            manager: state,
         }
     }
 
@@ -469,15 +489,15 @@ mod tests {
         assert_eq!(received.lock().unwrap().len(), 2);
         deliver(&mut aggregate, start + BATCH_INTERVAL * 3);
         assert_eq!(received.lock().unwrap().len(), 2, "unchanged sends nothing");
-        aggregate.state = LogSourceState {
+        aggregate.states.python = LogSourceState {
             kind: SourceKind::Missing,
-            ..available()
+            ..available().python
         };
         deliver(&mut aggregate, start + BATCH_INTERVAL * 4);
         let batches = received.lock().unwrap();
         assert_eq!(batches.len(), 3, "a state change is delivered");
         assert!(batches[2].records.is_empty());
-        assert_eq!(batches[2].state.kind, SourceKind::Missing);
+        assert_eq!(batches[2].states.python.kind, SourceKind::Missing);
         drop(batches);
         assert!(aggregate.unsubscribe(id));
         assert!(!aggregate.unsubscribe(id));

@@ -139,8 +139,13 @@ export function tokenVerdict({ docs, shell }) {
     problems.push(
       `docs frame sees __CADRUMO_SHELL__ (${docs.surface.shellObject})`,
     );
-  if (docs.names.length)
-    problems.push(`docs frame globals: ${docs.names.join(", ")}`);
+  // The docs assets publish translated chrome strings and search controls.
+  // These exact public names carry no shell authority; other names still fail.
+  const unexpected = docs.names.filter(
+    (name) => !["cadrumoChromeStrings", "CadrumoDocs"].includes(name),
+  );
+  if (unexpected.length)
+    problems.push(`docs frame globals: ${unexpected.join(", ")}`);
   for (const [name, reach] of Object.entries({
     "top.__CADRUMO_SHELL__": docs.topShell,
     "parent.__CADRUMO_SHELL__": docs.parentShell,

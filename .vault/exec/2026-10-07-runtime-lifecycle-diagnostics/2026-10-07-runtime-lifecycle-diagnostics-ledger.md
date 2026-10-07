@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:dffe36af960847e306c2a891d7421f6052aa578a4aa96f420a91b55b03cc0128'
+body_hash: 'sha256:44e3ea2ffe8a354b256c5441a812ea0368a35b5462f1759eafa1cc5e768781f6'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -153,6 +153,114 @@ related:
 - `S06` `verify:` `canonical projection6tests Ruff ty` -> `pass`
 - `S06` `verify:` `root integrated architectural review` -> `pass`
 - `S06` `by:` `root`
+- `S07` `M` `dev/locales/desktop_chrome.py`
+- `S07` `M` `native/desktop/frontend/src/App.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/RecordList.stories.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/fixtures/logs.ts`
+- `S07` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S07` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S07` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/logs.spec.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S07` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/host.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/record.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/tail.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/tests.rs`
+- `S07` `M` `native/desktop/src-tauri/src/python/environment.py`
+- `S07` `M` `native/desktop/src-tauri/src/terminal/tests.rs`
+- `S07` `M` `native/desktop/tests/packaged-harness.test.mjs`
+- `S07` `M` `native/desktop/tests/packaged/runtime_fixture.py`
+- `S07` `M` `native/desktop/tests/packaged/sign-in.mjs`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `A` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S07` `verify:` `desktop backend187 and Clippy` -> `pass`
+- `S07` `verify:` `browser20 distinct log manager scenarios` -> `pass`
+- `S07` `verify:` `frontend TypeScript ESLint formatting` -> `pass`
+- `S07` `verify:` `locales16tests` -> `pass`
+- `S07` `verify:` `packaged fixture9Node tests Ruff Prettier syntax` -> `pass`
+- `S07` `by:` `root`
+- `S07` `M` `native/desktop/tests/packaged/os.mjs`
+- `S07` `verify:` `desktop input3tests mixed-case LIB LIBPATH regression` -> `pass`
+- `S07` `verify:` `Session1 first acceptance helper bootstrap` -> `fail`
+- `S07` `verify:` `new manager with old package runtime_identity and observed cleanup` -> `pass`
+- `S07` `M` `native/desktop/tests/packaged.test.mjs`
+- `S07` `M` `native/desktop/tests/packaged/session.mjs`
+- `S07` `M` `native/desktop/tests/packaged/standin.mjs`
+- `S07` `M` `native/desktop/tests/packaged/docs-ui.mjs`
+- `S07` `M` `native/desktop/tests/packaged/verdicts.mjs`
+- `S07` `verify:` `full packaged harness33tests syntax format diff` -> `pass`
+- `S07` `verify:` `Session1 old-package r2 full acceptance13pass10fail4info` -> `fail`
+- `S07` `verify:` `real Unicode space relocation runtime identity Ready SessionEnd cleanup` -> `pass`
+- `S07` `verify:` `Session1 packaged 20261007-092557: 10 PASS 1 INFO 7 FAIL` -> `fail`
+- `S07` `verify:` `r3 recorded PID and birth survivor check: 28 absent` -> `pass`
+- `S07` `verify:` `just build-native-package Release: removed configured Python input` -> `fail`
+- `S07` `M` `native/manager/tests/runtime_identity.rs`
+- `S07` `M` `native/desktop/tests/packaged/results.mjs`
+- `S07` `verify:` `runtime identity measured phases against old package` -> `pass`
+- `S09` `M` `native/desktop/tests/packaged.test.mjs`
+- `S09` `M` `native/desktop/tests/packaged/results.mjs`
+- `S09` `A` `native/desktop/tests/packaged/results.test.mjs`
+- `S09` `verify:` `node --test native/desktop/tests/packaged/results.test.mjs: 1 passed 167.9 ms` -> `pass`
+- `S07` `verify:` `three simultaneous isolated real-runtime fixture invocations: 3 passed` -> `pass`
+- `S07` `verify:` `concurrent recorded process identity survivor check: 13 absent` -> `pass`
+- `S07` `M` `native/desktop/tests/packaged/browser.mjs`
+- `S07` `A` `native/desktop/tests/packaged/terminal-observer.mjs`
+- `S07` `A` `native/desktop/tests/terminal-observer.test.mjs`
+- `S07` `verify:` `bounded VT observer and owning harness: 47 tests 27.53s` -> `pass`
+- `S09` `M` `native/platform/src/desktop.rs`
+- `S09` `A` `native/platform/src/desktop/webview_process.rs`
+- `S09` `A` `native/platform/src/desktop/webview_process/tests.rs`
+- `S09` `M` `native/application/src/diagnostics/mod.rs`
+- `S09` `A` `native/application/src/diagnostics/webview.rs`
+- `S09` `M` `native/application/src/error/application.rs`
+- `S09` `M` `native/application/tests/diagnostics.rs`
+- `S09` `A` `native/application/tests/webview_diagnostics.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/webview.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S09` `M` `native/desktop/src-tauri/src/logs/host.rs`
+- `S09` `M` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S09` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S09` `verify:` `WebView focused checks: application32 COM4 shell6 host5; app and desktop Clippy; frontend and formatting` -> `pass`
+- `S09` `verify:` `integrated desktop backend: 189 tests 44.61s` -> `pass`
+- `S09` `verify:` `standalone platform Clippy: six unrelated findings` -> `fail`
+- `S07` `verify:` `idle observer and owning harness: 48 tests 27.83s` -> `pass`
+- `S07` `verify:` `Session1 packaged 20261007-100942: 12 PASS 4 INFO 10 FAIL 1 SKIP` -> `fail`
+- `S07` `verify:` `r4 cleanup clipboard restoration and 106 observed process identities absent` -> `pass`
+- `S10` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S10` `A` `native/desktop/src-tauri/src/shell/sign_in/process/admission_tests.rs`
+- `S10` `M` `native/application/src/error/application.rs`
+- `S10` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S10` `verify:` `sign-in process tests 15/15` -> `pass`
+- `S10` `verify:` `desktop Clippy` -> `pass`
+- `S10` `verify:` `frontend contract type lint format` -> `pass`
+- `S09` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S09` `verify:` `Session1 controlled renderer crash durable callback and normal close` -> `pass`
+- `S09` `verify:` `observed crash probe process survivors zero` -> `pass`
+- `S10` `verify:` `integrated desktop backend 197 tests` -> `pass`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S11` `M` `src/cadrumo/core/diagnostic_log.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_exit_reasons.py`
+- `S11` `M` `src/cadrumo/core/tests/test_diagnostic_log.py`
+- `S11` `verify:` `diagnostic and exit reason unit tests30` -> `pass`
+- `S11` `verify:` `Ruff check and format` -> `pass`
+- `S11` `verify:` `scoped ty Linux Windows Darwin` -> `pass`
+- `S11` `verify:` `formatter BasedPyright and Pyrefly` -> `pass`
+- `S10` `verify:` `Session1 real wrong-password then valid-password form sign-in` -> `pass`
+- `S10` `verify:` `Session1 canonical profile-list` -> `pass`
+- `S07` `verify:` `fixture phase timing14tests` -> `pass`
+- `S07` `verify:` `real PowerShell console path7cases` -> `pass`
+- `S07` `verify:` `production packaged console resolution PTY` -> `pass`
+- `S12` `M` `dev/packaging/native/platforms/windows.py`
+- `S12` `A` `dev/packaging/native/platforms/tests/test_windows.py`
+- `S12` `verify:` `Windows SDK provisioning5tests` -> `pass`
+- `S12` `verify:` `scoped Ruff lint format diff` -> `pass`
+- `S12` `verify:` `cmake build python_sdk Release` -> `pass`
 
 ## Notes
 
@@ -163,3 +271,18 @@ related:
 - `S04` User clarified bounded desktop integration plus flagged launcher dependency. Runtime supervisor source belongs other session; no live manager dispatch, installer registration, packaged rebuild or upgrade acceptance performed. Shared index lock prevented checkpoint commits.
 - `S01` Final aggregate import gate could not resolve lint-imports from bare PATH and detected concurrent source changes; direct venv executable subsequently passed all15 graph contracts. Subordinate checker reports15 authority findings in shared tree; no source-wide clean claim. Source loadability4519/4519passed. Generated target metadata includes concurrent owners' source census; not selectively hand-edited.
 - `S05` Root owns architectural review; Sol6.1 workers only narrow coding and tests. Measurements are fixture-local; no rebuilt executable or live installed acceptance. S04 remains open for stable launcher. Checkpoint commits remain pending shared index lock.
+- `S07` Session1 first run stopped before app launch because inherited VS LIB named an absent optional directory. Child-only helper sanitization fixes this; root wrapper restored clipboard and removed one-shot task. Interactive rerun and fresh package build remain in flight.
+- `S07` WebGL DOM readback defect and actual WebView Target crashed remain separate open findings; retry and bounded performance observation running
+- `S07` Per-check and launch milestones added; phase evidence runtime-phases; CPU observer covered only final 6.31 seconds
+- `S09` Root preserves bounded redacted log evidence in finally and per-check timing; callback implementation delegated under root-defined contract
+- `S07` Independent roots; old package; 20.40-20.62 s Ready and 1.50-1.74 s settlement; resource sampler final 8.35 s only
+- `S07` Root-reviewed parsing ACK race and stale document epoch guards; exact source hashes in terminal-observer.json
+- `S09` Root reviewed lifetime partial getters safe projection; s09-webview-verification.json records commands and limitations; actual callback acceptance pending
+- `S07` Runtime fixture passed; explicit sign-in queue refusal drives S10; per-stage performance and bounded failure evidence preserved
+- `S10` Focused runtime16.23s; command36.79s including17.10s compile. Root admission review passed; interactive r5 pending.
+- `S09` Same current test host with old package; crash-to-record1187ms, close133ms exit0. Preliminary close failures traced to optional HWND harness bug, corrected and independently tested.
+- `S10` 44.95s tests;49.09s wrapper. 48 samples: peak summedRSS472014848 bytes,2106handles,12.20 observedCPU seconds inclwrapper. r5 pre-GUI fixture failed after old runtime witness-loss shutdown; S10 interactive acceptance remains pending.
+- `S11` Root reviewed behavior preservation and private-data refusal; suite6.61s,3existing integration deselected. Exact evidence s11-login-witness-verification.json.
+- `S10` r6 current host with old payload; wrong-password23.93s,valid-password18.98s; noautomaticretry. Whole run13PASS1INFO4FAIL from Console comparison and docs failures; runtime/profile cleanup passed and89observed identities absent.
+- `S07` Timing evidence survives failures; normalized full paths prevent mixed-separator false refusal. r6 whole acceptance remains failed on old-package docs navigation/crash; fresh build pending.
+- `S12` Real target8.63s including configure and pinned download/extraction; root verified output and unchanged origin/hash/path checks. Full package still refused by documentation reference gate.

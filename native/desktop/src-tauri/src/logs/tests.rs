@@ -391,7 +391,12 @@ fn start(poller: Poller) -> std::thread::JoinHandle<()> {
 }
 
 fn hub(log: PathBuf, diagnostics: Arc<Diagnostics>) -> (LogHub, Poller) {
-    LogHub::new(log, FORMAT, diagnostics)
+    LogHub::new(
+        log.clone(),
+        log.with_file_name("cadrumo-manager.log"),
+        FORMAT,
+        diagnostics,
+    )
 }
 
 fn subscribe(hub: &LogHub) -> (u64, Frames) {
@@ -463,7 +468,7 @@ fn backlog_spans_rotations_in_order() {
     assert!(first["timestampMs"].is_null() && first["process"].is_null());
     assert_eq!(first["level"], "INFO");
     assert_eq!(first["logger"], "cadrumo.test");
-    assert_eq!(frames[0].1["state"]["kind"], "available");
+    assert_eq!(frames[0].1["states"]["python"]["kind"], "available");
 }
 
 #[test]
@@ -806,11 +811,19 @@ fn nothing_is_listed_or_opened_without_a_subscription_and_a_later_one_gets_the_c
     let base = scratch.log();
     let rotated = |index: u32| scratch.0.join(format!("cadrumo.log.{index}"));
     append(&base, (0..100).map(line).collect::<String>().as_bytes());
+    let manager = scratch.0.join("cadrumo-manager.log");
+    append(&manager, &manager_line(1));
     let (hub, poller) = hub(base.clone(), Arc::new(Diagnostics::default()));
     let io = poller.tail.io.clone();
+    let manager_io = poller.manager_tail.io.clone();
     let poller = start(poller);
     std::thread::sleep(TICK * 5);
     assert_eq!(io_of(&io), (0, 0), "read before any subscription");
+    assert_eq!(
+        io_of(&manager_io),
+        (0, 0),
+        "manager read before any subscription"
+    );
 
     let (subscription, frames) = subscribe(&hub);
     wait_for(&frames, Duration::from_secs(10), |frames| {
@@ -821,6 +834,7 @@ fn nothing_is_listed_or_opened_without_a_subscription_and_a_later_one_gets_the_c
     hub.unsubscribe(subscription).unwrap();
     std::thread::sleep(TICK * 3);
     let idle = io_of(&io);
+    let manager_idle = io_of(&manager_io);
     // Rotations and new records while nothing is subscribed.
     append(&base, (100..150).map(line).collect::<String>().as_bytes());
     fs::rename(&base, rotated(1)).unwrap();
@@ -830,6 +844,11 @@ fn nothing_is_listed_or_opened_without_a_subscription_and_a_later_one_gets_the_c
     append(&base, (200..250).map(line).collect::<String>().as_bytes());
     std::thread::sleep(TICK * 10);
     assert_eq!(io_of(&io), idle, "files touched without a subscription");
+    assert_eq!(
+        io_of(&manager_io),
+        manager_idle,
+        "manager files touched without a subscription"
+    );
 
     let (_, frames) = subscribe(&hub);
     wait_for(&frames, Duration::from_secs(10), |frames| {
@@ -837,7 +856,12 @@ fn nothing_is_listed_or_opened_without_a_subscription_and_a_later_one_gets_the_c
     });
     assert!(io_of(&io).1 > idle.1);
     let expected: Vec<String> = (0..250).map(|i| format!("rec-{i:06}")).collect();
-    assert_eq!(messages_of(&records_of(&frames.lock().unwrap())), expected);
+    let received: Vec<_> = records_of(&frames.lock().unwrap())
+        .into_iter()
+        .filter(|record| record["source"] == "python")
+        .collect();
+    assert_eq!(messages_of(&received), expected);
+    assert!(io_of(&manager_io).1 > manager_idle.1);
     // The poller ends with the hub.
     drop(hub);
     poller.join().unwrap();
@@ -899,23 +923,161 @@ fn a_probe_reports_the_state_before_any_poll() {
     let scratch = Scratch::new("probe");
     let (hub, _poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
     assert_eq!(
-        hub.subscribe(Arc::new(|_| true)).state.kind,
+        hub.subscribe(Arc::new(|_| true)).states.python.kind,
         SourceKind::Missing
     );
     append(&scratch.log(), line(0).as_bytes());
     assert_eq!(
-        hub.subscribe(Arc::new(|_| true)).state.kind,
+        hub.subscribe(Arc::new(|_| true)).states.python.kind,
         SourceKind::Available
     );
     let (refused, _poller) = LogHub::new(
         scratch.log(),
+        scratch.0.join("cadrumo-manager.log"),
         "%(message)s %(message)s",
         Arc::new(Diagnostics::default()),
     );
-    let state = refused.subscribe(Arc::new(|_| true)).state;
+    let state = refused.subscribe(Arc::new(|_| true)).states.python;
     assert_eq!(
         (state.kind, state.failure.map(|f| f.code)),
         (SourceKind::Unreadable, Some(ErrorCode::EnvironmentFailed))
+    );
+}
+
+fn manager_line(sequence: u64) -> Vec<u8> {
+    let mut line = serde_json::to_vec(&serde_json::json!({
+        "sequence": sequence,
+        "source": "manager",
+        "timestampMs": 1_791_117_001_042_u64 + sequence,
+        "hostPid": 4320,
+        "kind": "stage_completed",
+        "process": null,
+        "failure": null,
+        "status": null,
+        "stage": "supervision",
+        "lifecycle": { "event": "launched", "pid": 4321 + sequence },
+    }))
+    .unwrap();
+    line.push(b'\n');
+    line
+}
+
+#[test]
+fn manager_jsonl_waits_for_newlines_and_counts_refused_content_without_exposing_it() {
+    let scratch = Scratch::new("manager-lines");
+    let file = scratch.0.join("cadrumo-manager.log");
+    let line = manager_line(1);
+    let split = line.len() / 2;
+    let mut tail = Tail::manager(file.clone());
+    let now = Instant::now();
+    append(&file, &line[..split]);
+    assert!(tail.poll(now).0.is_empty());
+    let (entries, state) = tail.poll(now + SETTLE * 5);
+    assert!(entries.is_empty());
+    assert_eq!(state.rejected, 0);
+    append(&file, &line[split..]);
+    append(&file, b"PRIVATE-CONTENT-7f3a\n");
+    append(&file, &vec![b'x'; LINE_BYTES + 1]);
+    append(&file, b"\n");
+    append(&file, &manager_line(2));
+    let (entries, state) = tail.poll(now + SETTLE * 6);
+    assert_eq!(entries.len(), 2);
+    assert_eq!(state.kind, SourceKind::Available);
+    assert_eq!(state.rejected, 2);
+    assert_eq!(entries[0].context["runtime_pid"], 4322);
+    assert_eq!(entries[1].context["runtime_pid"], 4323);
+    assert!(!format!("{entries:?}").contains("7f3a"));
+    let (entries, state) = tail.poll(now + SETTLE * 7);
+    assert!(entries.is_empty());
+    assert_eq!(state.rejected, 2);
+}
+
+#[test]
+fn manager_jsonl_rotations_are_followed_once_and_reset_replays_the_bounded_backlog() {
+    let scratch = Scratch::new("manager-rotation");
+    let file = scratch.0.join("cadrumo-manager.log");
+    let rotated = scratch.0.join("cadrumo-manager.log.1");
+    append(&file, &manager_line(1));
+    let mut tail = Tail::manager(file.clone());
+    let now = Instant::now();
+    assert_eq!(tail.poll(now).0.len(), 1);
+    fs::rename(&file, &rotated).unwrap();
+    append(&rotated, &manager_line(2));
+    append(&file, &manager_line(3));
+    let (entries, _) = tail.poll(now + SETTLE);
+    assert_eq!(
+        entries
+            .iter()
+            .map(|entry| entry.context["event_id"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        [2, 3]
+    );
+    assert!(tail.poll(now + SETTLE * 2).0.is_empty());
+    tail.reset();
+    let (entries, _) = tail.poll(now + SETTLE * 3);
+    assert_eq!(
+        entries
+            .iter()
+            .map(|entry| entry.context["event_id"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        [1, 2, 3]
+    );
+}
+
+#[test]
+fn manager_and_python_availability_and_rejections_are_delivered_independently() {
+    let scratch = Scratch::new("manager-source-states");
+    let manager = scratch.0.join("cadrumo-manager.log");
+    append(&manager, &manager_line(1));
+    let (hub, mut poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
+    let subscribed = hub.subscribe(Arc::new(|_| true));
+    assert_eq!(subscribed.states.python.kind, SourceKind::Missing);
+    assert_eq!(subscribed.states.manager.kind, SourceKind::Available);
+    let (_, frames) = subscribe(&hub);
+    let now = Instant::now();
+    poller.tick(now);
+    append(&manager, b"PRIVATE-CONTENT-7f3a\n");
+    poller.tick(now + TICK);
+    let frames = frames.lock().unwrap();
+    assert_eq!(
+        frames.len(),
+        2,
+        "a rejection count change is delivered without a new record"
+    );
+    assert_eq!(frames[1].1["states"]["python"]["kind"], "missing");
+    assert_eq!(frames[1].1["states"]["manager"]["kind"], "available");
+    assert_eq!(frames[1].1["states"]["manager"]["rejected"], 1);
+    assert_eq!(frames[1].1["records"].as_array().unwrap().len(), 0);
+    assert!(
+        !serde_json::to_string(&frames[1].1)
+            .unwrap()
+            .contains("7f3a")
+    );
+}
+
+#[test]
+fn manager_directory_refusal_does_not_mark_python_unreadable() {
+    let scratch = Scratch::new("manager-unreadable");
+    append(&scratch.log(), line(1).as_bytes());
+    let blocked = scratch.0.join("blocked-parent");
+    fs::write(&blocked, b"not a directory").unwrap();
+    let (hub, mut poller) = LogHub::new(
+        scratch.log(),
+        blocked.join("cadrumo-manager.log"),
+        FORMAT,
+        Arc::new(Diagnostics::default()),
+    );
+    let states = hub.subscribe(Arc::new(|_| true)).states;
+    assert_eq!(states.python.kind, SourceKind::Available);
+    assert_eq!(states.manager.kind, SourceKind::Unreadable);
+    let (_, frames) = subscribe(&hub);
+    poller.tick(Instant::now());
+    let frames = frames.lock().unwrap();
+    assert_eq!(frames[0].1["states"]["python"]["kind"], "available");
+    assert_eq!(frames[0].1["states"]["manager"]["kind"], "unreadable");
+    assert_eq!(
+        frames[0].1["states"]["manager"]["failure"]["code"],
+        "read_failed"
     );
 }
 
@@ -1238,7 +1400,12 @@ for index in range(total):
         }));
 
         // A later subscriber's backlog spans the rotations in the same order.
-        let (hub, mut poller) = LogHub::new(log, &package.format, Arc::new(Diagnostics::default()));
+        let (hub, mut poller) = LogHub::new(
+            log.clone(),
+            log.with_file_name("cadrumo-manager.log"),
+            &package.format,
+            Arc::new(Diagnostics::default()),
+        );
         let (_, frames) = subscribe(&hub);
         // Paced ticks until the last record settled and every batch is out.
         let start = Instant::now();

@@ -46,7 +46,7 @@ fn token(value: impl Serialize) -> String {
         .unwrap_or_default()
 }
 
-fn entry(event: &Event) -> Entry {
+pub(super) fn entry(event: &Event) -> Entry {
     let (source, logger) = match event.source {
         DiagnosticSource::Desktop => (SOURCE, LOGGER),
         DiagnosticSource::Manager => ("manager", "manager"),
@@ -98,7 +98,23 @@ fn entry(event: &Event) -> Entry {
             context.insert("os_code".into(), Value::from(code));
         }
     }
+    if let Some(fact) = event.lifecycle {
+        super::manager::lifecycle_context(fact, &mut context);
+    }
+    if let Some(fact) = event.webview_failure {
+        webview_context(fact, &mut context);
+    }
     let mut message = token(event.kind);
+    if let Some(fact) = event.lifecycle {
+        let encoded = serde_json::to_value(fact).expect("closed lifecycle fact serializes");
+        if let Some(name) = encoded["event"].as_str() {
+            message.push_str(": ");
+            message.push_str(name);
+        }
+        if let Some(pid) = context.get("runtime_pid").and_then(Value::as_u64) {
+            message.push_str(&format!(" runtime pid {pid}"));
+        }
+    }
     if let Some(status) = &event.status {
         message.push_str(&format!(
             ": {} pid {}",
@@ -149,6 +165,55 @@ fn entry(event: &Event) -> Entry {
         detail: None,
         process: Some(process),
         context,
+    }
+}
+
+fn webview_context(
+    fact: cadrumo_application::diagnostics::webview::WebviewFailure,
+    context: &mut BTreeMap<String, Value>,
+) {
+    use cadrumo_application::diagnostics::webview::WebviewFailure;
+    match fact {
+        WebviewFailure::ProcessFailed {
+            kind,
+            kind_code,
+            reason,
+            reason_code,
+            exit_code,
+            read_failures,
+        } => {
+            context.insert("webview_event".into(), Value::from("process_failed"));
+            if let Some(kind) = kind {
+                context.insert("webview_process_kind".into(), Value::from(token(kind)));
+            }
+            if let Some(reason) = reason {
+                context.insert("webview_reason".into(), Value::from(token(reason)));
+            }
+            for (name, code) in [
+                ("webview_process_kind_code", kind_code),
+                ("webview_reason_code", reason_code),
+                ("webview_exit_code", exit_code),
+                ("webview_arguments_hresult", read_failures.arguments_hresult),
+                ("webview_kind_hresult", read_failures.kind_hresult),
+                ("webview_details_hresult", read_failures.details_hresult),
+                ("webview_reason_hresult", read_failures.reason_hresult),
+                ("webview_exit_code_hresult", read_failures.exit_code_hresult),
+            ] {
+                if let Some(code) = code {
+                    context.insert(name.into(), Value::from(code));
+                }
+            }
+        }
+        WebviewFailure::MonitorUnavailable { operation, hresult } => {
+            context.insert("webview_event".into(), Value::from("monitor_unavailable"));
+            context.insert(
+                "webview_monitor_operation".into(),
+                Value::from(token(operation)),
+            );
+            if let Some(hresult) = hresult {
+                context.insert("webview_hresult".into(), Value::from(hresult));
+            }
+        }
     }
 }
 
@@ -273,5 +338,63 @@ mod tests {
         assert_eq!(host.poll(&diagnostics).len(), 512);
         diagnostics.host_outcome(HostStage::Manager, HostOutcome::AlreadyRunning);
         assert_eq!(host.poll(&diagnostics).len(), 1);
+    }
+
+    #[test]
+    fn webview_failure_context_keeps_numeric_telemetry_and_host_attribution() {
+        use cadrumo_application::diagnostics::webview::{
+            MonitorOperation, ReadFailures, WebviewFailure,
+        };
+        let diagnostics = Diagnostics::default();
+        diagnostics.webview_failure(WebviewFailure::process(
+            Some(2),
+            Some(1),
+            Some(259),
+            ReadFailures::default(),
+        ));
+        diagnostics.webview_failure(WebviewFailure::process(
+            Some(104),
+            Some(-9),
+            None,
+            ReadFailures {
+                exit_code_hresult: Some(-2_147_467_259),
+                ..ReadFailures::default()
+            },
+        ));
+        diagnostics.webview_failure(WebviewFailure::MonitorUnavailable {
+            operation: MonitorOperation::Register,
+            hresult: Some(-2_147_467_259),
+        });
+        let mut host = HostEvents::default();
+        let entries = host.poll(&diagnostics);
+        assert_eq!(
+            entries[0].context["webview_process_kind"],
+            "render_process_unresponsive"
+        );
+        assert_eq!(entries[0].context["webview_exit_code"], 259);
+        assert!(!entries[0].context.contains_key("exit_code"));
+        assert_eq!(entries[1].context["webview_process_kind"], "unrecognized");
+        assert_eq!(entries[1].context["webview_process_kind_code"], 104);
+        assert_eq!(entries[1].context["webview_reason_code"], -9);
+        assert_eq!(
+            entries[1].context["webview_exit_code_hresult"],
+            -2_147_467_259_i32
+        );
+        assert_eq!(entries[2].context["webview_monitor_operation"], "register");
+        assert_eq!(entries[2].context["webview_hresult"], -2_147_467_259_i32);
+        assert!(host.poll(&diagnostics).is_empty());
+        for entry in entries {
+            assert_eq!(entry.level, Some(Level::Error));
+            assert_eq!(entry.context["stage"], "window");
+            assert_eq!(entry.process.as_ref().unwrap().pid, std::process::id());
+            assert_eq!(entry.process.as_ref().unwrap().role, "desktop");
+            assert!(entry.context.len() <= 32);
+            assert!(
+                entry
+                    .context
+                    .values()
+                    .all(|value| !value.is_array() && !value.is_object())
+            );
+        }
     }
 }

@@ -2,30 +2,41 @@
 // sources, one source the shell does not name, a record with continuation
 // lines and one long message. All values are synthetic.
 
-import type { LogLevel, LogRecord, LogSourceState } from "../../ipc/contract";
+import type { LogLevel, LogRecord, LogSourceStates } from "../../ipc/contract";
 
 export const FIXTURE_LOG_FILE = "<storage>/logs/cadrumo.log";
 
-export const AVAILABLE: LogSourceState = {
-  kind: "available",
-  detail: FIXTURE_LOG_FILE,
-  failure: null,
-};
-
-export const MISSING: LogSourceState = {
-  kind: "missing",
-  detail: FIXTURE_LOG_FILE,
-  failure: null,
-};
-
-export const UNREADABLE: LogSourceState = {
-  kind: "unreadable",
-  detail: FIXTURE_LOG_FILE,
-  failure: {
-    code: "read_failed",
-    operation: "logging",
-    message: "The log file could not be read.",
+export const AVAILABLE: LogSourceStates = {
+  python: {
+    kind: "available",
+    detail: FIXTURE_LOG_FILE,
+    failure: null,
+    rejected: 0,
   },
+  manager: {
+    kind: "available",
+    detail: "<storage>/logs/cadrumo-manager.log",
+    failure: null,
+    rejected: 0,
+  },
+};
+
+export const MISSING: LogSourceStates = {
+  python: { ...AVAILABLE.python, kind: "missing" },
+  manager: AVAILABLE.manager,
+};
+
+export const UNREADABLE: LogSourceStates = {
+  python: {
+    ...AVAILABLE.python,
+    kind: "unreadable",
+    failure: {
+      code: "read_failed",
+      operation: "logging",
+      message: "The log file could not be read.",
+    },
+  },
+  manager: AVAILABLE.manager,
 };
 
 const START_MS = Date.UTC(2026, 2, 2, 9, 14, 5, 120);
@@ -214,13 +225,13 @@ function generated(seq: number): LogRecord {
  */
 export function generatedBatches(
   count: number,
-): { records: LogRecord[]; dropped: number; state: LogSourceState }[] {
+): { records: LogRecord[]; dropped: number; states: LogSourceStates }[] {
   const batches = [];
   for (let start = 0; start < count; start += BATCH_LIMIT) {
     const records: LogRecord[] = [];
     for (let at = start; at < Math.min(count, start + BATCH_LIMIT); at++)
       records.push(generated(at + 1));
-    batches.push({ records, dropped: 0, state: AVAILABLE });
+    batches.push({ records, dropped: 0, states: AVAILABLE });
   }
   return batches;
 }
@@ -233,10 +244,10 @@ export const FEED_BATCH = 20;
 export function feedBatch(from: number): {
   records: LogRecord[];
   dropped: number;
-  state: LogSourceState;
+  states: LogSourceStates;
 } {
   const records: LogRecord[] = [];
   for (let seq = from; seq < from + FEED_BATCH; seq++)
     records.push(generated(seq));
-  return { records, dropped: 0, state: AVAILABLE };
+  return { records, dropped: 0, states: AVAILABLE };
 }

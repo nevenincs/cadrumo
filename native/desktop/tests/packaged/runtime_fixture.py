@@ -1,8 +1,9 @@
 """Own a real packaged runtime for one interactive desktop acceptance run.
 
-This script runs under the packaged interpreter. The harness creates its fresh
-profile through aeat first. No test login observer or development session override
-is installed. EOF from the harness ends the contained runtime and its children.
+This script runs under the packaged interpreter and starts against a fresh root.
+After its verified handshake the harness creates a profile through aeat and asks
+this helper to bind that profile. No test login observer or development session
+override is installed. EOF ends the contained runtime and its children.
 """
 
 from __future__ import annotations
@@ -37,6 +38,13 @@ def emit(record: dict[str, str | int]) -> None:
     sys.stdout.flush()
 
 
+def selected_profile_id() -> UUID | None:
+    """Observe only the profile selected under this fixture's isolated root."""
+    with profile_free_adapter_composition():
+        bucket_id = observe_active_profile_pointer().bucket_id
+    return UUID(bucket_id) if bucket_id is not None else None
+
+
 def main() -> None:
     """Keep exact process ownership until the parent closes the control pipe."""
     if any(name.upper() == "CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE" for name in os.environ):
@@ -44,8 +52,6 @@ def main() -> None:
     root = effective_storage_root().resolve(strict=True)
     profile_id: UUID | None = None
     try:
-        with profile_free_adapter_composition():
-            profile_id = UUID(observe_active_profile_pointer().bucket_id or "")
         runtime = Path(sys.argv[1]).resolve(strict=True)
         product = version("cadrumo")
         with ExitStack() as cleanup:
@@ -96,12 +102,17 @@ def main() -> None:
                 {
                     "kind": "ready",
                     "pid": process.pid,
-                    "profileId": str(profile_id),
                     "storageIdentity": endpoint.storage_identity,
                     "osOwnerId": endpoint.os_owner_id,
                 }
             )
-            sys.stdin.buffer.read()
+            while command := sys.stdin.buffer.readline(32):
+                if command != b"profile-created\n" or profile_id is not None:
+                    raise RuntimeError("invalid fixture control")
+                profile_id = selected_profile_id()
+                if profile_id is None:
+                    raise RuntimeError("profile creation did not select a profile")
+                emit({"kind": "profile-ready", "profileId": str(profile_id)})
             try:
                 exit_code = process.wait(timeout=0)
             except RuntimeRefusalError as waiting:
@@ -114,6 +125,10 @@ def main() -> None:
         # Narrow fixture teardown, as in the secure-storage integration fixtures:
         # address only the new profile under this fresh root, after runtime exit.
         # Normal acceptance signs out through the canonical host command first.
+        # A failed CLI response can leave a partially created profile before its
+        # binding command arrives; resolve that exact isolated selection as well.
+        if profile_id is None:
+            profile_id = selected_profile_id()
         if profile_id is not None:
             delete_profile_session(storage_root=root, profile_id=profile_id)
             receipt_path = profile_session_path(storage_root=root, profile_id=profile_id)
@@ -121,7 +136,7 @@ def main() -> None:
                 raise RuntimeError("exact-profile receipt remained after fixture cleanup")
             emit({"kind": "profile-cleaned", "profileId": str(profile_id)})
         else:
-            emit({"kind": "setup-incomplete", "detail": "no runtime launched or sign-in receipt minted"})
+            emit({"kind": "setup-incomplete", "detail": "no selected profile or sign-in receipt minted"})
     emit({"kind": "stopped"})
 
 

@@ -154,6 +154,7 @@ def provision_sdk(destination: Path, pin: str, tools: dict[str, Any], contract: 
     url = tools["cpython_source"].format(version=pin)
     if not url.startswith("https://api.nuget.org/"):
         raise ValueError("CPython SDK must come from the pinned HTTPS NuGet origin")
+    destination.mkdir(parents=True, exist_ok=True)
     if not archive.exists():
         with httpx.stream("GET", url, timeout=120) as response, archive.open("wb") as output:
             response.raise_for_status()

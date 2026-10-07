@@ -7,7 +7,7 @@ import {
   UNREADABLE,
   generatedBatches,
 } from "@/dev/fixtures/logs";
-import type { LogRecord, LogSourceState } from "../ipc/contract";
+import type { LogRecord, LogSourceStates } from "../ipc/contract";
 import { useStrings } from "../shell/strings";
 import { ContextMenu } from "./ContextMenu";
 import { DEFAULT_FILTERS, type RecordFilters } from "../shell/records";
@@ -16,18 +16,18 @@ import { RecordList } from "./RecordList";
 // The log view over fixed records, in every state its source can be in.
 type Args = {
   records: LogRecord[] | null;
-  sourceState: LogSourceState | "unavailable" | null;
+  sourceStates: LogSourceStates | "unavailable" | null;
   dropped: number;
   filters: RecordFilters;
 };
 
-function View({ records, sourceState, dropped, filters: initial }: Args) {
+function View({ records, sourceStates, dropped, filters: initial }: Args) {
   const [filters, setFilters] = useState(initial);
   return (
     <div className="flex h-dvh flex-col">
       <RecordList
         records={records}
-        sourceState={sourceState}
+        sourceStates={sourceStates}
         dropped={dropped}
         filters={filters}
         setFilters={setFilters}
@@ -43,7 +43,7 @@ const meta = {
   parameters: { fill: true },
   args: {
     records: [...FIXTURE_RECORDS],
-    sourceState: AVAILABLE,
+    sourceStates: AVAILABLE,
     dropped: 0,
     filters: { ...DEFAULT_FILTERS, minLevel: 0 },
   },
@@ -78,19 +78,19 @@ export const Empty: Story = { args: { records: [] } };
 
 export const Waiting: Story = {
   name: "Before the host answers",
-  args: { records: null, sourceState: null },
+  args: { records: null, sourceStates: null },
 };
 
 export const FileMissing: Story = {
-  args: { records: [], sourceState: MISSING },
+  args: { records: [], sourceStates: MISSING },
 };
 
 export const FileUnreadable: Story = {
-  args: { records: [], sourceState: UNREADABLE },
+  args: { records: [], sourceStates: UNREADABLE },
 };
 
 export const HostUnavailable: Story = {
-  args: { records: [], sourceState: "unavailable" },
+  args: { records: [], sourceStates: "unavailable" },
 };
 
 export const TenThousand: Story = {

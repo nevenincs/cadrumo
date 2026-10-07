@@ -607,6 +607,7 @@ desktop:
     loading: A napló betöltése…
     minimum_level: Minimális szint
     no_match: Egy bejegyzés sem felel meg ezeknek a szűrőknek.
+    rejected: '{count} bejegyzés kimaradt érvénytelen diagnosztikai formátum miatt.'
     source_host: Asztali alkalmazás
     source_python: Python
     sources: Források

@@ -5,6 +5,30 @@ import { label } from "../support/strings";
 
 test.use({ timezoneId: "Europe/Madrid" });
 
+for (const kind of ["missing", "unreadable", "rejected"] as const) {
+  test(`manager ${kind} state preserves Python records and names its own source`, async ({
+    page,
+  }) => {
+    await page.goto(`/scenarios.html?scenario=manager-log-${kind}&latency=0`);
+    await page
+      .getByRole("navigation", { name: label("desktop.rail.label") })
+      .getByRole("button", { name: label("desktop.rail.logs") })
+      .click();
+    const banner = page.locator(`.source-banner.state-${kind}`);
+    await expect(banner).toHaveCount(1);
+    await expect(banner).toHaveAttribute("data-source", "manager");
+    await expect(banner).toContainText("manager:");
+    if (kind === "rejected") {
+      await expect(banner).toContainText(
+        label("desktop.logs.rejected", { count: 2 }),
+      );
+    }
+    await expect(page.locator('.record[data-seq="4"]')).toContainText(
+      "Workbench ready",
+    );
+  });
+}
+
 test("log timestamps use the viewer timezone and preserve legacy wall times", async ({
   page,
 }) => {

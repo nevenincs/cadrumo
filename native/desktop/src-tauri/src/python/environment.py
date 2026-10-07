@@ -33,6 +33,7 @@ json.dump(
         webview=str(storage_path(StorageCategory.DESKTOP_WEBVIEW, settings=settings)),
         logs=str(log_file.parent),
         log_file=str(log_file),
+        manager_log_file=str(storage_path(StorageCategory.MANAGER_LOG_FILE, settings=settings)),
         log_format=LOG_FILE_FORMAT,
         log_max_bytes=settings.cadrumo_log_file_max_bytes,
         log_backups=settings.cadrumo_log_file_backup_count,

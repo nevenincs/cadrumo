@@ -1,6 +1,12 @@
 // The packaged run's results directory: results.json, summary.txt and an
 // evidence/ folder, with one PASS, FAIL, SKIP or INFO line per check.
-import { mkdirSync, writeFileSync } from "node:fs";
+import {
+  closeSync,
+  mkdirSync,
+  openSync,
+  readSync,
+  writeFileSync,
+} from "node:fs";
 import { resolve } from "node:path";
 
 export class Results {
@@ -25,7 +31,16 @@ export class Results {
     return out;
   }
 
-  record({ id, title, verdict, detail, data, kind = "check" }) {
+  record({
+    id,
+    title,
+    verdict,
+    detail,
+    data,
+    kind = "check",
+    startedAt,
+    elapsedMs,
+  }) {
     const entry = {
       id,
       kind,
@@ -34,6 +49,8 @@ export class Results {
       detail,
       at: new Date().toISOString(),
     };
+    if (startedAt !== undefined) entry.startedAt = startedAt;
+    if (elapsedMs !== undefined) entry.elapsedMs = elapsedMs;
     if (data !== undefined) entry.data = data;
     this.checks.push(entry);
     console.log(this.scrub(`${verdict} ${id} - ${title}: ${detail}`));
@@ -45,6 +62,42 @@ export class Results {
       typeof value === "string" ? value : JSON.stringify(value, null, 2);
     writeFileSync(resolve(this.evidenceDirectory, name), this.scrub(text));
     return `evidence/${name}`;
+  }
+
+  /** Snapshot a test-owned log even after a browser crash, with bounded reads. */
+  logEvidence(name, source) {
+    const limit = 4 * 1024 * 1024;
+    let descriptor;
+    try {
+      descriptor = openSync(source, "r");
+      const bytes = Buffer.alloc(limit + 1);
+      let length = 0;
+      while (length < bytes.length) {
+        const count = readSync(
+          descriptor,
+          bytes,
+          length,
+          bytes.length - length,
+          null,
+        );
+        if (count === 0) break;
+        length += count;
+      }
+      if (length > limit)
+        return { name, status: "over_limit", limitBytes: limit };
+      this.evidence(name, bytes.subarray(0, length).toString("utf8"));
+      return { name, status: "captured", bytes: length };
+    } catch {
+      return { name, status: "unavailable" };
+    } finally {
+      if (descriptor !== undefined) {
+        try {
+          closeSync(descriptor);
+        } catch {
+          // Evidence collection never owns the application cleanup outcome.
+        }
+      }
+    }
   }
 
   async screenshot(page, name) {
@@ -77,7 +130,7 @@ export class Results {
       "",
       ...this.checks.map(
         (check) =>
-          `${check.verdict} ${check.id} - ${check.title}: ${check.detail}`,
+          `${check.verdict} ${check.id}${check.elapsedMs === undefined ? "" : ` (${check.elapsedMs.toFixed(1)} ms)`} - ${check.title}: ${check.detail}`,
       ),
     ];
     writeFileSync(

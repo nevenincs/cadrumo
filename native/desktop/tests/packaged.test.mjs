@@ -226,13 +226,22 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
   let signIn = null;
 
   const record = async (kind, id, title, run) => {
+    const checkStartedAt = new Date().toISOString();
+    const checkStarted = performance.now();
     let outcome;
     try {
       outcome = await run();
     } catch (error) {
       outcome = { verdict: FAIL, detail: `error: ${error?.message ?? error}` };
     }
-    const entry = results.record({ kind, id, title, ...outcome });
+    const entry = results.record({
+      kind,
+      id,
+      title,
+      ...outcome,
+      startedAt: checkStartedAt,
+      elapsedMs: performance.now() - checkStarted,
+    });
     await t.test(
       `${entry.verdict} ${id}`,
       { skip: entry.verdict === SKIP && entry.detail },
@@ -378,6 +387,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
       [REMOTE]: `--remote-debugging-port=${port}`,
     });
     summary.removedVariables = removed.join(", ") || "none";
+    const hostLaunchStarted = performance.now();
     host = launch(testHost.executable, ["--gui"], {
       env: hostEnv,
       cwd: config.run,
@@ -397,6 +407,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
           devtoolsEndpoint(port, 90000),
           early,
         ]);
+        summary.hostToDevtoolsMs = performance.now() - hostLaunchStarted;
         session = await connect({
           endpoint,
           shellOrigins,
@@ -404,6 +415,8 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
           ipcPrefix,
           blockExternal: !config.allowBrowser,
         });
+        summary.hostToHarnessConnectedMs =
+          performance.now() - hostLaunchStarted;
         const cdp = await session.browser.newBrowserCDPSession();
         const version = await cdp.send("Browser.getVersion");
         summary.webview2 = `${version.product} (${version.userAgent.match(/Edg\/[\d.]+/)?.[0] ?? "?"})`;
@@ -415,6 +428,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     const environment = await session.call("desktop_environment");
     evidence("desktop-environment.json", environment);
     await session.waitDocs(60000);
+    summary.hostToDocsReadyMs = performance.now() - hostLaunchStarted;
     await results.screenshot(page, "01-loaded");
 
     const webviewProcesses = async () =>
@@ -496,8 +510,16 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
     await check(
       "python-prompt",
       "the Python tab shows the REPL prompt",
-      async () =>
-        terminalVerdict(
+      async () => {
+        await session.showTab("python");
+        await waitFor(
+          async () => {
+            const presentation = await session.presentation("python");
+            return presentation.visible && presentation.renderer !== null;
+          },
+          { what: "visible Python terminal renderer" },
+        );
+        return terminalVerdict(
           await session
             .waitRows("python", (rows) => rows.includes(">>>"), {
               timeout: 60000,
@@ -505,7 +527,8 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
             .catch(() => session.rows("python")),
           [">>>"],
           "REPL prompt",
-        ),
+        );
+      },
     );
     await check(
       "python-unicode",
@@ -525,12 +548,20 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
       "console-runtime",
       "the Console tab shows a prompt and resolves cadrumo-runtime into the package bin",
       async () => {
+        await session.showTab("console");
+        await waitFor(
+          async () => {
+            const presentation = await session.presentation("console");
+            return presentation.visible && presentation.renderer !== null;
+          },
+          { what: "visible Console terminal renderer" },
+        );
         await session.waitRows("console", (rows) => /PS .+>/.test(rows), {
           timeout: 60000,
         });
         await session.type(
           "console",
-          `"S10-RT=" + ((Get-Command cadrumo-runtime).Source -eq '${runtime}')`,
+          `$actual = [string](Get-Command cadrumo-runtime).Source; $expected = '${runtime.replaceAll("'", "''")}'; "S10-RT=" + ($actual -and $expected -and [IO.Path]::IsPathRooted($actual) -and [IO.Path]::IsPathRooted($expected) -and ([IO.Path]::GetFullPath($actual) -eq [IO.Path]::GetFullPath($expected)))`,
         );
         const rows = await session
           .waitRows("console", (text) => /^S10-RT=(True|False)/m.test(text), {
@@ -1073,6 +1104,7 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         const text = `${lines.join("\n")}\n`;
         // xterm sends each line ending as CR; the console's line input returns CR LF.
         const expected = lines.map((line) => `${line}\r\n`).join("");
+        await session.showTab("console");
         await session.waitRows("console", (rows) => /PS .+>/.test(rows), {
           timeout: 30000,
         });
@@ -1686,21 +1718,23 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
         detail: "not applicable: this run is on Windows",
       }),
     );
-
-    // Logs written under the fresh storage root.
-    for (const file of [
-      projected.logFile,
-      resolve(projected.logs, "cadrumo-native.jsonl"),
-    ])
-      if (existsSync(file))
-        copyFileSync(
-          file,
-          resolve(
-            results.evidenceDirectory,
-            `storage-${file.split(/[\\/]/).pop()}`,
-          ),
-        );
   } finally {
+    // Node-side evidence remains readable after a renderer crash. Preserve it
+    // before cleanup, without asking the failed browser to execute more code.
+    if (session) {
+      try {
+        evidence("playwright-console.json", session.console);
+        evidence("terminal-observation.json", session.observationStats());
+      } catch {
+        // An artifact-write failure must not prevent test-owned cleanup.
+        results.record({
+          id: "console-evidence",
+          title: "retain browser console evidence",
+          verdict: FAIL,
+          detail: "could not persist Node-side browser console evidence",
+        });
+      }
+    }
     if (host) {
       const done = await exited(host.exit, 1000);
       if (!done && hostPid) {
@@ -1716,6 +1750,20 @@ test("packaged desktop window", { timeout: 45 * 60 * 1000 }, async (t) => {
           return signIn.stop();
         },
       );
+    if (projected) {
+      const captures = [
+        results.logEvidence("storage-cadrumo.log", projected.logFile),
+        results.logEvidence(
+          "storage-cadrumo-native.jsonl",
+          resolve(projected.logs, "cadrumo-native.jsonl"),
+        ),
+      ];
+      try {
+        evidence("final-log-capture.json", captures);
+      } catch {
+        // Keep cleanup and the original failing check authoritative.
+      }
+    }
     input.close();
     const counts = results.finish({
       startedAt,

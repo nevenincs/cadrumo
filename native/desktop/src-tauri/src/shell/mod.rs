@@ -180,7 +180,10 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     #[cfg(windows)]
     let builder = {
         let ready = launch.diagnostics.clone();
-        builder.on_webview_ready(move |webview| webview::restrict(&webview, ready.clone()))
+        builder.on_webview_ready(move |webview| {
+            webview::restrict(&webview, ready.clone());
+            webview::observe(&webview, ready.clone());
+        })
     };
     builder.build()
 }

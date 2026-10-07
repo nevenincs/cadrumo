@@ -72,10 +72,14 @@ export type HostErrorCode =
   | "cleanup_failed"
   | "session_unavailable"
   | "queue_full"
+  | "cli_busy"
+  | "cli_wait_timed_out"
   | "lock_poisoned"
   | "log_unavailable"
   | "desktop_unavailable"
   | "webview_failed"
+  | "webview_process_failed"
+  | "webview_monitor_unavailable"
   | "unsupported_platform"
   | "instance_lock_foreign"
   | "panic";
@@ -146,8 +150,8 @@ export type DesktopEnvironment = {
 
 export type LogLevel = "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL";
 
-/** Open enumeration: `"python"` and `"host"` today; render unknown sources. */
-export type LogSource = "python" | "host" | (string & {});
+/** Open enumeration: render unknown sources. */
+export type LogSource = "python" | "host" | "manager" | (string & {});
 
 /** Roles are open: Python workers and agents also write records. */
 export type LogProcess = { role: string; pid: number };
@@ -185,6 +189,14 @@ export type LogSourceState = {
   detail: string;
   /** Why the file could not be read; set only for `unreadable`. */
   failure: HostFailure | null;
+  /** Complete file rows rejected by the admitted schema since polling resumed. */
+  rejected: number;
+};
+
+/** Independent file availability; host events are read from memory. */
+export type LogSourceStates = {
+  python: LogSourceState;
+  manager: LogSourceState;
 };
 
 /**
@@ -197,12 +209,12 @@ export type LogBatch = {
   records: LogRecord[];
   /** Records this subscription lost to ring overflow since its previous batch. */
   dropped: number;
-  state: LogSourceState;
+  states: LogSourceStates;
 };
 
 export type LogSubscription = {
   subscription: number;
-  state: LogSourceState;
+  states: LogSourceStates;
 };
 
 // ---------------------------------------------------------------------------
@@ -457,7 +469,53 @@ export type DiagnosticsEvent = {
     | "skipped_unmanaged"
     | "unavailable";
   hostExitCode?: number;
+  webviewFailure?: WebviewFailure;
 };
+
+/** Closed WebView2 telemetry. No page text, URLs, paths or failed renderer PID. */
+export type WebviewFailure =
+  | {
+      event: "process_failed";
+      kind:
+        | "browser_process_exited"
+        | "render_process_exited"
+        | "render_process_unresponsive"
+        | "frame_render_process_exited"
+        | "utility_process_exited"
+        | "sandbox_helper_process_exited"
+        | "gpu_process_exited"
+        | "ppapi_plugin_process_exited"
+        | "ppapi_broker_process_exited"
+        | "unknown_process_exited"
+        | "unrecognized"
+        | null;
+      kindCode: number | null;
+      reason:
+        | "unexpected"
+        | "unresponsive"
+        | "terminated"
+        | "crashed"
+        | "launch_failed"
+        | "out_of_memory"
+        | "profile_deleted"
+        | "unrecognized"
+        | null;
+      reasonCode: number | null;
+      /** Telemetry only: 259 for an unresponsive renderer means STILL_ACTIVE. */
+      exitCode: number | null;
+      readFailures: {
+        argumentsHresult?: number;
+        kindHresult?: number;
+        detailsHresult?: number;
+        reasonHresult?: number;
+        exitCodeHresult?: number;
+      };
+    }
+  | {
+      event: "monitor_unavailable";
+      operation: "dispatch" | "core_webview" | "register";
+      hresult: number | null;
+    };
 
 /** Captured output, kept in memory only and bounded to 256 KiB in total. */
 export type OutputChunk = {

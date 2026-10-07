@@ -1,10 +1,12 @@
 pub mod lifecycle;
 pub mod logging;
+pub mod webview;
 
 use crate::{
     diagnostics::{
         lifecycle::LifecycleFact,
         logging::{LogFile, LogPaths},
+        webview::WebviewFailure,
     },
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     process::status::{
@@ -84,6 +86,8 @@ pub struct Event {
     pub host_exit_code: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lifecycle: Option<LifecycleFact>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub webview_failure: Option<WebviewFailure>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -116,6 +120,7 @@ struct Context {
     outcome: Option<HostOutcome>,
     host_exit_code: Option<i32>,
     lifecycle: Option<LifecycleFact>,
+    webview_failure: Option<WebviewFailure>,
 }
 #[derive(Default)]
 pub struct Diagnostics {
@@ -207,6 +212,7 @@ impl Diagnostics {
             outcome: context.outcome,
             host_exit_code: context.host_exit_code,
             lifecycle: context.lifecycle,
+            webview_failure: context.webview_failure,
         };
         if let Some(file) = &state.file
             && let Err(error) = file.append(&event)
@@ -277,6 +283,22 @@ impl Diagnostics {
             Context {
                 stage: Some(HostStage::Shutdown),
                 host_exit_code: Some(code),
+                ..Context::default()
+            },
+        );
+    }
+    pub fn webview_failure(&self, fact: WebviewFailure) {
+        let code = match fact {
+            WebviewFailure::ProcessFailed { .. } => ErrorCode::WebviewProcessFailed,
+            WebviewFailure::MonitorUnavailable { .. } => ErrorCode::WebviewMonitorUnavailable,
+        };
+        self.record(
+            EventKind::Failure,
+            None,
+            Some(ApplicationError::new(code, Operation::Webview)),
+            Context {
+                stage: Some(HostStage::Window),
+                webview_failure: Some(fact),
                 ..Context::default()
             },
         );
