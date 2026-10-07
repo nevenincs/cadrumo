@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:006322e6ffe46d4c9cce15fc981e2dc26375463ca9eb4b14cdbb5ed44c4f1b85'
+body_hash: 'sha256:587dbc401a05eff52e3d5ae0ea5110967d799a7e7212f16311eead42e1ab72eb'
 related:
   - "[[2026-10-07-cmake-incremental-build-plan]]"
 ---
@@ -78,6 +78,20 @@ related:
 - `S04` `verify:` `scoped ty check changed Python files after corrections` -> `pass`
 - `S04` `verify:` `actual native unchanged-build artifact timestamp comparison` -> `pass`
 - `S01` `verify:` `node --test native/desktop/tests/content-build.test.mjs native/desktop/tests/backend-snapshot.test.mjs native/desktop/tests/frontend-clean.test.mjs native/desktop/tests/frontend-install.test.mjs` -> `pass`
+- `S05` `M` `dev/packaging/native/authority_build.py`
+- `S05` `M` `dev/packaging/native/tests/test_authority_build_fingerprints.py`
+- `S05` `M` `native/cmake/Authority.cmake`
+- `S05` `M` `packaging/authority/hatch_build.py`
+- `S05` `M` `dev/packaging/tests/test_authority_build_hook.py`
+- `S05` `M` `justfile`
+- `S05` `M` `native/CONTRACT.md`
+- `S05` `verify:` `pytest native authority helper and authority build hook tests (18 tests)` -> `pass`
+- `S05` `verify:` `cmake --preset windows-x64` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target registry_authority` -> `pass`
+- `S05` `verify:` `scoped Ruff format lint and ty for four changed Python files` -> `pass`
+- `S05` `verify:` `just check-style` -> `pass`
+- `S05` `verify:` `just check-format` -> `fail`
+- `S05` `verify:` `just check-types` -> `fail`
 
 ## Notes
 
@@ -86,3 +100,4 @@ related:
 - `S04` S04 remains open. Full application package attempt was stopped while queued behind an already-running foreign documentation build; package-release and verify-package must be completed when that shared output is available.
 - `S04` Repository type check reported two concurrent registry schema private-usage diagnostics; five in-scope diagnostics were fixed and scoped ty now passes. No unrelated source edits reverted.
 - `S01` Exact 23-test worker invocation includes frontend-install.test.mjs; the earlier verification row listed only three of its four test files.
+- `S05` Global formatting failure is concurrent `test_native_installation.py` drift; global type failure is concurrent application/operations/registry.py pyrefly diagnostic. Scoped modified files pass. Full publication was not rerun against shared authority; existing publisher command is unchanged.

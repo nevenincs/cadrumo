@@ -120,9 +120,11 @@ def test_an_editable_build_still_resolves_by_default(
     assert resolved == [tmp_path]
 
 
+@pytest.mark.parametrize("seeded_override", [False, True])
 def test_fresh_source_tree_bootstraps_repo_root_authority(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    seeded_override: bool,
 ) -> None:
     hook = _hook_module()
     expected = tmp_path / ".authority"
@@ -133,6 +135,8 @@ def test_fresh_source_tree_bootstraps_repo_root_authority(
         return destination
 
     monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    if seeded_override:
+        monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(expected))
     monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
 
     assert hook._authority_root(tmp_path) == expected
@@ -143,7 +147,7 @@ def test_a_current_publication_is_read_without_publishing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A copy of the session's current publication describes the live sources, so it is reused."""
+    """An existing publication is reused even when this source tree has no matching sources."""
     hook = _hook_module()
     current = Path(os.environ["CADRUMO_AUTHORITY_ROOT"])
     descriptor = json.loads((current / "authority.current.json").read_text(encoding="utf-8"))
@@ -161,11 +165,11 @@ def test_a_current_publication_is_read_without_publishing(
     assert hook._authority_root(tmp_path) == published
 
 
-def test_a_descriptor_that_describes_no_current_generation_is_republished(
+def test_a_malformed_existing_descriptor_is_refused_without_republication(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A directory holding a descriptor proves a publication happened, not that it is current."""
+    """A corrupt publication is refused rather than silently overwritten."""
     hook = _hook_module()
     published = tmp_path / ".authority"
     published.mkdir()
@@ -179,18 +183,25 @@ def test_a_descriptor_that_describes_no_current_generation_is_republished(
     monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
     monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
 
-    assert hook._authority_root(tmp_path) == published
-    assert calls == [(tmp_path, published)]
+    with pytest.raises(ValueError, match="invalid database"):
+        hook._authority_root(tmp_path)
+    assert calls == []
 
 
+@pytest.mark.parametrize("missing_database", [False, True])
 def test_an_interrupted_publication_is_completed_rather_than_read(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    missing_database: bool,
 ) -> None:
     """A directory a failed publication created, holding no descriptor, is not a publication."""
     hook = _hook_module()
     interrupted = tmp_path / ".authority"
     (interrupted / "authority-candidate-left-behind").mkdir(parents=True)
+    if missing_database:
+        (interrupted / "authority.current.json").write_text(
+            json.dumps({"database": f"authority-{'0' * 64}.sqlite3"}), encoding="utf-8"
+        )
     calls: list[tuple[Path, Path]] = []
 
     def publish(build_root: Path, destination: Path) -> Path:
