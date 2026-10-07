@@ -53,8 +53,6 @@ def record_member_uses(modules: Mapping[str, ShippedModule], consumers: frozense
             if method == "_asdict":
                 uses.update(tuples.get(owner, ()))
             whole.add(call.target)
-            whole.update(call.arguments)
-            whole.update(value for _keyword, value in call.keywords)
         for owner in whole:
             uses.update(enums.get(owner, ()))
     return frozenset(uses)

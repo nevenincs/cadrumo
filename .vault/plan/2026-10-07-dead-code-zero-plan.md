@@ -10,7 +10,7 @@ related:
   - '[[2026-10-05-google-outbound-review-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:f054f71a1a957b05f5d307793d1179a75ea2e36d9aa67e4a476bb0f9e105113c'
+body_hash: 'sha256:52f9cbd1eb99c40f9e8f2fcac08660e6737023f92f1f9a56458533d2b0acce85'
 ---
 
 # `dead-code-zero` plan
@@ -27,7 +27,7 @@ The accepted quality-gate product-boundary and reachability burndown ADRs govern
 
 - [x] `S01` - Retire unused product APIs, obsolete result fields and unimplemented transport/error declarations while preserving live custody and publication behavior; `src/cadrumo/adapters/outbound/google, src/cadrumo/adapters/persistence/storage, src/cadrumo/application/user_profile, src/cadrumo/entrypoints/runtime, src/cadrumo/core/transport_locus.py and owning tests`.
 - [x] `S02` - Resolve logging hooks, native generation records and typed acceptance cleanup through structural analyzer coverage and compatible formatter handling; `dev/audit reachability analyzers and tests, src/cadrumo/core/diagnostic_log.py and owning tests`.
-- [ ] `S03` - Re-measure dead-code signals, resolve cascading findings, run configured checks and record integrated closure; `.vault/audit/2026-10-07-dead-code-zero-tooling-coverage-audit.md, affected dead-code source and tests, .vault/plan/2026-10-07-dead-code-zero-plan.md`.
+- [x] `S03` - Re-measure dead-code signals, resolve cascading findings, run configured checks and record integrated closure; `.vault/audit/2026-10-07-dead-code-zero-tooling-coverage-audit.md, affected dead-code source and tests, .vault/plan/2026-10-07-dead-code-zero-plan.md`.
 
 ## Parallelization
 
@@ -38,3 +38,5 @@ Execute S01, S02 and S03 sequentially in this worktree. Preserve unrelated chang
 The Python product population remains fully covered. Reachability reports zero unreachable, type-only, module-execution-only and orphan-test modules, zero exact findings and zero unresolved heuristic candidates. Vulture reports zero findings and export-consumption remains clean. Native Rust, C, CMake and binary artifacts retain explicit scope exclusion; generated-contract Python consumers are analyzed accurately.
 
 Owning persistence, runtime, Google and CLI/TUI tests pass after removals. Analyzer tests prove qualified positive consumers and retain findings for unrelated classes, arbitrary methods and unresolved receivers. Configured formatting, lint, type and quality checks pass for the final source state. Append the measured outcome and final integrated review to the existing dead-code audit, then close each Step through the owning CLI.
+
+When concurrent unrelated edits prevent an authoritative source snapshot, verify the owned changes in a detached checkout of the committed baseline plus exactly this task's patch. Keep every configured command and population unchanged, record the baseline and byte hashes in the audit, and distinguish that result from the shared worktree. Reuse unchanged passing evidence and rerun checks affected by subsequent corrections.

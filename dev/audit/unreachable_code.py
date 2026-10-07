@@ -107,7 +107,11 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
 
     if not module_findings and not symbol_findings:
         return UnreachableCodeResult.clean(
-            roots=roots, shipped_modules=audited_total, reachable_modules=len(runtime_reach & audited_names)
+            roots=roots,
+            shipped_modules=audited_total,
+            reachable_modules=len(runtime_reach & audited_names),
+            data_cleared=data_cleared,
+            dev_cleared=dev_cleared,
         )
     return UnreachableCodeResult.from_findings(
         roots=roots,

@@ -215,13 +215,23 @@ class UnreachableCodeResult:
             raise ValueError(message)
 
     @classmethod
-    def clean(cls, *, roots: tuple[str, ...], shipped_modules: int, reachable_modules: int) -> UnreachableCodeResult:
+    def clean(
+        cls,
+        *,
+        roots: tuple[str, ...],
+        shipped_modules: int,
+        reachable_modules: int,
+        data_cleared: int = 0,
+        dev_cleared: int = 0,
+    ) -> UnreachableCodeResult:
         """A complete scan with no findings in its reported population."""
         return cls(
             outcome=UnreachableCodeOutcome.CLEAN,
             roots=roots,
             shipped_modules=shipped_modules,
             reachable_modules=reachable_modules,
+            data_cleared=data_cleared,
+            dev_cleared=dev_cleared,
         )
 
     @classmethod

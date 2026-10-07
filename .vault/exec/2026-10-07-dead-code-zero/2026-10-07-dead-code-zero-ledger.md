@@ -5,40 +5,14 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8e85bc3ff82a9c0ee1ec82bb7200f377c7c4819680625dad41bc6f8c9219277c'
+body_hash: 'sha256:f0ee7c3cd72c9d99aa587296b61d230632c915b8a7df7aa7d6941d27b9b56570'
 related:
   - "[[2026-10-07-dead-code-zero-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `dead-code-zero` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo/application/user_profile/custody_ports.py`
 - `S01` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
@@ -80,8 +54,29 @@ related:
 - `S02` `verify:` `scoped Ruff lint and format` -> `pass`
 - `S02` `verify:` `scoped ty check all S02 paths` -> `pass`
 - `S02` `verify:` `Vulture JSON: zero findings across 3265 offered modules` -> `pass`
+- `S03` `M` `dev/audit/unreachable_code.py`
+- `S03` `M` `dev/audit/unreachable_models.py`
+- `S03` `M` `dev/audit/unreachable_records.py`
+- `S03` `M` `dev/audit/unreachable_schema_consumers.py`
+- `S03` `A` `dev/audit/unreachable_schema_validators.py`
+- `S03` `M` `dev/audit/tests/test_unreachable_records.py`
+- `S03` `M` `dev/audit/tests/test_unreachable_schemas.py`
+- `S03` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S03` `M` `dev/quality/metadata/import_load_targets.json`
+- `S03` `M` `src/cadrumo/application/operations/registry.py`
+- `S03` `M` `.vault/audit/2026-10-07-dead-code-zero-tooling-coverage-audit.md`
+- `S03` `M` `.vault/plan/2026-10-07-dead-code-zero-plan.md`
+- `S03` `M` `.vault/index/dead-code-zero.index.md`
+- `S03` `verify:` `full typed reachability scan and configured module-symbol-export predicates: zero populations` -> `pass`
+- `S03` `verify:` `native audit-dead-weight: zero Vulture findings across 3265 offered modules` -> `pass`
+- `S03` `verify:` `all twelve configured quality gates with final corrections and stable snapshot evidence` -> `pass`
+- `S03` `verify:` `focused stable snapshot pytest unit and integration: 104 cases` -> `pass`
+- `S03` `verify:` `focused census extension: 73 distinct cases after corrective rerun` -> `pass`
+- `S03` `verify:` `final scoped Ruff lint-format and ty` -> `pass`
+- `S03` `verify:` `integrated S01-S03 review recorded in rolling audit` -> `pass`
 
 ## Notes
 
 - `S01` Full configured types initially reported 11 diagnostics in concurrent registry/native packaging work outside S01; scoped S01 check is clean. Initial hosted timeout passed serially. Retired frontend receipt-resume test seam replaced with real runtime and explicit credentials.
 - `S02` Second reachability pass exposed three schema fields after a concurrent registry refactor. S03 will resolve that structural coverage and re-measure the complete tree.
+- `S03` Concurrent shared-tree edits invalidated import authority snapshots. The unchanged configured gates pass against baseline f0be8532f5 plus the exact owned patch; all ten owned file hashes match. Source state and evidence details are in the rolling audit.

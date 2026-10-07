@@ -47,6 +47,7 @@ from pkg.records import RECORD, Other, Kind as K, OtherKind
 result = RECORD._asdict()
 constructed = Other('b')
 values = [kind.value for kind in K]
+print(OtherKind)
 def shadow(K):
     return [kind.value for kind in K]
 def unused(value):
@@ -110,6 +111,10 @@ values = [kind.value for kind in Kind]
     )
     result = scan_unreachable_code(spec)
     assert result.outcome is not UnreachableCodeOutcome.ERROR
+    if label == "dev":
+        assert result.outcome is UnreachableCodeOutcome.CLEAN
+        # The two imported declarations and their two members retain their census on CLEAN.
+        assert result.dev_cleared == 4
     findings = {(finding.module, finding.qualname) for finding in result.symbols}
     for member in ("Record.value", "Kind.MEMBER"):
         assert (("pkg.records", member) in findings) is (label == "tests")

@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from .unreachable_models import ShippedModule
+from .unreachable_schema_validators import validator_schema_arguments
 
 _OPERATIONS = frozenset(
     {"model_validate", "model_validate_json", "model_json_schema", "model_construct", "model_fields"}
@@ -94,6 +95,12 @@ def schema_parameter_consumers(
     changed = True
     while changed:
         changed = False
+        for target, parameters in validator_schema_arguments(
+            modules, qualify, models, functions, typed, consumed
+        ).items():
+            previous = len(consumed[target])
+            consumed[target].update(parameters)
+            changed |= len(consumed[target]) != previous
         for target, (name, prefix, function, _arguments) in functions.items():
             for call in (part for part in ast.walk(function) if isinstance(part, ast.Call)):
                 destination = qualify(name, call.func)

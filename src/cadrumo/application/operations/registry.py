@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import cached_property
-from typing import Literal, Protocol, runtime_checkable
+from typing import Literal, Protocol, Self, runtime_checkable
 
 from pydantic import (
     BaseModel,
@@ -295,8 +295,8 @@ class OperationSchemaBindingV1(BaseModel):
     def _validate_existing_fingerprint(
         cls,
         value: object,
-        handler: ModelWrapValidatorHandler[OperationSchemaBindingV1],
-    ) -> OperationSchemaBindingV1:
+        handler: ModelWrapValidatorHandler[Self],
+    ) -> Self:
         binding = handler(value)
         # Pydantic skips field validators for existing model instances. Preserve
         # current-model admission when a binding is reused or a subclass adds

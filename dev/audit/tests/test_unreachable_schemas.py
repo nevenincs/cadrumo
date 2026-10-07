@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..unreachable_frameworks import framework_contracts
 from ..unreachable_models import ShippedModule
 from ..unreachable_schemas import schema_member_uses
@@ -16,6 +18,74 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def _module(name: str, source: str) -> ShippedModule:
     return ShippedModule(name, Path(name + ".py"), False, ast.parse(source))
+
+
+@pytest.mark.parametrize("rebound, shadowed", [(False, False), (True, False), (False, True)])
+def test_registered_validation_hooks_consume_only_schema_generating_model_payloads(
+    rebound: bool, shadowed: bool
+) -> None:
+    record = _module(
+        "pkg.records",
+        """
+from pydantic import BaseModel
+class Payload(BaseModel):
+    wire_field: int
+class Unconsumed(BaseModel):
+    orphan: int
+""",
+    )
+    caller = _module(
+        "pkg.caller",
+        f"""
+from pydantic import BaseModel, ValidationInfo, field_validator
+from .records import Payload, Unconsumed
+def schema(model: type[BaseModel]):
+    return model.model_json_schema()
+class Binding(BaseModel):
+    model_type: type[BaseModel]
+    metadata_type: type[BaseModel]
+    identity: str
+    @field_validator('identity', mode='wrap')
+    @classmethod
+    def validate_identity(cls, value, handler, info: ValidationInfo{", schema=None" if shadowed else ""}):
+        selected = (info.data or {{}}).get('model_type')
+        {"selected = unknown()" if rebound else "pass"}
+        metadata = info.data.get('metadata_type')
+        print(metadata)
+        schema(selected)
+        return handler(value)
+    @classmethod
+    def bind(cls, model: type[BaseModel], metadata: type[BaseModel]):
+        return cls.model_validate({{'model_type': model, 'metadata_type': metadata, 'identity': ''}})
+Binding.bind(Payload, Unconsumed)
+""",
+    )
+    modules = {record.name: record, caller.name: caller}
+    uses = schema_member_uses(modules, frozenset(modules), framework_contracts(modules))
+    assert ((record.name, "Payload.wire_field") in uses) is (not rebound and not shadowed)
+    assert (record.name, "Unconsumed.orphan") not in uses
+
+
+def test_live_binding_validators_consume_registered_response_schema_fields() -> None:
+    modules = {}
+    for name in (
+        "cadrumo.application.operations.registry",
+        "cadrumo.application.operations.registry_schema_validation",
+        "cadrumo.application.export.google_review_operation_contracts",
+        "cadrumo.application.user_profile.censal_operation",
+        "cadrumo.application.user_profile.google_configuration_operation_contracts",
+    ):
+        path = REPO_ROOT / "src" / Path(*name.split(".")).with_suffix(".py")
+        modules[name] = ShippedModule(name, path, False, ast.parse(path.read_bytes()))
+    uses = schema_member_uses(modules, frozenset(modules), framework_contracts(modules))
+    assert {
+        ("cadrumo.application.export.google_review_operation_contracts", "GoogleReviewResponse.response_version"),
+        ("cadrumo.application.user_profile.censal_operation", "CensalReviewResponse.response_version"),
+        (
+            "cadrumo.application.user_profile.google_configuration_operation_contracts",
+            "GoogleConsentResponse.response_version",
+        ),
+    } <= uses
 
 
 def test_validated_nested_schema_consumes_fields_and_enum_alternatives() -> None:
