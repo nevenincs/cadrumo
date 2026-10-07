@@ -28,6 +28,7 @@ from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from .identity import identity
 from .layout import distribution_target, entrypoint_files, load_layout
 from .runtime_exit_reasons import runtime_exit_section, rust_runtime_exit_reasons
+from .stable_output import write_text
 from .storage_vectors import (
     INVALID_NATIVE_PATH_BYTES,
     INVALID_NATIVE_PATH_UTF16,
@@ -364,13 +365,13 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     rust.extend(_rust_root_and_environment(contract))
     rust.extend(rust_runtime_exit_reasons(contract["runtime_exit"]))
     destination.mkdir(parents=True, exist_ok=True)
-    (destination / "contract.rs").write_text("\n".join(rust) + "\n", encoding="utf-8")
-    (destination / "contract.h").write_text(
+    write_text(destination / "contract.rs", "\n".join(rust) + "\n")
+    write_text(
+        destination / "contract.h",
         f'#define CADRUMO_PYTHON_VERSION "{version}"\n#define CADRUMO_PLATFORM_ABI {layout["abi"]}\n'
         f"#define CADRUMO_CONTRACT_SCHEMA {CONTRACT_SCHEMA}\n",
-        encoding="utf-8",
     )
-    (destination / "contract.json").write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+    write_text(destination / "contract.json", json.dumps(contract, indent=2) + "\n")
 
 
 if __name__ == "__main__":

@@ -33,6 +33,9 @@ add_custom_target(rust_application ALL
   BYPRODUCTS "${application_output}"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_dependencies(rust_application native_contract)
+if(COMMAND cadrumo_register_clean)
+  cadrumo_register_clean(TARGET rust_application PATHS "${application_output}")
+endif()
 
 if(BUILD_TESTING)
   set(CADRUMO_APPLICATION_TEST_PACKAGE_ROOT "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"

@@ -12,6 +12,7 @@ from dev._paths import REPO_ROOT
 
 from .identity import identity
 from .layout import backend, distribution_target, load_layout
+from .stable_output import write_text
 
 
 def generate(
@@ -42,7 +43,7 @@ def generate(
         "target": product.target,
         "compatibility_floor": product.compatibility_floor,
     }
-    (destination / "build.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    write_text(destination / "build.json", json.dumps(metadata, indent=2))
     values = {
         "VERSION": version,
         "BUILD_NUMBER": str(number),
@@ -51,7 +52,7 @@ def generate(
         **{name.upper(): value for name, value in layout["files"].items()},
     }
     header = "\n".join(f"#define CADRUMO_{name} {json.dumps(value)}" for name, value in values.items())
-    (destination / "build_metadata.h").write_text(header + "\n", encoding="utf-8")
+    write_text(destination / "build_metadata.h", header + "\n")
     backend(layout).resources(destination, version, number, date, tools, layout["entrypoints"])
 
 

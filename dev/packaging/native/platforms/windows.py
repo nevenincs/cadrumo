@@ -21,6 +21,7 @@ from cadrumo.core.storage_taxonomy_locations import storage_location
 from dev._paths import REPO_ROOT
 
 from ..hashing import digest
+from ..stable_output import write_bytes, write_text
 from .pe import imports as pe_imports
 from .windows_verify import verify as windows_verify
 
@@ -184,14 +185,16 @@ def resources(
         svg_path=str(REPO_ROOT / "docs/_static/cadrumo-favicon.svg"), width=256, height=256, skip_system_fonts=True
     )
     with Image.open(io.BytesIO(png)) as icon:
-        icon.save(destination / "cadrumo.ico", format="ICO", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
+        output = io.BytesIO()
+        icon.save(output, format="ICO", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
+        write_bytes(destination / "cadrumo.ico", output.getvalue())
     numeric = ",".join([*version.split(".")[:3], str(number)])
     descriptions = {"interpreter": "CADRUMO controlled Python interpreter"} | {
         f"entrypoint-{name}": description for name, description in entrypoints.items()
     }
     for stem, description in descriptions.items():
         resource = _version_resource(destination, numeric, version, number, date, publisher, _rc_string(description))
-        (destination / f"{stem}.rc").write_text(resource, encoding="utf-8")
+        write_text(destination / f"{stem}.rc", resource)
 
 
 def _rc_string(value: str) -> str:

@@ -8,7 +8,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:b0d928807b408683747c71872a4017ffde2499c708af781b2f27db620b9d399c'
+body_hash: 'sha256:458da970c0c9279b17473718030b928bfa1031b537879904d6063b6958ce7d4d'
 ---
 
 # `cmake-incremental-build` plan
@@ -22,7 +22,7 @@ The user explicitly authorized fixing all seven CMake review findings and establ
 ## Steps
 
 - [x] `S01` - Make desktop builds content-stable and complete standalone prerequisites; `native/desktop CMake targets, scripts and dedicated build tests`.
-- [ ] `S02` - Narrow native action fingerprints and preserve unchanged generated outputs with separate binary targets; `native CMake targets and packaging helpers assigned in Parallelization`.
+- [x] `S02` - Narrow native action fingerprints and preserve unchanged generated outputs with separate binary targets; `native CMake targets and packaging helpers assigned in Parallelization`.
 - [ ] `S03` - Complete CMake prerequisite ownership, per-target cleanup and install-based ZIP packaging; `root CMake, shared packaging and cleanup helpers, justfile`.
 - [ ] `S04` - Verify integrated incremental builds and final ZIP and document supported commands; `native/CONTRACT.md, build verification and review audit`.
 

@@ -14,18 +14,18 @@ if(entrypoint_count GREATER 0)
     list(APPEND entrypoint_resources "${CONTRACT_DIR}/entrypoint-${entrypoint}.rc")
   endforeach()
 endif()
-add_custom_command(OUTPUT "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources}
-  COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
+cadrumo_cached_command(metadata_command native_metadata SHARED
+  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json"
+    "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${CADRUMO_PATH_TOOLS}/ready"
+  OUTPUTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
+    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources})
+add_custom_target(native_metadata
+  COMMAND ${metadata_command} ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
     --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
-  DEPENDS ${native_helper_inputs} ${contract_inputs}
-    "${CONTRACT_DIR}/identity.json"
-    "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${CADRUMO_PATH_TOOLS}/ready"
-    "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
+  BYPRODUCTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
+    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources}
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_custom_target(native_metadata DEPENDS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-  "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources})
 add_dependencies(native_metadata native_build_tools)
 
 set(CADRUMO_RUST_ROOT "$ENV{USERPROFILE}/.rustup/toolchains/${CADRUMO_PIN_rust}-${CADRUMO_PIN_rust_target}"
@@ -54,16 +54,34 @@ cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/
 set(platform_dir "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/${rust_profile}")
 set(platform_static "${platform_dir}/cadrumo_platform.lib")
 set(platform_import "${platform_dir}/cadrumo_platform.dll.lib")
-file(GLOB_RECURSE rust_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/platform/src/*.rs")
-add_custom_command(OUTPUT "${platform_static}" "${platform_import}" "${platform_dir}/cadrumo_platform.dll"
-    "${platform_dir}/platform-consumer.exe"
-  COMMAND ${platform_cargo} build --locked --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
-      --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
-  DEPENDS ${rust_sources} platform/Cargo.toml platform/Cargo.lock "${CONTRACT_DIR}/contract.rs" "${CADRUMO_BUILD_HELPER}"
-    "${PROJECT_SOURCE_DIR}/native/cmake/Rust.cmake" "${CMAKE_CURRENT_LIST_FILE}" "${PROJECT_SOURCE_DIR}/native/toolchain.json"
+# Separate crate types let one native library be rebuilt without linking its sibling.
+add_custom_target(rust_platform_static
+  COMMAND ${platform_cargo} rustc --locked --lib --crate-type staticlib
+    --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
+    --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
+  BYPRODUCTS "${platform_static}"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_custom_target(rust_platform DEPENDS "${platform_static}" "${platform_import}" "${platform_dir}/cadrumo_platform.dll"
-  "${platform_dir}/platform-consumer.exe")
+add_custom_target(rust_platform_shared
+  COMMAND ${platform_cargo} rustc --locked --lib --crate-type cdylib
+    --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
+    --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
+  BYPRODUCTS "${platform_import}" "${platform_dir}/cadrumo_platform.dll"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_dependencies(rust_platform_static native_contract)
+add_dependencies(rust_platform_shared native_contract)
+add_custom_target(rust_platform DEPENDS rust_platform_static rust_platform_shared)
+set(platform_consumer "${platform_dir}/platform-consumer${CMAKE_EXECUTABLE_SUFFIX}")
+add_custom_target(rust_platform_consumer
+  COMMAND ${platform_cargo} build --locked --bin platform-consumer
+    --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
+    --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
+  BYPRODUCTS "${platform_consumer}"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_dependencies(rust_platform_consumer native_contract)
+if(BUILD_TESTING)
+  # Preserve the default test build while keeping either producer individually addressable.
+  add_custom_target(platform_test_binaries ALL DEPENDS rust_platform_consumer)
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CADRUMO_PATH_BIN}/$<CONFIG>")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CADRUMO_PATH_LIB}/$<CONFIG>")
@@ -103,7 +121,7 @@ set_target_properties(cadrumo_python_bridge PROPERTIES OUTPUT_NAME "${bridge_nam
 target_compile_options(cadrumo_python_bridge PRIVATE "$<$<CONFIG:Debug>:/U_DEBUG>")
 target_include_directories(cadrumo_python_bridge PRIVATE "${CPYTHON_ROOT}/include")
 target_link_libraries(cadrumo_python_bridge PRIVATE "${CPYTHON_ROOT}/libs/python313.lib")
-add_dependencies(cadrumo_python_bridge python_dependencies)
+add_dependencies(cadrumo_python_bridge python_sdk)
 add_executable(platform_static_consumer platform/tests/consumer.c)
 add_executable(platform_dll_consumer platform/tests/consumer.c)
 include("${PROJECT_SOURCE_DIR}/native/cmake/CompilePolicy.cmake")
@@ -114,15 +132,17 @@ foreach(target ${host_targets} cadrumo_python_bridge platform_static_consumer pl
 endforeach()
 foreach(target ${host_targets} platform_static_consumer)
   target_link_libraries(${target} PRIVATE "${platform_static}" userenv ws2_32 ntdll bcrypt shell32 ole32 advapi32)
-  add_dependencies(${target} rust_platform)
+  add_dependencies(${target} rust_platform_static)
 endforeach()
 foreach(target ${host_targets} cadrumo_python_bridge)
   add_dependencies(${target} native_metadata)
 endforeach()
 add_custom_target(python DEPENDS cadrumo_python cadrumo_python_bridge)
 add_custom_target(python_d DEPENDS cadrumo_python_d cadrumo_python_bridge)
+cadrumo_register_clean(TARGET python DEPENDS cadrumo_python cadrumo_python_bridge)
+cadrumo_register_clean(TARGET python_d DEPENDS cadrumo_python_d cadrumo_python_bridge)
 target_link_libraries(platform_dll_consumer PRIVATE "${platform_import}")
-add_dependencies(platform_dll_consumer rust_platform)
+add_dependencies(platform_dll_consumer rust_platform_shared)
 foreach(target platform_static_consumer platform_dll_consumer)
   target_compile_options(${target} PRIVATE /UNDEBUG)
 endforeach()

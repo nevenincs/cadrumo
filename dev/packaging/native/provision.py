@@ -46,6 +46,7 @@ def provision(
     *,
     build_toolchain: Mapping[str, Any] | None = None,
     uv_executable: Path | None = None,
+    sdk: Path | None = None,
 ) -> None:
     """Download one verified SDK and install the repository's base closure."""
     destination = destination.resolve()
@@ -55,9 +56,15 @@ def provision(
     tools = provisioning_tools(target, build_toolchain)
     contract = load_layout(target)
     wheels = plan_target_wheels(REPO_ROOT, target, pin)
-    sdk = backend(contract).provision_sdk(destination, pin, tools, contract)
-    if sdk.resolve() != (destination / contract["sdk"]["root"]).resolve():
-        raise ValueError("SDK backend output differs from the declared SDK root")
+    if sdk is None:
+        produced = backend(contract).provision_sdk(destination, pin, tools, contract)
+        if not isinstance(produced, Path):
+            raise ValueError("SDK backend must return its produced directory")
+        sdk = produced
+        if sdk.resolve() != (destination / contract["sdk"]["root"]).resolve():
+            raise ValueError("SDK backend output differs from the declared SDK root")
+    elif not sdk.is_dir():
+        raise ValueError("Provisioning requires the separately verified SDK target")
     requirements = destination / "requirements.txt"
     requirements.write_text(
         "".join(f"{wheel.distribution} @ {wheel.url} --hash=sha256:{wheel.sha256}\n" for wheel in wheels),
@@ -99,8 +106,7 @@ def provision(
             {
                 "target": target,
                 "python": pin,
-                "lock_sha256": digest(REPO_ROOT / "uv.lock"),
-                "toolchain": tools,
+                "toolchain": {name: value for name, value in tools.items() if name.startswith("cpython_")},
                 "wheels": [asdict(wheel) for wheel in wheels],
             },
             indent=2,

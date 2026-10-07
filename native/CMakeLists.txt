@@ -1,35 +1,32 @@
 set(CONTRACT_DIR "${CADRUMO_PATH_GENERATED}")
 string(JSON sdk_root_relative GET "${package_layout}" sdk root)
-set(CPYTHON_ROOT "${CADRUMO_PATH_RUNTIME}/${sdk_root_relative}")
+set(CPYTHON_ROOT "${CADRUMO_PATH_PYTHON_SDK}/${sdk_root_relative}")
 set(CADRUMO_BUILD_HELPER "${PROJECT_SOURCE_DIR}/dev/packaging/native/cmake_build.py")
 set(CADRUMO_HELPER "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build)
 file(GLOB_RECURSE native_helper_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/dev/packaging/native/*.py")
-file(GLOB platform_contract_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/native/platforms/*.json")
-set(contract_inputs "${PROJECT_SOURCE_DIR}/native/package-layout.json" ${platform_contract_inputs}
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/layout.py")
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${contract_inputs})
+include("${PROJECT_SOURCE_DIR}/native/cmake/Contract.cmake")
 set(shared_inputs "${PROJECT_BINARY_DIR}/build-paths.json"
-  "${CADRUMO_PATH_GENERATED}/identity.json"
-  "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_paths.py" "${CADRUMO_BUILD_HELPER}" "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_cache.py")
 include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
-cadrumo_provision_helpers(provision_helper_inputs "${PROJECT_SOURCE_DIR}")
-set(provision_inputs ${shared_inputs} ${contract_inputs} ${provision_helper_inputs}
-  "${PROJECT_SOURCE_DIR}/uv.lock" "${PROJECT_SOURCE_DIR}/pyproject.toml"
-  "${CMAKE_CURRENT_SOURCE_DIR}/toolchain.json" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/provision.py" "${PROJECT_SOURCE_DIR}/dev/packaging/uv_constraints.py"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/${CADRUMO_BACKEND}.py")
-list(APPEND provision_inputs
+cadrumo_provision_helpers(provision_helper_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
+set(sdk_inputs ${shared_inputs} ${contract_inputs} ${provision_helper_inputs}
+  "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/command_execution.py")
+set(provision_inputs ${shared_inputs}
+  "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/provision.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_toolchain.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/target.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheel_selection.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/target.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/uv_constraints.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/command_execution.py")
-if(CADRUMO_ZSTD)
-  list(APPEND provision_inputs "${CADRUMO_ZSTD}")
-endif()
+list(JOIN sdk_inputs "\n" input_lines)
+file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-sdk.txt" CONTENT "${input_lines}\n")
 list(JOIN provision_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-provision.txt" CONTENT "${input_lines}\n")
-set(tool_inputs ${shared_inputs} "${CMAKE_CURRENT_SOURCE_DIR}/toolchain.json")
+set(tool_inputs ${shared_inputs} "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_toolchain.py")
 list(JOIN tool_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-tools.txt" CONTENT "${input_lines}\n")
 string(JSON production_executable GET "${package_layout}" paths executable)
@@ -41,41 +38,52 @@ cmake_path(GET bridge_library STEM bridge_name)
 set(CADRUMO_PACKAGE_EXECUTABLE "${production_executable}" PARENT_SCOPE)
 string(JSON package_manifest GET "${package_layout}" files package_manifest)
 set(CADRUMO_PACKAGE_MANIFEST "${package_manifest}" PARENT_SCOPE)
-file(GLOB settings_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/cadrumo/core/config*.py"
-  "${PROJECT_SOURCE_DIR}/src/cadrumo/core/storage*.py" "${PROJECT_SOURCE_DIR}/src/cadrumo/core/product_identity.py"
-  "${PROJECT_SOURCE_DIR}/src/cadrumo/core/logging.py")
-add_custom_command(OUTPUT "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
-  COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.generate "${CONTRACT_DIR}"
-    --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}"
-  DEPENDS ${settings_inputs} ${contract_inputs} "${PROJECT_SOURCE_DIR}/dev/packaging/native/generate.py"
-    "${PROJECT_SOURCE_DIR}/dev/packaging/native/runtime_exit_reasons.py"
-    "${PROJECT_SOURCE_DIR}/src/cadrumo/application/runtime/contracts.py"
-    "${CONTRACT_DIR}/identity.json" "${PROJECT_SOURCE_DIR}/pyproject.toml"
-    "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version" "${PROJECT_SOURCE_DIR}/.python-version"
-    "${CADRUMO_BUILD_HELPER}"
+add_custom_target(python_sdk
+  COMMAND ${CADRUMO_HELPER} sdk --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-sdk.txt"
+  DEPENDS ${sdk_inputs} "${PROJECT_BINARY_DIR}/inputs-sdk.txt"
+  BYPRODUCTS "${CADRUMO_PATH_PYTHON_SDK}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_custom_target(native_contract DEPENDS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h"
-  "${CONTRACT_DIR}/contract.json")
 add_custom_target(python_dependencies
   COMMAND ${CADRUMO_HELPER} provision --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   DEPENDS ${provision_inputs} "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   BYPRODUCTS "${CADRUMO_PATH_RUNTIME}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_dependencies(python_dependencies python_sdk)
 add_custom_target(native_build_tools
   COMMAND ${CADRUMO_HELPER} tools --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-tools.txt"
   DEPENDS ${tool_inputs} "${PROJECT_BINARY_DIR}/inputs-tools.txt"
   BYPRODUCTS "${CADRUMO_PATH_TOOLS}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+if(COMMAND cadrumo_register_clean)
+  cadrumo_register_clean(TARGET python_sdk PATHS "${CADRUMO_PATH_PYTHON_SDK}")
+  cadrumo_register_clean(TARGET python_dependencies PATHS "${CADRUMO_PATH_RUNTIME}")
+  cadrumo_register_clean(TARGET native_build_tools PATHS "${CADRUMO_PATH_TOOLS}")
+endif()
 set(native_helper_inputs "${native_helper_inputs}" PARENT_SCOPE)
 set(contract_inputs "${contract_inputs}" PARENT_SCOPE)
 set(CADRUMO_HELPER "${CADRUMO_HELPER}" PARENT_SCOPE)
 set(CADRUMO_BUILD_HELPER "${CADRUMO_BUILD_HELPER}" PARENT_SCOPE)
 include("${PROJECT_SOURCE_DIR}/native/cmake/Rust.cmake")
+set(metadata_inputs ${contract_inputs}
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/metadata.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/identity.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/stable_output.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/${CADRUMO_BACKEND}.py"
+  "${PROJECT_SOURCE_DIR}/src/cadrumo/core/product_identity.py"
+  "${PROJECT_SOURCE_DIR}/src/cadrumo/core/toml.py"
+  "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version")
 include("${PROJECT_SOURCE_DIR}/native/cmake/platforms/${CMAKE_SYSTEM_NAME}.cmake")
-add_custom_command(OUTPUT "${platform_static}" APPEND
-  DEPENDS "${CADRUMO_PATH_GENERATED}/build-toolchain.json")
-add_custom_command(OUTPUT "${CONTRACT_DIR}/build_metadata.h" APPEND
-  DEPENDS "${CADRUMO_PATH_GENERATED}/build-toolchain.json")
+if(COMMAND cadrumo_register_clean)
+  cadrumo_register_clean(TARGET rust_platform_static PATHS "${platform_static}")
+  if(WIN32)
+    cadrumo_register_clean(TARGET rust_platform_shared PATHS "${platform_import}" "${platform_dir}/cadrumo_platform.dll")
+  else()
+    cadrumo_register_clean(TARGET rust_platform_shared PATHS
+      "${platform_dir}/${CMAKE_SHARED_LIBRARY_PREFIX}cadrumo_platform${CMAKE_SHARED_LIBRARY_SUFFIX}")
+  endif()
+  cadrumo_register_clean(TARGET rust_platform DEPENDS rust_platform_static rust_platform_shared)
+  cadrumo_register_clean(TARGET rust_platform_consumer PATHS "${platform_consumer}")
+endif()
 add_subdirectory(application)
 # Defines rust_manager and CADRUMO_MANAGER_EXECUTABLE in this directory scope for Packaging.cmake.
 include("${PROJECT_SOURCE_DIR}/native/cmake/Manager.cmake")

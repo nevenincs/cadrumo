@@ -49,6 +49,9 @@ add_custom_target(rust_manager ALL
   BYPRODUCTS "${CADRUMO_MANAGER_EXECUTABLE}"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_dependencies(rust_manager native_contract)
+if(COMMAND cadrumo_register_clean)
+  cadrumo_register_clean(TARGET rust_manager PATHS "${CADRUMO_MANAGER_EXECUTABLE}")
+endif()
 
 if(BUILD_TESTING)
   # Covers the projected names, --version, and on Windows the GUI subsystem, the

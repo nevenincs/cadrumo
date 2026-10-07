@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-crate-type = ["staticlib", "cdylib", "rlib"]
+# CMake selects staticlib/cdylib explicitly; binary and Rust consumers need only the rlib.
+crate-type = ["rlib"]
 
 [profile.release]
 panic = "abort"
