@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:dc6cb78672925d257ec2df5a76baed0f17ac5517f14e2b548778bff35e9c84b5'
+body_hash: 'sha256:5c3dbf8cd6bf377e903cac89abe9bb0033b82f9397912c60aee886790cc022c9'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -129,7 +129,6 @@ Probe-reviewed source SHA-256: supervisor.rs 09c264eb8d39ee55bc6c03a69845f5d3090
 
 Overall verdict: REVISION REQUIRED for confirmed unreported termination failure and the existing installed version-selection blocker; PENDING for full manager/product acceptance. Passing evidence supports the implemented bounded Windows foundations only. Resolve the high finding before P02.S09 recloses, fix the two medium contract gaps with meaningful regressions, then complete the open integration and installed/OS acceptance Steps under the existing approved plan.
 
-
 ### 2026-10-07 corrective review — supervision defects
 
 PASS for the three reproduced supervision defects: termination attempts now retain the process handle and supervision claim until death is confirmed, report denied termination and expired confirmation separately, and never fabricate an exit or schedule a restart. Stop and stop-if-idle during restart backoff preserve the preceding effects status. Boot-record reads now use the existing custody local-record primitive, including parent-component reparse protection.
@@ -138,6 +137,15 @@ Evidence: 155 manager fixture tests passed, including a real Windows process wit
 
 The installed-version discovery high finding remains open for P03.S27. The operator selected concrete defects and the discovery blocker; tray, autostart, cutover/rollback and platform rollout remain in their existing steps. Disposable-host installation and session-end acceptance are not claimed by these fixture checks.
 
+### Corrective discovery review | low | Windows source fix verified; release and repository-wide gates remain pending
+
+Reviewed P03.S27 against the accepted manager and distribution decisions, the S09 corrective commit bb7eebefa6 and the owning uncommitted discovery diff. The concrete installed-version discovery defect is repaired in source. Packaging projects one version-independent prefix marker and versions directory from the existing package-layout owner, keeps both application images at each package root, preserves its immutable inventory and emits a stable entry-point registration even without a desktop shortcut. A shared native/application catalogue verifies identity, channel, target, ABI, all inventoried package files and manager headers/hashes before selecting the newest numeric complete version. Existing links, incomplete versions, foreign metadata and damaged entry points cannot win. Registry reads cover HKCU and HKLM as bounded hints; they confer no process or data authority.
+
+Desktop dispatch selects that stable entry through the shared catalogue. The entry and directly invoked older manager both select the newest complete version before session-lock acquisition, storage mutation or runtime ownership. Native admission and job escape still precede dispatch; the successor repeats them. Management eligibility is checked before strict environment clearing. Launch acknowledgement remains separate from runtime readiness. Prefix uninstall refuses a multi-version prefix, preserving shared discovery files for the package owner. Root-level binary placement and manager/runtime authority are retained.
+
+Applicable evidence: 155 manager tests passed; the shared application suite passed (70 tests before the additional metadata fixture), and all five final discovery fixtures passed; 17 focused desktop manager/log tests passed. Manager, shared application and desktop backend Clippy all passed with warnings denied; the previously concurrent sign-in build failure is resolved. Python installation/distribution checks passed (28 tests, two POSIX-only skips), including real CMake/CPack ZIP no-op, refresh and clean rebuild for manager and non-manager payloads. Earlier unchanged generator/storage contract checks passed. Ruff, formatting, type checks and scoped diff checks passed. Native/CONTRACT documents the consumed contract. Fixture evidence is in build/manager-implementation-audit/discovery-*.log and the owning pytest run 20261007T102604.645676Z-pytest-41692-ce77547c.
+
+PASS for the selected concrete source fixes. PENDING for broader gates: real dual-scope installer/upgrade and interactive session acceptance still require disposable hosts; existing major-upgrade policy, login registration, tray, cutover/rollback, obsolete-version removal and ports remain excluded rollout work. The manager feature vault check has zero errors/warnings. The required repository-wide vault check reports an unrelated approved Google plan referencing a non-accepted backup-custody ADR, plus unrelated workstream hygiene warnings; those records were preserved for their owners. This review does not declare the full manager plan or any installer format ready to ship.
 
 ## Recommendations
 

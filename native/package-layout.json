@@ -1,5 +1,11 @@
 {
   "abi": 1,
+  "installation": {
+    "schema": 1,
+    "marker": "data/installation.json",
+    "versions": "versions",
+    "maximum_versions": 128
+  },
   "paths": {
     "stdlib": "python.zip",
     "packages": "cadrumo/site-packages",

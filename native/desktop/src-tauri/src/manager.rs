@@ -2,13 +2,11 @@
 
 use crate::environment::Launch;
 use cadrumo_application::{
-    binary::{self, BinaryExpectation},
     child::ChildConfiguration,
     diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
-    package::PackageManifest,
+    installation::DiscoveryContract,
     process::status::{ProcessPhase, ProcessRole},
-    value::RelativePath,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -265,74 +263,32 @@ fn decode(bytes: &[u8], success: bool) -> Result<StartOutcome> {
     })
 }
 
-#[derive(Deserialize)]
-struct Contract {
-    layout: Layout,
-}
-#[derive(Deserialize)]
-struct Layout {
-    abi: u32,
-    platform: String,
-    application_images: Vec<Image>,
-    entrypoint_suffix: String,
-    files: Files,
-}
-#[derive(Deserialize)]
-struct Image {
-    name: String,
-    placement: String,
-    target: String,
-}
-#[derive(Deserialize)]
-struct Files {
-    package_manifest: RelativePath,
-}
-
-fn manager_member(layout: &Layout) -> Result<RelativePath> {
-    let mut candidates = layout
-        .application_images
-        .iter()
-        .filter(|image| image.target == "rust_manager");
-    let image = candidates
-        .next()
-        .ok_or_else(|| failure(ErrorCode::ManagerUnavailable))?;
-    if candidates.next().is_some() {
-        return Err(failure(ErrorCode::PackageUnavailable));
-    }
-    let name = format!("{}{}", image.name, layout.entrypoint_suffix);
-    RelativePath::new(if image.placement == "." {
-        name
-    } else {
-        format!("{}/{name}", image.placement)
-    })
-    .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))
-}
-
 fn target(package_root: &Path) -> Result<PathBuf> {
-    let contract: Contract =
+    let contract: DiscoveryContract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
             .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
-    let relative = manager_member(&contract.layout)?;
-    let manifest = PackageManifest::read(package_root, &contract.layout.files.package_manifest)
-        .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
-    if manifest.layout.abi != contract.layout.abi
-        || manifest.layout.platform != contract.layout.platform
-    {
-        return Err(failure(ErrorCode::PackageUnavailable));
-    }
-    let digest = manifest
-        .files
-        .get(&relative)
-        .ok_or_else(|| failure(ErrorCode::ManagerUnavailable))?;
-    let executable = relative.under(package_root);
-    binary::verify(
-        &executable,
-        digest,
-        BinaryExpectation::host()
-            .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?,
+    #[cfg(windows)]
+    let registered = cadrumo_platform::installation::manager_entry_points(
+        &contract.installation_identity.application_id,
     )
     .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
-    Ok(executable)
+    #[cfg(not(windows))]
+    let registered = Vec::new();
+    target_from(package_root, &contract, &registered)
+}
+
+fn target_from(
+    package_root: &Path,
+    contract: &DiscoveryContract,
+    registered: &[PathBuf],
+) -> Result<PathBuf> {
+    let member = contract
+        .manager_member()
+        .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
+    contract
+        .discover(&member.under(package_root), registered)
+        .map(|selection| selection.entrypoint)
+        .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))
 }
 
 #[cfg(windows)]

@@ -339,32 +339,27 @@ fn dispatch_acknowledges_launch_only_and_rejects_failed_or_malformed_replies() {
 
 #[test]
 fn manager_path_is_taken_from_the_package_projection_and_is_unambiguous() {
-    let mut layout = Layout {
-        abi: 1,
-        platform: "windows-x64".into(),
-        application_images: vec![Image {
-            name: "fixture-manager".into(),
-            placement: ".".into(),
-            target: "rust_manager".into(),
-        }],
-        entrypoint_suffix: ".exe".into(),
-        files: Files {
-            package_manifest: RelativePath::new("data/manifest.json").unwrap(),
-        },
-    };
+    use cadrumo_application::installation::Image;
+    let mut contract: DiscoveryContract =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
+    contract.layout.application_images = vec![Image {
+        name: "fixture-manager".into(),
+        placement: ".".into(),
+        target: "rust_manager".into(),
+    }];
     assert_eq!(
-        manager_member(&layout).unwrap().as_str(),
+        contract.manager_member().unwrap().as_str(),
         "fixture-manager.exe"
     );
-    layout.application_images[0].name = "../foreign".into();
-    assert!(manager_member(&layout).is_err());
-    layout.application_images[0].name = "fixture-manager".into();
-    layout.application_images.push(Image {
+    contract.layout.application_images[0].name = "../foreign".into();
+    assert!(contract.manager_member().is_err());
+    contract.layout.application_images[0].name = "fixture-manager".into();
+    contract.layout.application_images.push(Image {
         name: "duplicate-manager".into(),
         placement: ".".into(),
         target: "rust_manager".into(),
     });
-    assert!(manager_member(&layout).is_err());
-    layout.application_images.clear();
-    assert!(manager_member(&layout).is_err());
+    assert!(contract.manager_member().is_err());
+    contract.layout.application_images.clear();
+    assert!(contract.manager_member().is_err());
 }

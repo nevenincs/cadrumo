@@ -53,10 +53,11 @@ def test_refresh_preserves_previous_receipt_and_rejects_modified_stage(tmp_path:
     assert (build / "installation/stage/app/cadrumo").read_text(encoding="utf-8") == "user alteration"
 
 
-def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path) -> None:
+@pytest.mark.parametrize("manager", [False, True])
+def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path, manager: bool) -> None:
     cmake = shutil.which("cmake")
     assert cmake is not None
-    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64", manager=manager)
     source = tmp_path / "source"
     source.mkdir()
     build = tmp_path / "build"
@@ -90,6 +91,10 @@ def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path) -
         "-G", "Ninja", "-S", str(source), "-B", str(build), "-DCMAKE_BUILD_TYPE=Release", f"-DCADRUMO_PAYLOAD={payload}"
     )
     command("--build", str(build), "--target", "zip")
+    if manager:
+        assert "Desktop.wxs" in (build / "CPackConfig.cmake").read_text(encoding="utf-8")
+        assert (build / "installation/metadata/Desktop.wxs").is_file()
+    package = f"versions/{identity('windows-x86-64').version}" if manager else "app"
     archive = next((build / "packages").glob("*.zip"))
     original_time = archive.stat().st_mtime_ns
     command("--build", str(build), "--target", "zip")
@@ -97,10 +102,10 @@ def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path) -
     _change_payload(payload)
     command("--build", str(build), "--target", "zip")
     with zipfile.ZipFile(archive) as zipped:
-        binary = next(name for name in zipped.namelist() if name.endswith("/app/cadrumo"))
+        binary = next(name for name in zipped.namelist() if name.endswith(f"/{package}/cadrumo"))
         assert zipped.read(binary) == b"changed binary"
     command("--build", str(build), "--target", "clean-installation_prepare")
     assert not (build / "installation/stage").exists()
     assert list((build / "installation/receipts").glob("*.json"))
     command("--build", str(build), "--target", "zip")
-    assert (build / "installation/stage/app/cadrumo").exists()
+    assert (build / "installation/stage" / package / "cadrumo").exists()

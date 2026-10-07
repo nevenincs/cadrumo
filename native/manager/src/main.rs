@@ -79,6 +79,16 @@ fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::
         diagnostics.host_outcome(HostStage::JobEscape, HostOutcome::Dispatched);
         return Ok(());
     }
+    if stage(
+        &diagnostics,
+        HostStage::Package,
+        ErrorCode::PackageUnavailable,
+        Operation::Manager,
+        || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?),
+    )? {
+        diagnostics.host_outcome(HostStage::Package, HostOutcome::Dispatched);
+        return Ok(());
+    }
     let Some(_session_lock) = stage(
         &diagnostics,
         HostStage::Instance,

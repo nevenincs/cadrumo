@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:66adb5edcb68cbee3611d50b7995b8ddfc105ba7824d25c83da9997c1c50684e'
+body_hash: 'sha256:af102d92f7930751d5de2d3a1f8269cd4eb87c4f4747caa644260782d2aa018e'
 ---
 
 # `runtime-manager-architecture` plan
@@ -49,6 +49,8 @@ Named follow-on decisions remain outside this plan:
 - whether elevation refusal should be unconditional
 - per-session admission versus attended-session lifetime
 - how MCP-originated approval prompts are surfaced
+
+2026-10-07 corrective authorization: the operator requested fixing the identified high, medium and low issues while retaining current binary placement and authority, then selected "Fix defects and the discovery blocker". P02.S09 repairs the three reproduced supervision defects. P03.S27 implements the already accepted stable-entry/versioned-install commitment across packaging, shared discovery, manager startup and desktop dispatch. This authorization includes those owning source areas; remaining tray, autostart, cutover/rollback and platform rollout are excluded. The existing format-specific upgrade, removal and disposable-host acceptance gates remain open.
 
 ## Steps
 

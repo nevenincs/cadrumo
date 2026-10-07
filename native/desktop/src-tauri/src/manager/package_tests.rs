@@ -5,7 +5,15 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
+// Admission tests use explicit empty registration hints and never depend on a host install.
+fn target(package_root: &Path) -> Result<PathBuf> {
+    let contract: DiscoveryContract =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
+    super::target_from(package_root, &contract, &[])
+}
+
 struct PackageFixture {
+    prefix: PathBuf,
     root: PathBuf,
     image: PathBuf,
     manifest: PathBuf,
@@ -15,7 +23,7 @@ struct PackageFixture {
 
 impl PackageFixture {
     fn new() -> Self {
-        let root = std::env::temp_dir().join(format!(
+        let prefix = std::env::temp_dir().join(format!(
             "cadrumo-manager-package-{}-{} ü space",
             std::process::id(),
             SystemTime::now()
@@ -23,10 +31,11 @@ impl PackageFixture {
                 .unwrap()
                 .as_nanos()
         ));
-        fs::create_dir(&root).unwrap();
-        let contract: Contract =
+        let root = prefix.join("versions/0.1.0");
+        fs::create_dir_all(&root).unwrap();
+        let contract: DiscoveryContract =
             serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
-        let member = manager_member(&contract.layout).unwrap();
+        let member = contract.manager_member().unwrap();
         let image = member.under(&root);
         fs::create_dir_all(image.parent().unwrap()).unwrap();
         let source =
@@ -49,10 +58,20 @@ impl PackageFixture {
         fs::create_dir_all(manifest.parent().unwrap()).unwrap();
         let document = serde_json::json!({
             "layout": {"abi": contract.layout.abi, "platform": contract.layout.platform},
-            "python": "fixture", "distributions": {}, "files": {(member.as_str()): digest}
+            "build": {"application_id": contract.installation_identity.application_id,
+                "channel": contract.installation_identity.channel, "version": "0.1.0", "target": "windows-x86-64"},
+            "python": "fixture", "distributions": {}, "files": {(member.as_str()): digest},
+            "user_docs": {"directory": "docs/user", "bundled": false}
         });
         fs::write(&manifest, serde_json::to_vec(&document).unwrap()).unwrap();
+        fs::create_dir_all(prefix.join("data")).unwrap();
+        fs::write(contract.layout.installation.marker.under(&prefix), serde_json::to_vec(&serde_json::json!({
+            "schema": contract.layout.installation.schema, "application_id": contract.installation_identity.application_id,
+            "channel": contract.installation_identity.channel, "platform": contract.layout.platform, "abi": contract.layout.abi
+        })).unwrap()).unwrap();
+        fs::copy(&image, member.under(&prefix)).unwrap();
         Self {
+            prefix,
             root,
             image,
             manifest,
@@ -69,29 +88,31 @@ impl PackageFixture {
 
 impl Drop for PackageFixture {
     fn drop(&mut self) {
-        assert!(self.root.is_absolute());
-        assert_eq!(self.root.parent(), Some(std::env::temp_dir().as_path()));
-        let _ = fs::remove_dir_all(&self.root);
+        assert!(self.prefix.is_absolute());
+        assert_eq!(self.prefix.parent(), Some(std::env::temp_dir().as_path()));
+        let _ = fs::remove_dir_all(&self.prefix);
     }
 }
 
 #[test]
 fn relocated_package_with_spaces_and_unicode_is_verified_without_cwd_assumptions() {
     let mut fixture = PackageFixture::new();
-    assert_eq!(target(&fixture.root).unwrap(), fixture.image);
-    let moved = fixture.root.with_file_name(format!(
+    let member = fixture.image.file_name().unwrap().to_owned();
+    assert_eq!(target(&fixture.root).unwrap(), fixture.prefix.join(&member));
+    let moved = fixture.prefix.with_file_name(format!(
         "{} moved",
-        fixture.root.file_name().unwrap().to_str().unwrap()
+        fixture.prefix.file_name().unwrap().to_str().unwrap()
     ));
-    assert_eq!(moved.parent(), fixture.root.parent());
-    fs::rename(&fixture.root, &moved).unwrap();
+    assert_eq!(moved.parent(), fixture.prefix.parent());
+    fs::rename(&fixture.prefix, &moved).unwrap();
     let relative = fixture
-        .image
-        .strip_prefix(&fixture.root)
+        .root
+        .strip_prefix(&fixture.prefix)
         .unwrap()
         .to_owned();
-    fixture.root = moved;
-    assert_eq!(target(&fixture.root).unwrap(), fixture.root.join(relative));
+    fixture.prefix = moved;
+    fixture.root = fixture.prefix.join(relative);
+    assert_eq!(target(&fixture.root).unwrap(), fixture.prefix.join(member));
 }
 
 #[test]

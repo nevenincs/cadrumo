@@ -1251,6 +1251,27 @@ Python and Rust readers share conformance vectors in
 `manager/tests/protocol_vectors.json`. Session-end fences admissions before
 settling workers; cancellation waits for that supervisor to finish before restart.
 
+Installed Windows manager packages use the version-independent layout projected
+from `native/package-layout.json`: `versions/<major.minor.patch>/` contains the
+unchanged package, including its root-level manager and desktop images. The prefix
+contains a copy of the manager image as the stable entry and a closed
+`data/installation.json` marker (schema, application ID, channel, platform and ABI).
+The distribution writes `Software/<application-id>/EntryPoint` for its current
+machine-scope MSI registration. Discovery reads the 64-bit Windows registry view
+in both HKCU and HKLM; archives derive their prefix from this declared layout.
+
+`native/application` owns the shared read-only catalogue. It bounds the directory
+inventory, refuses redirected paths, checks identity, target and ABI, verifies the
+complete package inventory and manager executable, and selects the newest numeric
+version. Incomplete or incompatible versions do not win. The stable entry must
+match a manager in a complete compatible version. These consistency checks do not
+authenticate a publisher or sandbox a concurrent same-user file writer.
+The desktop dispatches the verified stable entry. After native admission and job
+escape, that entry (or an older version's manager) redirects to the selected
+version before taking the session lock or runtime ownership. The successor repeats
+admission and resolves the canonical installed default; an override never becomes
+managed through environment clearing. Dispatch still acknowledges launch only.
+
 This startup composition supports the selected complete package. Version cutover,
 manager IPC and tray controls remain separate plan work. A failed-version marker
 blocks startup/adoption conservatively until the installation catalogue can
@@ -1296,8 +1317,14 @@ is the latest release. Set `CPACK_WIX_PRODUCT_ICON` to the generated product ICO
 when producing the Windows installer. DEB requires dpkg tooling; RPM requires
 rpmbuild. Signing, notarization and native launch/upgrade tests remain release gates.
 
-MSI installs under Program Files/CADRUMO/app and owns Start menu/uninstall
-registration. Linux installs under `/opt/cadrumo` with desktop/icon registrations
+Windows payloads declaring the manager stage under `versions/<version>` with the
+stable entry at the installation prefix. The desktop shortcut targets that
+version's root-level desktop image; installer-added notices stay outside its
+immutable inventory. Payloads without a manager retain the existing `app` layout.
+MSI owns Start menu/uninstall registration. Its existing major-upgrade policy,
+dual-scope authoring and disposable-host upgrade acceptance remain rollout work;
+the catalogue alone does not implement manager cutover or obsolete-version removal.
+Linux installs under `/opt/cadrumo` with desktop/icon registrations
 under `/usr/share`. Preview uses separate names. macOS packages a CADRUMO.app
 bundle for the Applications folder. Runtime storage remains owned by Settings;
 these definitions add no services, scheduled tasks or automatic launch.
@@ -1310,4 +1337,6 @@ When staging has advanced, select the retained receipt for the older installatio
 with `CADRUMO_UNINSTALL_RECEIPT`.
 Changed files and unowned content remain. Symlink/junction traversal and filesystem
 root removal are refused. Native package managers own uninstall for system packages;
-the prefix helper is for isolated development installations.
+the prefix helper is for isolated development installations. It refuses removal
+when multiple version packages share the prefix, preserving their common entry
+and marker until the package owner implements version removal.

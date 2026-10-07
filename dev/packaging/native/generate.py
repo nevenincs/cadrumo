@@ -305,6 +305,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         "schema": CONTRACT_SCHEMA,
         "channel": {"build": build_channel, "installed_directory": STORAGE_ROOT.channel_directory(build_channel)},
         "layout": layout,
+        "installation_identity": {"application_id": release.application_id, "channel": release.channel},
         "python": version,
         "release": {
             "platform": layout["platform"],
@@ -348,6 +349,8 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         "TEMPORARY_DEFAULT": temporary.relative_path().as_posix(),
     }
     rust = [f"pub const ABI: u32 = {layout['abi']};"]
+    discovery = {"layout": layout, "installation_identity": contract["installation_identity"]}
+    rust.append(f"pub const INSTALLATION_CONTRACT: &str = {_rust_string(json.dumps(discovery))};")
     rust.extend(
         [
             f"pub const MANAGER_LOG: &str = {_rust_string(contract['desktop_defaults']['manager_log_file'])};",

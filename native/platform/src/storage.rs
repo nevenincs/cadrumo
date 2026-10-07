@@ -602,6 +602,17 @@ pub(crate) fn cleared(name: &str, profile: Profile, extra_allowed: &[&str]) -> b
             && !allowed)
 }
 
+/// Clear the canonical strict host classes without pinning a runtime storage root.
+/// Manager entry dispatch must let its successor resolve the installed default itself.
+pub fn strict_host_environment(
+    ambient: impl IntoIterator<Item = (OsString, OsString)>,
+) -> Vec<(OsString, OsString)> {
+    ambient
+        .into_iter()
+        .filter(|(name, _)| !cleared(&name.to_string_lossy(), Profile::Strict, &[]))
+        .collect()
+}
+
 /// Whether `ambient` carries a host-inherited pin such as the authority root.
 ///
 /// A launcher that must derive authority only from its own package refuses up front.

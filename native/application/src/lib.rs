@@ -28,6 +28,7 @@ pub mod child;
 pub mod component;
 pub mod diagnostics;
 pub mod error;
+pub mod installation;
 pub mod package;
 pub mod process;
 pub mod python;

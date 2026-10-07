@@ -13,6 +13,8 @@ pub mod contract;
 pub mod custody;
 pub mod diagnostics;
 pub mod identity;
+#[cfg(windows)]
+pub mod installation;
 pub mod installed;
 pub mod session;
 pub mod startup;

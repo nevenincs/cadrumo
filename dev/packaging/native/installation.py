@@ -17,7 +17,7 @@ from dev._paths import REPO_ROOT
 from .build_paths import build_paths
 from .hashing import digest
 from .installation_filesystem import file_identity, remove_owned_file
-from .layout import desktop_image
+from .layout import application_images, desktop_image, load_layout
 from .package_inventory import package_inventory, user_docs_bundled
 
 
@@ -110,6 +110,16 @@ def uninstall(prefix: Path, receipt: Path, *, dry_run: bool = False) -> list[str
     anchor = member(prefix, anchors[0])
     if not anchor.is_file() or digest(anchor) != owned[anchors[0]]:
         raise ValueError("Prefix does not contain the package identified by this receipt")
+    definition = load_layout("windows-x64")["installation"]
+    if anchors[0].startswith(definition["versions"] + "/"):
+        versions = member(prefix, definition["versions"])
+        for candidate in versions.iterdir():
+            candidate = member(prefix, candidate.relative_to(prefix).as_posix())
+            other_manifest = member(candidate, "data/package-manifest.json")
+            if other_manifest != anchor and other_manifest.exists():
+                raise ValueError(
+                    "Multiple installed versions share this prefix; version removal requires its package owner"
+                )
     removals = []
     preserved: list[str] = []
     # Preflight the entire receipt before removing anything.
@@ -175,23 +185,56 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
         raise ValueError("Payload and installer staging directory must not overlap")
     root.mkdir(parents=True, mode=0o700)
     target = value["target"]
+    manifest = json.loads(member(payload, "data/package-manifest.json").read_text(encoding="utf-8"))
+    managers = [image for image in application_images(manifest["layout"]) if image.target == "rust_manager"]
+    versioned = target.startswith("windows-") and bool(managers)
+    definition = manifest["layout"].get("installation", {})
+    if versioned:
+        if definition != load_layout("windows-x64")["installation"]:
+            raise ValueError("Manager payload requires the canonical installation layout; rebuild the package")
+        if len(managers) != 1 or managers[0].placement != ".":
+            raise ValueError("Versioned installation requires one root-level manager image")
+        if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", value["version"]):
+            raise ValueError("Versioned installation requires a canonical numeric release")
     if target.startswith("linux-"):
         destination = root / "opt" / value["package_name"]
     elif target.startswith("macos-"):
         if not desktop or "/" in desktop:
             raise ValueError("A macOS application bundle requires a root-level desktop executable")
         destination = root / f"{value['name']}.app" / "Contents/MacOS"
+    elif versioned:
+        destination = member(root, definition["versions"]) / value["version"]
     else:
         destination = root / "app"
     shutil.copytree(payload, destination, dirs_exist_ok=True)
     validate_payload(destination, identity_file, desktop)
-    license_dir = destination / "docs/licenses"
+    # Installer-added notices must not mutate the verified immutable package inventory.
+    license_dir = (root if versioned else destination) / "docs/licenses"
     license_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(REPO_ROOT / "LICENSE", license_dir / "CADRUMO.txt")
     shutil.copy2(REPO_ROOT / "NOTICE", license_dir / "NOTICE.txt")
     for file in license_dir.iterdir():
         if file.is_file():
             file.chmod(0o644)
+    if versioned:
+        manager = managers[0]
+        shutil.copy2(member(destination, manager.package_path), member(root, manager.package_path))
+        marker = member(root, definition["marker"])
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(
+            json.dumps(
+                {
+                    "schema": definition["schema"],
+                    "application_id": value["application_id"],
+                    "channel": value["channel"],
+                    "platform": manifest["layout"]["platform"],
+                    "abi": manifest["layout"]["abi"],
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     if target.startswith("linux-") and desktop:
         applications = root / "usr/share/applications"
         applications.mkdir(parents=True)
@@ -219,11 +262,14 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
             "NSHighResolutionCapable": True,
         }
         (destination.parent / "Info.plist").write_bytes(plistlib.dumps(plist))
-    if target.startswith("windows-") and desktop:
+    if target.startswith("windows-") and (desktop or versioned):
         wix = Element("Wix", xmlns="http://wixtoolset.org/schemas/v4/wxs")
         fragment = SubElement(wix, "Fragment")
-        menu = SubElement(fragment, "StandardDirectory", Id="ProgramMenuFolder")
-        folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=value["name"])
+        if desktop:
+            menu = SubElement(fragment, "StandardDirectory", Id="ProgramMenuFolder")
+            folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=value["name"])
+        else:
+            folder = SubElement(fragment, "DirectoryRef", Id="INSTALL_ROOT")
         component = SubElement(
             folder,
             "Component",
@@ -231,15 +277,19 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
             Bitness="always64",
             Guid=str(uuid5(UUID(value["upgrade_code"]), "start-menu")).upper(),
         )
-        shortcut = SubElement(
-            component,
-            "Shortcut",
-            Id="CADRUMO_LAUNCH",
-            Name=value["name"],
-            Target="[INSTALL_ROOT]app\\" + desktop.replace("/", "\\"),
-            WorkingDirectory="INSTALL_ROOT",
-        )
-        SubElement(shortcut, "ShortcutProperty", Key="System.AppUserModel.ID", Value=value["application_id"])
+        if desktop:
+            shortcut = SubElement(
+                component,
+                "Shortcut",
+                Id="CADRUMO_LAUNCH",
+                Name=value["name"],
+                Target="[INSTALL_ROOT]"
+                + destination.relative_to(root).as_posix().replace("/", "\\")
+                + "\\"
+                + desktop.replace("/", "\\"),
+                WorkingDirectory="INSTALL_ROOT",
+            )
+            SubElement(shortcut, "ShortcutProperty", Key="System.AppUserModel.ID", Value=value["application_id"])
         SubElement(
             component,
             "RegistryValue",
@@ -250,7 +300,18 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
             Value="[INSTALL_ROOT]",
             KeyPath="yes",
         )
-        SubElement(component, "RemoveFolder", Id="CADRUMO_REMOVE_MENU", On="uninstall")
+        if desktop:
+            SubElement(component, "RemoveFolder", Id="CADRUMO_REMOVE_MENU", On="uninstall")
+        if versioned:
+            SubElement(
+                component,
+                "RegistryValue",
+                Root="HKLM",
+                Key="Software\\" + value["application_id"],
+                Name="EntryPoint",
+                Type="string",
+                Value="[INSTALL_ROOT]" + managers[0].package_path.replace("/", "\\"),
+            )
         (build / "Desktop.wxs").write_bytes(tostring(wix, encoding="utf-8", xml_declaration=True))
         patch = Element("CPackWiXPatch")
         feature = SubElement(patch, "CPackWiXFragment", Id="#PRODUCTFEATURE")

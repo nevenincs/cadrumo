@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0d22534b4fb57d961c13404ee3aeb0117e9d5e15c833549c10d56eff08d373e'
+body_hash: 'sha256:72b99c7e37f1f9186dca1e651f4d60c49048af637dcbc5a7ffbab103b9a527cf'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -315,6 +315,38 @@ related:
 - `S09` `verify:` `desktop clippy-backend` -> `fail`
 - `S09` `verify:` `targeted rustfmt and git diff --check` -> `pass`
 - `S09` `by:` `Codex`
+- `S27` `M` `dev/packaging/native/generate.py`
+- `S27` `M` `dev/packaging/native/installation.py`
+- `S27` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S27` `M` `dev/packaging/tests/test_native_installation.py`
+- `S27` `M` `native/package-layout.json`
+- `S27` `M` `native/application/src/lib.rs`
+- `S27` `A` `native/application/src/installation.rs`
+- `S27` `A` `native/application/tests/installation.rs`
+- `S27` `M` `native/platform/src/lib.rs`
+- `S27` `M` `native/platform/src/storage.rs`
+- `S27` `A` `native/platform/src/installation.rs`
+- `S27` `M` `native/manager/src/lib.rs`
+- `S27` `M` `native/manager/src/main.rs`
+- `S27` `A` `native/manager/src/installation.rs`
+- `S27` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S27` `M` `native/desktop/src-tauri/src/manager/package_tests.rs`
+- `S27` `M` `native/desktop/src-tauri/src/manager/tests.rs`
+- `S27` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S27` `M` `native/CONTRACT.md`
+- `S27` `M` `.vault/audit/2026-10-05-runtime-manager-architecture-audit.md`
+- `S27` `verify:` `owning manager fixture cargo test (155 tests)` -> `pass`
+- `S27` `verify:` `shared application cargo test (70 tests, followed by final discovery fixture suite of 5 tests)` -> `pass`
+- `S27` `verify:` `desktop test-unit manager:: (17 tests)` -> `pass`
+- `S27` `verify:` `manager and application Clippy --all-targets -- -D warnings` -> `pass`
+- `S27` `verify:` `desktop clippy-backend` -> `pass`
+- `S27` `verify:` `pytest native installation and distribution preparation (28 pass, 2 POSIX skips)` -> `pass`
+- `S27` `verify:` `pytest unchanged incremental-generation and storage-contract coverage` -> `pass`
+- `S27` `verify:` `Ruff check/format and ty check on modified Python owners/tests` -> `pass`
+- `S27` `verify:` `targeted rustfmt and git diff --check` -> `pass`
+- `S27` `verify:` `vault check --feature runtime-manager-architecture` -> `pass`
+- `S27` `verify:` `vault check all` -> `fail`
+- `S27` `by:` `Codex`
 
 ## Notes
 
@@ -342,3 +374,4 @@ related:
 - `S25` Root-cause follow-up: fresh runtime startup 11605.89ms; `main_import` 5710.24ms, `registry_prepare` 5573.05ms, `listener_listen` 6.947ms. Independent unprofiled import+registry 11865.39ms. Profile: 1806 strict schema calls, 481 distinct compiled models, 14.381s of 15.422s in strict schema processing (instrumented, not benchmark latency). Separate shutdown probe: runtime returned at 214.51ms, atexit marker 215.33ms, process exit 1766.45ms. No registry semantics changed or package rebuilt; earlier 18.93s versus now 11.61s is not an optimization claim. Full evidence build/runtime-root-cause-report.json with source hashes and profile artifacts. Headless test passed in 14.89s. Shared Git index lock still present; no lock removed.
 - `S26` User authorized implementation of React ghost UI for asynchronous Tauri startup. Reused existing native manager launch and canonical readiness reads without Rust edits, new state libraries or package compilation. Corrected related missing `starting_services` declaration in canonical desktop locale projection and regenerated only chrome strings. React waits are bounded and stale read results cannot restore an unmounted owner. Evidence and source hashes: build/runtime-startup-ui/verification.json; visually inspected loading.png. Browser scenarios prove React behavior, native source runtime smoke proves native IPC; session-1 desktop GUI not claimed. Existing shared Git index.lock still blocks checkpoint; no lock removed and no other workstream staged.
 - `S09` Desktop Clippy fails in a concurrent sign-in test outside this step; the manager and changed consumer tests pass. Interactive installation and OS session-end acceptance remain disposable-host rollout obligations.
+- `S27` Concrete discovery source fix and scoped review pass. S27 remains open because the required repository-wide vault check fails on an unrelated approved Google plan's non-accepted backup-custody ADR. Full format-specific installation/upgrade and interactive-session acceptance remain excluded disposable-host rollout gates. Concurrent source edits and registry-authority documentation hunks are preserved and excluded from this commit.

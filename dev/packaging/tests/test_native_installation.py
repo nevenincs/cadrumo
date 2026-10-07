@@ -15,6 +15,7 @@ from dev.packaging.native import installation, installation_filesystem
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import identity
 from dev.packaging.native.installation import inventory, member, prepare, uninstall, validate_payload, verify_inventory
+from dev.packaging.native.layout import load_layout
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -38,7 +39,7 @@ def cmake_paths(tmp_path: Path) -> None:
     )
 
 
-def payload_fixture(tmp_path: Path, target: str) -> tuple[Path, Path]:
+def payload_fixture(tmp_path: Path, target: str, *, manager: bool = False) -> tuple[Path, Path]:
     value = asdict(identity(target))
     identity_file = tmp_path / "identity.json"
     identity_file.write_text(json.dumps(value), encoding="utf-8")
@@ -77,6 +78,13 @@ def payload_fixture(tmp_path: Path, target: str) -> tuple[Path, Path]:
             ],
         },
     }
+    if manager:
+        layout = load_layout("windows-x64")
+        manifest["layout"].update({key: layout[key] for key in ("abi", "platform", "installation")})
+        manager_image = next(image for image in layout["application_images"] if image["target"] == "rust_manager")
+        manifest["layout"]["application_images"].append(dict(manager_image))
+        (root / "cadrumo-manager").write_bytes(b"synthetic manager fixture")
+        manifest["files"]["cadrumo-manager"] = digest(root / "cadrumo-manager")
     (root / "data/package-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return root, identity_file
 
@@ -107,6 +115,49 @@ def test_native_layout_projects_registration(tmp_path: Path, target: str) -> Non
         assert registry is not None
         assert registry.attrib["Root"] == "HKLM"
         assert registry.attrib["Key"] == "Software\\md.neve.cadrumo"
+
+
+@pytest.mark.parametrize("desktop", [True, False])
+def test_windows_manager_stage_has_stable_entry_and_unmodified_version_inventory(tmp_path: Path, desktop: bool) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64", manager=True)
+    desktop_entry = "cadrumo" if desktop else None
+    root = prepare(payload, identity_file, tmp_path / "build", desktop_entry)
+    version = json.loads(identity_file.read_text(encoding="utf-8"))["version"]
+    package = root / "versions" / version
+    validate_payload(package, identity_file, "cadrumo")
+    assert (root / "cadrumo-manager").read_bytes() == (package / "cadrumo-manager").read_bytes()
+    assert (package / "cadrumo").is_file()
+    assert (root / "docs/licenses/CADRUMO.txt").is_file()
+    assert not (package / "docs/licenses/CADRUMO.txt").exists()
+    marker = json.loads((root / "data/installation.json").read_text(encoding="utf-8"))
+    assert marker == {
+        "schema": 1,
+        "application_id": "md.neve.cadrumo",
+        "channel": "stable",
+        "platform": "windows-x64",
+        "abi": 1,
+    }
+    namespaces = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
+    wix = ElementTree.parse(tmp_path / "build/installation/metadata/Desktop.wxs")
+    entry = wix.find(".//w:RegistryValue[@Name='EntryPoint']", namespaces)
+    assert entry is not None
+    assert entry.attrib["Root"] == "HKLM"
+    assert entry.attrib["Value"] == "[INSTALL_ROOT]cadrumo-manager"
+    shortcut = wix.find(".//w:Shortcut", namespaces)
+    if desktop:
+        assert shortcut is not None
+        assert shortcut.attrib["Target"] == f"[INSTALL_ROOT]versions\\{version}\\cadrumo"
+    else:
+        assert shortcut is None
+    assert prepare(payload, identity_file, tmp_path / "build", desktop_entry) == root
+    # A receipt for one version cannot remove entry points shared by another version.
+    other = root / "versions/0.0.1/data"
+    other.mkdir(parents=True)
+    (other / "package-manifest.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="Multiple installed versions"):
+        uninstall(root, tmp_path / "build/installation/metadata/installation.json")
+    assert (root / "cadrumo-manager").is_file()
+    assert (package / "cadrumo").is_file()
 
 
 def test_payload_rejects_modified_and_unowned_files(tmp_path: Path) -> None:
