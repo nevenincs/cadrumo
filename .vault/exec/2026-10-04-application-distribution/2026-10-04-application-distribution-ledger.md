@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea78fbb359482054eb7ce42f020c9ee7e2ee2c35e15418aee4df71fe4bf8c894'
+body_hash: 'sha256:745fd671325b999b187202fd00a32d15985d35ca81e1f81072dfa39e3c6eef86'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -81,9 +81,17 @@ related:
 - `S05` `verify:` `pytest native installation, build paths, artifact identity: 33 passed, 2 POSIX skips` -> `pass`
 - `S05` `verify:` `CMake desktop-paths-test, desktop-frontend-build, desktop-frontend-check` -> `pass`
 - `S05` `verify:` `ruff and ty affected Python modules` -> `pass`
+- `S04` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S04` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S04` `A` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S04` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/tests/test_native_installation.py dev/packaging/tests/test_native_installation_windows.py dev/packaging/native/tests/test_distribution_prepare.py dev/packaging/tests/test_distribution_identity.py (40 passed, 2 POSIX-only skips, 8 Windows cases deselected)` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/tests/test_native_installation_windows.py (8 passed)` -> `pass`
+- `S04` `verify:` `vaultspec-core vault check all (0 errors, 14 concurrent/index warnings)` -> `pass`
+- `S04` `verify:` `git diff --check for Windows installer decision and owning audit/plan` -> `pass`
 
 ## Notes
 
 - `S03` Native MSI RPM macOS and full platform lifecycle evidence remain in S04; WiX UI extension setup requires operator EULA acceptance.
 - `S05` S05 remains open. Automatic approval review rejected both PowerShell deletion attempts for the enumerated disposable build files and directories, including literal absolute paths, with blocked by policy and no further reason. No build clutter was removed. Source-build paths are centralized; desktop and standalone distribution output integration and physical cleanup remain pending.
 - `S05` Extended CMake path ownership to desktop and native installation staging. Removed development-status labels from build-framework documentation. Existing physical clutter remains blocked by the previously recorded deletion rejection; S05 remains open.
+- `S04` S04 remains open: forty-eight passing fixture tests do not establish live MSI/release acceptance. S03 reopened for the high current-template Removing major-upgrade finding. Proposed two-product MSI ownership and transaction contract requires acceptance before dependent implementation. Requested a disposable interactive Windows runner; current host is Session 0, has no VM, Sandbox disabled, Docker linux. No real install/registry/login/reboot/logoff action.

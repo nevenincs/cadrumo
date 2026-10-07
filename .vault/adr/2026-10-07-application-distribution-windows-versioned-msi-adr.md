@@ -1,0 +1,61 @@
+---
+tags:
+  - '#adr'
+  - '#application-distribution'
+date: '2026-10-07'
+modified: '2026-10-07'
+body_schema: 'body-v2'
+body_hash: 'sha256:edfbed07e27e4fb3fd3b21663795d299c06a7b48597adee0c74349be8a3ca40b'
+related:
+  - "[[2026-10-04-application-distribution-adr]]"
+  - "[[2026-10-04-runtime-manager-architecture-adr]]"
+  - "[[2026-10-05-runtime-manager-architecture-audit]]"
+  - "[[2026-10-04-application-distribution-audit]]"
+---
+
+# `application-distribution` adr: `Windows immutable version products and stable registration` | (**status:** `proposed`)
+
+## Problem Statement
+
+The manager's accepted architecture requires side-by-side versions, two installation scopes and preservation of in-use program files. The current combined CPack MSI owns a version and its shared entry together and uses a removing major upgrade. Complete installer acceptance cannot pass that policy. The operator requested completing installer/upgrade acceptance on 2026-10-07; this proposal makes the missing Windows ownership choice concrete for review.
+
+## Considerations
+
+Current source, the pinned CPack template, primary Windows Installer rules and host limitations are recorded in 2026-10-04-application-distribution-audit. The accepted 2026-10-04-application-distribution-adr and 2026-10-04-runtime-manager-architecture-adr already decide topology, binary placement, privilege and lifecycle authority. This record refines their format-specific ownership prerequisite; it does not reverse or supersede either decision.
+
+## Considered options
+
+- Keep one combined major-upgrade MSI: cannot preserve a prior product's in-use version; rejected.
+- Remove MajorUpgrade from a combined MSI: leaves successive products competing for shared entry, marker and registration resources; component ownership and uninstall remain unresolved; rejected.
+- One immutable version MSI per release, behind a separate stable registration MSI: preferred. More authoring and two-product transaction/recovery work, but version removal cannot implicitly remove shared launch registration or another version.
+
+## Constraints
+
+This proposal remains unaccepted. No dependent product-ownership or persisted installer protocol executes until the operator accepts this choice. Manager IPC, handoff, rollback, preferences and package removal retain their accepted owners and open Steps; passing this ADR or its local tests does not complete them.
+
+1. The verified package remains unchanged under the canonical prefix's versions/<major.minor.patch>. Manager and desktop images remain at each package root. Only the distribution owner adds version-independent prefix resources; no business data, credential or profile connection enters an MSI.
+2. Each release/scope/channel/target has a distinct immutable version product and unique path-derived component ownership. Its MSI owns only that version. Its normal install/upgrade never schedules removal or replacement of another version. Same-version different bytes are refused; repair uses the identified release inventory, not a replacement disguised as repair.
+3. One registration product per scope/channel/target owns the stable manager copy, prefix marker, shared notices, EntryPoint/InstallLocation, login registration and shortcuts. Compatible updates preserve shared component identity. Version products never own those resources. Registration records which version supplies its manager copy and desktop shortcut; those anchor versions remain installed until registration is safely advanced. The current catalogue requirement that the stable copy match a complete version is preserved.
+4. Identity projections distinguish legacy combined, registration and version product roles and user/machine scope. ProductCode and PackageCode retain their documented independent lifetimes; component identity includes its actual resource location. Existing published family identifiers are not silently reinterpreted. Legacy combined products or ambiguous ownership refuse migration until released fixtures and a separately reviewed migration prove preservation.
+5. Build separate perUser and perMachine packages from the same owners. Per-user installation needs no administrator token and registers HKCU; per-machine installation uses installer elevation and HKLM. Program-file locations follow native conventions and the explicit scope. The runtime and manager remain unelevated interactive-user processes. Installing never invokes the manager from an elevated context or turns an override into a managed default.
+6. Scope admission refuses a conflicting installation for an affected account. Machine admission checks native registered products across account contexts rather than treating the elevated installer's HKCU as every user's hive. Missing evidence, malformed ownership or inaccessible inventory is a refusal. If conflicting scopes nevertheless exist, this-user precedence at manager startup remains the accepted fallback; it grants no second runtime owner.
+7. Install a new version and prove its inventory before updating registration. Publication/removal needs installer-owned transaction state outside the immutable package inventory, consumed through the shared catalogue owner; an uncommitted or removing native product is not eligible. Atomic status publication, concurrent startup and native rollback must be verified. Failed registration preserves the prior launch configuration and reports incomplete work; rollback never deletes a version acquired by a process.
+8. Installer maintenance does not use Restart Manager to close CADRUMO processes, force a reboot or signal a runtime. Package-owned removal excludes new version launches while proving that no process in any session uses it. If exclusion or liveness cannot be proved, retain the product and report deferred maintenance. This-user cleanup is requested through its native package manager; all-users cleanup requires the next elevated maintenance run. Runtime cutover and readiness rollback stay with the manager.
+9. Uninstall removes the scoped shared registrations and stable entry, then permits running managers to detect removal and drain gracefully. In-use version products remain for safe deferred native removal; user state is preserved. Directly deleting program directories is not a substitute for native package ownership.
+10. Signing, matching WiX tools/extensions, any applicable tool terms, real release-payload proof and disposable-host acceptance remain separate gates. An artifact with no such evidence is not manager-shippable.
+
+## Implementation
+
+We will author two MSI roles through the existing CMake distribution graph and its Python identity/layout owners. A custom WiX template removes cross-release RemoveExistingProducts behavior from version products. The registration product handles only its shared resources and scoped registration. A CMake-owned WiX bundle is the initial implementation hypothesis for sequencing the two products and exposing one installer; it adds no elevated runtime broker. Generated product locators and native maintenance status belong to the installation contract, not duplicated manager or desktop declarations.
+
+Before source execution, refine the owning distribution plan for role/scope identities, immutable product authoring, transaction and scope admission, safe repair/uninstall, and a real acceptance harness. The existing manager plan owns IPC, default login start and opt-out, designated successor handoff/rollback and uninstall detection. A safe native installer is required before those package acceptance runs.
+
+Acceptance uses two genuinely built different releases, exact artifact/manifest identities and an explicitly disposable Windows host. Cover both scopes and channels, standard/admin accounts, relocated Unicode/space prefixes, an old manager/runtime and desktop held live during installation, incomplete/corrupt/interrupted candidates, idle/busy handoff, lost readiness and rollback, concurrent sessions, conflicting scopes, repair and uninstall with user-state/unowned-file preservation, reboot-deferred residue and actual login/logoff/cancelled shutdown. Record build, product/component identities, logs, process image/creation-time observations and before/after hashes. Catalogue fixtures, ZIP staging and Session-0 refusal do not satisfy these gates.
+
+## Rationale
+
+Separating immutable version ownership from shared registration lets Windows Installer retain its repair/uninstall responsibilities without a new release removing the old runtime's program files. It follows the already accepted topology while making the installer-specific lifetimes explicit. Removing one XML upgrade element alone cannot solve competing shared-resource ownership.
+
+## Consequences
+
+The Windows installer becomes a composed delivery rather than one combined product. Disk use increases while anchor or in-use versions are retained. Transaction publication and safe maintenance require shared catalogue integration and new native acceptance evidence. The existing accepted ADRs need no wording change or supersession. Linux/RPM/DEB and macOS ownership remain separate format decisions and platform gates; this Windows proposal establishes none of their acceptance. Approval authorizes this ownership design, not public distribution, tool-term acceptance, deployment or profile migration.
