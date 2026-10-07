@@ -5,47 +5,39 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:389b9d6ac526d21d719fb231cbf56e0179cc74e73f8266cb28374e9e27fe1b5c'
+body_hash: 'sha256:13a4424caba2864d624184d01c6706a60804151f63bf2a2388971423c0a66fd1'
 related:
   - "[[2026-10-07-desktop-environment-readiness-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `desktop-environment-readiness` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S02` `M` `dev/tests/test_storage_bootstrap_parity.py`
 - `S02` `verify:` `focused CLI TUI runtime attachment pytest unit suite` -> `pass`
 - `S02` `verify:` `storage bootstrap parity pytest integration (7 tests)` -> `pass`
 - `S02` `verify:` `ty check dev/tests/test_storage_bootstrap_parity.py` -> `pass`
 - `S02` `verify:` `ruff check and format storage bootstrap parity` -> `pass`
+- `S01` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S01` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S01` `M` `src/cadrumo/core/observability/tests/fingerprint.py`
+- `S01` `M` `src/cadrumo/core/tests/test_storage_fingerprint_participation_gate.py`
+- `S01` `M` `dev/packaging/native/generate.py`
+- `S01` `A` `dev/packaging/native/tests/test_desktop_workspace.py`
+- `S01` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S01` `M` `native/desktop/src-tauri/src/python/environment.py`
+- `S01` `M` `native/desktop/src-tauri/src/terminal/mod.rs`
+- `S01` `M` `native/desktop/src-tauri/src/terminal/console.rs`
+- `S01` `M` `native/desktop/src-tauri/src/terminal/tests.rs`
+- `S01` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S01` `M` `native/desktop/tests/packaged.test.mjs`
+- `S01` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S01` `verify:` `desktop tauri.mjs test-unit (208 tests)` -> `pass`
+- `S01` `verify:` `focused taxonomy generation workspace and fingerprint Python tests (33 unique)` -> `pass`
+- `S01` `verify:` `scoped Ruff format and diff check` -> `pass`
 
 ## Notes
 
 - `S02` Existing interactive receipt admission and verified native IPC already implement attachment. Added real subprocess coverage for inherited storage and authority pins from a workspace outside the checkout; no production admission changes needed.
+- `S01` Native test log build/desktop-windows-x64/environment-unit-tests.log. Full packaged live acceptance not run. Added fixed taxonomy exclusions regression to keep operator workspace out of replay drift fingerprints.

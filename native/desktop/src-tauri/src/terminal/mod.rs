@@ -54,38 +54,28 @@ impl Kind {
 }
 
 impl Program {
-    /// The launch of one terminal kind. Every kind receives the same pinned
-    /// child environment. Interactive shells start in the user's home and
-    /// never inside the storage root, so a relative write cannot land a
-    /// plaintext file in custody; the TUI starts in the storage root.
+    /// All terminal kinds share the pinned environment, bundled command path
+    /// and taxonomy-owned operator workspace.
     fn for_kind(launch: &Launch, kind: Kind) -> Result<Self> {
-        let environment = launch.child.environment().clone();
         let interpreter = launch.child.executable().to_owned();
-        if matches!(kind, Kind::Console | Kind::Python)
-            && (!launch.home.is_absolute()
-                || !launch.home.is_dir()
-                || launch.home.starts_with(&launch.working_directory))
-        {
-            return Err(failure(ErrorCode::EnvironmentFailed));
-        }
+        let environment =
+            console::with_package_first(launch.child.environment().clone(), &interpreter)?;
+        console::validate_workspace(&launch.console_workspace, &launch.working_directory)?;
         Ok(match kind {
             Kind::Console => {
                 let (executable, arguments) = console::shell(&environment)?;
                 Self {
                     executable,
                     arguments,
-                    directory: launch.home.clone(),
-                    environment: console::with_bin_first(
-                        environment,
-                        &console::package_bin(&interpreter)?,
-                    )?,
+                    directory: launch.console_workspace.clone(),
+                    environment,
                     role: ProcessRole::Console,
                 }
             }
             Kind::Python => Self {
                 executable: interpreter,
                 arguments: Vec::new(),
-                directory: launch.home.clone(),
+                directory: launch.console_workspace.clone(),
                 environment,
                 role: ProcessRole::Repl,
             },
@@ -95,7 +85,7 @@ impl Program {
                     .into_iter()
                     .map(OsString::from)
                     .collect(),
-                directory: launch.working_directory.clone(),
+                directory: launch.console_workspace.clone(),
                 environment,
                 role: ProcessRole::Tui,
             },

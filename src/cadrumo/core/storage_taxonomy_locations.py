@@ -129,6 +129,18 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
+        StorageCategory.CONSOLE_WORKSPACE,
+        "workspace",
+        dormant_reason=(
+            "The native desktop host projects this operator workspace as the cwd for its console, "
+            "Python and TUI terminals; no Python product module reads it. It is not encrypted custody."
+        ),
+        override_policy=StorageOverridePolicy.FIXED,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.EXPORTS,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
         StorageCategory.TEMPORARY_FILES,
         "tmp",
         create_explicit_directory=True,

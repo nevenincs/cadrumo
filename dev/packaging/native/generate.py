@@ -332,6 +332,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         },
         "runtime_exit": runtime_exit_section(),
         "desktop_defaults": {
+            "console_workspace": STORAGE_TAXONOMY[StorageCategory.CONSOLE_WORKSPACE].subpath,
             "webview": STORAGE_TAXONOMY[StorageCategory.DESKTOP_WEBVIEW].subpath,
             "logs": STORAGE_TAXONOMY[StorageCategory.LOGS].subpath,
             "log_file": STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath,

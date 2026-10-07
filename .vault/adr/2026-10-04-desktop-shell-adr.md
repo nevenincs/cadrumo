@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e6b65d8817e2b1fdd8f05ce40604d3604307f896cec8095053f09d2a7a940b8e'
+body_hash: 'sha256:18834ca830b088c348840c3b33a87378b7a3bdd7f1589a94f4b3a5f686f80c3d'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -98,6 +98,10 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - Interactive shells (`console`, `python`) never start inside the storage root. A relative write such as `open("notes.csv", "w")` would otherwise land a plaintext file inside the custody tree. Private data enters that tree only through approved encrypted custody.
 - Shell settings are frontend preferences only. They never write product Settings or reach the backend.
 - This record replaces these items in `2026-10-03-application-packaging-adr`: the separate Tauri `index.html` landing page, `docs/index.html` exposed through asset integration, and the runtime-control UI listed for desktop integration, which moves to the runtime manager. That record's author reconciles the wording.
+
+
+Amendment approved 2026-10-07 under the user's environment-readiness instruction: the earlier requirement for console and Python REPL to start in the generic user home is replaced by a dedicated console workspace declared in the canonical storage taxonomy beneath the resolved CADRUMO root. This workspace is for operator-authored scripts and scratch files, not encrypted profile custody. All desktop terminal kinds use this workspace and the same pinned storage/environment and bundled command search path. Standalone command invocations retain the caller's cwd for relative arguments. Authentication still uses native peer verification and the existing profile receipt flow; profile identifiers or credentials are not conveyed through new environment variables. Runtime start/supervision remains with the manager. This amendment also supersedes the home-cwd sentence in the terminal implementation specification below; all other shell authority constraints stand.
+
 
 ## Implementation
 

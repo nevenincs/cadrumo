@@ -8,7 +8,7 @@ from pathlib import Path
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.i18n.render import output_language
 from cadrumo.core.logging import LOG_FILE_FORMAT, default_log_file_path
-from cadrumo.core.storage_environment import configured_storage_root
+from cadrumo.core.storage_environment import configured_storage_root, ensure_storage_root
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 
@@ -38,7 +38,7 @@ json.dump(
         log_max_bytes=settings.cadrumo_log_file_max_bytes,
         log_backups=settings.cadrumo_log_file_backup_count,
         output_language=output_language(),
-        home=str(Path.home().resolve()),
+        console_workspace=str(ensure_storage_root(storage_path(StorageCategory.CONSOLE_WORKSPACE, settings=settings))),
     ),
     sys.stdout,
 )

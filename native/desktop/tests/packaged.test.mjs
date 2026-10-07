@@ -186,7 +186,7 @@ function projection(config, packageRoot, env) {
     logs: value.logs,
     logFile: value.log_file,
     outputLanguage: value.output_language,
-    home: value.home,
+    consoleWorkspace: value.console_workspace,
   };
 }
 

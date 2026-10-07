@@ -28,6 +28,7 @@ struct Contract {
 #[cfg(windows)]
 #[derive(Deserialize)]
 struct DesktopDefaults {
+    console_workspace: RelativePath,
     webview: RelativePath,
     logs: RelativePath,
     log_file: RelativePath,
@@ -73,7 +74,7 @@ struct Projection {
     log_max_bytes: u64,
     log_backups: u32,
     output_language: String,
-    home: PathBuf,
+    console_workspace: PathBuf,
 }
 
 pub struct Launch {
@@ -83,8 +84,8 @@ pub struct Launch {
     /// The webview profile directory, which also holds the window state.
     pub webview: PathBuf,
     pub diagnostics: Arc<Diagnostics>,
-    /// The user's home directory, where interactive shells start.
-    pub home: PathBuf,
+    /// Operator workspace for all terminals; separate from encrypted profile custody.
+    pub console_workspace: PathBuf,
     pub package_root: PathBuf,
     /// The packaged user documentation and its manifest inside the package.
     pub docs_root: PathBuf,
@@ -154,7 +155,7 @@ pub async fn resolve(
         working_directory: projection.storage,
         webview: projection.webview,
         diagnostics,
-        home: projection.home,
+        console_workspace: projection.console_workspace,
         package_root: root,
         docs_root,
         docs_manifest,
@@ -315,37 +316,6 @@ fn default_projection(
     if !uses_default_members(parent, settings_storage_names, ROOT_VARIABLE) {
         return Ok(None);
     }
-    // Python's Path.home on Windows reads USERPROFILE, otherwise HOMEDRIVE +
-    // HOMEPATH. Keep the query fallback for unusual host home configurations.
-    let lookup = |name: &str| {
-        parent
-            .environment
-            .iter()
-            .rev()
-            .find(|(key, _)| key.to_string_lossy().eq_ignore_ascii_case(name))
-            .map(|(_, value)| value.clone())
-    };
-    let home = lookup("USERPROFILE").or_else(|| {
-        let mut value = lookup("HOMEDRIVE").unwrap_or_default();
-        value.push(lookup("HOMEPATH")?);
-        Some(value)
-    });
-    let Some(home) = home.map(PathBuf::from).filter(|path| path.is_absolute()) else {
-        return Ok(None);
-    };
-    // Unlike storage, a home may legitimately traverse junctions. Resolve them
-    // as Path.home().resolve() does, retaining Python for a missing home.
-    let Ok(home) = std::fs::canonicalize(home) else {
-        return Ok(None);
-    };
-    let Some(home) = home.to_str() else {
-        return Ok(None);
-    };
-    let home = if let Some(unc) = home.strip_prefix(r"\\?\UNC\") {
-        PathBuf::from(format!(r"\\{unc}"))
-    } else {
-        PathBuf::from(home.strip_prefix(r"\\?\").unwrap_or(home))
-    };
     let environment = prepared_environment(executable, &parent.environment)
         .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(std::io::Error::other(e)))?;
     let environment: BTreeMap<String, String> = environment
@@ -372,6 +342,10 @@ fn default_projection(
     // The shell needs only storage and presentation defaults. Profile/pointer
     // validation remains with the canonical account CLI read, which can report
     // its typed refusal in the visible window instead of delaying its creation.
+    let console_workspace = path(&defaults.console_workspace)?;
+    std::fs::create_dir_all(&console_workspace)
+        .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
+    let console_workspace = path(&defaults.console_workspace)?;
     let projection = Projection {
         webview: path(&defaults.webview)?,
         logs: path(&defaults.logs)?,
@@ -384,7 +358,7 @@ fn default_projection(
         log_max_bytes: defaults.log_max_bytes,
         log_backups: defaults.log_backups,
         output_language: defaults.output_language.clone(),
-        home,
+        console_workspace,
     };
     if !admissible(&projection, settings_storage_names) {
         return Err(failure(ErrorCode::EnvironmentFailed));
@@ -399,7 +373,7 @@ fn admissible(projection: &Projection, settings_storage_names: &[String]) -> boo
         &projection.logs,
         &projection.log_file,
         &projection.manager_log_file,
-        &projection.home,
+        &projection.console_workspace,
     ]
     .iter()
     .all(|path| path.is_absolute())
@@ -487,6 +461,61 @@ mod tests {
         }
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn native_projection_creates_workspace_and_refuses_non_directory_or_link() {
+        let contract: Contract =
+            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
+        let scratch = std::env::temp_dir().join(format!(
+            "cadrumo-workspace-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let package = scratch.join("package");
+        let manifest = contract.layout.files.package_manifest.under(&package);
+        std::fs::create_dir_all(manifest.parent().unwrap()).unwrap();
+        std::fs::write(manifest, "{}").unwrap();
+        let storage = scratch.join("storage");
+        let workspace = storage.join("workspace");
+        let executable = contract.layout.paths.executable.under(&package);
+        let mut parent = Parent::current().unwrap();
+        parent.environment.retain(|(key, _)| {
+            !contract
+                .storage_environment_allowlist
+                .iter()
+                .any(|name| key.eq_ignore_ascii_case(name))
+        });
+        parent.environment.push((
+            cadrumo_platform::ROOT_VARIABLE.into(),
+            storage.clone().into_os_string(),
+        ));
+        let project = || {
+            default_projection(
+                &executable,
+                &parent,
+                &contract.desktop_defaults,
+                &contract.storage_environment_allowlist,
+            )
+        };
+        let projection = project().unwrap().unwrap();
+        assert_eq!(projection.console_workspace, workspace);
+        assert!(workspace.is_dir());
+        std::fs::remove_dir(&workspace).unwrap();
+        std::fs::write(&workspace, "not a directory").unwrap();
+        assert!(project().is_err());
+        std::fs::remove_file(&workspace).unwrap();
+        let other = scratch.join("elsewhere");
+        std::fs::create_dir(&other).unwrap();
+        std::os::windows::fs::symlink_dir(&other, &workspace).unwrap();
+        assert!(project().is_err());
+        assert!(std::fs::read_dir(&other).unwrap().next().is_none());
+        std::fs::remove_dir(&workspace).unwrap();
+        std::fs::remove_dir_all(scratch).unwrap();
+    }
+
     #[cfg(all(windows, feature = "live-package-tests"))]
     #[tokio::test]
     async fn native_defaults_match_the_real_python_projection() {
@@ -552,7 +581,7 @@ mod tests {
             log_max_bytes,
             log_backups,
             output_language,
-            home
+            console_workspace
         );
         eprintln!("native projection: {native_elapsed:?}; Python projection: {python_elapsed:?}");
 
@@ -657,7 +686,7 @@ mod tests {
             "log_max_bytes": 1,
             "log_backups": 1,
             "output_language": "es",
-            "home": "C:/Users/someone",
+            "console_workspace": "C:/state/var/storage/workspace",
         }))
         .unwrap()
     }
@@ -695,7 +724,7 @@ mod tests {
         admitted.logs = storage.join("logs");
         admitted.log_file = admitted.logs.join("cadrumo.log");
         admitted.manager_log_file = admitted.logs.join("cadrumo-manager.log");
-        admitted.home = std::env::temp_dir();
+        admitted.console_workspace = storage.join("workspace");
         admitted.webview = storage.join("webview");
         admitted.storage = storage;
         assert!(admissible(&admitted, &owned));
@@ -721,8 +750,14 @@ mod tests {
         let (_, projection, _) = project(&root, &parent, &Diagnostics::default())
             .await
             .unwrap();
-        assert!(projection.home.is_absolute() && projection.home.is_dir());
-        assert_ne!(projection.home, projection.storage);
+        assert!(
+            projection.console_workspace.is_absolute() && projection.console_workspace.is_dir()
+        );
+        assert!(
+            projection
+                .console_workspace
+                .starts_with(&projection.storage)
+        );
         assert_eq!(
             projection.log_file.parent(),
             Some(projection.logs.as_path())

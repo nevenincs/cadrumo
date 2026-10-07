@@ -71,6 +71,41 @@ fn variable<'a>(environment: &'a BTreeMap<OsString, OsString>, name: &str) -> Op
         .map(|(_, value)| value.as_os_str())
 }
 
+/// Prefer both native commands and the bundled Python interpreter.
+pub fn with_package_first(
+    environment: BTreeMap<OsString, OsString>,
+    interpreter: &Path,
+) -> Result<BTreeMap<OsString, OsString>> {
+    let bin = package_bin(interpreter)?;
+    let python = interpreter
+        .parent()
+        .ok_or_else(|| failure(ErrorCode::EnvironmentFailed))?;
+    with_bin_first(with_bin_first(environment, python)?, &bin)
+}
+
+/// Refuse a moved, missing or linked workspace before opening another terminal.
+pub fn validate_workspace(workspace: &Path, storage: &Path) -> Result<()> {
+    let invalid = || failure(ErrorCode::EnvironmentFailed);
+    if !workspace.is_absolute()
+        || workspace == storage
+        || !workspace.starts_with(storage)
+        || !workspace.is_dir()
+    {
+        return Err(invalid());
+    }
+    #[cfg(windows)]
+    cadrumo_platform::storage::validated_absolute_path(workspace)
+        .map_err(|e| invalid().caused_by(e))?;
+    #[cfg(not(windows))]
+    for ancestor in workspace.ancestors() {
+        let metadata = std::fs::symlink_metadata(ancestor).map_err(|e| invalid().caused_by(e))?;
+        if metadata.is_symlink() {
+            return Err(invalid());
+        }
+    }
+    Ok(())
+}
+
 /// Returns `environment` with `bin` ahead of every other search directory.
 pub fn with_bin_first(
     mut environment: BTreeMap<OsString, OsString>,
@@ -94,10 +129,24 @@ pub fn with_bin_first(
             (!existing.is_empty())
                 .then(|| std::env::split_paths(&existing))
                 .into_iter()
-                .flatten(),
+                .flatten()
+                .filter(|path| {
+                    if cfg!(windows) {
+                        !path.as_os_str().eq_ignore_ascii_case(bin.as_os_str())
+                    } else {
+                        path != bin
+                    }
+                }),
         ),
     )
     .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
+    environment.retain(|name, _| {
+        if cfg!(windows) {
+            !name.eq_ignore_ascii_case("PATH")
+        } else {
+            name.as_os_str() != "PATH"
+        }
+    });
     environment.insert(key, joined);
     Ok(environment)
 }
@@ -250,6 +299,41 @@ mod tests {
             created.get(OsStr::new("PATH")),
             Some(&bin.clone().into_os_string())
         );
+    }
+
+    #[test]
+    fn workspace_must_be_an_existing_directory_below_storage() {
+        let workspace = std::fs::canonicalize(std::env::temp_dir()).unwrap();
+        let storage = workspace.parent().unwrap();
+        assert!(validate_workspace(&workspace, storage).is_ok());
+        assert!(validate_workspace(&workspace, &workspace).is_err());
+        assert!(validate_workspace(&workspace.join("cadrumo-workspace-absent"), storage).is_err());
+        assert!(validate_workspace(Path::new("workspace"), storage).is_err());
+        assert!(validate_workspace(&workspace, &workspace.join("other")).is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn search_path_has_only_one_case_insensitive_name() {
+        let bin = std::env::temp_dir().join("package").join("bin");
+        let updated =
+            with_bin_first(environment(&[("PATH", "C:/one"), ("Path", "C:/two")]), &bin).unwrap();
+        assert_eq!(
+            updated
+                .keys()
+                .filter(|name| name.eq_ignore_ascii_case("PATH"))
+                .count(),
+            1
+        );
+        let paths: Vec<_> = std::env::split_paths(updated.values().next().unwrap()).collect();
+        assert_eq!(paths[0], bin);
+    }
+
+    #[test]
+    fn repeated_search_path_preparation_keeps_one_package_directory() {
+        let bin = std::env::temp_dir().join("package").join("bin");
+        let once = with_bin_first(BTreeMap::new(), &bin).unwrap();
+        assert_eq!(with_bin_first(once.clone(), &bin).unwrap(), once);
     }
 
     #[test]

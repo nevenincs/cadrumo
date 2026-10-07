@@ -367,15 +367,19 @@ fn a_stale_session_that_cannot_settle_stays_owned() {
 /// interpreter does not exist, so an open that is wrongly admitted fails to
 /// spawn rather than starting a process.
 fn unit_launch() -> crate::environment::Launch {
-    let directory = std::env::temp_dir();
-    let executable = directory.join("cadrumo-unit-absent-interpreter.exe");
+    let directory = std::fs::canonicalize(std::env::temp_dir()).unwrap();
+    let contract: serde_json::Value =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
+    let executable = directory
+        .join("cadrumo-unit-absent-package")
+        .join(contract["layout"]["paths"]["executable"].as_str().unwrap());
     assert!(!executable.exists());
     crate::environment::Launch {
         child: ChildConfiguration::new(executable, directory.clone(), Default::default()).unwrap(),
-        working_directory: directory.clone(),
+        working_directory: directory.parent().unwrap().to_owned(),
         webview: directory.clone(),
         diagnostics: Arc::new(Diagnostics::default()),
-        home: directory.clone(),
+        console_workspace: directory.clone(),
         package_root: directory.clone(),
         docs_root: directory.clone(),
         docs_manifest: directory.join("manifest.json"),
@@ -673,3 +677,31 @@ fn a_failed_terminal_launch_records_its_role_without_private_launch_data() {
 
 #[cfg(feature = "live-package-tests")]
 mod live;
+
+#[test]
+fn every_kind_uses_workspace_and_bundled_command_search_path() {
+    let mut launch = unit_launch();
+    launch.child = ChildConfiguration::new(
+        launch.child.executable().to_owned(),
+        launch.working_directory.clone(),
+        std::env::vars_os().collect(),
+    )
+    .unwrap();
+    let bin = console::package_bin(launch.child.executable()).unwrap();
+    let python = launch.child.executable().parent().unwrap();
+    for kind in Kind::ALL {
+        let program = Program::for_kind(&launch, kind).unwrap();
+        assert_eq!(program.directory, launch.console_workspace);
+        let (_, value) = program
+            .environment
+            .iter()
+            .find(|(key, _)| key.eq_ignore_ascii_case("PATH"))
+            .unwrap();
+        let paths: Vec<_> = std::env::split_paths(value).collect();
+        assert_eq!(paths[0], bin);
+        if python != bin {
+            assert_eq!(paths[1], python);
+        }
+        assert_eq!(paths.iter().filter(|path| *path == &bin).count(), 1);
+    }
+}

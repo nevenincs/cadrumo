@@ -326,9 +326,12 @@ fn assert_no_pty_bytes(diagnostics: &Diagnostics) {
 }
 
 #[tokio::test]
-async fn python_kind_is_a_repl_in_home_with_the_pinned_storage_root() {
+async fn python_kind_is_a_repl_in_workspace_with_the_pinned_storage_root() {
     let launch = launch().await;
-    let (home, storage) = (launch.home.clone(), launch.working_directory.clone());
+    let (home, storage) = (
+        launch.console_workspace.clone(),
+        launch.working_directory.clone(),
+    );
     let state = TerminalState::new(launch);
     let (sink, frames) = collector();
     let id = state
@@ -352,11 +355,17 @@ async fn python_kind_is_a_repl_in_home_with_the_pinned_storage_root() {
     screen.until(">>> ");
     assert!(same_path(Path::new(&screen.value("CWD=")), &home));
     assert!(
-        !fs::canonicalize(&home)
+        fs::canonicalize(&home)
             .unwrap()
             .starts_with(fs::canonicalize(&storage).unwrap())
     );
     assert!(same_path(Path::new(&screen.value("ROOT=")), &storage));
+    control
+        .write(b"import subprocess, sys; print('CHI' + 'LD=' + subprocess.check_output([sys.executable, '-c', 'import os; print(os.getcwd())'], text=True).strip())\r")
+        .unwrap();
+    screen.until("CHILD=");
+    screen.until(">>> ");
+    assert!(same_path(Path::new(&screen.value("CHILD=")), &home));
     // The packaged interpreter runs without `site`, so the `exit()` helper
     // does not exist; the REPL still leaves on SystemExit.
     control.write(b"raise SystemExit(0)\r").unwrap();
@@ -418,7 +427,7 @@ async fn tui_kind_draws_the_alternate_screen_from_the_storage_root() {
 #[tokio::test]
 async fn console_kind_is_the_absolute_platform_shell_with_package_bin_first() {
     let launch = launch().await;
-    let home = launch.home.clone();
+    let home = launch.console_workspace.clone();
     let bin = console::package_bin(launch.child.executable()).unwrap();
     let program = Program::for_kind(&launch, Kind::Console).unwrap();
     assert!(program.executable.is_absolute() && program.executable.is_file());
@@ -481,6 +490,16 @@ async fn console_kind_is_the_absolute_platform_shell_with_package_bin_first() {
         "console search path ahead of package bin: {:?}",
         &search[..bin_at]
     );
+
+    control
+        .write(b"Write-Output ('PY' + 'THON=' + (Get-Command python).Source)\r")
+        .unwrap();
+    screen.until("PYTHON=");
+    screen.until("PS ");
+    assert!(same_path(
+        Path::new(&screen.value("PYTHON=")),
+        state.launch.child.executable()
+    ));
 
     let contract: serde_json::Value =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
@@ -1124,11 +1143,7 @@ mod relocated {
             };
             let directory = program.directory.clone();
             assert_eq!(run(program, &launch), Some(0), "{kind:?} exit");
-            let expected = if kind == Kind::Tui {
-                &explicit
-            } else {
-                &launch.home
-            };
+            let expected = &launch.console_workspace;
             assert!(same_path(&directory, expected), "{kind:?} directory");
             assert_resolves(&read_report(&report), &explicit, expected);
         }

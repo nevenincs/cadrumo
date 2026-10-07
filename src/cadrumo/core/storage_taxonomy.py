@@ -215,6 +215,7 @@ class StorageCategory(StrEnum):
     OLLAMA_HOME = "ollama-home"
     GNOME_EXTENSIONS = "gnome-extensions"
     DESKTOP_WEBVIEW = "desktop-webview"
+    CONSOLE_WORKSPACE = "console-workspace"
     SECRETS = "secrets"
     BLOBS = "blobs"
     LIVE_STATE = "live-state"

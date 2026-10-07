@@ -58,7 +58,7 @@ def _hash_tree(
     Args:
         root: Directory to walk.
         excluded_dirs: Resolved absolute paths whose entire subtree
-            must be skipped. Each entry is compared against the
+            or individual file must be skipped. Each entry is compared against the
             resolved path of a visited directory; matching directories
             are pruned from ``dirnames`` before descent.
 
@@ -76,6 +76,8 @@ def _hash_tree(
         dirnames[:] = [name for name in dirnames if (dir_path / name).resolve() not in excluded_dirs]
         for fname in filenames:
             file_path = dir_path / fname
+            if file_path.resolve() in excluded_dirs:
+                continue
             try:
                 rel = file_path.relative_to(root).as_posix()
             except ValueError as rel_exc:
@@ -154,7 +156,7 @@ def compute_db_sha256(root: Path, *, excluded_dirs: frozenset[Path] = frozenset(
 
 
 def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
-    """Return the regenerable/self-referential directories under the data root.
+    """Return excluded directories and files declared beneath the data root.
 
     Which directories those are is declared, not decided here. Each member of
     the storage taxonomy carries a ``fingerprint_participation`` axis, and this
@@ -181,10 +183,20 @@ def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
     installed operator; excluding too little churns it on each cache write
     until the refusal stops being believed.
     """
-    from ...tests.storage_taxonomy_views import FINGERPRINT_EXCLUDED_STORAGE_FIELDS
+    from ...storage_taxonomy import FingerprintParticipation, StorageScope
+    from ...storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
 
-    resolved = (getattr(settings, field, None) for field in sorted(FINGERPRINT_EXCLUDED_STORAGE_FIELDS))
-    return frozenset(Path(path).resolve() for path in resolved if path is not None)
+    resolved: set[Path] = set()
+    for category, location in STORAGE_TAXONOMY.items():
+        if (
+            location.scope is not StorageScope.ROOT
+            or location.fingerprint_participation is not FingerprintParticipation.EXCLUDED
+        ):
+            continue
+        if location.settings_field is not None and getattr(settings, location.settings_field, None) is None:
+            continue
+        resolved.add(storage_path(category, settings=settings).resolve())
+    return frozenset(resolved)
 
 
 def compute_data_root_sha256(settings: Settings) -> str:
