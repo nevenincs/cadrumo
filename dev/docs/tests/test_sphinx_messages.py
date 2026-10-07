@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from ..compile_slots import MARK, CompileSlots, Rendering, activate, deactivate
-from ..sphinx_messages import _catalogue, _MarkingTranslations
+from ..sphinx_messages import _catalogue, _mark_frozen_words, _MarkingTranslations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -66,6 +66,28 @@ def test_a_word_that_differs_is_the_mark_reading_every_language(
     marked = translations.gettext("Index")
     assert MARK.fullmatch(marked) is not None
     assert slots.values == [("Index", "Índice", "Índex")]
+    assert slots.renderings == [Rendering.PLAIN]
+
+
+def test_a_word_resolved_before_the_compile_could_answer_it_is_marked_from_its_message(
+    slots: CompileSlots, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Sphinx resolves some of its own words while a module is imported.
+
+    That is before ``setup(app)`` replaces the translators, so the word is
+    already one language's plain string and no lookup of ours ever sees it. The
+    module index's name is the one in this tree, and it reaches a root through
+    the object inventory. The attribute is named by its own owner here, so a
+    renamed one fails rather than silently going unmarked.
+    """
+    from sphinx.domains.python import PythonModuleIndex
+
+    _write_catalogue(tmp_path, "es", {"Python Module Index": "Índice de módulos Python"})
+    _write_catalogue(tmp_path, "ca", {"Python Module Index": "Índex de mòduls de Python"})
+    monkeypatch.setattr(PythonModuleIndex, "localname", "Python Module Index")
+    _mark_frozen_words([_catalogue(language, [tmp_path]) for language in _LANGUAGES])
+    assert MARK.fullmatch(PythonModuleIndex.localname) is not None
+    assert slots.values == [("Python Module Index", "Índice de módulos Python", "Índex de mòduls de Python")]
     assert slots.renderings == [Rendering.PLAIN]
 
 

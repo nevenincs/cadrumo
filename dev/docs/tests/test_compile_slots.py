@@ -36,7 +36,9 @@ from ..compile_slots import (
     escape,
     factor_page,
     mark_positions,
+    read_escaped_marks,
     read_slots,
+    refuse_escaped_marks,
 )
 from ..shared_structure import LanguageText, compose_page
 
@@ -195,6 +197,25 @@ def test_a_verbatim_mark_is_placed_as_it_was_recorded(slots: CompileSlots) -> No
     ]
 
 
+def test_the_plain_text_a_mark_reads_as_is_the_message_rendering_stripped(slots: CompileSlots) -> None:
+    """A creation site that describes a page needs its words, not the markup around them."""
+    message = slots.reserve(Rendering.MESSAGE)
+    slots.supply(
+        message,
+        ['Read <a href="x.html">the guide</a>', "Lee la guía", "Llegeix la guia"],
+        ["Read the guide", "Lee la guía", "Llegeix la guia"],
+    )
+    assert slots.plain_resolved(f"{message} now", 0) == "Read the guide now"
+    assert slots.plain_resolved(f"{message} now", 1) == "Lee la guía now"
+
+
+def test_the_plain_text_of_a_docutils_mark_is_typeset_in_its_own_language(slots: CompileSlots) -> None:
+    """A docutils string reaches a page educated, and a description quotes the page."""
+    mark = slots.mark(Rendering.DOCUTILS, ['the "local" copy'] * len(_LANGUAGES))
+    assert slots.plain_resolved(mark, 0) == "the “local” copy"
+    assert slots.plain_resolved(mark, 1) == "the «local» copy"
+
+
 def test_a_docutils_mark_in_bare_markup_is_refused(slots: CompileSlots) -> None:
     """Nothing can say how a docutils writer would have written a tag's own bytes."""
     mark = slots.mark(Rendering.DOCUTILS, ["a", "b", "c"])
@@ -207,6 +228,54 @@ def test_a_mark_the_compile_never_recorded_is_refused(slots: CompileSlots) -> No
     slots.mark(Rendering.VERBATIM, ["a", "b", "c"])
     with pytest.raises(CompileSlotsError, match="recorded 1 mark"):
         factor_page(f"<p>{MARK_OPEN}9{MARK_CLOSE}</p>", slots)
+
+
+def test_a_mark_escaped_into_javascript_is_read_back_as_the_mark(slots: CompileSlots) -> None:
+    """A creation site serialising a URL escapes the mark, and the escape means the mark.
+
+    The error page's module import is written through ``json.dumps``, which
+    escapes every non-ASCII character: the page states the escape in both
+    cases, as a serialiser may write either.
+    """
+    mark = slots.mark(Rendering.VERBATIM, ["en", "es", "ca"])
+    page = f'<script>import m from "/docs/\\u{ord(MARK_OPEN):04x}0\\u{ord(MARK_CLOSE):04X}/m.js";</script>'
+    assert read_escaped_marks(page) == f'<script>import m from "/docs/{mark}/m.js";</script>'
+    assert factor_page(read_escaped_marks(page), slots) == [
+        '<script>import m from "/docs/',
+        ("en", "es", "ca"),
+        '/m.js";</script>',
+    ]
+
+
+def test_an_escape_of_a_character_the_marks_do_not_use_is_left_alone(slots: CompileSlots) -> None:
+    """A vendored script escapes private-use characters of its own, which are not ours."""
+    page = "<script>const glyph = \\ue006;</script>"
+    assert read_escaped_marks(page) == page
+
+
+def test_a_file_that_is_not_a_page_cannot_carry_an_escaped_mark() -> None:
+    """Stored whole, its escape is a language-dependent string nothing would resolve."""
+    with pytest.raises(CompileSlotsError, match=r"_static/app\.js is not a page and carries an escaped mark"):
+        refuse_escaped_marks('const root = "/docs/\\ue002k\\ue003/";', "_static/app.js")
+
+
+def test_a_page_carrying_half_a_mark_is_refused_by_name(slots: CompileSlots) -> None:
+    """A mark something cut through stands for strings no composition could read.
+
+    The page is written by hand with the opening delimiter and no closing one,
+    which is what a description cut at a character count left on 43 pages of
+    every language.
+    """
+    mark = slots.mark(Rendering.VERBATIM, ["a", "b", "c"])
+    page = f'<meta content="The filing workflow {mark[0]}" /><p>{mark}</p>'
+    with pytest.raises(CompileSlotsError, match=r"how-to/index\.html carries an opening mark delimiter"):
+        factor_page(page, slots, path="how-to/index.html")
+
+
+def test_a_page_carrying_a_stray_closing_delimiter_is_refused(slots: CompileSlots) -> None:
+    """The closing delimiter is checked as well, so neither half passes alone."""
+    with pytest.raises(CompileSlotsError, match="closing mark delimiter"):
+        factor_page(f"<p>cut{MARK_CLOSE}</p>", slots, path="index.html")
 
 
 def test_escaping_reaches_every_language_rather_than_the_mark(slots: CompileSlots) -> None:

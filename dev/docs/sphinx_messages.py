@@ -201,6 +201,33 @@ def _catalogue(language: str, directories: Sequence[Path]) -> NullTranslations:
     return found or NullTranslations()
 
 
+#: Words of Sphinx's own that are resolved before this module can answer them,
+#: by the attribute they are kept on. Sphinx initialises its own translator
+#: while the application is constructed, which is BEFORE ``setup(app)`` runs, so
+#: a word a module resolves while it is imported is already one language's
+#: plain string by the time the translators are replaced. Such a word is
+#: therefore marked here, from its own message.
+#:
+#: The module index's name is the one in this tree: it is not on a page of the
+#: user scope at all, and it reaches a root through Sphinx's object inventory,
+#: which names every label by its display name.
+_FROZEN: Final[tuple[tuple[str, str, str], ...]] = (
+    ("sphinx.domains.python", "PythonModuleIndex.localname", "Python Module Index"),
+)
+
+
+def _mark_frozen_words(catalogues: Sequence[NullTranslations]) -> None:
+    """Replace each word resolved before this compile could answer it with its mark."""
+    from importlib import import_module
+
+    for module_name, attribute, message in _FROZEN:
+        owner: object = import_module(module_name)
+        *path, name = attribute.split(".")
+        for step in path:
+            owner = getattr(owner, step)
+        setattr(owner, name, _marked([catalogue.gettext(message) for catalogue in catalogues], Rendering.PLAIN))
+
+
 def register(app: Sphinx) -> None:
     """Answer Sphinx's own words with every language's, for this compile only.
 
@@ -219,3 +246,4 @@ def register(app: Sphinx) -> None:
     catalogues = [_catalogue(language, directories) for language in slots.languages]
     locale.translators[_NAMESPACE, _CATALOGUE] = _MarkingTranslations(catalogues, Rendering.PLAIN)
     app.translator = _MarkingTranslations(catalogues, Rendering.TEMPLATE)
+    _mark_frozen_words(catalogues)

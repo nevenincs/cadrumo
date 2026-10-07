@@ -25,10 +25,19 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Final
 
-from .compile_slots import MARK, MARK_OPEN, CompileSlots, Rendering
+from .compile_slots import (
+    MARK,
+    MARK_CLOSE,
+    MARK_OPEN,
+    CompileSlots,
+    Rendering,
+    read_escaped_marks,
+    refuse_escaped_marks,
+    refuse_stray_delimiters,
+)
 from .compile_slots import cache_key_slots as _cache_key_slots
 from .compile_slots import factor_page as _factor_compiled_page
-from .shared_structure import LanguageText, compose_page, factor_page
+from .shared_structure import SLOT_CLOSE, SLOT_OPEN, LanguageText, compose_page, factor_page
 
 STRUCTURE_DIRECTORY: Final[str] = "structure"
 TEXT_DIRECTORY: Final[str] = "text"
@@ -217,6 +226,7 @@ def _rendered_language_file(content: bytes, slots: CompileSlots, language_index:
     theme's own files.
     """
     text = content.decode(_UTF_8)
+    refuse_stray_delimiters(text, path)
     pieces: list[str] = []
     position = 0
     for mark in MARK.finditer(text):
@@ -301,7 +311,9 @@ def store_compiled_root(
         if path.endswith(_PAGE_SUFFIX) and _page_text(content) is not None:
             page_paths.append(path)
             continue
-        if MARK_OPEN not in content.decode(_UTF_8, errors="replace"):
+        decoded = content.decode(_UTF_8, errors="replace")
+        if MARK_OPEN not in decoded:
+            refuse_escaped_marks(decoded, path)
             _write(_inside(destination / STRUCTURE_DIRECTORY, path), content)
             shared.append(path)
             continue
@@ -317,9 +329,12 @@ def store_compiled_root(
         text_of_page = _page_text(content)
         if text_of_page is None:  # pragma: no cover - the page text was read once already
             raise LanguageRootsError(f"{path} stopped being a page between the two passes")
-        page = _without_terminators(text_of_page)
+        # A mark a creation site wrote into JavaScript reaches the written page
+        # as its own escape, which is the delimiter and has to be read as one
+        # before the page is factored (:func:`read_escaped_marks`).
+        page = read_escaped_marks(_without_terminators(text_of_page))
         factored: list[str | tuple[str, ...]] = []
-        for part in _factor_compiled_page(page, slots):
+        for part in _factor_compiled_page(page, slots, path=path):
             factored.extend(_cache_key_slots(part, keys) if isinstance(part, str) else [part])
         if not any(isinstance(part, tuple) for part in factored):
             _write(_inside(destination / STRUCTURE_DIRECTORY, path), page.encode(_UTF_8))
@@ -400,14 +415,56 @@ def _kinds(layout: Layout, language: str) -> dict[str, str]:
     }
 
 
+#: Every private-use character the compile's own artefacts are delimited by: a
+#: structure's slots and a compiled page's marks. A composed page is what a
+#: reader is served, so none of them may still be in it.
+_RESERVED: Final[tuple[tuple[str, str], ...]] = (
+    (SLOT_OPEN, "an opening slot"),
+    (SLOT_CLOSE, "a closing slot"),
+    (MARK_OPEN, "an opening mark"),
+    (MARK_CLOSE, "a closing mark"),
+)
+
+
+def _refuse_reserved(language: str, path: str, content: bytes) -> None:
+    """Refuse a composed page still carrying a slot or mark delimiter.
+
+    Composition replaces every slot the structure names with one language's
+    string, and the strings were factored out of a page whose marks were all
+    read. So a delimiter left in a composed page means one of the two was not:
+    the page would reach a reader carrying a private-use character where its
+    text belongs, which is the one failure of this mechanism nothing downstream
+    could notice.
+
+    Raises:
+        LanguageRootsError: If the page carries any of them.
+    """
+    text = content.decode(_UTF_8, errors="replace")
+    for delimiter, name in _RESERVED:
+        at = text.find(delimiter)
+        if at >= 0:
+            raise LanguageRootsError(
+                f"the composed {language} page {path} still carries {name} delimiter, "
+                f"around {text[max(at - 60, 0) : at + 20]!r}"
+            )
+
+
 def compose_root(stored: Path, language: str, destination: Path) -> None:
-    """Write one language's whole site from the stored form into ``destination``."""
+    """Write one language's whole site from the stored form into ``destination``.
+
+    Raises:
+        LanguageRootsError: If the stored form holds no such language, or a
+            composed page still carries a slot or mark delimiter.
+    """
     layout = read_layout(stored)
     if language not in layout.languages:
         raise LanguageRootsError(f"the stored form holds {list(layout.languages)}, not {language}")
     strings = read_text(stored, language)
     for path, kind in _kinds(layout, language).items():
-        _write(_inside(destination, path), _stored(stored, kind, language, path, strings))
+        content = _stored(stored, kind, language, path, strings)
+        if path.endswith(_PAGE_SUFFIX):
+            _refuse_reserved(language, path, content)
+        _write(_inside(destination, path), content)
 
 
 def differences(stored: Path, files: Mapping[str, Mapping[str, Path]]) -> list[str]:

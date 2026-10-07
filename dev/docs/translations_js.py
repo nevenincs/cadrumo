@@ -201,9 +201,16 @@ def _supply_tag(
     # A recorded string stands in a page stored without the terminators of the
     # platform that wrote it, so the line break it carries is a line feed
     # (:func:`~dev.docs.language_roots.compose_root`).
+    # The href can itself hold a mark: the error page's links are absolute and
+    # rooted at this site root's own path, which is each language's own
+    # directory under the one compile. A recorded string cannot still name the
+    # other languages, so it is read in the language being recorded.
     tag = slots.mark(
         Rendering.VERBATIM,
-        [translations_js_tag(href, key, newline="\n") if key else "" for key in written.keys],
+        [
+            slots.resolved(translations_js_tag(href, key, newline="\n"), index) if key else ""
+            for index, key in enumerate(written.keys)
+        ],
     )
     context["cadrumo_translations_js_tag"] = lambda script: tag if str(script) == written.anchor else ""
 

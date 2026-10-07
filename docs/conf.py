@@ -44,6 +44,7 @@ _DOCS_SITE_PREFIX = import_module("dev.docs.build_paths").docs_site_prefix(os.en
 _DOCS_SITE_PREFIXES = import_module("dev.docs.build_paths").docs_site_prefixes
 _LANGUAGE_SWITCHER = import_module("dev.docs.language_switcher")
 _UNTRANSLATED_TYPESETTING = import_module("dev.docs.untranslated_typesetting")
+_PAGE_DESCRIPTIONS = import_module("dev.docs.page_descriptions")
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
@@ -437,6 +438,23 @@ if os.environ.get("CADRUMO_DOCS_OFFLINE"):
 html_theme = "furo"
 html_title = _SITE_LABELS["meta_title"]
 html_short_title = _SITE_LABELS["meta_short_title"]
+if _MULTILINGUAL and _DOCS_BASE_URL:
+    # A single-language build is given the address of its OWN root, because
+    # that is the only root it writes. One compile writes every root, so it is
+    # given the address ABOVE the language directories and completes it here
+    # with the language's own code -- as a mark, which is what makes the
+    # canonical link, ``og:url``, ``og:image`` and the absolute links of the
+    # error page each language's own instead of the compile's
+    # (:func:`dev.docs.compile_once.compile_language_roots`). The strings are
+    # recorded verbatim: a language tag carries no character any writer between
+    # here and the page would escape, and one of those writers is an inline
+    # script's own text.
+    _LANGUAGE_SEGMENT = _COMPILE_SLOTS.language_text(
+        lambda carried: carried,
+        language,
+        rendering=_COMPILE_SLOTS.Rendering.VERBATIM,
+    )
+    _DOCS_BASE_URL = f"{_DOCS_BASE_URL}/{_LANGUAGE_SEGMENT}"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
 # The error page is served at whatever path missed, so its links are absolute.
 # They are rooted at this site root's own path; the extension's default is a
@@ -733,9 +751,14 @@ html_context["cadrumo_chrome"] = site_chrome(
 )
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
+#: The most characters a page's description reads as. Cadrumo's own, because
+#: the description is derived here rather than by the Open Graph extension
+#: (:mod:`dev.docs.page_descriptions`); the extension is told the same number
+#: so nothing it computes is shaped by a second one.
+_DESCRIPTION_LENGTH = 180
 ogp_site_name = _SITE_LABELS["meta_short_title"]
 ogp_site_url = html_baseurl
-ogp_description_length = 180
+ogp_description_length = _DESCRIPTION_LENGTH
 ogp_type = "website"
 ogp_image = "_static/cadrumo-mark-light.svg"
 
@@ -1926,6 +1949,74 @@ def setup(app):
             return
         slots.write(Path(app.outdir) / _COMPILE_SLOTS.SLOTS_FILE)
 
+    #: Each reserved mark standing for a page's description, and the page's own
+    #: text it is derived from. The text still holds this compile's marks, so
+    #: the descriptions are finished once every one of them has its strings.
+    description_marks: dict[str, str] = {}
+
+    def _write_page_description(app, pagename, templatename, context, doctree):
+        """Replace the page's description tags with one derived from its blocks of text.
+
+        Runs after ``sphinxext.opengraph``'s own handler, whose description is
+        a join of the doctree's LEAF text cut at a character count: under the
+        one compile the count is of marks rather than of the text they stand
+        for, and the join loses the whitespace around inline markup in every
+        build (:mod:`dev.docs.page_descriptions`).
+
+        Under the one compile the tag carries a mark, because the text each
+        language reads is not known until every message has been rendered;
+        :func:`_supply_page_descriptions` finishes them.
+
+        Args:
+            app: The Sphinx application instance.
+            pagename: The page being written (unused).
+            templatename: The template rendering it (unused).
+            context: The template context, whose meta tags are rewritten.
+            doctree: The page's resolved doctree, or None for a page the
+                builder collected rather than read, which has no text of its
+                own to describe.
+        """
+        if not doctree:
+            return
+        # The title as the page's own heading reads, which stands in og:title
+        # already and so is left out of the description, exactly as the
+        # extension leaves it out.
+        titles = {_COMPILE_SLOTS.plain_text(context.get("title") or "")}
+        source = _PAGE_DESCRIPTIONS.description_source(doctree, titles=titles)
+        slots = _COMPILE_SLOTS.active()
+        if slots is None or not source:
+            content = _PAGE_DESCRIPTIONS.description_content(source, length=_DESCRIPTION_LENGTH)
+        else:
+            content = slots.reserve(_COMPILE_SLOTS.Rendering.VERBATIM)
+            description_marks[content] = source
+        context["metatags"] = _PAGE_DESCRIPTIONS.with_description(context["metatags"], content)
+
+    def _supply_page_descriptions(app, exception):
+        """Record what each page's description reads in every language.
+
+        Between the pass that reads the rendered translations back and the one
+        that writes the record: a description is the page's own text, so it can
+        only be cut once every mark in that text has its strings, and it has to
+        be recorded before the record is written.
+
+        Args:
+            app: The Sphinx application instance (unused).
+            exception: The build's failure, or None when it succeeded.
+        """
+        slots = _COMPILE_SLOTS.active()
+        if exception is not None or slots is None:
+            return
+        for mark, source in description_marks.items():
+            descriptions = [
+                _PAGE_DESCRIPTIONS.description_content(
+                    slots.plain_resolved(source, index),
+                    length=_DESCRIPTION_LENGTH,
+                )
+                for index in range(len(slots.languages))
+            ]
+            slots.supply(mark, descriptions, descriptions)
+        description_marks.clear()
+
     def _write_the_compiled_site_in_this_process(app):
         """Keep the one compile's write phase in the process that records its marks.
 
@@ -1953,11 +2044,18 @@ def setup(app):
         app.connect("env-purge-doc", _MESSAGE_MARKS.purge_notes)
         app.connect("env-merge-info", _MESSAGE_MARKS.merge_notes)
         app.connect("build-finished", _read_authored_messages, priority=100)
+        app.connect("build-finished", _supply_page_descriptions, priority=150)
         app.connect("build-finished", _write_compile_slots, priority=200)
         app.add_transform(_MESSAGE_MARKS_TITLE_TRANSFORM)
         app.add_transform(_MESSAGE_MARKS_HEADING_TRANSFORM)
         app.add_transform(_MESSAGE_MARKS_TRANSFORM)
         app.add_post_transform(_MESSAGE_MARKS_POST_TRANSFORM)
+    if not _DESKTOP_FLAVOR:
+        # Priority 600 runs after sphinxext.opengraph's own handler, which sits
+        # at the default and whose description tags this one replaces. The
+        # packaged copy loads no Open Graph extension and carries no
+        # description tags at all, so nothing there is described either.
+        app.connect("html-page-context", _write_page_description, priority=600)
     _LANGUAGE_SWITCHER.register(app)
     # Every build, not only the one compile: a page no language translates is
     # typeset in the language it is authored in wherever it is built, which is

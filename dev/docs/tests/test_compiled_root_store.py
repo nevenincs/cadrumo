@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ..compile_slots import CompileSlots, Rendering, activate, deactivate
+from ..compile_slots import MARK_CLOSE, MARK_OPEN, CompileSlots, Rendering, activate, deactivate
 from ..language_roots import (
     LANGUAGES_DIRECTORY,
     STRUCTURE_DIRECTORY,
@@ -25,6 +25,7 @@ from ..language_roots import (
     read_layout,
     store_compiled_root,
 )
+from ..shared_structure import SLOT_CLOSE, SLOT_OPEN
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -167,3 +168,45 @@ def test_the_stored_form_reads_the_same_however_it_was_written(slots: CompileSlo
     store_compiled_root(compiled, slots, stored, language_files={"en": {}, "es": {}})
     assert read_layout(stored).languages == _LANGUAGES
     assert not (stored / LANGUAGES_DIRECTORY).exists()
+
+
+@pytest.mark.parametrize(
+    ("delimiter", "named"),
+    [
+        (MARK_OPEN, "an opening mark"),
+        (MARK_CLOSE, "a closing mark"),
+        (SLOT_OPEN, "an opening slot"),
+        (SLOT_CLOSE, "a closing slot"),
+    ],
+)
+def test_a_composed_page_still_carrying_a_delimiter_is_refused(
+    delimiter: str,
+    named: str,
+    tmp_path: Path,
+) -> None:
+    """A reader is served composed pages, so a private-use delimiter must not reach one.
+
+    The stored form is written by hand, because the refusal is about a
+    structure or a string that something upstream left a delimiter in: a
+    structure composed from strings this module factored itself would carry
+    none, which is exactly what makes the check worth having.
+    """
+    stored = tmp_path / "stored"
+    _written(
+        stored,
+        {
+            f"{STRUCTURE_DIRECTORY}/page.html": f"<p>cut{delimiter}</p>".encode(),
+            "text/en.json": b"[]",
+            "layout.json": json.dumps(
+                {
+                    "schema": 1,
+                    "languages": ["en"],
+                    "pages": [],
+                    "shared": ["page.html"],
+                    "language_files": {"en": []},
+                }
+            ).encode(),
+        },
+    )
+    with pytest.raises(LanguageRootsError, match=f"composed en page page.html still carries {named} delimiter"):
+        compose_root(stored, "en", tmp_path / "root")

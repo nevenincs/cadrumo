@@ -509,6 +509,40 @@ class CompileSlots:
             return value
         return MARK.sub(lambda found: self.strings(int(found.group(1), len(_DIGITS)))[1][language], value)
 
+    def plain_resolved(self, value: str, language: int) -> str:
+        """Return *value* with every mark inside it read as the plain text its page carries.
+
+        :meth:`resolved` reads a mark as the string the page carries, which for
+        a message is rendered markup. A creation site that has to say something
+        about the WORDS of a page -- its description is the one here -- needs
+        the text that markup reads as instead, in the typography the language's
+        own build gives it: a message's plain form is already educated, because
+        the fragment that rendered it declared the language, and a string a
+        docutils writer owns is educated here exactly as writing it would.
+
+        Args:
+            value: A string that may contain marks.
+            language: The language's index in :attr:`languages`.
+
+        Returns:
+            The string with each mark replaced by the plain text that language
+            reads there.
+        """
+        if MARK_OPEN not in value:
+            return value
+
+        def read(found: re.Match[str]) -> str:
+            number = int(found.group(1), len(_DIGITS))
+            rendering, values = self.strings(number)
+            plain = self.plain[number]
+            if plain is not None:
+                return plain[language]
+            if rendering is Rendering.DOCUTILS:
+                return _educated(values[language], self.languages[language])
+            return values[language]
+
+        return MARK.sub(read, value)
+
     def strings(self, number: int) -> tuple[Rendering, tuple[str, ...]]:
         """Return one mark's owning writer and its string in every language.
 
@@ -856,21 +890,99 @@ def mark_positions(page: str) -> list[tuple[re.Match[str], Position]]:
     return found
 
 
-def factor_page(page: str, slots: CompileSlots) -> list[str | tuple[str, ...]]:
+#: Each mark delimiter as a creation site writing JavaScript escapes it.
+#: ``json.dumps`` escapes every non-ASCII character by default, so a mark that
+#: reaches an inline script -- the error page's module import names this root's
+#: own directory, which is each language's own -- arrives in the written page as
+#: the six characters of its own escape rather than as itself. Derived from the
+#: delimiters, so the two cannot drift apart.
+_ESCAPED: Final[dict[str, str]] = {f"\\u{ord(character):04x}": character for character in (MARK_OPEN, MARK_CLOSE)}
+_ESCAPED_MARK: Final[re.Pattern[str]] = re.compile("|".join(re.escape(escape) for escape in _ESCAPED), re.IGNORECASE)
+
+
+def read_escaped_marks(page: str) -> str:
+    """Return one compiled page with every JavaScript-escaped mark delimiter read back.
+
+    The escape means the delimiter, so reading it back is what lets the mark be
+    factored like any other: each language then composes the string its own
+    build wrote, where ``json.dumps`` of that language's own ASCII value
+    escapes nothing. Left alone, the page would reach a reader carrying the
+    escape -- valid JavaScript naming a private-use directory that does not
+    exist.
+
+    Only the mark delimiters are read back. A vendored script carrying escapes
+    of its own private-use characters is untouched, which is why the escapes
+    are derived from the delimiters rather than matched as a range.
+    """
+    return _ESCAPED_MARK.sub(lambda found: _ESCAPED[found.group().lower()], page)
+
+
+def refuse_escaped_marks(content: str, where: str) -> None:
+    """Refuse a file that is not a page and carries a JavaScript-escaped mark delimiter.
+
+    A page's escapes are read back (:func:`read_escaped_marks`) because the
+    page is factored. A file that is not a page is stored whole, so an escape in
+    one is a language-dependent string nothing will resolve and every language
+    would be given the compile's own.
+
+    Raises:
+        CompileSlotsError: If *content* carries either escape.
+    """
+    found = _ESCAPED_MARK.search(content)
+    if found is not None:
+        at = found.start()
+        raise CompileSlotsError(
+            f"{where} is not a page and carries an escaped mark delimiter, "
+            f"around {content[max(at - 60, 0) : at + 20]!r}; "
+            "its creation site must record the whole string rather than escape the mark"
+        )
+
+
+def refuse_stray_delimiters(page: str, where: str) -> None:
+    """Refuse a compiled page carrying a mark delimiter that is not part of a whole mark.
+
+    A whole mark is the two delimiters with a number between them, and nothing
+    else in a compiled page may carry either character. One on its own is a
+    mark something cut through -- a 180-character description cut is what found
+    this -- so the strings it stood for are lost and the page would reach a
+    reader with half a delimiter in it. The compile fails here instead.
+
+    Args:
+        page: One compiled page.
+        where: The page's path inside the site, for the refusal.
+
+    Raises:
+        CompileSlotsError: If either delimiter appears outside a whole mark.
+    """
+    whole = MARK.findall(page)
+    for delimiter, name in ((MARK_OPEN, "an opening"), (MARK_CLOSE, "a closing")):
+        if page.count(delimiter) != len(whole):
+            at = page.find(delimiter)
+            raise CompileSlotsError(
+                f"{where} carries {name} mark delimiter that is not part of a whole mark, "
+                f"around {page[max(at - 60, 0) : at + 20]!r}; a mark something cut through "
+                "stands for strings no composition can read"
+            )
+
+
+def factor_page(page: str, slots: CompileSlots, *, path: str = "a compiled page") -> list[str | tuple[str, ...]]:
     """Return one compiled page as shared text and, per slot, each language's string.
 
     Args:
         page: One compiled page, carrying the compile's marks.
         slots: The marks the compile recorded.
+        path: The page's path inside the site, for a refusal.
 
     Returns:
         The page in order: a ``str`` is text every language shares, a tuple
         holds what each language reads at that point.
 
     Raises:
-        CompileSlotsError: If the page names a mark the compile never recorded,
-            or a mark reached a position its writer cannot write.
+        CompileSlotsError: If the page carries a stray mark delimiter, names a
+            mark the compile never recorded, or a mark reached a position its
+            writer cannot write.
     """
+    refuse_stray_delimiters(page, path)
     factored: list[str | tuple[str, ...]] = []
     position = 0
     for mark, where in mark_positions(page):

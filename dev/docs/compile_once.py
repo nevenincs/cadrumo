@@ -34,10 +34,11 @@ import os
 import shutil
 import sys
 import time
+import zlib
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Final
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
@@ -47,12 +48,13 @@ if not __package__:
     __package__ = "dev.docs"
 
 
-from .build import DOCS_FLAVOR_ENV
+from .build import DOCS_FLAVOR_ENV, write_deployment_sitemap
 from .build import main as build_documentation
 from .build_paths import DOCS_BASE_URL_ENV, DOCS_BUILD_ROOT_ENV, DOCS_SITE_PREFIX_ENV
-from .compile_slots import SLOTS_FILE, context_at, markup_contexts, read_slots
+from .compile_slots import SLOTS_FILE, CompileSlots, context_at, markup_contexts, read_slots
 from .i18n import DEFAULT_SOURCE_LANGUAGE
 from .language_roots import compose_root, store_compiled_root
+from .message_marks import FRAGMENT_PREFIX
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from .shared_page_assets import CHROME_STRINGS_SCRIPT, language_chrome_strings
 from .shared_structure import compare_page
@@ -79,8 +81,30 @@ HOST_SELECTORS: Final[tuple[str, ...]] = (
     SEQUENCE_CHECK_SKIP_ENV,
 )
 
+#: Where each language's own object inventory is written out of the compiled
+#: one, inside the compiled site and taken out of the files it is read as.
+_INVENTORY_STAGING: Final[str] = ".compile-inventories"
+
 #: Build state inside the compiled site that no reader is served.
-_BUILD_STATE: Final[frozenset[str]] = frozenset({".doctrees", ".buildinfo", "_sources", SLOTS_FILE})
+_BUILD_STATE: Final[frozenset[str]] = frozenset({".doctrees", ".buildinfo", "_sources", SLOTS_FILE, _INVENTORY_STAGING})
+
+#: Sphinx's own inventory of every page and label, which names each by the
+#: title of the page it is on.
+INVENTORY_FILE: Final[str] = "objects.inv"
+
+#: The last line of an inventory's header, after which the entries are
+#: zlib-compressed (``sphinx.util.inventory.InventoryFile.dump``).
+_INVENTORY_BODY: Final[bytes] = b"# The remainder of this file is compressed using zlib.\n"
+
+#: The compression Sphinx writes an inventory's entries with, fed one entry at
+#: a time as it feeds them: the deflate stream depends on both, so a language's
+#: inventory is only the bytes its own build wrote if it is written the same way.
+_INVENTORY_COMPRESSION: Final[int] = 9
+
+#: The deployment sitemap, which ``dev.docs.build`` writes for a build served
+#: from an address of its own. It is the one reader-facing file of a compiled
+#: site that belongs to one root rather than to all of them.
+SITEMAP_FILE: Final[str] = "sitemap.xml"
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -151,13 +175,19 @@ INTENDED_DIFFERENCES: Final[tuple[IntendedDifference, ...]] = (
 )
 
 
+#: The context a difference in a file that is not a page is counted under.
+#: Such a file holds no markup, so the whole file is what differs.
+_WHOLE_FILE: Final[str] = "file"
+
+
 @dataclass
 class Comparison:
     """What one composed site still differs from its own build in.
 
     Attributes:
         language: The language compared.
-        pages: Pages compared in both.
+        pages: Pages compared in both. Every other file of the site is
+            compared as well, whole, and counted under :data:`_WHOLE_FILE`.
         equal: Pages whose bytes already match.
         missing: Paths the built site has and the composed site does not.
         extra: Paths the composed site has and the built site does not.
@@ -280,6 +310,77 @@ def _per_language_assets(files: dict[str, Path], languages: Sequence[str]) -> di
     return per_language
 
 
+def _names_a_fragment(entry: str) -> bool:
+    """Return whether one inventory entry points into a fragment document.
+
+    An entry is its name, its domain and type, its priority, the page it is on
+    and its display name, in that order and separated by single spaces; only
+    the display name can hold one, so the page is the fourth field.
+    """
+    fields = entry.split(" ", 4)
+    page = fields[3].partition("#")[0] if len(fields) > 3 else ""
+    return PurePosixPath(page).name.startswith(FRAGMENT_PREFIX)
+
+
+def _per_language_inventory(
+    files: dict[str, Path],
+    slots: CompileSlots,
+    staging: Path,
+) -> dict[str, dict[str, Path]]:
+    """Return each language's own object inventory, read out of the compiled one.
+
+    The inventory names every page and label by the title of its page, and a
+    title is a mark. Its entries are compressed, so no mark is visible in the
+    file and the ordinary rule -- a file carrying no mark is the same bytes in
+    every language -- would store the compile's own marks once and give them to
+    every language. It is therefore read back here, each language's titles put
+    in as the page's own text reads them, and written as Sphinx writes it.
+
+    The compiled inventory is taken out of *files*, because what the site holds
+    is one inventory per language and not a fifth. What the compile read and no
+    language's build does is taken out of the entries: a fragment document is
+    build scaffolding whose written page is deleted once its translations have
+    been read, so the inventory must not go on naming it
+    (:mod:`dev.docs.message_marks`).
+
+    Args:
+        files: The compiled site's files, which the inventory is taken out of.
+        slots: The marks the compile recorded.
+        staging: A directory to write each language's inventory into.
+
+    Returns:
+        For each language, its own inventory by its path inside the root; empty
+        for every language when the compile wrote none.
+
+    Raises:
+        SystemExit: If the compiled inventory is not in the format whose
+            entries can be read back.
+    """
+    source = files.pop(INVENTORY_FILE, None)
+    if source is None:
+        return {language: {} for language in slots.languages}
+    header, marker, body = source.read_bytes().partition(_INVENTORY_BODY)
+    if not marker:
+        raise SystemExit(
+            f"{source} does not carry the compressed-entry header a Sphinx inventory has, "
+            "so the titles its entries name cannot be read in each language"
+        )
+    entries = [entry for entry in zlib.decompress(body).decode(_UTF_8).splitlines() if not _names_a_fragment(entry)]
+    written: dict[str, dict[str, Path]] = {}
+    for index, language in enumerate(slots.languages):
+        compressor = zlib.compressobj(_INVENTORY_COMPRESSION)
+        compressed = b"".join(
+            compressor.compress(f"{slots.plain_resolved(entry, index)}\n".encode(_UTF_8)) for entry in entries
+        )
+        target = staging / language / INVENTORY_FILE
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(
+            slots.plain_resolved(header.decode(_UTF_8), index).encode(_UTF_8) + marker + compressed + compressor.flush()
+        )
+        written[language] = {INVENTORY_FILE: target}
+    return written
+
+
 def _pin_build_environment(
     build_root: Path,
     *,
@@ -394,6 +495,14 @@ def _compile_and_compose(
     slots = read_slots(record)
     files = _site_files(compiled)
     language_files = _per_language_assets(files, slots.languages)
+    for language, inventory in _per_language_inventory(files, slots, compiled / _INVENTORY_STAGING).items():
+        language_files[language].update(inventory)
+    # The sitemap names every page by its absolute address, and the driver that
+    # wrote it was given the address above the language directories, because
+    # that is what one compile of all of them is served from. So the compiled
+    # site's own sitemap belongs to no root: each is written from its own
+    # composed root below, where the language is known.
+    files.pop(SITEMAP_FILE, None)
     store_compiled_root(files, slots, stored, language_files=language_files)
     roots: dict[str, Path] = {}
     for language in slots.languages:
@@ -401,6 +510,8 @@ def _compile_and_compose(
         if roots[language].exists():
             shutil.rmtree(roots[language])
         compose_root(stored, language, roots[language])
+        if base_url is not None and flavor == "web":
+            write_deployment_sitemap(roots[language], f"{base_url.rstrip('/')}/{language}")
     return CompileOnceResult(
         compiled=compiled,
         stored=stored,
@@ -416,6 +527,7 @@ def compile_once(
     *,
     flavor: str = "desktop",
     jobs: int | None = None,
+    base_url: str | None = None,
 ) -> CompileOnceResult:
     """Compile the documentation once, store it, and compose every language back.
 
@@ -429,6 +541,12 @@ def compile_once(
             and the composed roots into.
         flavor: Who the pages are for, as ``dev.docs.build`` means it.
         jobs: Sphinx read parallelism, or None for the build's own default.
+        base_url: The site's address above the language directories, as
+            :func:`compile_language_roots` means it. The measurement needs it
+            too: a root the publisher builds from its own address differs from
+            one built from none wherever a page states where it is served, so
+            an oracle built that way is only comparable to a compile given the
+            same address.
 
     Returns:
         What the compile produced.
@@ -445,7 +563,7 @@ def compile_once(
         jobs=jobs,
         strict=False,
         check_sequences=None,
-        base_url=None,
+        base_url=base_url,
     )
 
 
@@ -530,7 +648,8 @@ def compare(composed: Path, built: Path, language: str, *, samples: int = 3) -> 
         samples: Examples to keep per markup context.
 
     Returns:
-        The comparison, differing stretches counted by markup context.
+        The comparison: every page's differing stretches counted by the markup
+        context they sit in, and every other file counted whole.
     """
     found = Comparison(language=language)
     composed_files, built_files = _site_files(composed), _site_files(built)
@@ -540,6 +659,16 @@ def compare(composed: Path, built: Path, language: str, *, samples: int = 3) -> 
         built_bytes = built_files[path].read_bytes()
         composed_bytes = composed_files[path].read_bytes()
         if not path.endswith(".html"):
+            # A file that is not a page is stored whole, so it is compared
+            # whole: there is no markup in it for a difference to sit in, and
+            # one that differs at all differs in what a reader is served. The
+            # search index, the inventory and the sitemap are each a language's
+            # own, and a proof that only read the pages would not say so.
+            if built_bytes != composed_bytes:
+                found.by_context[_WHOLE_FILE] += 1
+                kept = found.samples.setdefault(_WHOLE_FILE, [])
+                if len(kept) < samples:
+                    kept.append((path, f"{len(built_bytes)} byte(s)", f"{len(composed_bytes)} byte(s)"))
             continue
         found.pages += 1
         if built_bytes == composed_bytes:
@@ -604,7 +733,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--base-url",
         default=None,
-        help="The address the site is served from, above the language directories; --html-root only.",
+        help="The address the site is served from, above the language directories.",
     )
     parser.add_argument(
         "--oracle",
@@ -656,7 +785,12 @@ def main(argv: list[str] | None = None) -> int:
         for leftover in ("compiled", "stored", "roots"):
             if (destination / leftover).exists():
                 raise SystemExit(f"{destination / leftover} exists; give an empty --out or pass --compare-only")
-        result = compile_once(destination, flavor=arguments.flavor, jobs=arguments.jobs)
+        result = compile_once(
+            destination,
+            flavor=arguments.flavor,
+            jobs=arguments.jobs,
+            base_url=arguments.base_url,
+        )
         languages, roots = list(result.languages), dict(result.roots)
         stored_size = sum(path.stat().st_size for path in result.stored.rglob("*") if path.is_file())
         print(
