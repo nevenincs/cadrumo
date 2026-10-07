@@ -59,6 +59,7 @@ from ...adapters.persistence.profile.tests.justificante_metadata import persist_
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.actividad_asset.activity_asset_projections import (
     ActivityAssetClaimProjection,
@@ -394,7 +395,7 @@ from ...application.user_profile.censal_operation import (
 )
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from ...application.user_profile.custody_ports import profile_custody_secure_object_repository
-from ...application.user_profile.login_session import login_profile, logout_active_profile
+from ...application.user_profile.login_session import authenticate_profile_for_invocation
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.recovery_custody import enroll_profile_recovery, profile_recovery_status
 from ...application.user_profile.recovery_status_operation import RecoveryStatusProjection
@@ -3690,7 +3691,7 @@ def _runtime(
             profile_decode_context=_profile_decode_context_for_test,
         )
         profile_id = UUID(enrolled.profile_id)
-        login_profile(
+        authenticate_profile_for_invocation(
             name=enrolled.profile_id,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -3740,7 +3741,7 @@ def _runtime(
                 # The login above binds this process's live session; a runtime
                 # that leaves it open hands every later test in the worker a
                 # logged-in profile it never created.
-                logout_active_profile()
+                reset_test_profile_session()
 
 
 @pytest.mark.parametrize("apply", [True, False], ids=["apply", "reject"])

@@ -9,7 +9,6 @@ from cadrumo.application.auth.operation_definitions import (
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
     AUTH_RESET_OPERATION_DEFINITION_ID,
     AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
-    PROFILE_LOGIN_OPERATION_DEFINITION_ID,
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     AuthOperationPorts,
     build_auth_operation_definitions,
@@ -69,7 +68,7 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
             PROFILE_ROTATION_OPERATION_DEFINITION_ID,
         )
     )
-    assert PROFILE_LOGIN_OPERATION_DEFINITION_ID not in definition_ids
+    assert "auth.profile.login" not in definition_ids
     assert registry.lookup(PROFILE_ROTATION_OPERATION_DEFINITION_ID).ephemeral_secret is not None
     assert all(
         registry.lookup(definition_id).ephemeral_secret is None

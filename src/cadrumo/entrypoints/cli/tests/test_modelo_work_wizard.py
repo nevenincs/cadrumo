@@ -54,7 +54,7 @@ from ....application.modelo.work_wizard import (
     discover_modelo_work_wizard_steps,
     open_modelo_work_wizard_from_steps,
 )
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -192,7 +192,7 @@ def _login_for_oracle(fixture: NativeCliProfileFixture, *, operation: PinnedAuth
     if fixture.label is None:
         raise AssertionError("the native profile fixture has not registered a subject")
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=fixture.label,
         passphrase_callback=lambda: fixture.passphrase,
         profile_decode_context=operation.profile_decode_context(),

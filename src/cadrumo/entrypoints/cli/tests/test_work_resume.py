@@ -21,7 +21,7 @@ from ....application.operator_actions.models import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....application.workflow.abort import WorkflowAbortReason
 from ....application.workflow.persistence import list_runs, load_run, save_run
 from ....application.workflow.run_models import (
@@ -102,7 +102,7 @@ def _isolated_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperat
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(label=_PROFILE_LABEL, facts=_profile_facts())
         close_active_bucket_session()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_PROFILE_LABEL,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),
@@ -247,7 +247,7 @@ def _seed_work_unit():
 def _reopen_oracle_session() -> None:
     fixture = _NATIVE_FIXTURE.get()
     close_active_bucket_session()
-    login_profile(
+    authenticate_profile_for_invocation(
         name=_PROFILE_LABEL,
         passphrase_callback=lambda: fixture.passphrase,
         profile_decode_context=_AUTHORITY_PIN.get().profile_decode_context(),

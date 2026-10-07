@@ -32,6 +32,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_administration import (
     AccessAdministrationAction,
@@ -66,11 +67,7 @@ from cadrumo.application.user_profile.automation_lifecycle_service import (
     AutomationResumeRequest,
     HumanSignInRevocationResult,
 )
-from cadrumo.application.user_profile.login_session import (
-    ProfileLoginOutcome,
-    authenticate_profile_for_invocation,
-    logout_active_profile,
-)
+from cadrumo.application.user_profile.login_session import ProfileLoginOutcome, authenticate_profile_for_invocation
 from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -218,7 +215,7 @@ class AdmissionOwner:
             yield outcome, self.human_login_id
         finally:
             if not self.human_bound:
-                logout_active_profile()
+                reset_test_profile_session()
                 self.human_released = True
         if self.fail_human_release:
             raise RuntimeError("synthetic human release failure")

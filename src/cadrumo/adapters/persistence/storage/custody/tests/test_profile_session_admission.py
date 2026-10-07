@@ -8,12 +8,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import (
-    ProfileLoginOutcome,
-    authenticate_profile_for_invocation,
-    logout_active_profile,
-)
+from cadrumo.application.user_profile.login_session import ProfileLoginOutcome, authenticate_profile_for_invocation
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.session_admission import (
     ProfileCredentialRequestV1,
@@ -44,11 +41,11 @@ def profiles(tmp_path: Path) -> Iterator[tuple[str, str]]:
                 profile_decode_context=decode,
             )
             identifiers.append(result.profile_id)
-            logout_active_profile()
+            reset_test_profile_session()
         try:
             yield identifiers[0], identifiers[1]
         finally:
-            logout_active_profile()
+            reset_test_profile_session()
 
 
 @pytest.mark.parametrize("targeted", [True, False])
@@ -100,7 +97,7 @@ def test_credential_outcome_without_live_custody_is_not_admission(profiles: tupl
             passphrase_callback=lambda: PROFILE_INPUT,
             profile_decode_context=request.profile_decode_context,
         )
-        logout_active_profile()
+        reset_test_profile_session()
         return outcome
 
     with pytest.raises(InternalInvariantError, match="live session"):

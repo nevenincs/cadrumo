@@ -22,7 +22,7 @@ from ....application.ledger.actions_common import blocking_modelo_references
 from ....application.ledger.actions_manual import create_manual_transaction, ledger_transaction_result_payload
 from ....application.ledger.attachment_mutation_operation import LedgerAttachmentStaleRevisionProjection
 from ....application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....core.decimal.formatting import format_decimal
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
@@ -97,7 +97,7 @@ def _reauthenticate(
     """Unlock the profile for the encrypted canonical-state oracle."""
     assert profile.label is not None
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=profile.label,
         passphrase_callback=lambda: profile.passphrase,
         profile_decode_context=authority_operation.profile_decode_context(),

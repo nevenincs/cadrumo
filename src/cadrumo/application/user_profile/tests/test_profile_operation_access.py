@@ -40,7 +40,6 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
-    ProfileLogoutOperationRequest,
 )
 from cadrumo.application.user_profile.view_operation import (
     PROFILE_VIEW_OPERATION_DEFINITION_ID,
@@ -48,6 +47,8 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewPageKind,
 )
 from cadrumo.core.period import Period
+
+from .foreign_operation_payload import ForeignProfilePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -176,7 +177,7 @@ def test_profile_route_refuses_foreign_payload_before_profile_identity(route: st
     foreign = OperationRequest(
         definition_id=request.definition_id,
         subject_ref=f"profile:{_OTHER_PROFILE}",
-        payload=ProfileLogoutOperationRequest(profile_id=_OTHER_PROFILE),
+        payload=ForeignProfilePayload(profile_id=_OTHER_PROFILE),
     )
 
     with pytest.raises(ProfileAccessRefusedError) as unavailable:

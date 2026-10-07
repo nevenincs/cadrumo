@@ -24,7 +24,7 @@ from ....adapters.persistence.storage.master_key.active_session import close_act
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ....application.modelo.review_package_recipient_encryption import ensure_recipient_encryption_keypair
 from ....application.modelo.review_package_recipient_registry import add_recipient_fingerprint
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -92,7 +92,7 @@ def _invoke_public(*command: str) -> Result:
 def _reauthenticate(profile: NativeCliProfileFixture, operation: PinnedAuthorityOperation) -> str:
     assert profile.label is not None
     close_active_bucket_session()
-    session = login_profile(
+    session = authenticate_profile_for_invocation(
         name=profile.label,
         passphrase_callback=lambda: profile.passphrase,
         profile_decode_context=operation.profile_decode_context(),

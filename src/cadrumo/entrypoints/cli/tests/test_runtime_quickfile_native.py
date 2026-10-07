@@ -48,7 +48,7 @@ from ....application.runtime.operation_access import (
     RuntimeOperationSubmitted,
 )
 from ....application.user_profile.access_contracts import AccessDenialCode
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.aggregation import RetencionScheme
 from ....core.config import override_settings
 from ....core.hashing import canonical_json_bytes, sha256_hex
@@ -237,8 +237,8 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
 
         def reopen() -> None:
             close_active_bucket_session()
-            login_profile(
-                name=profile.label,
+            authenticate_profile_for_invocation(
+                name=str(profile_id),
                 passphrase_callback=lambda: profile.passphrase,
                 profile_decode_context=authority_operation.profile_decode_context(),
             )
@@ -476,7 +476,7 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
         assert exported and receipt.byte_size == len(exported)
         assert receipt.file_sha256 == sha256_hex(exported)
         close_active_bucket_session()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=profile.label,
             passphrase_callback=lambda: profile.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

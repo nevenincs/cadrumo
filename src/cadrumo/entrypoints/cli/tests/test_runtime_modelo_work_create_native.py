@@ -23,7 +23,7 @@ from ....application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -115,7 +115,7 @@ def test_native_create_reuse_rename_matches_encrypted_work_catalogue(
         assert renamed_result["name_applied"] == "Renamed"
 
         close_active_bucket_session()
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),
@@ -161,7 +161,7 @@ def test_native_applicability_refusal_has_bounded_detail_and_no_work(
         assert len(context["operation_id"]) == 64
 
         close_active_bucket_session()
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

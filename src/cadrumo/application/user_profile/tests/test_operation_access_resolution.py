@@ -18,10 +18,10 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
-    PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
     ProfileFieldMutationOperationRequest,
-    ProfileLogoutOperationRequest,
 )
+
+from .foreign_operation_payload import ForeignProfilePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,7 +44,7 @@ def test_profile_owner_resolves_only_exact_registered_work(wrong_coordinate: str
     request = OperationRequest(
         definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
         subject_ref=f"profile:{uuid4() if wrong_coordinate == 'subject' else profile}",
-        payload=ProfileLogoutOperationRequest(profile_id=profile)
+        payload=ForeignProfilePayload(profile_id=profile)
         if wrong_coordinate == "payload"
         else ProfileFieldMutationOperationRequest(
             profile_id=profile,
@@ -59,13 +59,13 @@ def test_profile_owner_resolves_only_exact_registered_work(wrong_coordinate: str
     elif wrong_coordinate in {"definition", "contract"}:
         context = replace(
             context,
-            contract=context.contract.model_copy(update={"definition_id": PROFILE_LOGOUT_OPERATION_DEFINITION_ID}),
+            contract=context.contract.model_copy(update={"definition_id": "user-profile.logout"}),
         )
         if wrong_coordinate == "definition":
             request = OperationRequest(
-                definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
+                definition_id="user-profile.logout",
                 subject_ref=request.subject_ref,
-                payload=ProfileLogoutOperationRequest(profile_id=profile),
+                payload=ForeignProfilePayload(profile_id=profile),
             )
     if wrong_coordinate is not None:
         with pytest.raises(ProfileAccessRefusedError) as error:

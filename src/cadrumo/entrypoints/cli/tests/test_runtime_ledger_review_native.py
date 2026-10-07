@@ -27,7 +27,7 @@ from click.testing import Result
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....core.config import load_settings, reset_settings_cache
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -112,7 +112,7 @@ class _NativeReview:
         """Decrypt canonical data with a separate password session as the oracle."""
         assert self.profile.label is not None
         close_active_bucket_session()
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=self.profile.label,
             passphrase_callback=lambda: self.profile.passphrase,
             profile_decode_context=self.operation.profile_decode_context(),

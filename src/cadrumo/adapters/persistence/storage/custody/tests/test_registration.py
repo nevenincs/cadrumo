@@ -34,9 +34,9 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import unlock_profile_custody_password
-from cadrumo.application.user_profile.login_session import logout_active_profile
 from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
 from cadrumo.core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
@@ -310,7 +310,7 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        logout_active_profile()
+        reset_test_profile_session()
         decomposed_profile = register_profile_with_credentials(
             label="Decomposed",
             passphrase=decomposed,

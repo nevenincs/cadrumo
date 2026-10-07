@@ -22,7 +22,7 @@ from ....application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....core.period import Period
 from ....core.redaction.rules import redact_structured_for_cli_output
@@ -98,7 +98,7 @@ def test_native_review_matches_pinned_canonical_compact_result(
         payload = unwrap_cli_result(observed)
 
         close_active_bucket_session()
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

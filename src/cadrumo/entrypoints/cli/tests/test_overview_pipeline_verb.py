@@ -30,7 +30,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.overview.pipeline_health import ModeloReadinessState
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -374,7 +374,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
     fixture = _NATIVE_FIXTURE.get()
     operation = _AUTHORITY_PIN.get()
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=_LABEL,
         passphrase_callback=lambda: fixture.passphrase,
         profile_decode_context=operation.profile_decode_context(),

@@ -16,7 +16,7 @@ from ....adapters.persistence.profile.ledger_classification_rules import LedgerC
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.rule_contracts import LedgerRuleRowProjection
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....core.decimal.formatting import format_decimal
 from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -92,7 +92,7 @@ def _reauthenticate(
     """Unlock the exact encrypted profile for a canonical readback."""
     assert profile.label is not None
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=profile.label,
         passphrase_callback=lambda: profile.passphrase,
         profile_decode_context=operation.profile_decode_context(),

@@ -123,7 +123,7 @@ def register_cli_profile(
     for a test that only drives the CLI in this process and so never needs the
     receipt.
     """
-    from .....application.user_profile.login_session import login_profile
+    from .....application.user_profile.login_session import authenticate_profile_for_invocation
     from .....application.user_profile.registration import register_profile_with_credentials
     from .....core.config import load_settings, override_settings
 
@@ -144,7 +144,7 @@ def register_cli_profile(
                 profile_decode_context=decode_context,
             )
         if log_in:
-            login_profile(
+            authenticate_profile_for_invocation(
                 name=label,
                 passphrase_callback=lambda: passphrase,
                 profile_decode_context=decode_context,
@@ -187,7 +187,7 @@ def live_clave_movil_profile_scope(base: Path) -> Iterator[LiveAeatProfile]:
     the operator's OS credential store.
     """
     from .....application.auth.preferences import set_profile_auth_preference
-    from .....application.user_profile.login_session import login_profile
+    from .....application.user_profile.login_session import authenticate_profile_for_invocation
     from .....application.workflow.profile_bucket_scan import resolve_profile_bucket
     from .....core.auth_provider import AuthProviderKind
     from .....core.config import load_settings
@@ -215,7 +215,7 @@ def live_clave_movil_profile_scope(base: Path) -> Iterator[LiveAeatProfile]:
                     )
                 else:
                     with _profile_authority_scope() as operation:
-                        profile_id = login_profile(
+                        profile_id = authenticate_profile_for_invocation(
                             name=_LIVE_PROFILE_LABEL,
                             passphrase_callback=lambda: passphrase,
                             profile_decode_context=operation.profile_decode_context(),

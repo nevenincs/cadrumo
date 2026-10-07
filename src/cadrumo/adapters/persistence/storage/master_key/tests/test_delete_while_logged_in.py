@@ -44,7 +44,7 @@ from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyTransactionState,
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.time.clock import now as _now
@@ -77,7 +77,7 @@ def _register_and_sign_in(root: Path) -> UUID:
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
-    login_profile(
+    authenticate_profile_for_invocation(
         name=outcome.profile_id,
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,

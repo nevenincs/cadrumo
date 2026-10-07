@@ -16,7 +16,7 @@ from ....adapters.persistence.storage.master_key.active_session import close_act
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.ledger.actions_common import blocking_modelo_references, build_manual_ledger_result
 from ....application.ledger.actions_manual import ledger_transaction_result_payload
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -89,7 +89,7 @@ def _reauthenticate(
     """Unlock the encrypted profile for the canonical state oracle."""
     assert profile.label is not None
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=profile.label,
         passphrase_callback=lambda: profile.passphrase,
         profile_decode_context=authority_operation.profile_decode_context(),

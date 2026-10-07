@@ -123,7 +123,7 @@ def _list_transactions() -> list[dict[str, Any]]:
 
 def _stored_transaction(transaction_id: str) -> Any:
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ....application.user_profile.login_session import login_profile
+    from ....application.user_profile.login_session import authenticate_profile_for_invocation
     from ....core.bucket_pointer import resolve_active_bucket_id
     from ....domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -137,7 +137,7 @@ def _stored_transaction(transaction_id: str) -> Any:
     close_active_bucket_session()
     try:
         with bundled_indexed_authority().operation() as operation:
-            login = login_profile(
+            login = authenticate_profile_for_invocation(
                 name=profile.label,
                 passphrase_callback=lambda: password,
                 profile_decode_context=operation.profile_decode_context(),

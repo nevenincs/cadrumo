@@ -21,7 +21,7 @@ from ....application.review.read_contracts import (
     ReviewQueueReadRequest,
     ReviewViewReadRequest,
 )
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import require_error_document, unwrap_cli_result
@@ -86,7 +86,7 @@ def _seed_case(
     definition_id: str,
 ) -> ReviewReadConformanceCase:
     assert profile.label is not None
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=profile.label,
         passphrase_callback=lambda: profile.passphrase,
         profile_decode_context=operation.profile_decode_context(),

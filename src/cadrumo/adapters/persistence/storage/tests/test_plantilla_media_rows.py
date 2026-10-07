@@ -12,7 +12,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import ProfileRecordConflictError
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.plantilla_media_rows import (
     PlantillaMediaMutation,
     PlantillaMediaWriteSurface,
@@ -57,7 +57,7 @@ def profile(tmp_path: Path) -> Iterator[tuple[str, ProfileDecodeContext]]:
             profile_create_context=operation.profile_create_context(),
             profile_decode_context=operation.profile_decode_context(),
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=outcome.label,
             passphrase_callback=passphrase.__str__,
             profile_decode_context=operation.profile_decode_context(),

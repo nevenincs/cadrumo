@@ -20,10 +20,10 @@ from cadrumo.core.storage_environment import (
     StorageRootRefusal,
     child_environment,
     ensure_storage_root,
-    resolve_storage_root,
     storage_root_for,
 )
 from cadrumo.core.tests.checkout import project_root
+from cadrumo.core.tests.storage_roots import resolve_storage_root
 from cadrumo.core.type_guards import is_str_keyed_dict
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 

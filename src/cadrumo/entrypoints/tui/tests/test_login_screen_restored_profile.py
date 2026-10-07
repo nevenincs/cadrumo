@@ -35,6 +35,7 @@ from ....adapters.persistence.storage.custody.tests.automation_support import Me
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.user_profile.capsule_restore import (
@@ -42,7 +43,6 @@ from ....application.user_profile.capsule_restore import (
     restore_profile_capsule_with_password,
 )
 from ....application.user_profile.login_interaction import profile_login_choices
-from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.config import override_settings
@@ -115,7 +115,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
     with override_settings(cadrumo_local_storage_root=str(root), cadrumo_output_language="en"):
         choices = list(profile_login_choices())
         assert any(choice.profile_id == restored.profile_id for choice in choices)
-        logout_active_profile()
+        reset_test_profile_session()
         profile_id = UUID(restored.profile_id)
         with ExitStack() as runtime_resources:
             endpoint = (

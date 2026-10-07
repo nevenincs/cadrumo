@@ -23,8 +23,8 @@ from typing import TYPE_CHECKING
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....application.user_profile.login_session import logout_active_profile
 from ....core.config import load_settings
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
@@ -121,7 +121,7 @@ def ensure_profile() -> str:
             profile_create_context=profile_create_context,
             profile_decode_context=profile_decode_context,
         )
-    logout_active_profile()
+    reset_test_profile_session()
     return outcome.bucket_id
 
 
@@ -170,13 +170,17 @@ def ensure_session() -> str:
     fixture pin instead, and every surface reading the profile record then
     refuses on the generation mismatch.
     """
-    from ....application.user_profile.login_session import login_profile
+    from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
+    from ....application.user_profile.login_session import authenticate_profile_for_invocation
     from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     bucket_id = ensure_profile()
+    ProfileCapsuleLifecycle().select(bucket_id)
     with bundled_indexed_authority().operation():
         _profile_create_context, profile_decode_context = _profile_contexts_for_test()
-        login_profile(name=bucket_id, passphrase_callback=passphrase, profile_decode_context=profile_decode_context)
+        authenticate_profile_for_invocation(
+            name=bucket_id, passphrase_callback=passphrase, profile_decode_context=profile_decode_context
+        )
     return bucket_id
 
 

@@ -98,10 +98,11 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
 def _login(label: str | None = None) -> None:
     """Establish the session through the application login door, for ``label`` or the active profile."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    from ....application.user_profile.login_session import login_profile
+    from ....application.user_profile.login_session import authenticate_profile_for_invocation
+    from ....core.bucket_pointer import require_active_bucket_id
 
-    login_profile(
-        name=label,
+    authenticate_profile_for_invocation(
+        name=label if label is not None else require_active_bucket_id(),
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,
     )

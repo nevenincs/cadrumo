@@ -28,7 +28,7 @@ from ....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....core.external_constants import OutputLanguage
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -128,7 +128,7 @@ def _cli(profile: NativeCliProfileFixture, *args: str) -> Result:
 def _opened_profile(profile: NativeCliProfileFixture, operation: PinnedAuthorityOperation) -> Iterator[str]:
     """Open the registered profile's encrypted bucket for direct seeding or assertions."""
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=_PROFILE_LABEL,
         passphrase_callback=lambda: profile.passphrase,
         profile_decode_context=operation.profile_decode_context(),
@@ -811,7 +811,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         # while leaving the ledger mesh assertions meaningful.
         # The CLI JSON output redacts ``bucket_id``, so seeding takes it from the
         # password login that opens the registered profile's encrypted bucket.
-        bucket_id = login_profile(
+        bucket_id = authenticate_profile_for_invocation(
             name=_PROFILE_LABEL,
             passphrase_callback=lambda: native_profile.passphrase,
             profile_decode_context=operation.profile_decode_context(),
@@ -870,7 +870,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         payload = _payload(result.output)
         revision_id = payload["calculation_revision_id"]
 
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_PROFILE_LABEL,
             passphrase_callback=lambda: native_profile.passphrase,
             profile_decode_context=operation.profile_decode_context(),
@@ -955,7 +955,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         def _noop() -> None: ...
 
         wizard_context = typer.Context(typer.main.get_command(wizard_app), obj={"format": "json"})
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_PROFILE_LABEL,
             passphrase_callback=lambda: native_profile.passphrase,
             profile_decode_context=operation.profile_decode_context(),

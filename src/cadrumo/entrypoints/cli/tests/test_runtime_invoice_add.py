@@ -28,7 +28,7 @@ from ....application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.tests.profile_values import complete_profile_facts
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.models import InvoiceCatalogue
@@ -161,7 +161,7 @@ def native_invoice_runtime_session(
 
 def catalogue_after_password_login(profile_id: UUID, authority_operation: PinnedAuthorityOperation) -> InvoiceCatalogue:
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=str(profile_id),
         passphrase_callback=lambda: PROFILE_INPUT,
         profile_decode_context=authority_operation.profile_decode_context(),
@@ -177,7 +177,7 @@ def catalogue_after_password_login(profile_id: UUID, authority_operation: Pinned
 def password_profile_session(profile_id: UUID, authority_operation: PinnedAuthorityOperation) -> Iterator[None]:
     """Open the enrolled profile for a direct repository assertion."""
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=str(profile_id),
         passphrase_callback=lambda: PROFILE_INPUT,
         profile_decode_context=authority_operation.profile_decode_context(),

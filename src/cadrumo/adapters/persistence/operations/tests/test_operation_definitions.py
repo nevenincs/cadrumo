@@ -37,7 +37,7 @@ from cadrumo.application.user_profile.custody_ports import (
     ProfileCustodySecureObjectRepositoryPort,
     profile_custody_secure_object_repository,
 )
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -45,7 +45,6 @@ from cadrumo.application.user_profile.operations import (
 from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
-    PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
@@ -114,7 +113,7 @@ def _register_profile() -> UUID:
             profile_create_context=authority_operation.profile_create_context(),
             profile_decode_context=authority_operation.profile_decode_context(),
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=outcome.profile_id,
             passphrase_callback=lambda: _PROFILE_CREDENTIAL_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),
@@ -334,4 +333,4 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
 def test_legacy_profile_logout_is_not_an_operation() -> None:
     registry = OperationRegistry(definitions=USER_PROFILE_OPERATION_DEFINITIONS)
     with pytest.raises(KeyError, match="unknown operation"):
-        registry.lookup(PROFILE_LOGOUT_OPERATION_DEFINITION_ID)
+        registry.lookup("user-profile.logout")

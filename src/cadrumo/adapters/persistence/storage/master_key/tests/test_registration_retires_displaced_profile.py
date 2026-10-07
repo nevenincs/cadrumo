@@ -23,7 +23,7 @@ from cadrumo.application.user_profile.registration import ProfileRegistrationErr
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
-from .test_login_handover import (
+from .profile_process_support import (
     _child_settings,
     _close_child_login,
     _login_in_separate_process,

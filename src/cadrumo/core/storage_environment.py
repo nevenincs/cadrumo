@@ -414,19 +414,6 @@ def _anchored_installed_default_root(
     )
 
 
-def installed_default_root(
-    platform: StoragePlatform | None,
-    environ: Mapping[str, str],
-    *,
-    channel: str | None = None,
-    path_type: type[PurePath] | None = None,
-) -> PurePath:
-    """Return the pure normalized installed default; host adapters also validate links."""
-    return _normalized_absolute(
-        _anchored_installed_default_root(platform, environ, channel=channel, path_type=path_type)
-    )
-
-
 def configured_root_value(
     environ: Mapping[str, str], mode: StorageMode, *, platform: StoragePlatform | None = None
 ) -> str | None:
@@ -500,27 +487,6 @@ def _anchored_storage_root(
     if mode is StorageMode.DEVELOPMENT:
         return _checkout_anchor(path_type, checkout).joinpath(*STORAGE_ROOT.development_default)
     return _anchored_installed_default_root(platform, environ, channel=channel, path_type=path_type)
-
-
-def resolve_storage_root(
-    *,
-    platform: StoragePlatform | None,
-    mode: StorageMode,
-    environ: Mapping[str, str],
-    checkout: PurePath | str | None = None,
-    channel: str | None = None,
-    path_type: type[PurePath] | None = None,
-) -> PurePath:
-    """Pure target-syntax resolution: a Unicode, normalized absolute root without effects.
-
-    Host resolution additionally validates the original anchored components for
-    links before normalization, then validates the normalized components.
-    """
-    return _normalized_absolute(
-        _anchored_storage_root(
-            platform=platform, mode=mode, environ=environ, checkout=checkout, channel=channel, path_type=path_type
-        )
-    )
 
 
 def _checkout_anchor(path_type: type[PurePath], checkout: PurePath | str | None) -> PurePath:

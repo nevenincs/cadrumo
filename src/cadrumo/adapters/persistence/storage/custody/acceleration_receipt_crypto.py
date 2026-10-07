@@ -36,7 +36,6 @@ from ..crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from ..crypto.aes_gcm import KEY_SIZE
 from ..errors import DecryptionError, EncryptionError
 from .sign_in_generation import SignInGeneration
-from .zeroise import zeroise as _zeroise
 
 PROFILE_SESSION_SCHEMA_VERSION: Final[int] = 3
 """Current persisted-session record schema version.
@@ -284,40 +283,12 @@ def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSe
         raise
 
 
-def advance_profile_session_idle_deadline(
-    *,
-    record: PersistedProfileSession,
-    session_key: bytes,
-    new_idle_deadline: datetime,
-) -> PersistedProfileSession:
-    """Re-wrap a receipt with a clamped idle deadline and a fresh nonce."""
-    clamped = min(validate_utc_aware(new_idle_deadline), record.absolute_deadline)
-    dek_buffer = unwrap_profile_session_dek(session_key=session_key, record=record)
-    try:
-        return _wrap_profile_session_dek(
-            session_key=session_key,
-            dek=bytes(dek_buffer),
-            profile_id=record.profile_id,
-            session_id=record.session_id,
-            custody_generation=record.custody_generation,
-            dek_epoch=record.dek_epoch,
-            login_binding=record.login_binding,
-            sign_in=record.sign_in,
-            issued_at=record.issued_at,
-            idle_deadline=clamped,
-            absolute_deadline=record.absolute_deadline,
-        )
-    finally:
-        _zeroise(dek_buffer)
-
-
 __all__ = [
     "PROFILE_SESSION_KEY_BYTES",
     "PROFILE_SESSION_LOGIN_ID_MAX_LENGTH",
     "PROFILE_SESSION_SCHEMA_VERSION",
     "LoginBindingDigest",
     "PersistedProfileSession",
-    "advance_profile_session_idle_deadline",
     "profile_session_login_binding",
     "profile_session_login_matches",
     "unwrap_profile_session_dek",

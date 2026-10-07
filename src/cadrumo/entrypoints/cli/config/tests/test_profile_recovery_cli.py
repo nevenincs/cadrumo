@@ -79,9 +79,9 @@ def _create_profile(name: str = _PROFILE) -> Result:
 
 def _close_local_session() -> None:
     """Drop only fixture-local custody before proving the next explicit password."""
-    from .....application.user_profile.login_session import logout_active_profile
+    from .....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 
-    logout_active_profile()
+    reset_test_profile_session()
 
 
 def _status() -> dict[str, Any]:

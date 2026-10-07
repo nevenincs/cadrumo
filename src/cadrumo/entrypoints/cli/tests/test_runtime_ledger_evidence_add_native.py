@@ -15,7 +15,7 @@ from ....adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.redaction.rules import redact_structured_for_cli_output
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import unwrap_cli_result
@@ -129,7 +129,7 @@ def test_native_exact_profile_evidence_add_replay_and_readback(
         # Reauthenticate independently to read the encrypted retained bytes.
         close_active_bucket_session()
         try:
-            login = login_profile(
+            login = authenticate_profile_for_invocation(
                 name=profile.label,
                 passphrase_callback=lambda: profile.passphrase,
                 profile_decode_context=authority_operation.profile_decode_context(),

@@ -19,12 +19,16 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-from cadrumo.adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
+from cadrumo.adapters.persistence.storage.master_key.active_session import (
+    ActiveProfileSessionPresenceAdapter,
+    current_active_bucket_session,
+)
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
@@ -34,13 +38,11 @@ from cadrumo.application.auth.operation_definitions import (
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
     AUTH_RESET_OPERATION_DEFINITION_ID,
     AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
-    PROFILE_LOGIN_OPERATION_DEFINITION_ID,
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
     AuthOperationPorts,
     AuthSessionAcquireOperationRequest,
     AuthTeardownOperationRequest,
-    ProfileLoginOperationRequest,
     ProfilePassphraseRotationOperationRequest,
     build_auth_operation_definitions,
     build_auth_operation_registrations,
@@ -50,9 +52,9 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
-from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.operations import (
     OperationEffect,
@@ -135,7 +137,7 @@ def _run_secret_operation(
     supervisor: OperationSupervisor,
     definition_id: str,
     subject_ref: str,
-    payload: ProfileLoginOperationRequest | ProfilePassphraseRotationOperationRequest,
+    payload: ProfilePassphraseRotationOperationRequest,
     operation_id: str,
     secret: bytes,
 ):
@@ -152,7 +154,7 @@ def _run_secret_operation(
 def test_legacy_profile_login_is_not_an_operation() -> None:
     registry = OperationRegistry(definitions=_AUTH_DEFINITIONS)
     with pytest.raises(KeyError, match="unknown operation"):
-        registry.lookup(PROFILE_LOGIN_OPERATION_DEFINITION_ID)
+        registry.lookup("auth.profile.login")
 
 
 def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody(
@@ -161,7 +163,7 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _CURRENT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -198,9 +200,10 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
         assert terminal.terminal_receipt is not None
         assert terminal.terminal_receipt.result_ref != f"profile:{profile_id}"
         _assert_not_durable(root, secret)
-        assert logout_active_profile() == str(profile_id)
+        reset_test_profile_session()
+        assert current_active_bucket_session() is None
 
-        relogin = login_profile(
+        relogin = authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _REPLACEMENT,
             profile_decode_context=_profile_decode_context_for_test,

@@ -7,7 +7,7 @@ import json
 from click.testing import Result
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .cli_runner import invoke_cached_cli
@@ -24,7 +24,7 @@ def reauthenticate_native_profile(
     """Unlock the encrypted profile using its held authority decode context."""
     assert profile.label is not None
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=profile.label,
         passphrase_callback=lambda: profile.passphrase,
         profile_decode_context=authority_operation.profile_decode_context(),

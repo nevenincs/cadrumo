@@ -97,10 +97,10 @@ def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
         # observes the same process boundary as an operator's completed create
         # command and can rename the capsule during deletion.
         from ....adapters.persistence.storage.sql.engine import dispose_engine
+        from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
         from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
-        from ....application.user_profile.login_session import logout_active_profile
 
-        logout_active_profile()
+        reset_test_profile_session()
         dispose_engine()
         ProfileCapsuleLifecycle().select(profile_id)
         return profile_id

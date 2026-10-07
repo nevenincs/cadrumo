@@ -77,7 +77,7 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationProjection,
@@ -653,7 +653,9 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                 running.result(timeout=12)
                 endpoint.close()
         _, decode = profile_authority_contexts()
-        login_profile(name=str(profile), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode)
+        authenticate_profile_for_invocation(
+            name=str(profile), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+        )
         try:
             persisted = ProfileRecordRepository.for_current_session(profile, profile_decode_context=decode).load(
                 profile

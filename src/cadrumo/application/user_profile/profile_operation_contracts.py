@@ -39,8 +39,6 @@ PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID = "user-profile.complete-setup"
 
 PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID = "user-profile.bundle-export"
 
-PROFILE_LOGOUT_OPERATION_DEFINITION_ID = "user-profile.logout"
-
 PROFILE_FIELD_MUTATION_PHASES = (
     "user-profile.field-mutation.preflight",
     "user-profile.field-mutation.execute",
@@ -97,12 +95,6 @@ PROFILE_BUNDLE_EXPORT_PHASES = (
 )
 
 PROFILE_BUNDLE_EXPORT_INPUT_KIND = "profile.bundle-export.passphrase"
-
-PROFILE_LOGOUT_PHASES = (
-    "user-profile.logout.preflight",
-    "user-profile.logout.execute",
-    "user-profile.logout.settlement",
-)
 
 
 class ProfileFieldMutationOperationRequest(BaseModel):
@@ -471,11 +463,3 @@ def project_profile_mutation_result(result: BaseModel, receipt: OperationTermina
             already_complete=result.already_complete,
         )
     return ProfileMutationOperationProjection(profile_id=result.profile_id, record_revision=result.record_revision)
-
-
-class ProfileLogoutOperationRequest(BaseModel):
-    """One strong-close request for the exact active profile subject."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: UUID

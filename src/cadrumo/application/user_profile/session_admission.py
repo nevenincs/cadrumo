@@ -71,11 +71,10 @@ class ProfileCredentialJourneyV1(Protocol):
     """The surface-owned half of admission: obtain credentials and authenticate.
 
     A journey returns the login outcome it achieved, or ``None`` when the
-    operator declined. It must authenticate through a canonical login door --
-    ``authenticate_profile_for_invocation`` for a target scoped to one
-    invocation, ``login_profile`` when the operator is genuinely selecting a
-    profile -- so that binding, throttling and handover stay owned by the
-    login services rather than re-implemented per surface.
+    operator declined. It authenticates an invocation target through
+    ``authenticate_profile_for_invocation`` so that password proof, throttling
+    and local custody binding remain owned by the login service. Shared human
+    sign-in and profile selection belong to their runtime boundaries.
     """
 
     def __call__(self, request: ProfileCredentialRequestV1, /) -> ProfileLoginOutcome | None:

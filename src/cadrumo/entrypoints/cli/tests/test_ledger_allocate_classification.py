@@ -22,7 +22,7 @@ from click.testing import Result
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.ledger.actions_manual import create_manual_transaction
 from ....application.ledger.models import ManualLedgerTransactionCommand
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import TransactionDirection
 from ...ledger_action_composition import compose_ledger_action_ports
@@ -76,7 +76,7 @@ def allocation_profile_and_transaction(
         assert profile.label is not None
         bucket_id = resolve_login_target(profile.label).bucket_id
         close_active_bucket_session()
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=profile.label,
             passphrase_callback=lambda: profile.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

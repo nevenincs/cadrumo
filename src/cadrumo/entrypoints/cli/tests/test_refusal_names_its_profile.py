@@ -37,10 +37,10 @@ def _register_active_profile(storage_root: Path, label: str) -> None:
         # Release the parent's engine and session so the child observes a
         # completed create, as an operator's next command would.
         from ....adapters.persistence.storage.sql.engine import dispose_engine
+        from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
         from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
-        from ....application.user_profile.login_session import logout_active_profile
 
-        logout_active_profile()
+        reset_test_profile_session()
         dispose_engine()
         ProfileCapsuleLifecycle().select(profile_id)
 

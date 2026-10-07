@@ -20,9 +20,9 @@ bucket's key-encryption key is derived from the credential the operator chose
 rather than from an ambient environment value.
 
 See Also:
-    :func:`~cadrumo.application.user_profile.login_session.login_profile`
-        The returning-operator counterpart; this module is the first-time
-        path that has no key material to unwrap yet.
+    :func:`~cadrumo.application.user_profile.login_session.authenticate_profile_for_invocation`
+        Explicit password authentication for an existing capsule; this module
+        creates the capsule and its initial key material.
 """
 
 from __future__ import annotations
@@ -108,9 +108,8 @@ class ProfileRegistrationOutcome(BaseModel):
     create span publishes its live bucket session and record authority
     process-wide through
     :func:`~cadrumo.application.user_profile.login_session.publish_created_profile_session`,
-    exactly as :func:`login_profile` leaves them, so the operator is not asked
-    for the passphrase they just chose. No acceleration receipt is minted, so
-    the next process authenticates normally.
+    so the operator is not asked for the passphrase they just chose. No
+    acceleration receipt is minted, so the next process authenticates normally.
     """
 
     model_config = STRICT_FROZEN_CONFIG

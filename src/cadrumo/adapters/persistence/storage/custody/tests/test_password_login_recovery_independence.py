@@ -11,9 +11,10 @@ from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import profile_custody_recovery_envelope_path
-from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
@@ -58,9 +59,9 @@ def test_password_login_ignores_absent_removed_or_damaged_recovery(tmp_path: Pat
                 wrapper.unlink()
             else:
                 wrapper.write_bytes(b"not-a-recovery-envelope")
-        logout_active_profile()
+        reset_test_profile_session()
 
-        authenticated = login_profile(
+        authenticated = authenticate_profile_for_invocation(
             name=outcome.profile_id,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -68,4 +69,4 @@ def test_password_login_ignores_absent_removed_or_damaged_recovery(tmp_path: Pat
         try:
             assert authenticated.bucket_id == outcome.profile_id
         finally:
-            logout_active_profile()
+            reset_test_profile_session()

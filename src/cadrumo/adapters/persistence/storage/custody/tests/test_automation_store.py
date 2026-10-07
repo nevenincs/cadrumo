@@ -49,6 +49,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.custody.zeroise import zeroise
 from cadrumo.adapters.persistence.storage.master_key.active_session import get_active_master_key
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -71,7 +72,7 @@ from cadrumo.application.user_profile.capsule_archive import (
     read_profile_capsule_archive,
 )
 from cadrumo.application.user_profile.capsule_restore import restore_profile_capsule_with_password
-from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
@@ -164,7 +165,7 @@ def subject(tmp_path: Path) -> Iterator[Subject]:
         native = MemoryNativePort()
         store = AutomationControlStore(root=root, binding=binding, secrets_store=native)
         yield Subject(store, native, material, credential)
-        logout_active_profile()
+        reset_test_profile_session()
 
 
 def test_unlock_after_password_logout_proves_real_sentinel(subject: Subject) -> None:
@@ -173,7 +174,7 @@ def test_unlock_after_password_logout_proves_real_sentinel(subject: Subject) -> 
     snapshot = custody.snapshot()
     assert snapshot.grants == (subject.material.grant,)
     assert subject.material.keys[0].verifier not in snapshot.model_dump_json()
-    logout_active_profile()
+    reset_test_profile_session()
     dek = subject.store.unwrap(credential=subject.credential, now=NOW)
     try:
         assert bytes(dek) == subject.dek
@@ -357,9 +358,9 @@ def test_password_authentication_is_independent_of_broken_automation(subject: Su
     subject.publish()
     subject.native.unavailable = True
     (subject.store.directory / "current.json").write_bytes(b"broken")
-    logout_active_profile()
+    reset_test_profile_session()
     _, decode = profile_authority_contexts()
-    result = login_profile(
+    result = authenticate_profile_for_invocation(
         name=str(subject.store.binding.profile_id),
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=decode,

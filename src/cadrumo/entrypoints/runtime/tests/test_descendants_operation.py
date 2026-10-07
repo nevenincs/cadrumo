@@ -39,7 +39,7 @@ from cadrumo.application.user_profile.descendant_rows import (
     ProfileDescendantRow,
     encode_descendant_rows,
 )
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileDescendantsOperationProjection,
     ProfileDescendantsOperationRequest,
@@ -79,7 +79,9 @@ class _LoginObservation:
 def _record(profile_id: UUID, *, root: Path) -> UserProfileRecord:
     """Read the actual encrypted record without retaining parent custody."""
     _, decode = profile_authority_contexts()
-    login_profile(name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode)
+    authenticate_profile_for_invocation(
+        name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+    )
     try:
         return load_test_profile_record(profile_id, root=root)
     finally:

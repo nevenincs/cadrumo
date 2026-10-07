@@ -20,12 +20,13 @@ from cadrumo.adapters.persistence.storage.recovery_key import canonical_recovery
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import (
     profile_custody_recovery_envelope_path,
     unlock_profile_custody_password,
 )
-from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.recovery_custody import (
@@ -297,7 +298,7 @@ def test_the_recovery_code_replaces_a_forgotten_passphrase_and_keeps_the_dek_epo
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         material_before = load_committed_profile_password_material(profile_id)
         wrapper = _wrapper_path(profile_id)
         wrapper_before = wrapper.read_bytes()
@@ -326,7 +327,7 @@ def test_the_recovery_code_replaces_a_forgotten_passphrase_and_keeps_the_dek_epo
 
         # The record is readable through a real login on the new credential,
         # so the reset re-headed the row rather than merely swapping the wrapper.
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: _REPLACEMENT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -337,7 +338,7 @@ def test_the_recovery_code_replaces_a_forgotten_passphrase_and_keeps_the_dek_epo
             ).load(str(profile_id))
             assert record.profile_id == str(profile_id)
         finally:
-            logout_active_profile()
+            reset_test_profile_session()
 
 
 def test_the_same_code_resets_again_after_a_reset(tmp_path: Path) -> None:
@@ -366,7 +367,7 @@ def test_a_wrong_code_refuses_non_oracularly_and_leaves_the_envelope_untouched(t
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         before = _storage_snapshot(storage_root)
         wrong = _mismatching_proof(code)
 
@@ -384,11 +385,18 @@ def test_a_wrong_code_refuses_non_oracularly_and_leaves_the_envelope_untouched(t
         assert wrong not in repr(refused.value)
         # The one write a refused code makes is the failed-attempt count, in
         # the profile's keystore beside the capsule rather than inside it.
-        keystore = login_throttle_path(storage_root=storage_root, bucket_id=str(profile_id)).parent
+        throttle = login_throttle_path(storage_root=storage_root, bucket_id=str(profile_id))
         after = _storage_snapshot(storage_root)
         changed = {key for key in before.keys() | after.keys() if before.get(key, b"") != after.get(key, b"")}
-        assert changed
-        assert all((storage_root / key).is_relative_to(keystore) for key in changed)
+        expected = {throttle.relative_to(storage_root).as_posix()}
+        # A cold keystore creates its two parent directories with the first
+        # failed-attempt record; neither directory contains capsule material.
+        for parent in (throttle.parent, throttle.parent.parent):
+            key = parent.relative_to(storage_root).as_posix()
+            if key not in before:
+                assert after[key] is None
+                expected.add(key)
+        assert changed == expected, changed
         material = load_committed_profile_password_material(profile_id)
         assert unlock_profile_custody_password(material, password=_CURRENT).dek is not None
 
@@ -397,7 +405,7 @@ def test_reset_refuses_a_profile_that_never_enrolled(tmp_path: Path) -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
-        logout_active_profile()
+        reset_test_profile_session()
         before = _storage_snapshot(storage_root)
 
         with pytest.raises(ProfileRecoveryError) as refused:
@@ -418,7 +426,7 @@ def test_reset_checks_the_new_passphrase_and_its_confirmation_before_any_proof(t
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         before = _storage_snapshot(storage_root)
 
         with pytest.raises(ProfileRecoveryError) as mismatched:
@@ -503,7 +511,7 @@ def test_prepared_reset_cannot_replay_or_retire_sessions_before_valid_proof(
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         before = load_committed_profile_password_material(profile_id).envelope
         retired: list[str] = []
         with pytest.raises(ProfileRecoveryError):

@@ -15,7 +15,7 @@ from ....application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LedgerEvidenceAttachmentViewRequest,
 )
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import unwrap_cli_result
 from ...tests.evidence_followup_operation_test_support import prepare_evidence_followup_conformance_case
@@ -74,7 +74,7 @@ def test_native_profile_reads_all_evidence_followup_surfaces(
         profile.register(label="native-ledger-evidence-followup", facts=_PROFILE_FACTS)
 
         assert profile.label is not None
-        login_profile(
+        authenticate_profile_for_invocation(
             name=profile.label,
             passphrase_callback=lambda: profile.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

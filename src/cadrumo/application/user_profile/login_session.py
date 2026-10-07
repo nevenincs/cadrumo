@@ -1,12 +1,9 @@
 """Local password custody and runtime-owned receipt admission.
 
-Local password authentication publishes a process-local DEK and record session
-through a recoverable pointer handover. Local logout or profile selection seals
-those keys without revoking a runtime-owned sign-in. Shared receipt minting and
-supplied-proof admission belong to the authenticated runtime lifecycle.
-
-Custody-deletion receipt cleanup remains migration work; callers must not use
-local logout as global sign-out.
+Explicit password authentication binds process-local custody without changing
+profile selection. Borrowed candidates leave publication to their runtime owner.
+Shared receipt minting and supplied-proof admission belong to the authenticated
+runtime lifecycle; custody deletion retains its exact-profile cleanup boundary.
 """
 
 from __future__ import annotations
@@ -23,7 +20,6 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...core.bucket_pointer import BucketPointer, resolve_active_bucket_id
 from ...core.config import load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
@@ -37,7 +33,6 @@ from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordSession
 from .custody_ports import (
     ProfileCustodyPasswordMaterialPort,
-    default_profile_bucket_event_history_repository,
     load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
     profile_is_keyring_unavailable,
@@ -46,7 +41,6 @@ from .custody_ports import (
     verify_profile_custody_dek_against_sentinel,
 )
 from .language_resolver import refresh_active_profile_output_language
-from .login_handover import HandoverPhase, ProfileLoginHandoverJournal
 from .login_session_port import (
     ProfileBucketSessionPort,
     ProfileLoginSessionPort,
@@ -54,14 +48,12 @@ from .login_session_port import (
     profile_login_session_port,
 )
 from .profile_pointer import (
-    ActiveProfilePointerTransaction,
     ActiveProfilePointerTransactionError,
     active_profile_pointer_transaction,
 )
 from .profile_record_repository import (
     activate_profile_record_session,
     bind_active_profile_record_session,
-    clear_active_profile_record_session_binding,
     close_active_profile_record_session,
 )
 
@@ -78,11 +70,11 @@ def _profile_login_sessions() -> ProfileLoginSessionPort:
     return profile_login_session_port()
 
 
-def _refuse_handover(reason: str) -> NoReturn:
-    """Fail closed when the active pointer diverges from a witnessed handover."""
+def _refuse_login_candidate(reason: str) -> NoReturn:
+    """Fail closed when a candidate differs from the requested profile identity."""
     raise ActiveProfilePointerTransactionError(
         translated_message="errors.integrity.integrity_storage_profile_custody_record",
-        context={"owner": "profile-login-handover", "reason": reason},
+        context={"owner": "profile-login-candidate", "reason": reason},
     )
 
 
@@ -133,10 +125,9 @@ class ProfileLoginOutcome(BaseModel):
             OS login to bind, so the session is process-scoped only.
         already_authenticated: ``True`` when a still-valid persisted
             session was resumed as a no-op (no re-prompt, no new record).
-        closed_previous_bucket_id: Bucket whose session this login closed
-            during a cross-profile handover, or ``None`` when the login
-            re-entered the profile already selected. Populated whether or
-            not that profile still had a live session in this process.
+        closed_previous_bucket_id: Retained result field, always ``None`` for
+            the supported candidate and invocation authentication doors. These
+            doors do not retire another profile's shared runtime sign-in.
     """
 
     model_config = _STRICT_FROZEN
@@ -233,52 +224,6 @@ class ProfileReceiptRefusedError(CadrumoError):
         super().__init__(reason.value)
 
 
-@dataclass(slots=True)
-class _HandoverRecovery:
-    """What one recovery classification leaves for the login that observed it.
-
-    ``interrupted`` is the witness the login must still replay, and is absent
-    whenever recovery settled the handover itself.  ``completed_selection``
-    names the profile the last COMPLETED handover selected, which is the only
-    durable record of what the pointer named before an out-of-band writer moved
-    it -- and is therefore the sole remaining source for the profile this login
-    is moving away from once that happened in an earlier process.
-    """
-
-    interrupted: ProfileLoginHandoverJournal | None = None
-    completed_selection: str | None = None
-
-
-@dataclass(slots=True)
-class _LoginAttempt:
-    """Resolved, lock-scoped inputs shared by one login attempt."""
-
-    target: ProfileBucketPointer
-    selected: BucketPointer
-    prior_pointer: BucketPointer
-    pointer_transaction: ActiveProfilePointerTransaction
-    storage_root: Path
-    interrupted_handover: ProfileLoginHandoverJournal | None
-    completed_selection: str | None = None
-
-
-@dataclass(slots=True)
-class _HandoverPublication:
-    """Durable pointer publication returned before candidate binding."""
-
-    journal: ProfileLoginHandoverJournal
-    published_pointer: BucketPointer
-
-
-@dataclass(slots=True)
-class _CandidatePromotionResult:
-    """Candidate state that is safe to retire A against."""
-
-    journal: ProfileLoginHandoverJournal
-    previous_record: ProfileRecordSession | None
-    persisted: bool
-
-
 def _bucket_session_windows() -> tuple[int, int]:
     """Return the bounded session windows for current capsules.
 
@@ -291,61 +236,6 @@ def _bucket_session_windows() -> tuple[int, int]:
         settings.cadrumo_bucket_default_idle_lock_minutes,
         settings.cadrumo_bucket_default_session_absolute_minutes,
     )
-
-
-def _recover_interrupted_handover(
-    *,
-    storage_root: Path,
-    pointer_transaction: ActiveProfilePointerTransaction,
-) -> _HandoverRecovery:
-    """Classify an interrupted handover without unlocking or overwriting it.
-
-    A process crash has already destroyed A's in-process handles.  The durable
-    pointer therefore decides the next process's profile.  Before B's
-    activation event is durable, the caller must re-authenticate B and replay
-    the stable journal event; once activation is witnessed, no replay is
-    needed and the journal can be removed.
-
-    The terminal receipt is classified by its PHASE alone, before the pointer
-    is consulted at all.  A journal reaches ``A_RETIRED`` only after the
-    handover has run to its end -- the receipt is written after A's authorities
-    are closed and its durable session artefacts revoked -- so there is no such
-    thing as an interrupted terminal handover, and the two pointer states it
-    witnessed answer no question that is still open.  It is retained past its
-    own completion purely so ONE later login observes the boundary, and in that
-    interval the pointer legitimately moves for reasons the handover never
-    witnessed: registering a profile compare-and-swaps the pointer onto the new
-    capsule inside the create transaction, so an ordinary
-    register-login-register-login sequence leaves the retained receipt matching
-    neither of its own states.  Judging a finished handover against a pointer
-    that has since moved on reported a live interruption where none existed and
-    refused every subsequent login.
-
-    Every pre-terminal phase still carries real outstanding work, so it is
-    still judged against the pointer and still fails closed when that pointer
-    is unrecognisable.
-    """
-    journal = _profile_login_sessions().load_handover_journal(storage_root=storage_root)
-    if journal is None:
-        return _HandoverRecovery()
-    if journal.phase is HandoverPhase.A_RETIRED:
-        _profile_login_sessions().clear_handover_journal(storage_root=storage_root, journal=journal)
-        return _HandoverRecovery(completed_selection=journal.profile_b)
-    current = pointer_transaction.read()
-    before = journal.pointer_before
-    after = journal.pointer_after
-    if current == before:
-        # The pointer stands where it did before this handover, so nothing it
-        # selected survived and the profile it moved away from is still the
-        # selected one.  There is no completed selection to carry.
-        _profile_login_sessions().clear_handover_journal(storage_root=storage_root, journal=journal)
-        return _HandoverRecovery()
-    if current != after:
-        _refuse_handover("pointer no longer matches either witnessed handover state")
-    if journal.phase is HandoverPhase.ACTIVATED:
-        _profile_login_sessions().clear_handover_journal(storage_root=storage_root, journal=journal)
-        return _HandoverRecovery(completed_selection=journal.profile_b)
-    return _HandoverRecovery(interrupted=journal)
 
 
 def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
@@ -361,42 +251,6 @@ def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> 
 def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
     """Close process record custody without mutating the runtime's shared receipt."""
     close_active_profile_record_session()
-
-
-def _distinct_bucket_ids(*bucket_ids: str | None) -> tuple[str, ...]:
-    """Return the supplied identities once each, in order, dropping absent ones.
-
-    Every profile identity a command-line process can observe is partial on its
-    own: the live in-process session is absent in a fresh process, and the
-    durable pointer is already moved on mid-handover. Both revocation owners --
-    logout and the login handover -- therefore act on the UNION of their
-    observations rather than on one of them, and share this one folding so the
-    two cannot drift.
-    """
-    return tuple(dict.fromkeys(value for value in bucket_ids if value is not None))
-
-
-def logout_active_profile() -> str | None:
-    """Close local custody and selection; shared sign-out belongs to the runtime.
-
-    This helper serves in-process lifecycle composition. It cannot delete a
-    receipt, extend authentication, or revoke another client's human session.
-    """
-    storage_root = effective_storage_root()
-    live = _profile_login_sessions().current_session()
-    live_bucket_id = live.bucket_id if live is not None else None
-    with active_profile_pointer_transaction(storage_root) as pointer_transaction:
-        selected = pointer_transaction.read()
-        selected_bucket_id = selected.bucket_id
-        target_ids = _distinct_bucket_ids(live_bucket_id, selected_bucket_id)
-        if not target_ids:
-            return None
-        _profile_login_sessions().close_active_session()
-        for bucket_id in target_ids:
-            close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
-        pointer_transaction.clear()
-    refresh_active_profile_output_language()
-    return live_bucket_id or selected_bucket_id
 
 
 def revoke_live_profile_secret_for_custody_delete(*, bucket_id: str) -> ProfileCustodySessionOwnerEffect:
@@ -574,92 +428,6 @@ def resolve_login_target(name: str) -> ProfileBucketPointer:
     return pointer
 
 
-def _resolve_selected_target(pointer: BucketPointer) -> ProfileBucketPointer:
-    """Resolve the already-selected profile for a bare ``login``.
-
-    The same live-profile resolver used for ``login NAME`` is required here:
-    reading a manifest directly by UUID would let a stale pointer select a
-    tombstoned bucket and authenticate it before the lifecycle boundary could
-    refuse the selection.
-    """
-    from ..workflow.profile_bucket_scan import resolve_profile_bucket
-
-    if pointer.bucket_id is None:
-        raise ProfileNotFoundError(
-            translated_message="application.user_profile.errors.no_active_profile_selected",
-        )
-    resolved = resolve_profile_bucket(pointer.bucket_id)
-    if resolved is None:
-        raise ProfileNotFoundError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": pointer.bucket_id},
-        )
-    return resolved
-
-
-def _prepare_login_attempt(
-    *,
-    name: str | None,
-    storage_root: Path,
-    pointer_transaction: ActiveProfilePointerTransaction,
-) -> _LoginAttempt:
-    """Resolve the target and capture the exact pointer for one handover."""
-    selected = pointer_transaction.read()
-    recovery = _recover_interrupted_handover(
-        storage_root=storage_root,
-        pointer_transaction=pointer_transaction,
-    )
-    interrupted_handover = recovery.interrupted
-    target = resolve_login_target(name) if name is not None else _resolve_selected_target(selected)
-    prior_pointer = selected
-    if interrupted_handover is not None and target.bucket_id != interrupted_handover.profile_b:
-        _refuse_handover("incomplete handover requires authenticating its B profile")
-    return _LoginAttempt(
-        target=target,
-        selected=selected,
-        prior_pointer=prior_pointer,
-        pointer_transaction=pointer_transaction,
-        storage_root=storage_root,
-        interrupted_handover=interrupted_handover,
-        completed_selection=recovery.completed_selection,
-    )
-
-
-def login_profile(
-    *,
-    name: str | None = None,
-    now: datetime | None = None,
-    passphrase_callback: Callable[[], str] | None = None,
-    profile_decode_context: ProfileDecodeContext,
-) -> ProfileLoginOutcome:
-    """Authenticate B before replacing an active A session.
-
-    Target resolution and throttle preflight happen before Argon2.  Password
-    authentication creates only transaction-owned candidate memory.  The
-    exact pointer capture is compared immediately before publication; then B
-    becomes the process binding and optional acceleration is attempted.  A is
-    not closed until those operations have succeeded.
-    """
-    instant = _now() if now is None else now
-    storage_root = effective_storage_root()
-
-    with active_profile_pointer_transaction() as pointer_transaction:
-        attempt = _prepare_login_attempt(
-            name=name,
-            storage_root=storage_root,
-            pointer_transaction=pointer_transaction,
-        )
-        candidate = _authenticate_login_candidate(
-            attempt=attempt,
-            now=instant,
-            passphrase_callback=passphrase_callback,
-            profile_decode_context=profile_decode_context,
-        )
-        outcome = _finish_candidate_login(attempt=attempt, candidate=candidate)
-    refresh_active_profile_output_language()
-    return outcome
-
-
 @contextmanager
 def authenticate_profile_candidate(
     *,
@@ -678,7 +446,7 @@ def authenticate_profile_candidate(
     storage_root = effective_storage_root()
     target = resolve_login_target(str(bucket_id))
     if target.bucket_id != str(bucket_id):
-        _refuse_handover("candidate target differs from the requested profile")
+        _refuse_login_candidate("candidate target differs from the requested profile")
     evaluation = _profile_login_sessions().evaluate_throttle(
         storage_root=storage_root,
         bucket_id=target.bucket_id,
@@ -874,25 +642,12 @@ def authenticate_profile_for_invocation(
     passphrase_callback: Callable[[], str] | None = None,
     profile_decode_context: ProfileDecodeContext,
 ) -> ProfileLoginOutcome:
-    """Unlock one profile for the current process WITHOUT selecting it.
+    """Authenticate explicit credentials and bind one profile for this process.
 
-    ``login_profile`` is a selection: it publishes the active-profile pointer,
-    journals a handover and retires the profile it displaces. That is correct
-    for ``config login NAME``, and wrong for every command that merely names a
-    target for this one invocation -- ``--profile X`` or a leaf's own profile
-    argument. Routing those through the selecting door meant that on a host
-    with no usable keychain, where each command must re-supply its passphrase,
-    reading one profile silently reselected it for every later command.
-
-    So this door authenticates and binds, and does nothing durable: no pointer
-    transaction is opened, no handover journal is written, no activation event
-    is recorded, no acceleration receipt is minted, and the previously selected
-    profile keeps its pointer entry and its receipt. A different live session
-    is closed in-process only, because the process holds exactly one.
-
-    The result is process-scoped by construction, so ``session_persisted`` is
-    always ``False``; the caller's existing not-persisted notice already tells
-    the operator the next process must authenticate again.
+    Selection and shared human sign-in remain owned by their separate runtime
+    boundaries. This door leaves the pointer and all acceleration receipts intact.
+    It closes a displaced local session because this process holds one profile's
+    custody at a time. The returned outcome is always process-scoped.
     """
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
@@ -946,56 +701,6 @@ def _resolve_login_password(callback: Callable[[], str] | None) -> str:
     return configured.get_secret_value()
 
 
-def _authenticate_login_candidate(
-    *,
-    attempt: _LoginAttempt,
-    now: datetime,
-    passphrase_callback: Callable[[], str] | None,
-    profile_decode_context: ProfileDecodeContext,
-) -> _CandidateProfileLogin:
-    """Apply the throttle gate before authenticating the candidate profile."""
-    evaluation = _profile_login_sessions().evaluate_throttle(
-        storage_root=attempt.storage_root,
-        bucket_id=attempt.target.bucket_id,
-        now=now,
-    )
-    if evaluation.throttled:
-        raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
-    return _authenticate_candidate_or_record_failure(
-        bucket_id=attempt.target.bucket_id,
-        storage_root=attempt.storage_root,
-        now=now,
-        passphrase_callback=passphrase_callback,
-        profile_decode_context=profile_decode_context,
-    )
-
-
-def _finish_candidate_login(
-    *,
-    attempt: _LoginAttempt,
-    candidate: _CandidateProfileLogin,
-) -> ProfileLoginOutcome:
-    """Reset the online-control cache and close an unpromoted candidate on error."""
-    try:
-        # Resetting an online-control cache must never turn an already
-        # authenticated candidate into an A teardown. It is performed
-        # while B is still only transaction-local.
-        _profile_login_sessions().reset_throttle(storage_root=attempt.storage_root, bucket_id=attempt.target.bucket_id)
-        return _promote_candidate_login(
-            candidate=candidate,
-            target_label=attempt.target.label,
-            selected_bucket_id=attempt.selected.bucket_id,
-            prior_pointer=attempt.prior_pointer,
-            pointer_transaction=attempt.pointer_transaction,
-            storage_root=attempt.storage_root,
-            interrupted_handover=attempt.interrupted_handover,
-            completed_selection=attempt.completed_selection,
-        )
-    except BaseException:
-        candidate.close()
-        raise
-
-
 def _authenticate_candidate_or_record_failure(
     *,
     bucket_id: str,
@@ -1047,346 +752,6 @@ def _authenticate_candidate_or_record_failure(
         material=material,
         windows=(idle_minutes, absolute_minutes),
     )
-
-
-def _promote_candidate_login(
-    *,
-    candidate: _CandidateProfileLogin,
-    target_label: str,
-    selected_bucket_id: str | None,
-    prior_pointer: BucketPointer,
-    pointer_transaction: ActiveProfilePointerTransaction,
-    storage_root: Path,
-    interrupted_handover: ProfileLoginHandoverJournal | None,
-    completed_selection: str | None,
-) -> ProfileLoginOutcome:
-    """CAS-publish, activate, then retire A through durable phases."""
-    # The live session is ONE of four inputs to the retirement set, never the
-    # gate: it is absent in an ordinary invocation, which is a fresh process.
-    # This binding survives for its own separate job -- closing the in-process
-    # session object by identity, further down in _retire_previous_authorities.
-    previous_live = _profile_login_sessions().current_session()
-    retired_bucket_ids = _retired_bucket_ids(
-        live_bucket_id=_live_bucket_id(previous_live),
-        selected_bucket_id=selected_bucket_id,
-        interrupted_bucket_id=None if interrupted_handover is None else interrupted_handover.profile_a,
-        completed_selection=completed_selection,
-        candidate_bucket_id=candidate.bucket_id,
-    )
-    retired_bucket_id = retired_bucket_ids[0] if retired_bucket_ids else None
-    publication = _publish_candidate_handover(
-        candidate=candidate,
-        retired_bucket_id=retired_bucket_id,
-        prior_pointer=prior_pointer,
-        pointer_transaction=pointer_transaction,
-        storage_root=storage_root,
-        interrupted_handover=interrupted_handover,
-    )
-    promotion = _bind_candidate_promotion(
-        candidate=candidate,
-        previous_live=previous_live,
-        publication=publication,
-        prior_pointer=prior_pointer,
-        pointer_transaction=pointer_transaction,
-        storage_root=storage_root,
-    )
-
-    # Only now can A be retired.  B is durable (or deliberately process-local)
-    # and both current-context authorities serve its exact UUID.
-    _retire_previous_authorities(
-        candidate=candidate,
-        previous_live=previous_live,
-        previous_record=promotion.previous_record,
-        retired_bucket_ids=retired_bucket_ids,
-        storage_root=storage_root,
-    )
-    handover = promotion.journal.at_phase(HandoverPhase.A_RETIRED)
-    _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=handover)
-    # Keep the terminal receipt until the next login observes it.  A process
-    # may die immediately after A's zeroisation; retaining this one bounded,
-    # non-secret file makes that boundary explicit and lets recovery classify
-    # it without inferring completion from a vanished sidecar.
-    return ProfileLoginOutcome(
-        bucket_id=candidate.bucket_id,
-        label=target_label,
-        authenticated_at=candidate.session.opened_at,
-        idle_deadline=candidate.session.idle_deadline,
-        absolute_deadline=candidate.session.absolute_deadline,
-        session_persisted=promotion.persisted,
-        already_authenticated=False,
-        closed_previous_bucket_id=retired_bucket_id,
-    )
-
-
-def _live_bucket_id(session: ProfileBucketSessionPort | None) -> str | None:
-    """Return the identity of a prior live session, if one exists."""
-    if session is None:
-        return None
-    return session.bucket_id
-
-
-def _publish_candidate_handover(
-    *,
-    candidate: _CandidateProfileLogin,
-    retired_bucket_id: str | None,
-    prior_pointer: BucketPointer,
-    pointer_transaction: ActiveProfilePointerTransaction,
-    storage_root: Path,
-    interrupted_handover: ProfileLoginHandoverJournal | None,
-) -> _HandoverPublication:
-    """Publish a fresh pointer or validate the pointer from interrupted work."""
-    if interrupted_handover is None:
-        return _publish_fresh_candidate_handover(
-            candidate=candidate,
-            retired_bucket_id=retired_bucket_id,
-            prior_pointer=prior_pointer,
-            pointer_transaction=pointer_transaction,
-            storage_root=storage_root,
-        )
-    return _resume_candidate_handover(
-        interrupted_handover=interrupted_handover,
-        pointer_transaction=pointer_transaction,
-    )
-
-
-def _publish_fresh_candidate_handover(
-    *,
-    candidate: _CandidateProfileLogin,
-    retired_bucket_id: str | None,
-    prior_pointer: BucketPointer,
-    pointer_transaction: ActiveProfilePointerTransaction,
-    storage_root: Path,
-) -> _HandoverPublication:
-    """Prepare and compare-and-swap the pointer for a new candidate.
-
-    ``profile_a`` witnesses the profile this handover is moving AWAY from, and
-    is therefore taken from the same durable-first union the retirement acts on.
-    Once the pointer is published it names B, so the journal is the only place a
-    later recovery process can still learn A's identity.
-    """
-    planned_pointer = (
-        prior_pointer
-        if prior_pointer.bucket_id == candidate.bucket_id
-        else BucketPointer.selected(
-            bucket_id=candidate.bucket_id,
-            transition_revision=prior_pointer.transition_revision + 1,
-        )
-    )
-    handover = ProfileLoginHandoverJournal.prepare(
-        profile_a=retired_bucket_id,
-        profile_b=candidate.bucket_id,
-        pointer_before=prior_pointer,
-        pointer_after=planned_pointer,
-        activation_at=_now(),
-    )
-    _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=handover)
-    published = pointer_transaction.compare_and_select(expected=prior_pointer, bucket_id=candidate.bucket_id)
-    if published != handover.pointer_after:
-        _refuse_handover("published pointer differs from prepared B witness")
-    handover = handover.at_phase(HandoverPhase.POINTER_PUBLISHED)
-    _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=handover)
-    return _HandoverPublication(journal=handover, published_pointer=published)
-
-
-def _resume_candidate_handover(
-    *,
-    interrupted_handover: ProfileLoginHandoverJournal,
-    pointer_transaction: ActiveProfilePointerTransaction,
-) -> _HandoverPublication:
-    """Validate the durable pointer before replaying an interrupted handover."""
-    published = interrupted_handover.pointer_after
-    if pointer_transaction.read() != published:
-        _refuse_handover("incomplete handover B pointer changed before recovery")
-    return _HandoverPublication(journal=interrupted_handover, published_pointer=published)
-
-
-def _bind_candidate_promotion(
-    *,
-    candidate: _CandidateProfileLogin,
-    previous_live: ProfileBucketSessionPort | None,
-    publication: _HandoverPublication,
-    prior_pointer: BucketPointer,
-    pointer_transaction: ActiveProfilePointerTransaction,
-    storage_root: Path,
-) -> _CandidatePromotionResult:
-    """Bind B and complete required durable phases inside the rollback window."""
-    previous_record: ProfileRecordSession | None = None
-    handover = publication.journal
-    try:
-        # Receipt retries are deliberately explicit: the canonical custody
-        # primitive treats matching bytes as a no-op, while also retiring only
-        # its verified predecessor sidecar if a process died after publication
-        # but before durable cleanup.  Do this before B gains any live binding.
-        _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=handover)
-        # Both context bindings are in-process and do not perform I/O.  A has
-        # not been closed, so an unexpected later failure can rebind it before
-        # the durable pointer is restored.
-        _profile_login_sessions().bind_session(candidate.session)
-        previous_record = bind_active_profile_record_session(candidate.record_session)
-        bound = handover.at_least_phase(HandoverPhase.B_BOUND)
-        if bound != handover:
-            _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=bound)
-        handover = bound
-        # An in-process login has no runtime-observed OS login to bind, so it
-        # mints no receipt; only the runtime's admitted sessions persist one.
-        persisted = False
-        accelerated = handover.at_least_phase(HandoverPhase.ACCELERATED)
-        if accelerated != handover:
-            _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=accelerated)
-        handover = accelerated
-        # Activation is required B state, not best-effort diagnostics.  Keep it
-        # inside the rollback window, with one stable event instant so a crash
-        # before the phase receipt can replay the same content-addressed event.
-        _record_activation(profile_id=candidate.bucket_id, occurred_at=handover.activation_at)
-        activated = handover.at_least_phase(HandoverPhase.ACTIVATED)
-        if activated != handover:
-            _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=activated)
-        handover = activated
-    except BaseException:
-        _rollback_candidate_promotion(
-            candidate=candidate,
-            previous_live=previous_live,
-            previous_record=previous_record,
-            prior_pointer=prior_pointer,
-            published_pointer=publication.published_pointer,
-            pointer_transaction=pointer_transaction,
-            storage_root=storage_root,
-        )
-        raise
-    return _CandidatePromotionResult(journal=handover, previous_record=previous_record, persisted=persisted)
-
-
-def _retire_previous_authorities(
-    *,
-    candidate: _CandidateProfileLogin,
-    previous_live: ProfileBucketSessionPort | None,
-    previous_record: ProfileRecordSession | None,
-    retired_bucket_ids: tuple[str, ...],
-    storage_root: Path,
-) -> None:
-    """Release displaced in-process keys without signing out other clients."""
-    if previous_live is not None and previous_live is not candidate.session:
-        previous_live.close()
-    if previous_record is not None and previous_record is not candidate.record_session:
-        previous_record.close()
-
-
-def _retired_bucket_ids(
-    *,
-    live_bucket_id: str | None,
-    selected_bucket_id: str | None,
-    interrupted_bucket_id: str | None,
-    completed_selection: str | None,
-    candidate_bucket_id: str,
-) -> tuple[str, ...]:
-    """Report every prior profile this handover actually moves away from.
-
-    Four observations are folded because no single one is complete, and a
-    profile whose durable session artefacts survive the handover is resumable
-    without its passphrase:
-
-    * the live in-process session, which is the only source when one process
-      switches profiles, and is absent in an ordinary command-line invocation
-      because every invocation is a fresh process;
-    * the durable active pointer captured before publication, which names the
-      retired profile in a fresh process, and has already moved on to B once
-      an interrupted handover is being replayed;
-    * the interrupted handover's own witness, which is the only source left
-      once that publication happened in a process that then died;
-    * the profile the last COMPLETED handover selected, which is the only
-      source left once an out-of-band pointer writer moved the selection in
-      between. Registering a profile is exactly such a writer -- the create
-      transaction compare-and-swaps the pointer onto the new capsule -- so
-      after register-login-register-login the captured pointer names the
-      profile being entered rather than the one being left, and without this
-      the displaced profile keeps a resumable receipt.
-
-    The candidate is excluded rather than filtered later: a login that re-enters
-    the profile already selected retires nothing, and revoking there would
-    destroy the receipt that same login just minted.
-    """
-    return tuple(
-        value
-        for value in _distinct_bucket_ids(
-            live_bucket_id,
-            selected_bucket_id,
-            interrupted_bucket_id,
-            completed_selection,
-        )
-        if value != candidate_bucket_id
-    )
-
-
-def _rollback_candidate_promotion(
-    *,
-    candidate: _CandidateProfileLogin,
-    previous_live: ProfileBucketSessionPort | None,
-    previous_record: ProfileRecordSession | None,
-    prior_pointer: BucketPointer,
-    published_pointer: BucketPointer,
-    pointer_transaction: ActiveProfilePointerTransaction,
-    storage_root: Path,
-) -> None:
-    """Restore A and erase every B candidate artefact after swap failure."""
-    if previous_live is not None:
-        _profile_login_sessions().bind_session(previous_live)
-    else:
-        _profile_login_sessions().close_active_session()
-    if previous_record is not None:
-        bind_active_profile_record_session(previous_record)
-    else:
-        clear_active_profile_record_session_binding(candidate.record_session)
-    candidate.close()
-    pointer_transaction.compare_and_restore(expected=published_pointer, captured=prior_pointer)
-
-
-def _record_activation(*, profile_id: str, occurred_at: datetime) -> None:
-    """Record that ``profile_id`` became the active profile.
-
-    Authentication and activation are one operation from the operator's
-    point of view, so a successful login owes the same two records the
-    dedicated selection span writes: the workflow-state selection, and the
-    ``PROFILE_ACTIVATED`` entry in the bucket-event catalogue that lets an
-    auditor replay which profile became active and when.
-
-    Both are delegated to the primitives that already own them rather than
-    re-implemented here. The dedicated span is deliberately NOT reused: it
-    opens its own pointer transaction and re-acquires the per-bucket lock,
-    and this runs inside a caller that already holds both, so composing the
-    span would nest them against the project-wide pointer-then-bucket lock
-    order. Reading the workflow state also surfaces a bucket whose manifest
-    exists but whose encrypted profile record does not, so activation
-    validates rather than silently succeeding.
-
-    Only a genuine authentication reaches here: the idempotent no-op
-    returns before this point, so a retry re-stamps no activation.
-    """
-    from ...core.config import override_settings
-    from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-    from ...domain.buckets.event_repository import emit_bucket_event
-
-    # A CLI invocation may have resolved and pinned the previously active
-    # profile before an interactive login selects this one.  The pointer and
-    # bucket session already name ``profile_id`` here, so let that authenticated
-    # identity own the storage route for the activation write too.  Otherwise
-    # the inherited settings override can route the database to the previous
-    # bucket and manufacture a route/session mismatch after valid credentials.
-    with override_settings(cadrumo_active_profile=profile_id):
-        # Through the shared emitter, not a bare load-append-save: the history is
-        # a singleton row, so an unguarded rewrite drops whatever another
-        # process committed in between -- and a lost activation entry leaves no
-        # gap to notice, because the surviving events are all internally intact.
-        emit_bucket_event(
-            repository=default_profile_bucket_event_history_repository(),
-            bucket_id=profile_id,
-            event_type=BucketEventType.PROFILE_ACTIVATED,
-            occurred_at=occurred_at,
-            actor="profile-login",
-            object_type=BucketEventObjectType.PROFILE,
-            object_id=profile_id,
-            payload={"active_profile": resolve_active_bucket_id() or profile_id},
-            payload_version=1,
-        )
 
 
 def _mint_or_warn(
@@ -1450,8 +815,6 @@ __all__ = [
     "authenticate_profile_for_invocation",
     "borrow_profile_receipt_key",
     "close_profile_session_artefacts",
-    "login_profile",
-    "logout_active_profile",
     "publish_created_profile_session",
     "remove_profile_session_acceleration_for_custody_delete",
     "resume_profile_candidate",

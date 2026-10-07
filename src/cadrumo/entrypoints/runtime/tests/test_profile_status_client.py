@@ -35,7 +35,7 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLockState,
     OsLoginContext,
 )
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.application.user_profile.view_operation import (
@@ -127,12 +127,16 @@ def test_native_status_reports_incomplete_and_ready_profiles_with_exact_page_pin
         incomplete_id = targets[0][0].binding.profile_id
         ready_id = targets[1][0].binding.profile_id
         _, decode = profile_authority_contexts()
-        login_profile(name=str(incomplete_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode)
+        authenticate_profile_for_invocation(
+            name=str(incomplete_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+        )
         try:
             incomplete = load_test_profile_record(incomplete_id, root=root)
         finally:
             close_active_bucket_session()
-        login_profile(name=str(ready_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode)
+        authenticate_profile_for_invocation(
+            name=str(ready_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+        )
         try:
             facts = complete_profile_facts(
                 authority_operation.profile_schema(),

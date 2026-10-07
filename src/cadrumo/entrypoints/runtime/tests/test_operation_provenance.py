@@ -27,7 +27,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
@@ -48,7 +48,9 @@ pytestmark = [
 
 def _record(root: Path, profile_id: UUID):
     _, decode = profile_authority_contexts()
-    login_profile(name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode)
+    authenticate_profile_for_invocation(
+        name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+    )
     try:
         return ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode).load(profile_id)
     finally:
@@ -215,7 +217,7 @@ def test_restarted_worker_refuses_damaged_original_provenance_before_entry(tmp_p
                 document["snapshot"]["admission_provenance_reference"] = None
             else:
                 _, decode = profile_authority_contexts()
-                login_profile(
+                authenticate_profile_for_invocation(
                     name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
                 )
                 try:
@@ -282,7 +284,7 @@ def test_old_provenance_custody_blocks_reentry_but_current_profile_can_observe_h
             journal_path = root / "operation-journals" / f"{operation_id}.json"
             document = json.loads(journal_path.read_text(encoding="utf-8"))
             _, decode = profile_authority_contexts()
-            login_profile(
+            authenticate_profile_for_invocation(
                 name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
             )
             try:

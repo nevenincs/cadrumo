@@ -30,7 +30,7 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLoginContext,
 )
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePatchOperationProjection,
     ProfilePatchOperationRequest,
@@ -71,7 +71,7 @@ class _LoginObservation:
 
 def _snapshot(profile_id: UUID, *, root: Path) -> tuple[UserProfileRecord, int]:
     _, decode = profile_authority_contexts()
-    login_profile(
+    authenticate_profile_for_invocation(
         name=str(profile_id),
         passphrase_callback=lambda: PROFILE_INPUT,
         profile_decode_context=decode,

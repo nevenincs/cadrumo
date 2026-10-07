@@ -25,7 +25,7 @@ from ....adapters.persistence.storage.master_key.active_session import close_act
 from ....application.ledger.list_query import LedgerTransactionListQuery, query_ledger_transaction_list
 from ....application.review.filter import LedgerReviewFilterSpec
 from ....application.user_profile import profile_summary
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.models import TransactionCatalogue
@@ -340,7 +340,7 @@ def test_a_filtered_list_reads_the_ledger_once(
     assert _corpus_profile.label is not None
     bucket_id = resolve_login_target(_corpus_profile.label).bucket_id
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=_corpus_profile.label,
         passphrase_callback=lambda: _corpus_profile.passphrase,
         profile_decode_context=authority_operation.profile_decode_context(),

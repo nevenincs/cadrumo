@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.capabilities import CapabilitySource
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.capabilities import ServiceCapability
 from ....core.config import override_settings
@@ -56,7 +56,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             # Registration closes its own session, so the profile is LOCKED and every
             # verb below refuses with "you are not logged in". Logging in derives the
             # DEK the capsule was sealed under.
-            login_profile(
+            authenticate_profile_for_invocation(
                 name=_LABEL,
                 passphrase_callback=lambda: _CREDENTIAL_INPUT,
                 profile_decode_context=operation.profile_decode_context(),

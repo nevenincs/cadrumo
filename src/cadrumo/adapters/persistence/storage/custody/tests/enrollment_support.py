@@ -19,6 +19,7 @@ from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -44,7 +45,6 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentRequester,
     ProtectedEnrollmentRecipient,
 )
-from cadrumo.application.user_profile.login_session import logout_active_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 NOW = datetime(2026, 9, 26, tzinfo=UTC)
@@ -228,4 +228,4 @@ def administration_subject(
         try:
             yield AdministrationSubject(service, owner, store, native, client_native, proposal)
         finally:
-            logout_active_profile()
+            reset_test_profile_session()

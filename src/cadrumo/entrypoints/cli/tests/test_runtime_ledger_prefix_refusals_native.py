@@ -19,7 +19,7 @@ from ....adapters.persistence.storage.master_key.active_session import (
 )
 from ....application.ledger.actions_manual import create_manual_transaction
 from ....application.ledger.models import ManualLedgerTransactionCommand
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....core.hashing import HEX_ALPHABET
 from ....core.operations import OperationEffect, OperationTerminalCondition
@@ -189,7 +189,7 @@ def test_native_registered_ledger_reads_keep_prefix_refusal_policy_and_receipts(
         bucket_id = resolve_login_target(label).bucket_id
 
         close_active_bucket_session()
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=label,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

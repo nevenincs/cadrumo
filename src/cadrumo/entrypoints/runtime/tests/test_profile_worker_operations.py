@@ -42,7 +42,7 @@ from cadrumo.application.user_profile.access_contracts import AccessAction, Acce
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
@@ -80,7 +80,7 @@ def _activity_owner(worker: ProfileWorkerProcess, root: Path) -> ProfileWorkerSe
 def _profile_baseline(profile_id: object) -> tuple[int, str]:
     """Read the real encrypted record before handing custody to a native worker."""
     _, decode = profile_authority_contexts()
-    login_profile(
+    authenticate_profile_for_invocation(
         name=str(profile_id),
         passphrase_callback=lambda: PROFILE_INPUT,
         profile_decode_context=decode,
@@ -280,7 +280,7 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
             replacement.close()
             replacement.settle()
         _, decode = profile_authority_contexts()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=str(identity.binding.profile_id),
             passphrase_callback=lambda: PROFILE_INPUT,
             profile_decode_context=decode,

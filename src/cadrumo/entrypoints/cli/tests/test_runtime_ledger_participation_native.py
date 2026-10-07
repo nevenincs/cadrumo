@@ -42,7 +42,7 @@ from ....application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.tests.profile_values import complete_profile_facts
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
@@ -75,7 +75,7 @@ def _reauthenticate_profile(
 ) -> None:
     """Open the encrypted oracle with the same real password used by the CLI fixture."""
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=profile_label,
         passphrase_callback=lambda: PROFILE_INPUT,
         profile_decode_context=authority_operation.profile_decode_context(),

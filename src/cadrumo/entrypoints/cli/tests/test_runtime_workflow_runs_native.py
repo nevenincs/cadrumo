@@ -28,7 +28,7 @@ from ....application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.workflow.persistence import load_run, save_run
 from ....application.workflow.run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
 from ....application.workflow.run_read_operation import (
@@ -217,7 +217,7 @@ def test_native_cli_run_details_and_inventory_use_encrypted_terminal_snapshot(
         assert [item["run_id"] for item in unwrap_cli_result(inventory)["runs"]] == [_RUN_ID]
 
         close_active_bucket_session()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),
@@ -251,7 +251,7 @@ def test_native_expected_period_uses_finite_grant_and_same_reloaded_record(
             assert missing.value.reason == "period_denied"
 
         close_active_bucket_session()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=session.profile_label,
             passphrase_callback=lambda: PROFILE_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),

@@ -32,7 +32,7 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLockState,
     OsLoginContext,
 )
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaOperationProjection,
     ProfilePlantillaMediaOperationRequest,
@@ -104,7 +104,9 @@ def _set(amount: str, state: PlantillaMediaState) -> ProfilePlantillaMediaSet:
 def _record(profile_id: UUID, *, root: Path) -> UserProfileRecord:
     """Read the real encrypted record, then release process-local custody."""
     _, decode = profile_authority_contexts()
-    login_profile(name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode)
+    authenticate_profile_for_invocation(
+        name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+    )
     try:
         return load_test_profile_record(profile_id, root=root)
     finally:

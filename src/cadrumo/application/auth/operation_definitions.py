@@ -38,11 +38,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import (
-    CredentialFreeOperationRequest,
-    OperationIdentity,
-    OperationRequest,
-)
+from ..operations.models import OperationIdentity, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
@@ -65,7 +61,6 @@ from .operator_results import AuthConfigureResult, AuthLoginResult, AuthLogoutRe
 from .operator_scope_ports import OperatorScopePorts
 from .protocols import BrowserSessionFactoryPort
 
-PROFILE_LOGIN_OPERATION_DEFINITION_ID = "auth.profile.login"
 AUTH_CONFIGURE_OPERATION_DEFINITION_ID = "auth.provider.configure"
 AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID = "auth.session.acquire"
 AUTH_LOGOUT_OPERATION_DEFINITION_ID = "auth.session.logout"
@@ -85,10 +80,6 @@ class AuthOperationPorts:
     browser_session_factory: BrowserSessionFactoryPort
     operator_probe_ports: OperatorProbePorts
     operator_scope_ports: OperatorScopePorts
-
-
-class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
-    profile_id: UUID
 
 
 class AuthConfigureOperationRequest(BaseModel):

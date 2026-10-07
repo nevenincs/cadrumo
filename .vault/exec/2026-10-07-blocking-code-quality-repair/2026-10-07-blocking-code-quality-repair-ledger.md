@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbe74770aaa51190171ed8f3e742e4417ba43a6ffb598af09840798271009b8c'
+body_hash: 'sha256:d1b2e756202d36c02afbd2875bb552c9dba6726915d3564ee2e50e308fe95fe4'
 related:
   - "[[2026-10-07-blocking-code-quality-repair-plan]]"
 ---
@@ -140,8 +140,142 @@ related:
 - `S03` `verify:` `Google export payload and transport focused tests 21 cases` -> `pass`
 - `S03` `verify:` `Google partial session encrypted storage seed unit tests 23 cases` -> `pass`
 - `S03` `by:` `vaultspec-high-executor`
+- `S03` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S03` `verify:` `scoped Google and spreadsheet Ruff lint and format` -> `pass`
+- `S03` `verify:` `scoped ty basedpyright and pyrefly` -> `pass`
+- `S03` `verify:` `publication TUI and Google configuration integration tests 38 cases` -> `pass`
+- `S03` `verify:` `historical saved revision and native plan tests 5 cases` -> `pass`
+- `S03` `verify:` `real supervisor XLSX conformance 2 cases` -> `pass`
+- `S03` `verify:` `Google export payload and transport focused tests 21 cases` -> `pass`
+- `S03` `verify:` `Google partial session encrypted storage seed unit tests 23 cases` -> `pass`
+- `S03` `verify:` `root error registry enforcement tests` -> `pass`
+- `S04` `M` `dev/ci/tests/test_domain_buckets_payload_version_contract.py`
+- `S04` `M` `dev/packaging/native/tests/test_storage_root_vectors.py`
+- `S04` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_auth_operation_definitions.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_operation_definitions.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_profile_additional_mutations.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_profile_operation_concurrency.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_profile_view_operation.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/profile_registration.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/enrollment_support.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_delete_a_signed_in_profile.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_passphrase_replacement_contract.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_passphrase_rotation.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_password_login_recovery_independence.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_profile_session_admission.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_recovery_enrollment.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_registration.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_session_authority.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_setup_state_must_be_stated.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/login_handover_journal.py`
+- `S04` `A` `src/cadrumo/adapters/persistence/storage/master_key/tests/profile_process_support.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_bucket_created_through_the_sanctioned_door_can_read_records.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_delete_while_logged_in.py`
+- `S04` `D` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_login_handover.py`
+- `S04` `D` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_login_handover_sequential_registration.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_login_interaction.py`
+- `S04` `D` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_logout_strong_close.py`
+- `S04` `A` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_invocation_authentication.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_record_authority_retires_with_the_bucket_session.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_registration_retires_displaced_profile.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/profile_login_session.py`
+- `S04` `A` `src/cadrumo/adapters/persistence/storage/tests/profile_session_setup.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_language_resolver.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_plantilla_media_rows.py`
+- `S04` `M` `src/cadrumo/application/auth/operation_definitions.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_operation_definitions.py`
+- `S04` `D` `src/cadrumo/application/user_profile/login_handover.py`
+- `S04` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S04` `M` `src/cadrumo/application/user_profile/login_session_port.py`
+- `S04` `M` `src/cadrumo/application/user_profile/profile_operation_contracts.py`
+- `S04` `M` `src/cadrumo/application/user_profile/profile_record_repository.py`
+- `S04` `M` `src/cadrumo/application/user_profile/registration.py`
+- `S04` `M` `src/cadrumo/application/user_profile/session_admission.py`
+- `S04` `A` `src/cadrumo/application/user_profile/tests/foreign_operation_payload.py`
+- `S04` `M` `src/cadrumo/application/user_profile/tests/test_operation_access_resolution.py`
+- `S04` `M` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
+- `S04` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S04` `M` `src/cadrumo/core/storage_environment.py`
+- `S04` `A` `src/cadrumo/core/tests/storage_roots.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_custody_enrollment_prompt_guard.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_recovery_cli.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_configuration_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/_machine_secret_channels_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/native_profile_cli_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_commands_leave_no_unsealed_bucket_session.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_config_capabilities.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_allocate_classification.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_followup_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_list_filter.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_llm_autosplit.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_recovery_isolation_cli_matrix.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_refusal_names_its_profile.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_add.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_catalogue_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_attachment_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_evidence_add_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_lifecycle_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_participation_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_prefix_refusals_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_reads_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_review_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_rules_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_m303_attestation_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_dependencies_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_m145_communication_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_review_package_exchange_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_create_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_history_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_review_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_quickfile_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_review_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_runs_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_work_resume.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_descendants_operation.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_provenance.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_acquisition_launch_write_serialisation.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_overview.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/fixture.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_login_screen_restored_profile.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_field_editors.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_language_switch.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_masked_field_preservation.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_masked_required_field.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_required_field_refusal.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_language_switch.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_screen.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_terminal_sizes.py`
+- `S04` `verify:` `Ruff lint and format 110 current S04 files` -> `pass`
+- `S04` `verify:` `ty Windows 110 current S04 files` -> `pass`
+- `S04` `verify:` `login source basedpyright and pyrefly` -> `pass`
+- `S04` `verify:` `custody password selection TUI and native status 79 distinct behavioral cases` -> `pass`
+- `S04` `verify:` `root core storage and authentication lane after strict foreign payload repair` -> `pass`
+- `S04` `verify:` `foreign payload owner and routing tests 111 cases` -> `pass`
+- `S04` `verify:` `legacy logout operation refusal regression` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor and supervisor`
 
 ## Notes
 
 - `S02` Only the root nonoptional narrowing hunk belongs to this Step in the already dirty packaged runtime fixture; peer lifecycle edits are preserved.
 - `S03` Retired inbound calculation and pull prototypes are outside supported product enrollment; the enrolled review publication and historical saved revision readers remain covered.
+- `S04` Root core lane had 254 passing and 5 failing cases; the strict test-model repair resolved all failures in its 111-case rerun. Eight OS credential store cases were refused by this Windows logon and one POSIX permission case was unavailable on Windows; none is claimed verified.
+- `S04` The worker first lane excluded 10 OS-keychain or external cases; 79 distinct selected behavioral cases passed after precise throttle-state and selection fixture corrections.
+- `S04` Test import migrations shared with S03 were already committed in that atomic consumer update; the remaining Step paths contain S04 production retirement and setup migrations.

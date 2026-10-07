@@ -41,7 +41,7 @@ from ....application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....application.user_profile.tests.profile_values import complete_profile_facts
 from ....core.config import override_settings
 from ....core.period import Period
@@ -206,7 +206,7 @@ def test_native_human_cli_reads_encrypted_ledger_status_history_view_and_track(
         # Reauthenticate with the actual fixture password before reading the
         # encrypted catalogue and append-only event history as the oracle.
         close_active_bucket_session()
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=label,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

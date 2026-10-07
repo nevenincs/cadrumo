@@ -11,7 +11,7 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....core.period import Period
 from ....domain.attachments.m303_filing_evidence import (
     M303Exonerado390ApplicabilityAssertion,
@@ -89,7 +89,7 @@ def test_cli_attests_period_before_any_work_unit_and_refuses_other_periods(
         assert rejected.exit_code != 0
 
         close_active_bucket_session()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=label,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

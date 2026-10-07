@@ -30,7 +30,7 @@ from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_interaction import ProfileLoginChoice
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
@@ -99,7 +99,7 @@ def _registered_profile(tmp_path: Path) -> Generator[tuple[Path, PinnedAuthority
             profile_create_context=authority_operation.profile_create_context(),
             profile_decode_context=authority_operation.profile_decode_context(),
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),

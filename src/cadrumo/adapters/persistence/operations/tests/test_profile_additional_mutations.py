@@ -24,7 +24,7 @@ from cadrumo.application.operations.persistence.journal import OperationPersiste
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -65,7 +65,7 @@ def _profile() -> UUID:
             profile_create_context=authority.profile_create_context(),
             profile_decode_context=authority.profile_decode_context(),
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=created.profile_id,
             passphrase_callback=lambda: _PASSWORD,
             profile_decode_context=authority.profile_decode_context(),

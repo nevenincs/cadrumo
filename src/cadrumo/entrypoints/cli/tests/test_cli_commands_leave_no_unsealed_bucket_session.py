@@ -36,7 +36,6 @@ from ....application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     unlock_profile_custody_password,
 )
-from ....application.user_profile.login_handover import ProfileLoginHandoverJournal
 from ....application.user_profile.login_session_port import (
     ProfileBucketSessionPort,
     ProfileLoginSessionPort,
@@ -142,15 +141,6 @@ class _ReceiptResumingPort:
         self._real = real
         self._dek = dek
         self._refuse_binding = refuse_binding
-
-    def load_handover_journal(self, *, storage_root: Path) -> ProfileLoginHandoverJournal | None:
-        return self._real.load_handover_journal(storage_root=storage_root)
-
-    def save_handover_journal(self, *, storage_root: Path, journal: ProfileLoginHandoverJournal) -> None:
-        self._real.save_handover_journal(storage_root=storage_root, journal=journal)
-
-    def clear_handover_journal(self, *, storage_root: Path, journal: ProfileLoginHandoverJournal) -> None:
-        self._real.clear_handover_journal(storage_root=storage_root, journal=journal)
 
     def current_session(self) -> ProfileBucketSessionPort | None:
         return self._real.current_session()

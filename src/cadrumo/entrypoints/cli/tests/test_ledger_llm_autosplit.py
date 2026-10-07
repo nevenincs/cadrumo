@@ -20,7 +20,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.ledger.llm_classification import reject_llm_suggestion
 from ....application.ledger.llm_classification_ports import LLMClassificationSuggestion
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.json_contract import NoticeSeverity
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.categories.spending_category import SpendingCategory
@@ -137,7 +137,7 @@ def test_list_hide_llm_rejected_retains_unrelated_rows(
     bucket_id = resolve_login_target(ledger_llm_profile.label).bucket_id
     close_active_bucket_session()
     try:
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=ledger_llm_profile.label,
             passphrase_callback=lambda: ledger_llm_profile.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

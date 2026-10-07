@@ -28,7 +28,7 @@ from ....application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
 )
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
@@ -181,7 +181,7 @@ def _prepare(authority: PinnedAuthorityOperation):
 
 def _catalogue_after_password_login(profile_id: UUID, authority: PinnedAuthorityOperation):
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=str(profile_id),
         passphrase_callback=lambda: PROFILE_INPUT,
         profile_decode_context=authority.profile_decode_context(),
@@ -195,7 +195,7 @@ def _catalogue_after_password_login(profile_id: UUID, authority: PinnedAuthority
 
 def _events_after_password_login(profile_id: UUID, authority: PinnedAuthorityOperation):
     close_active_bucket_session()
-    login = login_profile(
+    login = authenticate_profile_for_invocation(
         name=str(profile_id),
         passphrase_callback=lambda: PROFILE_INPUT,
         profile_decode_context=authority.profile_decode_context(),

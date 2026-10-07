@@ -19,7 +19,7 @@ from ....adapters.persistence.storage.master_key.active_session import (
 )
 from ....application.modelo.history import assemble_work_unit_history
 from ....application.modelo.work_lifecycle import create_work_unit, discard_work_unit
-from ....application.user_profile.login_session import login_profile, resolve_login_target
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.config import override_settings
 from ....core.period import Period
 from ....core.redaction.rules import redact_structured_for_cli_output
@@ -125,7 +125,7 @@ def test_native_work_history_matches_pinned_encrypted_oracle_including_discard(
         # The worker has closed its session. Open the named profile anew for
         # the independent encrypted oracle, using the same published pin.
         close_active_bucket_session()
-        login = login_profile(
+        login = authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: fixture.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

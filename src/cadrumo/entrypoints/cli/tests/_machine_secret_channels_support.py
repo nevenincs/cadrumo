@@ -106,10 +106,10 @@ _HARNESS = (
     exit_code = 0
     try:
         if payload.get("preauthenticate_label") is not None:
-            from cadrumo.application.user_profile.login_session import login_profile
+            from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
             from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
             with bundled_indexed_authority().operation() as operation:
-                login_profile(
+                authenticate_profile_for_invocation(
                     name=payload["preauthenticate_label"],
                     passphrase_callback=lambda: payload["preauthenticate_secret"],
                     profile_decode_context=operation.profile_decode_context(),
@@ -210,10 +210,10 @@ _WINDOWS_HANDLE_HARNESS = (
     exit_code = 0
     try:
         if payload.get("preauthenticate_label") is not None:
-            from cadrumo.application.user_profile.login_session import login_profile
+            from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
             from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
             with bundled_indexed_authority().operation() as operation:
-                login_profile(
+                authenticate_profile_for_invocation(
                     name=payload["preauthenticate_label"],
                     passphrase_callback=lambda: payload["preauthenticate_secret"],
                     profile_decode_context=operation.profile_decode_context(),

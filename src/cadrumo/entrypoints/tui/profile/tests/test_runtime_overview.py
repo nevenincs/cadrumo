@@ -10,7 +10,7 @@ import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.overview import build_profile_overview
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -39,7 +39,7 @@ def _register() -> UUID:
             profile_create_context=authority.profile_create_context(),
             profile_decode_context=authority.profile_decode_context(),
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=created.profile_id,
             passphrase_callback=lambda: _PASSWORD,
             profile_decode_context=authority.profile_decode_context(),

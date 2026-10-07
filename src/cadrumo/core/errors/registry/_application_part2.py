@@ -69,16 +69,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.modelo_spreadsheet_operation_contracts.ModeloSpreadsheetRowIngressRefusedError",
-        ErrorCode(
-            code="REFUSED_MODELO_SPREADSHEET_ROW_INGRESS",
-            category=ErrorCategory.REFUSED,
-            message_key="application.calculations.row_set.errors.row_assembly_failed",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.prorrata_register.sector_lifecycle.ProrrataSectorLifecycleUnavailableError",
         ErrorCode(
             code="REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",
@@ -1241,16 +1231,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_CALC_SHEETS_RECORD",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_calc_sheets_record",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.storage.calc_sheets.errors.CalcSheetsParityError",
-        ErrorCode(
-            code="ERROR_CALC_SHEETS_PARITY",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calc_sheets_parity",
             retryable=False,
             runbook_id=None,
         ),
