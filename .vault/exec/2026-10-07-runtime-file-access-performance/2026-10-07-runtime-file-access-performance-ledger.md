@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d7d200f32ff8bccd4590bf6054b9babb675c34e9c0a1693d963e3c25af3ed7a'
+body_hash: 'sha256:4a7be30d6e799413c118def06968359e136fd2f82e8b67beeca7e2d662e62627'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -136,6 +136,18 @@ related:
 - `S07` `verify:` `packaged staged source-module compilation caller count 2673 to zero` -> `pass`
 - `S06` `verify:` `42 optimized-builder bytecode and assembly/startup checks (20261007T190818.766825Z-pytest-62120-12615dfb)` -> `pass`
 - `S06` `verify:` `scoped Ruff ty format after explicit optimization zero` -> `pass`
+- `S03` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-broad-test-failure-brief-audit.md`
+- `S03` `M` `.vault/plan/2026-10-07-runtime-file-access-performance-plan.md`
+- `S03` `verify:` `final runtime-only verify ZIP and extracted-package recipes` -> `pass`
+- `S03` `verify:` `final 13 CTest checks` -> `pass`
+- `S03` `verify:` `final CLI and readiness benchmarks with immutable identity` -> `pass`
+- `S03` `verify:` `final full package inventory verification` -> `pass`
+- `S03` `verify:` `all 6582 checked-hash cache executable-code comparisons` -> `pass`
+- `S03` `verify:` `42 focused bytecode assembly startup tests` -> `pass`
+- `S03` `verify:` `71 bootstrap delegated inventory tests` -> `pass`
+- `S03` `verify:` `just check-style` -> `pass`
+- `S03` `verify:` `just check-format` -> `fail`
+- `S03` `verify:` `just check-types` -> `fail`
 
 ## Notes
 
@@ -180,3 +192,8 @@ related:
 - `S03` Current shared-tree gates report 18 format files, 40 style diagnostics and one ty invalid-argument-type in `dev/quality/tests/test_governed_fact_runtime_reads.py.` Reported paths are outside this workstream's modified packaging files; scoped producer/test/smoke Ruff ty format pass. Preserve concurrent owners and do not claim a current whole-repository PASS. Logs: build/runtime-file-access/rebuild-published/{format,style,types}.log.
 - `S07` Staged evidence identifies its manifest and runtime hashes in rebuild-published/staged-evidence-identity.json. Fresh extracted-ZIP admission and actual delivered-host readiness remain pending. Profiler totals 19.195825 to 9.629786 seconds include profiler overhead and are not native startup medians.
 - `S06` Compiler now explicitly uses optimize=0 so builder flags cannot alter published runtime checks. The optimized-builder fixture uses the owning `run_command` wrapper without lint suppressions. SDK bytecode reproduction against the final extracted artifact will establish whether current ordinary-builder bytes are identical; final admission and delivered benchmarks remain pending.
+- `S03` S04 remains open: runtime-only pipeline 5131.02s wall / 2072.11s descendant CPU; default documentation enabled restored. Full documentation/desktop pipeline remains blocked, not superseded by runtime package admission.
+- `S03` S06/S07 closed after actual inventoried 6582 caches, zero imported source compilation, metadata text opens 160 to 80, full admission and compiler comparison. Nine caches differ in serialization bytes despite matching headers and executable code; no complete bitwise reproducibility claim.
+- `S03` Native readiness medians wall 20.880s to 14.960s / CPU 14.969s to 11.313s, but 46 changed sources and wall range 9.757–32.471s prevent isolated causal claims; logical process read counts and bytes increased.
+- `S03` 615-log census: 270 original cases, 258 later PASSED and 12 last recorded FAILED. This workstream repaired 41 original cases through seven roots; other passes belong to separately authorized broad repairs. Full current suite verdict unavailable.
+- `S03` S03/S05 stay open: aggregate import invalidated by concurrent source changes, final whole format one peer fixture and types two peer `runtime_probe_artifacts` diagnostics; owned scoped checks pass.
