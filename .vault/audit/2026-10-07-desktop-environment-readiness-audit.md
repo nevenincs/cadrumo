@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:42d1949f177f12aa7fcfb12205f2a3a0494dcb76717289d72a1f647e40c788be'
+body_hash: 'sha256:d4812817aa67fe74f61e117e17fec2e8d42f23ca43777d914a0a792a6e5d8f65'
 related:
   - "[[2026-10-07-desktop-environment-readiness-plan]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -40,6 +40,8 @@ Final source verification: 208 desktop Rust unit tests passed (build/desktop-win
 Review status: source PASS with no unresolved findings; repository verification remains PENDING because configured lint/types have unrelated shared-worktree failures. S01 and S02 are complete; S03 remains open for a clean repository verification checkpoint. Scope-specific tests and documentation are complete. No authenticated desktop session or rebuilt full package was exercised.
 
 Configured uv import-gate rerun completed: dependency graph contracts passed (10648 files, 80198 dependencies), but overall gate failed because the shared import-load target metadata is stale. Full log: build/desktop-windows-x64/environment-import-gate.log. This is retained as an open repository verification limitation, not a passing check.
+
+The same import-gate snapshot also reports six subordinate findings outside this patch: one noncanonical CalculationRevisionCatalogue import in dev/ci/tests/test_modelo_runtime_benchmark.py and five unresolved custody_payloads imports in CLI custody and tests during concurrent edits. These prevent a clean integrated repository verdict; no source review or runtime availability claim overrides them.
 
 ## Recommendations
 
