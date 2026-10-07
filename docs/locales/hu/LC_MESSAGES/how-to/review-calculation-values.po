@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 13:14+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -462,21 +462,20 @@ msgstr ""
 "simplificada alá tartozó tevékenységet rögzít:"
 
 #: ../../how-to/review-calculation-values.md:182
-msgid "Add rows for list-based forms (184, 232, 347, 349)"
-msgstr "Adj hozzá sorokat a listaalapú nyomtatványokhoz (184, 232, 347, 349)"
+msgid "Add rows for list-based forms (184, 232, 349)"
+msgstr "Adj hozzá sorokat a listaalapú nyomtatványokhoz (184, 232, 349)"
 
 #: ../../how-to/review-calculation-values.md:184
 msgid ""
 "Some informational modelos report a list of records rather than one set "
 "of boxes: attribution members (Modelo 184), related-party operations "
-"(Modelo 232), declared counterparties (Modelo 347), and intra-community "
-"traders (Modelo 349). Supply each record with a repeatable `--row` input."
+"(Modelo 232), and intra-community traders (Modelo 349). Supply each "
+"record with a repeatable `--row` input."
 msgstr ""
 "Egyes tájékoztató nyomtatványok tétellistát jelentenek, nem egyetlen "
 "rovatkészletet: hozzárendelési tagokat (Modelo 184), kapcsolt felek "
-"ügyleteit (Modelo 232), bejelentett partnereket (Modelo 347) és "
-"közösségen belüli szereplőket (Modelo 349). Minden tételt ismételhető "
-"`--row` bemenetként adj meg."
+"ügyleteit (Modelo 232) és közösségen belüli szereplőket (Modelo 349). "
+"Minden tételt ismételhető `--row` bemenetként adj meg."
 
 #: ../../how-to/review-calculation-values.md:189
 msgid ""
@@ -524,14 +523,10 @@ msgid "`vinculada` - a related-party operation (Modelo 232)."
 msgstr "`vinculada`: egy kapcsolt ügylet (Modelo 232)."
 
 #: ../../how-to/review-calculation-values.md:207
-msgid "`contraparte` - a declared counterparty (Modelo 347)."
-msgstr "`contraparte`: egy bejelentett partner (Modelo 347)."
-
-#: ../../how-to/review-calculation-values.md:208
 msgid "`operador` - an intra-community trader (Modelo 349)."
 msgstr "`operador`: egy közösségen belüli szereplő (Modelo 349)."
 
-#: ../../how-to/review-calculation-values.md:210
+#: ../../how-to/review-calculation-values.md:209
 msgid ""
 "Cadrumo validates each row against the modelo's rules and refuses an "
 "incomplete set:"
@@ -539,17 +534,13 @@ msgstr ""
 "A Cadrumo minden sort érvényesít a nyomtatvány szabályaival szemben, és "
 "elutasítja a hiányos készletet:"
 
-#: ../../how-to/review-calculation-values.md:213
+#: ../../how-to/review-calculation-values.md:212
 msgid "Modelo 184 - the members' `porcentaje` values must sum to 100."
 msgstr ""
 "Modelo 184: a tagok `porcentaje` értékeinek összegének 100-nak kell "
 "lennie."
 
-#: ../../how-to/review-calculation-values.md:214
-msgid "Modelo 347 - a counterparty's annual total must exceed 3,005.06 euros."
-msgstr "Modelo 347: egy partner éves összegének meg kell haladnia a 3005,06 eurót."
-
-#: ../../how-to/review-calculation-values.md:215
+#: ../../how-to/review-calculation-values.md:213
 msgid ""
 "Modelo 349 - the trader's intra-community NIF must match its country "
 "format."
@@ -557,7 +548,7 @@ msgstr ""
 "Modelo 349: a szereplő közösségen belüli NIF-jének meg kell egyeznie az "
 "országformátumával."
 
-#: ../../how-to/review-calculation-values.md:217
+#: ../../how-to/review-calculation-values.md:215
 msgid ""
 "The saved rows appear in the calculation output as `detail_row` lines. "
 "Check them to confirm what was recorded."
@@ -565,25 +556,28 @@ msgstr ""
 "A mentett sorok a számítás kimenetében `detail_row` sorokként jelennek "
 "meg. Ellenőrizd őket, hogy megbizonyosodj róla, mi lett rögzítve."
 
-#: ../../how-to/review-calculation-values.md:220
+#: ../../how-to/review-calculation-values.md:218
 msgid ""
 "Direct `--row` support is only one way repeating data can reach a "
-"calculation. Modelo 720 foreign assets already reach the calculation "
-"through their own source, even though Modelo 720 is not in the direct "
-"`--row` list above. Do not treat the absence of a direct row command as a"
-" missing source."
+"calculation. Modelo 347 counterparty records come from the invoices you "
+"record in the ledger (see [Manage invoices](manage-invoices.md)), and "
+"Modelo 720 foreign assets reach the calculation through their own source,"
+" so neither is in the direct `--row` list above. Do not treat the absence"
+" of a direct row command as a missing source."
 msgstr ""
 "A közvetlen `--row` támogatás csak egy módja annak, hogy ismétlődő adatok"
-" kerüljenek a számításba. A Modelo 720 külföldi vagyonelemei már a saját "
-"forrásukon keresztül jutnak el a számításhoz, noha a Modelo 720 nincs a "
-"fenti közvetlen `--row` listán. Ne tekintsd a közvetlen sorparancs "
-"hiányát hiányzó forrásnak."
+" kerüljenek a számításba. A Modelo 347 partnertételei a ledgerben "
+"rögzített számláidból származnak (lásd: [Számlák kezelése](manage-"
+"invoices.md)), a Modelo 720 külföldi vagyonelemei pedig a saját "
+"forrásukon keresztül jutnak el a számításhoz, ezért egyik sincs a fenti "
+"közvetlen `--row` listán. Ne tekintsd a közvetlen sorparancs hiányát "
+"hiányzó forrásnak."
 
-#: ../../how-to/review-calculation-values.md:225
+#: ../../how-to/review-calculation-values.md:224
 msgid "Special calculation tools (IRPF comparison and exemptions)"
 msgstr "Különleges számítási eszközök (IRPF-összehasonlítás és mentességek)"
 
-#: ../../how-to/review-calculation-values.md:227
+#: ../../how-to/review-calculation-values.md:226
 msgid ""
 "For specialized calculations, the CLI provides evaluation and comparison "
 "commands:"
@@ -591,7 +585,7 @@ msgstr ""
 "Speciális számításokhoz a CLI értékelő és összehasonlító parancsokat "
 "kínál:"
 
-#: ../../how-to/review-calculation-values.md:229
+#: ../../how-to/review-calculation-values.md:228
 msgid ""
 "**Joint vs. individual Impuesto sobre la Renta de las Personas Físicas "
 "(IRPF) comparison (`compare-taxation`)**: Compare filing jointly as a "
@@ -610,7 +604,7 @@ msgstr ""
 "parancs a `No active work unit matches this modelo, year, and period` "
 "üzenettel elutasít:"
 
-#: ../../how-to/review-calculation-values.md:245
+#: ../../how-to/review-calculation-values.md:244
 msgid ""
 "This check does not save a draft. It shows the tax difference and a "
 "recommendation. The individual figure reuses the family unit's combined "
@@ -626,7 +620,7 @@ msgstr ""
 "egy általa igényelt előző évi adat, például a negatív alap áthozata, és "
 "nincs hozzá `--binding` kapcsoló."
 
-#: ../../how-to/review-calculation-values.md:252
+#: ../../how-to/review-calculation-values.md:251
 msgid ""
 "**Maritime worker exemption preview (`preview-maritime-exemption`)**: "
 "Preview the IRPF exemption for maritime workers (Art. 7.p LIRPF or the "
@@ -638,7 +632,7 @@ msgstr ""
 "cikke, vagy a Registro Especial de Buques y Empresas Navieras de Canarias"
 " (REBECA) szerinti 50 százalékos mentesség):"
 
-#: ../../how-to/review-calculation-values.md:260
+#: ../../how-to/review-calculation-values.md:259
 msgid ""
 "The command shows which tax boxes are affected by the exemption and the "
 "amounts, with references to the applicable law and the Régimen Especial "
@@ -651,11 +645,11 @@ msgstr ""
 "hivatkozásokkal. Ez csak a tengerészeti dolgozókra vonatkozik. A legtöbb "
 "bevalló kihagyhatja ezt a szakaszt."
 
-#: ../../how-to/review-calculation-values.md:266
+#: ../../how-to/review-calculation-values.md:265
 msgid "Correct a declaration already recorded as filed"
 msgstr "Helyesbíts egy már benyújtottként rögzített bevallást"
 
-#: ../../how-to/review-calculation-values.md:268
+#: ../../how-to/review-calculation-values.md:267
 msgid ""
 "If a filing was already made at AEAT and later needs correction, use the "
 "correction command. Do not recalculate the same period. That would not "
@@ -666,7 +660,7 @@ msgstr ""
 "időszakot. Az nem hozná létre a helyes complementaria (kiegészítő "
 "bevallás) bejegyzést:"
 
-#: ../../how-to/review-calculation-values.md:275
+#: ../../how-to/review-calculation-values.md:274
 #, python-brace-format
 msgid ""
 "The correction starts from a filing record that carries an imported AEAT "
@@ -684,32 +678,32 @@ msgstr ""
 "igazolás), majd add át az azonosítóját a `--from-filing-record` "
 "kapcsolónak. A helyesbítési parancs nem nyújt be semmit az AEAT-nál."
 
-#: ../../how-to/review-calculation-values.md:281
+#: ../../how-to/review-calculation-values.md:280
 msgid "Where to go next"
 msgstr "Merre tovább"
 
-#: ../../how-to/review-calculation-values.md:283
+#: ../../how-to/review-calculation-values.md:282
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Gyorsindító: nyomtatvány-benyújtás előkészítése](quickstart.md)"
 
-#: ../../how-to/review-calculation-values.md:284
+#: ../../how-to/review-calculation-values.md:283
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/review-calculation-values.md:285
+#: ../../how-to/review-calculation-values.md:284
 msgid "[Prepare a Modelo 303 VAT filing](modelo-303.md)"
 msgstr "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md)"
 
-#: ../../how-to/review-calculation-values.md:286
+#: ../../how-to/review-calculation-values.md:285
 msgid "[Prepare the annual Modelo 390 VAT summary](modelo-390.md)"
 msgstr "[Az éves Modelo 390 IVA-összesítő előkészítése](modelo-390.md)"
 
-#: ../../how-to/review-calculation-values.md:287
+#: ../../how-to/review-calculation-values.md:286
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr ""
 "[Számítások áttekintése Google Sheets segítségével](review-with-google-"
 "sheets.md)"
 
-#: ../../how-to/review-calculation-values.md:288
+#: ../../how-to/review-calculation-values.md:287
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 22:18+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -309,26 +309,32 @@ msgstr "Connecta un assistent d'IA"
 
 #: ../../workstation-setup.md:124
 msgid ""
-"The Cadrumo package includes `cadrumo-mcp`, the Model Context Protocol "
-"(MCP) server that lets an AI assistant operate the same gated commands as"
-" the CLI. It needs no separate install. Run `cadrumo-mcp --help` to "
-"confirm it is on your path, then follow [Connect an agent](how-to"
-"/connect-an-agent.md) to register it with your assistant. On Windows, "
-"install with `pip` or `uv tool install` to get the command on your path."
+"Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
+"agent to registered operations through the local runtime and binds each "
+"connection to an explicit profile ID. Run `cadrumo-mcp --help` to confirm"
+" it is on your path. In a source checkout, check the installed entrypoint"
+" with:"
 msgstr ""
-"El paquet de Cadrumo inclou `cadrumo-mcp`, el servidor del Model Context "
-"Protocol (MCP) que permet que un assistent d'IA executi les mateixes "
-"ordres amb control d'accés que la CLI. No cal instal·lar-lo a part. "
-"Executa `cadrumo-mcp --help` per confirmar que és al teu PATH i segueix "
-"després [Connecta un agent](how-to/connect-an-agent.md) per registrar-lo "
-"al teu assistent. A Windows, instal·la amb `pip` o `uv tool install` "
-"perquè l'ordre quedi al teu PATH."
+"Cadrumo instal·la `cadrumo-mcp` juntament amb `aeat`. El servidor "
+"connecta un agent amb les operacions registrades a través de l'entorn "
+"d'execució local i vincula cada connexió a un ID de perfil explícit. "
+"Executa `cadrumo-mcp --help` per confirmar que és al teu camí de cerca. "
+"En una còpia de treball del codi font, comprova el punt d'entrada "
+"instal·lat amb:"
 
-#: ../../workstation-setup.md:131
+#: ../../workstation-setup.md:134
+msgid ""
+"[Connect an agent](how-to/connect-an-agent.md) shows profile-bound "
+"registration and the grant request flow."
+msgstr ""
+"[Connecta un agent](how-to/connect-an-agent.md) mostra el registre "
+"vinculat a un perfil i el flux de sol·licitud d'autoritzacions."
+
+#: ../../workstation-setup.md:137
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../workstation-setup.md:133
+#: ../../workstation-setup.md:139
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -336,7 +342,7 @@ msgstr ""
 "[Inici ràpid](how-to/quickstart.md) - d'un perfil buit a un fitxer de "
 "modelo exportat."
 
-#: ../../workstation-setup.md:135
+#: ../../workstation-setup.md:141
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -345,11 +351,10 @@ msgstr ""
 "capacitats de servei per perfil (exportació a Google, visió LLM, pujada "
 "de proves al núvol)."
 
-#: ../../workstation-setup.md:137
+#: ../../workstation-setup.md:143
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Connecta un agent](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:138
+#: ../../workstation-setup.md:144
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
-

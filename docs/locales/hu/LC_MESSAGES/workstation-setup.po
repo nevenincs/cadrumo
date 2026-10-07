@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 22:18+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -311,27 +311,32 @@ msgstr "AI-asszisztens csatlakoztatása"
 
 #: ../../workstation-setup.md:124
 msgid ""
-"The Cadrumo package includes `cadrumo-mcp`, the Model Context Protocol "
-"(MCP) server that lets an AI assistant operate the same gated commands as"
-" the CLI. It needs no separate install. Run `cadrumo-mcp --help` to "
-"confirm it is on your path, then follow [Connect an agent](how-to"
-"/connect-an-agent.md) to register it with your assistant. On Windows, "
-"install with `pip` or `uv tool install` to get the command on your path."
+"Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
+"agent to registered operations through the local runtime and binds each "
+"connection to an explicit profile ID. Run `cadrumo-mcp --help` to confirm"
+" it is on your path. In a source checkout, check the installed entrypoint"
+" with:"
 msgstr ""
-"A Cadrumo-csomag tartalmazza a `cadrumo-mcp` szervert, a Model Context "
-"Protocol (MCP) szervert, amellyel egy AI-asszisztens ugyanazokat a védett"
-" parancsokat használhatja, mint a CLI. Nem kell külön telepíteni. A "
-"`cadrumo-mcp --help` paranccsal ellenőrizheted, hogy elérhető-e az "
-"elérési utadon, majd az [Ügynök csatlakoztatása](how-to/connect-an-"
-"agent.md) oldalt követve regisztráld az asszisztensednél. Windowson a "
-"parancs elérési útra kerüléséhez `pip`-pel vagy `uv tool install`-lal "
-"telepíts."
+"A Cadrumo az `aeat` mellé telepíti a `cadrumo-mcp` parancsot. A "
+"kiszolgáló a helyi futtatókörnyezeten keresztül kapcsol össze egy "
+"ügynököt a regisztrált műveletekkel, és minden kapcsolatot egy "
+"kifejezetten megadott profilazonosítóhoz köt. Futtasd a `cadrumo-mcp "
+"--help` parancsot, hogy megerősítsd: szerepel az elérési utadon. "
+"Forráskód-munkapéldányban ezzel ellenőrizd a telepített belépési pontot:"
 
-#: ../../workstation-setup.md:131
+#: ../../workstation-setup.md:134
+msgid ""
+"[Connect an agent](how-to/connect-an-agent.md) shows profile-bound "
+"registration and the grant request flow."
+msgstr ""
+"Az [Ügynök csatlakoztatása](how-to/connect-an-agent.md) oldal bemutatja a"
+" profilhoz kötött regisztrációt és az engedélykérés folyamatát."
+
+#: ../../workstation-setup.md:137
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../workstation-setup.md:133
+#: ../../workstation-setup.md:139
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -339,7 +344,7 @@ msgstr ""
 "[Gyorsindító](how-to/quickstart.md) - az üres profiltól az exportált "
 "modelofájlig."
 
-#: ../../workstation-setup.md:135
+#: ../../workstation-setup.md:141
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -348,11 +353,10 @@ msgstr ""
 "szolgáltatási képességeket (Google-export, LLM-es képfeldolgozás, "
 "felhőbeli bizonyítékfeltöltés)."
 
-#: ../../workstation-setup.md:137
+#: ../../workstation-setup.md:143
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:138
+#: ../../workstation-setup.md:144
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
-

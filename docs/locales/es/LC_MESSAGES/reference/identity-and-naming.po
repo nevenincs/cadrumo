@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:34+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -93,16 +93,12 @@ msgid "`cadrumo-mcp`"
 msgstr "`cadrumo-mcp`"
 
 #: ../../reference/identity-and-naming.md
-msgid "MCP tool prefix"
-msgstr "Prefijo de herramientas MCP"
+msgid "MCP tool naming"
+msgstr "Nombres de las herramientas MCP"
 
 #: ../../reference/identity-and-naming.md
-msgid "`cadrumo_`"
-msgstr "`cadrumo_`"
-
-#: ../../reference/identity-and-naming.md
-msgid "MCP resource scheme"
-msgstr "Esquema de recursos MCP"
+msgid "Unprefixed names advertised by `tools/list`"
+msgstr "Nombres sin prefijo anunciados por `tools/list`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Plugin identifier"
@@ -132,7 +128,7 @@ msgstr "Espacio de nombres de Python complementario"
 msgid "`cadrumo_data`"
 msgstr "`cadrumo_data`"
 
-#: ../../reference/identity-and-naming.md:24
+#: ../../reference/identity-and-naming.md:23
 msgid ""
 "These values identify one product. There is no alternate human CLI "
 "spelling or Python import alias."
@@ -140,7 +136,7 @@ msgstr ""
 "Estos valores identifican un único producto. No existe una grafía "
 "alternativa de la CLI para personas ni un alias de importación de Python."
 
-#: ../../reference/identity-and-naming.md:27
+#: ../../reference/identity-and-naming.md:26
 msgid "Product and authority names"
 msgstr "Nombres de producto y de la autoridad"
 
@@ -188,7 +184,7 @@ msgstr ""
 "portal de la AEAT, credenciales de la AEAT, fichero oficial de la AEAT, "
 "fuente legal de la AEAT, taxonomía de la AEAT"
 
-#: ../../reference/identity-and-naming.md:34
+#: ../../reference/identity-and-naming.md:33
 msgid ""
 "AEAT is an external authority and counterparty, not the application name."
 " Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
@@ -199,4 +195,3 @@ msgstr ""
 "aplicación. Los términos propios de la autoridad como *modelo*, "
 "*casilla*, *justificante* y los tokens oficiales de periodo o de "
 "clasificación conservan su significado de la AEAT dentro de Cadrumo."
-

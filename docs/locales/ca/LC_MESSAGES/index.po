@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -230,10 +230,6 @@ msgid "Project"
 msgstr "Projecte"
 
 #: ../../index.md:212
-msgid "Architecture and internals"
-msgstr "Arquitectura i funcionament intern"
-
-#: ../../index.md:212
 msgid "Technical documentation"
 msgstr "Documentació tècnica"
 
@@ -416,3 +412,7 @@ msgstr ""
 "and-evidence.md) per distingir les dades d'origen, les sortides de "
 "revisió, els fitxers de pujada de l'AEAT, el justificant de l'AEAT i els "
 "paquets d'auditoria."
+
+#~ msgid "Architecture and internals"
+#~ msgstr "Arquitectura i funcionament intern"
+

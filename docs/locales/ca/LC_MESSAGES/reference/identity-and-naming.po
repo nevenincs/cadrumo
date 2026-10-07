@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:34+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -93,16 +93,12 @@ msgid "`cadrumo-mcp`"
 msgstr "`cadrumo-mcp`"
 
 #: ../../reference/identity-and-naming.md
-msgid "MCP tool prefix"
-msgstr "Prefix d'eines MCP"
+msgid "MCP tool naming"
+msgstr "Noms de les eines MCP"
 
 #: ../../reference/identity-and-naming.md
-msgid "`cadrumo_`"
-msgstr "`cadrumo_`"
-
-#: ../../reference/identity-and-naming.md
-msgid "MCP resource scheme"
-msgstr "Esquema de recursos MCP"
+msgid "Unprefixed names advertised by `tools/list`"
+msgstr "Noms sense prefix anunciats per `tools/list`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Plugin identifier"
@@ -132,7 +128,7 @@ msgstr "Espai de noms de Python complementari"
 msgid "`cadrumo_data`"
 msgstr "`cadrumo_data`"
 
-#: ../../reference/identity-and-naming.md:24
+#: ../../reference/identity-and-naming.md:23
 msgid ""
 "These values identify one product. There is no alternate human CLI "
 "spelling or Python import alias."
@@ -140,7 +136,7 @@ msgstr ""
 "Aquests valors identifiquen un sol producte. No hi ha cap grafia "
 "alternativa de la CLI per a humans ni cap àlies d'importació de Python."
 
-#: ../../reference/identity-and-naming.md:27
+#: ../../reference/identity-and-naming.md:26
 msgid "Product and authority names"
 msgstr "Noms de producte i d'autoritat"
 
@@ -188,7 +184,7 @@ msgstr ""
 "Portal de l'AEAT, credencials de l'AEAT, fitxer oficial de l'AEAT, font "
 "legal de l'AEAT, taxonomia de l'AEAT"
 
-#: ../../reference/identity-and-naming.md:34
+#: ../../reference/identity-and-naming.md:33
 msgid ""
 "AEAT is an external authority and counterparty, not the application name."
 " Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
@@ -199,4 +195,3 @@ msgstr ""
 "l'aplicació. Els termes propietat de l'autoritat, com ara *modelo*, "
 "*casilla*, *justificante*, i els identificadors oficials de període o de "
 "classificació conserven el seu significat de l'AEAT dins de Cadrumo."
-

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 17:54+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -39,36 +39,38 @@ msgstr ""
 msgid ""
 "Before authorizing an agent or managing its access, set up the intended "
 "profile using [Set up a profile](profile-setup.md) and establish a human "
-"password-authorized session for it. Checking installation and public "
-"runtime status does not require profile authentication."
+"password-authorized session for it. Checking installation does not "
+"require profile authentication."
 msgstr ""
 "Abans d'autoritzar un agent o gestionar-ne l'accés, configura el perfil "
-"desitjat seguint [Configurar un perfil](profile-setup.md) i obre-hi una "
-"sessió humana autoritzada amb contrasenya. Comprovar la instal·lació i "
-"l'estat públic de l'entorn d'execució no requereix autenticar-se al "
-"perfil."
+"desitjat seguint [Configura un perfil](profile-setup.md) i obre-hi una "
+"sessió humana autoritzada amb contrasenya. Comprovar la instal·lació no "
+"requereix autenticar-se al perfil."
 
-#: ../../how-to/connect-an-agent.md:13
+#: ../../how-to/connect-an-agent.md:12
 msgid "Check the installation"
 msgstr "Comprovar la instal·lació"
 
-#: ../../how-to/connect-an-agent.md:23
+#: ../../how-to/connect-an-agent.md:18
 msgid ""
 "If `cadrumo-mcp` is unavailable, install Cadrumo first; see [Get "
 "Cadrumo](../download.md). The command and the `aeat` CLI ship in the same"
-" Cadrumo distribution. The adapter locates or starts the local runtime "
-"when it connects."
+" Cadrumo distribution. The adapter connects to an already running local "
+"runtime. An unavailable or untrusted endpoint returns a connection "
+"refusal; connecting does not install or start a service."
 msgstr ""
 "Si `cadrumo-mcp` no està disponible, instal·la primer Cadrumo; consulta "
 "[Obtén Cadrumo](../download.md). L'ordre i la CLI `aeat` es distribueixen"
-" juntes amb Cadrumo. En connectar-se, l'adaptador localitza o inicia "
-"l'entorn d'execució local."
+" juntes amb Cadrumo. L'adaptador es connecta a un entorn d'execució local"
+" que ja estigui en marxa. Si el punt de connexió no està disponible o no "
+"és de confiança, la connexió es rebutja; connectar-se no instal·la ni "
+"inicia cap servei."
 
-#: ../../how-to/connect-an-agent.md:28
+#: ../../how-to/connect-an-agent.md:24
 msgid "Register one profile-bound server"
 msgstr "Registrar un servidor vinculat a un perfil"
 
-#: ../../how-to/connect-an-agent.md:30
+#: ../../how-to/connect-an-agent.md:26
 msgid ""
 "Find the intended profile ID in Cadrumo. CLI output hides profile IDs by "
 "default; set `CADRUMO_CLI_REVEAL_IDENTIFIERS=1` for the command's process"
@@ -81,7 +83,7 @@ msgstr ""
 "perfil per mostrar-lo. Aquesta opció revela els ID opacs de perfil i "
 "dipòsit; les credencials continuen ocultes."
 
-#: ../../how-to/connect-an-agent.md:38
+#: ../../how-to/connect-an-agent.md:34
 msgid ""
 "Register `cadrumo-mcp` as a stdio server in your MCP client. For clients "
 "that accept a JSON server definition:"
@@ -89,7 +91,7 @@ msgstr ""
 "Registra `cadrumo-mcp` com a servidor stdio al teu client MCP. Per als "
 "clients que accepten una definició de servidor en JSON:"
 
-#: ../../how-to/connect-an-agent.md:52
+#: ../../how-to/connect-an-agent.md:48
 msgid ""
 "Use a separate server entry for each profile. The profile ID is required;"
 " the server does not select the human's active profile. Keep credentials "
@@ -105,7 +107,7 @@ msgstr ""
 "la seva autorització i el perfil continuïn complint les condicions "
 "d'accés."
 
-#: ../../how-to/connect-an-agent.md:58
+#: ../../how-to/connect-an-agent.md:54
 msgid ""
 "If the configured reference cannot authenticate, the MCP connection stays"
 " open. Use `status` to inspect the refusal; private operations remain "
@@ -120,11 +122,28 @@ msgstr ""
 "crida explícitament `authenticate`. Les consultes públiques d'`authority`"
 " continuen disponibles."
 
-#: ../../how-to/connect-an-agent.md:63
+#: ../../how-to/connect-an-agent.md:59
+msgid ""
+"Before authentication, `corpus_search` searches the bundled BOE/AEAT "
+"corpus and approved tax terminology. Supply `query` and optionally "
+"`limit` (1–50). An exact citation ID returns its published verbatim text;"
+" other queries return ranked offline evidence and terminology matches. "
+"The response identifies the publication generation used for citation "
+"lookup. This public search reads no profile data."
+msgstr ""
+"Abans de l'autenticació, `corpus_search` cerca al corpus BOE/AEAT inclòs "
+"i a la terminologia tributària aprovada. Indica `query` i, opcionalment, "
+"`limit` (1–50). Un ID de citació exacte en retorna el text literal "
+"publicat; les altres consultes retornen evidència fora de línia ordenada "
+"per rellevància i coincidències terminològiques. La resposta identifica "
+"la generació de publicació emprada per cercar la citació. Aquesta cerca "
+"pública no llegeix dades de cap perfil."
+
+#: ../../how-to/connect-an-agent.md:66
 msgid "Authorize the connection"
 msgstr "Autoritzar la connexió"
 
-#: ../../how-to/connect-an-agent.md:65
+#: ../../how-to/connect-an-agent.md:68
 msgid ""
 "On a first connection, ask the agent to use `status`, then "
 "`authorization_prepare` and `authorization_request` for the operations, "
@@ -143,27 +162,29 @@ msgstr ""
 "contrasenya o una credencial emmagatzemada, per si soles, no "
 "constitueixen una sessió d'agent autenticada."
 
-#: ../../how-to/connect-an-agent.md:72
+#: ../../how-to/connect-an-agent.md:75
 msgid ""
-"After admission, `search` lists permitted operations, `describe` shows a "
-"registered operation's input contract, `execute` submits it, and "
-"`observe` tracks its result. The separate `authority` tool reads "
-"published tax authority data. Operation grants, session locks, profile "
-"suspension, provider checks and human review still apply. Retain "
-"operation IDs and reconcile uncertain effects after a disconnect instead "
-"of submitting the same effect blindly."
+"After admission, `search` ranks permitted operations by the query, using "
+"their current contracts and request vocabulary; omit the query to list "
+"them. `describe` shows a registered operation's input contract, `execute`"
+" submits it, and `observe` tracks its result. The separate `authority` "
+"tool reads published tax authority data. Operation grants, session locks,"
+" profile suspension, provider checks and human review still apply. Retain"
+" operation IDs and reconcile uncertain effects after a disconnect instead"
+" of submitting the same effect blindly."
 msgstr ""
-"Després de l'admissió, `search` enumera les operacions permeses, "
-"`describe` mostra el contracte d'entrada d'una operació registrada, "
-"`execute` l'envia i `observe` en segueix el resultat. L'eina independent "
-"`authority` llegeix dades publicades per l'autoritat tributària. "
-"Continuen aplicant-se les autoritzacions d'operacions, els bloqueigs de "
-"sessió, la suspensió del perfil, les comprovacions del proveïdor i la "
-"revisió humana. Conserva els ID d'operació i reconcilia els efectes "
-"incerts després d'una desconnexió, en lloc d'enviar de nou el mateix "
-"efecte sense comprovar-lo."
+"Després de l'admissió, `search` ordena les operacions permeses segons la "
+"consulta, fent servir els seus contractes vigents i el vocabulari de les "
+"seves sol·licituds; omet la consulta per enumerar-les. `describe` mostra "
+"el contracte d'entrada d'una operació registrada, `execute` l'envia i "
+"`observe` en segueix el resultat. L'eina independent `authority` llegeix "
+"dades publicades per l'autoritat tributària. Continuen aplicant-se les "
+"autoritzacions d'operacions, els bloqueigs de sessió, la suspensió del "
+"perfil, les comprovacions del proveïdor i la revisió humana. Conserva els"
+" ID d'operació i reconcilia els efectes incerts després d'una "
+"desconnexió, en lloc d'enviar de nou el mateix efecte sense comprovar-lo."
 
-#: ../../how-to/connect-an-agent.md:79
+#: ../../how-to/connect-an-agent.md:84
 msgid ""
 "Read a settled operation's approved projection with `result`. For a large"
 " result, use `result_page` with the same result request and an initial "
@@ -182,7 +203,7 @@ msgstr ""
 "autorització vigent; un bloqueig o una revocació poden impedir rebre les "
 "pàgines restants. Un document incomplet no és un resultat complet."
 
-#: ../../how-to/connect-an-agent.md:86
+#: ../../how-to/connect-an-agent.md:91
 msgid ""
 "To rotate or narrow an existing grant, reconnect with its protected "
 "credential reference and prepare a new authorization request. Human "
@@ -194,7 +215,7 @@ msgstr ""
 "sol·licitud d'autorització. El canvi requereix aprovació humana. Revocar "
 "l'autorització impedeix futures admissions amb aquesta clau."
 
-#: ../../how-to/connect-an-agent.md:90
+#: ../../how-to/connect-an-agent.md:95
 msgid ""
 "Discover the currently supported operations with `search`; a CLI "
 "command's availability alone does not make it available through MCP. "
@@ -210,11 +231,11 @@ msgstr ""
 "presentació davant l'AEAT. Revisa personalment la declaració preparada "
 "tal com es descriu a la [guia de presentació](file-at-aeat.md)."
 
-#: ../../how-to/connect-an-agent.md:96
+#: ../../how-to/connect-an-agent.md:101
 msgid "Review and manage access as the profile owner"
 msgstr "Revisar i gestionar l'accés com a titular del perfil"
 
-#: ../../how-to/connect-an-agent.md:98
+#: ../../how-to/connect-an-agent.md:103
 msgid ""
 "Use a human password-authorized session for the intended profile, as "
 "described in [Set up a profile](profile-setup.md). The agent's API-key "
@@ -227,13 +248,13 @@ msgstr ""
 "sol·licitud ni administrar altres clients. Comprova l'ID de perfil en "
 "cada resultat."
 
-#: ../../how-to/connect-an-agent.md:102
+#: ../../how-to/connect-an-agent.md:107
 msgid "List pending requests and inspect the exact request before deciding:"
 msgstr ""
 "Enumera les sol·licituds pendents i inspecciona la sol·licitud exacta "
 "abans de decidir:"
 
-#: ../../how-to/connect-an-agent.md:107
+#: ../../how-to/connect-an-agent.md:112
 msgid ""
 "Replace `REQUEST_UUID` with the returned request ID. Review the client "
 "and destination, operations, actions, disclosures, periods, expiry, "
@@ -247,7 +268,7 @@ msgstr ""
 "bloqueig del sistema operatiu. Copia el `review_digest` actual d'aquesta "
 "inspecció. Aprova només els permisos revisats o rebutja la sol·licitud:"
 
-#: ../../how-to/connect-an-agent.md:115
+#: ../../how-to/connect-an-agent.md:120
 msgid ""
 "Run one decision command. Approval asks for a fresh profile password "
 "through a hidden terminal prompt; decline does not. For controlled "
@@ -268,7 +289,7 @@ msgstr ""
 "demostra per si sola que s'hagi completat el lliurament protegit. L'agent"
 " ha d'acabar el sondeig i autenticar-se amb la referència lliurada."
 
-#: ../../how-to/connect-an-agent.md:123
+#: ../../how-to/connect-an-agent.md:128
 msgid ""
 "The same review procedure applies to rotation, renewal and scope-change "
 "requests. Enrollment and rotation can deliver a new protected reference; "
@@ -291,13 +312,13 @@ msgstr ""
 "l'autorització. Bloquejar la sessió actual no revoca aquesta autorització"
 " independent."
 
-#: ../../how-to/connect-an-agent.md:132
+#: ../../how-to/connect-an-agent.md:137
 msgid "Use the inventory's non-secret key or grant ID to revoke access:"
 msgstr ""
 "Fes servir l'ID no secret de clau o autorització de l'inventari per "
 "revocar l'accés:"
 
-#: ../../how-to/connect-an-agent.md:137
+#: ../../how-to/connect-an-agent.md:142
 msgid ""
 "Check `access_denied` and `cleanup_pending` in text output; in the JSON "
 "result, inspect `receipt.access_denied` and `receipt.cleanup_pending`. "
@@ -310,7 +331,7 @@ msgstr ""
 "credencials estigui pendent és diferent del fet que s'hagi denegat "
 "l'accés."
 
-#: ../../how-to/connect-an-agent.md:141
+#: ../../how-to/connect-an-agent.md:146
 msgid ""
 "List sessions, then choose the intended lock scope. A current-session "
 "lock ends the caller's session; a selected-session lock ends that "
@@ -321,7 +342,7 @@ msgstr ""
 "sessió seleccionada acaba aquella sessió. Un bloqueig de tot el perfil "
 "suspèn la seva automatització."
 
-#: ../../how-to/connect-an-agent.md:149
+#: ../../how-to/connect-an-agent.md:154
 msgid ""
 "To resume, supply the fresh password at the hidden prompt. Add `--grant "
 "GRANT_UUID` for each grant you deliberately reactivate; omitting it "
@@ -332,53 +353,10 @@ msgstr ""
 "reactivar; si l'omets, es restaura l'accés humà sense reactivar "
 "autoritzacions."
 
-#: ../../how-to/connect-an-agent.md:156
+#: ../../how-to/connect-an-agent.md:161
 msgid ""
 "Confirm the returned grant IDs, then let agents reconnect and "
 "authenticate afresh."
 msgstr ""
 "Confirma els ID de les autoritzacions retornats i permet que els agents "
 "es tornin a connectar i s'autentiquin de nou."
-
-#: ../../how-to/connect-an-agent.md:158
-msgid "Manage the shared local runtime"
-msgstr "Gestionar l'entorn d'execució local compartit"
-
-#: ../../how-to/connect-an-agent.md:164
-msgid ""
-"Check native manager and owner-stop availability before changing runtime "
-"state. An unavailable owner-stop capability refuses the stop request, as "
-"shown above. Enabling or disabling login startup requires a supported "
-"per-user native manager."
-msgstr ""
-"Comprova la disponibilitat del gestor natiu i de la capacitat d'aturar el"
-" propietari de l'entorn d'execució abans de canviar-ne l'estat. Si "
-"aquesta capacitat no està disponible, la sol·licitud d'aturada es "
-"rebutja, com es mostra més amunt. Activar o desactivar l'inici en iniciar"
-" sessió requereix un gestor natiu per usuari compatible."
-
-#: ../../how-to/connect-an-agent.md:168
-msgid ""
-"`status` does not start the runtime. `enable` configures login startup "
-"without starting it immediately; `disable` does not stop a running owner."
-" Review the shared impact before using `stop`. Runtime startup does not "
-"authenticate a profile, and restarting requires agents to establish fresh"
-" sessions."
-msgstr ""
-"`status` no inicia l'entorn d'execució. `enable` configura l'inici en "
-"iniciar sessió sense iniciar-lo immediatament; `disable` no atura un "
-"procés propietari en execució. Revisa l'efecte sobre tothom abans de fer "
-"servir `stop`. Iniciar l'entorn d'execució no autentica un perfil i "
-"reiniciar-lo requereix que els agents estableixin sessions noves."
-
-#: ../../how-to/connect-an-agent.md:173
-msgid ""
-"These controls depend on the platform's available native manager and "
-"credential facilities. Read actual refusal codes and manager "
-"availability; an unavailable or locked protected store does not permit "
-"unattended access or a plaintext fallback."
-msgstr ""
-"Aquests controls depenen del gestor natiu i de les funcions de "
-"credencials disponibles a la plataforma. Consulta els codis de rebuig "
-"reals i la disponibilitat del gestor; un magatzem protegit no disponible "
-"o bloquejat no permet l'accés desatès ni recórrer a text sense xifrar."

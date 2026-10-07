@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -672,23 +672,23 @@ msgstr ""
 #: ../../how-to/modelo-390.md:202
 msgid ""
 "If the annual totals from your records and the reconciliation values "
-"taken from 303 diverge, do not force the 390 to pass first. Review the "
-"annual period's records, each 303 calculation, any AEAT receipts, and the"
-" values you supplied for the 390. Use the spreadsheet review loop when "
-"you need a wider view of the calculation, then run `work calculate` and "
-"`work verify` again on the same target. `spreadsheet push` reaches "
-"Google, so it is shown as an example that is not run:"
+"taken from 303 diverge, review the annual period's records, each 303 "
+"calculation, any AEAT receipts, and the values you supplied for the 390. "
+"Correct local inputs, then run `work calculate` and `work verify` again "
+"on the same target. Google spreadsheet edits are not calculation inputs; "
+"the former template `spreadsheet push` is disabled pending saved-revision"
+" publication integration."
 msgstr ""
 "Ha a nyilvántartásaidból számított éves összegek és a 303-ból átvett "
-"egyeztetési értékek eltérnek, ne erőltesd, hogy a 390 előbb átmenjen. "
-"Vizsgáld át az éves időszak nyilvántartásait, minden 303-as számítást, a "
-"meglévő AEAT-igazolásokat és a 390-hez általad megadott értékeket. "
-"Használd a táblázatos áttekintési kört, ha szélesebb rálátásra van "
-"szükséged a számításra, majd futtasd újra a `work calculate` és a `work "
-"verify` parancsot ugyanazon a célon. A `spreadsheet push` eléri a "
-"Google-t, ezért nem futtatott példaként szerepel:"
+"egyeztetési értékek eltérnek, vizsgáld át az éves időszak "
+"nyilvántartásait, minden 303-as számítást, a meglévő AEAT-igazolásokat és"
+" a 390-hez általad megadott értékeket. Javítsd a helyi bemeneteket, majd "
+"futtasd újra a `work calculate` és a `work verify` parancsot ugyanazon a "
+"célon. A Google-táblázatban végzett szerkesztések nem számítási "
+"bemenetek; a korábbi, sablonalapú `spreadsheet push` le van tiltva, amíg "
+"a mentett revíziók közzététele be nem épül."
 
-#: ../../how-to/modelo-390.md:207
+#: ../../how-to/modelo-390.md:204
 msgid ""
 "To review without Google, run `aeat app modelo spreadsheet export` for "
 "the same modelo, year, and period, with the workbook path in `--output`. "
@@ -703,11 +703,11 @@ msgstr ""
 " meg a `--replace` kapcsolót. A táblázatos munkafolyamat áttekintési "
 "felület; nem nyújt be semmit az AEAT-nál."
 
-#: ../../how-to/modelo-390.md:212
+#: ../../how-to/modelo-390.md:209
 msgid "Export and file"
 msgstr "Export és benyújtás"
 
-#: ../../how-to/modelo-390.md:214
+#: ../../how-to/modelo-390.md:211
 msgid ""
 "The check step in the annual example passed the annual draft as complete "
 "(`verificado_completo`). If the check instead reports "
@@ -728,7 +728,7 @@ msgstr ""
 "bizonyítja, hogy az AEAT elfogadta a benyújtást. A részletes eredményhez "
 "azonosító alapján nézd meg a mentett ellenőrzési jelentést:"
 
-#: ../../how-to/modelo-390.md:219
+#: ../../how-to/modelo-390.md:216
 msgid ""
 "Export the checked calculation or the one recorded as filed. Export needs"
 " the four 303 quarters recorded as filed, so the export and the post-"
@@ -744,7 +744,7 @@ msgstr ""
 "és elutasít, ha a kimeneti mappa nem létezik. A fájl a fejlesztői "
 "szoftverazonosítót hordozza, ezért csak áttekintésre tartsd meg:"
 
-#: ../../how-to/modelo-390.md:224
+#: ../../how-to/modelo-390.md:221
 msgid ""
 "Enter the calculated figures through AEAT's official channel; the full "
 "checklist is in [File your modelo at the AEAT portal](file-at-aeat.md). "
@@ -770,11 +770,11 @@ msgstr ""
 "kell, egy tárolt igazoláscsomag olvasása pedig azonosító alapján "
 "hivatkozik rá, ezért mindkettő nem futtatott példa marad:"
 
-#: ../../how-to/modelo-390.md:230
+#: ../../how-to/modelo-390.md:227
 msgid "What Modelo 390 does not check for you"
 msgstr "Amit a Modelo 390 nem ellenőriz helyetted"
 
-#: ../../how-to/modelo-390.md:232
+#: ../../how-to/modelo-390.md:229
 msgid ""
 "The tax rules in Cadrumo support Modelo 390's annual 303 reconciliation, "
 "but Cadrumo does not enforce every operational policy you might want for "
@@ -784,13 +784,13 @@ msgstr ""
 "de a Cadrumo nem érvényesít minden működési szabályt, amelyet egy "
 "megbízható éves benyújtási munkafolyamathoz szeretnél."
 
-#: ../../how-to/modelo-390.md:234
+#: ../../how-to/modelo-390.md:231
 msgid "Use these limits when deciding how much to review yourself:"
 msgstr ""
 "Használd ezeket a korlátokat annak eldöntéséhez, hogy mennyit vizsgálj át"
 " saját magad:"
 
-#: ../../how-to/modelo-390.md:236
+#: ../../how-to/modelo-390.md:233
 msgid ""
 "Modelo 390 does not look at all local filing history regardless of state."
 " 303-derived resolution is keyed by modelo, filing year, and period."
@@ -799,7 +799,7 @@ msgstr ""
 "függetlenül. A 303-ból származó feloldás nyomtatvány, benyújtási év és "
 "időszak szerint van kulcsolva."
 
-#: ../../how-to/modelo-390.md:238
+#: ../../how-to/modelo-390.md:235
 msgid ""
 "Calculation and the check treat 303 filings differently. Calculation "
 "fills in the values taken from 303 without looking at each quarter's "
@@ -816,7 +816,7 @@ msgstr ""
 "AEAT-igazolás (lásd „Mire van szüksége minden Modelo 303 negyedévnek az "
 "ellenőrzés előtt”)."
 
-#: ../../how-to/modelo-390.md:243
+#: ../../how-to/modelo-390.md:240
 msgid ""
 "The annual `work calculate` should not be treated as a general \"latest "
 "active 303 calculation\" selector. Use `work revision --select filed`, "
@@ -828,7 +828,7 @@ msgstr ""
 "--select filed`, `latest-verified` vagy a pontos számításazonosítókat, "
 "amikor egy adott 303-as értékre van szükséged."
 
-#: ../../how-to/modelo-390.md:246
+#: ../../how-to/modelo-390.md:243
 msgid ""
 "Filings you record with `work file`, filed declarations read from AEAT, "
 "and AEAT receipt reconciliation are related but separate. Cadrumo does "
@@ -839,7 +839,7 @@ msgstr ""
 "egymáshoz, de különállóak. A Cadrumo nem követeli meg, hogy megegyezzenek"
 " minden Modelo 390 számítás előtt."
 
-#: ../../how-to/modelo-390.md:249
+#: ../../how-to/modelo-390.md:246
 msgid ""
 "Missing 303 history can leave the values taken from 303 unavailable or "
 "force you to supply reviewed values. Calculation can still produce a "
@@ -852,7 +852,7 @@ msgstr ""
 "blokkol, amíg a hiányzó negyedévekhez nincs rögzített benyújtás vagy "
 "AEAT-igazolás."
 
-#: ../../how-to/modelo-390.md:253
+#: ../../how-to/modelo-390.md:250
 msgid ""
 "What AEAT holds does not count unless you explicitly read or reconcile it"
 " in the workflow you are running."
@@ -860,7 +860,7 @@ msgstr ""
 "Az AEAT birtokában lévő adatok nem számítanak, hacsak nem olvasod be vagy"
 " egyezteted őket kifejezetten az általad futtatott munkafolyamatban."
 
-#: ../../how-to/modelo-390.md:256
+#: ../../how-to/modelo-390.md:253
 msgid ""
 "For a conservative annual close, calculate and review every 303 period, "
 "reconcile official AEAT receipts where available, inspect the values "
@@ -875,38 +875,38 @@ msgstr ""
 "ellenőrzést, jelezd ezt a hiányt, ahelyett hogy érvényesített "
 "viselkedésként dokumentálnád."
 
-#: ../../how-to/modelo-390.md:258
+#: ../../how-to/modelo-390.md:255
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/modelo-390.md:260
+#: ../../how-to/modelo-390.md:257
 msgid "[Prepare a Modelo 303 VAT filing](modelo-303.md)"
 msgstr "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md)"
 
-#: ../../how-to/modelo-390.md:261
+#: ../../how-to/modelo-390.md:258
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/modelo-390.md:262
+#: ../../how-to/modelo-390.md:259
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr ""
 "[Számítások áttekintése Google Sheets segítségével](review-with-google-"
 "sheets.md)"
 
-#: ../../how-to/modelo-390.md:263
+#: ../../how-to/modelo-390.md:260
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr "[Egy benyújtott nyomtatvány egyeztetése az AEAT-igazolással](reconcile.md)"
 
-#: ../../how-to/modelo-390.md:264
+#: ../../how-to/modelo-390.md:261
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/modelo-390.md:265
+#: ../../how-to/modelo-390.md:262
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
 msgstr "[Diagnosztizáld és javítsd a helyi beállításodat](troubleshooting.md)"
 
-#: ../../how-to/modelo-390.md:266
+#: ../../how-to/modelo-390.md:263
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"

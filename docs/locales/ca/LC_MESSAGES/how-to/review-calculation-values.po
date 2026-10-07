@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 13:14+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -462,21 +462,20 @@ msgstr ""
 " abans de proporcionar els pagaments fraccionats del Modelo 130:"
 
 #: ../../how-to/review-calculation-values.md:182
-msgid "Add rows for list-based forms (184, 232, 347, 349)"
-msgstr "Afegeix files per als models basats en llistes (184, 232, 347, 349)"
+msgid "Add rows for list-based forms (184, 232, 349)"
+msgstr "Afegeix files per als models basats en llistes (184, 232, 349)"
 
 #: ../../how-to/review-calculation-values.md:184
 msgid ""
 "Some informational modelos report a list of records rather than one set "
 "of boxes: attribution members (Modelo 184), related-party operations "
-"(Modelo 232), declared counterparties (Modelo 347), and intra-community "
-"traders (Modelo 349). Supply each record with a repeatable `--row` input."
+"(Modelo 232), and intra-community traders (Modelo 349). Supply each "
+"record with a repeatable `--row` input."
 msgstr ""
 "Alguns models informatius declaren una llista de registres en lloc d'un "
 "conjunt de caselles: membres en atribució (Modelo 184), operacions "
-"vinculades (Modelo 232), contraparts declarades (Modelo 347) i operadors "
-"intracomunitaris (Modelo 349). Aporta cada registre amb una entrada "
-"`--row` repetible."
+"vinculades (Modelo 232) i operadors intracomunitaris (Modelo 349). Aporta"
+" cada registre amb una entrada `--row` repetible."
 
 #: ../../how-to/review-calculation-values.md:189
 msgid ""
@@ -523,14 +522,10 @@ msgid "`vinculada` - a related-party operation (Modelo 232)."
 msgstr "`vinculada` - una operació vinculada (Modelo 232)."
 
 #: ../../how-to/review-calculation-values.md:207
-msgid "`contraparte` - a declared counterparty (Modelo 347)."
-msgstr "`contraparte` - una contrapart declarada (Modelo 347)."
-
-#: ../../how-to/review-calculation-values.md:208
 msgid "`operador` - an intra-community trader (Modelo 349)."
 msgstr "`operador` - un operador intracomunitari (Modelo 349)."
 
-#: ../../how-to/review-calculation-values.md:210
+#: ../../how-to/review-calculation-values.md:209
 msgid ""
 "Cadrumo validates each row against the modelo's rules and refuses an "
 "incomplete set:"
@@ -538,17 +533,11 @@ msgstr ""
 "Cadrumo valida cada fila amb les regles del model i rebutja un conjunt "
 "incomplet:"
 
-#: ../../how-to/review-calculation-values.md:213
+#: ../../how-to/review-calculation-values.md:212
 msgid "Modelo 184 - the members' `porcentaje` values must sum to 100."
 msgstr "Modelo 184 - els valors `porcentaje` dels membres han de sumar 100."
 
-#: ../../how-to/review-calculation-values.md:214
-msgid "Modelo 347 - a counterparty's annual total must exceed 3,005.06 euros."
-msgstr ""
-"Modelo 347 - el total anual d'una contrapart ha de superar els 3.005,06 "
-"euros."
-
-#: ../../how-to/review-calculation-values.md:215
+#: ../../how-to/review-calculation-values.md:213
 msgid ""
 "Modelo 349 - the trader's intra-community NIF must match its country "
 "format."
@@ -556,7 +545,7 @@ msgstr ""
 "Modelo 349 - el NIF intracomunitari de l'operador ha de coincidir amb el "
 "format del seu país."
 
-#: ../../how-to/review-calculation-values.md:217
+#: ../../how-to/review-calculation-values.md:215
 msgid ""
 "The saved rows appear in the calculation output as `detail_row` lines. "
 "Check them to confirm what was recorded."
@@ -564,26 +553,29 @@ msgstr ""
 "Les files desades apareixen a la sortida del càlcul com a línies "
 "`detail_row`. Comprova-les per confirmar què s'ha registrat."
 
-#: ../../how-to/review-calculation-values.md:220
+#: ../../how-to/review-calculation-values.md:218
 msgid ""
 "Direct `--row` support is only one way repeating data can reach a "
-"calculation. Modelo 720 foreign assets already reach the calculation "
-"through their own source, even though Modelo 720 is not in the direct "
-"`--row` list above. Do not treat the absence of a direct row command as a"
-" missing source."
+"calculation. Modelo 347 counterparty records come from the invoices you "
+"record in the ledger (see [Manage invoices](manage-invoices.md)), and "
+"Modelo 720 foreign assets reach the calculation through their own source,"
+" so neither is in the direct `--row` list above. Do not treat the absence"
+" of a direct row command as a missing source."
 msgstr ""
 "El suport directe de `--row` és només una de les maneres en què les dades"
-" repetides poden arribar a un càlcul. Els actius a l'estranger del Modelo"
-" 720 ja arriben al càlcul a través del seu propi origen, encara que el "
-"Modelo 720 no sigui a la llista de `--row` directes anterior. No "
+" repetides poden arribar a un càlcul. Els registres de contraparts del "
+"Modelo 347 provenen de les factures que registres al ledger (consulta "
+"[Gestiona les factures](manage-invoices.md)), i els actius a l'estranger "
+"del Modelo 720 arriben al càlcul a través del seu propi origen, de manera"
+" que cap dels dos és a la llista de `--row` directes anterior. No "
 "confonguis l'absència d'una ordre de fila directa amb un origen que "
 "falta."
 
-#: ../../how-to/review-calculation-values.md:225
+#: ../../how-to/review-calculation-values.md:224
 msgid "Special calculation tools (IRPF comparison and exemptions)"
 msgstr "Eines de càlcul especials (comparació de l'IRPF i exempcions)"
 
-#: ../../how-to/review-calculation-values.md:227
+#: ../../how-to/review-calculation-values.md:226
 msgid ""
 "For specialized calculations, the CLI provides evaluation and comparison "
 "commands:"
@@ -591,7 +583,7 @@ msgstr ""
 "Per a càlculs especialitzats, la CLI ofereix ordres d'avaluació i "
 "comparació:"
 
-#: ../../how-to/review-calculation-values.md:229
+#: ../../how-to/review-calculation-values.md:228
 msgid ""
 "**Joint vs. individual Impuesto sobre la Renta de las Personas Físicas "
 "(IRPF) comparison (`compare-taxation`)**: Compare filing jointly as a "
@@ -610,7 +602,7 @@ msgstr ""
 " l'ordre es nega amb `No active work unit matches this modelo, year, and "
 "period`:"
 
-#: ../../how-to/review-calculation-values.md:245
+#: ../../how-to/review-calculation-values.md:244
 msgid ""
 "This check does not save a draft. It shows the tax difference and a "
 "recommendation. The individual figure reuses the family unit's combined "
@@ -627,7 +619,7 @@ msgstr ""
 "anterior que necessita, com ara l'arrossegament de la base negativa, i no"
 " accepta cap opció `--binding` per aportar-ne una."
 
-#: ../../how-to/review-calculation-values.md:252
+#: ../../how-to/review-calculation-values.md:251
 msgid ""
 "**Maritime worker exemption preview (`preview-maritime-exemption`)**: "
 "Preview the IRPF exemption for maritime workers (Art. 7.p LIRPF or the "
@@ -640,7 +632,7 @@ msgstr ""
 "del Registro Especial de Buques y Empresas Navieras de Canarias "
 "(REBECA)):"
 
-#: ../../how-to/review-calculation-values.md:260
+#: ../../how-to/review-calculation-values.md:259
 msgid ""
 "The command shows which tax boxes are affected by the exemption and the "
 "amounts, with references to the applicable law and the Régimen Especial "
@@ -653,11 +645,11 @@ msgstr ""
 "s'aplica només als treballadors marítims. La majoria de declarants poden "
 "saltar-se aquesta secció."
 
-#: ../../how-to/review-calculation-values.md:266
+#: ../../how-to/review-calculation-values.md:265
 msgid "Correct a declaration already recorded as filed"
 msgstr "Corregeix una declaració ja registrada com a presentada"
 
-#: ../../how-to/review-calculation-values.md:268
+#: ../../how-to/review-calculation-values.md:267
 msgid ""
 "If a filing was already made at AEAT and later needs correction, use the "
 "correction command. Do not recalculate the same period. That would not "
@@ -668,7 +660,7 @@ msgstr ""
 "mateix període. Això no crearia el registre de complementaria (declaració"
 " complementària) correcte:"
 
-#: ../../how-to/review-calculation-values.md:275
+#: ../../how-to/review-calculation-values.md:274
 #, python-brace-format
 msgid ""
 "The correction starts from a filing record that carries an imported AEAT "
@@ -686,30 +678,30 @@ msgstr ""
 "l'id a `--from-filing-record`. L'ordre de correcció no presenta res a "
 "l'AEAT."
 
-#: ../../how-to/review-calculation-values.md:281
+#: ../../how-to/review-calculation-values.md:280
 msgid "Where to go next"
 msgstr "On anar després"
 
-#: ../../how-to/review-calculation-values.md:283
+#: ../../how-to/review-calculation-values.md:282
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Inici ràpid: prepara la presentació d'un model](quickstart.md)"
 
-#: ../../how-to/review-calculation-values.md:284
+#: ../../how-to/review-calculation-values.md:283
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flux de treball de presentació](filing-spine.md)"
 
-#: ../../how-to/review-calculation-values.md:285
+#: ../../how-to/review-calculation-values.md:284
 msgid "[Prepare a Modelo 303 VAT filing](modelo-303.md)"
 msgstr "[Prepara una presentació d'IVA del Modelo 303](modelo-303.md)"
 
-#: ../../how-to/review-calculation-values.md:286
+#: ../../how-to/review-calculation-values.md:285
 msgid "[Prepare the annual Modelo 390 VAT summary](modelo-390.md)"
 msgstr "[Prepara el resum anual d'IVA del Modelo 390](modelo-390.md)"
 
-#: ../../how-to/review-calculation-values.md:287
+#: ../../how-to/review-calculation-values.md:286
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisa càlculs amb Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/review-calculation-values.md:288
+#: ../../how-to/review-calculation-values.md:287
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"

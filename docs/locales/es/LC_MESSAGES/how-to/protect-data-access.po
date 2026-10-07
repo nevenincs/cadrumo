@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -716,10 +716,72 @@ msgstr ""
 "cuando regreses."
 
 #: ../../how-to/protect-data-access.md:283
+msgid "Remove Google access"
+msgstr "Quitar el acceso de Google"
+
+#: ../../how-to/protect-data-access.md:285
+msgid ""
+"Profile logout and Google logout serve different purposes. To remove the "
+"saved Google refresh token and account metadata from the active profile, "
+"run:"
+msgstr ""
+"Cerrar la sesión del perfil y cerrar la sesión de Google sirven para "
+"cosas distintas. Para quitar del perfil activo el token de actualización "
+"de Google guardado y los metadatos de la cuenta, ejecuta:"
+
+#: ../../how-to/protect-data-access.md:292
+msgid ""
+"This keeps the Drive folder and exported workbooks. It does not revoke "
+"Google's grant or invalidate a token copied elsewhere. To revoke access, "
+"open your [Google account "
+"connections](https://myaccount.google.com/connections), select Cadrumo, "
+"and remove its access to your Google account. Then clear the local "
+"session with the command above. Google documents this in [Manage third-"
+"party connections](https://support.google.com/accounts/answer/13533235)."
+msgstr ""
+"Esto conserva la carpeta de Drive y los libros exportados. No revoca la "
+"concesión de Google ni invalida un token copiado en otro lugar. Para "
+"revocar el acceso, abre las [conexiones de tu cuenta de "
+"Google](https://myaccount.google.com/connections), selecciona Cadrumo y "
+"quítale el acceso a tu cuenta de Google. Después borra la sesión local "
+"con el comando anterior. Google lo documenta en [Gestionar las conexiones"
+" con terceros](https://support.google.com/accounts/answer/13533235)."
+
+#: ../../how-to/protect-data-access.md:299
+msgid ""
+"Google Sheets exports contain readable financial data. Review the "
+"workbook's sharing settings in Google Drive; anyone with sufficient "
+"Google authorization can read it. Removing Cadrumo's access does not "
+"delete exported data or copies already obtained by others. Encrypted "
+"backups have a different boundary: keep the profile passphrase and "
+"recovery material separate from the backup."
+msgstr ""
+"Las exportaciones a Google Sheets contienen datos financieros legibles. "
+"Revisa la configuración de uso compartido del libro en Google Drive; "
+"cualquiera con autorización suficiente de Google puede leerlo. Quitar el "
+"acceso de Cadrumo no elimina los datos exportados ni las copias que otros"
+" ya hayan obtenido. Las copias de seguridad cifradas tienen un límite "
+"distinto: guarda la frase de contraseña del perfil y el material de "
+"recuperación separados de la copia de seguridad."
+
+#: ../../how-to/protect-data-access.md:305
+msgid ""
+"Install Cadrumo through its published distribution channels. A "
+"counterfeit app can reuse the public Google client metadata and display "
+"the same consent brand. PKCE protects the authorization-code exchange; "
+"the consent screen does not prove which program you installed."
+msgstr ""
+"Instala Cadrumo a través de sus canales de distribución publicados. Una "
+"aplicación falsificada puede reutilizar los metadatos públicos del "
+"cliente de Google y mostrar la misma marca en el consentimiento. PKCE "
+"protege el intercambio del código de autorización; la pantalla de "
+"consentimiento no demuestra qué programa has instalado."
+
+#: ../../how-to/protect-data-access.md:310
 msgid "Reset local state (last resort)"
 msgstr "Restablece el estado local (último recurso)"
 
-#: ../../how-to/protect-data-access.md:285
+#: ../../how-to/protect-data-access.md:312
 msgid ""
 "Export every profile you want to keep before continuing. Reset "
 "permanently deletes every profile stored locally, related local "
@@ -739,7 +801,7 @@ msgstr ""
 "seguridad) queda fuera del control de Cadrumo y nada en Cadrumo puede "
 "retirarla."
 
-#: ../../how-to/protect-data-access.md:295
+#: ../../how-to/protect-data-access.md:322
 msgid ""
 "Use `start` only when you intend to remove all local profiles. Confirm "
 "the reset explicitly. It checks retention requirements before deleting "
@@ -750,7 +812,7 @@ msgstr ""
 " de conservación antes de eliminar nada y se niega a iniciarse mientras "
 "otro restablecimiento esté incompleto."
 
-#: ../../how-to/protect-data-access.md:298
+#: ../../how-to/protect-data-access.md:325
 msgid ""
 "Use the read-only `status` command to inspect the latest operation "
 "without changing local data. Provide an operation ID to inspect an exact "
@@ -763,7 +825,7 @@ msgstr ""
 " incompleta, en pausa o completa. Su salida incluye el ID de la operación"
 " y cualquier motivo de pausa."
 
-#: ../../how-to/protect-data-access.md:302
+#: ../../how-to/protect-data-access.md:329
 msgid ""
 "Use `resume` after an interruption or pause. Confirm the reset again. It "
 "continues the same incomplete operation instead of creating another. "
@@ -776,7 +838,7 @@ msgstr ""
 "exacta. Una vez que empieza la eliminación, reanudar el restablecimiento "
 "no restaura los datos eliminados."
 
-#: ../../how-to/protect-data-access.md:307
+#: ../../how-to/protect-data-access.md:334
 msgid ""
 "If legal retention requirements pause the reset, stop if you must keep "
 "the affected records. Override the pause only after reviewing and "
@@ -790,7 +852,7 @@ msgstr ""
 "proporciona siempre un motivo no vacío. Si proporcionas un motivo sin "
 "anular la pausa, el comando se niega a continuar."
 
-#: ../../how-to/protect-data-access.md:312
+#: ../../how-to/protect-data-access.md:339
 msgid ""
 "See [Set up your taxpayer profile](profile-setup.md) for sealed archive "
 "backup instructions."
@@ -798,11 +860,11 @@ msgstr ""
 "Consulta [Configurar tu perfil de contribuyente](profile-setup.md) para "
 "obtener instrucciones de copia de seguridad de archivos sellados."
 
-#: ../../how-to/protect-data-access.md:315
+#: ../../how-to/protect-data-access.md:342
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/protect-data-access.md:317
+#: ../../how-to/protect-data-access.md:344
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md): see where encrypted custody ends and deliberate "
@@ -812,7 +874,7 @@ msgstr ""
 "and-evidence.md): ve dónde acaba la custodia cifrada y dónde empiezan los"
 " traspasos en claro deliberados."
 
-#: ../../how-to/protect-data-access.md:320
+#: ../../how-to/protect-data-access.md:347
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md): create, export, and "
 "import profiles."
@@ -820,7 +882,7 @@ msgstr ""
 "[Configurar tu perfil de contribuyente](profile-setup.md): crea, exporta "
 "e importa perfiles."
 
-#: ../../how-to/protect-data-access.md:322
+#: ../../how-to/protect-data-access.md:349
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md): quarantine "
 "unreadable records and fix storage or integrity problems without a reset."
@@ -829,7 +891,6 @@ msgstr ""
 "en cuarentena los registros ilegibles y soluciona los problemas de "
 "almacenamiento o integridad sin restablecer."
 
-#: ../../how-to/protect-data-access.md:324
+#: ../../how-to/protect-data-access.md:351
 msgid "[CLI reference](../cli/index.rst): full option reference."
 msgstr "[Referencia de la CLI](../cli/index.rst): referencia completa de opciones."
-

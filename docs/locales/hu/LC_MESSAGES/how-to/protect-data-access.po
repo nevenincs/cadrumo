@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -712,10 +712,74 @@ msgstr ""
 "másik pontos profilt, amikor visszatérsz."
 
 #: ../../how-to/protect-data-access.md:283
+msgid "Remove Google access"
+msgstr "A Google-hozzáférés eltávolítása"
+
+#: ../../how-to/protect-data-access.md:285
+msgid ""
+"Profile logout and Google logout serve different purposes. To remove the "
+"saved Google refresh token and account metadata from the active profile, "
+"run:"
+msgstr ""
+"A profilból való kijelentkezés és a Google-kijelentkezés más célt "
+"szolgál. Ha el szeretnéd távolítani az aktív profilból a mentett Google "
+"frissítési tokent és a fiók metaadatait, futtasd ezt:"
+
+#: ../../how-to/protect-data-access.md:292
+msgid ""
+"This keeps the Drive folder and exported workbooks. It does not revoke "
+"Google's grant or invalidate a token copied elsewhere. To revoke access, "
+"open your [Google account "
+"connections](https://myaccount.google.com/connections), select Cadrumo, "
+"and remove its access to your Google account. Then clear the local "
+"session with the command above. Google documents this in [Manage third-"
+"party connections](https://support.google.com/accounts/answer/13533235)."
+msgstr ""
+"Ez megtartja a Drive-mappát és az exportált munkafüzeteket. Nem vonja "
+"vissza a Google-nál megadott felhatalmazást, és nem érvényteleníti a "
+"máshová másolt tokent. A hozzáférés visszavonásához nyisd meg a [Google-"
+"fiókod kapcsolatait](https://myaccount.google.com/connections), válaszd "
+"ki a Cadrumót, és távolítsd el a hozzáférését a Google-fiókodhoz. Ezután "
+"töröld a helyi munkamenetet a fenti paranccsal. A Google ezt a [Harmadik "
+"felekkel létesített kapcsolatok "
+"kezelése](https://support.google.com/accounts/answer/13533235) oldalon "
+"írja le."
+
+#: ../../how-to/protect-data-access.md:299
+msgid ""
+"Google Sheets exports contain readable financial data. Review the "
+"workbook's sharing settings in Google Drive; anyone with sufficient "
+"Google authorization can read it. Removing Cadrumo's access does not "
+"delete exported data or copies already obtained by others. Encrypted "
+"backups have a different boundary: keep the profile passphrase and "
+"recovery material separate from the backup."
+msgstr ""
+"A Google Sheets-exportok olvasható pénzügyi adatokat tartalmaznak. Nézd "
+"át a munkafüzet megosztási beállításait a Google Drive-ban; bárki "
+"elolvashatja, akinek elegendő Google-jogosultsága van. A Cadrumo "
+"hozzáférésének eltávolítása nem törli az exportált adatokat, sem a mások "
+"által már megszerzett másolatokat. A titkosított biztonsági mentések "
+"határa más: a profil jelmondatát és a helyreállítási anyagot tartsd külön"
+" a biztonsági mentéstől."
+
+#: ../../how-to/protect-data-access.md:305
+msgid ""
+"Install Cadrumo through its published distribution channels. A "
+"counterfeit app can reuse the public Google client metadata and display "
+"the same consent brand. PKCE protects the authorization-code exchange; "
+"the consent screen does not prove which program you installed."
+msgstr ""
+"A Cadrumót a közzétett terjesztési csatornáin keresztül telepítsd. Egy "
+"hamisított alkalmazás újrahasználhatja a nyilvános Google-"
+"ügyfélmetaadatokat, és ugyanazt a márkát jelenítheti meg a hozzájárulási "
+"képernyőn. A PKCE az engedélyezési kód cseréjét védi; a hozzájárulási "
+"képernyő nem bizonyítja, hogy melyik programot telepítetted."
+
+#: ../../how-to/protect-data-access.md:310
 msgid "Reset local state (last resort)"
 msgstr "A helyi állapot visszaállítása (végső eszköz)"
 
-#: ../../how-to/protect-data-access.md:285
+#: ../../how-to/protect-data-access.md:312
 msgid ""
 "Export every profile you want to keep before continuing. Reset "
 "permanently deletes every profile stored locally, related local "
@@ -735,7 +799,7 @@ msgstr ""
 "ellenőrzésén kívül esik, és a Cadrumóban semmi sem tudja visszavonni "
 "őket."
 
-#: ../../how-to/protect-data-access.md:295
+#: ../../how-to/protect-data-access.md:322
 msgid ""
 "Use `start` only when you intend to remove all local profiles. Confirm "
 "the reset explicitly. It checks retention requirements before deleting "
@@ -746,7 +810,7 @@ msgstr ""
 "előtt ellenőrzi a megőrzési követelményeket, és megtagadja az indulást, "
 "amíg egy másik visszaállítás befejezetlen."
 
-#: ../../how-to/protect-data-access.md:298
+#: ../../how-to/protect-data-access.md:325
 msgid ""
 "Use the read-only `status` command to inspect the latest operation "
 "without changing local data. Provide an operation ID to inspect an exact "
@@ -759,7 +823,7 @@ msgstr ""
 "befejezett műveletet jelez. A kimenete tartalmazza a műveletazonosítót és"
 " a szünet okát, ha van."
 
-#: ../../how-to/protect-data-access.md:302
+#: ../../how-to/protect-data-access.md:329
 msgid ""
 "Use `resume` after an interruption or pause. Confirm the reset again. It "
 "continues the same incomplete operation instead of creating another. "
@@ -772,7 +836,7 @@ msgstr ""
 " meg műveletazonosítót. A törlés megkezdése után a visszaállítás "
 "folytatása nem állítja vissza a törölt adatokat."
 
-#: ../../how-to/protect-data-access.md:307
+#: ../../how-to/protect-data-access.md:334
 msgid ""
 "If legal retention requirements pause the reset, stop if you must keep "
 "the affected records. Override the pause only after reviewing and "
@@ -786,7 +850,7 @@ msgstr ""
 "mindig adj meg nem üres indokot. Ha felülírás nélkül adsz meg indokot, a "
 "parancs megtagadja a folytatást."
 
-#: ../../how-to/protect-data-access.md:312
+#: ../../how-to/protect-data-access.md:339
 msgid ""
 "See [Set up your taxpayer profile](profile-setup.md) for sealed archive "
 "backup instructions."
@@ -794,11 +858,11 @@ msgstr ""
 "A lezárt archív biztonsági mentés utasításaiért lásd: [Állítsd be az "
 "adózói profilodat](profile-setup.md)."
 
-#: ../../how-to/protect-data-access.md:315
+#: ../../how-to/protect-data-access.md:342
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/protect-data-access.md:317
+#: ../../how-to/protect-data-access.md:344
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md): see where encrypted custody ends and deliberate "
@@ -808,7 +872,7 @@ msgstr ""
 "evidence.md): lásd, hol ér véget a titkosított őrizet, és hol kezdődnek a"
 " szándékos, nyílt szövegű átadások."
 
-#: ../../how-to/protect-data-access.md:320
+#: ../../how-to/protect-data-access.md:347
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md): create, export, and "
 "import profiles."
@@ -816,7 +880,7 @@ msgstr ""
 "[Állítsd be az adózói profilodat](profile-setup.md): profilok "
 "létrehozása, exportálása és importálása."
 
-#: ../../how-to/protect-data-access.md:322
+#: ../../how-to/protect-data-access.md:349
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md): quarantine "
 "unreadable records and fix storage or integrity problems without a reset."
@@ -825,6 +889,6 @@ msgstr ""
 "karanténozd az olvashatatlan tételeket, és javítsd ki a tárolási vagy "
 "integritási problémákat visszaállítás nélkül."
 
-#: ../../how-to/protect-data-access.md:324
+#: ../../how-to/protect-data-access.md:351
 msgid "[CLI reference](../cli/index.rst): full option reference."
 msgstr "[CLI-referencia](../cli/index.rst): a teljes opcióreferencia."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -1101,21 +1101,24 @@ msgstr ""
 #: ../../how-to/profile-setup.md:440
 msgid ""
 "Sign out without deleting the profile using `aeat config logout` after "
-"the login-gated maintenance and capability checks above. Logout closes "
-"the active storage session, discards its in-memory keys, closes the "
-"storage connections, and clears the local active-profile pointer:"
+"the login-gated maintenance and capability checks above. Logout revokes "
+"this profile's shared human sign-in and closes its human sessions. The "
+"profile stays selected; subsequent commands require fresh authentication."
+" Enrolled API credentials keep their separate authority:"
 msgstr ""
-"Tanca la sessió sense esborrar el perfil amb `aeat config logout` després"
-" de les comprovacions de manteniment i capacitats protegides per inici de"
-" sessió anteriors. El tancament de sessió tanca la sessió "
-"d'emmagatzematge activa, descarta les seves claus en memòria, tanca les "
-"connexions d'emmagatzematge i esborra el punter local del perfil actiu:"
+"Tanca la sessió sense eliminar el perfil amb `aeat config logout` després"
+" de les tasques de manteniment i les comprovacions de capacitats "
+"anteriors, que requereixen haver iniciat la sessió. Tancar la sessió "
+"revoca l'inici de sessió humà compartit d'aquest perfil i en tanca les "
+"sessions humanes. El perfil continua seleccionat; les ordres posteriors "
+"exigeixen una autenticació nova. Les credencials d'API inscrites "
+"conserven la seva autoritat independent:"
 
-#: ../../how-to/profile-setup.md:449
+#: ../../how-to/profile-setup.md:450
 msgid "See what changed"
 msgstr "Mira què ha canviat"
 
-#: ../../how-to/profile-setup.md:451
+#: ../../how-to/profile-setup.md:452
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
 "calculations, and filings - is recorded as an event in that profile's "
@@ -1130,7 +1133,7 @@ msgstr ""
 "sessió oberta, així que inicia primer sessió al perfil. L'exemple llista "
 "els filtres que accepta `aeat config profile history`:"
 
-#: ../../how-to/profile-setup.md:461
+#: ../../how-to/profile-setup.md:462
 msgid ""
 "Repeat `--event-type` to include several types. Narrow the window with "
 "`--since` and `--until`, or match one record with `--object-id` or "
@@ -1143,30 +1146,34 @@ msgstr ""
 "acceptats, de manera que un valor buit és una manera ràpida de descobrir "
 "el vocabulari."
 
-#: ../../how-to/profile-setup.md:466
+#: ../../how-to/profile-setup.md:467
 msgid "Delete a profile permanently"
 msgstr "Elimina un perfil permanentment"
 
-#: ../../how-to/profile-setup.md:468
+#: ../../how-to/profile-setup.md:469
 msgid ""
-"Delete a profile for good only after closing its active session. Cadrumo "
-"refuses to delete the active profile, so log out first and then confirm "
-"the irreversible deletion of that exact named profile. This terminal "
-"example comes after every profile operation in this guide because the "
-"deleted profile cannot be used again:"
+"Close the profile's sign-in before deleting it. Logout keeps that profile"
+" selected, and Cadrumo refuses to delete the selected profile. Log in to "
+"another existing profile to change the default selection, then confirm "
+"the irreversible deletion of the original named profile. The example "
+"assumes `docs-sequence-replacement` already exists; login asks for its "
+"passphrase. It comes after every operation on the original profile "
+"because that profile cannot be used again:"
 msgstr ""
-"Elimina definitivament un perfil només després de tancar-ne la sessió "
-"activa. Cadrumo es nega a eliminar el perfil actiu, per tant, primer "
-"tanca la sessió i després confirma l'eliminació irreversible d'aquell "
-"perfil amb el nom exacte. Aquest exemple terminal apareix després de "
-"totes les operacions de perfil de la guia perquè el perfil eliminat no es"
-" pot tornar a utilitzar:"
+"Tanca l'inici de sessió del perfil abans d'eliminar-lo. Tancar la sessió "
+"manté aquest perfil seleccionat, i Cadrumo es nega a eliminar el perfil "
+"seleccionat. Inicia la sessió en un altre perfil existent per canviar la "
+"selecció predeterminada i confirma després l'eliminació irreversible del "
+"perfil original, indicant-lo pel nom. L'exemple suposa que `docs-"
+"sequence-replacement` ja existeix; l'inici de sessió en demana la frase "
+"de contrasenya. Va després de totes les operacions sobre el perfil "
+"original perquè aquest perfil no es pot tornar a fer servir:"
 
-#: ../../how-to/profile-setup.md:478
+#: ../../how-to/profile-setup.md:481
 msgid "If setup looks wrong"
 msgstr "Si la configuració sembla incorrecta"
 
-#: ../../how-to/profile-setup.md:480
+#: ../../how-to/profile-setup.md:483
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1176,7 +1183,7 @@ msgstr ""
 " vàlid, o que estàs treballant sota el perfil incorrecte, consulta "
 "[Diagnostica i repara la teva configuració local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:484
+#: ../../how-to/profile-setup.md:487
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1190,27 +1197,26 @@ msgstr ""
 "deixar fora abans de portar el problema al gestor d'incidències del "
 "projecte."
 
-#: ../../how-to/profile-setup.md:490
+#: ../../how-to/profile-setup.md:493
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/profile-setup.md:492
+#: ../../how-to/profile-setup.md:495
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:493
+#: ../../how-to/profile-setup.md:496
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén les dades censals del Modelo 036 al teu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:494
+#: ../../how-to/profile-setup.md:497
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:495
+#: ../../how-to/profile-setup.md:498
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:496
+#: ../../how-to/profile-setup.md:499
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
-

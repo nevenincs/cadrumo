@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-05 12:06+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -24,44 +24,30 @@ msgstr "Számítások áttekintése Google Sheets segítségével"
 
 #: ../../how-to/review-with-google-sheets.md:3
 msgid ""
-"This page covers the spreadsheet review of a modelo calculation: "
-"exporting it to Google Sheets, checking how each total is reached with "
-"live formulas, and pulling your reviewed edits back as filing inputs. "
-"Pull returns those edits without saving them. This workflow is for "
-"reviewing calculated values after your profile and transactions are "
-"ready. It is not a bank statement import or bulk edit tool."
+"Google review is outbound-only. Edits in Google Sheets do not become "
+"Cadrumo calculation inputs. The spreadsheet `pull`, `calculate`, and "
+"`verify` commands have been removed; use local calculation inputs and "
+"`work calculate` instead."
 msgstr ""
-"Ez az oldal egy nyomtatványszámítás táblázatos áttekintését mutatja be: a"
-" számítás Google Táblázatokba exportálását, annak ellenőrzését, hogyan "
-"áll össze az egyes végösszeg élő képletekkel, valamint a felülvizsgált "
-"módosításaid visszahozását benyújtási bemenetként. A pull visszaadja "
-"ezeket a módosításokat anélkül, hogy elmentené őket. Ez a munkafolyamat a"
-" kiszámított értékek áttekintésére szolgál, miután a profilod és a "
-"tranzakcióid készen állnak. Nem bankkivonat-importáló vagy tömeges "
-"szerkesztő eszköz."
+"A Google-áttekintés csak kifelé irányul. A Google Sheetsben végzett "
+"szerkesztések nem válnak a Cadrumo számítási bemeneteivé. A táblázatos "
+"`pull`, `calculate` és `verify` parancsok megszűntek; helyettük használj "
+"helyi számítási bemeneteket és a `work calculate` parancsot."
 
-#: ../../how-to/review-with-google-sheets.md:8
+#: ../../how-to/review-with-google-sheets.md:7
 msgid ""
-"Cadrumo has two spreadsheet routes for the same calculation surface. "
-"`aeat app modelo spreadsheet push` creates a Google Sheets workbook in "
-"your Drive, and `pull` and `calculate` read your edits back. `aeat app "
-"modelo spreadsheet export` writes an offline `.xlsx` workbook with live "
-"formulas to a local path. It needs no Google account, but no command "
-"reads an edited local workbook back. Use Google Sheets to review and "
-"adjust, and see [Export an offline workbook](#export-an-offline-workbook)"
-" for the other route."
+"The previous template-based Google `push` remains disabled. Use `publish`"
+" with an exact saved calculation revision to create a new native Google "
+"Sheet. Offline `.xlsx` export remains available; see [Export an offline "
+"workbook](#export-an-offline-workbook)."
 msgstr ""
-"A Cadrumónak két táblázatos útvonala van ugyanahhoz a számítási "
-"felülethez. Az `aeat app modelo spreadsheet push` létrehoz egy Google "
-"Sheets-munkafüzetet a Drive-odban, a `pull` és a `calculate` pedig "
-"visszaolvassa a szerkesztéseidet. Az `aeat app modelo spreadsheet export`"
-" egy offline `.xlsx` munkafüzetet ír élő képletekkel egy helyi elérési "
-"útra. Nem kell hozzá Google-fiók, de egyetlen parancs sem olvassa vissza "
-"a szerkesztett helyi munkafüzetet. Az áttekintéshez és módosításhoz "
-"használd a Google Sheetset, a másik útvonalról pedig lásd: [Offline "
-"munkafüzet exportálása](#export-an-offline-workbook)."
+"A korábbi, sablonalapú Google `push` továbbra is le van tiltva. Egy "
+"pontosan megadott mentett számítási revízióval használd a `publish` "
+"parancsot, hogy új natív Google Sheet jöjjön létre. Az offline "
+"`.xlsx`-export továbbra is elérhető; lásd: [Offline munkafüzet "
+"exportálása](#export-an-offline-workbook)."
 
-#: ../../how-to/review-with-google-sheets.md:16
+#: ../../how-to/review-with-google-sheets.md:12
 msgid ""
 "The local configuration commands on this page (status, folder view, "
 "logout) and the readiness checks on your records run live at build time. "
@@ -76,21 +62,21 @@ msgstr ""
 "fiókoddal futnak, nem a dokumentációs tesztkörnyezetben, ezért nem "
 "futtatott példaként szerepelnek."
 
-#: ../../how-to/review-with-google-sheets.md:20
+#: ../../how-to/review-with-google-sheets.md:16
 msgid "Before you start"
 msgstr "Mielőtt hozzákezdesz"
 
-#: ../../how-to/review-with-google-sheets.md:22
+#: ../../how-to/review-with-google-sheets.md:18
 msgid "You need:"
 msgstr "Szükséged lesz:"
 
-#: ../../how-to/review-with-google-sheets.md:24
+#: ../../how-to/review-with-google-sheets.md:20
 msgid "an active profile; see [Set up your taxpayer profile](profile-setup.md)"
 msgstr ""
 "egy aktív profilra; lásd: [Állítsd be az adózói profilodat](profile-"
 "setup.md)"
 
-#: ../../how-to/review-with-google-sheets.md:25
+#: ../../how-to/review-with-google-sheets.md:21
 msgid ""
 "classified transaction data; see [Import and manage transactions](import-"
 "bank-statements.md)"
@@ -98,38 +84,39 @@ msgstr ""
 "besorolt tranzakciós adatokra; lásd: [Tranzakciók importálása és kezelése"
 "](import-bank-statements.md)"
 
-#: ../../how-to/review-with-google-sheets.md:26
+#: ../../how-to/review-with-google-sheets.md:22
 msgid "a modelo and period ready enough to calculate"
 msgstr "egy modelóra és időszakra, amely eléggé készen áll a számításhoz"
 
-#: ../../how-to/review-with-google-sheets.md:27
+#: ../../how-to/review-with-google-sheets.md:23
 msgid "the `google` extra, installed with `pip install \"cadrumo[google]\"`"
 msgstr ""
 "a `google` extrára, amelyet a `pip install \"cadrumo[google]\"` "
 "paranccsal telepít"
 
-#: ../../how-to/review-with-google-sheets.md:29
+#: ../../how-to/review-with-google-sheets.md:25
 msgid ""
-"Cadrumo works only inside a folder it creates in your Google Drive when "
-"you sign in. It never opens, lists or changes a file or folder you "
-"already had, and no command accepts a Drive folder or file from you, "
-"apart from the ID of a workbook Cadrumo itself exported. It does not use "
-"an older `aeat-vault/` folder; export a new workbook before pulling edits"
-" into Cadrumo."
+"Cadrumo creates a managed Drive folder for each profile. Transport checks"
+" the local creation receipt, profile, ownership markers and current "
+"ancestry before accessing managed content. Known identities may receive a"
+" minimal metadata check when moved outside that folder; their content is "
+"then refused. Google does not provide an atomic folder-membership "
+"condition for every content request, so an external move between the "
+"check and request remains a provider limitation."
 msgstr ""
-"A Cadrumo kizárólag abban a mappában dolgozik, amelyet bejelentkezéskor "
-"hoz létre a Google Drive-odban. Soha nem nyit meg, nem listáz és nem "
-"módosít olyan fájlt vagy mappát, amely már korábban megvolt, és egyetlen "
-"parancs sem fogad el tőled Drive-mappát vagy -fájlt, kivéve egy olyan "
-"munkafüzet azonosítóját, amelyet maga a Cadrumo exportált. Régebbi `aeat-"
-"vault/` mappát nem használ; exportálj új munkafüzetet, mielőtt "
-"szerkesztéseket húznál vissza a Cadrumóba."
+"A Cadrumo minden profilhoz létrehoz egy kezelt Drive-mappát. A kezelt "
+"tartalom elérése előtt az átvitel ellenőrzi a helyi létrehozási nyugtát, "
+"a profilt, a tulajdonjelzőket és az aktuális szülőláncot. Az ismert "
+"azonosítók minimális metaadat-ellenőrzést kaphatnak, ha a mappán kívülre "
+"kerültek; a tartalmukat ilyenkor elutasítja. A Google nem kínál atomi "
+"mappatagsági feltételt minden tartalomkéréshez, ezért az ellenőrzés és a "
+"kérés közötti külső áthelyezés szolgáltatói korlát marad."
 
-#: ../../how-to/review-with-google-sheets.md:35
+#: ../../how-to/review-with-google-sheets.md:32
 msgid "Configure Google access"
 msgstr "Google-hozzáférés beállítása"
 
-#: ../../how-to/review-with-google-sheets.md:37
+#: ../../how-to/review-with-google-sheets.md:34
 msgid ""
 "Sign in to Google for the active profile. Cadrumo opens Google's consent "
 "page in your browser and asks for your email address and for access to "
@@ -150,7 +137,7 @@ msgstr ""
 "biztonsági másolat. A bejelentkezés eléri a Google-t, ezért itt futtatás "
 "nélkül szerepel:"
 
-#: ../../how-to/review-with-google-sheets.md:48
+#: ../../how-to/review-with-google-sheets.md:45
 msgid ""
 "Check the Google status and the folder created for the profile. These are"
 " local commands, so they run here. On a profile that has not signed in, "
@@ -161,17 +148,18 @@ msgstr ""
 "jelentkezett be, az állapotban a `session_present` értéke hamis, és még "
 "nincs mappa:"
 
-#: ../../how-to/review-with-google-sheets.md:56
+#: ../../how-to/review-with-google-sheets.md:53
 msgid ""
-"If you move the folder to the bin, or sign in to a different Google "
-"account, sign in again: Cadrumo finds its folder or creates a new one, "
-"and you export your workbooks again."
+"A trashed or mismatched managed folder is refused. Signing in again does "
+"not search your Drive for a same-name replacement. An uncertain creation "
+"needs reconciliation before another creation attempt."
 msgstr ""
-"Ha a mappát a kukába helyezed, vagy másik Google-fiókkal jelentkezel be, "
-"jelentkezz be újra: a Cadrumo megtalálja a mappáját, vagy újat hoz létre,"
-" te pedig újra exportálod a munkafüzeteidet."
+"A kukába helyezett vagy nem egyező kezelt mappát elutasítja. Az újbóli "
+"bejelentkezés nem keres a Drive-odban azonos nevű helyettesítőt. Egy "
+"bizonytalan létrehozást tisztázni kell, mielőtt újabb létrehozási "
+"kísérlet történne."
 
-#: ../../how-to/review-with-google-sheets.md:60
+#: ../../how-to/review-with-google-sheets.md:57
 msgid ""
 "Probe the connection once you have signed in. The probe reaches Google, "
 "so it is shown here without being run:"
@@ -179,7 +167,7 @@ msgstr ""
 "Vizsgáld meg a kapcsolatot, miután bejelentkeztél. A vizsgálat eléri a "
 "Google-t, ezért itt futtatás nélkül szerepel:"
 
-#: ../../how-to/review-with-google-sheets.md:66
+#: ../../how-to/review-with-google-sheets.md:63
 msgid ""
 "The Google integration is profile-scoped. Each profile signs in "
 "separately and gets its own folder."
@@ -187,49 +175,66 @@ msgstr ""
 "A Google-integráció profilhoz kötött. Minden profil külön jelentkezik be,"
 " és saját mappát kap."
 
-#: ../../how-to/review-with-google-sheets.md:68
-msgid "Export a calculation workbook"
-msgstr "Egy számítási munkafüzet exportálása"
+#: ../../how-to/review-with-google-sheets.md:65
+msgid "Publish a saved calculation"
+msgstr "Mentett számítás közzététele"
 
-#: ../../how-to/review-with-google-sheets.md:70
+#: ../../how-to/review-with-google-sheets.md:67
 msgid ""
-"Export the calculation of one modelo, year, and period. The export "
-"creates a Google Sheets workbook inside the configured `cadrumo-vault/` "
-"area in Drive:"
+"Copy the calculation revision ID returned by `app modelo work calculate`,"
+" then run:"
 msgstr ""
-"Exportáld egy nyomtatvány adott évre és időszakra vonatkozó számítását. "
-"Az export egy Google Táblázatok-munkafüzetet hoz létre a Drive-ban "
-"beállított `cadrumo-vault/` területen belül:"
+"Másold ki az `app modelo work calculate` által visszaadott számítási "
+"revízió azonosítóját, majd futtasd ezt:"
 
-#: ../../how-to/review-with-google-sheets.md:77
+#: ../../how-to/review-with-google-sheets.md:73
 msgid ""
-"It is a workbook for reviewing a calculation, not a bank statement "
-"export. Use `aeat app ledger export` when you need a CSV, JSONL, or XLSX "
-"snapshot of your records."
+"The flag authorizes a readable copy of that revision and its captured "
+"ledger support in the profile's managed Google folder. Anyone with "
+"sufficient Google authorization can read the Sheet. Original attachment "
+"bytes are not uploaded by this command. The result includes the actual "
+"spreadsheet URL."
 msgstr ""
-"Ez egy számítás áttekintésére szolgáló munkafüzet, nem bankszámlakivonat-"
-"export. Használd az `aeat app ledger export` parancsot, ha a "
-"nyilvántartásaidról készített CSV-, JSONL- vagy XLSX-pillanatképre van "
-"szükséged."
+"A kapcsoló engedélyezi, hogy a revízióról és a vele rögzített ledger-"
+"alátámasztásról olvasható másolat készüljön a profil kezelt Google-"
+"mappájában. A Sheetet bárki elolvashatja, akinek elegendő Google-"
+"jogosultsága van. Ez a parancs nem tölti fel a mellékletek eredeti "
+"bájtjait. Az eredmény tartalmazza a táblázat tényleges URL-jét."
 
-#: ../../how-to/review-with-google-sheets.md:80
+#: ../../how-to/review-with-google-sheets.md:78
 msgid ""
-"Use `--prefill-relations` only when you want the spreadsheet to include "
-"values carried from related filings, such as annual summaries or prior-"
-"quarter carryovers. Add `--dry-run` to preview what the export would "
-"clear and rewrite in the workbook without writing anything."
+"Each publication creates a new document and preserves earlier review "
+"notes. The Sheet uses saved values without recalculating from today's "
+"ledger. Missing historical evidence, attribution or display metadata is "
+"reported explicitly; an incomplete review is not a filing-ready or audit-"
+"complete declaration."
 msgstr ""
-"A `--prefill-relations` kapcsolót csak akkor használd, ha azt szeretnéd, "
-"hogy a táblázat tartalmazza a kapcsolódó benyújtásokból áthozott "
-"értékeket, például éves összesítőket vagy korábbi negyedévi áthozatokat. "
-"Add hozzá a `--dry-run` kapcsolót, hogy előnézetben lásd, mit törölne és "
-"írna újra az exportálás a munkafüzetben, anélkül hogy bármit írna."
+"Minden közzététel új dokumentumot hoz létre, és megőrzi a korábbi "
+"áttekintési megjegyzéseket. A Sheet a mentett értékeket használja, és nem"
+" számol újra a mai ledgerből. A hiányzó korábbi bizonyítékot, "
+"hozzárendelést vagy megjelenítési metaadatot kifejezetten jelzi; a "
+"hiányos áttekintés nem benyújtásra kész és nem auditálásra teljes "
+"bevallás."
 
-#: ../../how-to/review-with-google-sheets.md:86
+#: ../../how-to/review-with-google-sheets.md:83
+msgid ""
+"An optional `--publication-id UUID` identifies one publication across "
+"retries. Keep that identity after a timeout: a timeout does not prove "
+"that no Sheet was created. A retained, completed publication can return "
+"its existing URL without rewriting it; partial or uncertain publication "
+"requires reconciliation."
+msgstr ""
+"Egy opcionális `--publication-id UUID` ugyanazt a közzétételt azonosítja "
+"az újrapróbálkozások során. Időtúllépés után is őrizd meg ezt az "
+"azonosítót: az időtúllépés nem bizonyítja, hogy nem jött létre Sheet. Egy"
+" megőrzött, befejezett közzététel átírás nélkül visszaadhatja a meglévő "
+"URL-jét; a részleges vagy bizonytalan közzétételt tisztázni kell."
+
+#: ../../how-to/review-with-google-sheets.md:89
 msgid "Export an offline workbook"
 msgstr "Offline munkafüzet exportálása"
 
-#: ../../how-to/review-with-google-sheets.md:88
+#: ../../how-to/review-with-google-sheets.md:91
 msgid ""
 "To review without Google, write the same calculation surface to a local "
 "`.xlsx` workbook with live formulas. Nothing is uploaded:"
@@ -238,7 +243,7 @@ msgstr ""
 "felületet egy helyi `.xlsx` munkafüzetbe élő képletekkel. Semmi sem kerül"
 " feltöltésre:"
 
-#: ../../how-to/review-with-google-sheets.md:95
+#: ../../how-to/review-with-google-sheets.md:98
 msgid ""
 "The result prints the file path, size, SHA-256 checksum, and box count. "
 "The command refuses to overwrite an existing file unless you add "
@@ -253,113 +258,21 @@ msgstr ""
 "elutasítás szövege `The export output path is not valid`, és megnevezi az"
 " okot."
 
-#: ../../how-to/review-with-google-sheets.md:100
+#: ../../how-to/review-with-google-sheets.md:103
 msgid ""
-"The offline workbook is a review copy. `pull`, `calculate`, and `verify` "
-"work only with a Google Sheet, so edits you make in the local file do not"
-" flow back into Cadrumo. It accepts `--prefill-relations` like `push`."
+"The offline workbook is a review copy. Edits in it do not flow back into "
+"Cadrumo. It accepts `--prefill-relations` for values carried from related"
+" filings."
 msgstr ""
-"Az offline munkafüzet egy áttekintési másolat. A `pull`, a `calculate` és"
-" a `verify` csak Google Sheettel működik, ezért a helyi fájlban végzett "
-"szerkesztései nem kerülnek vissza a Cadrumóba. Elfogadja a `--prefill-"
-"relations` kapcsolót, mint a `push`."
+"Az offline munkafüzet egy áttekintési másolat. A benne végzett "
+"szerkesztések nem kerülnek vissza a Cadrumóba. Elfogadja a `--prefill-"
+"relations` kapcsolót a kapcsolódó bevallásokból átvett értékekhez."
 
-#: ../../how-to/review-with-google-sheets.md:104
-msgid "Pull your edits back"
-msgstr "Húzd vissza a szerkesztéseidet"
-
-#: ../../how-to/review-with-google-sheets.md:106
-msgid ""
-"After reviewing or editing the workbook, pull your edits back from the "
-"Sheet. Add `--assemble-observations` when you want the command output to "
-"include edited row-level data assembled as structured observations. The "
-"command does not save those observations:"
-msgstr ""
-"A munkafüzet áttekintése vagy szerkesztése után húzd vissza a "
-"szerkesztéseidet a Táblázatból. Add hozzá az `--assemble-observations` "
-"kapcsolót, ha azt szeretnéd, hogy a parancs kimenete tartalmazza a "
-"szerkesztett sorszintű adatokat strukturált megfigyelésekként "
-"összeállítva. A parancs nem menti el ezeket a megfigyeléseket:"
-
-#: ../../how-to/review-with-google-sheets.md:113
-msgid ""
-"The pull command checks that the spreadsheet belongs to the current "
-"profile and matches the expected filing period. If it refuses, re-export "
-"and retry from the new spreadsheet. To use a pulled edit in a filing, "
-"supply it to `aeat app modelo work calculate` with `--casilla`, "
-"`--binding`, or `--relation`."
-msgstr ""
-"A pull parancs ellenőrzi, hogy a táblázat az aktuális profilhoz tartozik,"
-" és megegyezik a várt benyújtási időszakkal. Ha elutasít, exportálj újra,"
-" és próbáld újra az új táblázatból. Ha egy visszahúzott szerkesztést fel "
-"akarsz használni egy benyújtásnál, add át az `aeat app modelo work "
-"calculate` parancsnak a `--casilla`, `--binding` vagy `--relation` "
-"kapcsolóval."
-
-#: ../../how-to/review-with-google-sheets.md:119
-msgid "Compute box values from the Sheet"
-msgstr "Rovatértékek kiszámítása a Táblázatból"
-
-#: ../../how-to/review-with-google-sheets.md:121
-msgid ""
-"Run `aeat app modelo spreadsheet calculate` when you want Cadrumo to "
-"calculate box values from the edits in the Sheet. It pulls the cells you "
-"edited, runs the calculation engine over them, and displays the result. "
-"It saves nothing:"
-msgstr ""
-"Futtasd az `aeat app modelo spreadsheet calculate` parancsot, ha azt "
-"szeretnéd, hogy a Cadrumo a Sheetben lévő szerkesztésekből számítson "
-"rovatértékeket. Behúzza az általad szerkesztett cellákat, lefuttatja "
-"rajtuk a számítási motort, és megjeleníti az eredményt. Semmit sem ment "
-"el:"
-
-#: ../../how-to/review-with-google-sheets.md:128
-msgid ""
-"The `calculate` command checks that the spreadsheet matches the expected "
-"filing period. If it refuses, re-export and retry from the new "
-"spreadsheet."
-msgstr ""
-"A `calculate` parancs ellenőrzi, hogy a táblázat megegyezik a várt "
-"benyújtási időszakkal. Ha elutasít, exportálj újra, és próbáld újra az új"
-" táblázatból."
-
-#: ../../how-to/review-with-google-sheets.md:131
-msgid "Check the spreadsheet calculation"
-msgstr "Ellenőrizd a táblázat számítását"
-
-#: ../../how-to/review-with-google-sheets.md:133
-msgid ""
-"Run the spreadsheet check command for the same modelo, year, and period. "
-"If you have a scenario JSON with your inputs and expected Agencia Estatal"
-" de Administración Tributaria (AEAT) outputs, pass it explicitly with "
-"`--scenario`:"
-msgstr ""
-"Futtasd a táblázat-ellenőrző parancsot ugyanarra a nyomtatványra, évre és"
-" időszakra. Ha van olyan forgatókönyv-JSON-od, amely tartalmazza a "
-"bemeneteidet és a várt Agencia Estatal de Administración Tributaria "
-"(AEAT) kimeneteket, add át kifejezetten a `--scenario` kapcsolóval:"
-
-#: ../../how-to/review-with-google-sheets.md:140
-msgid ""
-"The check rewrites that period's workbook with your scenario file's "
-"inputs, then compares the workbook's formula results with the local "
-"calculation engine and, when the scenario supplies AEAT-published "
-"expected outputs, with those as well. It overwrites edits made in the "
-"pushed sheet, so pull your edits before you run the check. It does not "
-"submit a filing to AEAT."
-msgstr ""
-"Az ellenőrzés újraírja az adott időszak munkafüzetét a forgatókönyvfájlod"
-" bemeneteivel, majd összeveti a munkafüzet képleteredményeit a helyi "
-"számítási motorral, és ha a forgatókönyv AEAT által közzétett várt "
-"kimeneteket ad, azokkal is. Felülírja a feltöltött Sheetben végzett "
-"módosításokat, ezért húzd vissza a szerkesztéseidet, mielőtt lefuttatod "
-"az ellenőrzést. Nem nyújt be bevallást az AEAT-nak."
-
-#: ../../how-to/review-with-google-sheets.md:148
+#: ../../how-to/review-with-google-sheets.md:107
 msgid "Back up your encrypted data to Drive"
 msgstr "Készíts biztonsági másolatot a titkosított adataidról a Drive-ra"
 
-#: ../../how-to/review-with-google-sheets.md:150
+#: ../../how-to/review-with-google-sheets.md:109
 msgid ""
 "Keep an off-machine copy of your encrypted data by mirroring it to the "
 "configured Drive folder. Preview with `--dry-run` first; it reports what "
@@ -372,43 +285,70 @@ msgstr ""
 "anélkül, hogy bármit módosítana. Egy nagy feltöltés terjedelmét szűkítsd "
 "a `--namespace` vagy a `--limit` opcióval:"
 
-#: ../../how-to/review-with-google-sheets.md:158
+#: ../../how-to/review-with-google-sheets.md:117
 msgid ""
-"Only encrypted data is uploaded. Your data leaves the machine exactly as "
-"it sits encrypted on disk, and the master key never leaves your computer,"
-" so the Drive copy is unreadable without it. The mirror is one-way: "
-"Cadrumo writes the copy and never reads Drive back as the original of "
-"your data."
+"Secure-object payloads are uploaded as their stored ciphertext, with "
+"length and SHA-256 checks before a complete namespace manifest is "
+"published. Structural manifests contain metadata and are not encrypted "
+"payloads. A limited or incomplete upload does not establish a complete "
+"backup; inspect failed and degraded manifest counts. A partial upload "
+"retains acknowledged ciphertext when safe cleanup cannot be established."
 msgstr ""
-"Csak titkosított adatok kerülnek feltöltésre. Az adataid pontosan úgy "
-"hagyják el a gépet, ahogy titkosítva vannak a lemezen, és a mesterkulcs "
-"soha nem hagyja el a számítógépedet, így a Drive-másolat a mesterkulcs "
-"nélkül olvashatatlan. A tükrözés egyirányú: a Cadrumo megírja a "
-"másolatot, és soha nem olvassa vissza a Drive-ot az adataid eredeti "
-"forrásaként."
+"A biztonságos objektumok tartalma a tárolt titkosított szövegként "
+"töltődik fel, hossz- és SHA-256-ellenőrzéssel, mielőtt a névtér teljes "
+"jegyzéke közzétételre kerül. A szerkezeti jegyzékek metaadatokat "
+"tartalmaznak, és nem titkosított tartalmak. Egy korlátozott vagy hiányos "
+"feltöltés nem jelent teljes biztonsági mentést; nézd meg a sikertelen és "
+"a csökkent értékű jegyzékek számát. A részleges feltöltés megtartja a már"
+" nyugtázott titkosított szöveget, ha a biztonságos takarítás nem "
+"állapítható meg."
 
-#: ../../how-to/review-with-google-sheets.md:163
+#: ../../how-to/review-with-google-sheets.md:124
+msgid ""
+"This is a one-way mirror with no remote restore command. Local `archive "
+"import` reads a portable archive, not these mirrored objects. Successful "
+"upload and integrity verification do not establish recoverability."
+msgstr ""
+"Ez egyirányú tükör, távoli visszaállító parancs nélkül. A helyi `archive "
+"import` hordozható archívumot olvas, nem ezeket a tükrözött objektumokat."
+" A sikeres feltöltés és az integritás-ellenőrzés nem bizonyítja a "
+"visszaállíthatóságot."
+
+#: ../../how-to/review-with-google-sheets.md:128
 msgid "Sign out of Google"
 msgstr "Jelentkezz ki a Google-ból"
 
-#: ../../how-to/review-with-google-sheets.md:165
+#: ../../how-to/review-with-google-sheets.md:130
+msgid ""
+"Google logout removes local credentials; it does not revoke Google's "
+"grant. To stop access by copied credentials as well, follow [Remove "
+"Google access](protect-data-access.md#remove-google-access)."
+msgstr ""
+"A Google-kijelentkezés eltávolítja a helyi hitelesítő adatokat; nem vonja"
+" vissza a Google-nál megadott felhatalmazást. Ha a lemásolt hitelesítő "
+"adatokkal való hozzáférést is meg szeretnéd szüntetni, kövesd [A Google-"
+"hozzáférés eltávolítása](protect-data-access.md#remove-google-access) "
+"részt."
+
+#: ../../how-to/review-with-google-sheets.md:134
 msgid ""
 "Clear the Google session for the active profile. Logout is a local "
 "command, so it runs here. If a session exists, it removes the saved "
 "session token and its metadata. The profile's Drive folder is kept, so a "
-"later `aeat config google login` signs in again and finds it:"
+"later `aeat config google login` signs in again and validates its "
+"recorded identity:"
 msgstr ""
 "Töröld a Google-munkamenetet az aktív profilhoz. A kijelentkezés helyi "
 "parancs, ezért itt lefut. Ha létezik munkamenet, eltávolítja a mentett "
 "munkamenet-tokent és annak metaadatait. A profil Drive-mappája megmarad, "
 "így egy későbbi `aeat config google login` újra bejelentkezik, és "
-"megtalálja:"
+"ellenőrzi a rögzített azonosítóját:"
 
-#: ../../how-to/review-with-google-sheets.md:174
+#: ../../how-to/review-with-google-sheets.md:143
 msgid "Upgrading from an earlier version"
 msgstr "Frissítés egy korábbi verzióról"
 
-#: ../../how-to/review-with-google-sheets.md:176
+#: ../../how-to/review-with-google-sheets.md:145
 msgid ""
 "Earlier versions asked you to create a Google Cloud project, register its"
 " client file, and point Cadrumo at a Drive folder of your own. This "
@@ -418,7 +358,7 @@ msgstr ""
 " regisztráld az ügyfélfájlját, és adj meg a Cadrumónak egy saját Drive-"
 "mappát. Ez a verzió egyiket sem kéri. Frissítés után:"
 
-#: ../../how-to/review-with-google-sheets.md:180
+#: ../../how-to/review-with-google-sheets.md:149
 msgid ""
 "Run `aeat config google login`. A sign-in from an earlier version is not "
 "reused; Cadrumo tells you to sign in again."
@@ -427,63 +367,62 @@ msgstr ""
 "származó bejelentkezést a rendszer nem használja fel újra; a Cadrumo "
 "jelzi, hogy jelentkezz be újra."
 
-#: ../../how-to/review-with-google-sheets.md:182
+#: ../../how-to/review-with-google-sheets.md:151
 msgid ""
-"Export your workbooks again. Cadrumo keeps everything in the folder it "
-"creates at sign-in and does not look for workbooks or folders an earlier "
-"version created. Those stay in your Drive untouched; move or delete them "
-"yourself."
+"Keep earlier workbooks for review. Cadrumo does not adopt historical "
+"unreceipted workbooks or search Drive to repair them. Use `publish` to "
+"make a new review copy from a saved calculation revision."
 msgstr ""
-"Exportáld újra a munkafüzeteidet. A Cadrumo mindent abban a mappában "
-"tart, amelyet bejelentkezéskor hoz létre, és nem keresi a korábbi verzió "
-"által létrehozott munkafüzeteket vagy mappákat. Azok érintetlenül a "
-"Drive-odban maradnak; helyezd át vagy töröld őket magad."
+"A korábbi munkafüzeteket őrizd meg áttekintésre. A Cadrumo nem veszi át a"
+" nyugta nélküli korábbi munkafüzeteket, és nem keres a Drive-ban, hogy "
+"megjavítsa őket. A `publish` paranccsal készíts új áttekintési másolatot "
+"egy mentett számítási revízióból."
 
-#: ../../how-to/review-with-google-sheets.md:187
+#: ../../how-to/review-with-google-sheets.md:155
 msgid "These are no longer available:"
 msgstr "Ezek már nem érhetők el:"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "Removed"
 msgstr "Eltávolítva"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "Use instead"
 msgstr "Használd helyette"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "`config google register` and its client file"
 msgstr "`config google register` és az ügyfélfájlja"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "Nothing. The application carries its own Google client."
 msgstr "Semmit. Az alkalmazás tartalmazza a saját Google-kliensét."
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "`config google credential-source` and service-account access"
 msgstr "`config google credential-source` és a szolgáltatásfiókos hozzáférés"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "`aeat config google login`"
 msgstr "`aeat config google login`"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "`config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
 msgstr "`config google folder set` és `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "Nothing. Cadrumo creates its folder at sign-in."
 msgstr "Semmit. A Cadrumo bejelentkezéskor létrehozza a mappáját."
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "`config google login --refresh-only`"
 msgstr "`config google login --refresh-only`"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "`app ledger evidence pull` and `pull-all`"
 msgstr "`app ledger evidence pull` és `pull-all`"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid ""
 "Download the document, then `aeat app ledger evidence add`; see [Attach "
 "supporting documents](ledger-evidence.md)."
@@ -491,15 +430,15 @@ msgstr ""
 "Töltsd le a dokumentumot, majd használd az `aeat app ledger evidence add`"
 " parancsot; lásd: [Bizonylatok csatolása](ledger-evidence.md)."
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "`CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S`"
 msgstr "`CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S`"
 
-#: ../../how-to/review-with-google-sheets.md:170
+#: ../../how-to/review-with-google-sheets.md:139
 msgid "Nothing. It had no effect."
 msgstr "Semmit. Nem volt hatása."
 
-#: ../../how-to/review-with-google-sheets.md:198
+#: ../../how-to/review-with-google-sheets.md:166
 msgid ""
 "Scripts that read command output should also note these changes. `config "
 "google status` no longer reports `client_registered`, `client_id`, "
@@ -522,11 +461,11 @@ msgstr ""
 "telepítésében nincs Google-kliens, az elutasítás kódja "
 "`REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE`."
 
-#: ../../how-to/review-with-google-sheets.md:207
+#: ../../how-to/review-with-google-sheets.md:175
 msgid "Where this fits"
 msgstr "Hová illeszkedik ez"
 
-#: ../../how-to/review-with-google-sheets.md:209
+#: ../../how-to/review-with-google-sheets.md:177
 msgid ""
 "Use this after transaction review and classification. Confirm the period "
 "is ready before you rely on the calculation workbook:"
@@ -535,7 +474,7 @@ msgstr ""
 "hogy az időszak készen áll, mielőtt a számítási munkafüzetre "
 "hagyatkoznál:"
 
-#: ../../how-to/review-with-google-sheets.md:216
+#: ../../how-to/review-with-google-sheets.md:184
 msgid ""
 "If your records still have missing categories, VAT fields, currency, or "
 "proportionality references, finish those in [Classify transactions"
@@ -546,7 +485,7 @@ msgstr ""
 "](classify-transactions.md) oldalon, mielőtt a számítási munkafüzetre "
 "hagyatkoznál."
 
-#: ../../how-to/review-with-google-sheets.md:221
+#: ../../how-to/review-with-google-sheets.md:189
 msgid ""
 "For manual box values, the rules that fill each box, offsets, and earlier"
 " calculations, use [Review and supply calculation inputs](review-"
@@ -556,11 +495,11 @@ msgstr ""
 "ellentételezésekhez és a korábbi számításokhoz lásd: [A számítási "
 "bemenetek áttekintése és megadása](review-calculation-values.md)."
 
-#: ../../how-to/review-with-google-sheets.md:225
+#: ../../how-to/review-with-google-sheets.md:193
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/review-with-google-sheets.md:227
+#: ../../how-to/review-with-google-sheets.md:195
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand why a Google Sheet is for review only, not "
@@ -571,20 +510,20 @@ msgstr ""
 "áttekintésre, és miért nem benyújtási igazolás vagy egy számítás "
 "hivatalos alapja."
 
-#: ../../how-to/review-with-google-sheets.md:230
+#: ../../how-to/review-with-google-sheets.md:198
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/review-with-google-sheets.md:231
+#: ../../how-to/review-with-google-sheets.md:199
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók besorolása](classify-transactions.md)"
 
-#: ../../how-to/review-with-google-sheets.md:232
+#: ../../how-to/review-with-google-sheets.md:200
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/review-with-google-sheets.md:233
+#: ../../how-to/review-with-google-sheets.md:201
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
