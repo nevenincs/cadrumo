@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:4b52e04d2a0d92e71721fdf6c98ff0b97fdce90cc6e615f639056559b31ddb41'
+body_hash: 'sha256:339fdd1719f7fbc53a30295062f306c797d822a6c93dd93270a5fff70615ac7c'
 ---
 
 <!-- RETIRED: S08 -->
@@ -48,10 +48,13 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S17` - Remove repeated package-verification filesystem work while preserving complete digest inventory, link refusal and degradation checks, with same-package optimized measurements; `native/application/src/package.rs and private filesystem helpers if required, native/application/tests package integrity fixtures, bounded diagnostic evidence`.
 - [x] `S18` - Stop installed-version verification once newest-complete selection and stable-entry admission are established, preserving bounded enumeration and fallback semantics; `native/application/src/installation.rs, owning installation discovery tests and measured verification counts`.
 - [x] `S19` - Reuse current-process installed-package admission during manager startup instead of verifying the selected package twice; `native/manager/src/installation.rs, installed.rs, main.rs, supervision/environment.rs test-only fixture constructor and owning manager startup tests`.
-- [ ] `S20` - Cancel desktop-owned package discovery during shutdown and settle its worker without launching a manager after close; `native/application package and discovery cancellation, existing Cancellation type, native/desktop/src-tauri/src/manager.rs and owning cancellation tests`.
+- [x] `S20` - Cancel desktop-owned package discovery during shutdown and settle its worker without launching a manager after close; `native/application package and discovery cancellation, existing Cancellation type, native/desktop/src-tauri/src/manager.rs and owning cancellation tests`.
 - [ ] `S21` - Defer TUI automation contract composition until a requester screen needs it, preserving one validated graph per installed session and measuring avoided startup work; `src/cadrumo/entrypoints/tui/installed_session.py, owning installed-session and requester tests, import and startup evidence`.
+- [ ] `S22` - Emit one bounded KDF worker lifecycle diagnostic with phase timings and truthful failure/cleanup outcome, preserving custody and deadlines; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py, fixed diagnostic scalar allowlist, owning logging/supervision tests and measured diagnostic overhead`.
 
 ## Parallelization
+
+S22 addresses the observed loss of timeout phase when KDF supervision maps TimeoutError to the public resource refusal. Root owns design and integrated review; the existing Python logging Sol 6.1 worker owns the supervisor diagnostic, fixed scalar allowlist and owning tests. Emit a single bounded summary after worker cleanup, with monotonic phase durations, fixed failure stage and truthful outcome; retain the actual primary exception and all existing cleanup, custody, process, cryptographic and deadline behavior. Do not log request/response payloads, secrets, profile identities, environment values or paths. Timing collection must not add per-phase sink I/O. This assignment is disjoint from the package worker's read-only historical import attribution and native/TUI verification. Measure logging cost before claiming negligible overhead.
 
 S21 follows root's consumer trace: installed TUI startup constructs the full production registry before inventory, but its public contracts are consumed only when creating an automation requester screen. Defer that exact construction and its import to the first requester invocation, retaining the resulting immutable contract set only within the same installed-session invocation, as before. Normal inventory, registration and human login must not construct it. Login, human-review and API requester paths must still receive the fully validated same contract set; failures must propagate without partial publication. Root owns the design and review; the authority Sol 6.1 worker owns installed_session.py and its tests after freezing S19. No runtime readiness, permission, schema validation or timeout policy changes.
 
