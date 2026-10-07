@@ -24,6 +24,8 @@ _LIFECYCLE_FIELDS = tuple(
     sorted(
         {
             "cleanup_incomplete",
+            "cleanup_error_type",
+            "cleanup_status",
             "drain_timeout_seconds",
             "elapsed_seconds",
             "error_origin",
@@ -35,6 +37,13 @@ _LIFECYCLE_FIELDS = tuple(
             "inventory_elapsed_ms",
             "inventory_login_count",
             "inventory_state",
+            "kdf_clean_exit_elapsed_ms",
+            "kdf_cleanup_elapsed_ms",
+            "kdf_ready_attestation_elapsed_ms",
+            "kdf_ready_wait_elapsed_ms",
+            "kdf_request_write_elapsed_ms",
+            "kdf_result_wait_elapsed_ms",
+            "kdf_start_elapsed_ms",
             "login_method",
             "observation_elapsed_ms",
             "observed_active_count",

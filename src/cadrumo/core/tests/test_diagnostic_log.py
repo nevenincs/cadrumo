@@ -125,6 +125,46 @@ def test_login_witness_context_allows_only_fixed_scalar_counts_and_spans() -> No
     assert "observed_unknown_count" not in context and "inventory_elapsed_ms" not in context
 
 
+def test_kdf_context_admits_fixed_phase_spans_and_cleanup_without_private_payloads() -> None:
+    fields = {
+        "stage": "ready_wait",
+        "outcome": "failed",
+        "error_type": "TimeoutError",
+        "cleanup_status": "failed",
+        "cleanup_incomplete": True,
+        "cleanup_error_type": "OSError",
+        "kdf_start_elapsed_ms": 1.25,
+        "kdf_ready_wait_elapsed_ms": 0.0,
+        "kdf_ready_attestation_elapsed_ms": None,
+        "kdf_request_write_elapsed_ms": None,
+        "kdf_result_wait_elapsed_ms": None,
+        "kdf_clean_exit_elapsed_ms": None,
+        "kdf_cleanup_elapsed_ms": 0.125,
+    }
+    record = _record()
+    record.__dict__.update(fields)
+    for private_key in (
+        "request",
+        "response",
+        "password",
+        "profile_id",
+        "worker_environment",
+        "worker_argv",
+        "neutral_root",
+    ):
+        record.__dict__[private_key] = "synthetic-private-kdf-canary"
+    stamp_diagnostic_scalar_fields(record)
+
+    _, context = _context(record)
+
+    assert context == {"process_id": os.getpid(), "process_role": "python", **fields}
+    assert "canary" not in record.__dict__["diagnostic_context"]
+    record.__dict__["kdf_start_elapsed_ms"] = {"private": "synthetic-private-kdf-canary"}
+    record.__dict__["cleanup_error_type"] = object()
+    _, context = _context(record)
+    assert "kdf_start_elapsed_ms" not in context and "cleanup_error_type" not in context
+
+
 def test_suffix_escapes_newlines_and_scrubs_allowed_field_values_before_truncation() -> None:
     record = _record()
     record.__dict__["error_origin"] = 'module.py:4:function\n[ERROR] forged | {"outcome":"forged"}'
