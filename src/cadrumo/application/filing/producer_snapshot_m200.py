@@ -226,10 +226,9 @@ class Modelo200ProjectionRows(BaseModel):
     Sociedades return could not export at all. It failed CLOSED, so no wrong bytes were
     ever emitted, but it did not file.
 
-    Unlike modelo 296's perceptores, whose data already exists as
-    ``Withholding296Observation``, these rows are genuinely operator-supplied: the app
-    holds no administrador, representante or participada register anywhere else. So they
-    are declared here rather than projected from an existing substrate.
+    These rows are operator-supplied through the typed producer snapshot, as are modelo
+    296's perceptor detail rows. No separate administrador, representante or participada
+    register feeds this projection.
 
     Every family defaults to empty. An absent family emits no record occurrence, which is
     what AEAT expects of a page a filer has nothing to put on -- it is not the same as a

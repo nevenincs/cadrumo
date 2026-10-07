@@ -12,7 +12,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:1797fa80f16ae3dd1adcd4f6d9750be9c3120550758b44aa6384be8fa1e62b81'
+body_hash: 'sha256:96c18a1e2473c732c49951da536993dc89211f6943bc74e7747b48e32a847e45'
 ---
 
 # `blocking-code-quality-repair` plan
@@ -38,7 +38,7 @@ The first repair convergence run passed eight gates, including all configured pl
 - [x] `S02` - Repair production and Windows fixture type contracts; `src/cadrumo/domain/calculations/registry, application/operations/terminated_owner.py, entrypoints/cli/config/tests and native desktop Python`.
 - [x] `S03` - Complete retirement of obsolete Google workbook paths and repair remaining typed renderers; `Google adapters, calc_sheets, modelo spreadsheet modules and dedicated review presentation modules`.
 - [x] `S04` - Reconcile authentication and storage symbols with their real production consumers; `profile authentication, secure custody and core storage_environment`.
-- [ ] `S07` - Retire residual unconsumed observation prototypes and reconcile their owning tests and descriptions; `gasto193_bindings.py, withholding296_bindings.py and direct typed-row consumer descriptions and tests`.
+- [x] `S07` - Retire residual unconsumed observation prototypes and reconcile their owning tests and descriptions; `gasto193_bindings.py, withholding296_bindings.py and direct typed-row consumer descriptions and tests`.
 - [ ] `S05` - Regenerate import enrollment and prove the integrated blocking gate result; `dev/quality/metadata and all modified source plus focused tests`.
 
 ## Parallelization

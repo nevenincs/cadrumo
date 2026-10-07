@@ -1,24 +1,20 @@
 """Modelo 296 perceptor row-set binding helpers.
 
-Modelo 296 (IRNR retenciones, resumen anual) declares its own clave
-vocabulary -- numeric renta-type claves with D/E naturaleza -- which the shared
-:class:`~._withholding_bindings.WithholdingObservation` cannot carry, so this
-family holds its own observation type and selector validation.
+Modelo 296 (IRNR retenciones, resumen anual) has its own perceptor field
+vocabulary. This family declares the typed provider selector and validates its
+aggregation invariants. Its provider registration remains deferred without an
+executable observation route; filing detail rows are supplied through the typed
+producer snapshot.
 """
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
-from ....core.country_code import CountryCodeAlpha2
-from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import provider_member
 from .errors import RegistryValidationError
@@ -28,7 +24,6 @@ if TYPE_CHECKING:
     from .schema import BindingDefinition
 
 __all__ = [
-    "Withholding296Observation",
     "Withholding296Provider",
     "validate_withholding296_binding_selector_shape",
 ]
@@ -80,62 +75,8 @@ def _runtime_object(value: object) -> object:
     return value
 
 
-class Withholding296Observation(BaseModel):
-    """One Modelo 296 perceptor row: IRNR renta plus the payer's retentions."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_id: str = Field(min_length=1, max_length=128)
-    perceptor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
-    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
-    persona_juridica_flag: str | None = Field(default=None, max_length=1)
-    perceptor_legal_name: str = Field(default="", max_length=200)
-    codigo_bic: str | None = Field(default=None, max_length=6)
-    fecha_devengo: str | None = Field(default=None, pattern=r"^\d{8}$")
-    naturaleza: str = Field(default="D", pattern=r"^[DE]$")
-    clave: str = Field(default="01", pattern=r"^\d{2}$")
-    # The official 296 perceptor record declares subclave as a non-required
-    # two-character slot, so an undeclared subclave is a legitimate empty
-    # value rather than a code this model may invent one for.
-    subclave: str = Field(default="", pattern=r"^(\d{2})?$")
-    base_retenciones: Decimal = Decimal("0")
-    porcentaje_retencion: Percentage = PERCENTAGE_MIN
-    retencion_practicada: Decimal = Decimal("0")
-    perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
-    codigo: str | None = Field(default=None, max_length=1)
-    codigo_emisor: str | None = Field(default=None, max_length=12)
-    pago: int | None = Field(default=None, ge=1, le=5)
-    tipo_codigo: str | None = Field(default=None, pattern=r"^[COP]$")
-    codigo_cuenta: str | None = Field(default=None, max_length=20)
-    pendiente_flag: str | None = Field(default=None, max_length=1)
-    accrual_year: int | None = Field(default=None, ge=1900, le=2100)
-    fecha_inicio_prestamo: str | None = Field(default=None, pattern=r"^\d{8}$")
-    fecha_vencimiento_prestamo: str | None = Field(default=None, pattern=r"^\d{8}$")
-    compensaciones: Decimal = Decimal("0")
-    garantias: Decimal = Decimal("0")
-    otros_importes: Decimal = Decimal("0")
-    direccion_perceptor: str | None = Field(default=None, max_length=162)
-    ingreso_a_cuenta_repercutido: Decimal = Decimal("0")
-    nif_pagador_anterior: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
-    procedimiento_especial_flag: str | None = Field(default=None, max_length=1)
-    clave_mercado: str | None = Field(default=None, pattern=r"^[A-D]$")
-    codigo_lei: str | None = Field(default=None, max_length=20)
-    # The perceptor's identifier in their OWN country, so it takes the
-    # normalising token and never the checksum-validating alias: Modelo 296 is
-    # IRNR withholding and this field exists precisely for a non-resident, whose
-    # identifier no Spanish control character can validate. Normalising it still
-    # matters -- the token is what grouping keys and stored rows compare on, and
-    # an unfolded value makes two canonically-equal identifiers into two rollups.
-    nif_pais_residencia: TaxIdIdentityToken | None = Field(default=None, max_length=20)
-    fecha_nacimiento: str | None = Field(default=None, pattern=r"^\d{8}$")
-    ciudad_nacimiento: str | None = Field(default=None, max_length=35)
-    codigo_pais: CountryCodeAlpha2 | None = None
-    pais_residencia_fiscal: CountryCodeAlpha2 | None = None
-    transaction_date: date
-
-
 class Withholding296Provider(BaseModel):
-    """The Modelo 296 non-resident withholding provider over its perceptor rows."""
+    """Typed selector for deferred Modelo 296 non-resident withholding bindings."""
 
     model_config = STRICT_FROZEN_CONFIG
 

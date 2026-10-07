@@ -10,10 +10,9 @@ One occurrence is emitted per row a family actually carries. A family with no ro
 occurrence, which is what AEAT expects of a page a filer has nothing to put on; whether
 that absence is admissible is the record's own ``required`` flag, checked by the caller.
 
-Unlike modelo 296's perceptores, whose data already exists as ``Withholding296Observation``,
-these rows are genuinely operator-supplied -- the application holds no separate detail
-register elsewhere -- so they are read from the typed profile rather than projected from
-an existing substrate.
+These rows are operator-supplied through the typed producer snapshot, as are modelo 296's
+perceptor detail rows. No separate detail register feeds this projection; the builder
+reads the selected row families from the snapshot's typed profile.
 """
 
 from __future__ import annotations

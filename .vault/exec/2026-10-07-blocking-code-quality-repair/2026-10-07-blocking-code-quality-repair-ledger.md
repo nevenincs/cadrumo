@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8f9c51181ade18f79f5b8f873948820075d5a27a11099c6eddc9d3164b7792e'
+body_hash: 'sha256:cd7f53cb4a4717fb570a5c6acdedeb2d779c88a688554f632ad4fcbe6c2959bc'
 related:
   - "[[2026-10-07-blocking-code-quality-repair-plan]]"
 ---
@@ -256,6 +256,20 @@ related:
 - `S06` `verify:` `domain and actual encrypted catalogue readback suite 24 cases` -> `pass`
 - `S06` `verify:` `independent corrected rendering boundary review` -> `pass`
 - `S06` `by:` `vaultspec-standard-executor`
+- `S07` `M` `src/cadrumo/application/filing/_m200_projection.py`
+- `S07` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S07` `M` `src/cadrumo/application/filing/producer_snapshot_m200.py`
+- `S07` `M` `src/cadrumo/core/filing_projection_ref.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/gasto193_bindings.py`
+- `S07` `D` `src/cadrumo/domain/calculations/registry/tests/test_gasto193_observation.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/withholding296_bindings.py`
+- `S07` `verify:` `focused Ruff lint format and diff hygiene six current files` -> `pass`
+- `S07` `verify:` `ty Windows Linux Darwin and production basedpyright pyrefly` -> `pass`
+- `S07` `verify:` `provider registration terminal audit and projection reference unit tests 116 cases` -> `pass`
+- `S07` `verify:` `actual Modelo296 repeated-detail and projection-plan integration tests 34 cases` -> `pass`
+- `S07` `verify:` `producer snapshot unit tests 62 cases` -> `pass`
+- `S07` `verify:` `AST comparison retains provider fields selector validators and projection executable bodies` -> `pass`
+- `S07` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -266,3 +280,4 @@ related:
 - `S04` Test import migrations shared with S03 were already committed in that atomic consumer update; the remaining Step paths contain S04 production retirement and setup migrations.
 - `S06` Captured directory IDs are copied from the validated owner and participate in rendering integrity; no current authority lookup, inferred references, weakened validators or durability changes were introduced.
 - `S06` Reusable adapters retain identical validated shapes and remove measured repeated schema construction in the saved-rendering traversal.
+- `S07` Only the two unenrolled observation value classes and three exclusively prototype test cases were retired; actual provider registrations and typed detail-record projection are unchanged.

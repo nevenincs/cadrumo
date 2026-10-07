@@ -332,11 +332,10 @@ class Modelo296PerceptorRow(BaseModel):
     published layout; duplicating them as constraints here would be a second copy of the
     design that is free to disagree with it.
 
-    These rows are NOT yet fed from the withholding substrate. The values already exist in
-    the registry as ``Withholding296Observation`` -- perceptor tax id, legal name, naturaleza,
-    clave, subclave, base and retencion among them -- and the snapshot assembler should
-    project them from there rather than take them as operator entry. Until it does, a caller
-    that populates these by hand can state a figure the ledger disagrees with.
+    These are operator-supplied filing detail rows held by the typed producer snapshot.
+    The projection plan reads them by render occurrence. No automatic feed from a ledger
+    or withholding observation store is enrolled, so this row does not certify that its
+    supplied figures agree with ledger evidence.
     """
 
     model_config = STRICT_FROZEN_CONFIG
