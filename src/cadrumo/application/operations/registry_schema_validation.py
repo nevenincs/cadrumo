@@ -118,7 +118,9 @@ def operation_schema_compilation_scope() -> Generator[None]:
         _SCHEMA_COMPILATION_MEMO.reset(token)
 
 
-def _model_schema_graph_state(model_type: type[BaseModel]) -> dict[type[BaseModel], tuple[object, ...]]:
+def _model_schema_graph_state(
+    model_type: type[BaseModel], *, rebuilt_models: set[type[BaseModel]] | None = None
+) -> dict[type[BaseModel], tuple[object, ...]]:
     """Capture live schema state, including nested models and editable metadata."""
     graph: dict[type[BaseModel], tuple[object, ...]] = {}
     snapshots: dict[int, tuple[object, object]] = {}
@@ -131,6 +133,8 @@ def _model_schema_graph_state(model_type: type[BaseModel]) -> dict[type[BaseMode
                 return
             if not annotation.__pydantic_complete__:
                 annotation.model_rebuild()
+                if rebuilt_models is not None:
+                    rebuilt_models.add(annotation)
             graph[annotation] = (
                 _schema_state(annotation.model_config, snapshots),
                 annotation.model_json_schema,
@@ -390,8 +394,10 @@ def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
     """Return one exact closed schema after enforcing the public model baseline."""
     require_strict_frozen_operation_model_graph(model_type, path="public schema")
     memo = _active_schema_compilation_memo()
-    model_graph = _model_schema_graph_state(model_type) if memo is not None else None
-    if model_graph is not None:
+    rebuilt_models: set[type[BaseModel]] = set()
+    model_graph = _model_schema_graph_state(model_type, rebuilt_models=rebuilt_models) if memo is not None else None
+    # Deferred rebuilding can reveal nested models the first contract check could not inspect.
+    if rebuilt_models:
         require_strict_frozen_operation_model_graph(model_type, path="public schema")
     cached_schema = _cached_model_schema(memo, model_type, model_graph)
     if cached_schema is not None:

@@ -8,6 +8,7 @@ from typing import Any, ClassVar, Literal, cast, override
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic.fields import ModelPrivateAttr
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaMode
 
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -117,6 +118,30 @@ def test_cached_schema_still_refuses_malformed_model_graph(payload_type: type[_C
 def test_first_schema_refuses_lax_model_resolved_during_deferred_build() -> None:
     with operation_schema_compilation_scope(), pytest.raises(ValueError, match="strict=True"):
         strict_model_json_schema(_DeferredParent)
+
+
+@pytest.mark.parametrize("scoped", [False, True])
+def test_shared_nested_model_contract_is_rechecked_on_later_calls(scoped: bool) -> None:
+    class Child(BaseModel):
+        model_config = STRICT_FROZEN_CONFIG
+        value: str
+
+    class Parent(BaseModel):
+        model_config = STRICT_FROZEN_CONFIG
+        left: Child
+        right: Child
+
+    def validate_and_mutate() -> None:
+        strict_model_json_schema(Parent)
+        Child.__private_attributes__["hidden"] = ModelPrivateAttr(default=0)
+        with pytest.raises(ValueError, match="private mutable state"):
+            strict_model_json_schema(Parent)
+
+    if scoped:
+        with operation_schema_compilation_scope():
+            validate_and_mutate()
+    else:
+        validate_and_mutate()
 
 
 @pytest.mark.parametrize("nested", [False, True])
