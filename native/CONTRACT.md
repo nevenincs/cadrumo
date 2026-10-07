@@ -1332,11 +1332,30 @@ platform mapping marks `desktop`, such as `cadrumo.exe` on Windows. Only that im
 receives desktop registration. macOS requires a root-level desktop executable. Its runtime backend and WebView containment validation
 must be completed before a macOS application release.
 
-CPack definitions select MSI/ZIP on Windows, DEB/RPM/TGZ on Linux, and DMG/TGZ on
-macOS. Build the CMake `zip` target for the install-defined portable archive.
-For a native installer, first build `installation_prepare`, then run
-`cpack --config <build>/CPackConfig.cmake -G <generator>` on the native
-packaging host. WiX .NET tooling and its matching UI extension are prerequisites
+CPack's `package` target selects MSI on Windows, DEB and RPM on Linux, and DMG
+on macOS. Native format targets validate and refresh the selected payload before
+packaging. Run these build presets from `native/cmake/distribution` after configuring
+the corresponding distribution preset on the native packaging host:
+
+| Platform | Build command | Output |
+| --- | --- | --- |
+| Windows x64 | `cmake --build --preset distribution-windows-msi` | `.msi` |
+| Linux x64 | `cmake --build --preset distribution-linux-x86-64-deb` | `.deb` |
+| Linux x64 | `cmake --build --preset distribution-linux-x86-64-rpm` | `.rpm` |
+| Linux ARM64 | `cmake --build --preset distribution-linux-aarch64-deb` | `.deb` |
+| Linux ARM64 | `cmake --build --preset distribution-linux-aarch64-rpm` | `.rpm` |
+| macOS ARM64 | `cmake --build --preset distribution-macos-dmg` | `.dmg` |
+
+DEB serves Debian/Ubuntu package tooling; RPM serves distributions using RPM
+package tooling. Each Linux format can be built independently. Artifacts go to
+the binary directory's CMake-owned `packages` path. The same format targets can
+be selected with `cmake --build <build> --config Release --target <format>`, where
+`<format>` is `msi`, `deb`, `rpm` or `dmg` on its corresponding host.
+Build the CMake `zip` target for the install-defined portable archive. Archives
+are explicit auxiliary outputs. For direct CPack invocation, first build
+`installation_prepare`, then run
+`cpack --config <build>/CPackConfig.cmake -C Release -G <generator>`.
+WiX .NET tooling and its matching UI extension are prerequisites
 for MSI; current WiX 7 also requires operator acceptance of its OSMF EULA. CPack's
 `CPACK_WIX_VERSION=4` selects the WiX XML/tool interface, not a claim that WiX 4
 is the latest release. Set `CPACK_WIX_PRODUCT_ICON` to the generated product ICO

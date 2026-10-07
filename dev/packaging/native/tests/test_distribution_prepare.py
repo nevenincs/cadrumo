@@ -1,4 +1,4 @@
-"""Install-based ZIP stages refresh incrementally and retain prior uninstall receipts."""
+"""Distribution graphs select native formats and retain incremental ZIP receipts."""
 
 from __future__ import annotations
 
@@ -53,11 +53,16 @@ def test_refresh_preserves_previous_receipt_and_rejects_modified_stage(tmp_path:
     assert (build / "installation/stage/app/cadrumo").read_text(encoding="utf-8") == "user alteration"
 
 
-@pytest.mark.parametrize("manager", [False, True])
-def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path, manager: bool) -> None:
+def _cmake(source: Path, *arguments: str) -> str:
     cmake = shutil.which("cmake")
     assert cmake is not None
-    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64", manager=manager)
+    result = run_command([cmake, *arguments], cwd=source)
+    assert result.returncode == 0, result.stdout + result.stderr
+    return result.stdout
+
+
+def _configure_distribution(tmp_path: Path, target: str, *, manager: bool = False) -> tuple[Path, Path, Path]:
+    payload, identity_file = payload_fixture(tmp_path, target, manager=manager)
     source = tmp_path / "source"
     source.mkdir()
     build = tmp_path / "build"
@@ -73,39 +78,116 @@ def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path, m
     )
     (source / "CMakeLists.txt").write_text(text, encoding="utf-8")
     shutil.copy2(module / "VerifyInstall.cmake.in", source / "VerifyInstall.cmake.in")
-    bootstrap = cmake_projection(identity("windows-x86-64"))
+    bootstrap = cmake_projection(identity(target))
     bootstrap += f'set(CADRUMO_SOURCE_ROOT "{REPO_ROOT.as_posix()}")\n'
     bootstrap += f'set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
-    bootstrap += "set(CADRUMO_TARGET windows-x86-64)\nadd_custom_target(setup-native-builder)\n"
+    bootstrap += f"set(CADRUMO_TARGET {target})\nadd_custom_target(setup-native-builder)\n"
     bootstrap += f'include("{(REPO_ROOT / "native/cmake/Cleanup.cmake").as_posix()}")\n'
     bootstrap += 'cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_finalize_clean_targets)\n'
     for key, relative in paths.items():
         bootstrap += f'set(CADRUMO_PATH_{key.upper()} "${{CMAKE_BINARY_DIR}}/{relative}")\n'
     (source / "FixtureIdentity.cmake").write_text(bootstrap, encoding="utf-8")
 
-    def command(*arguments: str) -> None:
-        result = run_command([cmake, *arguments], cwd=source)
-        assert result.returncode == 0, result.stdout + result.stderr
-
-    command(
-        "-G", "Ninja", "-S", str(source), "-B", str(build), "-DCMAKE_BUILD_TYPE=Release", f"-DCADRUMO_PAYLOAD={payload}"
+    _cmake(
+        source,
+        "-G",
+        "Ninja",
+        "-S",
+        str(source),
+        "-B",
+        str(build),
+        "-DCMAKE_BUILD_TYPE=Release",
+        f"-DCADRUMO_PAYLOAD={payload}",
     )
-    command("--build", str(build), "--target", "zip")
+    return payload, source, build
+
+
+def test_distribution_build_presets_are_host_bound() -> None:
+    source = REPO_ROOT / "native/cmake/distribution"
+    presets = _cmake(source, "--list-presets=build")
+    windows = {"distribution-windows-msi"}
+    linux = {
+        f"distribution-linux-{arch}-{format_name}" for arch in ("x86-64", "aarch64") for format_name in ("deb", "rpm")
+    }
+    macos = {"distribution-macos-dmg"}
+    visible = windows if sys.platform == "win32" else macos if sys.platform == "darwin" else linux
+    for name in visible:
+        assert f'"{name}"' in presets
+    for name in (windows | linux | macos) - visible:
+        assert f'"{name}"' not in presets
+
+
+@pytest.mark.parametrize(
+    ("target", "generators", "formats", "metadata"),
+    [
+        ("windows-x86-64", "WIX", {"msi": "WIX"}, {"CPACK_WIX_ARCHITECTURE": "x64"}),
+        (
+            "linux-x86-64",
+            "DEB;RPM",
+            {"deb": "DEB", "rpm": "RPM"},
+            {"CPACK_DEBIAN_PACKAGE_ARCHITECTURE": "amd64", "CPACK_RPM_PACKAGE_ARCHITECTURE": "x86_64"},
+        ),
+        (
+            "linux-aarch64",
+            "DEB;RPM",
+            {"deb": "DEB", "rpm": "RPM"},
+            {"CPACK_DEBIAN_PACKAGE_ARCHITECTURE": "arm64", "CPACK_RPM_PACKAGE_ARCHITECTURE": "aarch64"},
+        ),
+        ("macos-arm64", "DragNDrop", {"dmg": "DragNDrop"}, {"CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK": "OFF"}),
+    ],
+)
+def test_distribution_native_formats_and_stage_dependencies(
+    tmp_path: Path, target: str, generators: str, formats: dict[str, str], metadata: dict[str, str]
+) -> None:
+    _, source, build = _configure_distribution(tmp_path, target)
+    probe = source / "probe.cmake"
+    keys = ["CPACK_GENERATOR", *metadata]
+    probe.write_text(
+        f'include("{(build / "CPackConfig.cmake").as_posix()}")\n'
+        + "".join(f'message(STATUS "{key}=${{{key}}}")\n' for key in keys),
+        encoding="utf-8",
+    )
+    projection = _cmake(source, "-P", str(probe))
+    for key, value in {"CPACK_GENERATOR": generators, **metadata}.items():
+        assert f"-- {key}={value}\n" in projection
+    ninja = shutil.which("ninja")
+    assert ninja is not None
+    for name, generator in formats.items():
+        result = run_command([ninja, "-C", str(build), "-t", "commands", name], cwd=source)
+        assert result.returncode == 0, result.stdout + result.stderr
+        commands = result.stdout.splitlines()
+        preparation = next(
+            index for index, line in enumerate(commands) if "dev.packaging.native.distribution_prepare" in line
+        )
+        packaging = next(index for index, line in enumerate(commands) if "CPackConfig.cmake" in line)
+        assert preparation < packaging
+        assert f" -G {generator}" in commands[packaging]
+        assert " -C Release" in commands[packaging]
+        assert len([line for line in commands if "CPackConfig.cmake" in line]) == 1
+    help_text = _cmake(source, "--build", str(build), "--target", "help")
+    for other in {"msi", "deb", "rpm", "dmg"} - formats.keys():
+        assert f"{other}: phony" not in help_text
+
+
+@pytest.mark.parametrize("manager", [False, True])
+def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path, manager: bool) -> None:
+    payload, source, build = _configure_distribution(tmp_path, "windows-x86-64", manager=manager)
+    _cmake(source, "--build", str(build), "--target", "zip")
     if manager:
         assert "Desktop.wxs" in (build / "CPackConfig.cmake").read_text(encoding="utf-8")
         assert (build / "installation/metadata/Desktop.wxs").is_file()
     package = f"versions/{identity('windows-x86-64').version}" if manager else "app"
     archive = next((build / "packages").glob("*.zip"))
     original_time = archive.stat().st_mtime_ns
-    command("--build", str(build), "--target", "zip")
+    _cmake(source, "--build", str(build), "--target", "zip")
     assert archive.stat().st_mtime_ns == original_time
     _change_payload(payload)
-    command("--build", str(build), "--target", "zip")
+    _cmake(source, "--build", str(build), "--target", "zip")
     with zipfile.ZipFile(archive) as zipped:
         binary = next(name for name in zipped.namelist() if name.endswith(f"/{package}/cadrumo"))
         assert zipped.read(binary) == b"changed binary"
-    command("--build", str(build), "--target", "clean-installation_prepare")
+    _cmake(source, "--build", str(build), "--target", "clean-installation_prepare")
     assert not (build / "installation/stage").exists()
     assert list((build / "installation/receipts").glob("*.json"))
-    command("--build", str(build), "--target", "zip")
+    _cmake(source, "--build", str(build), "--target", "zip")
     assert (build / "installation/stage" / package / "cadrumo").exists()

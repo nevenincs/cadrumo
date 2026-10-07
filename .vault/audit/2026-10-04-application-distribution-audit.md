@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:5ae30b3a69c18449a189e1029355dc27ad563d16791daa2d331c05da56b1b18b'
+body_hash: 'sha256:8c85625f803c211574807b08e6f0d5f54ab8d39e0490c10c839ce091783ec904'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -56,6 +56,14 @@ The separately selected command uv run --no-sync pytest -q -n 0 -m windows_only 
 ### windows-decision-placement | low | Proposed MSI ownership refines existing topology without claiming acceptance
 
 2026-10-07-application-distribution-windows-versioned-msi-adr records the proposed format-specific ownership choice, with immutable version products behind one shared registration product per scope/channel/target. Existing accepted distribution and manager commitments remain unchanged; no supersession or acceptance was inferred. The whole ADR catalogue listing was followed through its next_offset after the first five hundred records: all 551 records were returned across two pages. Relevant named installation/packaging/manager records were inspected. One configured hosted cross-reference pass judged the draft against thirty-two candidates from a bounded pool of 192 among 551 corpus records, with thirty-eight requests and 122673 input tokens. It returned already-declared refines/dependency links to the accepted distribution and manager ADRs; source and twenty-one candidate inputs were clipped, so the complete named parent records were also read locally. No hosted score grants authority or establishes complete corpus conflict coverage. Dependent implementation and full release acceptance remain pending.
+
+### native-format-delivery | low | Requested native formats have explicit staged build targets and host-bound presets
+
+2026-10-07 S06 review against HEAD  f3c589b358 and the owned working-tree diff: the operator selected MSI for Windows and DMG for macOS and requested setup; DEB/RPM reuse the accepted distribution decision. native/cmake/distribution/CMakeLists.txt now defaults to WIX, DEB/RPM and DragNDrop without implicit archive delivery. Independently selectable msi, deb, rpm and dmg targets depend on installation_prepare and invoke the real CPack configuration with the selected build configuration. Native artifacts are regenerated so tool/signing changes are not hidden by an archive cache. CMakePresets.json adds six Release build presets, each constrained to its native OS. The unchanged explicit zip target retains its content-aware cache and owning cleanup. native/CONTRACT.md documents commands, output formats and host prerequisites. The proposed Windows ownership ADR's initial EXE bundle hypothesis is replaced with the operator's MSI requirement; its two-product persisted protocol remains proposed and no authority is inferred.
+
+Verification on Windows with pinned CMake 4.4.3: uv run --no-sync pytest -q -n 0 dev/packaging/native/tests/test_distribution_prepare.py passed 8 tests; log var/storage/development/.logs/test-runs/2026-10-07/20261007T144422.196536Z-pytest-34120-f848d9ad/run.log. The four-target cases run the actual CMake graph/configuration and inspect real Ninja command dependencies without executing or faking native installer success. They verify native generator selection, architecture metadata, configuration selection and separate Linux format commands. Real CPack ZIP runs with explicitly synthetic payloads verify unchanged no-op reuse, changed-payload refresh, clean and rebuild for manager and non-manager Windows stages. The actual CMake preset parser lists only the Windows MSI build preset on this host. Ruff check, Ruff format --check and ty check of the changed test module passed; git diff --check passed. Feature vault check reports zero errors and one previously recorded stale-index warning.
+
+S06 verdict: PASS for format-delivery setup with no new high or critical finding. Overall distribution verdict remains REVISION REQUIRED for the existing high Windows product-ownership finding and PENDING for live platform acceptance. No MSI, DEB, RPM or DMG was generated or installed by S06; no signing, platform-floor, dual-scope, upgrade/cutover, login or uninstall acceptance is claimed. S03/S04 stay open. The native toolchain terms, real release payloads and disposable platform runners remain the owners' next acceptance prerequisites.
 
 ## Recommendations
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:745fd671325b999b187202fd00a32d15985d35ca81e1f81072dfa39e3c6eef86'
+body_hash: 'sha256:87a0198f538f1899808d27e4ec0d46f2fbdc875dcd774e1525321752bcda3fa2'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -88,6 +88,21 @@ related:
 - `S04` `verify:` `uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/tests/test_native_installation_windows.py (8 passed)` -> `pass`
 - `S04` `verify:` `vaultspec-core vault check all (0 errors, 14 concurrent/index warnings)` -> `pass`
 - `S04` `verify:` `git diff --check for Windows installer decision and owning audit/plan` -> `pass`
+- `S06` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S06` `M` `native/cmake/distribution/CMakePresets.json`
+- `S06` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S06` `M` `native/CONTRACT.md`
+- `S06` `M` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S06` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S06` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S06` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/native/tests/test_distribution_prepare.py (8 passed)` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff check dev/packaging/native/tests/test_distribution_prepare.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff format --check dev/packaging/native/tests/test_distribution_prepare.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ty check dev/packaging/native/tests/test_distribution_prepare.py` -> `pass`
+- `S06` `verify:` `cmake --list-presets=all -S native/cmake/distribution (Windows host lists Windows native build only)` -> `pass`
+- `S06` `verify:` `vaultspec-core vault check --feature application-distribution (0 errors, 1 stale-index warning)` -> `pass`
+- `S06` `verify:` `git diff --check` -> `pass`
+- `S06` `by:` `Codex`
 
 ## Notes
 
@@ -95,3 +110,4 @@ related:
 - `S05` S05 remains open. Automatic approval review rejected both PowerShell deletion attempts for the enumerated disposable build files and directories, including literal absolute paths, with blocked by policy and no further reason. No build clutter was removed. Source-build paths are centralized; desktop and standalone distribution output integration and physical cleanup remain pending.
 - `S05` Extended CMake path ownership to desktop and native installation staging. Removed development-status labels from build-framework documentation. Existing physical clutter remains blocked by the previously recorded deletion rejection; S05 remains open.
 - `S04` S04 remains open: forty-eight passing fixture tests do not establish live MSI/release acceptance. S03 reopened for the high current-template Removing major-upgrade finding. Proposed two-product MSI ownership and transaction contract requires acceptance before dependent implementation. Requested a disposable interactive Windows runner; current host is Session 0, has no VM, Sandbox disabled, Docker linux. No real install/registry/login/reboot/logoff action.
+- `S06` S06 covers format setup only. No native installer creation/install or release lifecycle acceptance; S03/S04 remain open for ownership, manager integration and disposable native runner gates.

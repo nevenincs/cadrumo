@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:edfbed07e27e4fb3fd3b21663795d299c06a7b48597adee0c74349be8a3ca40b'
+body_hash: 'sha256:031c5292d5a673a0a581979b5abad97d3147c521d6ad90f7910b7c53a75bb8c1'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -46,7 +46,9 @@ This proposal remains unaccepted. No dependent product-ownership or persisted in
 
 ## Implementation
 
-We will author two MSI roles through the existing CMake distribution graph and its Python identity/layout owners. A custom WiX template removes cross-release RemoveExistingProducts behavior from version products. The registration product handles only its shared resources and scoped registration. A CMake-owned WiX bundle is the initial implementation hypothesis for sequencing the two products and exposing one installer; it adds no elevated runtime broker. Generated product locators and native maintenance status belong to the installation contract, not duplicated manager or desktop declarations.
+## Implementation
+
+We will author two MSI roles through the existing CMake distribution graph and its Python identity/layout owners. A custom WiX template removes cross-release RemoveExistingProducts behavior from version products. The registration product handles only its shared resources and scoped registration. The operator explicitly selected MSI delivery on 2026-10-07. Deliver the two roles as native MSI artifacts with an ordered installation and maintenance workflow; an EXE bootstrapper is not the requested format. Product sequencing and rollback still require the installer-owned publication protocol described above; this delivery choice does not establish its implementation or acceptance. Generated product locators and native maintenance status belong to the installation contract, not duplicated manager or desktop declarations.
 
 Before source execution, refine the owning distribution plan for role/scope identities, immutable product authoring, transaction and scope admission, safe repair/uninstall, and a real acceptance harness. The existing manager plan owns IPC, default login start and opt-out, designated successor handoff/rollback and uninstall detection. A safe native installer is required before those package acceptance runs.
 
