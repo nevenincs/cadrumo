@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:020dc1dc06e4ce0b8dcb78c1962f0d2cf8e87029077872f63ce104cec2d1b18e'
+body_hash: 'sha256:d239dd0d4a64c04e31b9238f114a97f03154d1fdc9be3ad5d8cde876d264407e'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -128,6 +128,16 @@ related:
 - `S13` `M` `dev/docs/_locale_chrome.py`
 - `S13` `M` `dev/docs/translations_js.py`
 - `S13` `verify:` `pytest dev/docs/tests/test_language_roots.py` -> `pass`
+- `S10` `M` `dev/docs/serve.py`
+- `S10` `M` `dev/docs/serve_languages.py`
+- `S10` `M` `dev/docs/tests/test_docs_serve.py`
+- `S10` `M` `dev/docs/tests/test_docs_build_localized.py`
+- `S10` `M` `dev/deploy/docs_site_build.py`
+- `S10` `M` `dev/deploy/docs_site_languages.py`
+- `S10` `M` `dev/deploy/tests/test_docs_static_site.py`
+- `S10` `M` `dev/deploy/tests/test_publish_authority.py`
+- `S10` `M` `dev/docs/tests/test_deployment_search_parity.py`
+- `S10` `verify:` `pytest dev/deploy/tests dev/docs/tests/test_docs_serve.py dev/docs/tests/test_docs_build_localized.py` -> `pass`
 
 ## Notes
 
@@ -142,3 +152,4 @@ related:
 - `S11` No further change needed. The command tree is written once because the languages now come from one compile. The per-language command walk the search records make was measured on Linux at 0.3 to 0.7 s per language (1.2 s for four languages, 323 commands and 1,335 options), so it stays one small subprocess per language.
 - `S08` Measured on Windows: the one compile with its comparison 232 to 236 s for four languages; each language's own build 164 to 249 s. On Linux with four reading workers: 145 s. The package documentation target itself (CMake) was not run after the switch.
 - `S13` Pages are stored with a line feed and composed with the composing platform's terminator. A Windows and a Linux compile of the same tree stored 387 of 400 files as the same bytes, every page structure and every language's text among them. The 13 that differ are non-page stylesheets and scripts written with the platform terminator; they are left as built because the desktop host serves a non-page file exactly as stored.
+- `S10` The release workflow file needed no change: its documentation job runs the publisher, which now runs two builds whatever the number of languages, and its proof jobs reach the documentation tests through the recipes changed here. The publisher's path was run on Linux through its own code with the goldens gate skipped; the English root's strict build failed there on API reference warnings that predate this plan, so a real publish stays refused until those are cleared.

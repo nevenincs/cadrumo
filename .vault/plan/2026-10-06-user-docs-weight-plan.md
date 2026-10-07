@@ -8,7 +8,7 @@ related:
   - '[[2026-10-06-user-docs-weight-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:fa9e51c75c9466e6fa3cac9581475e9ee32b6c0826691042908007adf497a648'
+body_hash: 'sha256:742754bcb13d7c8066e82f1ed80c61b1f7319c568179d4edc338e4d956cba82e'
 ---
 
 # `user-docs-weight` plan
@@ -30,7 +30,7 @@ The plan reaches the decision's two commitments in its order D5. S01 to S05 chan
 - [x] `S06` - Emit every language's strings for the generated references from one projection and retire their per-language generation; `dev/docs/casilla_reference.py, dev/docs/legal_reference.py, dev/docs/glossary_reference.py, dev/docs/cli_reference.py`.
 - [x] `S07` - Emit the site chrome's strings for every language from the catalogues; `dev/docs/site_chrome.py, docs/_templates/`.
 - [x] `S08` - Emit the authored pages' strings from the gettext catalogues in the one compile, retire the per-language builds, and move the strict and completeness gates onto the composed pages; `dev/docs/build.py, dev/docs/i18n.py, dev/packaging/native/docs_build.py, dev/docs/tests/`.
-- [ ] `S10` - Make the local and CI flows compile the documentation once: the language recipes, the live preview's per-language rebuilds, the docs gates that the local gate and the repository-contract lane each run again, and the prove jobs that repeat them per interpreter; `justfile, .github/workflows/release.yml, dev/docs/serve.py, dev/docs/serve_languages.py`.
+- [x] `S10` - Make the local and CI flows compile the documentation once: the language recipes, the live preview's per-language rebuilds, the docs gates that the local gate and the repository-contract lane each run again, and the prove jobs that repeat them per interpreter; `justfile, .github/workflows/release.yml, dev/docs/serve.py, dev/docs/serve_languages.py`.
 - [x] `S11` - Run each language-independent projection once per compile: the command tree written per root and the command walk the search records repeat per language; `dev/docs/cli_tree.py, dev/docs/terminology/cli_projection.py, docs/conf.py`.
 - [x] `S12` - Build the packaged documentation once for every platform preset and key its cache on what it reads, not on the binary directory; `native/cmake/Docs.cmake, dev/packaging/native/action_cache.py`.
 - [x] `S13` - Store the structure with one line terminator whatever platform compiled it, and compose each page with the terminator the composing platform's own build writes; `dev/docs/language_roots.py, dev/docs/compile_once.py, dev/docs/_locale_chrome.py`.
