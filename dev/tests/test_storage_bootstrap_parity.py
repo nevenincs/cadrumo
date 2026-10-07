@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
@@ -12,8 +14,47 @@ from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, tool_storag
 from dev._paths import REPO_ROOT
 from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV, docs_build_root
 from dev.packaging.command_execution import run_command
+from dev.product_environment import clean_product_env
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+
+def test_source_bootstrap_retains_console_root_and_authority_from_another_cwd(tmp_path: Path) -> None:
+    """Checkout tooling inherits the console root without selecting another runtime store."""
+    root = tmp_path / "console storage"
+    workspace = root / "workspace"
+    workspace.mkdir(parents=True)
+    authority = tmp_path / "selected authority"
+    authority.mkdir()
+    environment = clean_product_env()
+    environment.update(
+        {
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+            "CADRUMO_STORAGE_ROOT": str(tmp_path / "different checkout storage"),
+            "CADRUMO_AUTHORITY_ROOT": str(authority),
+        }
+    )
+    # Import the actual checkout bootstrap from an unrelated working directory.
+    # No profile identifiers, passwords or runtime credentials are supplied.
+    script = "\n".join(
+        (
+            "import json, os, sys",
+            f"sys.path.insert(0, {str(REPO_ROOT)!r})",
+            "import dev._paths",
+            "from cadrumo.core.storage_environment import configured_storage_root",
+            "print(json.dumps({'root': str(configured_storage_root()),",
+            "'authority': os.environ['CADRUMO_AUTHORITY_ROOT'],",
+            "'temp': os.environ['TEMP'], 'cargo': os.environ['CARGO_HOME']}))",
+        )
+    )
+    completed = run_command([sys.executable, "-c", script], cwd=workspace, environment=environment, timeout_seconds=30)
+    assert completed.returncode == 0, completed.stderr
+    observed = json.loads(completed.stdout)
+    assert Path(observed["root"]) == root.resolve()
+    assert Path(observed["authority"]) == authority
+    assert Path(observed["temp"]).is_relative_to(root)
+    assert Path(observed["temp"]).is_dir()
+    assert Path(observed["cargo"]).is_relative_to(root)
 
 
 @pytest.mark.parametrize("member", ["", "relative-cache", "absolute-cache"])
