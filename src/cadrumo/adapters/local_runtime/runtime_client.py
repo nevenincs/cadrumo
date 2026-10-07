@@ -16,7 +16,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.paths import effective_storage_root
-from cadrumo.domain.calculations.registry.authority import published_authority_generation
+from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 
 
 class _InstalledClientCleanup:

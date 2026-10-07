@@ -1,5 +1,5 @@
 //! Real filesystem/package/binary discovery fixtures; no installation or registry writes.
-use cadrumo_application::installation::DiscoveryContract;
+use cadrumo_application::{component::Cancellation, error::Error, installation::DiscoveryContract};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::{
@@ -110,6 +110,78 @@ fn old_image_and_old_stable_entry_select_newest_complete_numeric_version() {
         assert_eq!(result.entrypoint, member.under(&prefix));
         assert_eq!(result.version, [0, 10, 0]);
     }
+}
+
+#[test]
+fn pre_cancelled_discovery_and_prefix_inspection_never_fall_back() {
+    let fixture = Fixture::new();
+    let prefix = fixture.prefix("cancelled discovery");
+    let package = fixture.version(&prefix, "1.0.0");
+    let member = fixture.contract.manager_member().unwrap();
+    let cancellation = Cancellation::default();
+    cancellation.cancel();
+    assert!(matches!(
+        fixture.contract.inspect_cancellable(&prefix, &cancellation),
+        Err(Error::Cancelled)
+    ));
+    assert!(matches!(
+        fixture.contract.discover_cancellable(
+            &member.under(&package),
+            &[member.under(&prefix)],
+            &cancellation
+        ),
+        Err(Error::Cancelled)
+    ));
+    assert_eq!(
+        fixture
+            .contract
+            .discover(&member.under(&package), &[])
+            .unwrap()
+            .package,
+        package
+    );
+}
+
+#[test]
+fn cancellation_during_candidate_verification_propagates_through_both_fallbacks() {
+    use std::{
+        sync::{Arc, mpsc},
+        thread,
+        time::Duration,
+    };
+    let fixture = Fixture::new();
+    let prefix = fixture.prefix("active verification");
+    let older = fixture.version(&prefix, "1.0.0");
+    let newest = fixture.version(&prefix, "2.0.0");
+    let fallback = fixture.prefix("valid fallback prefix");
+    fixture.version(&fallback, "1.0.0");
+    let payload = fs::File::create(newest.join("large.bin")).unwrap();
+    payload.set_len(512 * 1024 * 1024).unwrap();
+    fixture.amend(&newest, |value| {
+        value["files"]["large.bin"] = json!("00".repeat(32))
+    });
+    let cancellation = Arc::new(Cancellation::default());
+    let worker_token = cancellation.clone();
+    let member = fixture.contract.manager_member().unwrap();
+    let image = member.under(&older);
+    let registered = [member.under(&fallback)];
+    let (entered, ready) = mpsc::channel();
+    let result = thread::scope(|scope| {
+        let contract = &fixture.contract;
+        let worker = scope.spawn(move || {
+            entered.send(()).unwrap();
+            contract.discover_cancellable(&image, &registered, &worker_token)
+        });
+        ready.recv_timeout(Duration::from_secs(5)).unwrap();
+        // A large logical member adds verification work without writing payload
+        // bytes. This handshake precedes discover, so hashing entry is not
+        // independently observed. The reader unit test proves the exact chunk
+        // boundary; this integration exercises both public fallback layers.
+        thread::sleep(Duration::from_millis(20));
+        cancellation.cancel();
+        worker.join().unwrap()
+    });
+    assert!(matches!(result, Err(Error::Cancelled)));
 }
 
 #[test]

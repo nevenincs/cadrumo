@@ -21,7 +21,6 @@ import threading
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import clear_output_language_cache, register_profile_language_resolver
 from ...core.logging import get_logger
-from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .custody_ports import (
     clear_profile_output_language_hint,
     read_profile_output_language_hint,
@@ -101,6 +100,8 @@ def active_profile_output_language_from_storage() -> str | None:
     record = workflow_state_repository().load().active_profile_record()
     if record is None:
         return None
+    from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+
     # The CLI root may scope this record to the invocation that triggered the
     # language refresh. A calculation command then consumes it once; hosts
     # without that scope retain their ordinary independent profile reads.

@@ -50,7 +50,7 @@ from .export_link_operation_ports import (
     resolve_export_link_access,
     settle_export_link_failure,
 )
-from .extraction_draft_store import bind_extraction_draft_repository_factory
+from .extraction_draft_repository import bind_extraction_draft_repository_factory
 from .invoice_extraction_authority import default_invoice_extraction_period
 
 

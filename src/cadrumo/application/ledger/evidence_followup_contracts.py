@@ -19,7 +19,7 @@ from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from .attachment_review import AttachmentReviewItem
 from .consent_withdrawal import CloudDerivedArtefact, ConsentedDispatch, ConsentWithdrawalSurvey
-from .extraction_draft_store import ExtractionDraftRepositoryFactory
+from .extraction_draft_repository import ExtractionDraftRepositoryFactory
 from .invoice_evidence_operation_dtos import (
     ConfirmationBlockerProjectionV1,
     InvoiceDraftProjectionV1,

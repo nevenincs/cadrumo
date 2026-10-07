@@ -61,11 +61,8 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-    bundled_authority_descriptor_path,
-    bundled_indexed_authority,
-)
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.entrypoints.adapter_composition import build_borrador_100_snapshot_repository
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session

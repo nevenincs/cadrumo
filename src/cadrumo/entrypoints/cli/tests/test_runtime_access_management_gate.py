@@ -86,7 +86,7 @@ def test_resume_stages_one_leaf_payload_before_unadmitted_runtime_binding(monkey
     profile_id = str(uuid4())
     events: list[str] = []
     monkeypatch.setattr(
-        "cadrumo.application.provisioning.provision_cli_storage",
+        "cadrumo.application.cli_provisioning.provision_cli_storage",
         lambda *, writes_state: events.append("provision"),
     )
     monkeypatch.setattr(session_gate, "normalize_ambient_profile", lambda _ctx: None)

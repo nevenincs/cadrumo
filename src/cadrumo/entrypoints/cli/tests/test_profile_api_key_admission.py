@@ -102,7 +102,7 @@ def test_runtime_leaf_receives_explicit_api_method_before_local_session(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     events: list[tuple[object, ...]] = []
-    monkeypatch.setattr("cadrumo.application.provisioning.provision_cli_storage", lambda **_kwargs: None)
+    monkeypatch.setattr("cadrumo.application.cli_provisioning.provision_cli_storage", lambda **_kwargs: None)
     monkeypatch.setattr(session_gate, "normalize_ambient_profile", lambda _ctx: None)
     monkeypatch.setattr("cadrumo.core.bucket_pointer.resolve_active_bucket_id", lambda: str(uuid4()))
     monkeypatch.setattr(gate, "_diagnose_unregistered_profile", lambda **_kwargs: False)

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from collections.abc import Callable
 from logging import WARNING
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -33,7 +34,6 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.logging import get_logger
 from ..adapter_composition import profile_adapter_composition
-from ..operation_composition import build_production_operation_registry
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .launcher import run_precomposed_runtime_root_session
 from .runtime_admission import runtime_login_session
@@ -108,7 +108,7 @@ async def _open_credential_client(profile_id: UUID, credential_reference: UUID) 
 async def _run_runtime_session(
     inventory: ProfileLoginInventoryV1,
     *,
-    operation_contracts: OperationPublicContractSetV1,
+    operation_contracts: Callable[[], OperationPublicContractSetV1],
     choose_profile: bool,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
@@ -118,7 +118,7 @@ async def _run_runtime_session(
     def requester_for_login(profile_id: UUID) -> RuntimeAutomationRequesterScreen:
         return RuntimeAutomationRequesterScreen(
             profile_id=profile_id,
-            contracts=operation_contracts,
+            contracts=operation_contracts(),
             secrets_store=installed_automation_secret_store(),
             open_client=_open_client,
         )
@@ -155,7 +155,7 @@ async def _run_runtime_session(
 
                 return RuntimeAutomationRequesterScreen(
                     profile_id=client.profile_id,
-                    contracts=operation_contracts,
+                    contracts=operation_contracts(),
                     secrets_store=store,
                     client=client,
                     fresh_credential_client=fresh_credential_client,
@@ -176,7 +176,7 @@ async def _run_runtime_session(
                 raise ValueError("requester requires the original human client")
             return RuntimeAutomationRequesterScreen(
                 profile_id=handoff.profile_id,
-                contracts=operation_contracts,
+                contracts=operation_contracts(),
                 secrets_store=installed_automation_secret_store(),
                 open_client=_open_client,
                 reviewer_client=client,
@@ -230,7 +230,7 @@ def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusal
 
 def _attempt_runtime_session(
     inventory: ProfileLoginInventoryV1,
-    operation_contracts: OperationPublicContractSetV1,
+    operation_contracts: Callable[[], OperationPublicContractSetV1],
     choose_profile: bool,
     headless: bool,
     auto_pilot: AutopilotCallbackType | None,
@@ -260,10 +260,19 @@ def run_installed_workbench_session(
     autopilot may drive the same real login and root screens used interactively.
     Profile switching discards the former connection before rereading choices.
     """
+    contracts: OperationPublicContractSetV1 | None = None
+
+    def operation_contracts() -> OperationPublicContractSetV1:
+        nonlocal contracts
+        if contracts is None:
+            from ..operation_composition import build_production_operation_registry
+
+            contracts = build_production_operation_registry().public_contract_set
+        return contracts
+
     choose_profile = False
     with profile_adapter_composition():
         _release_bootstrap_custody()
-        operation_contracts = build_production_operation_registry().public_contract_set
         while True:
             inventory = observe_profile_login_inventory()
             diagnostic_event(

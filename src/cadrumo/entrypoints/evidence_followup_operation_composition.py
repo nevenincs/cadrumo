@@ -8,7 +8,7 @@ from ..application.ledger.consent_withdrawal import ConsentedDispatch
 from ..application.ledger.evidence_followup_contracts import (
     LedgerEvidenceFollowupOperationPorts,
 )
-from ..application.ledger.extraction_draft_store import ExtractionDraftRepositoryProtocol
+from ..application.ledger.extraction_draft_repository import ExtractionDraftRepositoryProtocol
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id

@@ -23,7 +23,7 @@ from cadrumo.application.workflow import profile_bucket_scan
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.json_contract import OutputSchema
 from cadrumo.entrypoints.cli.config import custody
-from cadrumo.entrypoints.cli.config_payloads import ConfigSignInStatusResult
+from cadrumo.entrypoints.cli.config.custody_payloads import ConfigSignInStatusResult
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

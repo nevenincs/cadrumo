@@ -11,7 +11,6 @@ from ...core.auth_provider import AuthProviderDescription, AuthProviderKind
 from ...core.errors.hierarchy import InternalInvariantError
 from ..auth_credentials import ActiveCertificateCredentials
 from .certificate_secret_backend import CertificateSecretBackendFactory
-from .credentials import resolve_active_certificate_credentials
 from .operator_scope_ports import OperatorScopePorts
 from .protocols import BrowserSessionFactoryPort
 from .session_types import AeatLoginAssertion, AeatSession
@@ -97,6 +96,8 @@ def select_provider(
     """
     credentials = certificate_credentials
     if kind is AuthProviderKind.CERTIFICATE and credentials is None:
+        from .credentials import resolve_active_certificate_credentials
+
         credentials = resolve_active_certificate_credentials(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=settings,

@@ -60,11 +60,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-    bundled_authority_descriptor_path,
-    bundled_indexed_authority,
-)
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.censo_modelos import (
     CENSO_MODELO_EVENT_KINDS,
     CensoModeloEventKind,

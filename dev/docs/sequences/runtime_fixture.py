@@ -49,7 +49,7 @@ from cadrumo.application.user_profile.automation_custody_port import (
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.time.clock import frozen_clock
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.filing import software_identity
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections

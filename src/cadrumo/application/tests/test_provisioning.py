@@ -26,14 +26,9 @@ from ...core.storage_taxonomy_locations import storage_tree_targets
 from ...domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreError
 from ...domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
 from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
+from ..cli_provisioning import admit_cli_authority, provision_cli_storage
 from ..local_reader import probe_local_reader
-from ..provisioning import (
-    DependencyStatus,
-    admit_cli_authority,
-    probe_optional_extra,
-    probe_optional_extras,
-    provision_cli_storage,
-)
+from ..provisioning import DependencyStatus, probe_optional_extra, probe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

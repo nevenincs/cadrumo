@@ -1,4 +1,5 @@
 use crate::{
+    component::Cancellation,
     error::Error,
     filesystem,
     value::{RelativePath, Sha256Digest},
@@ -61,8 +62,17 @@ pub struct PackageInspection {
 
 impl PackageManifest {
     pub fn read(root: &Path, manifest: &RelativePath) -> Result<Self, Error> {
+        Self::read_cancellable(root, manifest, &Cancellation::default())
+    }
+
+    pub fn read_cancellable(
+        root: &Path,
+        manifest: &RelativePath,
+        cancellation: &Cancellation,
+    ) -> Result<Self, Error> {
+        cancellation.check()?;
         filesystem::absolute_root(root)?;
-        filesystem::json_file(&manifest.under(root))
+        filesystem::json_file_cancellable(&manifest.under(root), cancellation)
     }
 
     /// Expected platform spelling is projected by the caller; aliases are not guessed.
@@ -73,19 +83,40 @@ impl PackageManifest {
         platform: &str,
         abi: u32,
     ) -> Result<PackageInspection, Error> {
+        self.inspect_cancellable(root, manifest_path, platform, abi, &Cancellation::default())
+    }
+
+    /// Cooperative cancellation between entries and stream chunks; filesystem calls
+    /// themselves remain synchronous and are not forcibly interruptible.
+    pub fn inspect_cancellable(
+        self,
+        root: &Path,
+        manifest_path: &RelativePath,
+        platform: &str,
+        abi: u32,
+        cancellation: &Cancellation,
+    ) -> Result<PackageInspection, Error> {
+        cancellation.check()?;
         filesystem::absolute_root(root)?;
         let readiness = if self.layout.platform != platform || self.layout.abi != abi {
             Readiness::Incompatible("package target or ABI differs".into())
         } else {
-            self.check_files(root, manifest_path)?
+            self.check_files(root, manifest_path, cancellation)?
         };
+        cancellation.check()?;
         Ok(PackageInspection {
             manifest: self,
             readiness,
         })
     }
 
-    fn check_files(&self, root: &Path, manifest_path: &RelativePath) -> Result<Readiness, Error> {
+    fn check_files(
+        &self,
+        root: &Path,
+        manifest_path: &RelativePath,
+        cancellation: &Cancellation,
+    ) -> Result<Readiness, Error> {
+        cancellation.check()?;
         if self.files.is_empty() || self.files.contains_key(manifest_path) {
             return Err(Error::Invalid("invalid package file inventory".into()));
         }
@@ -111,6 +142,7 @@ impl PackageManifest {
         let mut inventory = self.files.clone();
         let mut admitted_manifests = BTreeMap::new();
         for (prefix, member) in &self.delegated_inventories {
+            cancellation.check()?;
             if !self.files.contains_key(member)
                 || !member
                     .as_str()
@@ -123,12 +155,13 @@ impl PackageManifest {
             let expected = &self.files[member];
             // The same bounded, digest-verified bytes supply the nested inventory.
             // Only this small set needs a path walk before the tree is traversed.
-            let nested = match read_delegated(root, member, expected)? {
+            let nested = match read_delegated(root, member, expected, cancellation)? {
                 Admission::Admitted(nested) => nested,
                 Admission::Refused(readiness) => return Ok(readiness),
             };
             admitted_manifests.insert(member.clone(), expected.clone());
             for (relative, expected) in nested.files {
+                cancellation.check()?;
                 let joined =
                     RelativePath::new(format!("{}/{}", prefix.as_str(), relative.as_str()))?;
                 if inventory.contains_key(&joined) {
@@ -142,7 +175,9 @@ impl PackageManifest {
         }
         let mut pending = vec![root.to_path_buf()];
         while let Some(directory) = pending.pop() {
+            cancellation.check()?;
             for entry in fs::read_dir(directory)? {
+                cancellation.check()?;
                 let path = entry?.path();
                 // Ancestors were admitted when entering the root and each
                 // descended directory. Check this entry without following it.
@@ -185,7 +220,7 @@ impl PackageManifest {
                     Admission::Admitted(file) => file,
                     Admission::Refused(readiness) => return Ok(readiness),
                 };
-                if filesystem::digest_opened(&mut file)? != expected {
+                if filesystem::digest_reader(&mut file, cancellation)? != expected {
                     return Ok(Readiness::Incompatible(relative.as_str().into()));
                 }
             }
@@ -224,7 +259,9 @@ fn read_delegated(
     root: &Path,
     member: &RelativePath,
     expected: &Sha256Digest,
+    cancellation: &Cancellation,
 ) -> Result<Admission<DelegatedInventory>, Error> {
+    cancellation.check()?;
     let path = member.under(root);
     filesystem::refuse_links(&path)?;
     match fs::symlink_metadata(&path) {
@@ -246,15 +283,23 @@ fn read_delegated(
         Admission::Refused(readiness) => return Ok(Admission::Refused(readiness)),
     };
     let mut bytes = Vec::new();
-    file.take(filesystem::JSON_BYTES_LIMIT + 1)
-        .read_to_end(&mut bytes)?;
+    cancellation.check()?;
+    let read = file
+        .take(filesystem::JSON_BYTES_LIMIT + 1)
+        .read_to_end(&mut bytes);
+    cancellation.check()?;
+    read?;
     if bytes.len() as u64 > filesystem::JSON_BYTES_LIMIT {
         return Err(Error::LimitExceeded);
     }
-    if Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes)))? != *expected {
+    let actual = Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes)))?;
+    cancellation.check()?;
+    if actual != *expected {
         return Ok(Admission::Refused(Readiness::Incompatible(
             member.as_str().into(),
         )));
     }
-    Ok(Admission::Admitted(serde_json::from_slice(&bytes)?))
+    let nested = serde_json::from_slice(&bytes);
+    cancellation.check()?;
+    Ok(Admission::Admitted(nested?))
 }

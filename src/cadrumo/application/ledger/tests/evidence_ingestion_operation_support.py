@@ -24,7 +24,8 @@ from ..evidence_input import EvidenceInput, resolve_purchase_invoice_evidence_in
 from ..evidence_input_ports import EvidenceInputPorts
 from ..evidence_ports import EvidenceAttachmentIngestRequest, LedgerEvidencePorts
 from ..evidence_textlayer_ports import EvidenceTextLayerPorts
-from ..extraction_draft_store import ExtractionDraftDocument, ExtractionDraftRepositoryProtocol
+from ..extraction_draft_repository import ExtractionDraftRepositoryProtocol
+from ..extraction_draft_store import ExtractionDraftDocument
 from ..invoice_draft_extraction_ports import InvoiceDraftExtractionPorts, StructuredInvoiceReadError
 from ..structured_invoice_ports import StructuredInvoiceRecord
 from .bulk_classify_operation_support import PROFILE_ID

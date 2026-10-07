@@ -59,11 +59,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-    bundled_authority_descriptor_path,
-    bundled_indexed_authority,
-)
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
 from cadrumo.entrypoints.diagnostics_operation_composition import build_diagnostics_read_ports
 from cadrumo.tests.os_keychain_hook import require_os_credential_store

@@ -11,7 +11,7 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

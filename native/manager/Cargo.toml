@@ -23,6 +23,9 @@ tokio = { version = "1", features = ["rt", "time", "process"] }
 # Descriptor-relative, no-follow calls for the custody primitives.
 libc = "0.2"
 
+[dev-dependencies]
+sha2 = "0.10"
+
 [[bin]]
 name = "cadrumo-manager"
 path = "src/main.rs"

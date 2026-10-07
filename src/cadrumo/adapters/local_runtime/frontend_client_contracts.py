@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import ValidationError
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.user_profile.sign_in_refusals import SignInRefusal
-from ...application.user_profile.view_operation import (
-    ProfileViewItem,
-    ProfileViewOperationProjection,
-    ProfileViewPageKind,
-)
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.digest import ContentDigest
 from ...domain.user_profile.values import ProfileSetupState
+
+if TYPE_CHECKING:
+    from ...application.user_profile.view_operation import (
+        ProfileViewItem,
+        ProfileViewOperationProjection,
+        ProfileViewPageKind,
+    )
 
 
 class RuntimeFrontendRefusedError(CadrumoError):

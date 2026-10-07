@@ -13,8 +13,132 @@ fn fixture(target: Result<Option<PathBuf>>) -> Arc<ManagerStart> {
         attempt: Arc::new(tokio::sync::Mutex::new(None)),
         generation: AtomicU64::new(0),
         closed: AtomicBool::new(false),
+        cancellation: Arc::new(Cancellation::default()),
+        spawn_fence: Mutex::new(()),
         closing: tokio::sync::Notify::new(),
     })
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn close_cancels_then_joins_the_actual_verifier_and_refuses_late_retries() {
+    use cadrumo_application::{error::Error, package::PackageManifest, value::RelativePath};
+    use std::{sync::mpsc, time::Instant};
+    for abandon_caller in [false, true] {
+        let manager = fixture(Ok(None));
+        let settled = Arc::new(AtomicBool::new(false));
+        let cancellation_observed = Arc::new(AtomicBool::new(false));
+        let worker_settled = settled.clone();
+        let worker_observed = cancellation_observed.clone();
+        let (entered, ready) = tokio::sync::oneshot::channel();
+        let (release, waiting) = mpsc::channel();
+        let owner = manager.clone();
+        let caller = tokio::spawn(async move {
+            owner
+                .start_with(false, |owner| async move {
+                    owner
+                        .resolve_with(move |cancellation| {
+                            entered.send(()).unwrap();
+                            waiting.recv_timeout(Duration::from_secs(5)).unwrap();
+                            let owner = RelativePath::new("manifest.json").unwrap();
+                            let inspected = PackageManifest::read_cancellable(
+                                &std::env::temp_dir().join("unused-cancelled-verifier-fixture"),
+                                &owner,
+                                &cancellation,
+                            );
+                            worker_observed.store(
+                                matches!(inspected, Err(Error::Cancelled)),
+                                Ordering::Release,
+                            );
+                            worker_settled.store(true, Ordering::Release);
+                            // Even a verifier that returns a target after the close fence
+                            // must settle without permitting a late helper launch.
+                            Ok(PathBuf::from("unused-target"))
+                        })
+                        .await?;
+                    owner
+                        .run_dispatch(helper("exit 99"), Duration::from_secs(15))
+                        .await
+                })
+                .await
+        });
+        tokio::time::timeout(Duration::from_secs(5), ready)
+            .await
+            .unwrap()
+            .unwrap();
+        if abandon_caller {
+            caller.abort();
+        }
+        let cancellation_started = Instant::now();
+        let closing_owner = manager.clone();
+        let closing = tokio::spawn(async move { closing_owner.close().await });
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while !manager.closed.load(Ordering::Acquire) {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(
+            !closing.is_finished(),
+            "close must wait for the actual blocked verifier"
+        );
+        assert!(!settled.load(Ordering::Acquire));
+        for _ in 0..8 {
+            assert_eq!(
+                tokio::time::timeout(Duration::from_secs(1), manager.start(true))
+                    .await
+                    .unwrap()
+                    .unwrap_err()
+                    .code,
+                ErrorCode::SessionUnavailable
+            );
+        }
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        let released = Instant::now();
+        release.send(()).unwrap();
+        tokio::time::timeout(Duration::from_secs(5), closing)
+            .await
+            .unwrap()
+            .unwrap();
+        if abandon_caller {
+            assert!(caller.await.unwrap_err().is_cancelled());
+        } else {
+            assert_eq!(
+                caller.await.unwrap().unwrap_err().code,
+                ErrorCode::SessionUnavailable
+            );
+        }
+        assert!(settled.load(Ordering::Acquire));
+        assert!(cancellation_observed.load(Ordering::Acquire));
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        assert_eq!(
+            manager
+                .attempt
+                .lock()
+                .await
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap_err()
+                .code,
+            ErrorCode::SessionUnavailable
+        );
+        assert_eq!(
+            manager
+                .run_dispatch(helper("exit 99"), Duration::from_secs(15))
+                .await
+                .unwrap_err()
+                .code,
+            ErrorCode::SessionUnavailable
+        );
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        eprintln!(
+            "verifier settlement abandon_caller={abandon_caller} cancellation_to_settlement_us={} test_gate_release_to_settlement_us={}",
+            cancellation_started.elapsed().as_micros(),
+            released.elapsed().as_micros()
+        );
+    }
 }
 
 #[cfg(windows)]

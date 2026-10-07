@@ -1,4 +1,5 @@
 use cadrumo_application::{
+    component::Cancellation,
     error::Error,
     package::{PackageManifest, Readiness},
     value::{RelativePath, Sha256Digest},
@@ -285,6 +286,33 @@ fn owning_manifest_is_excluded_only_when_not_in_the_expanded_inventory() {
             .unwrap()
             .readiness,
         Readiness::Incompatible(owner.as_str().into())
+    );
+}
+
+#[test]
+fn cancelled_package_read_and_inspection_refuse_without_changing_uncancelled_calls() {
+    let fixture = Fixture::new();
+    let owner = RelativePath::new(OWNER).unwrap();
+    let manifest = PackageManifest::read(&fixture.root, &owner).unwrap();
+    let cancellation = Cancellation::default();
+    cancellation.cancel();
+    assert!(matches!(
+        PackageManifest::read_cancellable(&fixture.root.join("absent"), &owner, &cancellation),
+        Err(Error::Cancelled)
+    ));
+    assert!(matches!(
+        manifest.inspect_cancellable(&fixture.root, &owner, "fixture-target", 1, &cancellation),
+        Err(Error::Cancelled)
+    ));
+    assert_eq!(fixture.inspect().unwrap(), Readiness::Ready);
+    let fresh = Cancellation::default();
+    assert_eq!(
+        PackageManifest::read_cancellable(&fixture.root, &owner, &fresh)
+            .unwrap()
+            .inspect_cancellable(&fixture.root, &owner, "fixture-target", 1, &fresh)
+            .unwrap()
+            .readiness,
+        Readiness::Ready
     );
 }
 

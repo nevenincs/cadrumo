@@ -30,7 +30,6 @@ from .authority_cache import (
     AuthorityCacheStats,
     RetainedAuthorityValue,
 )
-from .authority_component_codec import decode_authority_component
 
 AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v4"
 AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
@@ -314,6 +313,8 @@ class SQLiteAuthorityReader:
             self.load(authority_query_from_identity(dependency_kind, dependency_key), pin=pin)
             for dependency_kind, dependency_key in dependency_rows
         )
+        from .authority_component_codec import decode_authority_component
+
         decoded = decode_authority_component(query, payload, dependencies=dependencies)
         # Publication measured the decoded graph once; re-walking millions of
         # members on every load would repeat that work for every operation.

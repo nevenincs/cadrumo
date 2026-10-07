@@ -59,9 +59,23 @@ pub struct InstalledRuntime {
 
 impl InstalledRuntime {
     pub fn inspect(locations: &ManagedLocations) -> Result<Self, InspectionFailure> {
-        let package = locations.package_root();
         require_no_failed_marker(locations.storage_root())?;
-        require_package(package)?;
+        require_package(locations.package_root())?;
+        Self::prepare(locations)
+    }
+
+    /// Consume catalogue admission for this manager; runtime identity is still probed.
+    #[cfg(windows)]
+    pub fn from_admitted(
+        installation: crate::installation::CurrentInstallation,
+    ) -> Result<Self, InspectionFailure> {
+        let locations = installation.into_locations();
+        require_no_failed_marker(locations.storage_root())?;
+        Self::prepare(&locations)
+    }
+
+    fn prepare(locations: &ManagedLocations) -> Result<Self, InspectionFailure> {
+        let package = locations.package_root();
         let query = ChildConfiguration::new(
             package.join(crate::contract::EXECUTABLE),
             package.to_path_buf(),
@@ -111,6 +125,8 @@ fn require_no_failed_marker(root: &Path) -> Result<(), InspectionFailure> {
 }
 
 fn require_package(package: &Path) -> Result<(), InspectionFailure> {
+    #[cfg(test)]
+    PACKAGE_INSPECTIONS.with(|count| count.set(count.get() + 1));
     let manifest_path =
         RelativePath::new(crate::contract::MODE_PACKAGE_MANIFEST).map_err(package_failure)?;
     let manifest = PackageManifest::read(package, &manifest_path).map_err(package_failure)?;
@@ -134,6 +150,16 @@ fn require_package(package: &Path) -> Result<(), InspectionFailure> {
             InspectionRefusal::PackageIncomplete,
         )),
     }
+}
+
+#[cfg(test)]
+thread_local! {
+    static PACKAGE_INSPECTIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(all(windows, test))]
+pub(crate) fn package_inspections() -> usize {
+    PACKAGE_INSPECTIONS.with(std::cell::Cell::get)
 }
 
 fn require_identity(

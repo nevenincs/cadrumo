@@ -12,11 +12,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import (
-    IndexedRegistryAuthority,
-    ValidatedRegistryAuthority,
-    bundled_authority_descriptor_path,
-)
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.validate_below_floor_export_refs import declared_supported_filing_years_floor

@@ -17,7 +17,8 @@ from pathlib import Path
 
 from .....core.config import override_settings
 from .. import authority as authority_module
-from ..authority import bundled_authority_descriptor_path, release_bundled_indexed_authority
+from ..authority import release_bundled_indexed_authority
+from ..authority_location import bundled_authority_descriptor_path
 
 
 @contextlib.contextmanager

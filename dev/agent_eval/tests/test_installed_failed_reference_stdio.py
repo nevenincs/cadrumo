@@ -16,7 +16,7 @@ from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
 
 from .test_installed_authenticated_stdio import (

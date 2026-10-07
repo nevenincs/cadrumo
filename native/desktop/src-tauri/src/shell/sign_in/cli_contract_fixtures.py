@@ -24,8 +24,12 @@ from cadrumo.core.errors.error_codes import render_error_json
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.json_contract import EnvelopeStatus, Notice, NoticeSeverity, SchemaEnvelope
 from cadrumo.entrypoints.cli._modelo_rendering import advisory_notice
+from cadrumo.entrypoints.cli.config.custody_payloads import (
+    ConfigLoginResult,
+    ConfigLogoutResult,
+    ConfigSignInStatusResult,
+)
 from cadrumo.entrypoints.cli.config.profile_list_payloads import ConfigListResult, ProfilePointerPayload
-from cadrumo.entrypoints.cli.config_payloads import ConfigLoginResult, ConfigLogoutResult, ConfigSignInStatusResult
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 
 

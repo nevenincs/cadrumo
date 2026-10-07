@@ -76,7 +76,7 @@ from cadrumo.application.user_profile.automation_enrollment import AutomationInv
 from cadrumo.core.config import load_settings
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
-from cadrumo.domain.calculations.registry.authority import published_authority_generation
+from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.runtime import session_owner, worker_service
 from cadrumo.entrypoints.runtime.operation_host import ProfileWorkerOperationHost

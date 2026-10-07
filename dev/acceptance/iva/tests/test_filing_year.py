@@ -13,11 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import (
-    IndexedRegistryAuthority,
-    PinnedAuthorityOperation,
-    bundled_authority_descriptor_path,
-)
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 

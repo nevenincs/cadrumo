@@ -9,14 +9,15 @@ not declare admits nothing.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.identity.documents import IdentityError, SpanishTaxIdFormat, validate_identity
 from ....core.time.clock import today_madrid
-from .authority import bundled_indexed_authority
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from .nif_iva_catalogue import NifIvaCatalogue, resolve_nif_iva_catalogue
-from .tax_id_format import tax_id_format
+
+if TYPE_CHECKING:
+    from .governed_fact_scope import GovernedFactSource
+    from .nif_iva_catalogue import NifIvaCatalogue
 
 
 def _with_authority[T](resolve: Callable[[GovernedFactSource], T]) -> T | None:
@@ -29,6 +30,9 @@ def _with_authority[T](resolve: Callable[[GovernedFactSource], T]) -> T | None:
     over-redact rather than break the log call that asked.
     """
     try:
+        from .authority import bundled_indexed_authority
+        from .governed_fact_scope import governed_facts_in_scope
+
         scoped = governed_facts_in_scope()
         if scoped is not None:
             return resolve(scoped)
@@ -39,10 +43,14 @@ def _with_authority[T](resolve: Callable[[GovernedFactSource], T]) -> T | None:
 
 
 def _catalogue(authority: GovernedFactSource) -> NifIvaCatalogue:
+    from .nif_iva_catalogue import resolve_nif_iva_catalogue
+
     return resolve_nif_iva_catalogue(effective_date=today_madrid(), authority=authority)
 
 
 def _spanish_format(authority: GovernedFactSource) -> SpanishTaxIdFormat:
+    from .tax_id_format import tax_id_format
+
     return tax_id_format(authority, effective_date=today_madrid())
 
 
@@ -62,6 +70,10 @@ class RegistryTaxIdentityAdmission:
 
     def admits_nif_iva(self, normalised: str) -> bool | None:
         """Return whether ``normalised`` matches its declared Member State format."""
+        # Every governed format requires digits, including the short RO/XI forms.
+        # Ordinary alphabetic scan matches need no catalogue lookup.
+        if not any(character.isdigit() for character in normalised):
+            return False
         catalogue = _with_authority(_catalogue)
         if catalogue is None:
             return None

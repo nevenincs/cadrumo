@@ -82,7 +82,7 @@ def test_reference_refuses_invalid_routes_before_storage_or_secret_reads(
     reason: str,
 ) -> None:
     monkeypatch.setattr(
-        "cadrumo.application.provisioning.provision_cli_storage",
+        "cadrumo.application.cli_provisioning.provision_cli_storage",
         lambda **_kwargs: pytest.fail("refusal provisioned storage"),
     )
     monkeypatch.setattr(gate, "_read_and_stage_leaf", lambda **_kwargs: pytest.fail("refusal read a leaf secret"))
@@ -104,7 +104,7 @@ def test_reference_routes_only_one_exact_migrated_profile_without_root_secret(
 ) -> None:
     profile_id, reference = uuid4(), uuid4()
     observed: list[dict[str, object]] = []
-    monkeypatch.setattr("cadrumo.application.provisioning.provision_cli_storage", lambda **_kwargs: None)
+    monkeypatch.setattr("cadrumo.application.cli_provisioning.provision_cli_storage", lambda **_kwargs: None)
     monkeypatch.setattr(gate, "_resolve_profile_targets", lambda *_args, **_kwargs: (str(profile_id), "exact"))
     monkeypatch.setattr(gate, "_diagnose_unregistered_profile", lambda **_kwargs: False)
     monkeypatch.setattr(

@@ -31,7 +31,7 @@ from ....adapters.persistence.storage.custody.acceleration_receipt import (
 )
 from ....application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from ....core.storage_environment import ChildEnvironmentProfile, child_environment
-from ....domain.calculations.registry.authority import published_authority_generation
+from ....domain.calculations.registry.authority_location import published_authority_generation
 from ....tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.windows_only, pytest.mark.os_keychain]

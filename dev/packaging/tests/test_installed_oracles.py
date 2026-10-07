@@ -256,7 +256,7 @@ _ORACLE_AUTHORITY_PROBE = """
 import hashlib
 import json
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
 descriptor_path = bundled_authority_descriptor_path().resolve(strict=True)

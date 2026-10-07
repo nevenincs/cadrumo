@@ -10,7 +10,7 @@ from uuid import UUID
 from ...core.config import Settings
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from .evidence_ports import LedgerEvidencePorts
-from .extraction_draft_store import ExtractionDraftRepositoryFactory
+from .extraction_draft_repository import ExtractionDraftRepositoryFactory
 from .invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 
 

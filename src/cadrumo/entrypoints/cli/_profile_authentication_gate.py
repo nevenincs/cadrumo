@@ -675,7 +675,7 @@ def preflight_parsed_leaf(
         _refuse("profile_secrets_inapplicable")
     # The secret-source refusals above are still parse-time refusals and write
     # nothing; from here on the command runs, so its storage is provisioned.
-    from ...application.provisioning import provision_cli_storage
+    from ...application.cli_provisioning import provision_cli_storage
 
     provision_cli_storage(writes_state=command_needs_state_tree(node))
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))

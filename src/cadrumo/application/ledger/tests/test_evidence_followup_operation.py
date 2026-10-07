@@ -60,7 +60,7 @@ from ....application.ledger.evidence_followup_registration import (
 from ....application.ledger.evidence_followup_registration import (
     project_review_view_result as _project_review_view,
 )
-from ....application.ledger.extraction_draft_store import ExtractionDraftRepositoryFactory
+from ....application.ledger.extraction_draft_repository import ExtractionDraftRepositoryFactory
 from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access

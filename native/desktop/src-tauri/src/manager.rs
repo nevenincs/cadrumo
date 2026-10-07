@@ -3,6 +3,7 @@
 use crate::environment::Launch;
 use cadrumo_application::{
     child::ChildConfiguration,
+    component::Cancellation,
     diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     installation::DiscoveryContract,
@@ -13,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
     process::Stdio,
     sync::{
-        Arc,
+        Arc, Mutex,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::Duration,
@@ -39,6 +40,8 @@ pub struct ManagerStart {
     attempt: Arc<tokio::sync::Mutex<Option<Result<StartOutcome>>>>,
     generation: AtomicU64,
     closed: AtomicBool,
+    cancellation: Arc<Cancellation>,
+    spawn_fence: Mutex<()>,
     closing: tokio::sync::Notify,
 }
 
@@ -52,6 +55,8 @@ impl ManagerStart {
             attempt: Arc::new(tokio::sync::Mutex::new(None)),
             generation: AtomicU64::new(0),
             closed: AtomicBool::new(false),
+            cancellation: Arc::new(Cancellation::default()),
+            spawn_fence: Mutex::new(()),
             closing: tokio::sync::Notify::new(),
         }
     }
@@ -67,6 +72,9 @@ impl ManagerStart {
         F: FnOnce(Arc<Self>) -> Work + Send + 'static,
         Work: std::future::Future<Output = Result<StartOutcome>> + Send + 'static,
     {
+        if self.closed.load(Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
         let observed = self.generation.load(Ordering::Acquire);
         let previous = self.attempt.clone().lock_owned().await;
         if self.closed.load(Ordering::Acquire) {
@@ -111,10 +119,18 @@ impl ManagerStart {
         outcome
     }
 
-    /// Fence new requests and settle the bounded private helper before host exit.
+    /// Fence requests, cancel verification and join its actual worker before host exit.
+    /// Blocking OS calls themselves cannot be forcibly interrupted.
     /// No manager or runtime process handle is owned or stopped here.
     pub async fn close(&self) {
-        self.closed.store(true, Ordering::Release);
+        {
+            let _fence = self
+                .spawn_fence
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            self.closed.store(true, Ordering::Release);
+            self.cancellation.cancel();
+        }
         self.closing.notify_waiters();
         let _settled = self.attempt.lock().await;
     }
@@ -128,9 +144,9 @@ impl ManagerStart {
         };
         let package_root = package_root.clone();
         // Recheck package bytes on every actual attempt, off the GUI/runtime thread.
-        let target = tokio::task::spawn_blocking(move || target(&package_root))
-            .await
-            .map_err(|_| failure(ErrorCode::Panic))??;
+        let target = self
+            .resolve_with(move |cancellation| target(&package_root, &cancellation))
+            .await?;
         if self.closed.load(Ordering::Acquire) {
             return Err(failure(ErrorCode::SessionUnavailable));
         }
@@ -147,6 +163,25 @@ impl ManagerStart {
         self.run_dispatch(command, DEADLINE).await
     }
 
+    async fn resolve_with<F>(&self, inspect: F) -> Result<PathBuf>
+    where
+        F: FnOnce(Arc<Cancellation>) -> Result<PathBuf> + Send + 'static,
+    {
+        if self.closed.load(Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        let cancellation = self.cancellation.clone();
+        // The owned attempt awaits this handle fully, even if its IPC caller is
+        // dropped. Close cancels first and then waits that same attempt to settle.
+        let target = tokio::task::spawn_blocking(move || inspect(cancellation))
+            .await
+            .map_err(|_| failure(ErrorCode::Panic))??;
+        if self.closed.load(Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        Ok(target)
+    }
+
     async fn run_dispatch(
         &self,
         mut command: tokio::process::Command,
@@ -155,10 +190,17 @@ impl ManagerStart {
         let closing = self.closing.notified();
         tokio::pin!(closing);
         closing.as_mut().enable();
-        if self.closed.load(Ordering::Acquire) {
-            return Err(failure(ErrorCode::SessionUnavailable));
-        }
-        let mut child = command.spawn().map_err(|error| {
+        let spawned = {
+            let _fence = self
+                .spawn_fence
+                .lock()
+                .map_err(|_| failure(ErrorCode::Panic))?;
+            if self.closed.load(Ordering::Acquire) {
+                return Err(failure(ErrorCode::SessionUnavailable));
+            }
+            command.spawn()
+        };
+        let mut child = spawned.map_err(|error| {
             let error = failure(ErrorCode::ManagerDispatchFailed).caused_by(error);
             self.diagnostics
                 .spawn_failure(ProcessRole::ManagerDispatch, error.clone());
@@ -263,7 +305,7 @@ fn decode(bytes: &[u8], success: bool) -> Result<StartOutcome> {
     })
 }
 
-fn target(package_root: &Path) -> Result<PathBuf> {
+fn target(package_root: &Path, cancellation: &Cancellation) -> Result<PathBuf> {
     let contract: DiscoveryContract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
             .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
@@ -274,21 +316,25 @@ fn target(package_root: &Path) -> Result<PathBuf> {
     .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     #[cfg(not(windows))]
     let registered = Vec::new();
-    target_from(package_root, &contract, &registered)
+    target_from(package_root, &contract, &registered, cancellation)
 }
 
 fn target_from(
     package_root: &Path,
     contract: &DiscoveryContract,
     registered: &[PathBuf],
+    cancellation: &Cancellation,
 ) -> Result<PathBuf> {
     let member = contract
         .manager_member()
         .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     contract
-        .discover(&member.under(package_root), registered)
+        .discover_cancellable(&member.under(package_root), registered, cancellation)
         .map(|selection| selection.entrypoint)
-        .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))
+        .map_err(|error| match error {
+            cadrumo_application::error::Error::Cancelled => failure(ErrorCode::SessionUnavailable),
+            error => failure(ErrorCode::PackageUnavailable).caused_by(error),
+        })
 }
 
 #[cfg(windows)]

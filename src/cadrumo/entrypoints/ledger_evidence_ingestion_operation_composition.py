@@ -15,7 +15,7 @@ from ..adapters.persistence.storage.attachment import AttachmentStore
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..application.ledger.evidence_ingestion_operation_ports import LedgerEvidenceIngestionPorts
 from ..application.ledger.evidence_ports import LedgerEvidencePorts
-from ..application.ledger.extraction_draft_store import ExtractionDraftRepositoryProtocol
+from ..application.ledger.extraction_draft_repository import ExtractionDraftRepositoryProtocol
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id

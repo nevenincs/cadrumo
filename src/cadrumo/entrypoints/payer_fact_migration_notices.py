@@ -11,18 +11,16 @@ the fact stays unanswered.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from ..application.operator_actions.catalogue import next_action
-from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..application.user_profile.profile_schema_migration import drain_migration_cleared_paths
-from ..application.wizard.catalogue import build_setup_flow
 from ..core.i18n.render import tr
 from ..core.json_contract import Notice, NoticeSeverity
-from ..domain.calculations.registry.applicability import iter_modelo_applicability_rules
-from ..domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
-from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ..domain.user_profile.labels import profile_field_label
-from ..domain.user_profile.values import UserProfileRecord
+
+if TYPE_CHECKING:
+    from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..domain.user_profile.values import UserProfileRecord
 
 NOTICE_CODE = "config.profile.payer_fact_cleared"
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
@@ -30,6 +28,8 @@ _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
 
 def _edit_flag_by_path(operation: PinnedAuthorityOperation) -> dict[str, str]:
     """Map each setup-flow profile path to the question id its CLI flag carries."""
+    from ..application.wizard.catalogue import build_setup_flow
+
     flow = build_setup_flow(operation)
     return {
         question.profile_key: question.id
@@ -45,6 +45,8 @@ def payer_fact_cleared_notices(
     operation: PinnedAuthorityOperation,
 ) -> tuple[Notice, ...]:
     """Return one localized notice per cleared payer-fact path."""
+    from ..domain.user_profile.labels import profile_field_label
+
     flags = _edit_flag_by_path(operation)
     schema = operation.profile_decode_context().schema
     notices: list[Notice] = []
@@ -72,12 +74,17 @@ def drain_payer_fact_migration_notices() -> tuple[Notice, ...]:
     paths = drain_migration_cleared_paths()
     if not paths:
         return ()
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
+
     with bundled_indexed_authority().operation() as operation:
         return payer_fact_cleared_notices(paths, operation=operation)
 
 
 def _gated_modelos(path: str, *, operation: PinnedAuthorityOperation) -> frozenset[str]:
     """Return the modelos whose payer-fact gate reads the profile field at ``path``."""
+    from ..domain.calculations.registry.applicability import iter_modelo_applicability_rules
+    from ..domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
+
     schema = operation.profile_decode_context().schema
     return frozenset(
         str(rule.modelo)
@@ -104,6 +111,8 @@ def pending_payer_fact_notices(
     """
     if record is None:
         return ()
+    from ..application.user_profile.profile_record_repository import ProfileRecordRepository
+
     repository = ProfileRecordRepository.for_current_session(
         record.profile_id,
         profile_decode_context=operation.profile_decode_context(),

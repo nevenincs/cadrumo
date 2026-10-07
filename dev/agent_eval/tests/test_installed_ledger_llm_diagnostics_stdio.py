@@ -50,11 +50,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-    bundled_authority_descriptor_path,
-    bundled_indexed_authority,
-)
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
 from cadrumo.entrypoints.cli.tests.test_ledger_llm_diagnostics import (
     seed_ledger_llm_classified_transactions,

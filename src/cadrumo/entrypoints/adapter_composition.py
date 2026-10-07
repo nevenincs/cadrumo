@@ -1705,8 +1705,8 @@ def profile_adapter_composition(
     from ..application.auth.providers import bind_auth_provider_selector
     from ..application.bucket_event_repository import bind_bucket_event_history_repository_factory
     from ..application.ledger.column_roles import bind_column_role_mapping_resolver
-    from ..application.ledger.confirmation_record import bind_confirmation_record_repository_factory
-    from ..application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
+    from ..application.ledger.confirmation_record_repository import bind_confirmation_record_repository_factory
+    from ..application.ledger.extraction_draft_repository import bind_extraction_draft_repository_factory
     from ..application.ledger.participation_read import bind_transaction_participation_index_repository_factory
     from ..application.ledger.rule_repository import bind_ledger_classification_rule_repository_factory
     from ..application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory

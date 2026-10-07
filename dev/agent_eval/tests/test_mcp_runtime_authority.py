@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityGenerationPin,
     SnapshotGlobalsComponentQuery,
 )
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
@@ -187,7 +188,7 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    source_descriptor = authority_module.bundled_authority_descriptor_path()
+    source_descriptor = bundled_authority_descriptor_path()
     _copy_and_corrupt_published_database(source_descriptor, tmp_path)
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
 

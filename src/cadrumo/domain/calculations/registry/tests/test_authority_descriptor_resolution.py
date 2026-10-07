@@ -8,8 +8,8 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.resources.bundled_data import bundled_path
-from .. import authority as authority_module
-from ..authority import bundled_authority_descriptor_path, published_authority_generation
+from .. import authority_location
+from ..authority_location import bundled_authority_descriptor_path, published_authority_generation
 from ..authority_store import AuthorityDescriptor
 from ..errors import AuthorityDescriptorUnavailableError
 
@@ -72,7 +72,7 @@ def test_absent_packaged_descriptor_refuses_when_no_root_is_configured(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     absent = tmp_path / "packaged" / _DESCRIPTOR_NAME
-    monkeypatch.setattr(authority_module, "_bundled_path", lambda *parts: absent)
+    monkeypatch.setattr(authority_location, "_bundled_path", lambda *parts: absent)
     with override_settings(cadrumo_authority_root=None), pytest.raises(AuthorityDescriptorUnavailableError) as refusal:
         bundled_authority_descriptor_path()
     error = refusal.value

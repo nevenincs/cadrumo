@@ -206,11 +206,11 @@ def _admit_authority_at_startup() -> None:
     parsing has accepted it, so help, a bare group and a parse-time refusal
     write nothing.
     """
+    from ...application.cli_provisioning import admit_cli_authority
     from ...application.profile_preconditions import (
         FormerProductDetectionScope,
         former_product_state_verdict,
     )
-    from ...application.provisioning import admit_cli_authority
     from ...core.config_state_root import FormerProductStateError
     from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
     from .errors import CliRefusedBoundaryError, emit_error_and_exit, project_cli_boundary_error

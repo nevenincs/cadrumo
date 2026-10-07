@@ -237,7 +237,7 @@ def published_verdict_key(*, docs_root: Path, goldens_root: Path | None) -> str:
     Raises:
         SequenceEngineError: When the published authority is not current.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+    from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
     require_current_authority()

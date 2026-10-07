@@ -5,10 +5,12 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+
+if TYPE_CHECKING:
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
 class TransactionCatalogueRepositoryFactory(Protocol):

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 
 from .. import registry_status
 

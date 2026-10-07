@@ -30,6 +30,7 @@ from ....application.user_profile.login_interaction import (
     ProfileLoginInventoryV1,
 )
 from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ... import operation_composition
 from .. import installed_session
 from ..runtime_admission import runtime_login_session
 from ..secret.runtime_login_contracts import (
@@ -402,7 +403,7 @@ def test_installed_exit_mapping_preserves_cleanup_bearing_refusal(
     monkeypatch.setattr(installed_session, "close_active_profile_record_session", release_bootstrap)
     monkeypatch.setattr(installed_session, "close_active_bucket_session", release_bootstrap)
     monkeypatch.setattr(installed_session, "observe_profile_login_inventory", inventory)
-    monkeypatch.setattr(installed_session, "build_production_operation_registry", operation_registry)
+    monkeypatch.setattr(operation_composition, "build_production_operation_registry", operation_registry)
     monkeypatch.setattr(installed_session, "runtime_login_session", refuse_login)
     if attachment is None:
         assert installed_session.run_installed_workbench_session() == installed_session.SESSION_INVENTORY_UNAVAILABLE

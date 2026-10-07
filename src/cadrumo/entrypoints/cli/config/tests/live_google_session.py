@@ -217,7 +217,7 @@ def main() -> None:
     from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
     from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
     from cadrumo.application.runtime.contracts import RuntimeClientHello
-    from cadrumo.domain.calculations.registry.authority import published_authority_generation
+    from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 
     mode = sys.argv[1]
     commands = {

@@ -37,7 +37,12 @@ from ....application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
-from ....application.runtime.operation_access import RuntimeOperationPage, RuntimeOperationResultPage
+from ....application.runtime.operation_access import (
+    RuntimeOperationPage,
+    RuntimeOperationProjected,
+    RuntimeOperationResult,
+    RuntimeOperationResultPage,
+)
 from ....application.runtime.profile_access import RuntimeAccessRefusal, RuntimeRequest
 from ....application.runtime.profile_worker import ProfileWorkerIdentity, ProfileWorkerProjectionPage
 from ....application.runtime.projection_pages import (
@@ -393,6 +398,81 @@ def _profile_view_contracts() -> OperationPublicContractSetV1:
         if registration.contract.definition_id == PROFILE_VIEW_OPERATION_DEFINITION_ID
     )
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,)).public_contract_set
+
+
+@pytest.mark.parametrize("fault", [None, "unknown_field", "invalid_stream", "continuation", "contract_digest"])
+def test_profile_view_result_executes_typed_page_and_contract_validation(fault: str | None) -> None:
+    """The deferred model still admits only its strict canonical page envelope."""
+    contract = _profile_view_contracts().definitions[0]
+    assert contract.result_schema is not None
+    page: dict[str, JsonValue] = {
+        "profile_id": str(_PROFILE_ID),
+        "page_kind": "facts",
+        "outcome": "page",
+        "refusal_code": None,
+        "record_revision": 1,
+        "content_digest": "d" * 64,
+        "setup_state": "incomplete",
+        "schema_version": 1,
+        "valid": False,
+        "cursor": 0,
+        "next_cursor": None,
+        "total_items": 1,
+        "items": [{"kind": "fact", "path": "identity.tax_id", "value": "synthetic"}],
+    }
+    if fault == "unknown_field":
+        page["unexpected"] = True
+    elif fault == "invalid_stream":
+        page["page_kind"] = "issues"
+    elif fault == "continuation":
+        page["next_cursor"] = 1
+    document: dict[str, JsonValue] = {
+        "outcome": "success",
+        "result_projection_version": 1,
+        "result_schema": contract.result_schema.model_dump(mode="json"),
+        "definition_contract_digest": "f" * 64 if fault == "contract_digest" else contract.definition_contract_digest,
+        "projection": page,
+    }
+    requests: list[RuntimeOperationResult] = []
+
+    def reply(request: RuntimeOperationResult, *, deadline: float) -> RuntimeOperationProjected:
+        assert deadline > time.monotonic()
+        requests.append(request)
+        return RuntimeOperationProjected(
+            request_id=request.request_id,
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            operation_id=_OPERATION_ID,
+            projection_kind="result",
+            document=document,
+        )
+
+    client = cast(
+        RuntimeProfileViewFrontend,
+        SimpleNamespace(
+            profile_id=_PROFILE_ID,
+            _connection=SimpleNamespace(operation=reply),
+            _session=lambda: _SESSION_ID,
+            _reply=RuntimeFrontendClient._reply,
+        ),
+    )
+    if fault is None:
+        result = RuntimeProfileViewFrontend.result(
+            client, _OPERATION_ID, terminal_revision=3, contract=contract, deadline=time.monotonic() + 5
+        )
+        assert result.profile_id == _PROFILE_ID
+        assert result.page_kind is ProfileViewPageKind.FACTS
+        assert result.items[0].kind == "fact"
+    else:
+        with pytest.raises(RuntimeRefusalError) as raised:
+            RuntimeProfileViewFrontend.result(
+                client, _OPERATION_ID, terminal_revision=3, contract=contract, deadline=time.monotonic() + 5
+            )
+        assert raised.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert len(requests) == 1
+    assert requests[0].profile_id == _PROFILE_ID
+    assert requests[0].session_id == _SESSION_ID
+    assert requests[0].result.terminal_revision == 3
 
 
 def test_profile_view_terminal_refusal_exposes_registered_refusal_code_without_requesting_result() -> None:

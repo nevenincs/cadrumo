@@ -5,10 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from threading import RLock
+from typing import TYPE_CHECKING
 
-from .....application.runtime.profile_worker import ProfileWorkerIdentity
 from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .bucket_session import BucketSession
+
+if TYPE_CHECKING:
+    from .....application.runtime.profile_worker import ProfileWorkerIdentity
 
 
 @dataclass(frozen=True)

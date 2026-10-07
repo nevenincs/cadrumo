@@ -1,4 +1,4 @@
-use crate::{error::Error, value::Sha256Digest};
+use crate::{component::Cancellation, error::Error, value::Sha256Digest};
 use sha2::{Digest, Sha256};
 use std::{
     fs::{self, File},
@@ -59,10 +59,22 @@ pub(crate) fn digest(path: &Path) -> Result<Sha256Digest, Error> {
 
 /// The caller has admitted the path and checked that the opened descriptor is regular.
 pub(crate) fn digest_opened(file: &mut File) -> Result<Sha256Digest, Error> {
+    digest_reader(file, &Cancellation::default())
+}
+
+/// The descriptor admission remains with the caller. Cancellation cannot interrupt
+/// a blocked operating-system read, but is observed before and after each chunk.
+pub(crate) fn digest_reader(
+    reader: &mut impl Read,
+    cancellation: &Cancellation,
+) -> Result<Sha256Digest, Error> {
     let mut hash = Sha256::new();
     let mut buffer = [0; 65536];
     loop {
-        let n = file.read(&mut buffer)?;
+        cancellation.check()?;
+        let read = reader.read(&mut buffer);
+        cancellation.check()?;
+        let n = read?;
         if n == 0 {
             break;
         }
@@ -75,6 +87,18 @@ pub(crate) const JSON_BYTES_LIMIT: u64 = 16 * 1024 * 1024;
 
 pub(crate) fn json_file<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, Error> {
     Ok(serde_json::from_slice(&json_bytes(path)?)?)
+}
+
+pub(crate) fn json_file_cancellable<T: serde::de::DeserializeOwned>(
+    path: &Path,
+    cancellation: &Cancellation,
+) -> Result<T, Error> {
+    cancellation.check()?;
+    let bytes = json_bytes(path);
+    cancellation.check()?;
+    let parsed = serde_json::from_slice(&bytes?);
+    cancellation.check()?;
+    Ok(parsed?)
 }
 
 pub(crate) fn json_bytes(path: &Path) -> Result<Vec<u8>, Error> {
@@ -130,4 +154,73 @@ pub(crate) fn require_executable(path: &Path) -> Result<(), Error> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod cancellation_tests {
+    use super::*;
+    use std::io::{self, Cursor};
+
+    struct CancellingReader<'a> {
+        cancellation: &'a Cancellation,
+        reads: usize,
+        fail: bool,
+    }
+
+    impl Read for CancellingReader<'_> {
+        fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+            self.reads += 1;
+            assert!(
+                self.reads <= 2,
+                "must not read another chunk after cancellation"
+            );
+            assert_eq!(bytes.len(), 65536);
+            bytes.fill(7);
+            if self.reads == 2 {
+                self.cancellation.cancel();
+                if self.fail {
+                    return Err(io::Error::other("isolated reader failure"));
+                }
+            }
+            Ok(bytes.len())
+        }
+    }
+
+    #[test]
+    fn stream_checks_cancellation_after_a_real_read_boundary_and_preserves_it_over_io_error() {
+        for fail in [false, true] {
+            let cancellation = Cancellation::default();
+            let mut reader = CancellingReader {
+                cancellation: &cancellation,
+                reads: 0,
+                fail,
+            };
+            assert!(matches!(
+                digest_reader(&mut reader, &cancellation),
+                Err(Error::Cancelled)
+            ));
+            assert_eq!(reader.reads, 2);
+        }
+    }
+
+    #[test]
+    fn cancelled_stream_does_not_read_and_uncancelled_stream_hashes_all_chunks() {
+        let cancellation = Cancellation::default();
+        cancellation.cancel();
+        let mut reader = CancellingReader {
+            cancellation: &cancellation,
+            reads: 0,
+            fail: false,
+        };
+        assert!(matches!(
+            digest_reader(&mut reader, &cancellation),
+            Err(Error::Cancelled)
+        ));
+        assert_eq!(reader.reads, 0);
+        let bytes = vec![11u8; 131_073];
+        assert_eq!(
+            digest_reader(&mut Cursor::new(&bytes), &Cancellation::default()).unwrap(),
+            Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes))).unwrap()
+        );
+    }
 }

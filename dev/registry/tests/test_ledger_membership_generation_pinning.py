@@ -14,8 +14,9 @@ from cadrumo.adapters.persistence.profile.tests.published_authority_support impo
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_membership import query_ledger_membership
 from cadrumo.application.modelo.profile_readiness_gate import load_modelo_work_profile
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact, AuthorityEvidenceProjection
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
     minimal_catalogues,

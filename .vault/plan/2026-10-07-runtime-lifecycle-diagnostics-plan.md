@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:7ff2d6c181053fe83162fdc30be323de83fd3933489bca8c48f3c4265a843e95'
+body_hash: 'sha256:4b52e04d2a0d92e71721fdf6c98ff0b97fdce90cc6e615f639056559b31ddb41'
 ---
 
 <!-- RETIRED: S08 -->
@@ -47,10 +47,13 @@ The separate manager session retains its active implementation files. This work 
 - [ ] `S16` - Isolate CLI authority admission and custody bindings from unused registry and worker dependency graphs, preserving validation and measuring paired startup latency; `canonical CLI provisioning and authority location plus all consumers, authority store/artifact/tax identity admission and measured lexical rejection, language and auth provider binding, workflow persistence, confirmation and extraction repository ports and consumers, annotation-only ledger and Modelo repository bindings, worker binding and frontend profile-view client, CLI custody payloads and migration notices, import enrollment, owning tests and paired performance evidence`.
 - [x] `S17` - Remove repeated package-verification filesystem work while preserving complete digest inventory, link refusal and degradation checks, with same-package optimized measurements; `native/application/src/package.rs and private filesystem helpers if required, native/application/tests package integrity fixtures, bounded diagnostic evidence`.
 - [x] `S18` - Stop installed-version verification once newest-complete selection and stable-entry admission are established, preserving bounded enumeration and fallback semantics; `native/application/src/installation.rs, owning installation discovery tests and measured verification counts`.
-- [ ] `S19` - Reuse current-process installed-package admission during manager startup instead of verifying the selected package twice; `native/manager/src/installation.rs, installed.rs, main.rs and owning manager startup tests`.
+- [x] `S19` - Reuse current-process installed-package admission during manager startup instead of verifying the selected package twice; `native/manager/src/installation.rs, installed.rs, main.rs, supervision/environment.rs test-only fixture constructor and owning manager startup tests`.
 - [ ] `S20` - Cancel desktop-owned package discovery during shutdown and settle its worker without launching a manager after close; `native/application package and discovery cancellation, existing Cancellation type, native/desktop/src-tauri/src/manager.rs and owning cancellation tests`.
+- [ ] `S21` - Defer TUI automation contract composition until a requester screen needs it, preserving one validated graph per installed session and measuring avoided startup work; `src/cadrumo/entrypoints/tui/installed_session.py, owning installed-session and requester tests, import and startup evidence`.
 
 ## Parallelization
+
+S21 follows root's consumer trace: installed TUI startup constructs the full production registry before inventory, but its public contracts are consumed only when creating an automation requester screen. Defer that exact construction and its import to the first requester invocation, retaining the resulting immutable contract set only within the same installed-session invocation, as before. Normal inventory, registration and human login must not construct it. Login, human-review and API requester paths must still receive the fully validated same contract set; failures must propagate without partial publication. Root owns the design and review; the authority Sol 6.1 worker owns installed_session.py and its tests after freezing S19. No runtime readiness, permission, schema validation or timeout policy changes.
 
 S20 follows the S17/S18 checkpoints because it touches their verifier paths. Root owns the cancellation design; the native worker implements it using the existing Cancellation signal. Desktop close fences requests, cancels discovery and waits for the actual blocking worker to settle. Directory, candidate and hash-chunk boundaries observe cancellation; fallback must propagate it. This removes abandoned work without changing any timeout or terminating an independent manager/runtime. Individual operating-system filesystem calls are not forcibly interruptible, so cooperative cancellation is not a hard guarantee against hung OS I/O.
 

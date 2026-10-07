@@ -2,6 +2,7 @@
 //! Metadata and hashes establish package consistency, not publisher authenticity.
 use crate::{
     binary::{self, BinaryExpectation},
+    component::Cancellation,
     error::Error,
     filesystem,
     package::{PackageManifest, Readiness},
@@ -137,9 +138,21 @@ impl DiscoveryContract {
     /// Registered entry points are hints; every prefix, complete package and executable
     /// is verified before it can be returned. The newest compatible complete version wins.
     pub fn discover(&self, image: &Path, registered: &[PathBuf]) -> Result<Selection, Error> {
+        self.discover_cancellable(image, registered, &Cancellation::default())
+    }
+
+    /// Cancellation is fatal through prefix and version fallback, not a damaged candidate.
+    pub fn discover_cancellable(
+        &self,
+        image: &Path,
+        registered: &[PathBuf],
+        cancellation: &Cancellation,
+    ) -> Result<Selection, Error> {
+        cancellation.check()?;
         let member = self.manager_member()?;
         let mut prefixes: Vec<PathBuf> = self.local_prefix(image).into_iter().collect();
         for entry in registered {
+            cancellation.check()?;
             if entry.file_name() == Some(Path::new(member.as_str()).as_os_str())
                 && let Some(prefix) = entry.parent()
                 && !prefixes.iter().any(|p| p == prefix)
@@ -149,7 +162,13 @@ impl DiscoveryContract {
         }
         let mut newest: Option<Selection> = None;
         for prefix in prefixes {
-            if let Ok(candidate) = self.inspect(&prefix)
+            cancellation.check()?;
+            let inspected = self.inspect_cancellable(&prefix, cancellation);
+            cancellation.check()?;
+            if matches!(inspected, Err(Error::Cancelled)) {
+                return Err(Error::Cancelled);
+            }
+            if let Ok(candidate) = inspected
                 && newest
                     .as_ref()
                     .is_none_or(|old| candidate.version > old.version)
@@ -157,15 +176,28 @@ impl DiscoveryContract {
                 newest = Some(candidate);
             }
         }
+        cancellation.check()?;
         newest.ok_or_else(|| {
             Error::Incompatible("no complete compatible manager installation".into())
         })
     }
 
     pub fn inspect(&self, prefix: &Path) -> Result<Selection, Error> {
+        self.inspect_cancellable(prefix, &Cancellation::default())
+    }
+
+    pub fn inspect_cancellable(
+        &self,
+        prefix: &Path,
+        cancellation: &Cancellation,
+    ) -> Result<Selection, Error> {
+        cancellation.check()?;
         filesystem::absolute_root(prefix)?;
         let layout = &self.layout;
-        let marker: Marker = filesystem::json_file(&layout.installation.marker.under(prefix))?;
+        let marker: Marker = filesystem::json_file_cancellable(
+            &layout.installation.marker.under(prefix),
+            cancellation,
+        )?;
         if marker.schema != layout.installation.schema
             || marker.application_id != self.installation_identity.application_id
             || marker.channel != self.installation_identity.channel
@@ -183,6 +215,7 @@ impl DiscoveryContract {
         let mut entry_verified = false;
         let mut candidates = Vec::new();
         for (count, entry) in fs::read_dir(&versions)?.enumerate() {
+            cancellation.check()?;
             if count >= layout.installation.maximum_versions {
                 return Err(Error::LimitExceeded);
             }
@@ -197,10 +230,13 @@ impl DiscoveryContract {
         // a ready candidate still count toward the installation's version limit.
         candidates.sort_unstable_by_key(|candidate| std::cmp::Reverse(candidate.0));
         for (number, name, package) in candidates {
+            cancellation.check()?;
             let inspect = || -> Result<_, Error> {
                 filesystem::absolute_root(&package)?;
-                let manifest: VersionManifest =
-                    filesystem::json_file(&layout.files.package_manifest.under(&package))?;
+                let manifest: VersionManifest = filesystem::json_file_cancellable(
+                    &layout.files.package_manifest.under(&package),
+                    cancellation,
+                )?;
                 let target = if layout.platform == "windows-x64" {
                     "windows-x86-64"
                 } else {
@@ -213,11 +249,12 @@ impl DiscoveryContract {
                 {
                     return Err(Error::Incompatible("version identity differs".into()));
                 }
-                let inspected = manifest.package.inspect(
+                let inspected = manifest.package.inspect_cancellable(
                     &package,
                     &layout.files.package_manifest,
                     &layout.platform,
                     layout.abi,
+                    cancellation,
                 )?;
                 if inspected.readiness != Readiness::Ready {
                     return Err(Error::Integrity("incomplete installed version".into()));
@@ -229,16 +266,25 @@ impl DiscoveryContract {
                     .ok_or_else(|| Error::Invalid("manager absent from inventory".into()))?
                     .clone();
                 let manager = member.under(&package);
+                cancellation.check()?;
                 binary::verify(&manager, &digest, expected)?;
+                cancellation.check()?;
                 Ok((manager, digest))
             };
-            let Ok((manager, digest)) = inspect() else {
+            let inspected = inspect();
+            cancellation.check()?;
+            if matches!(inspected, Err(Error::Cancelled)) {
+                return Err(Error::Cancelled);
+            }
+            let Ok((manager, digest)) = inspected else {
                 continue;
             };
             // A stable entry can still contain an older manager's bytes. It must match
             // a complete version; its startup redirects before claiming runtime ownership.
             if !entry_verified {
+                cancellation.check()?;
                 entry_verified = binary::verify(&entrypoint, &digest, expected).is_ok();
+                cancellation.check()?;
             }
             if newest.is_none() {
                 newest = Some(Selection {
@@ -253,10 +299,12 @@ impl DiscoveryContract {
             }
         }
         if !entry_verified {
+            cancellation.check()?;
             return Err(Error::Integrity(
                 "stable manager entry point is missing or modified".into(),
             ));
         }
+        cancellation.check()?;
         newest.ok_or_else(|| Error::Incompatible("no complete compatible installed version".into()))
     }
 }

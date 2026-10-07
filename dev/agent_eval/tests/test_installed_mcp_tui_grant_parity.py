@@ -86,7 +86,7 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
 from cadrumo.entrypoints.runtime.profile_host import RuntimeProfileHost
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp

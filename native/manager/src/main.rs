@@ -64,9 +64,9 @@ fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::
     use cadrumo_manager::{
         background::Background,
         diagnostics::{configure, inspection_failed, stage},
+        installation::DispatchOutcome,
         installed::InstalledRuntime,
         session::{ManagerSession, instance::claim_session},
-        supervision::environment::ManagedLocations,
         windows_lifecycle,
     };
     if stage(
@@ -79,16 +79,19 @@ fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::
         diagnostics.host_outcome(HostStage::JobEscape, HostOutcome::Dispatched);
         return Ok(());
     }
-    if stage(
+    let installation = match stage(
         &diagnostics,
         HostStage::Package,
         ErrorCode::PackageUnavailable,
         Operation::Manager,
         || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?),
     )? {
-        diagnostics.host_outcome(HostStage::Package, HostOutcome::Dispatched);
-        return Ok(());
-    }
+        DispatchOutcome::Dispatched => {
+            diagnostics.host_outcome(HostStage::Package, HostOutcome::Dispatched);
+            return Ok(());
+        }
+        DispatchOutcome::Current(installation) => installation,
+    };
     let Some(_session_lock) = stage(
         &diagnostics,
         HostStage::Instance,
@@ -100,16 +103,11 @@ fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::
         diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
         return Ok(());
     };
-    let locations = stage(
-        &diagnostics,
-        HostStage::Storage,
-        ErrorCode::EnvironmentFailed,
-        Operation::Environment,
-        || ManagedLocations::resolve(&env::current_exe()?),
-    )?;
-    configure(&locations, &diagnostics);
+    diagnostics.host_event(EventKind::StageStarted, HostStage::Storage);
+    diagnostics.host_event(EventKind::StageCompleted, HostStage::Storage);
+    configure(installation.locations(), &diagnostics);
     diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
-    let installed = InstalledRuntime::inspect(&locations)
+    let installed = InstalledRuntime::from_admitted(installation)
         .map_err(|error| inspection_failed(&diagnostics, error))?;
     diagnostics.host_outcome(HostStage::Package, HostOutcome::Ready);
     let session = stage(

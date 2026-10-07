@@ -258,7 +258,7 @@ def config_login(
         machine_secret=machine_secret,
     )
 
-    from ..config_payloads import ConfigLoginResult
+    from .custody_payloads import ConfigLoginResult
 
     result = ConfigLoginResult(
         profile_id=outcome.bucket_id,
@@ -297,7 +297,7 @@ def config_sign_in_status(
     from ....application.operations.registry import OperationFrontendProjection
     from ....application.runtime.sign_in import SignInPresence, SignInStatus
     from ....application.user_profile.profile_pointer import observe_active_profile_pointer
-    from ..config_payloads import ConfigSignInStatusResult
+    from .custody_payloads import ConfigSignInStatusResult
 
     captured = observe_active_profile_pointer()
     status = SignInStatus(presence=SignInPresence.ABSENT)
@@ -356,7 +356,7 @@ def config_logout(
     signed_out = captured.bucket_id
     logged_out_profile = target.label if target is not None else signed_out
 
-    from ..config_payloads import ConfigLogoutResult
+    from .custody_payloads import ConfigLogoutResult
 
     result = ConfigLogoutResult(
         logged_out_profile=logged_out_profile,

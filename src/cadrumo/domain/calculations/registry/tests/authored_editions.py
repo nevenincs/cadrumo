@@ -17,8 +17,9 @@ from pathlib import PurePosixPath
 
 from .....core.resources.bundled_data import bundled_path
 from .....core.text_fold import normalise_corpus_text
-from ..authority import bundled_authority_descriptor_path, bundled_indexed_authority
+from ..authority import bundled_indexed_authority
 from ..authority_artifact import AuthorityComponentKind, ReferenceComponentQuery
+from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
 from ..schema import ModeloRevision
 from ..schema_references import SourceReference

@@ -50,6 +50,21 @@ impl ManagedLocations {
         })
     }
 
+    #[cfg(test)]
+    pub(crate) fn fixture(package: PathBuf, storage: PathBuf) -> io::Result<Self> {
+        Self::from_resolved(
+            Evidence {
+                mode: Mode::Installed,
+                package,
+                checkout: None,
+            },
+            ResolvedRoot {
+                root: storage,
+                source: RootSource::InstalledDefault,
+            },
+        )
+    }
+
     pub fn package_root(&self) -> &Path {
         &self.package
     }

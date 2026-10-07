@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from pydantic import ValidationError
@@ -32,14 +33,6 @@ from ...application.runtime.operation_access import (
     RuntimeOperationSubmitted,
 )
 from ...application.user_profile.access_contracts import AccessDenialCode
-from ...application.user_profile.view_operation import (
-    PROFILE_VIEW_MAX_ITEMS,
-    PROFILE_VIEW_OPERATION_DEFINITION_ID,
-    ProfileViewOperationProjection,
-    ProfileViewOperationRequest,
-    ProfileViewPageKind,
-    ProfileViewRefusalCode,
-)
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.digest import ContentDigest
@@ -48,12 +41,21 @@ from ...domain.user_profile.values import ProfileSetupState
 from .frontend_client_contracts import ProfileViewCollection, RuntimeFrontendRefusedError
 from .frontend_operation_client import RuntimeOperationFrontend
 
+if TYPE_CHECKING:
+    from ...application.user_profile.view_operation import (
+        ProfileViewOperationProjection,
+        ProfileViewOperationRequest,
+        ProfileViewPageKind,
+    )
+
 
 class RuntimeProfileViewFrontend(RuntimeOperationFrontend):
     """Collect only complete page streams pinned to one canonical profile revision."""
 
     def submit(self, payload: ProfileViewOperationRequest, *, deadline: float) -> OperationId:
         """Submit only the registered exact-profile view request."""
+        from ...application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID
+
         if payload.profile_id != self.profile_id:
             raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
         reply = self._reply(
@@ -94,6 +96,8 @@ class RuntimeProfileViewFrontend(RuntimeOperationFrontend):
 
     def observe(self, operation_id: OperationId, *, deadline: float) -> OperationObservationSuccessV1:
         """Read current canonical state; a refusal never counts as completion."""
+        from ...application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID
+
         reply = self._reply(
             self._connection.operation(
                 RuntimeOperationObserve(
@@ -126,6 +130,11 @@ class RuntimeProfileViewFrontend(RuntimeOperationFrontend):
         deadline: float,
     ) -> ProfileViewOperationProjection:
         """Validate a registered result envelope and its typed view page."""
+        from ...application.user_profile.view_operation import (
+            PROFILE_VIEW_OPERATION_DEFINITION_ID,
+            ProfileViewOperationProjection,
+        )
+
         schema = contract.result_schema
         if contract.definition_id != PROFILE_VIEW_OPERATION_DEFINITION_ID or schema is None:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
@@ -180,6 +189,12 @@ class RuntimeProfileViewFrontend(RuntimeOperationFrontend):
         refusal, oversized indivisible item or total deadline discards the
         entire local collection. The caller may explicitly restart.
         """
+        from ...application.user_profile.view_operation import (
+            PROFILE_VIEW_MAX_ITEMS,
+            PROFILE_VIEW_OPERATION_DEFINITION_ID,
+            ProfileViewOperationRequest,
+        )
+
         _require_profile_view_request(page_kinds, max_pages, expected_revision, expected_content_digest)
         deadline = deadline_after(timeout)
         contract = self.contract(PROFILE_VIEW_OPERATION_DEFINITION_ID, deadline=deadline)
@@ -287,6 +302,8 @@ def _profile_view_page_pin(
     expected_content_digest: ContentDigest | None,
 ) -> _ProfileViewPin:
     """Pin the first page or refuse any subsequent revision or shape change."""
+    from ...application.user_profile.view_operation import ProfileViewRefusalCode
+
     current = (
         page.record_revision,
         page.content_digest,

@@ -28,7 +28,7 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.paths import effective_storage_root
-from cadrumo.domain.calculations.registry.authority import published_authority_generation
+from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.adapter_composition import profile_free_adapter_composition
 
 

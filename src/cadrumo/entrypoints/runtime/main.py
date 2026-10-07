@@ -41,7 +41,7 @@ from ...core.config import load_settings, override_settings
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
 from ...core.logging import configure_logging, get_logger
 from ...core.startup_phase_log import startup_phase
-from ...domain.calculations.registry.authority import published_authority_generation
+from ...domain.calculations.registry.authority_location import published_authority_generation
 from .profile_connections import RuntimeProfileConnections
 from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, RuntimeStop, terminate_runtime
 from .supervised_channel import (
