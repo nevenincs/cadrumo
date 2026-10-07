@@ -14,6 +14,7 @@ import textwrap
 import threading
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Final, override
 
 import pytest
@@ -23,6 +24,7 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
 from dev._paths import REPO_ROOT
+from dev.docs import compile_once as _compile_once
 from dev.docs.build import pagefind_index_mode
 from dev.docs.build_paths import docs_site_prefix
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
@@ -36,17 +38,20 @@ from ..docs_delivery_contracts import (
     _REQUIRED_SITE_SEARCH_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
 )
-from ..docs_site_build import _build_language_roots, _clear_apex, _compose_apex, _indexed_roots
+from ..docs_site_build import _clear_apex, _compose_apex, _indexed_roots, _run_site_builds
 from ..docs_site_download import _DOWNLOAD_LATEST_SCHEMA, _DOWNLOAD_LATEST_STATIC_PATH, _refresh_download_latest
 from ..docs_site_languages import (
-    _language_build_environments,
+    TRANSLATED_ROOTS_BUILD,
+    SiteBuild,
     _language_site_url,
     _write_language_entry,
-    language_build_command,
-    language_build_environment,
     localized_languages,
-    root_build_jobs,
     site_build_environment,
+    site_build_jobs,
+    site_builds,
+    source_root_build_command,
+    source_root_build_environment,
+    translated_roots_compile_command,
 )
 from ..docs_site_preflight import _validate_built_site, _validate_language_entry, _validate_language_roots
 from ..docs_static_site import _dry_run
@@ -205,80 +210,178 @@ def test_language_site_url_is_a_subroot_of_the_canonical_docs_url() -> None:
     assert _language_site_url("es") == f"{CANONICAL_DOCS_BASE_URL}/es"
 
 
-def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp_path: Path) -> None:
-    """The localized build command drives dev.docs.build with the user scope, language, and out-dir."""
-    out_dir = tmp_path / "html" / "ca"
-    command = language_build_command("ca", out_dir)
+_SOURCE = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+_TRANSLATED: tuple[str, ...] = tuple(language for language in localized_languages() if language != _SOURCE)
+
+
+def test_the_source_root_is_the_full_scope_build_of_the_driver(tmp_path: Path) -> None:
+    """English keeps the one Sphinx build of its own: strict, full scope, and no catalogue selected."""
+    out_dir = tmp_path / "html" / _SOURCE
+    command = source_root_build_command(out_dir)
+    assert command[1:] == ["-m", "dev.docs.build", "--strict", "--isolated-source", "--out-dir", str(out_dir)]
+
+
+def test_every_translated_root_comes_from_one_strict_compile_given_the_site_address(tmp_path: Path) -> None:
+    """One command writes every translated root, and none of them is built with ``--language``.
+
+    The compile is told the site's address ABOVE the language directories: each
+    root takes its own canonical address and its own site prefix from it, so a
+    per-language address here would be one language's address on every page.
+    """
+    html_root = tmp_path / "html"
+    command = translated_roots_compile_command(html_root, ("es", "ca", "hu"), jobs=6)
     assert command[1:] == [
         "-m",
-        "dev.docs.build",
+        "dev.docs.compile_once",
+        "--html-root",
+        str(html_root),
+        "--build-root",
+        str(tmp_path),
+        "--flavor",
+        "web",
         "--strict",
-        "--isolated-source",
-        "--scope",
-        "user",
-        "--language",
+        "--base-url",
+        CANONICAL_DOCS_BASE_URL,
+        "--jobs",
+        "6",
+        "--languages",
+        "es",
         "ca",
-        "--out-dir",
-        str(out_dir),
+        "hu",
     ]
+    assert "--language" not in command
 
 
-# Each stand-in root records the storage root it was given, then waits until
-# every root has started: roots built one after another never all start, so the
-# wait times out and the root fails. ``ca`` then fails on purpose.
-_ROOT_STAND_IN = textwrap.dedent(
+def test_the_compile_reads_the_publishers_command_as_the_publisher_means_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The command is read back through the compile's own argument parser.
+
+    Asserting the flags through the parser that consumes them is what keeps a
+    renamed or dropped flag from passing: the compile would write the English
+    root over the full-scope one, or every root without an address, while a
+    comparison of raw strings went on agreeing with itself.
+    """
+    html_root = tmp_path / "html"
+    command = translated_roots_compile_command(html_root, _TRANSLATED, jobs=3)
+    recorded: dict[str, object] = {}
+    named: list[str] = []
+
+    def record(written_under: Path, *, languages: tuple[str, ...] | None = None, **settings: object) -> object:
+        recorded.update(settings, html_root=written_under)
+        named.extend(languages or ())
+        return SimpleNamespace(
+            languages=localized_languages(), roots=dict.fromkeys(named), seconds=0.0, html_root=written_under
+        )
+
+    monkeypatch.setattr(_compile_once, "compile_language_roots", record)
+    monkeypatch.delenv(SEQUENCE_CHECK_SKIP_ENV, raising=False)
+
+    assert _compile_once.main(command[3:]) == 0
+    assert recorded["html_root"] == html_root
+    assert recorded["build_root"] == tmp_path
+    assert recorded["flavor"] == "web"
+    assert recorded["strict"] is True
+    assert recorded["base_url"] == CANONICAL_DOCS_BASE_URL
+    assert recorded["jobs"] == 3
+    assert tuple(named) == _TRANSLATED
+    assert _SOURCE not in named
+
+
+def test_two_builds_write_the_site_however_many_languages_it_publishes(tmp_path: Path) -> None:
+    """A language added to the site adds text to the one compile, not a build to the publish."""
+    builds = site_builds(tmp_path / "html")
+
+    assert [build.name for build in builds] == [_SOURCE, TRANSLATED_ROOTS_BUILD]
+    assert builds[0].languages == (_SOURCE,)
+    assert builds[1].languages == _TRANSLATED
+    assert len(_TRANSLATED) >= 3, "the fixture no longer proves that several languages share one build"
+    source_jobs, compile_jobs = site_build_jobs(os.cpu_count() or 1, translated=True)
+    assert builds[0].environment["CADRUMO_DOCS_JOBS"] == str(source_jobs)
+    assert builds[1].command[builds[1].command.index("--jobs") + 1] == str(compile_jobs)
+
+
+# Each stand-in build marks that it started, then waits until every build has
+# started: builds run one after another never all start, so the wait times out
+# and the build fails. It then writes a root for each language it was given,
+# recording the storage root it ran under.
+_BUILD_STAND_IN = textwrap.dedent(
     """
     import os, pathlib, sys, time
-    out = pathlib.Path(sys.argv[1])
-    started = out.parent / "started"
+    html_root, expected, outcome = pathlib.Path(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
+    languages = sys.argv[4:]
+    started = html_root.parent / "started"
     started.mkdir(parents=True, exist_ok=True)
-    (started / out.name).touch()
+    (started / languages[0]).touch()
     deadline = time.monotonic() + 60
-    while len(list(started.iterdir())) < int(sys.argv[2]):
+    while len(list(started.iterdir())) < expected:
         if time.monotonic() > deadline:
             sys.exit(9)
         time.sleep(0.05)
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "storage.txt").write_text(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"], encoding="utf-8")
-    (out / "jobs.txt").write_text(os.environ["CADRUMO_DOCS_JOBS"], encoding="utf-8")
-    print(f"built {out.name}")
-    sys.exit(3 if out.name == "ca" else 0)
+    for language in languages:
+        out = html_root / language
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "storage.txt").write_text(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"], encoding="utf-8")
+        if outcome == "indexes":
+            (out / "pagefind").mkdir()
+    print(f"built {' '.join(languages)}")
+    sys.exit(3 if outcome == "fails" else 0)
     """,
 )
 
 
-def test_the_language_roots_build_at_once_each_with_its_own_storage_and_every_failure_named(
+def _stand_in_builds(
+    *, translated_outcome: str = "passes", translated_writes: tuple[str, ...] = _TRANSLATED
+) -> Callable[[Path], tuple[SiteBuild, ...]]:
+    """Return the publish's two builds with a small real command in place of each Sphinx run."""
+
+    def builds(html_root: Path) -> tuple[SiteBuild, ...]:
+        def command(outcome: str, languages: tuple[str, ...]) -> list[str]:
+            return [sys.executable, "-c", _BUILD_STAND_IN, str(html_root), "2", outcome, *languages]
+
+        return (
+            SiteBuild(name=_SOURCE, languages=(_SOURCE,), command=command("passes", (_SOURCE,)), environment={}),
+            SiteBuild(
+                name=TRANSLATED_ROOTS_BUILD,
+                languages=_TRANSLATED,
+                command=command(translated_outcome, translated_writes),
+                environment={},
+            ),
+        )
+
+    return builds
+
+
+def test_the_site_builds_run_at_once_each_with_its_own_storage_and_every_failure_named(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Every root runs concurrently, in its own storage root, and a failed root stops the publish by name."""
+    """Both builds run concurrently, each in its own storage root, and a failed build stops the publish by name."""
     html_root = tmp_path / "html"
-    languages = localized_languages()
 
-    def stand_in(_language: str, out_dir: Path) -> list[str]:
-        return [sys.executable, "-c", _ROOT_STAND_IN, str(out_dir), str(len(languages))]
+    with pytest.raises(SystemExit, match=r"failed for translated roots \(3\); refusing to publish") as refused:
+        _run_site_builds(REPO_ROOT, html_root, builds_for=_stand_in_builds(translated_outcome="fails"))
 
-    with pytest.raises(SystemExit, match=r"failed for ca \(3\); refusing to publish") as refused:
-        _build_language_roots(REPO_ROOT, html_root, command_for=stand_in)
-
-    assert "9)" not in str(refused.value), "the roots did not all run at once"
-    storage_roots = {(html_root / language / "storage.txt").read_text(encoding="utf-8") for language in languages}
-    assert len(storage_roots) == len(languages)
-    expected_jobs = root_build_jobs(languages, os.cpu_count() or 1)
-    for language in languages:
-        assert (html_root / language / "jobs.txt").read_text(encoding="utf-8") == expected_jobs[language]
+    assert "9)" not in str(refused.value), "the builds did not run at once"
+    storage = {
+        language: (html_root / language / "storage.txt").read_text(encoding="utf-8")
+        for language in localized_languages()
+    }
+    assert len({storage[language] for language in _TRANSLATED}) == 1, "one compile ran under more than one storage root"
+    assert storage[_SOURCE] != storage[_TRANSLATED[0]], "the two builds shared a storage root"
     output = capsys.readouterr().out
-    for language in languages:
-        assert f"built {language}" in output
+    assert f"built {_SOURCE}" in output
+    assert f"built {' '.join(_TRANSLATED)}" in output
 
 
 def test_a_previous_publishs_per_root_index_is_removed_before_the_build(tmp_path: Path) -> None:
     """A root kept between publishes must not carry last release's index.
 
-    The roots survive a publish for their Sphinx environment, and a build that
-    writes no index of its own clears nothing. An index left inside a root would
-    upload as current and answer a reader with the previous release's site,
-    while every check stayed green because nothing asks a root for an index.
+    The source root survives a publish for its Sphinx environment, and a build
+    that writes no index of its own clears nothing. An index left inside a root
+    would upload as current and answer a reader with the previous release's
+    site, while every check stayed green because nothing asks a root for an
+    index.
     """
     html_root = tmp_path / "html"
     languages = localized_languages()
@@ -287,14 +390,24 @@ def test_a_previous_publishs_per_root_index_is_removed_before_the_build(tmp_path
         stale.mkdir(parents=True)
         (stale / "es_stale.pf_index").write_bytes(b"last release")
 
-    def stand_in(_language: str, out_dir: Path) -> list[str]:
-        return [sys.executable, "-c", _ROOT_STAND_IN, str(out_dir), str(len(languages))]
-
-    with pytest.raises(SystemExit, match="refusing to publish"):
-        _build_language_roots(REPO_ROOT, html_root, command_for=stand_in)
+    _run_site_builds(REPO_ROOT, html_root, builds_for=_stand_in_builds())
 
     for language in languages:
         assert not (html_root / language / "pagefind").exists(), f"the {language!r} root kept a stale index"
+
+
+def test_a_build_that_succeeds_without_writing_one_of_its_roots_stops_the_publish(tmp_path: Path) -> None:
+    """A compile that carried fewer languages than the site publishes must not publish a site missing one."""
+    missing = _TRANSLATED[-1]
+
+    with pytest.raises(SystemExit, match=rf"wrote no root for {missing}; refusing to publish"):
+        _run_site_builds(REPO_ROOT, tmp_path / "html", builds_for=_stand_in_builds(translated_writes=_TRANSLATED[:-1]))
+
+
+def test_a_root_that_comes_out_of_its_build_with_an_index_stops_the_publish(tmp_path: Path) -> None:
+    """No root indexes itself, whichever build wrote it: the site's one index is at its apex."""
+    with pytest.raises(SystemExit, match="holding a search index of their own"):
+        _run_site_builds(REPO_ROOT, tmp_path / "html", builds_for=_stand_in_builds(translated_outcome="indexes"))
 
 
 def test_the_one_index_covers_every_root_at_its_served_address(tmp_path: Path) -> None:
@@ -317,65 +430,68 @@ def test_the_one_index_covers_every_root_at_its_served_address(tmp_path: Path) -
 def test_the_publisher_produces_its_roots_in_one_place(tmp_path: Path) -> None:
     """The build reaches its roots through one producer, and consumes what it returns.
 
-    The producer is about to be replaced: the roots will be composed from one
-    stored structure plus each language's text instead of built per language.
-    That is a change to this one function only as long as nothing downstream
-    reaches for the roots itself, which is what this pins.
+    How the roots are produced has already changed once, from one build per
+    language to one compile for every translated root. It stayed a change to
+    this one function because nothing downstream reaches for the roots itself,
+    which is what this pins.
     """
     calls = _direct_calls(_docs_site_build._build_site_roots)
 
     assert calls.index("_produce_language_roots") < calls.index("_index_site") < calls.index("_compose_apex")
-    assert "_build_language_roots" not in calls, "the build bypasses its own root producer"
+    assert "_run_site_builds" not in calls, "the build bypasses its own root producer"
     produced = _direct_calls(_docs_site_build._produce_language_roots)
-    assert "_build_language_roots" in produced, "the root producer no longer produces the roots"
+    assert "_run_site_builds" in produced, "the root producer no longer produces the roots"
 
 
 @pytest.mark.parametrize("cpus", [1, 2, 4, 12, 64])
-def test_concurrent_roots_share_the_cpus_the_full_scope_root_taking_half(cpus: int) -> None:
-    """The roots never fork more workers than CPUs between them once each has one."""
-    languages = localized_languages()
-    jobs = {language: int(count) for language, count in root_build_jobs(languages, cpus).items()}
+def test_the_two_builds_share_the_cpus_the_full_scope_root_taking_half(cpus: int) -> None:
+    """The builds never fork more workers than CPUs between them once each has one."""
+    source_jobs, compile_jobs = site_build_jobs(cpus, translated=True)
 
-    assert set(jobs) == set(languages)
-    assert min(jobs.values()) >= 1
-    assert sum(jobs.values()) <= max(cpus, len(languages))
-    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
-    assert all(jobs[source] >= count for count in jobs.values())
-    if cpus >= 2 * (len(languages) - 1):
-        assert jobs[source] == cpus // 2
+    assert source_jobs >= 1
+    assert compile_jobs >= 1
+    assert source_jobs + compile_jobs <= max(cpus, 2)
+    if cpus >= 2:
+        assert source_jobs == cpus // 2
+        assert compile_jobs == cpus - cpus // 2
+    assert site_build_jobs(cpus, translated=False) == (cpus, 0)
 
 
-def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:
-    """Each root build carries its own base URL, its site prefix, and no index of its own."""
-    env = language_build_environment("hu", check_sequences=True)
-    assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
+def test_the_source_root_environment_points_the_base_url_at_its_own_root() -> None:
+    """The source root's build carries its own base URL, its site prefix, and no index of its own."""
+    env = source_root_build_environment(check_sequences=True)
+    assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/{_SOURCE}"
     assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "none"
     assert env["CADRUMO_DOCS_JOBS"] == "auto"
 
 
-@pytest.mark.parametrize("language", localized_languages())
-def test_every_root_declares_the_directory_it_is_served_under(language: str) -> None:
-    """Each root's pages carry their own directory as the site prefix.
+def test_the_source_root_declares_the_directory_it_is_served_under() -> None:
+    """The source root's pages carry their own directory as the site prefix.
 
     This is what makes a page resolve the site's one index one level up from its
     own root, and what completes a shared record's destination inside the
     language being read. Read through :func:`docs_site_prefix` -- the build's own
-    resolver -- so a value the build would refuse cannot pass here.
+    resolver -- so a value the build would refuse cannot pass here. The
+    translated roots take theirs from the compile, which derives every
+    language's prefix from the site address it is given.
     """
-    environment = language_build_environment(language, check_sequences=False)
+    environment = source_root_build_environment(check_sequences=False)
 
-    assert docs_site_prefix(environment) == f"{language}/"
+    assert docs_site_prefix(environment) == f"{_SOURCE}/"
 
 
 def test_the_site_pins_the_record_injected_contract_and_no_root_indexes_itself() -> None:
     """The one index is record-injected; the roots that feed it write no index at all.
 
     The deployed contract is ``full`` for the SITE, which is the environment the
-    one index pass resolves its injector from, and ``none`` for every root,
-    because the site's index spans them all and a root that indexed itself would
-    write one the served site never loads. Both are read through
+    one index pass resolves its injector from, and ``none`` for the source root,
+    because the site's index spans every root and a root that indexed itself
+    would write one the served site never loads. Both are read through
     :func:`pagefind_index_mode` - the build's own resolver - rather than compared
     as raw strings, so this pins the contract the build will actually select.
+    The translated roots are written by the compile, which pins its own
+    selectors; the publish refuses any root that comes out of its build holding
+    an index, whichever build wrote it.
 
     An ambient ``pages`` in the publishing session must not narrow the site's
     contract, which is why the deploy layer pins the key explicitly instead of
@@ -385,48 +501,46 @@ def test_the_site_pins_the_record_injected_contract_and_no_root_indexes_itself()
 
     assert pagefind_index_mode(site_build_environment(base_environment={})) == "full"
     assert pagefind_index_mode(site_build_environment(base_environment=hostile_base)) == "full"
-    for language in localized_languages():
-        assert pagefind_index_mode(language_build_environment(language, check_sequences=False)) == "none"
+    assert pagefind_index_mode(source_root_build_environment(check_sequences=False)) == "none"
 
 
-def test_exactly_one_site_root_runs_the_cli_sequence_goldens_check() -> None:
+def test_exactly_one_site_build_runs_the_cli_sequence_goldens_check(tmp_path: Path) -> None:
     """The deploy pays for the goldens check once, and never zero times.
 
     The check's subprocess scrubs every ``CADRUMO_*`` key and pins English, so
-    the four roots cannot disagree and running it per-root buys four identical
+    the two builds cannot disagree and running it in both buys two identical
     answers. Read through :func:`should_check_sequences` - the build's own
     resolver - so this pins the behaviour the build will select rather than a
     key that merely looks right.
     """
-    environments = _language_build_environments()
-    checking = [language for language, env in environments if SEQUENCE_CHECK_SKIP_ENV not in env]
+    builds = site_builds(tmp_path / "html")
+    checking = [build.name for build in builds if SEQUENCE_CHECK_SKIP_ENV not in build.environment]
 
-    assert len(environments) == len(localized_languages())
-    assert len(checking) == 1
-    for _language, env in environments:
-        with scoped_env_var(SEQUENCE_CHECK_SKIP_ENV, env.get(SEQUENCE_CHECK_SKIP_ENV)):
-            assert should_check_sequences() is (SEQUENCE_CHECK_SKIP_ENV not in env)
+    assert checking == [_SOURCE]
+    for build in builds:
+        with scoped_env_var(SEQUENCE_CHECK_SKIP_ENV, build.environment.get(SEQUENCE_CHECK_SKIP_ENV)):
+            assert should_check_sequences() is (SEQUENCE_CHECK_SKIP_ENV not in build.environment)
 
 
-def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses() -> None:
-    """Losing the check on every root must stop the publish, not pass quietly.
+def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses(tmp_path: Path) -> None:
+    """Losing the check in every build must stop the publish, not pass quietly.
 
-    Skipping the repeats is only sound because one root still runs it. A
-    refactor that drops that root would leave the deploy publishing a site
+    Skipping the repeat is only sound because one build still runs it. A
+    refactor that drops it there would leave the deploy publishing a site
     whose CLI sequences were never checked against their goldens -- and would
     look exactly like a successful build.
     """
     with (
         _replacing(
             _docs_site_languages,
-            "language_build_environment",
-            lambda language, *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
+            "source_root_build_environment",
+            lambda *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
         ),
         pytest.raises(SystemExit) as refusal,
     ):
-        _language_build_environments()
+        site_builds(tmp_path / "html")
 
-    assert "exactly one site root" in str(refusal.value)
+    assert "exactly one site build" in str(refusal.value)
 
 
 def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> None:
@@ -588,7 +702,7 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
         f"the publish no longer builds, then validates, then uploads: {calls}"
     )
     inlined = sorted(
-        {"_build_language_roots", "_write_language_entry", "_validate_language_entry", "_validate_language_roots"}
+        {"_run_site_builds", "_write_language_entry", "_validate_language_entry", "_validate_language_roots"}
         & set(calls)
     )
     assert not inlined, f"the publish re-inlines {inlined} instead of sharing the dry run's composition"

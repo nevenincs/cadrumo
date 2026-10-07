@@ -18,7 +18,7 @@ import pytest
 from ...deploy import docs_delivery_activation
 from ..docs_delivery_contracts import _CI_MARKERS, DELIVERY_CREDENTIAL_ENV
 from ..docs_delivery_policy import _require_authorized_publish_environment
-from ..docs_site_languages import language_build_command, site_build_environment
+from ..docs_site_languages import site_build_environment, translated_roots_compile_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -87,13 +87,13 @@ def test_the_build_path_carries_no_automation_conditional() -> None:
     deploy_keys = ("CADRUMO_DOCS_BASE_URL", "CADRUMO_DOCS_JOBS", "CADRUMO_DOCS_PAGEFIND_MODE")
 
     local_environment = {key: site_build_environment(base_environment={})[key] for key in deploy_keys}
-    local_command = language_build_command("es", Path("out"))
+    local_command = translated_roots_compile_command(Path("out"), ("es",), jobs=2)
 
     automated_base = {"CI": "true", "GITHUB_ACTIONS": "true", **_CREDENTIALS}
     automated_environment = {key: site_build_environment(base_environment=automated_base)[key] for key in deploy_keys}
 
     assert automated_environment == local_environment
-    assert language_build_command("es", Path("out")) == local_command
+    assert translated_roots_compile_command(Path("out"), ("es",), jobs=2) == local_command
 
 
 def test_a_cutover_publish_refuses_every_automated_run(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:

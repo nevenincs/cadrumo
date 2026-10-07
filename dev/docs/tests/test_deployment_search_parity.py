@@ -69,10 +69,11 @@ from dev.deploy.docs_delivery_contracts import CANONICAL_DOCS_BASE_URL, MIRROR_D
 from dev.deploy.docs_delivery_probe import public_delivery_checks
 from dev.deploy.docs_site_build import _indexed_roots
 from dev.deploy.docs_site_languages import (
-    language_build_command,
-    language_build_environment,
     localized_languages,
     site_build_environment,
+    source_root_build_command,
+    source_root_build_environment,
+    translated_roots_compile_command,
 )
 from dev.docs.build_paths import docs_html_root
 
@@ -340,25 +341,25 @@ def test_deploy_environment_resolves_the_record_injector() -> None:
     but not sufficient, which is why the artefact tests below are the real gate.
 
     Both halves are asserted because they are one decision. The site has ONE
-    index, built over every root once they are all built, so the environment
-    that index pass resolves its injector from must select ``full`` -- and each
+    index, built over every root once they all exist, so the environment that
+    index pass resolves its injector from must select ``full`` -- and the source
     ROOT's own build must select ``none``, because a root that indexed itself
     would write an index the served site never loads and would restore exactly
     the per-root splitting the one index removed. Asserting only the first would
-    leave that regression unmeasured.
+    leave that regression unmeasured. The translated roots are written by the
+    one compile, which pins its own selectors, and the publish refuses any root
+    that comes out of its build holding an index.
     """
     assert resolve_record_injector(_REPO_ROOT, site_build_environment(base_environment={})) is not None
-    for language in localized_languages():
-        # The cli-sequence goldens gate is irrelevant to the index contract and
-        # its verdict cannot vary by root, so these probes take the documented
-        # opt-out rather than paying for it once per language.
-        environment = language_build_environment(language, check_sequences=False)
-        assert pagefind_index_mode(environment) == "none", (
-            f"root {language!r} would write its own search index; the site has one, at its apex"
-        )
-        assert resolve_record_injector(_REPO_ROOT, environment) is None, (
-            f"root {language!r} would inject the record corpus into an index of its own"
-        )
+    # The cli-sequence goldens gate is irrelevant to the index contract, so this
+    # probe takes the documented opt-out rather than paying for it.
+    environment = source_root_build_environment(check_sequences=False)
+    assert pagefind_index_mode(environment) == "none", (
+        "the source root would write its own search index; the site has one, at its apex"
+    )
+    assert resolve_record_injector(_REPO_ROOT, environment) is None, (
+        "the source root would inject the record corpus into an index of its own"
+    )
 
 
 def test_deployed_index_carries_every_decided_record_kind(published_site: _PublishedSite) -> None:
@@ -703,29 +704,30 @@ def test_every_reader_language_recalls_a_casilla_by_its_declared_localized_terms
 
 #: The translated roots only. The deploy language set carries the source
 #: language too, but English is the msgid source with no catalogue to select,
-#: so it is deliberately built WITHOUT ``--language`` -- asserting the flag for
-#: it would gate the opposite of the decided behaviour.
+#: and it alone has a Sphinx build of its own.
 _TRANSLATED_LANGUAGES: tuple[str, ...] = tuple(
     language for language in localized_languages() if language != _docs_i18n.DEFAULT_SOURCE_LANGUAGE
 )
 
 
-@pytest.mark.parametrize("language", _TRANSLATED_LANGUAGES)
-def test_localized_root_command_and_env_agree_on_the_language(language: str) -> None:
-    """Pin the seam this gate composes: ``--language <lang>`` becomes the build language.
+def test_the_translated_roots_are_named_to_one_compile_and_built_by_no_language_flag() -> None:
+    """Pin the seam this gate composes against how the publisher now produces a translated root.
 
-    The publisher passes the language on the command line and the build driver
-    turns it into ``CADRUMO_DOCS_LANGUAGE``, which both ``conf.py`` (page
-    language) and the record injector (index language) read. This gate composes
-    that key directly, so both ends are pinned here: drop the flag from the
-    deploy command, or stop resolving the key into a build language, and this
-    fails rather than letting the composition quietly stand for nothing.
+    The fixture roots here are built per language, through ``--language``, which
+    the build driver turns into ``CADRUMO_DOCS_LANGUAGE`` for ``conf.py`` and the
+    record injector; that resolution is pinned below because the fixture stands
+    on it. The publisher no longer builds a translated root that way: it names
+    every translated language to ONE compile. So the deploy command must carry
+    exactly the translated set and no ``--language``, or the site would be
+    produced one build per language again while this gate went on passing.
     """
-    command = language_build_command(language, Path("out"))
-    assert "--language" in command, f"the {language!r} deploy command no longer passes --language: {command}"
-    assert command[command.index("--language") + 1] == language
+    command = translated_roots_compile_command(Path("out"), _TRANSLATED_LANGUAGES, jobs=1)
 
-    assert docs_build_language({"CADRUMO_DOCS_LANGUAGE": language}) == OutputLanguage(language)
+    assert "--language" not in command, f"a translated root is built on its own again: {command}"
+    assert tuple(command[command.index("--languages") + 1 :]) == _TRANSLATED_LANGUAGES
+
+    for language in _TRANSLATED_LANGUAGES:
+        assert docs_build_language({"CADRUMO_DOCS_LANGUAGE": language}) == OutputLanguage(language)
     assert docs_build_language({}) == OutputLanguage.EN
 
 
@@ -738,7 +740,7 @@ def test_the_source_language_root_is_built_without_a_language_flag() -> None:
     tree that only this root carries -- so the omission is load-bearing, not an
     oversight, and a future edit that "fixes" it by adding the flag fails here.
     """
-    command = language_build_command(_docs_i18n.DEFAULT_SOURCE_LANGUAGE, Path("out"))
+    command = source_root_build_command(Path("out"))
 
     assert "--language" not in command, f"the source-language root must not select a catalogue: {command}"
     assert "--scope" not in command, f"the source-language root must keep the full scope: {command}"

@@ -1,11 +1,13 @@
-"""Construct isolated per-language build environments and the language entry."""
+"""Construct the builds that write the published roots, and the language entry."""
 
 from __future__ import annotations
 
 import os
 import sys
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
@@ -23,7 +25,7 @@ def site_build_environment(*, base_environment: Mapping[str, str] | None = None)
     alone. This is the SITE's contract, and the site has one index -- so this is
     the environment the one index pass resolves its injector from
     (:func:`~dev.deploy.docs_site_build._index_site`), while one root's own
-    build narrows it to ``none`` (:func:`language_build_environment`) because a
+    build narrows it to ``none`` (:func:`source_root_build_environment`) because a
     root does not index itself. It is pinned explicitly rather than left to the
     build default so an ambient ``CADRUMO_DOCS_PAGEFIND_MODE`` in the
     publishing session cannot narrow the shipped search contract — ``base`` is
@@ -68,36 +70,66 @@ def _language_site_url(language: str) -> str:
     return f"{CANONICAL_DOCS_BASE_URL}/{language}"
 
 
-def language_build_command(language: str, out_dir: Path) -> list[str]:
-    """Return the build-driver command for one site root.
+def source_root_build_command(out_dir: Path) -> list[str]:
+    """Return the build-driver command for the source-language root.
 
-    Reuses the ``dev.docs.build`` driver's flags rather than duplicating build
-    logic. English is built WITHOUT ``--language``: it is the msgid source, so
-    it has no catalogue to select, and passing the flag would force the user
-    scope and drop the API autodoc tree. It therefore keeps the full scope and
-    carries ``api/`` inside its own root, while every translated root is a
-    strict user-scope build of the operator surface. Every root reads its own
-    copy of the sources (``--isolated-source``), because the roots build at the
-    same time and each renders its generated pages in its own language.
+    English is the one root with a Sphinx build of its own, because it is the
+    one root that carries the API reference: it is built at the full scope and
+    WITHOUT ``--language``, which would select a catalogue the msgid source
+    does not have and force the user scope. It reads its own copy of the
+    sources (``--isolated-source``), because the compile of the translated
+    roots runs at the same time and renders its generated pages itself.
     """
-    command = [sys.executable, "-m", "dev.docs.build", "--strict", "--isolated-source"]
-    if language == _docs_i18n.DEFAULT_SOURCE_LANGUAGE:
-        command += ["--out-dir", str(out_dir)]
-        return command
-    command += ["--scope", "user", "--language", language, "--out-dir", str(out_dir)]
-    return command
+    return [sys.executable, "-m", "dev.docs.build", "--strict", "--isolated-source", "--out-dir", str(out_dir)]
 
 
-def language_build_environment(language: str, *, check_sequences: bool) -> dict[str, str]:
-    """Return the deploy build environment for one published site root.
+def translated_roots_compile_command(html_root: Path, languages: Sequence[str], *, jobs: int) -> list[str]:
+    """Return the ONE compile that writes every translated root.
+
+    The translated roots are not built one by one: the documentation is
+    compiled once, strictly, at the user scope, and each language's root is
+    composed from the shared structure and that language's text. The compile is
+    given the site's address above the language directories, from which every
+    root takes its own canonical address and its own site prefix, and it writes
+    no search index, because the site has one and it is built over every root
+    afterwards (:func:`~dev.deploy.docs_site_build._index_site`).
+
+    Args:
+        html_root: The composed HTML root; each language's root is written at
+            its own code beneath it.
+        languages: The roots to write. The source-language root is left out,
+            because its own full-scope build writes it.
+        jobs: How many workers the compile may read with.
+    """
+    return [
+        sys.executable,
+        "-m",
+        "dev.docs.compile_once",
+        "--html-root",
+        str(html_root),
+        "--build-root",
+        str(html_root.parent),
+        "--flavor",
+        "web",
+        "--strict",
+        "--base-url",
+        CANONICAL_DOCS_BASE_URL,
+        "--jobs",
+        str(jobs),
+        "--languages",
+        *languages,
+    ]
+
+
+def source_root_build_environment(*, check_sequences: bool) -> dict[str, str]:
+    """Return the deploy build environment for the source-language root.
 
     The shared deployment environment (parallel workers) with the canonical base
-    URL pointed at the language's own root so the per-language sitemap and
-    canonical/OpenGraph URLs are correct, and two keys that place this root in a
-    site it does not own alone:
+    URL pointed at the root's own directory so its canonical/OpenGraph URLs are
+    correct, and two keys that place this root in a site it does not own alone:
 
     - ``CADRUMO_DOCS_PAGEFIND_MODE=none``, because the site has ONE search index
-      and it is built over every root once they are all built
+      and it is built over every root once they all exist
       (:func:`~dev.deploy.docs_site_build._index_site`). A root that indexed
       itself would write a second index the served site never loads, addressed
       to its own root rather than to the apex.
@@ -106,63 +138,134 @@ def language_build_environment(language: str, *, check_sequences: bool) -> dict[
       own root, and what completes a shared record's destination inside the
       language being read.
 
-    ``check_sequences`` selects whether this root runs the cli-sequence goldens
-    gate. The check's verdict cannot vary by root -- its subprocess scrubs every
-    ``CADRUMO_*`` key and pins English output -- so the four roots produce four
-    identical answers for four times the cost. One root runs it and the rest set
-    the documented opt-out; which root is decided by
-    :func:`_language_build_environments`, never here.
+    ``check_sequences`` selects whether this build runs the cli-sequence goldens
+    gate; which build of the publish runs it is decided by :func:`site_builds`,
+    never here.
     """
+    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
     environment = {
         **site_build_environment(),
-        "CADRUMO_DOCS_BASE_URL": _language_site_url(language),
+        "CADRUMO_DOCS_BASE_URL": _language_site_url(source),
         "CADRUMO_DOCS_PAGEFIND_MODE": "none",
-        DOCS_SITE_PREFIX_ENV: language,
+        DOCS_SITE_PREFIX_ENV: source,
     }
     if not check_sequences:
         environment[SEQUENCE_CHECK_SKIP_ENV] = "1"
     return environment
 
 
-def root_build_jobs(languages: Sequence[str], cpus: int) -> dict[str, str]:
-    """Share one machine's CPUs between site roots that build at the same time.
+def translated_roots_compile_environment(*, check_sequences: bool) -> dict[str, str]:
+    """Return the environment the one compile of the translated roots runs under.
 
-    Each root left at ``auto`` forks a worker per CPU, so four roots ran four
-    times as many workers as CPUs; every full-scope worker imports the whole
+    The compile pins every documentation selector itself, from its own
+    arguments, so nothing of the site is said here a second time. What it does
+    read from its caller is whether the cli-sequence goldens gate runs.
+    """
+    environment = dict(os.environ)
+    environment.pop(SEQUENCE_CHECK_SKIP_ENV, None)
+    if not check_sequences:
+        environment[SEQUENCE_CHECK_SKIP_ENV] = "1"
+    return environment
+
+
+@dataclass(frozen=True)
+class SiteBuild:
+    """One of the builds a publish runs at the same time, and the roots it writes.
+
+    Attributes:
+        name: What the build is called in the publish's output.
+        languages: The site roots this build writes.
+        command: The build's command line.
+        environment: The environment it runs under, before its own storage
+            root is added.
+    """
+
+    name: str
+    languages: tuple[str, ...]
+    command: list[str]
+    environment: dict[str, str]
+
+
+#: The build that writes every translated root, as the publish's output names it.
+TRANSLATED_ROOTS_BUILD: Final[str] = "translated roots"
+
+
+def site_build_jobs(cpus: int, *, translated: bool) -> tuple[int, int]:
+    """Share one machine's CPUs between the two builds a publish runs at the same time.
+
+    Each build left at ``auto`` forks a worker per CPU, so concurrent builds ran
+    more workers than CPUs; every full-scope worker imports the whole
     application, and the English build's workers died mid-read. The full-scope
-    source root carries more than ten times the pages of a translated root, so
-    it takes half the CPUs and the translated roots share the rest. Every root
-    gets at least one worker, so on a machine with fewer CPUs than that needs,
-    the full-scope root yields its half first.
+    source root carries more than ten times the pages of the user scope the
+    compile reads, so it takes half the CPUs and the compile takes the rest,
+    however many languages the compile carries. Each build gets at least one
+    worker.
+
+    Args:
+        cpus: The CPUs of the machine.
+        translated: Whether a compile of translated roots runs beside the
+            source root's build.
+
+    Returns:
+        The source root build's workers and the compile's.
+    """
+    if not translated:
+        return max(1, cpus), 0
+    source_jobs = max(1, cpus // 2)
+    return source_jobs, max(1, cpus - source_jobs)
+
+
+def site_builds(html_root: Path) -> tuple[SiteBuild, ...]:
+    """Return the builds that write every published root, and what each runs under.
+
+    Two builds write the site however many languages it publishes: the
+    source-language root's own full-scope build, and one compile for every
+    translated root. A language added to the site adds text to the compile, not
+    a build to this list.
+
+    The cli-sequence goldens gate runs in exactly one of them. Its verdict
+    cannot vary by build -- its subprocess scrubs every ``CADRUMO_*`` key and
+    pins English output -- so the source root's build runs it and the compile
+    takes the documented opt-out. Deciding that here, rather than inside the
+    build loop, makes the invariant checkable without running a build, and the
+    refusal below is the teeth: a future edit that skips the check in every
+    build (silently dropping the gate from the whole deploy) cannot reach a
+    published site.
     """
     source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
-    translated = [language for language in languages if language != source]
-    source_jobs = max(1, min(cpus // 2, cpus - len(translated))) if translated else max(1, cpus)
-    translated_jobs = max(1, (cpus - source_jobs) // len(translated)) if translated else 0
-    return {language: str(source_jobs if language == source else translated_jobs) for language in languages}
-
-
-def _language_build_environments() -> tuple[tuple[str, dict[str, str]], ...]:
-    """Return each site root paired with the environment it is built under.
-
-    The cli-sequence goldens gate runs on exactly one root. Pairing the decision
-    with the languages here -- rather than branching inside the build loop --
-    makes the invariant checkable without running a build, and the refusal below
-    is the teeth: a future edit that skips the check on every root (silently
-    dropping the gate from the whole deploy) cannot reach a published site.
-    """
-    environments = tuple(
-        (language, language_build_environment(language, check_sequences=index == 0))
-        for index, language in enumerate(localized_languages())
-    )
-    checked = [language for language, environment in environments if SEQUENCE_CHECK_SKIP_ENV not in environment]
+    translated = tuple(language for language in localized_languages() if language != source)
+    source_jobs, compile_jobs = site_build_jobs(os.cpu_count() or 1, translated=bool(translated))
+    builds = [
+        SiteBuild(
+            name=source,
+            languages=(source,),
+            command=source_root_build_command(html_root / source),
+            environment={**source_root_build_environment(check_sequences=True), "CADRUMO_DOCS_JOBS": str(source_jobs)},
+        )
+    ]
+    if translated:
+        builds.append(
+            SiteBuild(
+                name=TRANSLATED_ROOTS_BUILD,
+                languages=translated,
+                command=translated_roots_compile_command(html_root, translated, jobs=compile_jobs),
+                environment=translated_roots_compile_environment(check_sequences=False),
+            )
+        )
+    checked = [build.name for build in builds if SEQUENCE_CHECK_SKIP_ENV not in build.environment]
     if len(checked) != 1:
         raise SystemExit(
-            f"The deploy must run the cli-sequence goldens check on exactly one site root; "
-            f"{len(checked)} root(s) would run it ({', '.join(checked) or 'none'}). "
+            f"The deploy must run the cli-sequence goldens check in exactly one site build; "
+            f"{len(checked)} build(s) would run it ({', '.join(checked) or 'none'}). "
             "Refusing to publish a site whose CLI sequences were never checked against their goldens.",
         )
-    return environments
+    written = sorted(language for build in builds for language in build.languages)
+    if written != sorted(localized_languages()):
+        raise SystemExit(
+            f"The deploy's builds write the roots {written}, and the site publishes "
+            f"{sorted(localized_languages())}. Refusing to publish a site with a root no build writes."
+        )
+    return tuple(builds)
 
 
 def _write_language_entry(html_root: Path) -> Path:

@@ -7,8 +7,9 @@ import re
 import shutil
 import sys
 import tempfile
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import Future, ThreadPoolExecutor
+from dataclasses import replace
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
@@ -21,13 +22,12 @@ from dev.packaging.command_execution import CommandResult, run_command
 
 from .docs_site_commands import _command_label
 from .docs_site_languages import (
-    _language_build_environments,
+    SiteBuild,
     _language_site_url,
     _write_language_entry,
-    language_build_command,
     localized_languages,
-    root_build_jobs,
     site_build_environment,
+    site_builds,
 )
 
 
@@ -126,80 +126,85 @@ def _compose_apex(html_root: Path) -> None:
     _write_apex_sitemap(html_root)
 
 
-def _build_language_roots(
+def _run_site_builds(
     repo_root: Path,
     html_root: Path,
     *,
-    command_for: Callable[[str, Path], list[str]] = language_build_command,
+    builds_for: Callable[[Path], Sequence[SiteBuild]] = site_builds,
 ) -> None:
-    """Build every site root into its own subdirectory.
+    """Run the builds that write every site root, each root into its own subdirectory.
 
     ``/en/``, ``/es/``, ``/ca/`` and ``/hu/`` are peers, and none of them
     carries a search index: the site has ONE index, at the apex above them, and
-    :func:`_index_site` writes it once every root is built. English holds no
+    :func:`_index_site` writes it once every root exists. English holds no
     privileged position either: the readers here file Spanish tax, so it sits at
     ``/en/`` like the rest and ``/`` resolves to the reader's own language
     instead (:func:`_write_language_entry`).
 
-    An index a PREVIOUS publish left inside a root is removed before the build,
-    because the roots are kept between publishes for their Sphinx environment
+    An index a PREVIOUS publish left inside a root is removed before the builds,
+    because the source root is kept between publishes for its Sphinx environment
     and nothing in a build that writes no index would clear one. Left in place
     it would upload as current, and a reader who reached it would search last
     release's site.
 
-    The roots build at the same time. Each reads its own copy of the sources
-    and writes only below its own directory, and each gets its own scratch
+    The builds run at the same time. Each reads its own copy of the sources and
+    writes only below the roots it owns, and each gets its own scratch
     product-storage root, so no two builds share a file they write. The CPUs
-    are shared between them (:func:`root_build_jobs`). A root's output is
-    printed whole once it finishes; the publish stops, naming every
-    failed root, after all of them have finished.
+    are shared between them (:func:`site_build_jobs`). A build's output is
+    printed whole once it finishes; the publish stops, naming every failed
+    build, after all of them have finished. It also stops when a build that
+    reported success wrote no root for a language it owns, or wrote a search
+    index into one: no root indexes itself, whichever build wrote it.
 
     Args:
         repo_root: Repository root the builds run from.
-        html_root: The composed HTML root; each root builds into its own
-            subdirectory.
-        command_for: DI seam for tests. Production runs the real build driver;
-            a test passes a small real command to prove the concurrency and
-            isolation without paying for four Sphinx builds.
+        html_root: The composed HTML root; each root is its own subdirectory.
+        builds_for: DI seam for tests. Production runs the real builds; a test
+            passes small real commands to prove the concurrency and isolation
+            without paying for a Sphinx build.
     """
-    environments = [
-        (language, {**environment, "CADRUMO_DOCS_BUILD_ROOT": str(html_root.parent)})
-        for language, environment in _language_build_environments()
+    builds = [
+        replace(build, environment={**build.environment, "CADRUMO_DOCS_BUILD_ROOT": str(html_root.parent)})
+        for build in builds_for(html_root)
     ]
-    for language, _environment in environments:
-        stale_index = html_root / language / "pagefind"
-        if stale_index.exists():
-            shutil.rmtree(stale_index)
-    cpus = os.cpu_count() or 1
-    jobs = root_build_jobs([language for language, _ in environments], cpus)
-    print(
-        f"Building the roots at once on {cpus} CPUs: "
-        f"{', '.join(f'{language} with {jobs[language]} workers' for language, _ in environments)}.",
-        flush=True,
-    )
+    for build in builds:
+        for language in build.languages:
+            stale_index = html_root / language / "pagefind"
+            if stale_index.exists():
+                shutil.rmtree(stale_index)
+    written = "; ".join(f"{build.name} writes {', '.join(build.languages)}" for build in builds)
+    print(f"Running {len(builds)} site build(s) at once on {os.cpu_count() or 1} CPUs: {written}.", flush=True)
     with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-", dir=prepare_temporary_directory()) as scratch:
 
-        def build(language: str, environment: dict[str, str]) -> CommandResult:
-            storage_root = Path(scratch) / language
+        def run(index: int, build: SiteBuild) -> CommandResult:
+            storage_root = Path(scratch) / str(index)
             storage_root.mkdir()
-            command = command_for(language, html_root / language)
             return run_command(
-                command,
+                build.command,
                 cwd=repo_root,
-                environment={
-                    **environment,
-                    "CADRUMO_DOCS_JOBS": jobs[language],
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-                },
+                environment={**build.environment, "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root)},
             )
 
-        with ThreadPoolExecutor(max_workers=len(environments)) as pool:
-            futures = {language: pool.submit(build, language, environment) for language, environment in environments}
+        with ThreadPoolExecutor(max_workers=len(builds)) as pool:
+            futures = {build.name: pool.submit(run, index, build) for index, build in enumerate(builds)}
             failed: list[str] = []
-            for language, future in futures.items():
-                _record_language_build_result(language, future, failed)
+            for name, future in futures.items():
+                _record_site_build_result(name, future, failed)
     if failed:
-        raise SystemExit(f"Localized docs build failed for {', '.join(failed)}; refusing to publish.")
+        raise SystemExit(f"Documentation build failed for {', '.join(failed)}; refusing to publish.")
+    absent = sorted(language for build in builds for language in build.languages if not (html_root / language).is_dir())
+    if absent:
+        raise SystemExit(
+            f"The documentation builds reported success and wrote no root for {', '.join(absent)}; refusing to publish."
+        )
+    indexed = sorted(
+        language for build in builds for language in build.languages if (html_root / language / "pagefind").exists()
+    )
+    if indexed:
+        raise SystemExit(
+            f"The root(s) {', '.join(indexed)} came out of their build holding a search index of their own; "
+            "the site has one, at its apex. Refusing to publish."
+        )
 
 
 def _produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]:
@@ -210,13 +215,10 @@ def _produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]
     roots this returns and never how they were produced, so the way they are
     produced can change here alone.
 
-    It will change: the documentation is moving to one compile that writes a
-    shared page structure plus each language's text
-    (``2026-10-06-user-docs-weight-adr``, C2). When that lands, the body of this
-    function becomes a call to ``dev.docs.language_roots.compose_root(stored,
-    language, html_root / language)`` per language, in place of
-    :func:`_build_language_roots`, and nothing else in the publisher moves: the
-    roots it hands back are the same directories with the same bytes.
+    The documentation is not built once per language. The source-language root
+    has a build of its own because it alone carries the API reference; every
+    translated root comes from ONE compile of the user documentation
+    (:func:`~dev.deploy.docs_site_languages.site_builds`).
 
     Args:
         repo_root: Repository root the build commands run from.
@@ -226,7 +228,7 @@ def _produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]
     Returns:
         ``{language: root directory}`` for every published language.
     """
-    _build_language_roots(repo_root, html_root)
+    _run_site_builds(repo_root, html_root)
     return {language: html_root / language for language in localized_languages()}
 
 
@@ -311,8 +313,9 @@ def _build_site_roots(repo_root: Path) -> Path:
     The write half of a publish's pre-upload work, factored out so the dry run
     below and the publish share one composition. A second composition would be
     free to drift, and the drift would only ever surface on the live site. The
-    English root is the one full-scope build; nothing is built twice, and the
-    search index is built once over all four roots rather than once per root.
+    English root is the one full-scope build, every translated root comes from
+    one compile, and the search index is built once over all the roots rather
+    than once per root.
 
     Returns:
         The composed HTML root, carrying every published root and the one index.
@@ -325,12 +328,12 @@ def _build_site_roots(repo_root: Path) -> Path:
     return html_root
 
 
-def _record_language_build_result(language: str, future: Future[CommandResult], failed: list[str]) -> None:
-    """Record language build result."""
+def _record_site_build_result(name: str, future: Future[CommandResult], failed: list[str]) -> None:
+    """Print one site build's whole output and note it if it failed."""
     result = future.result()
-    print(f"+ [{language}] {_command_label(result.argv)} ({result.duration_seconds:.0f}s)", flush=True)
+    print(f"+ [{name}] {_command_label(result.argv)} ({result.duration_seconds:.0f}s)", flush=True)
     for stream, text in ((sys.stdout, result.stdout), (sys.stderr, result.stderr)):
         if text:
             print(text, end="" if text.endswith("\n") else "\n", file=stream, flush=True)
     if result.returncode != 0:
-        failed.append(f"{language} ({result.returncode})")
+        failed.append(f"{name} ({result.returncode})")
