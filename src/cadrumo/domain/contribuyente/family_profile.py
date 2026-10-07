@@ -282,7 +282,7 @@ class RentaFamilyProfile(BaseModel):
 
         Reads :attr:`dependencia_assimilation_available` off this profile rather
         than taking it as an argument, exactly as
-        :meth:`DescendantInfo.is_eligible_ordinary does, so the anualidades
+        :meth:`DescendantInfo.is_eligible_ordinary` does, so the anualidades
         carve-out cannot be applied to the mínimo and skipped for the deducción
         that keys on it.
 

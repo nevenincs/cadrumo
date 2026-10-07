@@ -43,7 +43,7 @@ bundled vocabulary placed the record's token, so it is empty for precisely the
 codes this module exists to report -- and reading it made every firing above
 unreachable from a real document while the module's own tests, which set that
 field by hand, stayed green. The verbatim token lives on
-:attr:`~application.ledger.invoice_draft_records.InvoiceDraft.supplier_stated_country_code` and its
+``InvoiceDraft.supplier_stated_country_code`` and its
 sibling, and that is what is asked. A structured record stating ``THA`` for a
 Thai supplier was otherwise byte-identical, all the way to the operator, to one
 carrying no address block at all.

@@ -64,7 +64,7 @@ class M720IdentifierScheme(StrEnum):
     """Account identified by the bank's own code: clave ``O`` (pos. 144)."""
 
     ISIN = "isin"
-    """Security or IIC share with an ISIN: clave de identificación ``1`` (pos. 131)."""
+    """A security or IIC share with an ISIN: clave de identificación ``1`` (pos. 131)."""
 
     NO_ISIN_ISSUER_COUNTRY = "no_isin_issuer_country"
     """Foreign security without an ISIN: clave ``2``, written ``Z`` + issuer country."""

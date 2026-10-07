@@ -844,6 +844,15 @@ nitpick_ignore_regex = [
         r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
         r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
     ),
+    # pydantic's ``JsonValue`` is a recursive type alias, not a class, and
+    # autodoc renders it by its BARE name wherever a signature carries it, so
+    # even the online pydantic inventory has nothing the short form reaches.
+    (r"py:class", r"^JsonValue$"),
+    # A fragment of a regular expression. A pydantic field's ``pattern`` is
+    # rendered inside its annotation, the annotation is split at ``|``, and the
+    # alternative ``activities(...)`` of the censal fact-path pattern leaves
+    # this one word as a cross-reference target. It is not a type.
+    (r"py:class", r"^activities$"),
     # Autodoc's ``show-inheritance`` renders a base class by its BARE name, so a
     # TUI class deriving from Textual emits ``Widget`` rather than
     # ``textual.widget.Widget``. The vendored inventory carries the qualified
@@ -1012,7 +1021,7 @@ nitpick_ignore_regex = [
         r"reset_workflow_state|output_language|extract_pages_text|"
         r"extract_pages_text_from_bytes|emit_collab_workspace_opened_event|"
         r"LLMProvider|PersonaAction|parse_declaracion|parse_declaracion_bytes|"
-        r"parse_justificante|parse_justificante_bytes|zeroise|"
+        r"parse_justificante|parse_justificante_bytes|zeroise|write_all|"
         r"NotificationsSnapshot)$",
     ),
     # Enum members are emitted as ``:ivar:`` entries by Napoleon
@@ -1059,14 +1068,39 @@ nitpick_ignore_regex = [
         r"py:(data|meth|obj)",
         r"^(datetime\.date\.min|pathlib\.Path\.with_name|typing\.PydanticArgs)$",
     ),
+    # Stdlib classes autodoc renders by their BARE name in an annotation
+    # (``threading.RLock`` and ``Event``, ``logging.Logger``, the ``contextlib``
+    # context-manager bases), exactly as ``Buffer`` above, and
+    # ``weakref.ReferenceType``, which the inventory carries only as
+    # ``weakref.ref``. No project class has any of these names.
+    (
+        r"py:class",
+        r"^(RLock|Event|Logger|AbstractContextManager|AbstractAsyncContextManager|"
+        r"ReferenceType|weakref\.ReferenceType)$",
+    ),
+    # A ``ParamSpec`` named ``P`` is rendered under ``typing``, where no such
+    # object exists; same category as the bare type parameters above.
+    (r"py:obj", r"^typing\.P$"),
+    # ``PyOVERLAPPED`` is pywin32's overlapped-I/O structure, annotated in the
+    # Windows native I/O adapter. pywin32 ships no inventory.
+    (r"py:class", r"^PyOVERLAPPED$"),
     # Textual and Rich classes autodoc renders by their BARE name, exactly as
     # ``Widget`` above: the TUI screens subclass ``Screen`` and annotate Rich
     # ``Style`` and Textual ``AutopilotCallbackType``. The vendored textual
     # inventory carries the qualified targets, unreachable from the short form.
     (r"py:class", r"^(Screen|Style|AutopilotCallbackType)$"),
-    # A ``TYPE_CHECKING``-only alias of a googleapiclient stub type; the Google
-    # API client ships no inventory, and the alias is not a project class.
-    (r"py:class", r"^SheetsValueRange$"),
+    # The same, for what the profile and workbench screens annotate: Textual's
+    # ``App`` and its visual types, Rich's ``RenderableType``, and the message
+    # classes Textual nests in a widget (``Button.Pressed``), which autodoc
+    # renders as written in the handler's signature.
+    (
+        r"py:class",
+        r"^(App|VisualType|ContentText|RenderableType|"
+        r"Button\.Pressed|DataTable\.RowHighlighted|Worker\.StateChanged)$",
+    ),
+    # ``TYPE_CHECKING``-only aliases of googleapiclient stub types; the Google
+    # API client ships no inventory, and the aliases are not project classes.
+    (r"py:class", r"^(SheetsValueRange|SheetsResource|DriveResource)$"),
     # Project objects written by a path that omits the ``cadrumo.`` root and
     # whose package is excluded from the documented surface (``entrypoints.cli``
     # has no stubs) or whose bare name the resolver cannot reach
@@ -2061,7 +2095,11 @@ def setup(app):
     # typeset in the language it is authored in wherever it is built, which is
     # what makes one page in one compile the page every language publishes.
     _UNTRANSLATED_TYPESETTING.register(app)
-    app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
+    # Ahead of the default priority, so the fences are gone before the type-hint
+    # extension reads the docstring: it parses every docstring once on its own
+    # to find where a return type goes, and what it reported there carried no
+    # source, once for every screen that inherits Textual's ``compose``.
+    app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings, priority=400)
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)

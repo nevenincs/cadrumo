@@ -140,7 +140,7 @@ class SupervisorExecutionMixin(SupervisorHost):
         Every refusal before executor entry is raised here, and admission -- the
         lease held and the running state committed -- is durable before this
         returns. Execution and settlement continue in one supervised task;
-        :meth:`settled` returns what it concluded, and observers follow its
+        ``settled`` returns what it concluded, and observers follow its
         events through the journal meanwhile.
         """
         snapshot = await self.inspect(operation_id)

@@ -737,7 +737,7 @@ class TransactionCatalogueRepository:
         routing rows for this bucket to select the candidate transaction ids
         whose filing date (``value_date`` or ``booked_date``) falls in the
         window, then decrypts only those rows via one targeted batch
-        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.load_many` --
+        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.load_many_current` --
         never a full-namespace scan-and-decrypt of every row in the bucket.
 
         The index is a derived, rebuildable cache: correctness never depends
@@ -922,7 +922,7 @@ class TransactionCatalogueRepository:
         match the encrypted membership index -- before trusting the index for
         a partition. On a completeness match, only the in-window transaction
         ids are decrypted through one targeted batch
-        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.load_many`;
+        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.load_many_current`;
         out-of-window ids are reported as plaintext
         :class:`~domain.transactions.models.OutOfWindowTransactionIndexEntry` rows (id +
         filing date only, never decrypted). On a completeness MISMATCH -- a

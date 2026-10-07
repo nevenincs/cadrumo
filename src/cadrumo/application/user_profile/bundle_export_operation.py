@@ -247,7 +247,7 @@ class ProfileBundleExportJournalRepository(JournalRepositoryBase[ProfileBundleEx
 
         The repository lock makes absence and insertion one decision. Even an
         unreadable file or dangling link is retained rather than overwritten.
-        Later PREPARED-to-COMPLETED transitions use :meth:`save`.
+        Later PREPARED-to-COMPLETED transitions use :meth:`JournalRepositoryBase.save`.
         """
         self._ensure_root()
         path = self.path_for(operation.operation_id)

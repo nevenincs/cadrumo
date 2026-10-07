@@ -612,7 +612,7 @@ class WorkflowStep(BaseModel):
 
 
 class WorkflowResult(BaseModel):
-    """The full result of one :meth:`WorkflowEngine.run_next` invocation."""
+    """The full result of one :meth:`WorkflowEngine.run_for_period` invocation."""
 
     model_config = _STRICT_FROZEN
 
