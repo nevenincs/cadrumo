@@ -66,6 +66,10 @@ Every caller of the one compile uses the mode that writes roots and measures not
 
 The generated-reference generators behind `S06`, the command-tree projection of `S11`, the search-record content, the Rust handler's media and policy modules, and `native/CONTRACT.md` prose were not reviewed. The Rust tests were read and not run.
 
+### resolution | low | what was done about each finding, as of commit `d32e456d13`
+
+`proof-verdict`, `declaration-width`, `lenient-decode`, `lone-closing-delimiter`, `stored-form-unread` and `oracle-moved` are fixed in `dev/docs/compile_once.py` and `dev/docs/language_roots.py`, each with a test that fails without its fix. `switcher-published-layout` is fixed in `dev/docs/language_switcher.py` and `dev/docs/build_paths.py`; the web proof was rerun against a rebuilt oracle and the desktop proof against the unchanged one, both with no differing stretch and no missing or extra file. `local-roots-search` is answered in the recipe's description in `justfile`. `proof-not-scheduled`, `catalogue-drift` and `worker-first-word` are open: the first needs the decision named below, the second is translation work on pages this plan did not change, and the third is noted.
+
 ## Recommendations
 
 - `proof-verdict`, `declaration-width`, `lenient-decode`, `lone-closing-delimiter`, `stored-form-unread` and `oracle-moved` are corrections within the plan's scope and are fixed under the reopened proof of `S08`.

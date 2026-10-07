@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:d239dd0d4a64c04e31b9238f114a97f03154d1fdc9be3ad5d8cde876d264407e'
+body_hash: 'sha256:8f048c7104aaeb4db3169dda2bc312c7d69ee58a9d46841cb752c805b1840f25'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -138,6 +138,18 @@ related:
 - `S10` `M` `dev/deploy/tests/test_publish_authority.py`
 - `S10` `M` `dev/docs/tests/test_deployment_search_parity.py`
 - `S10` `verify:` `pytest dev/deploy/tests dev/docs/tests/test_docs_serve.py dev/docs/tests/test_docs_build_localized.py` -> `pass`
+- `S08` `M` `dev/docs/compile_once.py`
+- `S08` `M` `dev/docs/tests/test_compile_once.py`
+- `S08` `M` `dev/docs/tests/test_compiled_root_store.py`
+- `S08` `M` `dev/docs/tests/test_docs_build_localized_compile.py`
+- `S08` `M` `dev/packaging/native/tests/test_docs_build_environment.py`
+- `S08` `verify:` `python -m dev.docs.compile_once --out --oracle (desktop; no differing stretch, no missing or extra file)` -> `pass`
+- `S07` `M` `dev/docs/language_switcher.py`
+- `S07` `M` `dev/docs/build_paths.py`
+- `S07` `M` `docs/conf.py`
+- `S07` `M` `dev/docs/tests/test_docs_language_switcher.py`
+- `S07` `M` `dev/docs/tests/test_docs_build.py`
+- `S07` `verify:` `python -m dev.docs.compile_once --out --oracle --flavor web --base-url (no differing stretch, no missing or extra file)` -> `pass`
 
 ## Notes
 
@@ -153,3 +165,5 @@ related:
 - `S08` Measured on Windows: the one compile with its comparison 232 to 236 s for four languages; each language's own build 164 to 249 s. On Linux with four reading workers: 145 s. The package documentation target itself (CMake) was not run after the switch.
 - `S13` Pages are stored with a line feed and composed with the composing platform's terminator. A Windows and a Linux compile of the same tree stored 387 of 400 files as the same bytes, every page structure and every language's text among them. The 13 that differ are non-page stylesheets and scripts written with the platform terminator; they are left as built because the desktop host serves a non-page file exactly as stored.
 - `S10` The release workflow file needed no change: its documentation job runs the publisher, which now runs two builds whatever the number of languages, and its proof jobs reach the documentation tests through the recipes changed here. The publisher's path was run on Linux through its own code with the goldens gate skipped; the English root's strict build failed there on API reference warnings that predate this plan, so a real publish stays refused until those are cleared.
+- `S08` Reopened by the final review: the comparison's verdict ignored missing and extra files, declarations matched by substring, pages were decoded with replacement, a lone delimiter in a shared file was not refused, and the unread stored form stayed beneath the build root. All fixed; each has a test that fails without its fix.
+- `S07` Reopened by the final review: the switcher assumed the desktop layout and wrote wrong links on the published site, a defect older than this plan. The links now come from the layout authority; the web oracle was rebuilt and the desktop oracle was not.
