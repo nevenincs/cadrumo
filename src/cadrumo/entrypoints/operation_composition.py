@@ -32,11 +32,11 @@ from ..adapters.persistence.operations.typed_financial_operand_custody import (
     OperationTypedFinancialOperandCustodyFilesystemRepository,
 )
 from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
-from ..adapters.persistence.profile.calculation_revision_override_migration import GuardedCalculationRevisionMigration
 from ..adapters.persistence.profile.catalogue_creation import (
     build_catalogue_creation_ports,
     build_catalogue_lifecycle_ports,
 )
+from ..adapters.persistence.profile.guarded_calculation_revision_migration import GuardedCalculationRevisionMigration
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
 from ..adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports

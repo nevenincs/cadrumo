@@ -325,6 +325,7 @@
         "cadrumo.adapters.persistence.profile.filing_drafts",
         "cadrumo.adapters.persistence.profile.filing_history",
         "cadrumo.adapters.persistence.profile.foreign_assets",
+        "cadrumo.adapters.persistence.profile.guarded_calculation_revision_migration",
         "cadrumo.adapters.persistence.profile.inventory",
         "cadrumo.adapters.persistence.profile.invoice_confirmation",
         "cadrumo.adapters.persistence.profile.invoice_source_resolver",

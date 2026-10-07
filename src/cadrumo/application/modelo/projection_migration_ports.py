@@ -5,11 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
-from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
-
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
+    from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 
 
 @dataclass(frozen=True, slots=True)

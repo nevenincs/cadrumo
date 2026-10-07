@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:fec92f0dab81328af61e94e3575fbebb6e01700f1a4cd860e0be581e3c00a75b'
+body_hash: 'sha256:e376c770df551228c5357a0d8fbb420ecff1daebc916a4c85ef969489697655f'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -375,6 +375,20 @@ related:
 - `S26` `verify:` `exact original close regression requires rescue and fails admission assertion` -> `pass`
 - `S26` `verify:` `Ruff format ty Linux Windows Darwin and diff checks` -> `pass`
 - `S26` `by:` `root`
+- `S25` `A` `src/cadrumo/adapters/persistence/profile/guarded_calculation_revision_migration.py`
+- `S25` `M` `src/cadrumo/adapters/persistence/profile/calculation_revision_override_migration.py`
+- `S25` `M` `src/cadrumo/application/modelo/projection_migration_ports.py`
+- `S25` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S25` `A` `src/cadrumo/adapters/persistence/profile/tests/test_guarded_calculation_revision_migration.py`
+- `S25` `A` `src/cadrumo/entrypoints/tests/test_guarded_calculation_revision_migration_imports.py`
+- `S25` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S25` `M` `dev/quality/metadata/import_load_targets.json`
+- `S25` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S25` `verify:` `23 distinct behavior cases with original fresh-child bounds` -> `pass`
+- `S25` `verify:` `Ruff format ty and final six source hashes` -> `pass`
+- `S25` `verify:` `complete frozen import gate:15 contracts and4526 loaded modules` -> `pass`
+- `S25` `verify:` `three paired source measurements with twelve exact public identities` -> `pass`
+- `S25` `by:` `root`
 
 ## Notes
 
@@ -411,3 +425,4 @@ related:
 - `S21` Implementation already checkpointed in 3b063e7d50. Before comparison remains censored at unchanged30s bound. Current direct-base interpreter baseline differs from native packaged launch and does not establish a speedup or production latency target. Foreign filing-test edit during owning tests did not change production or owned inputs.
 - `S24` Initial startup outlier remains open under S13; corrected original module entrypoint cases pass without deadline change.
 - `S26` Existing outer and termination-helper waits unchanged; root reviewed real child/thread settlement. Startup stall and broader native handle/launch ownership remain open.
+- `S25` Live-tree full gate failed solely on source mutation and is retained. Frozen complete gate passed with unchanged budgets. Instrumented source medians are not packaged SLO evidence. Only generated canonical-module enrollment is owned; foreign dev target rows remain unstaged.
