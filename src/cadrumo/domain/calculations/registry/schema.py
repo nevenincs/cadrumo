@@ -140,7 +140,6 @@ __all__ = [
     "SociedadesAnnualManualCoverageDisposition",
     "SociedadesAnnualManualCoverageStatus",
     "SupportedFilingYearsCatalogue",
-    "modelo_directory_revision_ids",
 ]
 
 from ....core.filing_year import FilingYear
@@ -930,6 +929,13 @@ class ModeloDefinition(RegistryModel):
     # validator on the same instance without the construction context.
     _directory_revision_ids: frozenset[str] | None = PrivateAttr(default=None)
 
+    @property
+    def directory_revision_ids(self) -> frozenset[str]:
+        """Read the actual directory identities retained by this selected Modelo view."""
+        if self._directory_revision_ids is not None:
+            return self._directory_revision_ids
+        return frozenset(self.revisions)
+
     def get_title(self, locale: str) -> str:
         """Resolve the Modelo title from the shared catalogue."""
         return require_modelo_localization((self.title_localization_key,), locale=locale)
@@ -972,13 +978,6 @@ class ModeloDefinition(RegistryModel):
         if failures:
             raise RegistryValidationError("; ".join(failures))
         return self
-
-
-def modelo_directory_revision_ids(modelo: ModeloDefinition) -> frozenset[str]:
-    """Read the actual directory identities retained by a selected Modelo view."""
-    if modelo._directory_revision_ids is not None:
-        return modelo._directory_revision_ids
-    return frozenset(modelo.revisions)
 
 
 def _require_revision_family_storage_delta(revision: ModeloRevision) -> None:

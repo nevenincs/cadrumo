@@ -12,7 +12,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:688781038c27823496f098628bb4f644ed8f15ffd4a9300b7cec171e719d7197'
+body_hash: 'sha256:eebfad2635450e80922edc5993126d48d4d54a8c381f034648b0cbe2b34c538e'
 ---
 
 # `blocking-code-quality-repair` plan
@@ -39,7 +39,7 @@ The first repair convergence run passed eight gates, including all configured pl
 - [x] `S03` - Complete retirement of obsolete Google workbook paths and repair remaining typed renderers; `Google adapters, calc_sheets, modelo spreadsheet modules and dedicated review presentation modules`.
 - [x] `S04` - Reconcile authentication and storage symbols with their real production consumers; `profile authentication, secure custody and core storage_environment`.
 - [x] `S07` - Retire residual unconsumed observation prototypes and reconcile their owning tests and descriptions; `gasto193_bindings.py, withholding296_bindings.py and direct typed-row consumer descriptions and tests`.
-- [ ] `S05` - Regenerate import enrollment and prove the integrated blocking gate result; `dev/quality/metadata and all modified source plus focused tests`.
+- [x] `S05` - Regenerate import enrollment and prove the integrated blocking gate result; `dev/quality/metadata and all modified source plus focused tests`.
 
 ## Parallelization
 

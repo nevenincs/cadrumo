@@ -10,7 +10,6 @@ from pydantic import ValidationError
 from ....core.hashing import content_hash_hex
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
-from ...calculations.registry.schema import modelo_directory_revision_ids
 from ..calculation_revision_rendering import CalculationRenderingSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -37,7 +36,7 @@ def test_saved_rendering_snapshot_roundtrips_complete_registry_fields(
     assert loaded.registry_snapshot.revision.localization_key == snapshot.revision.localization_key
     assert loaded.registry_snapshot.revision.predecessor == snapshot.revision.predecessor
     assert loaded.labels == original.labels
-    assert loaded.revision_directory_ids == tuple(sorted(modelo_directory_revision_ids(snapshot.modelo)))
+    assert loaded.revision_directory_ids == tuple(sorted(snapshot.modelo.directory_revision_ids))
 
 
 def test_an_existing_valid_rendering_without_directory_context_keeps_its_shape_and_digest() -> None:

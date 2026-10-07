@@ -26,7 +26,6 @@ from ..calculations.registry.revision_contracts import DeclaredPredecessor, NoPr
 from ..calculations.registry.schema import (
     MODELO_REVISION_IDS_CONTEXT,
     RegistrySnapshot,
-    modelo_directory_revision_ids,
 )
 
 _OBJECT_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(dict[object, object])
@@ -133,7 +132,7 @@ class CalculationRenderingSnapshot(BaseModel):
         if content_hash_hex(self.registry_snapshot.model_dump(mode="json")) != self.registry_digest:
             raise ValueError("saved rendering registry digest does not match its captured snapshot")
         if self.revision_directory_ids is not None and frozenset(self.revision_directory_ids) != (
-            modelo_directory_revision_ids(self.registry_snapshot.modelo)
+            self.registry_snapshot.modelo.directory_revision_ids
         ):
             raise ValueError("saved rendering directory identities disagree with its captured snapshot")
         if (
@@ -152,7 +151,7 @@ class CalculationRenderingSnapshot(BaseModel):
             for text in (lookup_translation(key, locale="es"),)
             if text is not None
         )
-        directory_ids = tuple(sorted(modelo_directory_revision_ids(snapshot.modelo)))
+        directory_ids = tuple(sorted(snapshot.modelo.directory_revision_ids))
         return cls(
             authority_generation=authority_generation,
             registry_digest=content_hash_hex(snapshot.model_dump(mode="json")),
