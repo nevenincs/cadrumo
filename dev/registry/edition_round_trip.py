@@ -65,8 +65,7 @@ through dependency classifications, cross-modelo relations and source-modelo
 bindings, transitively -- because registry-scope validation refuses a modelo
 whose declared sources are absent. Every other modelo is left out, so only the
 closure is loaded. :func:`copy_registry_tree` builds such a tree from a live
-registry; :func:`materialise_reference_registry` builds one whose judged modelo
-is read from a commit with ``git archive``. A reference is refused if any of
+registry. Callers supply an explicit pre-migration reference tree. A reference is refused if any of
 its editions names a predecessor, since it would then be judged by the
 materialiser under test.
 
@@ -90,26 +89,18 @@ Where the gate stops
   Draft construction calculates from the bundled registry whichever tree is
   selected, so the bytes judge the export surface; formulas and every other
   calculation input are judged by the typed comparison.
-- A reference whose commit is absent from the clone fails closed, naming the
-  commit, rather than reporting the modelo clean.
 - It does not judge delta minimality, grade barriers on a declared
   predecessor, or label coverage; each has its own gate.
 """
 
 from __future__ import annotations
 
-import asyncio
-import os
-import re
 import shutil
-import subprocess
-import tarfile
 from collections import Counter, deque
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from io import BytesIO
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Final, TypeIs
 
 from cadrumo.application.filing.draft_construction import build_draft
@@ -143,10 +134,8 @@ from .compiler.authority import compile_validated_authority
 from .compiler.loader import load_modelo_directory, modelo_fact_scope
 
 __all__ = [
-    "COMMIT_ID",
     "SYNTHETIC_TAX_ID",
     "EditionExportScenario",
-    "ReferenceUnavailableError",
     "RegistryDependencyClosureError",
     "RoundTripFinding",
     "RoundTripFindingKind",
@@ -156,12 +145,10 @@ __all__ = [
     "delta_authored_revisions",
     "edition_round_trip_report",
     "localization_differences",
-    "materialise_reference_registry",
     "merge_order",
     "merge_orders",
     "modelo_dependency_ids",
     "registry_dependency_closure",
-    "run_git",
 ]
 
 
@@ -213,17 +200,11 @@ class EditionExportScenario:
     product_software_identity_factory: Callable[[], AeatProductSoftwareIdentity] | None = None
 
 
-class ReferenceUnavailableError(RuntimeError):
-    """The reference tree cannot be read, so the round trip is unchecked."""
-
-
 class RegistryDependencyClosureError(RuntimeError):
     """A modelo, or a modelo it depends on, is absent from the registry its closure is taken from."""
 
 
-#: A commit id as git prints it, abbreviated or full.
-COMMIT_ID: Final = re.compile(r"^[0-9a-f]{7,64}$")
-#: The taxpayer every round-trip draft is built for; synthetic, never a real identity.
+#: The taxpayer for round-trip drafts; synthetic, never a real identity.
 SYNTHETIC_TAX_ID: Final = "12345678Z"
 
 _MODELOS_DIR: Final = "modelos"
@@ -253,14 +234,6 @@ _EXCLUDED_FROM_EQUALITY: Final = frozenset(
     }
     | {default_field for _section, default_field in family_source_default_fields()}
 )
-_GIT_TIMEOUT_SECONDS: Final = 120
-#: Variables that would point git at a repository other than the one named.
-_GIT_LOCATION_VARIABLES: Final = frozenset(
-    {"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_COMMON_DIR"}
-)
-
-
-# ── the dependency closure ──────────────────────────────────────────────────
 
 
 def modelo_dependency_ids(modelo: ModeloDefinition) -> frozenset[str]:
@@ -347,95 +320,6 @@ def copy_registry_tree(source: Path, destination: Path, *, modelo_id: str | None
 
     shutil.copytree(source, destination, ignore=ignore)
     return destination
-
-
-def materialise_reference_registry(
-    *,
-    repo_root: Path,
-    registry_relative: PurePosixPath,
-    modelo_id: str,
-    base_commit: str,
-    destination: Path,
-) -> Path:
-    """Build a registry tree holding ``modelo_id`` exactly as committed at ``base_commit``.
-
-    Every other registry family, and the modelo's dependency closure, is
-    copied from the live tree, so the result differs from the live copy only
-    in the one modelo's files.
-
-    Raises:
-        ReferenceUnavailableError: When the commit is not in this clone or does
-            not contain the modelo, so no reference exists to compare against.
-        RegistryDependencyClosureError: When the live tree lacks the modelo or
-            a modelo its closure needs.
-    """
-    if not COMMIT_ID.match(base_commit):
-        raise ReferenceUnavailableError(f"base commit {base_commit!r} is not a commit id")
-    probe = run_git(repo_root, "cat-file", "-e", f"{base_commit}^{{commit}}")
-    if probe.returncode != 0:
-        raise ReferenceUnavailableError(
-            f"base commit {base_commit} is not in this clone's history, so modelo {modelo_id} is unchecked; "
-            "fetch full history (for a CI checkout, fetch-depth: 0) and re-run",
-        )
-    modelo_path = registry_relative / _MODELOS_DIR / modelo_id
-    archive = run_git(repo_root, "archive", "--format=tar", base_commit, "--", modelo_path.as_posix())
-    if archive.returncode != 0:
-        raise ReferenceUnavailableError(
-            f"base commit {base_commit} holds no {modelo_path.as_posix()}: "
-            f"{archive.stderr.decode('utf-8', 'replace').strip()}",
-        )
-    copy_registry_tree(repo_root.joinpath(*registry_relative.parts), destination, modelo_id=modelo_id)
-    shutil.rmtree(destination / _MODELOS_DIR / modelo_id)
-    staging = destination.parent / f"{destination.name}.archive"
-    with tarfile.open(fileobj=BytesIO(archive.stdout)) as tar:
-        tar.extractall(staging, filter="data")
-    shutil.move(staging.joinpath(*modelo_path.parts), destination / _MODELOS_DIR / modelo_id)
-    shutil.rmtree(staging)
-    return destination
-
-
-def run_git(repo_root: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
-    """Run git in ``repo_root`` with every variable that could redirect it to another repository removed."""
-    environment = {name: value for name, value in os.environ.items() if name not in _GIT_LOCATION_VARIABLES}
-    executable = shutil.which("git")
-    if executable is None:
-        raise RuntimeError("git executable is required for edition round-trip checks")
-    command = (
-        str(Path(executable).resolve(strict=True)),
-        "--no-optional-locks",
-        "-c",
-        "core.autocrlf=false",
-        *arguments,
-    )
-    returncode, stdout, stderr = asyncio.run(
-        _run_git_process(command, repo_root=repo_root, environment=environment),
-    )
-    return subprocess.CompletedProcess(command, returncode, stdout, stderr)
-
-
-async def _run_git_process(
-    command: tuple[str, ...],
-    *,
-    repo_root: Path,
-    environment: Mapping[str, str],
-) -> tuple[int, bytes, bytes]:
-    """Run the resolved git executable while retaining archive bytes exactly."""
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        cwd=repo_root,
-        env=dict(environment),
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), _GIT_TIMEOUT_SECONDS)
-    except TimeoutError as error:
-        process.kill()
-        stdout, stderr = await process.communicate()
-        raise subprocess.TimeoutExpired(command, _GIT_TIMEOUT_SECONDS, output=stdout, stderr=stderr) from error
-    if process.returncode is None:  # pragma: no cover - communicate() waits for process exit
-        raise RuntimeError("git process completed without a return code")
-    return process.returncode, stdout, stderr
 
 
 # ── the gate ────────────────────────────────────────────────────────────────

@@ -11,9 +11,9 @@ from dev.deploy.cloudflare_api import (
     CloudflareAccount,
 )
 from dev.deploy.r2_objects import R2Bucket
+from dev.source_tree import content_digest, repository_files
 
 from .docs_delivery_contracts import _CI_MARKERS, _RELEASE_LABEL_RE, DELIVERY_CREDENTIAL_ENV, DeliveryCredentials
-from .docs_site_commands import _run
 
 
 def _delivery_credentials(environment: Mapping[str, str]) -> DeliveryCredentials:
@@ -49,9 +49,9 @@ def release_id(label: str, *, now: datetime) -> str:
 
 
 def _local_release_label(repo_root: Path) -> str:
-    """Label a local publish by the commit it was built from."""
-    head = _run(["git", "--no-optional-locks", "rev-parse", "--short=12", "HEAD"], cwd=repo_root)
-    return f"local-{head.stdout.strip()}"
+    """Label a local publish by the actual documentation and producer content."""
+    files = repository_files(repo_root, under=("docs", "src", "dev/docs", "pyproject.toml", "uv.lock"))
+    return f"local-{content_digest(repo_root, files)[:12]}"
 
 
 def _require_authorized_publish_environment(*, environment: Mapping[str, str] | None = None) -> None:

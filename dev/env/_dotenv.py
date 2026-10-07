@@ -1,8 +1,8 @@
 """Provisioning of `env/.env`.
 
-`env/.env` is created from `env/.env.example` when it is absent, then topped up
-from the worktree checked out on `main`, when that is a separate worktree with
-its own `env/.env`. A value is ported when the operator set it there - it is
+`env/.env` is created from `env/.env.example` when it is absent. An explicitly
+supplied source tree can top it up from its own `env/.env`; setup does not
+discover other worktrees. A value is ported when the operator set it there - it is
 non-empty and differs from main's own template - and this worktree still holds
 nothing or its template's value for that key. A value this worktree set for
 itself is never overwritten, so running this again changes nothing.
@@ -16,7 +16,6 @@ from __future__ import annotations
 import os
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass, field
@@ -24,12 +23,6 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT
-from dev.packaging.command_execution import run_command
-
-#: The branch whose worktree holds the operator's established configuration.
-MAIN_BRANCH: Final = "refs/heads/main"
-
-GIT_TIMEOUT_SECONDS: Final = 30
 
 #: `KEY=value`, optionally prefixed with `export`, as dotenv loaders read it.
 _ASSIGNMENT: Final = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
@@ -129,37 +122,6 @@ def port_values(*, target: Path, template: Path, source: Path, source_template: 
     return result
 
 
-def main_worktree(root: Path) -> Path | None:
-    """Return the worktree checked out on `main`, when it is not ``root`` itself.
-
-    Returns:
-        Its path, or ``None`` when there is no such worktree, ``root`` is it, or
-        git cannot answer.
-    """
-    git = shutil.which("git")
-    if git is None:
-        return None
-    try:
-        listing = run_command(
-            [git, "--no-optional-locks", "worktree", "list", "--porcelain"],
-            cwd=root,
-            errors="replace",
-            timeout_seconds=GIT_TIMEOUT_SECONDS,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if listing.returncode != 0:
-        return None
-    worktree: Path | None = None
-    for line in listing.stdout.splitlines():
-        key, _, value = line.partition(" ")
-        if key == "worktree":
-            worktree = Path(value)
-        elif key == "branch" and value == MAIN_BRANCH and worktree is not None:
-            return None if worktree.resolve() == root.resolve() else worktree
-    return None
-
-
 def provision(root: Path, main: Path | None) -> int:
     """Create `env/.env` when absent, then port the main worktree's values into it.
 
@@ -237,7 +199,7 @@ def provision_google_client(root: Path) -> int:
 
 def env_setup() -> int:
     """Provision this checkout's `env/.env`, porting values from the main worktree."""
-    return provision(REPO_ROOT, main_worktree(REPO_ROOT))
+    return provision(REPO_ROOT, None)
 
 
 def _port_assignment(

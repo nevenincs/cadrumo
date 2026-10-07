@@ -37,14 +37,3 @@ def test_supplied_snapshot_number_needs_no_git(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert (tmp_path / "number.txt").read_text(encoding="utf-8") == "2086"
-
-
-def test_checkout_number_uses_actual_revision_count(tmp_path: Path) -> None:
-    cmake = shutil.which("cmake")
-    git = shutil.which("git")
-    assert cmake is not None and git is not None
-    expected = run_command([git, "rev-list", "--count", "HEAD"], cwd=REPO_ROOT)
-    assert expected.returncode == 0, expected.stderr
-    result = run_command([cmake, "-P", str(_script(tmp_path, REPO_ROOT))], cwd=tmp_path)
-    assert result.returncode == 0, result.stderr
-    assert (tmp_path / "number.txt").read_text(encoding="utf-8") == expected.stdout.strip()

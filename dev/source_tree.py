@@ -40,6 +40,7 @@ from ._paths import REPO_ROOT, UTF_8
 
 __all__ = [
     "content_digest",
+    "ignored_paths",
     "normalised_content",
     "normalised_contents",
     "repository_files",
@@ -136,6 +137,29 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
         # apply to it, and an ignored ancestor excludes it outright.
         _visit_repository_subtree(root, prefix, found)
     return tuple(sorted(dict.fromkeys(found)))
+
+
+def ignored_paths(root: Path = REPO_ROOT) -> tuple[str, ...]:
+    """Return ignored files and directories without entering an ignored directory."""
+    found: list[str] = []
+
+    def visit(directory: Path, base: str, rules: tuple[_ScopedRules, ...]) -> None:
+        own = _ignore_rules(directory, base)
+        scoped = (*rules, own) if own is not None else rules
+        with os.scandir(directory) as entries:
+            children = sorted(entries, key=lambda entry: entry.name)
+        for entry in children:
+            if entry.name == _VCS_ENTRY:
+                continue
+            relative = f"{base}/{entry.name}" if base else entry.name
+            is_directory = entry.is_dir(follow_symlinks=False)
+            if _is_ignored(relative, is_directory=is_directory, rules=scoped):
+                found.append(f"{relative}/" if is_directory else relative)
+            elif is_directory and not is_nested_repository(Path(entry.path)):
+                visit(Path(entry.path), relative, scoped)
+
+    visit(root.resolve(), "", ())
+    return tuple(found)
 
 
 def _governing_attribute_files(relative: str) -> tuple[str, ...]:

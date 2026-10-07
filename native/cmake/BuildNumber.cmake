@@ -1,7 +1,5 @@
-# Snapshot callers supply the identifier captured from the authoring revision.
-# Derive it only when configuring directly from a version-controlled checkout.
-if(NOT DEFINED CADRUMO_BUILD_NUMBER)
-  execute_process(COMMAND git rev-list --count HEAD WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    OUTPUT_VARIABLE build_number OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
-  set(CADRUMO_BUILD_NUMBER "${build_number}" CACHE STRING "Numeric build identifier")
+# Release callers supply the captured identifier; local development defaults to 1.
+set(CADRUMO_BUILD_NUMBER "1" CACHE STRING "Explicit numeric build identifier")
+if(NOT CADRUMO_BUILD_NUMBER MATCHES "^[1-9][0-9]*$")
+  message(FATAL_ERROR "CADRUMO_BUILD_NUMBER must be a positive integer")
 endif()

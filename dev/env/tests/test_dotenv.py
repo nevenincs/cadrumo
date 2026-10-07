@@ -8,7 +8,6 @@ holds the operator's secrets.
 from __future__ import annotations
 
 import os
-import shutil
 from typing import TYPE_CHECKING
 
 import pytest
@@ -16,10 +15,9 @@ import pytest
 from cadrumo.core import config_google
 from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import STORAGE_ROOT, ChildEnvironmentProfile, child_environment
-from dev.packaging.command_execution import run_command
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, GOOGLE_OAUTH_RESOURCE
 
-from .._dotenv import main_worktree, provision
+from .._dotenv import provision
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -155,42 +153,6 @@ def test_without_a_main_worktree_the_template_is_copied(tmp_path: Path, capsys: 
 
     assert _dotenv(feature) == _TEMPLATE
     assert "nothing to port" in _output(capsys)
-
-
-def _git(repository: Path, *arguments: str) -> None:
-    executable = shutil.which("git")
-    assert executable is not None, "git must be on PATH to prove worktree discovery"
-    identity = ("-c", "user.email=gate@example.invalid", "-c", "user.name=gate")
-    completed = run_command(
-        [executable, "--no-optional-locks", *identity, *arguments],
-        cwd=repository,
-        timeout_seconds=120,
-    )
-    assert completed.returncode == 0, completed.stderr
-
-
-def test_the_main_worktree_is_found_from_a_sibling_and_not_from_itself(tmp_path: Path) -> None:
-    main = tmp_path / "main"
-    main.mkdir()
-    _git(main, "init", "--initial-branch=main")
-    _git(main, "commit", "--allow-empty", "-m", "root")
-    feature = tmp_path / "feature"
-    _git(main, "worktree", "add", "-b", "feature", str(feature))
-
-    found = main_worktree(feature)
-
-    assert found is not None
-    assert found.resolve() == main.resolve()
-    assert main_worktree(main) is None
-
-
-def test_no_main_worktree_is_found_when_main_is_not_checked_out(tmp_path: Path) -> None:
-    repository = tmp_path / "repository"
-    repository.mkdir()
-    _git(repository, "init", "--initial-branch=trunk")
-    _git(repository, "commit", "--allow-empty", "-m", "root")
-
-    assert main_worktree(repository) is None
 
 
 def test_setup_materializes_client_for_a_worker_that_scrubs_environment(
