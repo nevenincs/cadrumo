@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:06ad063e0fc66ffaa50d338ad312df9afa7be22dc55317deb0a8e6d26a804fce'
+body_hash: 'sha256:c8fe70a0df87781a22a9cbb1b7fc72eed438d7a5c82815eec34d849a34ab7b58'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -73,3 +73,20 @@ related:
 - `S03` `verify:` `uv run --no-sync basedpyright src/cadrumo/domain/modelos/calculation_revision_rendering.py` -> `pass`
 - `S03` `verify:` `actual encrypted M100 load median2.147s to1.600s with identical saved JSON and digests` -> `pass`
 - `S03` `verify:` `isolated admitted dependency floor pydantic-core2.46.0 serializer constructor and explicit copied-schema serialization` -> `pass`
+- `S06` `M` `dev/ci/modelo_runtime_benchmark.py`
+- `S06` `M` `dev/ci/tests/test_modelo_runtime_benchmark.py`
+- `S06` `verify:` `uv run --no-sync pytest -n 0 --basetemp=.tmp/pytest-modelo-benchmark-startup-1 -m 'unit or integration' dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py dev/docs/sequences/tests/test_benchmark_scopes.py dev/docs/sequences/tests/test_runtime_fixture.py --tb=line` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest -n 0 --basetemp=.tmp/pytest-modelo-benchmark-startup-cache-1 -m unit dev/ci/tests/test_modelo_runtime_benchmark.py::test_observed_real_cli_materialization_keeps_its_cache_and_restores_after_failure --tb=line` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff check dev/ci/modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff format --check dev/ci/modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ty check dev/ci/modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark.py dev/ci/tests/test_modelo_runtime_benchmark_process.py --output-format concise` -> `pass`
+- `S05` `M` `src/cadrumo/application/modelo/selectors.py`
+- `S05` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/test_selector_catalogue_reads.py`
+- `S05` `verify:` `uv run --no-sync pytest -n 0 -m unit src/cadrumo/application/modelo/tests/test_selector_catalogue_reads.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/modelo/tests/test_revision_id_d1_resolver_policy.py --basetemp=.tmp/modelo-selector-dedup-tests-boundaries -q` -> `pass`
+- `S05` `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/selectors.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/modelo/tests/test_selector_catalogue_reads.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync basedpyright src/cadrumo/application/modelo/selectors.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/modelo/tests/test_selector_catalogue_reads.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync pyrefly check src/cadrumo/application/modelo/selectors.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/modelo/tests/test_selector_catalogue_reads.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/selectors.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/modelo/tests/test_selector_catalogue_reads.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/modelo/selectors.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/modelo/tests/test_selector_catalogue_reads.py` -> `pass`

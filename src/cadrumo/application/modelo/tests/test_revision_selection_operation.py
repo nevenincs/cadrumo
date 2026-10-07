@@ -241,17 +241,22 @@ def test_historical_result_uses_encrypted_admission_period_without_reresolving_c
 
 
 @pytest.mark.parametrize("positional_work_id", [False, True])
-def test_fresh_submission_derives_period_from_selected_persisted_unit(
-    positional_work_id: bool, *, authority_operation: PinnedAuthorityOperation
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START])
+def test_each_fresh_boundary_derives_period_from_selected_persisted_unit(
+    positional_work_id: bool, action: AccessAction, *, authority_operation: PinnedAuthorityOperation
 ) -> None:
     unit = _unit()
     calculation_loads: list[PinnedAuthorityOperation | None] = []
+    work_catalogue = WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
+    work_loads = 0
 
     class WorkRepository:
         bucket_id = str(_PROFILE)
 
         def load(self) -> WorkUnitCatalogue:
-            return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
+            nonlocal work_loads
+            work_loads += 1
+            return work_catalogue
 
     class CalculationRepository:
         bucket_id = str(_PROFILE)
@@ -290,7 +295,7 @@ def test_fresh_submission_derives_period_from_selected_persisted_unit(
         context=OperationAccessContext(
             profile_id=_PROFILE,
             destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
+            action=action,
             frontend=OperationFrontendProjection.CLI,
             contract=registration.contract,
             published_authority=Availability.AVAILABLE,
@@ -301,6 +306,26 @@ def test_fresh_submission_derives_period_from_selected_persisted_unit(
     assert resolved.request.periods == frozenset({unit.period})
     assert not resolved.request.period_independent
     assert calculation_loads == ([authority_operation] if positional_work_id else [])
+    assert work_loads == 1
+
+    work_catalogue = WorkUnitCatalogue()
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(
+            registry=registry,
+            request=request,
+            context=OperationAccessContext(
+                profile_id=_PROFILE,
+                destination_id=uuid4(),
+                action=action,
+                frontend=OperationFrontendProjection.CLI,
+                contract=registration.contract,
+                published_authority=Availability.AVAILABLE,
+                authority_operation=authority_operation,
+            ),
+        )
+    assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
+    assert work_loads == 2
+    assert calculation_loads == ([authority_operation, authority_operation] if positional_work_id else [])
 
 
 def test_fresh_submission_without_authority_pin_refuses_before_repository_creation() -> None:
@@ -395,7 +420,7 @@ def test_revision_request_identity_refuses_before_missing_pin_and_shape() -> Non
     assert bundle_calls == 0
 
 
-@pytest.mark.parametrize("selector", ["exact", "natural"])
+@pytest.mark.parametrize("selector", ["exact", "natural", "positional-work"])
 def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     selector: str,
     monkeypatch: pytest.MonkeyPatch,
@@ -487,16 +512,19 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     monkeypatch.setattr(work_addressing, "bundled_indexed_authority", unexpected_lease)
 
     subject_ref = profile_operation_subject(str(_PROFILE))
-    payload = (
-        ModeloWorkRevisionRequest(profile_id=_PROFILE, calculation_revision_id=revision_id)
-        if selector == "exact"
-        else ModeloWorkRevisionRequest(
+    if selector == "exact":
+        payload = ModeloWorkRevisionRequest(profile_id=_PROFILE, calculation_revision_id=revision_id)
+    elif selector == "positional-work":
+        payload = ModeloWorkRevisionRequest(
+            profile_id=_PROFILE, calculation_revision_id=unit.work_unit_id, default_for="verify"
+        )
+    else:
+        payload = ModeloWorkRevisionRequest(
             profile_id=_PROFILE,
             modelo=str(unit.modelo),
             year=unit.filing_year,
             period=PublicPeriod.from_period(unit.period),
         )
-    )
     request = OperationRequest[ModeloWorkRevisionRequest](
         definition_id=MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref,
@@ -544,8 +572,15 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
 
     assert result_ref == _REPORT_ID
     assert isinstance(operands.value, ModeloWorkRevisionProjection)
-    assert operands.value.calculation_revision_id == revision_id
-    assert calculation_loads == [authority_operation] * (3 if selector == "exact" else 2)
+    assert operands.value == ModeloWorkRevisionProjection(
+        profile_id=_PROFILE,
+        unit=ModeloWorkMetadataSnapshot.from_work_unit(unit),
+        calculation_revision_id=revision_id,
+        calculation_state=CalculationRevisionState.BORRADOR,
+        verification_report_id=None,
+        granted_verificado_completo=False,
+    )
+    assert calculation_loads == [authority_operation]
     assert events.phases == [MODELO_WORK_REVISION_OPERATION_DEFINITION_ID]
     assert events.effects == [OperationEffect.NONE]
 

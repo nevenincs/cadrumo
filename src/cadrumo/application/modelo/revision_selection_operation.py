@@ -19,7 +19,11 @@ from ...core.operations import profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+)
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecord
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
@@ -113,12 +117,22 @@ def _unit(
     payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, *, operation: PinnedAuthorityOperation
 ) -> WorkUnit:
     """Resolve the persisted unit before interpreting its revision selector."""
+    unit, _catalogue = _unit_and_catalogue(payload, bundle, operation=operation)
+    return unit
+
+
+def _unit_and_catalogue(
+    payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, *, operation: PinnedAuthorityOperation
+) -> tuple[WorkUnit, CalculationRevisionCatalogue | None]:
+    """Retain the exact-id lookup only for the caller's synchronous selection."""
     profile_id = str(payload.profile_id)
     if bundle.work_unit.bucket_id != profile_id or bundle.calculation.bucket_id != profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     catalogue = bundle.work_unit.load()
+    calculations: CalculationRevisionCatalogue | None = None
     if payload.calculation_revision_id is not None and _selects_exact_calculation(payload):
-        revision = bundle.calculation.load(operation=operation).get(payload.calculation_revision_id)
+        calculations = bundle.calculation.load(operation=operation)
+        revision = calculations.get(payload.calculation_revision_id)
         if revision is None:
             # The established verify/file positional-id route also accepts an
             # exact work-unit id and then selects its current calculation.
@@ -141,7 +155,7 @@ def _unit(
         )
     if unit.bucket_id != profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return unit
+    return unit, calculations
 
 
 def _external_record_coordinates_match(
@@ -232,13 +246,11 @@ def _require_selected_revision_grant_evidence(
 def _capture(
     payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, operation: OperationExecutorContext
 ) -> ModeloWorkRevisionProjection:
-    unit = _unit(payload, bundle, operation=operation.authority_operation)
+    unit, calculations = _unit_and_catalogue(payload, bundle, operation=operation.authority_operation)
+    if calculations is None:
+        calculations = bundle.calculation.load(operation=operation.authority_operation)
     selected_id = payload.calculation_revision_id
-    if (
-        selected_id is not None
-        and selected_id == unit.work_unit_id
-        and bundle.calculation.load(operation=operation.authority_operation).get(selected_id) is None
-    ):
+    if selected_id is not None and selected_id == unit.work_unit_id and calculations.get(selected_id) is None:
         selected_id = None
     selection = resolve_modelo_calculation_revision_pick(
         unit,
@@ -247,6 +259,7 @@ def _capture(
         default_for=payload.default_for,
         calculation_repository=bundle.calculation,
         operation=operation.authority_operation,
+        calculation_catalogue=calculations,
     )
     revision = selection.revision
     if payload.default_for in {"verify", "file"}:

@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:9db59962919622a7cbf9a1f97e616f55612977983f14d46205bbec2a6a655c3e'
+body_hash: 'sha256:feb5c33541ec2f35a7938ece940199d33778fa6d33c6d72344278735b6df32fd'
 ---
 
 # `modelo-runtime-performance` plan
@@ -33,11 +33,14 @@ The baseline is current HEAD f0be8532f5 plus existing peer edits. Root owns the 
 - [x] `S01` - Measure current real Modelo100 startup calculation and export and retain bounded phase and load profiling; `dev/ci/modelo_runtime_benchmark.py (new), justfile benchmark invocation, dev/docs/sequences runtime fixture benchmark seams and owning tests`.
 - [x] `S02` - Reduce measured operation schema generation and graph snapshot work while preserving exact public fingerprints and live mutation refusal; `src/cadrumo/application/operations/registry_schema_validation.py, _model_contract.py, schema_identity.py, owning operation registry tests and src/cadrumo/entrypoints/tests/test_operation_registry_schema_parity.py`.
 - [x] `S03` - Optimize measured calculation revision decode and read paths without stale authority or cross-load private caches; `src/cadrumo/adapters/persistence/profile/modelos_calculation.py and owning calculation revision, rendering, verification and readback consumers/tests`.
+- [x] `S05` - Deduplicate synchronous selector and exact-revision capture reads inside one invocation while retaining every independent fresh runtime guard; `src/cadrumo/application/modelo calculation revision selector and capture owners with their direct tests`.
+- [ ] `S06` - Attribute the measured cold startup wait with bounded public native launch and authentication timing; `dev/ci/modelo_runtime_benchmark.py and direct benchmark tests`.
+- [ ] `S07` - Replace measured quadratic duplicate scans with one typed counting pass while preserving exact registry refusal semantics; `src/cadrumo/domain/calculations/registry/schema_surfaces.py and owning duplicate-validator tests`.
 - [ ] `S04` - Prove real Modelo100 completion and core loading improvement with regression controls and all blocking quality gates; `dev/docs/tests/test_sequence_goldens.py real runtime fixtures, focused Modelo100/303/131 and currentness/custody tests, generated import enrollment, feature audit and ledger`.
 
 ## Parallelization
 
-Use vaultspec-team for disjoint S01, S02 and S03 investigation/implementation. A profiling worker owns S01 developer benchmark code and copied diagnostic scripts; it reads production owners but does not alter them. A schema worker owns S02 operation schema helpers and their tests. A revision worker owns S03 calculation revision decode/read owner and direct tests, reporting any required edit outside ownership first. Begin with read-only measurements and proposed mechanisms; implement only optimizations supported by measured current-path cost. Preserve all peer edits. Root owns plan/ledger/audit writes, shared metadata, Git staging/commits, native baseline and final production-route runs, and integrated review. Shared expensive fixtures are serialized; scoped pure tests may run independently. S04 follows final source repairs.
+Use vaultspec-team for disjoint S01, S02 and S03 investigation/implementation. A profiling worker owns developer benchmark code and copied diagnostic scripts, including S06 startup measurement; it reads production owners but does not alter them. The schema worker owns S02 operation schema helpers and follows with S05 synchronous revision selection/capture deduplication and direct tests. The revision worker owns S03 calculation revision decode/read owner and direct tests, reporting any required edit outside ownership first. Begin with read-only measurements and proposed mechanisms; implement only optimizations supported by measured current-path cost. Preserve all peer edits. Root owns plan/ledger/audit writes, shared metadata, Git staging/commits, native baseline and final production-route runs, and integrated review. Shared expensive fixtures are serialized; scoped pure tests may run independently. S04 follows final source repairs.
 
 ## Verification
 

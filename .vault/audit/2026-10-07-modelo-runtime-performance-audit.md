@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:0526cc2e1299932adf02c11f2143718ed9394b9741f1ace9b8899864701a4981'
+body_hash: 'sha256:8fa3f6e9fc1a23996562a467fc629f5f51410e1829f650a942b5c47935e52e9c'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
   - "[[2026-10-07-blocking-code-quality-repair-audit]]"
@@ -38,6 +38,14 @@ S03 replaces recursive Python JSON projection with an isolated copied-core-schem
 ### canonical-completion-still-unresolved | high | Faster one-run evidence does not establish double-run completion
 
 The ordinary unchanged 300-second canonical after run still timed out during verification reply wait in the shared double-run fixture. Command and stack are .tmp/m100-performance-after.txt; durable log var/storage/development/.logs/test-runs/2026-10-07/20261007T112521.912299Z-pytest-5328-e2966a37/run.log. Original retained metadata cannot identify which iteration was waiting. A subsequent unprofiled promoted native benchmark completed one full M100 journey in 128.59 s with process-tree CPU 123.19 s: profile edit 14.80 s, work creation 10.37 s, calculation 25.39 s, verification 37.42 s and export 34.74 s. Worker schema-call snapshots show only 1,277 calls and 2.59 s cumulatively; compilation is no longer a dominant repeated cost. Both fixture and benchmark preserve normal settings and native custody; benchmark preimports some production modules before its whole-sequence clock, and pytest collection has distinct GC/authority pinning. These are source-supported context differences, not measured causes. Exact canonical per-iteration observation is required before completion closure. Evidence .tmp/modelo-runtime-after-current; no timer increase, skip or validation bypass.
+
+### canonical-iteration-attribution | high | Three assertions complete but the cold wait leaves insufficient margin
+
+Unchanged canonical tests observed through an ephemeral payload-free plugin all passed: shared setup 294.77 s, total pytest 301.93 s; the item setup remained within the unchanged 300 s policy. This is still insufficient completion margin and is not final closure. Exact original two iterations were retained: first profile edit 60.40 s, creation 10.56 s, calculation 25.09 s, verification 38.00 s; second profile edit 11.97 s, creation 8.81 s, calculation 20.75 s, verification 34.71 s, export 36.38 s. Whole observed scope 296.17 s versus process-tree CPU 244.98 s (parent 29.84 s, descendants 215.17 s). That CPU is approximately twice the one-run benchmark 123.19 s, while the first profile-edit frame adds about 45 s wall time. The startup wait requires bounded attribution; a calibration claim is unsupported because existing profile password unwrap does not use new-envelope calibration. Evidence: .tmp/modelo-runtime-canonical-after and .tmp/m100-performance-canonical-probe.txt; log var/storage/development/.logs/test-runs/2026-10-07/20261007T114459.842595Z-pytest-86936-fe8fac94/run.log. Source inspection additionally found synchronous duplicate catalogue reads in revision selection/capture with no await, write or currentness boundary between them; S05 will remove only those duplicates while retaining separate runtime SUBMIT/START/COMMIT reads.
+
+### synchronous-selector-read-repair | low | One freshly validated catalogue serves one synchronous selection
+
+S05 retains one repository-validated calculation catalogue only as a local value in the synchronous selector/capture invocation. CURRENT, EXPLICIT and FILED reads fall from two to one; natural capture two to one, exact capture three to one, positional work-id capture four to one. Export filed/current/fallback helpers share that one value without an await, write or intervening guard. Every coordinate, parent/profile, state, ambiguity and report-grant check remains, and all separate native access resolutions and persistence compare-and-swap reads remain fresh. Twenty-eight focused cases pass, including later SUBMIT/START resolution after work-row removal, next-call selector after catalogue removal, stale coordinate and foreign-parent refusals, complete exact capture projection and draft-export refusal. All configured scoped type engines, Ruff and formatting passed. Evidence .tmp/s05-selector-read-dedup-evidence.txt; log var/storage/development/.logs/test-runs/2026-10-07/20261007T120159.293746Z-pytest-80348-495d2154/run.log. Route savings are measured separately by root; read-count reductions are controlled proof, not an inferred whole-route timing.
 
 ## Recommendations
 
