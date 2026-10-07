@@ -6,16 +6,15 @@ date: '2026-10-05'
 tier: L1
 related:
   - '[[2026-10-05-google-outbound-review-adr]]'
-  - '[[2026-10-05-google-outbound-review-backup-custody-policy-adr]]'
   - '[[2026-10-04-google-app-identity-adr]]'
   - '[[2026-07-12-google-oauth-adr]]'
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-visual-design-adr]]'
-modified: '2026-10-05'
+modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:6ed6963897d10e1d96b67af52f132617c603b71e8d064c6ae4c1466dccb687e1'
+body_hash: 'sha256:1a3818d5b4fe4d72c1f5ec4fb412e3833606038349699c1f585defd8df32778e'
 ---
 # `google-outbound-review` plan
 
@@ -28,6 +27,8 @@ Authorization basis: the user dispatched Session 02 to execute SESSION-02-CONTAI
 Accepted 2026-10-05-google-outbound-review-adr governs outbound admission, publication and retirement; existing identity, workbook/evidence/visual, mirror and compatibility decisions remain applicable. The separate backup-custody-policy ADR is proposed. S04 may investigate and repair integrity under existing policy but cannot change credential selection, manifest confidentiality or restore behavior without acceptance.
 
 S01 freezes shared snapshot/admission/publication interfaces before dependent integration. Sessions B/C own renderer and evidence builder implementations and provide integration requests. The single integration owner controls shared contracts, central registration, namespace declarations and generated enrollment. Independent settled boundary fixes and focused reproductions started under the user's explicit brief; evidence is retained in SESSION-02-PROGRESS.md.
+
+2026-10-07 validation repair, authorized by the operator's request to resolve the Google ADR validation error: 2026-10-05-google-outbound-review-backup-custody-policy-adr remains proposed and is recorded here as S04's unmet prerequisite, rather than linked as governing authority for this approved plan. S04 remains open and policy-changing implementation remains blocked until the proposal is explicitly accepted. This repair grants no custody-policy, restore, deployment or provider-mutation authority.
 
 ## Steps
 

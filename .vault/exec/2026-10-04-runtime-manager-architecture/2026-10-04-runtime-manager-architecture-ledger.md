@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:72b99c7e37f1f9186dca1e651f4d60c49048af637dcbc5a7ffbab103b9a527cf'
+body_hash: 'sha256:247b0a246f2f9848d3d7da61a9561d76756a575ffef380b4c5c04c064c8c281a'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -347,6 +347,7 @@ related:
 - `S27` `verify:` `vault check --feature runtime-manager-architecture` -> `pass`
 - `S27` `verify:` `vault check all` -> `fail`
 - `S27` `by:` `Codex`
+- `S27` `verify:` `vaultspec-core vault check all after Google governing-link repair` -> `pass`
 
 ## Notes
 
@@ -375,3 +376,4 @@ related:
 - `S26` User authorized implementation of React ghost UI for asynchronous Tauri startup. Reused existing native manager launch and canonical readiness reads without Rust edits, new state libraries or package compilation. Corrected related missing `starting_services` declaration in canonical desktop locale projection and regenerated only chrome strings. React waits are bounded and stale read results cannot restore an unmounted owner. Evidence and source hashes: build/runtime-startup-ui/verification.json; visually inspected loading.png. Browser scenarios prove React behavior, native source runtime smoke proves native IPC; session-1 desktop GUI not claimed. Existing shared Git index.lock still blocks checkpoint; no lock removed and no other workstream staged.
 - `S09` Desktop Clippy fails in a concurrent sign-in test outside this step; the manager and changed consumer tests pass. Interactive installation and OS session-end acceptance remain disposable-host rollout obligations.
 - `S27` Concrete discovery source fix and scoped review pass. S27 remains open because the required repository-wide vault check fails on an unrelated approved Google plan's non-accepted backup-custody ADR. Full format-specific installation/upgrade and interactive-session acceptance remain excluded disposable-host rollout gates. Concurrent source edits and registry-authority documentation hunks are preserved and excluded from this commit.
+- `S27` The 2026-10-07 Google decision-coverage repair removes the prior external schema blocker. Prior source verification at commit 7798824f68 remains evidence for S27; later concurrent startup/cancellation improvements belong to their owners. Closing discovery does not close MSI lifecycle or product acceptance.

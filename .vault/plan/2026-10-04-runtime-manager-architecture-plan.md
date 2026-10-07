@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:af102d92f7930751d5de2d3a1f8269cd4eb87c4f4747caa644260782d2aa018e'
+body_hash: 'sha256:79e371cbf83aace423a78105fa347f1ba10a45cef752d2472bbdd35e69eb9842'
 ---
 
 # `runtime-manager-architecture` plan
@@ -86,7 +86,7 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 
 Windows login registration in the installation scope and client remedies that name the manager.
 
-- [ ] `P03.S27` - Resolve the audit's installed-version discovery blocker with a shared Windows versioned-prefix layout, complete-version catalogue and stable manager entry point consumed by packaging, manager startup and desktop dispatch; preserve root-level images, strict admission and existing process authority.; `dev/packaging/native installation/layout owners and tests, native/application shared discovery, native/manager startup, native/desktop manager target selection and owning tests`.
+- [x] `P03.S27` - Resolve the audit's installed-version discovery blocker with a shared Windows versioned-prefix layout, complete-version catalogue and stable manager entry point consumed by packaging, manager startup and desktop dispatch; preserve root-level images, strict admission and existing process authority.; `dev/packaging/native installation/layout owners and tests, native/application shared discovery, native/manager startup, native/desktop manager target selection and owning tests`.
 - [ ] `P03.S14` - Generate Windows login registration and the manager Start-menu shortcut with AUMID in both installation scopes from the identity projection, gated on the versioned-install layout; `dev/packaging/native/installation.py, native/cmake/distribution/`.
 - [ ] `P03.S15` - Add localized UNAVAILABLE remedies naming the manager to CLI, TUI and MCP refusal output without automatic manager requests; `src/cadrumo/adapters/local_runtime/runtime_client.py consumers, src/cadrumo/locales/, src/cadrumo_harness/mcp/`.
 

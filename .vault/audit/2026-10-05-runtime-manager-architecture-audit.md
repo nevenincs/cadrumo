@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:5c3dbf8cd6bf377e903cac89abe9bb0033b82f9397912c60aee886790cc022c9'
+body_hash: 'sha256:f97e5e937b6bbd56eba1b985d94519be04974b40a122dc396060c452e907d2fd'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -146,6 +146,10 @@ Desktop dispatch selects that stable entry through the shared catalogue. The ent
 Applicable evidence: 155 manager tests passed; the shared application suite passed (70 tests before the additional metadata fixture), and all five final discovery fixtures passed; 17 focused desktop manager/log tests passed. Manager, shared application and desktop backend Clippy all passed with warnings denied; the previously concurrent sign-in build failure is resolved. Python installation/distribution checks passed (28 tests, two POSIX-only skips), including real CMake/CPack ZIP no-op, refresh and clean rebuild for manager and non-manager payloads. Earlier unchanged generator/storage contract checks passed. Ruff, formatting, type checks and scoped diff checks passed. Native/CONTRACT documents the consumed contract. Fixture evidence is in build/manager-implementation-audit/discovery-*.log and the owning pytest run 20261007T102604.645676Z-pytest-41692-ce77547c.
 
 PASS for the selected concrete source fixes. PENDING for broader gates: real dual-scope installer/upgrade and interactive session acceptance still require disposable hosts; existing major-upgrade policy, login registration, tray, cutover/rollback, obsolete-version removal and ports remain excluded rollout work. The manager feature vault check has zero errors/warnings. The required repository-wide vault check reports an unrelated approved Google plan referencing a non-accepted backup-custody ADR, plus unrelated workstream hygiene warnings; those records were preserved for their owners. This review does not declare the full manager plan or any installer format ready to ship.
+
+### discovery-external-gate-resolved | low | Google decision coverage no longer blocks P03.S27
+
+On 2026-10-07 the operator requested the Google validation repair and complete installer/upgrade acceptance. The bounded Google repair is in 2026-10-07-google-outbound-review-decision-coverage-repair-audit: the plan retains its proposed custody prerequisite without treating it as governing authority. Whole-vault validation now reports zero errors (thirteen unrelated/concurrent warnings). S27's previously verified source at commit 7798824f68 is unchanged by this repair, and its final required gate now passes; P03.S27 is closed. Concurrent later startup/cancellable catalogue source changes are owned and verified separately. This source-discovery closure makes no MSI, upgrade, signing, GUI or complete manager-plan acceptance claim.
 
 ## Recommendations
 
