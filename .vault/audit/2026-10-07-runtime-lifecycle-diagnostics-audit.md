@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:91ba92ba1f68f89b1d6aa6e5f5b97fcd85025e6fd5c1e6881d8a83585d23877f'
+body_hash: 'sha256:ed84bf367fdf368536eb7c7d4d4371b640ae4a0173fe7621934326b12216e42c'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -291,3 +291,9 @@ Root reviewed the final S17 package/filesystem patch and its real filesystem tes
 The original verifier's three alternating optimized samples had median wall/CPU 27.05395/26.703125 seconds. The final compatibility-corrected verifier's three optimized samples measured 3.92314/3.22980/3.25619 seconds wall and median 3.21875 CPU: approximately 8.3 times faster, an 88 percent wall reduction. Every sample returned Ready for the unchanged 29,286-file, 1,152,178,211-byte inventory. Compilation and the diagnostic census are excluded. A root vault command may overlap part of the first original observation; raw data is retained and later observations were root-quiet. This is current verifier performance against the immutable old payload, not historical r6 attribution or complete application startup acceptance.
 
 Two concurrent fresh optimized probes before the empty-directory compatibility correction both returned Ready in 3.42347/3.42400 seconds, with peak working sets 19,349,504/19,357,696 bytes. Total-host CPU during that pair was 28.827 percent across 24 logical CPUs, including background work. Final serial high-water memory reached 23.585 MB because the probe retains the preceding returned manifest while starting its next inspection; this is not evidence of a leak or a steady-state measurement. Forty-four distinct native tests, scoped Clippy, formatting and whitespace checks pass across the applicable original and final suites. Evidence: diagnostics-review/s17-package-inspection-verification.json, paired-measurement.json and final-measurement.json beneath its s17-package-inspection directory. Root verdict PASS for S17; installed selection, repeated manager admission, scan cancellation and fresh desktop acceptance remain separate work.
+
+### installation-selection-work | pass | Stop after both selection obligations are established
+
+Root reviewed S18 against the unchanged complete-package and stable-entry admission contracts. All entries count toward the existing bound before verification; canonical numeric versions are visited descending. Selection stops only after admitting the newest complete package and matching the stable entry to a complete package. An older stable entry still requires its matching older complete version. Corruption, incomplete matches, excess entries and relocation retain their original outcomes.
+
+Ten owning tests, all-target Clippy, scoped formatting and whitespace checks pass. Disposable before/after probes preserve all seven outcomes: newest stable and relocated prefix require 3 to 1 full inspections; older stable and damaged newest require 3 to 2; incomplete older stable stays 2 to 2 and refuses; modified stable stays 3 to 3 and refuses; excessive entries now refuse before any inspection (1 to 0). Counts include attempted incomplete inspections. Synthetic whole-probe wall 0.8142 to 0.6099 seconds includes setup and is not installed-payload latency evidence. No timeout, cache, launch, registration or user storage changed. Evidence: runtime-latency-investigation/s18-installation-selection/verification.json and counts.json (SHA-256 5f05bcd3f87a17f407e9ffd717efc032834a671f1177b3fb808e5ac2e8db38ad). Root verdict PASS for S18; cross-process verification remains necessary, and S19 separately removes duplicated admission inside one manager process.

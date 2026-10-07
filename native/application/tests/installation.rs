@@ -79,6 +79,19 @@ impl Fixture {
         edit(&mut value);
         fs::write(file, serde_json::to_vec(&value).unwrap()).unwrap();
     }
+    fn version_with_distinct_manager(&self, prefix: &Path, version: &str) -> PathBuf {
+        let package = self.version(prefix, version);
+        let member = self.contract.manager_member().unwrap();
+        // Native object parsing permits an inert overlay without changing the
+        // executable's target. These bytes are never executed by this fixture.
+        let mut bytes = fs::read(member.under(&package)).unwrap();
+        bytes.extend_from_slice(b"distinct fixture manager overlay");
+        fs::write(member.under(&package), &bytes).unwrap();
+        self.amend(&package, |value| {
+            value["files"][member.as_str()] = json!(format!("{:x}", Sha256::digest(&bytes)));
+        });
+        package
+    }
 }
 
 #[test]
@@ -96,6 +109,86 @@ fn old_image_and_old_stable_entry_select_newest_complete_numeric_version() {
         assert_eq!(result.manager, member.under(&newest));
         assert_eq!(result.entrypoint, member.under(&prefix));
         assert_eq!(result.version, [0, 10, 0]);
+    }
+}
+
+#[test]
+fn damaged_newest_hash_falls_back_to_the_next_complete_version() {
+    let fixture = Fixture::new();
+    let prefix = fixture.prefix("damaged newest");
+    let complete = fixture.version(&prefix, "1.0.0");
+    let damaged = fixture.version(&prefix, "2.0.0");
+    fs::write(damaged.join("python.zip"), b"modified dependency").unwrap();
+    let selected = fixture.contract.inspect(&prefix).unwrap();
+    assert_eq!(selected.package, complete);
+    assert_eq!(selected.version, [1, 0, 0]);
+}
+
+#[test]
+fn a_complete_older_stable_manager_with_different_bytes_still_selects_the_newest_package() {
+    let fixture = Fixture::new();
+    let prefix = fixture.prefix("older stable ü space");
+    let old = fixture.version(&prefix, "1.0.0");
+    let newest = fixture.version_with_distinct_manager(&prefix, "2.0.0");
+    fixture.version(&prefix, "0.9.0");
+    let member = fixture.contract.manager_member().unwrap();
+    assert_eq!(
+        fs::read(member.under(&prefix)).unwrap(),
+        fs::read(member.under(&old)).unwrap()
+    );
+    assert_ne!(
+        fs::read(member.under(&prefix)).unwrap(),
+        fs::read(member.under(&newest)).unwrap()
+    );
+    let selected = fixture.contract.inspect(&prefix).unwrap();
+    assert_eq!(selected.package, newest);
+    assert_eq!(selected.version, [2, 0, 0]);
+}
+
+#[test]
+fn an_incomplete_older_package_cannot_verify_the_stable_manager() {
+    let fixture = Fixture::new();
+    let prefix = fixture.prefix("incomplete stable match");
+    let older = fixture.version(&prefix, "1.0.0");
+    fixture.version_with_distinct_manager(&prefix, "2.0.0");
+    fs::remove_file(older.join("python.zip")).unwrap();
+    assert!(matches!(
+        fixture.contract.inspect(&prefix),
+        Err(cadrumo_application::error::Error::Integrity(_))
+    ));
+}
+
+#[test]
+fn a_modified_stable_manager_is_refused_even_when_newest_is_complete() {
+    let fixture = Fixture::new();
+    let prefix = fixture.prefix("modified stable");
+    fixture.version(&prefix, "1.0.0");
+    fixture.version(&prefix, "2.0.0");
+    fs::write(
+        fixture.contract.manager_member().unwrap().under(&prefix),
+        b"modified stable image",
+    )
+    .unwrap();
+    assert!(matches!(
+        fixture.contract.inspect(&prefix),
+        Err(cadrumo_application::error::Error::Integrity(_))
+    ));
+}
+
+#[test]
+fn moving_the_complete_prefix_keeps_versioned_and_stable_discovery_coherent() {
+    let fixture = Fixture::new();
+    let prefix = fixture.prefix("original prefix");
+    fixture.version(&prefix, "1.0.0");
+    let relocated = fixture.directory.path().join("relocated ü prefix");
+    fs::rename(&prefix, &relocated).unwrap();
+    let member = fixture.contract.manager_member().unwrap();
+    let package = relocated.join("versions/1.0.0");
+    for image in [member.under(&relocated), member.under(&package)] {
+        let selected = fixture.contract.discover(&image, &[]).unwrap();
+        assert_eq!(selected.package, package);
+        assert_eq!(selected.entrypoint, member.under(&relocated));
+        assert_eq!(selected.version, [1, 0, 0]);
     }
 }
 

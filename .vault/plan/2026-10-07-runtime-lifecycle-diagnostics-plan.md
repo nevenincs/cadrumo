@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:9d94fa0773252966dbb91d6ac1d813d09145d8f161311523d2125f078eb446f9'
+body_hash: 'sha256:7ff2d6c181053fe83162fdc30be323de83fd3933489bca8c48f3c4265a843e95'
 ---
 
 <!-- RETIRED: S08 -->
@@ -44,9 +44,9 @@ The separate manager session retains its active implementation files. This work 
 - [ ] `S13` - Attribute runtime startup, profile creation, sign-in and shutdown latency with bounded phase and CPU measurements before optimizing; `native/desktop/src-tauri/src/shell/sign_in, native/application/src/diagnostics, native/manager/tests/runtime_identity.rs, native/desktop/tests/packaged, runtime latency evidence`.
 - [x] `S14` - Remove redundant schema binding compilation and background-read serialization from sign-in without weakening validation or increasing timeouts; `src/cadrumo/application/operations/registry.py and owning tests, native desktop sign-in process lanes and frontend sequencing, app shutdown and owning tests`.
 - [x] `S15` - Defer unused Google export implementation imports to their operation execution boundary and measure startup CPU and dependency closure; `src/cadrumo/entrypoints/operation_composition.py, google_review_operation_composition.py, owning entrypoint tests and guarded performance evidence`.
-- [ ] `S16` - Isolate CLI authority admission and custody bindings from unused registry and worker dependency graphs, preserving validation and measuring paired startup latency; `canonical CLI provisioning and authority location plus all consumers, authority store/artifact/tax identity admission, language and auth provider binding, workflow persistence, confirmation and extraction repository ports and consumers, annotation-only ledger and Modelo repository bindings, worker binding and frontend profile-view client, CLI custody payload owner/consumers, import enrollment, owning tests and paired performance evidence`.
+- [ ] `S16` - Isolate CLI authority admission and custody bindings from unused registry and worker dependency graphs, preserving validation and measuring paired startup latency; `canonical CLI provisioning and authority location plus all consumers, authority store/artifact/tax identity admission and measured lexical rejection, language and auth provider binding, workflow persistence, confirmation and extraction repository ports and consumers, annotation-only ledger and Modelo repository bindings, worker binding and frontend profile-view client, CLI custody payloads and migration notices, import enrollment, owning tests and paired performance evidence`.
 - [x] `S17` - Remove repeated package-verification filesystem work while preserving complete digest inventory, link refusal and degradation checks, with same-package optimized measurements; `native/application/src/package.rs and private filesystem helpers if required, native/application/tests package integrity fixtures, bounded diagnostic evidence`.
-- [ ] `S18` - Stop installed-version verification once newest-complete selection and stable-entry admission are established, preserving bounded enumeration and fallback semantics; `native/application/src/installation.rs, owning installation discovery tests and measured verification counts`.
+- [x] `S18` - Stop installed-version verification once newest-complete selection and stable-entry admission are established, preserving bounded enumeration and fallback semantics; `native/application/src/installation.rs, owning installation discovery tests and measured verification counts`.
 - [ ] `S19` - Reuse current-process installed-package admission during manager startup instead of verifying the selected package twice; `native/manager/src/installation.rs, installed.rs, main.rs and owning manager startup tests`.
 - [ ] `S20` - Cancel desktop-owned package discovery during shutdown and settle its worker without launching a manager after close; `native/application package and discovery cancellation, existing Cancellation type, native/desktop/src-tauri/src/manager.rs and owning cancellation tests`.
 

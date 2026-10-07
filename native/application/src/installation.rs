@@ -181,6 +181,7 @@ impl DiscoveryContract {
         let expected = BinaryExpectation::host()?;
         let mut newest: Option<Selection> = None;
         let mut entry_verified = false;
+        let mut candidates = Vec::new();
         for (count, entry) in fs::read_dir(&versions)?.enumerate() {
             if count >= layout.installation.maximum_versions {
                 return Err(Error::LimitExceeded);
@@ -190,7 +191,12 @@ impl DiscoveryContract {
                 continue;
             };
             let Ok(number) = version(&name) else { continue };
-            let package = entry.path();
+            candidates.push((number, name, entry.path()));
+        }
+        // Enumeration is bounded before selection: invalid names and entries after
+        // a ready candidate still count toward the installation's version limit.
+        candidates.sort_unstable_by_key(|candidate| std::cmp::Reverse(candidate.0));
+        for (number, name, package) in candidates {
             let inspect = || -> Result<_, Error> {
                 filesystem::absolute_root(&package)?;
                 let manifest: VersionManifest =
@@ -234,13 +240,16 @@ impl DiscoveryContract {
             if !entry_verified {
                 entry_verified = binary::verify(&entrypoint, &digest, expected).is_ok();
             }
-            if newest.as_ref().is_none_or(|old| number > old.version) {
+            if newest.is_none() {
                 newest = Some(Selection {
                     entrypoint: entrypoint.clone(),
                     package,
                     manager,
                     version: number,
                 });
+            }
+            if newest.is_some() && entry_verified {
+                break;
             }
         }
         if !entry_verified {

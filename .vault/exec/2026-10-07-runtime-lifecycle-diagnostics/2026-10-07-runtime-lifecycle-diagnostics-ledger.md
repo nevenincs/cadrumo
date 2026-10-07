@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2394ce290d7252c22714e1eff6f5a9d210503f43a3201a6d9be43dbc554a7ce2'
+body_hash: 'sha256:ba48266fb7d5a681ee69811736a7da535912dc1c1b41d36f9eed6d914146f4e4'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -306,6 +306,12 @@ related:
 - `S17` `verify:` `S17 optimized paired and final same-package probes` -> `pass`
 - `S17` `verify:` `S17 two concurrent optimized package inspections` -> `pass`
 - `S17` `by:` `root architectural review; Sol6.1 implementation`
+- `S18` `M` `native/application/src/installation.rs`
+- `S18` `M` `native/application/tests/installation.rs`
+- `S18` `verify:` `S18 installation discovery 10 tests` -> `pass`
+- `S18` `verify:` `S18 all-target Clippy scoped Rustfmt and whitespace` -> `pass`
+- `S18` `verify:` `S18 seven-case before-after verification counts and refusals` -> `pass`
+- `S18` `by:` `root architectural review; Sol6.1 implementation`
 
 ## Notes
 
@@ -336,3 +342,4 @@ related:
 - `S13` Closed phase facts omit arguments output passwords and identifiers; helper completed means native output returned only. Measured oldpayload startup, registry, KDF calibration and current binding CPU; empty-root CLI attribution remains in flight. Exact sources/logs archived in s14-helper-lanes-verification.json and sign-in-submission-timings-verification.json.
 - `S15` Structural exclusion established, no measured speedup. Preexisting review fixture owner/filing/rendering drift repaired without assertion or production changes. Performance remains open.
 - `S17` No timeout changes. Final median verification27.054 to3.256seconds;44 distinct tests. Concurrent proof precedes only empty-directory compatibility correction. Full metrics/source/log evidence in s17-package-inspection-verification.json; whole desktop and installed acceptance remain open.
+- `S18` Newest stable 3 to1 full verifications; older stable and damaged newest3 to2; all seven outcomes preserved. Synthetic probe time is not installed latency. Evidence s18-installation-selection/verification.json.
