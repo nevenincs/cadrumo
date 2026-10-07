@@ -1,9 +1,9 @@
 # Shared by the source build and the native distribution project.
 include("${CMAKE_CURRENT_LIST_DIR}/BuildPaths.cmake")
 get_filename_component(CADRUMO_SOURCE_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
-find_program(CADRUMO_DEV_PYTHON NAMES python python3
-  PATHS "${CADRUMO_SOURCE_ROOT}/.venv/Scripts" "${CADRUMO_SOURCE_ROOT}/.venv/bin"
-  NO_DEFAULT_PATH DOC "Development Python")
+include("${CMAKE_CURRENT_LIST_DIR}/Bootstrap.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/Cleanup.cmake")
+cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_finalize_clean_targets)
 if(NOT EXISTS "${CADRUMO_DEV_PYTHON}")
   message(FATAL_ERROR "Set CADRUMO_DEV_PYTHON to the project's development interpreter")
 endif()

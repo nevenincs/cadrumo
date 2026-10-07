@@ -645,14 +645,11 @@ setup-native-builder:
 _native-selection CONFIGURATION:
     @{{ if native_preset == "" { error("No native configure preset is enrolled for host " + native_host) } else if CONFIGURATION =~ '^(Debug|Release)$' { "" } else { error("CONFIGURATION must be Release or Debug, not " + CONFIGURATION) } }}
 
-# Configure runs on every entry because `CADRUMO_DEV_PYTHON` is a cache entry:
-# only a configure moves a binary directory that was first configured against
-# `.venv` onto the builder. Configure refuses a missing or stale published
-# authority, so publication precedes it. A missing Node.js, Rust or compiler
-# pin stops here with CMake's own message.
+# CMake owns builder setup and authority publication. An explicitly selected
+# CADRUMO_DEV_PYTHON remains externally owned; fresh builds provision their builder.
 [private]
-_native-configure CONFIGURATION: (_native-selection CONFIGURATION) setup-native-builder registry-publish-authority-if-authority-stale
-    cmake --preset {{native_preset}} {{quote("-DCADRUMO_DEV_PYTHON=" + native_builder_python)}}
+_native-configure CONFIGURATION: (_native-selection CONFIGURATION)
+    cmake --preset {{native_preset}}
 
 # Each recipe below names one CMake target and lets CMake build what that
 # target depends on: `verify` and `zip` build the bundle first, and

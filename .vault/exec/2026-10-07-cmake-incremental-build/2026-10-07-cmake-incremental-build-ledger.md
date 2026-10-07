@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:f51b592fb2d991e6197fb4d123ee9b02dd735e47c761a678a6bada321b257b15'
+body_hash: 'sha256:e47f2d72d69225118c726065eaa50ab853f4de1f2cdb8d7bc52710615aa09fef'
 related:
   - "[[2026-10-07-cmake-incremental-build-plan]]"
 ---
@@ -71,7 +71,33 @@ related:
 - `S02` `verify:` `ty check changed Python files` -> `pass`
 - `S02` `verify:` `cmake --preset windows-x64` -> `pass`
 - `S02` `verify:` `cmake native static shared consumer python target builds and unchanged timestamp comparison` -> `pass`
+- `S03` `M` `justfile`
+- `S03` `M` `native/cmake/BuildPaths.cmake`
+- `S03` `M` `native/cmake/Docs.cmake`
+- `S03` `M` `native/cmake/Identity.cmake`
+- `S03` `M` `native/cmake/Packaging.cmake`
+- `S03` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S03` `A` `native/cmake/Authority.cmake`
+- `S03` `A` `native/cmake/Bootstrap.cmake`
+- `S03` `A` `native/cmake/CachedCommand.cmake`
+- `S03` `A` `native/cmake/CleanBuilder.cmake`
+- `S03` `A` `native/cmake/Cleanup.cmake`
+- `S03` `M` `dev/packaging/native/cleanup.py`
+- `S03` `A` `dev/packaging/native/authority_build.py`
+- `S03` `A` `dev/packaging/native/cached_command.py`
+- `S03` `A` `dev/packaging/native/distribution_prepare.py`
+- `S03` `A` `dev/packaging/native/tests/test_authority_build_fingerprints.py`
+- `S03` `A` `dev/packaging/native/tests/test_builder_cleanup.py`
+- `S03` `A` `dev/packaging/native/tests/test_cached_command.py`
+- `S03` `A` `dev/packaging/native/tests/test_cleanup.py`
+- `S03` `A` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S03` `verify:` `pytest cleanup cached command distribution builder tests (13 tests)` -> `pass`
+- `S03` `verify:` `pytest authority fingerprints included final producer suite` -> `pass`
+- `S03` `verify:` `ruff check and format --check changed Python files` -> `pass`
+- `S03` `verify:` `ty check changed Python files` -> `pass`
+- `S03` `verify:` `cmake --preset windows-x64` -> `pass`
 
 ## Notes
 
 - `S02` Authority compiler fingerprint remains intentionally conservative in its canonical owner; this does not establish minimal compiler invalidation.
+- `S03` Full application ZIP acceptance is assigned to S04 and remains pending behind the foreign documentation build; real install/CPack fixtures pass.

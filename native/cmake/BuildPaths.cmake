@@ -10,6 +10,7 @@ cadrumo_require_enrolled_binary_directory(
 set(CADRUMO_BUILD_DIRECTORIES
   GENERATED generated
   RUNTIME _deps/runtime
+  PYTHON_SDK _deps/python-sdk
   TOOLS _deps/build-tools
   PRODUCT product
   BIN bin
@@ -33,8 +34,10 @@ set(CADRUMO_BUILD_DIRECTORIES
   USER_DOCS_STAGE user-docs/stage
   INSTALLATION_STAGE installation/stage
   INSTALLATION_METADATA installation/metadata
+  INSTALLATION_RECEIPTS installation/receipts
   INSTALLATION_WORK installation/work)
 set(build_paths "{\"paths\":{}}")
+string(JSON build_paths SET "${build_paths}" source "\"${CMAKE_SOURCE_DIR}\"")
 while(CADRUMO_BUILD_DIRECTORIES)
   list(POP_FRONT CADRUMO_BUILD_DIRECTORIES key relative)
   set(CADRUMO_PATH_${key} "${CMAKE_BINARY_DIR}/${relative}")
@@ -44,7 +47,7 @@ endwhile()
 set(cleanup_groups [=[{
   "stage": ["stage", "verification", "testing"],
   "packages": ["packages"],
-  "dependencies": ["runtime", "tools", "product"],
+  "dependencies": ["runtime", "python_sdk", "tools", "product"],
   "native": ["bin", "lib", "symbols", "cargo"],
   "desktop": ["desktop_frontend", "desktop_frontend_generated", "desktop_cache", "desktop_icons", "desktop_host", "desktop_cargo", "desktop_testing", "desktop_results"],
   "docs": ["user_docs_build", "user_docs_work", "user_docs_stage"]

@@ -20,27 +20,34 @@ if(CADRUMO_DESKTOP_EXECUTABLE)
   set(desktop_args --desktop "${CADRUMO_DESKTOP_EXECUTABLE}")
 endif()
 set(installation_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.installation)
-execute_process(COMMAND ${installation_helper} prepare --payload "${CADRUMO_PAYLOAD}"
-  --identity "${CADRUMO_PATH_GENERATED}/identity.json" --build "${CMAKE_BINARY_DIR}" ${desktop_args}
-  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-  "${CADRUMO_PAYLOAD}/data/package-manifest.json"
-  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/installation.py")
+include(../CachedCommand.cmake)
+set(installation_inputs "${CADRUMO_PAYLOAD}" "${CADRUMO_PATH_GENERATED}/identity.json"
+  "${CMAKE_BINARY_DIR}/build-paths.json" "${CADRUMO_SOURCE_ROOT}/LICENSE" "${CADRUMO_SOURCE_ROOT}/NOTICE"
+  "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-favicon.svg")
+foreach(helper installation installation_filesystem distribution_prepare build_paths hashing layout package_inventory docs_stage)
+  list(APPEND installation_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
+endforeach()
+cadrumo_cached_command(installation_command installation_prepare INPUTS ${installation_inputs}
+  OUTPUTS "${CADRUMO_PATH_INSTALLATION_STAGE}" "${CADRUMO_PATH_INSTALLATION_METADATA}")
+add_custom_target(installation_prepare ALL
+  COMMAND ${installation_command} "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.distribution_prepare
+    --payload "${CADRUMO_PAYLOAD}" --identity "${CADRUMO_PATH_GENERATED}/identity.json"
+    --build "${CMAKE_BINARY_DIR}" ${desktop_args}
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+add_dependencies(installation_prepare setup-native-builder)
+cadrumo_register_clean(TARGET installation_prepare PATHS "${CADRUMO_PATH_INSTALLATION_WORK}")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Explicit development installation prefix" FORCE)
 endif()
 configure_file(VerifyInstall.cmake.in "${CMAKE_BINARY_DIR}/VerifyInstall.cmake" @ONLY)
 install(SCRIPT "${CMAKE_BINARY_DIR}/VerifyInstall.cmake")
-file(GLOB install_roots RELATIVE "${CADRUMO_PATH_INSTALLATION_STAGE}"
-  "${CADRUMO_PATH_INSTALLATION_STAGE}/*")
-foreach(root IN LISTS install_roots)
-  install(DIRECTORY "${CADRUMO_PATH_INSTALLATION_STAGE}/${root}/"
-    DESTINATION "${root}" USE_SOURCE_PERMISSIONS)
-endforeach()
+install(DIRECTORY "${CADRUMO_PATH_INSTALLATION_STAGE}/" DESTINATION . USE_SOURCE_PERMISSIONS)
 set(CADRUMO_UNINSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Exact prefix previously installed with cmake --install")
+set(CADRUMO_UNINSTALL_RECEIPT "${CADRUMO_PATH_INSTALLATION_METADATA}/installation.json"
+  CACHE FILEPATH "Receipt identifying the installed prefix; older receipts are retained in installation/receipts")
 add_custom_target(uninstall
   COMMAND ${installation_helper} uninstall --prefix "${CADRUMO_UNINSTALL_PREFIX}"
-    --receipt "${CADRUMO_PATH_INSTALLATION_METADATA}/installation.json"
+    --receipt "${CADRUMO_UNINSTALL_RECEIPT}"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
 
 set(CPACK_PACKAGE_NAME "${CADRUMO_ID_NAME}")
@@ -97,4 +104,18 @@ elseif(CADRUMO_TARGET STREQUAL "macos-arm64")
   set(CPACK_DMG_VOLUME_NAME "${CADRUMO_ID_NAME}")
   set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK OFF)
 endif()
+set(distribution_archive "${CADRUMO_PATH_PACKAGES}/${CPACK_PACKAGE_FILE_NAME}.zip")
 include(CPack)
+# The generated `package` target builds ALL first; `zip` selects the portable
+# install-based archive independently of host installer tool availability.
+cadrumo_cached_command(distribution_zip_command zip
+  INPUTS "${CADRUMO_PATH_INSTALLATION_STAGE}" "${CADRUMO_PATH_INSTALLATION_METADATA}"
+    "${CMAKE_BINARY_DIR}/CPackConfig.cmake" "${CMAKE_BINARY_DIR}/cmake_install.cmake"
+    "${CMAKE_BINARY_DIR}/VerifyInstall.cmake" "${CMAKE_CPACK_COMMAND}"
+  OUTPUTS "${distribution_archive}")
+add_custom_target(zip COMMAND ${distribution_zip_command} "${CMAKE_CPACK_COMMAND}"
+  --config "${CMAKE_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>" -G ZIP
+  DEPENDS installation_prepare USES_TERMINAL VERBATIM)
+add_custom_target(clean-package
+  COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cleanup "${CMAKE_BINARY_DIR}" packages
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)

@@ -1,31 +1,14 @@
-file(GLOB_RECURSE product_inputs CONFIGURE_DEPENDS
-  "${PROJECT_SOURCE_DIR}/src/*" "${PROJECT_SOURCE_DIR}/packaging/*"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/*.py"
-  "${PROJECT_SOURCE_DIR}/dev/registry/*.py"
-  "${PROJECT_SOURCE_DIR}/dev/corpus/*.py"
-  "${PROJECT_SOURCE_DIR}/dev/docs/preprocess/*.py"
-  "${PROJECT_SOURCE_DIR}/dev/.gitattributes"
-  "${PROJECT_SOURCE_DIR}/dev/.gitignore")
-list(FILTER product_inputs EXCLUDE REGEX "/(__pycache__|\\.git)/|\\.pyc$|\\.lock$|/\\.aeat-generated-export-transaction-|/\\.generated-export-(backup|stage)-")
-list(FILTER product_inputs EXCLUDE REGEX "/dev/packaging/native/|/dev/.*/tests/")
-list(APPEND product_inputs
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/product.py"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/hashing.py"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/cmake_build.py"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_cache.py")
-foreach(name README.md LICENSE NOTICE pyproject.toml uv.lock .gitignore .gitattributes dev/source_tree.py dev/_paths.py
-    dev/__init__.py dev/docs/__init__.py dev/cache_root.py)
-  if(EXISTS "${PROJECT_SOURCE_DIR}/${name}")
-    list(APPEND product_inputs "${PROJECT_SOURCE_DIR}/${name}")
-  endif()
-endforeach()
+include("${CMAKE_CURRENT_LIST_DIR}/PackageInputs.cmake")
+# Read the actual wheel projects and build hook from the same declarations the
+# product helper consumes; installer/tooling directories are not wheel inputs.
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
-  "from dev.packaging.authority_staging import selected_published_authority; from dev._paths import REPO_ROOT; print(';'.join(p.resolve().as_posix() for p in selected_published_authority(REPO_ROOT)))"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE authority_inputs
+  "import pathlib, tomllib; from cadrumo.core.product_identity import PRODUCT_IDENTITY; p=tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8')); roots=[p['tool']['uv']['sources'][name]['path'] for name in PRODUCT_IDENTITY.companion_distributions]; roots.append(str(pathlib.Path(p['tool']['hatch']['build']['targets']['wheel']['hooks']['custom']['path']).parent)); print(';'.join(roots))"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE product_directories
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${authority_inputs})
-list(APPEND product_inputs ${authority_inputs} "${CADRUMO_PATH_RUNTIME}/ready"
-  "${CADRUMO_PATH_GENERATED}/identity.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json")
+cadrumo_product_inputs(product_inputs "${PROJECT_SOURCE_DIR}" ${product_directories})
+include("${CMAKE_CURRENT_LIST_DIR}/Authority.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
+list(APPEND product_inputs "${CADRUMO_PATH_RUNTIME}/ready")
 list(JOIN product_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n")
 add_custom_target(python_product
@@ -35,7 +18,8 @@ add_custom_target(python_product
   DEPENDS ${product_inputs} "${PROJECT_BINARY_DIR}/inputs-product.txt"
   BYPRODUCTS "${CADRUMO_PATH_PRODUCT}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_dependencies(python_product python_dependencies)
+add_dependencies(python_product python_dependencies registry_authority)
+cadrumo_register_clean(TARGET python_product PATHS "${CADRUMO_PATH_PRODUCT}")
 if(CADRUMO_INCLUDE_DEVELOPMENT_BINARY)
   set(development_args --development)
   set(development_target cadrumo_python_d)
@@ -122,8 +106,42 @@ if(image_count GREATER 0)
 endif()
 include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
 cadrumo_package_bootstrap(package_bootstrap "${package_layout}" "${PROJECT_SOURCE_DIR}")
-add_custom_command(OUTPUT "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
-  COMMAND ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
+set(assembly_inputs "${CADRUMO_PATH_RUNTIME}" "${CADRUMO_PATH_PYTHON_SDK}" "${CADRUMO_PATH_PRODUCT}"
+  "${CADRUMO_PATH_GENERATED}/build.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
+  "${package_bootstrap}" ${contract_inputs})
+foreach(target cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${development_target})
+  list(APPEND assembly_inputs "$<TARGET_FILE:${target}>")
+endforeach()
+foreach(argument IN LISTS application_image_args)
+  if(argument MATCHES "^[^=]+=(.+)$")
+    list(APPEND assembly_inputs "${CMAKE_MATCH_1}")
+  endif()
+endforeach()
+if(CADRUMO_PACKAGE_USER_DOCS)
+  list(APPEND assembly_inputs "${CADRUMO_PATH_USER_DOCS_STAGE}")
+endif()
+# These helpers own assembly; unrelated native build/test helpers are not inputs.
+foreach(helper assemble stdlib package_inventory layout hashing build_paths docs_stage cmake_build cached_command)
+  list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/${helper}.py")
+endforeach()
+file(GLOB assembly_backend_inputs CONFIGURE_DEPENDS
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/${CADRUMO_BACKEND}*.py")
+list(APPEND assembly_inputs ${assembly_backend_inputs})
+if(WIN32)
+  list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/pe.py")
+else()
+  list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/posix.py")
+endif()
+list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py")
+foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
+    dev/packaging/runtime_wheel_selection.py dev/packaging/runtime_wheelhouse_contract.py
+    dev/packaging/native/action_cache.py dev/packaging/native/build_toolchain.py)
+  list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/${input}")
+endforeach()
+cadrumo_cached_command(assembly_command bundle INPUTS ${assembly_inputs}
+  OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>")
+add_custom_target(bundle ALL
+  COMMAND ${assembly_command} ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
     ${user_docs_args} ${application_image_args}
   DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
     python_product ${user_docs_dependencies}
@@ -131,10 +149,10 @@ add_custom_command(OUTPUT "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
     "${CADRUMO_PATH_PRODUCT}/ready" "${PROJECT_SOURCE_DIR}/native/package-layout.json"
     "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py" "${PROJECT_SOURCE_DIR}/dev/packaging/native/assemble.py"
     "${PROJECT_SOURCE_DIR}/dev/packaging/native/stdlib.py"
-    ${native_helper_inputs} ${contract_inputs}
+    ${contract_inputs}
     "${package_bootstrap}"
+  BYPRODUCTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_custom_target(bundle ALL DEPENDS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready")
 add_dependencies(bundle rust_application)
 if(BUILD_TESTING)
   add_test(NAME bundle.python COMMAND "${CMAKE_COMMAND}" -E env
@@ -150,7 +168,7 @@ if(BUILD_TESTING)
     set_tests_properties(bundle.entrypoint.${entrypoint} PROPERTIES RESOURCE_LOCK package_inventory)
   endforeach()
 endif()
-install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION .)
+install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION . USE_SOURCE_PERMISSIONS)
 set(CPACK_GENERATOR ZIP)
 set(CPACK_VERBATIM_VARIABLES YES)
 set(CPACK_PACKAGE_NAME "${CADRUMO_ID_NAME}")
@@ -170,13 +188,7 @@ configure_file("${PROJECT_SOURCE_DIR}/native/cmake/Artifact.cmake.in"
 set(CPACK_POST_BUILD_SCRIPTS "${PROJECT_BINARY_DIR}/Artifact.cmake")
 set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_BINARY_DIR}/CPackProject.cmake")
 include(CPack)
-foreach(group IN LISTS CADRUMO_CLEANUP_GROUPS)
-  add_custom_target(clean-${group}
-    COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cleanup
-      "${PROJECT_BINARY_DIR}" "${group}"
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-endforeach()
-set(native_verification_targets rust_platform rust_application)
+set(native_verification_targets rust_platform rust_platform_consumer rust_application)
 foreach(consumer platform_static_consumer platform_dll_consumer)
   if(TARGET ${consumer})
     list(APPEND native_verification_targets ${consumer})
@@ -186,9 +198,17 @@ add_custom_target(verify
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure
   DEPENDS bundle ${native_verification_targets}
   USES_TERMINAL VERBATIM)
-add_custom_target(zip
-  COMMAND "${CMAKE_CPACK_COMMAND}" --config "${PROJECT_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>"
+cadrumo_cached_command(zip_command zip
+  INPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${PROJECT_BINARY_DIR}/CPackConfig.cmake"
+    "${PROJECT_BINARY_DIR}/CPackProject.cmake" "${PROJECT_BINARY_DIR}/Artifact.cmake"
+    "${PROJECT_BINARY_DIR}/cmake_install.cmake" "${CADRUMO_PATH_GENERATED}/contract.json"
+    "${PROJECT_SOURCE_DIR}/LICENSE" "${CMAKE_CPACK_COMMAND}"
+  OUTPUTS "${CADRUMO_PATH_PACKAGES}/$<CONFIG>/${CADRUMO_ARTIFACT_STEM}-$<CONFIG>.zip"
+    "${PROJECT_BINARY_DIR}/artifacts-$<CONFIG>.json")
+add_custom_target(zip ALL
+  COMMAND ${zip_command} "${CMAKE_CPACK_COMMAND}" --config "${PROJECT_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>"
   DEPENDS bundle USES_TERMINAL VERBATIM)
+add_custom_target(clean-package DEPENDS clean-zip)
 add_custom_target(verify-package
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.artifact_verify
     --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
