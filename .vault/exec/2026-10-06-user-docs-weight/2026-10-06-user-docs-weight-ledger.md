@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f048c7104aaeb4db3169dda2bc312c7d69ee58a9d46841cb752c805b1840f25'
+body_hash: 'sha256:0d889be36cca522e99bd5e189eca59952c65d4b7618dce724152ee83cfec6641'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -150,6 +150,13 @@ related:
 - `S07` `M` `dev/docs/tests/test_docs_language_switcher.py`
 - `S07` `M` `dev/docs/tests/test_docs_build.py`
 - `S07` `verify:` `python -m dev.docs.compile_once --out --oracle --flavor web --base-url (no differing stretch, no missing or extra file)` -> `pass`
+- `S08` `M` `dev/docs/compile_slots.py`
+- `S08` `M` `dev/docs/language_switcher.py`
+- `S08` `M` `dev/docs/build_paths.py`
+- `S08` `A` `dev/docs/tests/test_renderer_writers.py`
+- `S08` `D` `dev/docs/tests/test_docs_build_user_scope.py`
+- `S08` `verify:` `pytest dev/docs/tests/test_docs_build_localized_compile.py (Windows, compile beside the Catalan witness)` -> `pass`
+- `S08` `verify:` `pytest witness lane and new unit checks (Linux, 172 tests)` -> `pass`
 
 ## Notes
 
@@ -167,3 +174,4 @@ related:
 - `S10` The release workflow file needed no change: its documentation job runs the publisher, which now runs two builds whatever the number of languages, and its proof jobs reach the documentation tests through the recipes changed here. The publisher's path was run on Linux through its own code with the goldens gate skipped; the English root's strict build failed there on API reference warnings that predate this plan, so a real publish stays refused until those are cleared.
 - `S08` Reopened by the final review: the comparison's verdict ignored missing and extra files, declarations matched by substring, pages were decoded with replacement, a lone delimiter in a shared file was not refused, and the unread stored form stayed beneath the build root. All fixed; each has a test that fails without its fix.
 - `S07` Reopened by the final review: the switcher assumed the desktop layout and wrote wrong links on the published site, a defect older than this plan. The links now come from the layout authority; the web oracle was rebuilt and the desktop oracle was not.
+- `S08` The standing proof is now one witness language built beside the one compile, with refusals inside the compile and renderer checks against the real writers, as the decision's D9 records. The comparison against every language's own build is retired; an operator names a witness to compare any one language.

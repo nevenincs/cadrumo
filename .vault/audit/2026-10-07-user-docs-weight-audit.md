@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:975398036b01f2a4b7cbf637646757b113ecf397f5c4da78e8e55a5647fba144'
+body_hash: 'sha256:7cdc38c1d6811339af6a189758f6e1787b1c94b9f0166093883b26a8314dfff5'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -69,6 +69,10 @@ The generated-reference generators behind `S06`, the command-tree projection of 
 ### resolution | low | what was done about each finding, as of commit `d32e456d13`
 
 `proof-verdict`, `declaration-width`, `lenient-decode`, `lone-closing-delimiter`, `stored-form-unread` and `oracle-moved` are fixed in `dev/docs/compile_once.py` and `dev/docs/language_roots.py`, each with a test that fails without its fix. `switcher-published-layout` is fixed in `dev/docs/language_switcher.py` and `dev/docs/build_paths.py`; the web proof was rerun against a rebuilt oracle and the desktop proof against the unchanged one, both with no differing stretch and no missing or extra file. `local-roots-search` is answered in the recipe's description in `justfile`. `proof-not-scheduled`, `catalogue-drift` and `worker-first-word` are open: the first needs the decision named below, the second is translation work on pages this plan did not change, and the third is noted.
+
+### resolution-of-the-open-findings | low | the three findings left open, as of commit `343fbda1c6`
+
+`proof-not-scheduled` is settled by D9 of `2026-10-06-user-docs-weight-adr`: the comparison against every language's own build is retired, and the test lane builds one translated witness language beside the one compile and requires equality in every file, with nothing scheduled. `catalogue-drift` is fixed in commit `7812ed4e2c`: the 34 messages per language are translated and the drift gate passes. `worker-first-word` stays as noted; the failure is loud. Two defects found after the review were fixed with it: the language switcher on a page only the English root publishes (`665245735f`), and a root given its own directory being placed at the site's top (`343fbda1c6`).
 
 ## Recommendations
 
