@@ -12,7 +12,7 @@ related:
   - '[[2026-07-20-ci-speed-redesign-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:e3b6c1f328586188ba37af748fe27adff227f4f27b4d879e66f5508540b1418a'
+body_hash: 'sha256:0d22cbbdea8ada3efe822b10e3ba645a4ac2bef625ece204bbe10d03e4b109b3'
 ---
 
 # `modelo-runtime-performance` plan
@@ -71,7 +71,7 @@ S13 follows the existing production-performance authorization and the accepted o
 - [x] `S14` - Repair remaining blocking style, format and test-helper type drift in the captured candidate while preserving concurrent source changes; `Exact frozen and subsequent live style, format and type finding owners, including filing-year test helpers, portable KDF fixture override and diagnostic-format owners, guarded candidate overlays, affected blocking gate reruns and feature records`.
 - [ ] `S15` - Avoid measured startup cache-publication work by aligning source profile workers with the accepted writes-disabled interpreter policy; `src/cadrumo/adapters/local_runtime/profile_worker.py, worker_arguments.py, linux_worker_process.py, macos_worker_process.py, eight exact argv and containment fixture/test owners, package-bytecode and native authority/custody regressions, feature records`.
 - [ ] `S16` - Reject declared business-expectation violations before refreshing documentation goldens; `dev/docs/sequences/checks.py, exact owning refresh regression tests, guarded source and candidate overlays, unchanged prior-golden proof and valid declared-nonzero capture proof, final native corpus and blocking gates, feature records`.
-- [ ] `S17` - Repair the stale login test expectation so missing human password input refuses before opening or resuming a runtime client; `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py, owning no-input and explicit-password regressions, guarded artifact application, scoped style and configured types, feature records`.
+- [x] `S17` - Repair the stale login test expectation so missing human password input refuses before opening or resuming a runtime client; `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py, owning no-input and explicit-password regressions, guarded artifact application, scoped style and configured types, feature records`.
 
 ## Parallelization
 

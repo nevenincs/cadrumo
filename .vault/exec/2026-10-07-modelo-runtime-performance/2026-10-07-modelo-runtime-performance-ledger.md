@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:0720521a3b00b6656063bf9e75cbc3cb2af330eab640daba5f59a7d82abb4a4e'
+body_hash: 'sha256:f143a0498d7a9e7f5f26cdcfe66a4dcb38a605d67c2616758102a8c45e670991'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -445,6 +445,12 @@ related:
 - `S16` `verify:` `two exact postimage Ruff lint and format artifact checks` -> `pass`
 - `S16` `verify:` `uv run --no-sync pytest -n0 -m integration dev/docs/sequences/tests/test_reader_frame_output_advisory.py --tb=short` -> `pass`
 - `S14` `verify:` `just check-code` -> `pass`
+- `S17` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S17` `verify:` `uv run --no-sync pytest -n0 -m integration src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py::test_absent_receipt_and_no_console_refuse_before_password --tb=short` -> `fail`
+- `S17` `verify:` `uv run --no-sync pytest -n0 -m empty explicit-password and missing-channel owning regression targets` -> `pass`
+- `S17` `verify:` `scoped Ruff lint and format plus ty linux win32 darwin` -> `pass`
+- `S17` `verify:` `uv run --no-sync pytest -n0 -m '' src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py::test_absent_receipt_and_no_console_refuse_before_password src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py::test_explicit_password_reads_once_wipes_and_persists src/cadrumo/entrypoints/cli/tests/test_interactive_receipt_admission.py --tb=short` -> `pass`
+- `S17` `verify:` `S17 bounded final integrated review` -> `pass`
 
 ## Notes
 
@@ -464,3 +470,5 @@ related:
 - `S16` Partial S16 checkpoint: canonical expectations now run before evidence and golden writes. Nine selected pure tests pass, including three new no-write/prior-byte-preservation/valid-nonzero cases; five existing integration checks were deselected and have no new acceptance evidence. Corrected canonical missing-path assertion before application. Captured checkout remains unchanged during active native baseline. Scoped types, integration, final full gates and native acceptance pending.
 - `S16` Frozen guarded S16 overlay2PASS. First integration run setup failed missing explicit checkout Playwright directory; materialized owned empty configured directory and independent rerun5PASS93.08s,9unitdeselected. Original9unitPASS remains applicable. Full live12gates session52562pending. Frozen34pagecapture5PASS29FAIL retained; no runtime refusal golden accepted; current original authority differs so frozen generation deltas not authorized for live refresh.
 - `S14` Actual original sharedworkspace full12blockinggates session52562 completed0 at21:19UTC after S16guard and currentpeerqualityrepairs. Includes style,format,dataformat,ty/pyrefly/basedpyright across3platforms,import/dependency,module/symbol/export,writepaths,docrefs. Real34page frozen native capture remains5PASS29FAIL; originalcurrent authority019 differsfrozen007. No fullnative/resilience oratomicshared-source snapshotclaim.
+- `S17` Baseline1actualFAIL atstale calls assertion. Guarded1lineapplyPASS; missing-channel expectedzero clientcalls consistentaccepted sign-in policy. Actual6PASS33.58s includes explicitpassword2targets and4receipt-admissioncases. Earlier defaultunitselection deselected0exit5 notacceptance. Preserve refusal,password-buffer,pointer assertions. No productionchange; prior full12gates applicable to unchanged production/check surfaces. Final reviewer pending.
+- `S17` The exact mixed-marker command used an empty -m argument and passed all six selected cases,33.58s,exit0,run20261007T212802.406592Z-pytest-33908-ba8d8d6f. The prior descriptive verify is clarified by this literal command. Sealed final review passes within the sole assertion change; scoped Ruff/format and ty three platforms pass. Earlier zero-selected exit5 excluded. Twelve gates passed before sole assertion literal, with no production/native completion claim.

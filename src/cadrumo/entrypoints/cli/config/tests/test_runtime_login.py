@@ -276,7 +276,7 @@ def test_absent_receipt_and_no_console_refuse_before_password(monkeypatch: Monke
     with pytest.raises(CliRefusedBoundaryError):
         _login_through_the_prompt(_ctx(), name=str(profile_id), machine_secret=None)
 
-    assert client.calls == ["resume", "close"]
+    assert client.calls == []
     assert client.password_buffer is None
     assert observe_active_profile_pointer() == original
 
