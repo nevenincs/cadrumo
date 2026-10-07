@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:c675ff39f09a2b5f16c8e8ea779e200d59d1d0014f6ad42fc703009d7b3d6e55'
+body_hash: 'sha256:566a0f79d25289846704e09d66d84fe6acdf536438e96db078c8fd2f4de16114'
 ---
 
 # `runtime-manager-architecture` plan
@@ -72,7 +72,7 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 
 - [x] `P02.S07` - Create the native/manager crate and cadrumo-manager root-level image with identity-projected names, the Background Services suffix owner, DEPENDENTLOADFLAG linkage, platform-mapping declaration, manifest, verification and signing inventory; `native/manager/ (new), native/CMakeLists.txt, native/cmake/, dev/packaging/native/identity.py, dev/packaging/native/ layout and verification, src/cadrumo/core/product_identity.py`.
 - [ ] `P02.S08` - Consume the canonical location definition in strict profile through native/platform and probe storage identity and version from the installed interpreter; `native/manager/, native/platform/, native/application/ after desktop-shell S04-S07`.
-- [x] `P02.S09` - Implement the supervision core with fixture test mode: launch with allow-list environment, readiness ceiling, heartbeat hang escalation, restart classes with monotonic backoff, crash-loop ceiling, adoption by image, elevation and boot record, and foreign state; `native/manager/, fixture runtimes in isolated synthetic roots`.
+- [ ] `P02.S09` - Implement the supervision core with fixture test mode: launch with allow-list environment, readiness ceiling, heartbeat hang escalation, restart classes with monotonic backoff, crash-loop ceiling, adoption by image, elevation and boot record, and foreign state; `native/manager/, fixture runtimes in isolated synthetic roots`.
 - [ ] `P02.S10` - Implement Windows stop delivery, the manager window procedure for session end with cancel restart and restart suppression, job escape, and elevation and session-0 refusal; `native/manager/ Windows modules`.
 - [x] `P02.S11` - Implement session ownership: per-session lock, per-user kernel-released start claim and Quit marker conformance-tested against the Python custody primitives, observe-only other sessions and active-session handoff; `native/manager/, contract generator conformance tests`.
 - [ ] `P02.S12` - Implement the manager IPC endpoint with owner and image verification and the closed reveal, retry and successor-readiness request set; `native/manager/`.
