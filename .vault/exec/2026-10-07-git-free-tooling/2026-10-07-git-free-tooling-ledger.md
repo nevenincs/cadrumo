@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:d49af1fbe2893cdbbe92784247ef81f31e24ac88937f36dda4e62f3978b765ba'
+body_hash: 'sha256:2489c061bcdf7520c0f4ef8e93cddba671e60a4647c64c3c0635512623111574'
 related:
   - "[[2026-10-07-git-free-tooling-plan]]"
 ---
@@ -70,6 +70,20 @@ related:
 - `S02` `verify:` `PowerShell syntax` -> `pass`
 - `S02` `verify:` `scoped Ruff lint and format` -> `pass`
 - `S02` `verify:` `scoped ty` -> `pass`
+- `S03` `D` `dev/quality/tests/test_git_invocations_take_no_optional_locks.py`
+- `S03` `A` `dev/quality/tests/test_no_git_cli.py`
+- `S03` `A` `.vault/audit/2026-10-07-git-free-tooling-audit.md`
+- `S03` `M` `.vaultspec/rules/00-architecture.md`
+- `S03` `M` `.vaultspec/skills/cadrumo-start/references/00-architecture.md`
+- `S03` `M` `.codex/rules/00-architecture.md`
+- `S03` `M` `.agents/skills/cadrumo-start/references/00-architecture.md`
+- `S03` `verify:` `final invocation gate: 11386 source/configuration files, zero offenders, 25 tests passed` -> `pass`
+- `S03` `verify:` `repeat product reachability: 3269 of 3269 reachable, zero findings` -> `pass`
+- `S03` `verify:` `repeat Vulture: 3270 offered, zero findings` -> `pass`
+- `S03` `verify:` `publication delivery and guard checks: 69 passed` -> `pass`
+- `S03` `verify:` `final guard scoped Ruff lint format and ty` -> `pass`
+- `S03` `verify:` `four-surface rule/reference parity` -> `pass`
+- `S03` `by:` `root integrated review`
 
 ## Notes
 

@@ -50,6 +50,20 @@ This rule uses import linting, Ruff lint and formatting checks, type checking, a
 
 Use relative imports within the actual module/package boundaries, importing from the defining module. Relative syntax must not escape configured package roots or bypass dependency contracts. All rules must be respected when working.
 
+## Repository-owned executable calls
+
+### Rule
+
+Never resolve or invoke the Git executable from repository-owned product code, tests, developer tools, native build definitions or workflow shells. Configure pytest with plain assertions so it does not generate comparison diffs.
+
+### Why
+
+`2026-10-07-git-free-tooling-adr` records the operator's prohibition and its verified removal. Git-based discovery made verification depend on checkout history; pytest comparison rendering could spend minutes constructing a failed assertion's diff.
+
+### How
+
+Use the filesystem inclusion policy, explicitly supplied source trees and build identifiers, changed-path manifests with complete-gate fallback, and authenticated forge APIs with expected-file identity. Run `dev/quality/tests/test_no_git_cli.py` to reject executable calls across Python, shell, PowerShell, CMake, native/frontend sources and workflow commands; fixture strings and REST route names are data. Developer commands used to manage the repository and external checkout/package-manager implementations are outside this ownership boundary.
+
 ## Implementation and verification invariants
 
 - Public symbols have one canonical defining module. Keep package `__init__.py` files inert; do not add re-exports, facade modules, forwarding aliases or cross-package imports from private modules. Put tests under the narrowest owning `tests/` directory. Use canonical Spanish tax terms and semantic module names.
