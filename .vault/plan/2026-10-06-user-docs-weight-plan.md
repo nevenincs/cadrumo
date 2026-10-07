@@ -6,9 +6,9 @@ date: '2026-10-06'
 tier: L1
 related:
   - '[[2026-10-06-user-docs-weight-adr]]'
-modified: '2026-10-06'
+modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:a7f00fc298bf884d6d3969b2f696a0d3f745bf56334ee3e06f47c0ce4c7e8551'
+body_hash: 'sha256:fa9e51c75c9466e6fa3cac9581475e9ee32b6c0826691042908007adf497a648'
 ---
 
 # `user-docs-weight` plan
@@ -27,13 +27,13 @@ The plan reaches the decision's two commitments in its order D5. S01 to S05 chan
 - [x] `S03` - Stage the package as one structure and each language's text, with a manifest that says how each address is served; `dev/packaging/native/docs_stage.py, native/package-layout.json`.
 - [x] `S04` - Compose a page from its structure and the language's text in the documentation scheme handler, and state the layout in the contract; `native/desktop/src-tauri/src/docs/, native/CONTRACT.md`.
 - [x] `S05` - Publish the site by composing each language's pages from the structure and the text; `dev/deploy/docs_static_site.py`.
-- [ ] `S06` - Emit every language's strings for the generated references from one projection and retire their per-language generation; `dev/docs/casilla_reference.py, dev/docs/legal_reference.py, dev/docs/glossary_reference.py, dev/docs/cli_reference.py`.
-- [ ] `S07` - Emit the site chrome's strings for every language from the catalogues; `dev/docs/site_chrome.py, docs/_templates/`.
-- [ ] `S08` - Emit the authored pages' strings from the gettext catalogues in the one compile, retire the per-language builds, and move the strict and completeness gates onto the composed pages; `dev/docs/build.py, dev/docs/i18n.py, dev/packaging/native/docs_build.py, dev/docs/tests/`.
+- [x] `S06` - Emit every language's strings for the generated references from one projection and retire their per-language generation; `dev/docs/casilla_reference.py, dev/docs/legal_reference.py, dev/docs/glossary_reference.py, dev/docs/cli_reference.py`.
+- [x] `S07` - Emit the site chrome's strings for every language from the catalogues; `dev/docs/site_chrome.py, docs/_templates/`.
+- [x] `S08` - Emit the authored pages' strings from the gettext catalogues in the one compile, retire the per-language builds, and move the strict and completeness gates onto the composed pages; `dev/docs/build.py, dev/docs/i18n.py, dev/packaging/native/docs_build.py, dev/docs/tests/`.
 - [ ] `S10` - Make the local and CI flows compile the documentation once: the language recipes, the live preview's per-language rebuilds, the docs gates that the local gate and the repository-contract lane each run again, and the prove jobs that repeat them per interpreter; `justfile, .github/workflows/release.yml, dev/docs/serve.py, dev/docs/serve_languages.py`.
-- [ ] `S11` - Run each language-independent projection once per compile: the command tree written per root and the command walk the search records repeat per language; `dev/docs/cli_tree.py, dev/docs/terminology/cli_projection.py, docs/conf.py`.
+- [x] `S11` - Run each language-independent projection once per compile: the command tree written per root and the command walk the search records repeat per language; `dev/docs/cli_tree.py, dev/docs/terminology/cli_projection.py, docs/conf.py`.
 - [x] `S12` - Build the packaged documentation once for every platform preset and key its cache on what it reads, not on the binary directory; `native/cmake/Docs.cmake, dev/packaging/native/action_cache.py`.
-- [ ] `S13` - Store the structure with one line terminator whatever platform compiled it, and compose each page with the terminator the composing platform's own build writes; `dev/docs/language_roots.py, dev/docs/compile_once.py, dev/docs/_locale_chrome.py`.
+- [x] `S13` - Store the structure with one line terminator whatever platform compiled it, and compose each page with the terminator the composing platform's own build writes; `dev/docs/language_roots.py, dev/docs/compile_once.py, dev/docs/_locale_chrome.py`.
 
 ## Parallelization
 

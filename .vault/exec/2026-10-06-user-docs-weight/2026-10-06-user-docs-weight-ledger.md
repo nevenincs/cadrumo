@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:341354cc0b7b3fea21a6a8d81a966bce2298f4e62c74fa95673a6e4e1e64a030'
+body_hash: 'sha256:020dc1dc06e4ce0b8dcb78c1962f0d2cf8e87029077872f63ce104cec2d1b18e'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -91,6 +91,43 @@ related:
 - `S12` `M` `native/CONTRACT.md`
 - `S12` `M` `native/cmake/Docs.cmake`
 - `S12` `verify:` `pytest dev/packaging/native/tests -k docs` -> `pass`
+- `S11` `M` `dev/packaging/native/docs_build.py`
+- `S06` `M` `dev/docs/_locale_chrome.py`
+- `S06` `M` `dev/docs/cli_reference.py`
+- `S06` `M` `dev/docs/glossary_reference.py`
+- `S06` `M` `dev/docs/legal_page_rendering.py`
+- `S06` `M` `dev/docs/casilla_page_rendering.py`
+- `S06` `M` `dev/docs/casilla_schema_compilation.py`
+- `S06` `M` `dev/docs/casilla_reference_models.py`
+- `S06` `M` `dev/docs/casilla_markup.py`
+- `S06` `A` `dev/docs/section_anchors.py`
+- `S06` `verify:` `python -m dev.docs.compile_once --out --oracle (desktop flavour, every file of four roots)` -> `pass`
+- `S07` `M` `dev/docs/site_chrome.py`
+- `S07` `A` `dev/docs/language_switcher.py`
+- `S07` `A` `dev/docs/sphinx_messages.py`
+- `S07` `A` `dev/docs/translations_js.py`
+- `S07` `A` `dev/docs/page_descriptions.py`
+- `S07` `M` `dev/docs/shared_page_assets.py`
+- `S07` `M` `docs/_templates/base.html`
+- `S07` `M` `docs/_templates/cadrumo-language-switcher.html`
+- `S07` `verify:` `python -m dev.docs.compile_once --out --oracle --flavor web --base-url (every file of four roots)` -> `pass`
+- `S08` `A` `dev/docs/compile_slots.py`
+- `S08` `A` `dev/docs/compile_once.py`
+- `S08` `A` `dev/docs/message_marks.py`
+- `S08` `A` `dev/docs/untranslated_typesetting.py`
+- `S08` `M` `dev/docs/language_roots.py`
+- `S08` `M` `docs/conf.py`
+- `S08` `M` `dev/packaging/native/docs_build.py`
+- `S08` `A` `dev/docs/tests/test_docs_build_localized_compile.py`
+- `S08` `D` `dev/docs/tests/test_docs_build_localized_es.py`
+- `S08` `D` `dev/docs/tests/test_docs_build_localized_ca.py`
+- `S08` `D` `dev/docs/tests/test_docs_build_localized_hu.py`
+- `S08` `D` `dev/docs/tests/_localized_build_support.py`
+- `S08` `verify:` `pytest dev/docs/tests/test_docs_build_localized_compile.py` -> `pass`
+- `S13` `M` `dev/docs/language_roots.py`
+- `S13` `M` `dev/docs/_locale_chrome.py`
+- `S13` `M` `dev/docs/translations_js.py`
+- `S13` `verify:` `pytest dev/docs/tests/test_language_roots.py` -> `pass`
 
 ## Notes
 
@@ -102,3 +139,6 @@ related:
 - `S05` The publisher takes its pages from one producer function and still compiles each language there; composing them from the one compile is that function's change once S06 to S08 are proven.
 - `S05` No real web-flavour build and no network delivery were run; the English full-scope root under en/ is covered by a test over real built pages.
 - `S05` A release published before this change is refused by manual rollback and activate until the next successful publish; automatic recovery inside a publish is unaffected. Supporting both release shapes is left to the operator.
+- `S11` No further change needed. The command tree is written once because the languages now come from one compile. The per-language command walk the search records make was measured on Linux at 0.3 to 0.7 s per language (1.2 s for four languages, 323 commands and 1,335 options), so it stays one small subprocess per language.
+- `S08` Measured on Windows: the one compile with its comparison 232 to 236 s for four languages; each language's own build 164 to 249 s. On Linux with four reading workers: 145 s. The package documentation target itself (CMake) was not run after the switch.
+- `S13` Pages are stored with a line feed and composed with the composing platform's terminator. A Windows and a Linux compile of the same tree stored 387 of 400 files as the same bytes, every page structure and every language's text among them. The 13 that differ are non-page stylesheets and scripts written with the platform terminator; they are left as built because the desktop host serves a non-page file exactly as stored.
