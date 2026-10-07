@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:339fdd1719f7fbc53a30295062f306c797d822a6c93dd93270a5fff70615ac7c'
+body_hash: 'sha256:99022e74bb77af4aeac48326a049c02638d0ddc6c006d732e47f73c0f9774ed8'
 ---
 
 <!-- RETIRED: S08 -->
@@ -49,10 +49,13 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S18` - Stop installed-version verification once newest-complete selection and stable-entry admission are established, preserving bounded enumeration and fallback semantics; `native/application/src/installation.rs, owning installation discovery tests and measured verification counts`.
 - [x] `S19` - Reuse current-process installed-package admission during manager startup instead of verifying the selected package twice; `native/manager/src/installation.rs, installed.rs, main.rs, supervision/environment.rs test-only fixture constructor and owning manager startup tests`.
 - [x] `S20` - Cancel desktop-owned package discovery during shutdown and settle its worker without launching a manager after close; `native/application package and discovery cancellation, existing Cancellation type, native/desktop/src-tauri/src/manager.rs and owning cancellation tests`.
-- [ ] `S21` - Defer TUI automation contract composition until a requester screen needs it, preserving one validated graph per installed session and measuring avoided startup work; `src/cadrumo/entrypoints/tui/installed_session.py, owning installed-session and requester tests, import and startup evidence`.
+- [x] `S21` - Defer TUI automation contract composition until a requester screen needs it, preserving one validated graph per installed session and measuring avoided startup work; `src/cadrumo/entrypoints/tui/installed_session.py, owning installed-session and requester tests, import and startup evidence`.
 - [ ] `S22` - Emit one bounded KDF worker lifecycle diagnostic with phase timings and truthful failure/cleanup outcome, preserving custody and deadlines; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py, fixed diagnostic scalar allowlist, owning logging/supervision tests and measured diagnostic overhead`.
+- [ ] `S23` - Close every partially acquired KDF pipe exactly once on startup failure without changing worker deadlines or termination policy; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py partial-start ownership and owning real-descriptor failure tests`.
 
 ## Parallelization
+
+S23 follows S22 in the same worker lane and fixes a concrete lifecycle defect found during logging review. Root owns the resource-acquisition design: register child-side pipe descriptors in an ExitStack immediately after each successful allocation, assign parent-side descriptors to the existing supervisor owner immediately, and remove duplicate parent closes from the launch-error branch. The existing outer cleanup remains the single parent-descriptor owner. Verify failure during second-pipe allocation, directory creation, temporary-directory creation and process launch using real descriptors, including exact-once close behavior. Preserve worker termination, retry, attestation, cryptographic and timeout contracts. Broader retained-process cleanup behavior remains a separate finding.
 
 S22 addresses the observed loss of timeout phase when KDF supervision maps TimeoutError to the public resource refusal. Root owns design and integrated review; the existing Python logging Sol 6.1 worker owns the supervisor diagnostic, fixed scalar allowlist and owning tests. Emit a single bounded summary after worker cleanup, with monotonic phase durations, fixed failure stage and truthful outcome; retain the actual primary exception and all existing cleanup, custody, process, cryptographic and deadline behavior. Do not log request/response payloads, secrets, profile identities, environment values or paths. Timing collection must not add per-phase sink I/O. This assignment is disjoint from the package worker's read-only historical import attribution and native/TUI verification. Measure logging cost before claiming negligible overhead.
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a90666dc3f74528b291e0487e1c556827724bb5d86e57f8a30bfd444296a534'
+body_hash: 'sha256:7b0ad5967f8278859eabbbf4933a72819db4a981aade598ad33d4f0c02d61ed0'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -336,6 +336,14 @@ related:
 - `S20` `verify:` `S20 six equivalent fresh-process package scans and 94 stability guards` -> `pass`
 - `S20` `verify:` `S20 current distribution integration 58 focused tests and 14 matching source-test-lock hashes` -> `pass`
 - `S20` `by:` `root architectural review`
+- `S21` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/tests/test_installed_session.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S21` `verify:` `S21 current 31 owning tests run 20261007T190359.161431Z-pytest-89200-aaf44cf4` -> `pass`
+- `S21` `verify:` `S21 current scoped ty Ruff formatting and whitespace` -> `pass`
+- `S21` `verify:` `S21 fresh empty-inventory self-test zero registry builds` -> `pass`
+- `S21` `verify:` `S21 three direct-owned current startup samples with stable guards and settled children` -> `pass`
+- `S21` `by:` `root architectural review`
 
 ## Notes
 
@@ -369,3 +377,4 @@ related:
 - `S18` Newest stable 3 to1 full verifications; older stable and damaged newest3 to2; all seven outcomes preserved. Synthetic probe time is not installed latency. Evidence s18-installation-selection/verification.json.
 - `S19` Private consumed current-installation proof avoids second package inspection; no cross-process cache or timeout changes. Integrated final input guards stable; build/s19-admission-proof/integrated-final/verification.json.
 - `S20` Implementation already included in shared checkpoint 3b063e7d50. Current registration-hint integration evidence reused from distribution owner; no duplicate Cargo run. Timings are finite loaded-host observations, not production SLO or hard OS-I/O cancellation bounds.
+- `S21` Implementation already checkpointed in 3b063e7d50. Before comparison remains censored at unchanged30s bound. Current direct-base interpreter baseline differs from native packaged launch and does not establish a speedup or production latency target. Foreign filing-test edit during owning tests did not change production or owned inputs.

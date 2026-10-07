@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:911342b89ed900e03169efc27121a7ca8fb3c2c355066d74852c39a859d504da'
+body_hash: 'sha256:b90fcc723a58b4bec1760e34cc0c35cc182f62bfefd7ff7475ae5404fb727a4d'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -339,3 +339,17 @@ The original 31 tests and scoped type/style/format checks pass. A real fresh emp
 ### cancellation-current-integration | low | PASS with current installed registration composition
 
 Root's integration review is now supported by the distribution owner's detailed current application and production desktop logs, copied into diagnostics-review/s20-current-integration. Fourteen relevant source, test and lock hashes match the tested production snapshot. The focused scope passes 58 tests: thirteen library, fourteen installation, twelve package and nineteen desktop-manager cases, including typed registration precedence, cancellation propagation and worker settlement. Application and desktop Clippy pass. Application wrapper wall is 131.69 seconds with the three focused suite bodies 0.24/0.44/0.16 seconds; desktop Release compilation is 426 seconds and manager test bodies 11.57 seconds. Compilation and test fixtures are not application startup measurements. Reusing this applicable evidence avoids duplicate expensive builds. S20 verdict PASS; installed desktop acceptance and remaining performance work stay open.
+
+### kdf-import-attribution-limit | low | Ordinary launcher probes do not isolate supervised worker startup
+
+The immutable October 6 package import-only experiment performs no KDF or protocol operation and preserves nineteen source guards. Ordinary worker-module import has median 102.541 milliseconds; profiled AES leaf import is 11.351 milliseconds, while two WMI queries total 34.073 milliseconds exclusive. These do not justify claiming an AES-only change fixes multi-second calibration overhead. Crucially, the ordinary native `-c` probe executes platform preparation that the exact supervised `-m` invocation skips. Its pre-marker interval is not actual supervised-worker initialization and must not be subtracted from the measured READY wait. This corrects the preliminary conversation interpretation. Evidence: runtime-latency-investigation/20261007T190310Z-kdf-worker-import/verification.json (SHA-256 9ef8a50048486739cdb5c6f03544c3ad33588326d7ea44f0a7128b970ba4704d). No production KDF or timeout change follows from this experiment.
+
+### kdf-cleanup-diagnostic-scope | medium | Preserve distinct primary and cleanup failures without changing custody behavior
+
+Root traced an existing synchronous ownership weakness while designing S22: worker enter/exit cleanup can replace an earlier error, and `_close` clears its process/job references before fallible termination or directory cleanup. Merely preferring TimeoutError would be unsafe because the caller maps that error to a generic resource refusal with suppressed chaining. S22 therefore records the original stage/type and separate cleanup failure, but preserves existing product exception propagation and termination behavior. Diagnostics themselves must never replace the escaping error. An attempted launch without a returned tracked child cannot prove cleanup completion; the summary must say unconfirmed. This finding remains open for an owning lifecycle correction with actual retained-resource tests; adding a log is not its resolution.
+
+### requester-current-integration | low | PASS for demand loading with remaining startup cost measured
+
+The current S21 owning suite passes all 31 cases in 21.77 seconds (28.831-second wrapper), run 20261007T190359.161431Z-pytest-89200-aaf44cf4. Scoped ty, Ruff, formatting and whitespace checks pass. All three owned hashes and all production sources remain unchanged during those checks; the wider guard records one unrelated filing-test edit. Source review, actual zero-build empty-inventory observation and these current checks support PASS for the demand-loading change.
+
+The old-path comparison remains censored by the unchanged 30-second harness bound. Root identified the forwarding-launcher ownership limitation and required direct PID ownership for the final current-only baseline. Exact fixture-process inspection found no surviving runner/probe processes and issued no termination. Earlier attempts remain separately retained, including a timeout and two completions. The final three fresh resolved-base Python 3.13.11 children use explicit current source and the same managed site-packages with -I -S -B; no ambient site initialization, forwarder or profiler runs. Every returned PID matches the directly owned child, all children settle and all guards remain stable. Import/session phase wall is 22.813345/4.560561/4.237715 seconds; CPU is 4.171875/4.421875/4.015625 seconds. Median phase wall/CPU is 4.560561/4.171875 seconds; median whole-wrapper wall is 5.493656 seconds and peak working set reaches 200,126,464 bytes. The first wall outlier is retained, not discarded. This is an absolute source-interpreter experiment, not a paired speedup, native desktop readiness or latency SLO. Evidence: build/s21-requester-current-integration/verification.json and build/s21-requester-owned-current-startup/measurement.json. Remaining startup performance stays open under S13.
