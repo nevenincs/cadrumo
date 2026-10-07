@@ -35,6 +35,7 @@ from .unreachable_models import (
 )
 from .unreachable_policy import _DEV_LABEL
 from .unreachable_receiver_types import receiver_types
+from .unreachable_records import record_member_uses
 from .unreachable_references import _references, _string_tokens, assembled_reference_names
 from .unreachable_schemas import schema_member_uses
 from .unreachable_tree import ShippedTreeSpec, iter_python_files, relative_to_repo
@@ -115,7 +116,11 @@ def _symbol_findings(
         whole_use |= _collection_uses(tree)
 
     contracts = framework_contracts(modules)
-    schema_uses = schema_member_uses(modules, full_reach, contracts) | dataclass_member_uses(modules, full_reach)
+    schema_uses = (
+        schema_member_uses(modules, full_reach, contracts)
+        | dataclass_member_uses(modules, full_reach)
+        | record_member_uses(modules, full_reach)
+    )
     usage = _SymbolUsage(member_names, literal_tokens, resolved_uses, self_uses, whole_use, schema_uses)
     findings: list[SymbolFinding] = []
     data_cleared = 0

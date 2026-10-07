@@ -17,6 +17,7 @@ _INSTALLED_FRAMEWORK_MODULES: Final = (
     "click",
     "click.core",
     "ctypes",
+    "logging",
     "pydantic",
     "pydantic.main",
     "pydantic_settings",
@@ -93,6 +94,7 @@ def _installed_contract(target: str) -> FrameworkContract:
         "pydantic",
         "pydantic_settings",
         "ctypes",
+        "logging",
         "click",
         "typer",
     }:

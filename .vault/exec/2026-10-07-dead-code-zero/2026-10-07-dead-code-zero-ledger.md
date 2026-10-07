@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:33932d72ed623d3b419ee1c17b75b0f8709ad5d14183373c8eb9b75ebae46977'
+body_hash: 'sha256:8e85bc3ff82a9c0ee1ec82bb7200f377c7c4819680625dad41bc6f8c9219277c'
 related:
   - "[[2026-10-07-dead-code-zero-plan]]"
 ---
@@ -65,7 +65,23 @@ related:
 - `S01` `verify:` `focused owning tests with hosted and corrected CLI cases rerun: 88 passed, 2 OS-keychain skips` -> `pass`
 - `S01` `verify:` `scoped Ruff lint and format` -> `pass`
 - `S01` `verify:` `scoped ty check all S01 paths` -> `pass`
+- `S02` `M` `dev/audit/unreachable_code.py`
+- `S02` `M` `dev/audit/unreachable_findings.py`
+- `S02` `M` `dev/audit/unreachable_frameworks.py`
+- `S02` `M` `dev/audit/unreachable_members.py`
+- `S02` `M` `dev/audit/unreachable_outside.py`
+- `S02` `A` `dev/audit/unreachable_records.py`
+- `S02` `M` `dev/audit/tests/test_unreachable_members.py`
+- `S02` `M` `dev/audit/tests/test_unreachable_frameworks.py`
+- `S02` `A` `dev/audit/tests/test_unreachable_records.py`
+- `S02` `M` `src/cadrumo/core/diagnostic_log.py`
+- `S02` `M` `src/cadrumo/core/tests/test_diagnostic_log.py`
+- `S02` `verify:` `focused analyzer, formatter, rotation and audit tests: 156 distinct passing cases after corrective rerun` -> `pass`
+- `S02` `verify:` `scoped Ruff lint and format` -> `pass`
+- `S02` `verify:` `scoped ty check all S02 paths` -> `pass`
+- `S02` `verify:` `Vulture JSON: zero findings across 3265 offered modules` -> `pass`
 
 ## Notes
 
 - `S01` Full configured types initially reported 11 diagnostics in concurrent registry/native packaging work outside S01; scoped S01 check is clean. Initial hosted timeout passed serially. Retired frontend receipt-resume test seam replaced with real runtime and explicit credentials.
+- `S02` Second reachability pass exposed three schema fields after a concurrent registry refactor. S03 will resolve that structural coverage and re-measure the complete tree.

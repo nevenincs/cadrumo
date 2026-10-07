@@ -43,6 +43,13 @@ def _context(record: logging.LogRecord) -> tuple[str, dict[str, object]]:
     return message, cast("dict[str, object]", context)
 
 
+def test_formatter_keeps_utc_time_when_logging_supplies_a_date_format() -> None:
+    formatter = DiagnosticFormatter(LOG_FILE_FORMAT, datefmt="%Y")
+    record = _record()
+    assert formatter.formatTime(record, datefmt="%Y") == "1970-01-01T00:00:00.125Z"
+    assert formatter.format(record).startswith("1970-01-01T00:00:00.125Z [WARNING]")
+
+
 def test_utc_record_contains_scrubbed_process_and_attempt_context() -> None:
     with diagnostic_process("tui"), diagnostic_scope() as identifier:
         record = _record()

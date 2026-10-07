@@ -7,11 +7,78 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..unreachable_members import resolved_member_uses
 from ..unreachable_models import ShippedModule
 from ..unreachable_receiver_types import receiver_types
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_isinstance_filtered_collections_resolve_indexed_members_without_guessing() -> None:
+    records = ShippedModule("pkg.records", Path("records.py"), False, ast.parse("class Record: pass"))
+    caller = ShippedModule(
+        "dev.consumer",
+        Path("consumer.py"),
+        False,
+        ast.parse("""
+from pkg.records import Record
+def read(unknown):
+    rows = [row for row in unknown if isinstance(row, Record)]
+    rows[0].used()
+    item = rows[0]
+    item.selected()
+    rows.unproven()
+    rows[:1].slice_unknown()
+    plain = [row for row in unknown]
+    plain[0].unproven()
+def shadow(unknown, isinstance):
+    rows = [row for row in unknown if isinstance(row, Record)]
+    rows[0].shadow_unknown()
+def sibling(rows):
+    rows[0].sibling_unknown()
+"""),
+    )
+    uses = resolved_member_uses(caller, frozenset({records.name}), receivers=receiver_types({records.name: records}))
+    assert {pair for pair in uses if pair[1].startswith("Record.")} == {
+        (records.name, "Record.used"),
+        (records.name, "Record.selected"),
+    }
+
+
+def test_installed_review_acceptance_cleanup_resolves_its_actual_screen() -> None:
+    modules = {}
+    for name, relative in (
+        ("cadrumo.entrypoints.tui.google_saved_review", "src/cadrumo/entrypoints/tui/google_saved_review.py"),
+        ("dev.acceptance.review.installed_google_review_tui", "dev/acceptance/review/installed_google_review_tui.py"),
+    ):
+        path = REPO_ROOT / relative
+        modules[name] = ShippedModule(name, path, False, ast.parse(path.read_bytes()))
+    screen, consumer = modules.values()
+    uses = resolved_member_uses(consumer, frozenset({screen.name}), receivers=receiver_types(modules))
+    assert (screen.name, "GoogleSavedReviewScreen.reject_pending_prepublication") in uses
+
+
+def test_exception_handler_retains_typed_receivers_but_shadows_its_exception_name() -> None:
+    records = ShippedModule("pkg.records", Path("records.py"), False, ast.parse("class Record: pass"))
+    caller = ShippedModule(
+        "dev.consumer",
+        Path("consumer.py"),
+        False,
+        ast.parse("""
+from pkg.records import Record
+def read(record: Record):
+    try:
+        raise RuntimeError()
+    except Exception as Record:
+        record.cleanup()
+        Record.unproven()
+"""),
+    )
+    uses = resolved_member_uses(caller, frozenset({records.name}), receivers=receiver_types({records.name: records}))
+    assert (records.name, "Record.cleanup") in uses
+    assert (records.name, "Record.unproven") not in uses
 
 
 def test_iterated_return_fields_and_comprehensions_keep_qualified_elements() -> None:

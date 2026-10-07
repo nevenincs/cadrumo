@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from dev.first_party_source import is_test_source
@@ -14,6 +15,7 @@ from .unreachable_graph import module_edges, resolved_symbol_uses
 from .unreachable_memo import parse_module
 from .unreachable_models import ShippedModule, _OutsideUse
 from .unreachable_receiver_types import ReceiverTypes, receiver_types
+from .unreachable_records import record_member_uses
 from .unreachable_references import _references
 from .unreachable_tree import ShippedTreeSpec, iter_python_files
 
@@ -31,7 +33,13 @@ def _outside_module_name(path: Path, spec: ShippedTreeSpec) -> str:
     return module_name_for(path, src_root=root)
 
 
-def _outside_use(spec: ShippedTreeSpec, known: frozenset[str], receivers: ReceiverTypes | None = None) -> _OutsideUse:
+def _outside_use(
+    spec: ShippedTreeSpec,
+    known: frozenset[str],
+    receivers: ReceiverTypes | None = None,
+    *,
+    modules: Mapping[str, ShippedModule] | None = None,
+) -> _OutsideUse:
     use = _OutsideUse()
     probes: list[tuple[ShippedModule, str]] = []
     for corpus in spec.outside:
@@ -73,6 +81,12 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str], receivers: Receiv
             use.modules.setdefault(target, set()).add(label)
         for pair in resolved_symbol_uses(probe, known, receivers):
             use.resolved.setdefault(pair, set()).add(label)
+    if modules is not None:
+        combined = {**modules, **{probe.name: probe for probe, _label in probes}}
+        for label in {label for _probe, label in probes} - {"tests"}:
+            consumers = frozenset(probe.name for probe, owner in probes if owner == label)
+            for pair in record_member_uses(combined, consumers):
+                use.resolved.setdefault(pair, set()).add(label)
     if use.unreadable:
         raise OSError(
             format_unread_notice(

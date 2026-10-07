@@ -54,6 +54,22 @@ raise RuntimeError('product modules must never execute')
     }
 
 
+def test_live_logging_override_is_bound_but_an_unrelated_method_is_reported() -> None:
+    path = REPO_ROOT / "src/cadrumo/core/diagnostic_log.py"
+    tree = ast.parse(path.read_bytes())
+    module = ShippedModule("cadrumo.core.diagnostic_log", path, False, tree)
+    contracts = framework_contracts({module.name: module})
+    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    assert "DiagnosticFormatter.formatTime" not in definitions
+    formatter = next(
+        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "DiagnosticFormatter"
+    )
+    method = next(node for node in formatter.body if isinstance(node, ast.FunctionDef) and node.name == "formatTime")
+    method.name = "orphan_time"
+    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    assert "DiagnosticFormatter.orphan_time" in definitions
+
+
 def test_installed_sqlalchemy_contract_includes_annotated_configuration() -> None:
     module = _module(
         "pkg.columns",

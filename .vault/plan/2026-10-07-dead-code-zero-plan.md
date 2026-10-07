@@ -10,7 +10,7 @@ related:
   - '[[2026-10-05-google-outbound-review-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:268204cf841d5287403a45cc74aefb34d8322f2a41d0475100fc4fe8f33407c1'
+body_hash: 'sha256:f054f71a1a957b05f5d307793d1179a75ea2e36d9aa67e4a476bb0f9e105113c'
 ---
 
 # `dead-code-zero` plan
@@ -26,7 +26,7 @@ The accepted quality-gate product-boundary and reachability burndown ADRs govern
 ## Steps
 
 - [x] `S01` - Retire unused product APIs, obsolete result fields and unimplemented transport/error declarations while preserving live custody and publication behavior; `src/cadrumo/adapters/outbound/google, src/cadrumo/adapters/persistence/storage, src/cadrumo/application/user_profile, src/cadrumo/entrypoints/runtime, src/cadrumo/core/transport_locus.py and owning tests`.
-- [ ] `S02` - Resolve logging hooks, native generation records and typed acceptance cleanup through structural analyzer coverage and compatible formatter handling; `dev/audit reachability analyzers and tests, src/cadrumo/core/diagnostic_log.py and owning tests`.
+- [x] `S02` - Resolve logging hooks, native generation records and typed acceptance cleanup through structural analyzer coverage and compatible formatter handling; `dev/audit reachability analyzers and tests, src/cadrumo/core/diagnostic_log.py and owning tests`.
 - [ ] `S03` - Re-measure dead-code signals, resolve cascading findings, run configured checks and record integrated closure; `.vault/audit/2026-10-07-dead-code-zero-tooling-coverage-audit.md, affected dead-code source and tests, .vault/plan/2026-10-07-dead-code-zero-plan.md`.
 
 ## Parallelization

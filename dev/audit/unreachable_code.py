@@ -94,7 +94,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
 
     audited_names = _audited_module_names(spec, modules)
     audited_total = len(audited_names)
-    outside = _outside_use(spec, known, receiver_types(modules))
+    outside = _outside_use(spec, known, receiver_types(modules), modules=modules)
     data_tokens = _data_tokens(spec)
     declared_values = _declared_data_values(spec)
     shipped_importers = _shipped_importers(full_edges)

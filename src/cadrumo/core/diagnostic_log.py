@@ -148,6 +148,8 @@ class DiagnosticFormatter(logging.Formatter):
 
     @override
     def formatTime(self, record: logging.LogRecord, datefmt: str | None = None) -> str:
+        # Keep the logging override's keyword contract; diagnostics always use UTC ISO time.
+        del datefmt
         return datetime.fromtimestamp(record.created, UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
     @override
