@@ -1178,7 +1178,8 @@ python_files = ["test_*.py"]
 #
 # `--capture=sys` avoids pytest's fd-level dup2 capture, which dies silently
 # under Git Bash / MinTTY on this project's primary platform.
-addopts = "-n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' --strict-markers --strict-config --capture=sys --max-worker-restart=0"
+# Plain assertions preserve failures without rendering expensive comparison diffs.
+addopts = "-n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' --strict-markers --strict-config --capture=sys --max-worker-restart=0 --assert=plain"
 # Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
 # instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
 # wedged with idle workers on every recent run). pytest-timeout picks the
