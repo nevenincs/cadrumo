@@ -6,9 +6,9 @@
 
 use super::json::{FlatObject, canonical_uuid, text, unsigned};
 use super::protocol::Admission;
+use crate::custody::read_optional_local_record;
 use serde_json::Value;
-use std::fs::{self, File};
-use std::io::{self, Read};
+use std::io;
 use std::path::{Path, PathBuf};
 
 /// Location of the record below the storage root, one component per element.
@@ -92,47 +92,15 @@ pub fn decode_boot_record(raw: &[u8]) -> Option<BootRecord> {
 /// Read the published record without creating anything.
 pub fn read_boot_record(storage_root: &Path) -> Result<BootRecord, BootRecordUnavailable> {
     let path = boot_record_path(storage_root);
-    let raw = match read_bounded_regular_file(&path) {
-        Ok(raw) => raw,
+    let raw = match read_optional_local_record(&path, MAXIMUM_BOOT_RECORD_BYTES) {
+        Ok(Some(raw)) => raw,
+        Ok(None) => return Err(BootRecordUnavailable::Absent),
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             return Err(BootRecordUnavailable::Absent);
         }
         Err(_) => return Err(BootRecordUnavailable::Unreadable),
     };
     decode_boot_record(&raw).ok_or(BootRecordUnavailable::Unreadable)
-}
-
-/// Read a regular file that is no link or reparse point, refusing one above the bound.
-fn read_bounded_regular_file(path: &Path) -> io::Result<Vec<u8>> {
-    let refused = || io::Error::new(io::ErrorKind::InvalidData, "not a bounded regular file");
-    if !is_plain_file(&fs::symlink_metadata(path)?) {
-        return Err(refused());
-    }
-    let mut file = File::open(path)?;
-    let metadata = file.metadata()?;
-    if !is_plain_file(&metadata) || metadata.len() > MAXIMUM_BOOT_RECORD_BYTES {
-        return Err(refused());
-    }
-    let mut raw = Vec::new();
-    file.by_ref()
-        .take(MAXIMUM_BOOT_RECORD_BYTES + 1)
-        .read_to_end(&mut raw)?;
-    if u64::try_from(raw.len()).map_err(|_| refused())? > MAXIMUM_BOOT_RECORD_BYTES {
-        return Err(refused());
-    }
-    Ok(raw)
-}
-
-#[cfg(windows)]
-fn is_plain_file(metadata: &fs::Metadata) -> bool {
-    use std::os::windows::fs::MetadataExt;
-    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
-    metadata.file_type().is_file() && metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT == 0
-}
-
-#[cfg(not(windows))]
-fn is_plain_file(metadata: &fs::Metadata) -> bool {
-    metadata.file_type().is_file()
 }
 
 #[cfg(test)]

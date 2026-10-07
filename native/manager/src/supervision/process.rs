@@ -98,12 +98,9 @@ impl RuntimeProcess {
     }
 
     /// How the process ended, or `None` while it runs.
-    pub fn try_exit(&mut self) -> Option<RuntimeExit> {
+    pub fn try_exit(&mut self) -> io::Result<Option<RuntimeExit>> {
         match self {
-            Self::Launched(child) => match child.try_wait() {
-                Ok(status) => status.map(exit_of),
-                Err(_) => Some(RuntimeExit::Unknown),
-            },
+            Self::Launched(child) => child.try_wait().map(|status| status.map(exit_of)),
             Self::Adopted(opened) => adopted_exit(opened),
         }
     }
@@ -118,16 +115,16 @@ impl RuntimeProcess {
 }
 
 #[cfg(windows)]
-fn adopted_exit(opened: &OpenedProcess) -> Option<RuntimeExit> {
-    match opened.held.exit_code() {
-        Ok(code) => code.map(RuntimeExit::from_code),
-        Err(_) => Some(RuntimeExit::Unknown),
-    }
+fn adopted_exit(opened: &OpenedProcess) -> io::Result<Option<RuntimeExit>> {
+    opened
+        .held
+        .exit_code()
+        .map(|code| code.map(RuntimeExit::from_code))
 }
 
 #[cfg(not(windows))]
-fn adopted_exit(_opened: &OpenedProcess) -> Option<RuntimeExit> {
-    Some(RuntimeExit::Unknown)
+fn adopted_exit(_opened: &OpenedProcess) -> io::Result<Option<RuntimeExit>> {
+    Err(io::Error::from(io::ErrorKind::Unsupported))
 }
 
 #[cfg(windows)]

@@ -162,6 +162,51 @@ fn supervision_facts_survive_durable_replay_without_identifiers_or_protocol_payl
 }
 
 #[test]
+fn termination_failures_remain_distinct_and_retain_only_safe_native_facts() {
+    let scratch = Scratch::new();
+    let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+    let current = scratch.0.join(MANAGER_LOG);
+    diagnostics.configure_file(&current, 16384, 1).unwrap();
+    for event in [
+        Event::TerminationRequested { pid: 7 },
+        Event::TerminationFailed {
+            pid: 7,
+            kind: io::ErrorKind::PermissionDenied,
+            os_code: Some(5),
+        },
+        Event::TerminationUnconfirmed { pid: 7 },
+        Event::ProcessInspectionFailed {
+            pid: 7,
+            kind: io::ErrorKind::InvalidInput,
+            os_code: None,
+        },
+    ] {
+        supervision_event(&diagnostics, &event);
+    }
+    let records: Vec<serde_json::Value> = fs::read_to_string(current)
+        .unwrap()
+        .lines()
+        .map(|line| serde_json::from_str(line).unwrap())
+        .collect();
+    assert_eq!(records[0]["kind"], "stage_started");
+    assert_eq!(records[0]["lifecycle"]["event"], "termination_requested");
+    assert_eq!(records[1]["lifecycle"]["event"], "termination_failed");
+    assert_eq!(records[1]["failure"]["ioKind"], "PermissionDenied");
+    assert_eq!(records[1]["failure"]["osCode"], 5);
+    assert_eq!(records[2]["lifecycle"]["event"], "termination_unconfirmed");
+    assert_eq!(records[2]["failure"]["ioKind"], "TimedOut");
+    assert_eq!(
+        records[3]["lifecycle"]["event"],
+        "process_inspection_failed"
+    );
+    assert!(
+        records[1..]
+            .iter()
+            .all(|record| record["kind"] == "failure")
+    );
+}
+
+#[test]
 fn stage_failure_keeps_safe_io_facts_and_buffer_until_a_canonical_file_is_selected() {
     let scratch = Scratch::new();
     let diagnostics = Diagnostics::new(DiagnosticSource::Manager);

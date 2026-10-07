@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:566a0f79d25289846704e09d66d84fe6acdf536438e96db078c8fd2f4de16114'
+body_hash: 'sha256:66adb5edcb68cbee3611d50b7995b8ddfc105ba7824d25c83da9997c1c50684e'
 ---
 
 # `runtime-manager-architecture` plan
@@ -72,7 +72,7 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 
 - [x] `P02.S07` - Create the native/manager crate and cadrumo-manager root-level image with identity-projected names, the Background Services suffix owner, DEPENDENTLOADFLAG linkage, platform-mapping declaration, manifest, verification and signing inventory; `native/manager/ (new), native/CMakeLists.txt, native/cmake/, dev/packaging/native/identity.py, dev/packaging/native/ layout and verification, src/cadrumo/core/product_identity.py`.
 - [ ] `P02.S08` - Consume the canonical location definition in strict profile through native/platform and probe storage identity and version from the installed interpreter; `native/manager/, native/platform/, native/application/ after desktop-shell S04-S07`.
-- [ ] `P02.S09` - Implement the supervision core with fixture test mode: launch with allow-list environment, readiness ceiling, heartbeat hang escalation, restart classes with monotonic backoff, crash-loop ceiling, adoption by image, elevation and boot record, and foreign state; `native/manager/, fixture runtimes in isolated synthetic roots`.
+- [x] `P02.S09` - Implement the supervision core with fixture test mode: launch with allow-list environment, readiness ceiling, heartbeat hang escalation, restart classes with monotonic backoff, crash-loop ceiling, adoption by image, elevation and boot record, and foreign state; `native/manager/, fixture runtimes in isolated synthetic roots`.
 - [ ] `P02.S10` - Implement Windows stop delivery, the manager window procedure for session end with cancel restart and restart suppression, job escape, and elevation and session-0 refusal; `native/manager/ Windows modules`.
 - [x] `P02.S11` - Implement session ownership: per-session lock, per-user kernel-released start claim and Quit marker conformance-tested against the Python custody primitives, observe-only other sessions and active-session handoff; `native/manager/, contract generator conformance tests`.
 - [ ] `P02.S12` - Implement the manager IPC endpoint with owner and image verification and the closed reveal, retry and successor-readiness request set; `native/manager/`.
@@ -84,6 +84,7 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 
 Windows login registration in the installation scope and client remedies that name the manager.
 
+- [ ] `P03.S27` - Resolve the audit's installed-version discovery blocker with a shared Windows versioned-prefix layout, complete-version catalogue and stable manager entry point consumed by packaging, manager startup and desktop dispatch; preserve root-level images, strict admission and existing process authority.; `dev/packaging/native installation/layout owners and tests, native/application shared discovery, native/manager startup, native/desktop manager target selection and owning tests`.
 - [ ] `P03.S14` - Generate Windows login registration and the manager Start-menu shortcut with AUMID in both installation scopes from the identity projection, gated on the versioned-install layout; `dev/packaging/native/installation.py, native/cmake/distribution/`.
 - [ ] `P03.S15` - Add localized UNAVAILABLE remedies naming the manager to CLI, TUI and MCP refusal output without automatic manager requests; `src/cadrumo/adapters/local_runtime/runtime_client.py consumers, src/cadrumo/locales/, src/cadrumo_harness/mcp/`.
 

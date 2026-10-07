@@ -130,6 +130,26 @@ pub fn supervision_event(diagnostics: &Diagnostics, event: &Event) {
             None,
         ),
         Event::Terminated { pid } => (fact::LifecycleFact::Terminated { pid: *pid }, None),
+        Event::TerminationRequested { pid } => (
+            fact::LifecycleFact::TerminationRequested { pid: *pid },
+            None,
+        ),
+        Event::TerminationFailed { pid, kind, os_code } => (
+            fact::LifecycleFact::TerminationFailed { pid: *pid },
+            Some(native_failure(ErrorCode::CleanupFailed, *kind, *os_code)),
+        ),
+        Event::TerminationUnconfirmed { pid } => (
+            fact::LifecycleFact::TerminationUnconfirmed { pid: *pid },
+            Some(native_failure(
+                ErrorCode::CleanupFailed,
+                io::ErrorKind::TimedOut,
+                None,
+            )),
+        ),
+        Event::ProcessInspectionFailed { pid, kind, os_code } => (
+            fact::LifecycleFact::ProcessInspectionFailed { pid: *pid },
+            Some(native_failure(ErrorCode::ReadFailed, *kind, *os_code)),
+        ),
         Event::EffectsUnknown { pid } => (fact::LifecycleFact::EffectsUnknown { pid: *pid }, None),
         Event::Exited {
             pid,
@@ -187,6 +207,8 @@ pub fn supervision_event(diagnostics: &Diagnostics, event: &Event) {
             )
         {
             EventKind::Failure
+        } else if matches!(event, Event::TerminationRequested { .. }) {
+            EventKind::StageStarted
         } else {
             EventKind::StageCompleted
         },
@@ -194,6 +216,13 @@ pub fn supervision_event(diagnostics: &Diagnostics, event: &Event) {
         fact,
         failure,
     );
+}
+
+fn native_failure(code: ErrorCode, kind: io::ErrorKind, os_code: Option<i32>) -> ApplicationError {
+    let error = os_code
+        .map(io::Error::from_raw_os_error)
+        .unwrap_or_else(|| io::Error::from(kind));
+    ApplicationError::new(code, Operation::Manager).caused_by(error)
 }
 
 pub fn supervision_outcome(diagnostics: &Diagnostics, outcome: Outcome) {

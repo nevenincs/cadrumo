@@ -603,20 +603,31 @@ fn quit_during_backoff_suppresses_the_restart_and_releases_the_claim() {
 }
 
 #[test]
-fn stopping_during_backoff_releases_the_restart_claim() {
-    let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
-    let (_, outcome) = Case::default().run(&root, |event, handle| {
-        if matches!(event, Event::RestartScheduled { .. }) {
-            handle.request(Request::Stop);
-        }
-    });
-    assert_eq!(outcome, SETTLED);
-    assert_eq!(root.launches(), 1);
-    assert!(
-        StartClaim::take(root.path(), Duration::ZERO)
-            .unwrap()
-            .is_some()
-    );
+fn stopping_during_backoff_preserves_unknown_effects_and_releases_the_restart_claim() {
+    for request in [Request::Stop, Request::StopIfIdle] {
+        let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+        let (seen, outcome) = Case::default().run(&root, |event, handle| {
+            if matches!(event, Event::RestartScheduled { .. }) {
+                handle.request(request);
+            }
+        });
+        assert!(
+            seen.iter()
+                .any(|seen| matches!(seen.event, Event::EffectsUnknown { .. }))
+        );
+        assert_eq!(
+            outcome,
+            Outcome::Stopped {
+                effects: Effects::Unknown
+            }
+        );
+        assert_eq!(root.launches(), 1);
+        assert!(
+            StartClaim::take(root.path(), Duration::ZERO)
+                .unwrap()
+                .is_some()
+        );
+    }
 }
 
 #[test]

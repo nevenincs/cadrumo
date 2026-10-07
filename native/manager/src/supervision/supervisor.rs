@@ -49,7 +49,7 @@ pub struct SupervisorConfig {
     pub drain_bound: Duration,
     /// Deadline for the runtime's ordered session-end settlement before containment.
     pub session_end_bound: Duration,
-    /// How long to wait for a terminated process to be reported ended.
+    /// How long to wait before reporting unconfirmed termination; monitoring continues.
     pub termination_bound: Duration,
     /// Upper bound of one wait between exit polls.
     pub poll_interval: Duration,
@@ -209,6 +209,22 @@ pub enum Event {
         pid: u32,
         cause: StopCause,
         path: StopPath,
+    },
+    TerminationRequested {
+        pid: u32,
+    },
+    TerminationFailed {
+        pid: u32,
+        kind: ErrorKind,
+        os_code: Option<i32>,
+    },
+    TerminationUnconfirmed {
+        pid: u32,
+    },
+    ProcessInspectionFailed {
+        pid: u32,
+        kind: ErrorKind,
+        os_code: Option<i32>,
     },
     Terminated {
         pid: u32,
@@ -462,7 +478,15 @@ struct Watch {
     cause: Option<StopCause>,
     idle_pending: bool,
     stop_deadline: Option<Instant>,
+    termination: Option<Termination>,
+    inspection_failure: Option<(ErrorKind, Option<i32>)>,
     announced: Option<ExitReason>,
+}
+
+struct Termination {
+    deadline: Instant,
+    accepted: bool,
+    unconfirmed: bool,
 }
 
 /// Supervises the runtime of one storage root until an [`Outcome`].
@@ -592,7 +616,9 @@ impl Supervisor {
                 match self.launch() {
                     Some(ended) => ended,
                     None => {
-                        if let Some(outcome) = self.back_off(RestartClass::LaunchFailure) {
+                        if let Some(outcome) =
+                            self.back_off(RestartClass::LaunchFailure, prior_effects)
+                        {
                             return outcome;
                         }
                         continue;
@@ -635,7 +661,7 @@ impl Supervisor {
                 Decision::WitnessLoss => RestartClass::WitnessLoss,
                 Decision::Restart(class) => class,
             };
-            if let Some(outcome) = self.back_off(class) {
+            if let Some(outcome) = self.back_off(class, effects) {
                 return outcome;
             }
         }
@@ -688,7 +714,7 @@ impl Supervisor {
     }
 
     /// Wait the admitted backoff while honouring requests; `Some` ends supervision.
-    fn back_off(&mut self, class: RestartClass) -> Option<Outcome> {
+    fn back_off(&mut self, class: RestartClass, prior_effects: Effects) -> Option<Outcome> {
         if self.session_ending.load(Ordering::SeqCst) {
             return Some(Outcome::Stopped {
                 effects: Effects::Unknown,
@@ -727,10 +753,10 @@ impl Supervisor {
                         effects: Effects::Unknown,
                     });
                 }
-                // Nothing runs, so an ordinary stop is complete at once.
+                // Process absence cannot settle effects from the previous boot.
                 Ok(Input::Control(_)) => {
                     return Some(Outcome::Stopped {
-                        effects: Effects::Settled,
+                        effects: prior_effects,
                     });
                 }
                 Ok(_) => {}
@@ -822,18 +848,55 @@ impl Supervisor {
             cause: None,
             idle_pending: false,
             stop_deadline: None,
+            termination: None,
+            inspection_failure: None,
             announced: None,
         };
         loop {
             if self.session_ending.load(Ordering::SeqCst) {
                 self.begin_stop(&mut watch, StopCause::SessionEnd);
             }
-            if let Some(exit) = watch.runtime.try_exit() {
-                return self.ended(&watch, exit, false);
+            match watch.runtime.try_exit() {
+                Ok(Some(exit)) => {
+                    let attempted = watch.termination.is_some();
+                    let exit = if watch
+                        .termination
+                        .as_ref()
+                        .is_some_and(|state| state.accepted)
+                    {
+                        self.emit(Event::Terminated { pid: watch.pid });
+                        RuntimeExit::Terminated
+                    } else {
+                        exit
+                    };
+                    return self.ended(&watch, exit, attempted);
+                }
+                Ok(None) => watch.inspection_failure = None,
+                Err(error) => {
+                    let failure = (error.kind(), error.raw_os_error());
+                    if watch.inspection_failure != Some(failure) {
+                        self.emit(Event::ProcessInspectionFailed {
+                            pid: watch.pid,
+                            kind: failure.0,
+                            os_code: failure.1,
+                        });
+                        watch.inspection_failure = Some(failure);
+                    }
+                }
             }
             let now = Instant::now();
-            if watch.stop_deadline.is_some_and(|deadline| now >= deadline) {
-                return self.terminate(watch);
+            if watch.termination.is_none()
+                && watch.stop_deadline.is_some_and(|deadline| now >= deadline)
+            {
+                self.terminate(&mut watch);
+            }
+            if let Some(state) = &mut watch.termination
+                && !state.unconfirmed
+                && now >= state.deadline
+            {
+                state.unconfirmed = true;
+                self.emit(Event::TerminationUnconfirmed { pid: watch.pid });
+                self.emit(Event::EffectsUnknown { pid: watch.pid });
             }
             self.advance(&mut watch, now);
             let wait = self.next_wait(&watch, Instant::now());
@@ -899,6 +962,16 @@ impl Supervisor {
     }
 
     fn next_wait(&self, watch: &Watch, now: Instant) -> Duration {
+        if let Some(state) = &watch.termination {
+            return if state.unconfirmed {
+                self.config.poll_interval
+            } else {
+                state
+                    .deadline
+                    .saturating_duration_since(now)
+                    .min(self.config.poll_interval)
+            };
+        }
         let deadline = match (&watch.phase, watch.stop_deadline) {
             (_, Some(deadline)) => Some(deadline),
             (Phase::Starting { deadline }, None) => Some(*deadline),
@@ -1060,16 +1133,22 @@ impl Supervisor {
         });
     }
 
-    fn terminate(&self, mut watch: Watch) -> Ended {
-        let _ = watch.runtime.terminate();
-        self.emit(Event::Terminated { pid: watch.pid });
-        let deadline = Instant::now() + self.config.termination_bound;
-        loop {
-            if watch.runtime.try_exit().is_some() || Instant::now() >= deadline {
-                return self.ended(&watch, RuntimeExit::Terminated, true);
-            }
-            thread::sleep(self.config.poll_interval.min(Duration::from_millis(10)));
+    fn terminate(&self, watch: &mut Watch) {
+        self.emit(Event::TerminationRequested { pid: watch.pid });
+        let result = watch.runtime.terminate();
+        if let Err(error) = &result {
+            self.emit(Event::TerminationFailed {
+                pid: watch.pid,
+                kind: error.kind(),
+                os_code: error.raw_os_error(),
+            });
         }
+        // Retain the exact process and keep consuming controls until death is observed.
+        watch.termination = Some(Termination {
+            deadline: Instant::now() + self.config.termination_bound,
+            accepted: result.is_ok(),
+            unconfirmed: false,
+        });
     }
 
     fn ended(&self, watch: &Watch, exit: RuntimeExit, terminated: bool) -> Ended {

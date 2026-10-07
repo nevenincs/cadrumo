@@ -214,6 +214,18 @@ pub enum LifecycleFact {
         cause: StopCause,
         path: StopPath,
     },
+    TerminationRequested {
+        pid: u32,
+    },
+    TerminationFailed {
+        pid: u32,
+    },
+    TerminationUnconfirmed {
+        pid: u32,
+    },
+    ProcessInspectionFailed {
+        pid: u32,
+    },
     Terminated {
         pid: u32,
     },

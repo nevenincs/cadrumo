@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:07f2f6a4139f23f590909578e5debfb49f9346b351df9109fc4ed7d6ff5d9296'
+body_hash: 'sha256:a0d22534b4fb57d961c13404ee3aeb0117e9d5e15c833549c10d56eff08d373e'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -295,6 +295,26 @@ related:
 - `S26` `verify:` `pytest real Windows headless runtime load (1 test)` -> `pass`
 - `S26` `verify:` `TypeScript noEmit and scoped ESLint Prettier Ruff ty` -> `pass`
 - `S26` `by:` `root`
+- `S09` `M` `native/application/src/diagnostics/lifecycle.rs`
+- `S09` `M` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S09` `M` `native/manager/src/diagnostics.rs`
+- `S09` `M` `native/manager/src/session/ownership.rs`
+- `S09` `M` `native/manager/src/supervision/boot_record.rs`
+- `S09` `M` `native/manager/src/supervision/process.rs`
+- `S09` `M` `native/manager/src/supervision/stop.rs`
+- `S09` `M` `native/manager/src/supervision/supervisor.rs`
+- `S09` `M` `native/manager/tests/diagnostics.rs`
+- `S09` `M` `native/manager/tests/startup_cases/mod.rs`
+- `S09` `M` `native/manager/tests/supervision.rs`
+- `S09` `A` `native/manager/tests/boot_record.rs`
+- `S09` `A` `native/manager/tests/termination.rs`
+- `S09` `M` `.vault/audit/2026-10-05-runtime-manager-architecture-audit.md`
+- `S09` `verify:` `manager.supervision CTest owning cargo test (155 tests)` -> `pass`
+- `S09` `verify:` `manager Clippy --all-targets --features fixture-test-mode -- -D warnings` -> `pass`
+- `S09` `verify:` `desktop test-unit logs::manager (4 tests)` -> `pass`
+- `S09` `verify:` `desktop clippy-backend` -> `fail`
+- `S09` `verify:` `targeted rustfmt and git diff --check` -> `pass`
+- `S09` `by:` `Codex`
 
 ## Notes
 
@@ -321,3 +341,4 @@ related:
 - `S25` One later stress fixture exceeded its unchanged 3s startup wait on the busy shared host; the 512-client test passed unchanged on targeted rerun. Baseline race failed, fix verified. Updated two stale assertions to the existing optional `sign_in` field and tick-before-first-loop semantics. No different-user/session or GUI acceptance. Repository-wide import gates were not rerun against unrelated concurrent changes under the operator's fast scoped verification instruction.
 - `S25` Root-cause follow-up: fresh runtime startup 11605.89ms; `main_import` 5710.24ms, `registry_prepare` 5573.05ms, `listener_listen` 6.947ms. Independent unprofiled import+registry 11865.39ms. Profile: 1806 strict schema calls, 481 distinct compiled models, 14.381s of 15.422s in strict schema processing (instrumented, not benchmark latency). Separate shutdown probe: runtime returned at 214.51ms, atexit marker 215.33ms, process exit 1766.45ms. No registry semantics changed or package rebuilt; earlier 18.93s versus now 11.61s is not an optimization claim. Full evidence build/runtime-root-cause-report.json with source hashes and profile artifacts. Headless test passed in 14.89s. Shared Git index lock still present; no lock removed.
 - `S26` User authorized implementation of React ghost UI for asynchronous Tauri startup. Reused existing native manager launch and canonical readiness reads without Rust edits, new state libraries or package compilation. Corrected related missing `starting_services` declaration in canonical desktop locale projection and regenerated only chrome strings. React waits are bounded and stale read results cannot restore an unmounted owner. Evidence and source hashes: build/runtime-startup-ui/verification.json; visually inspected loading.png. Browser scenarios prove React behavior, native source runtime smoke proves native IPC; session-1 desktop GUI not claimed. Existing shared Git index.lock still blocks checkpoint; no lock removed and no other workstream staged.
+- `S09` Desktop Clippy fails in a concurrent sign-in test outside this step; the manager and changed consumer tests pass. Interactive installation and OS session-end acceptance remain disposable-host rollout obligations.

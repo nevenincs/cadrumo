@@ -271,7 +271,10 @@ fn a_slow_observer_has_bounded_events_and_does_not_delay_runtime_stop() {
     owned.running.join().unwrap();
     owned.finished = true;
     assert_eq!(outcome, SETTLED);
-    assert!(held.try_exit().is_some(), "the exact child must be reaped");
+    assert!(
+        held.try_exit().unwrap().is_some(),
+        "the exact child must be reaped"
+    );
     assert!(owned.running.events.try_iter().count() <= EVENT_QUEUE);
     assert!(owned.running.handle.take_dropped_events() > 0);
     assert_eq!(owned.running.handle.take_dropped_events(), 0);
@@ -310,7 +313,7 @@ fn saturated_input_preserves_session_end_and_persists_dropped_observations() {
     ));
     owned.finished = true;
     assert!(
-        held.try_exit().is_some(),
+        held.try_exit().unwrap().is_some(),
         "session end must settle the exact child"
     );
     assert_eq!(root.launches(), 1, "session end must suppress restart");

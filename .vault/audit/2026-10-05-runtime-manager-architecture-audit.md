@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:af65ac5a7f438e6749205738671660862fc05f3dce301338631fa3904ef8d522'
+body_hash: 'sha256:dc6cb78672925d257ec2df5a76baed0f17ac5517f14e2b548778bff35e9c84b5'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -128,6 +128,16 @@ CADRUMO_EDITABLE_AUTHORITY=skip uv run --no-sync pytest -q -n 0 over test_superv
 Probe-reviewed source SHA-256: supervisor.rs 09c264eb8d39ee55bc6c03a69845f5d309057b68c62547306928518fe5df96cb; boot_record.rs c3e8b51328c005be020d1f47abf623edb1143690e14a14856030a9cf62a66c6f; windows.rs ba74557fddffa92e9282af5d3f6b2cc532a19c580f30814a1c5d7293cefc32a4. Semantic code discovery was unavailable because the managed RAG/Qdrant service was not provisioned; existing vault search and narrowly scoped source reads were used without installing infrastructure.
 
 Overall verdict: REVISION REQUIRED for confirmed unreported termination failure and the existing installed version-selection blocker; PENDING for full manager/product acceptance. Passing evidence supports the implemented bounded Windows foundations only. Resolve the high finding before P02.S09 recloses, fix the two medium contract gaps with meaningful regressions, then complete the open integration and installed/OS acceptance Steps under the existing approved plan.
+
+
+### 2026-10-07 corrective review — supervision defects
+
+PASS for the three reproduced supervision defects: termination attempts now retain the process handle and supervision claim until death is confirmed, report denied termination and expired confirmation separately, and never fabricate an exit or schedule a restart. Stop and stop-if-idle during restart backoff preserve the preceding effects status. Boot-record reads now use the existing custody local-record primitive, including parent-component reparse protection.
+
+Evidence: 155 manager fixture tests passed, including a real Windows process with denied PROCESS_TERMINATE access and an independent retained cleanup handle; the child remained alive and supervised through the timeout. Four desktop manager-log parser tests passed. Manager Clippy with all targets and warnings denied passed; targeted formatting and diff checks passed. Desktop backend Clippy failed at the concurrently edited sign-in test's redundant closure call (`native/desktop/src-tauri/src/shell/sign_in/process.rs:492`), outside this corrective scope.
+
+The installed-version discovery high finding remains open for P03.S27. The operator selected concrete defects and the discovery blocker; tray, autostart, cutover/rollback and platform rollout remain in their existing steps. Disposable-host installation and session-end acceptance are not claimed by these fixture checks.
+
 
 ## Recommendations
 

@@ -51,8 +51,10 @@ impl StopSignal for PlatformStopSignal {
     #[cfg(windows)]
     fn deliver(&self, runtime: &mut RuntimeProcess) -> Result<(), StopSignalError> {
         use super::windows::{ConsoleInterruptError, interrupt_console};
-        if runtime.try_exit().is_some() {
-            return Err(StopSignalError::NotRunning);
+        match runtime.try_exit() {
+            Ok(Some(_)) => return Err(StopSignalError::NotRunning),
+            Ok(None) => {}
+            Err(_) => return Err(StopSignalError::Failed),
         }
         interrupt_console(runtime.pid(), self.delivery_bound).map_err(|error| match error {
             ConsoleInterruptError::AlreadyAttached => StopSignalError::AlreadyAttached,

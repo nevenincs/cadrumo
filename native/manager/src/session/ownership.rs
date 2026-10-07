@@ -283,7 +283,7 @@ impl ObservedRuntime for HandleObserver {
     }
 
     fn has_ended(&mut self) -> bool {
-        self.process.try_exit().is_some()
+        self.process.try_exit().is_ok_and(|exit| exit.is_some())
     }
 }
 

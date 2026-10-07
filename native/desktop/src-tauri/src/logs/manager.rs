@@ -149,6 +149,7 @@ pub(super) fn parse(line: &[u8]) -> Option<Entry> {
         host_exit_code: wire.host_exit_code,
         lifecycle: wire.lifecycle,
         webview_failure: None,
+        helper_timing: None,
     });
     if let Some(kind) = io_kind {
         field(&mut entry.context, "io_kind", kind);
@@ -181,6 +182,10 @@ pub(super) fn lifecycle_context(fact: LifecycleFact, context: &mut BTreeMap<Stri
         | ChannelClosed { pid }
         | Busy { pid }
         | IdleStopUnavailable { pid }
+        | TerminationRequested { pid }
+        | TerminationFailed { pid }
+        | TerminationUnconfirmed { pid }
+        | ProcessInspectionFailed { pid }
         | Terminated { pid }
         | EffectsUnknown { pid }
         | Adopted { pid } => field(context, "runtime_pid", pid),
@@ -307,6 +312,28 @@ mod tests {
                 .values()
                 .all(|value| !value.is_array() && !value.is_object())
         );
+    }
+
+    #[test]
+    fn unconfirmed_termination_is_displayed_without_an_exit_claim() {
+        let mut wire = wire();
+        wire["kind"] = Value::from("failure");
+        wire["failure"]["code"] = Value::from("cleanup_failed");
+        wire["failure"]["osCode"] = Value::from(5);
+        wire["failure"]["ioKind"] = Value::from("PermissionDenied");
+        for event in [
+            "termination_failed",
+            "termination_unconfirmed",
+            "process_inspection_failed",
+        ] {
+            wire["lifecycle"] = serde_json::json!({"event": event, "pid": 4321});
+            let entry = parse(&serde_json::to_vec(&wire).unwrap()).unwrap();
+            assert_eq!(entry.context["runtime_pid"], 4321);
+            assert_eq!(entry.context["lifecycle_event"], event);
+            assert_eq!(entry.context["io_kind"], "PermissionDenied");
+            assert_eq!(entry.context["os_code"], 5);
+            assert!(!entry.context.contains_key("exit_classification"));
+        }
     }
 
     #[test]
