@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e376c770df551228c5357a0d8fbb420ecff1daebc916a4c85ef969489697655f'
+body_hash: 'sha256:d60938309df2222f6020fdddfaf67d1ef64becaab39fb18a9ada8fc7ba7274a2'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -389,6 +389,13 @@ related:
 - `S25` `verify:` `complete frozen import gate:15 contracts and4526 loaded modules` -> `pass`
 - `S25` `verify:` `three paired source measurements with twelve exact public identities` -> `pass`
 - `S25` `by:` `root`
+- `S27` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S27` `A` `src/cadrumo/entrypoints/tests/test_operation_execution_imports.py`
+- `S27` `verify:` `31 distinct functional and offline integration cases` -> `pass`
+- `S27` `verify:` `Ruff format and ty three platforms` -> `pass`
+- `S27` `verify:` `Root reviewed unchanged production import edges with prior complete stable graph evidence` -> `pass`
+- `S27` `verify:` `Six guarded source children twelve identical public registry observations and five fewer model constructions` -> `pass`
+- `S27` `by:` `root`
 
 ## Notes
 
@@ -426,3 +433,4 @@ related:
 - `S24` Initial startup outlier remains open under S13; corrected original module entrypoint cases pass without deadline change.
 - `S26` Existing outer and termination-helper waits unchanged; root reviewed real child/thread settlement. Startup stall and broader native handle/launch ownership remain open.
 - `S25` Live-tree full gate failed solely on source mutation and is retained. Frozen complete gate passed with unchanged budgets. Instrumented source medians are not packaged SLO evidence. Only generated canonical-module enrollment is owned; foreign dev target rows remain unstaged.
+- `S27` Measured source variants only; shared-host stall retained; packaged startup and enrollment targets remain unresolved.

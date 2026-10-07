@@ -14,8 +14,6 @@ from uuid import UUID
 
 from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope, default_browser_session_factory
 from ..adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
-from ..adapters.outbound.aeat.sede.groi_check import collect_groi_observations
-from ..adapters.outbound.aeat.sede.nif_iva_check import collect_nif_iva_check_observations
 from ..adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
 from ..adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailableError
 from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
@@ -811,7 +809,6 @@ from .justificante_composition import (
 from .ledger_action_composition import compose_ledger_action_ports, compose_ledger_import_ports
 from .ledger_evidence_ingestion_operation_composition import build_ledger_evidence_ingestion_operation_ports
 from .ledger_export_link_operation_composition import build_ledger_export_link_operation_ports
-from .ledger_llm_composition import compose_ledger_llm
 from .ledger_llm_diagnostics_composition import build_ledger_llm_diagnostics_operation_ports
 from .live_borrador_operation_composition import build_borrador_100_operation_ports
 from .live_state_composition import (
@@ -1445,6 +1442,8 @@ def build_production_operation_registry(
     def ledger_llm_operation_ports_factory(
         *, bucket_id: str, operation: PinnedAuthorityOperation
     ) -> LedgerLlmOperationPorts:
+        from .ledger_llm_composition import compose_ledger_llm
+
         return LedgerLlmOperationPorts(
             ledger=ledger_action_ports_factory(bucket_id=bucket_id, operation=operation),
             llm=compose_ledger_llm(bucket_id=bucket_id, settings=resolved_settings).ports,
@@ -2129,8 +2128,12 @@ async def _acquire_registry_verify_observation(
     del operation
     expected_by_nif = {tax_id_identity_token(nif): expected or "unknown"}
     if surface is VerifySurface.NIF_IVA:
+        from ..adapters.outbound.aeat.sede.nif_iva_check import collect_nif_iva_check_observations
+
         result = await collect_nif_iva_check_observations(b"", expected=expected_by_nif, settings=resolved_settings)
     else:
+        from ..adapters.outbound.aeat.sede.groi_check import collect_groi_observations
+
         result = await collect_groi_observations(b"", expected=expected_by_nif, settings=resolved_settings)
     if len(result.observations) != 1:
         raise ValueError("verify acquisition must return exactly one observation")
