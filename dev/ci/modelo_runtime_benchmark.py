@@ -15,6 +15,9 @@ last admitted boundary; frequent schema calls are aggregated in memory.
 Aggregate records are cumulative snapshots: use the last or maximum count per
 process, never sum snapshots. Catalogue and Modelo completions publish them
 before a native owner can contain its worker without composition teardown.
+The parent worker-construction span includes the child's early bootstrap;
+child observations begin inside composition. Observer imports precede the
+sequence clock, so cold import costs may differ from an uninstrumented run.
 """
 
 from __future__ import annotations
@@ -226,6 +229,41 @@ def _observe_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkReco
     )
 
 
+def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
+    """Separate low-frequency synchronous launch, admission and CLI costs."""
+    from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
+    from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+    from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
+    from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
+
+    patch.setattr(
+        ProfileWorkerProcess, "__init__", recorder.wrap(ProfileWorkerProcess.__init__, "startup.profile_worker")
+    )
+    patch.setattr(
+        RuntimeFrontendClient,
+        "login_password",
+        recorder.wrap(RuntimeFrontendClient.login_password, "admission.frontend_password"),
+    )
+    patch.setattr(
+        ProfileWorkerHumanLogin,
+        "authenticate",
+        recorder.wrap(ProfileWorkerHumanLogin.authenticate, "admission.worker_password"),
+    )
+    _patch_function_aliases(patch, unlock_profile_custody, recorder.wrap(unlock_profile_custody, "custody.unlock"))
+    _patch_function_aliases(patch, cadrumo_click_command, recorder.wrap(cadrumo_click_command, "cli.cached_command"))
+    if sys.platform == "win32":
+        from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+        from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+
+        patch.setattr(
+            WindowsProcessScope, "launch", recorder.wrap(WindowsProcessScope.launch, "startup.native_process_launch")
+        )
+        patch.setattr(
+            WindowsRuntimeEndpoint, "connect", recorder.wrap(WindowsRuntimeEndpoint.connect, "startup.native_connect")
+        )
+
+
 @contextmanager
 def observe_runtime_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[None]:
     """Instrument actual owners only inside the composed developer fixture."""
@@ -273,6 +311,7 @@ def observe_runtime_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[
             PinnedAuthorityOperation, "snapshot", recorder.wrap(PinnedAuthorityOperation.snapshot, "authority.snapshot")
         )
         _observe_functions(patch, recorder)
+        _observe_startup_functions(patch, recorder)
         patch.setattr(BaseModel, "model_validate_json", classmethod(validate))
         try:
             yield

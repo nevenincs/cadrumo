@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:feb5c33541ec2f35a7938ece940199d33778fa6d33c6d72344278735b6df32fd'
+body_hash: 'sha256:c39b0073c782dff85c7c91fec4421affd19d08763985d501c1311fa378e541d1'
 ---
 
 # `modelo-runtime-performance` plan
@@ -34,7 +34,7 @@ The baseline is current HEAD f0be8532f5 plus existing peer edits. Root owns the 
 - [x] `S02` - Reduce measured operation schema generation and graph snapshot work while preserving exact public fingerprints and live mutation refusal; `src/cadrumo/application/operations/registry_schema_validation.py, _model_contract.py, schema_identity.py, owning operation registry tests and src/cadrumo/entrypoints/tests/test_operation_registry_schema_parity.py`.
 - [x] `S03` - Optimize measured calculation revision decode and read paths without stale authority or cross-load private caches; `src/cadrumo/adapters/persistence/profile/modelos_calculation.py and owning calculation revision, rendering, verification and readback consumers/tests`.
 - [x] `S05` - Deduplicate synchronous selector and exact-revision capture reads inside one invocation while retaining every independent fresh runtime guard; `src/cadrumo/application/modelo calculation revision selector and capture owners with their direct tests`.
-- [ ] `S06` - Attribute the measured cold startup wait with bounded public native launch and authentication timing; `dev/ci/modelo_runtime_benchmark.py and direct benchmark tests`.
+- [x] `S06` - Attribute the measured cold startup wait with bounded public native launch and authentication timing; `dev/ci/modelo_runtime_benchmark.py and direct benchmark tests`.
 - [ ] `S07` - Replace measured quadratic duplicate scans with one typed counting pass while preserving exact registry refusal semantics; `src/cadrumo/domain/calculations/registry/schema_surfaces.py and owning duplicate-validator tests`.
 - [ ] `S04` - Prove real Modelo100 completion and core loading improvement with regression controls and all blocking quality gates; `dev/docs/tests/test_sequence_goldens.py real runtime fixtures, focused Modelo100/303/131 and currentness/custody tests, generated import enrollment, feature audit and ledger`.
 

@@ -10,9 +10,13 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.modelos.calculation_repository import CalculationRevisionCatalogue
+from cadrumo.entrypoints.cli.tests import cli_runner
+from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 
 from ..modelo_runtime_benchmark import (
     RuntimeBenchmarkRecorder,
@@ -125,20 +129,54 @@ def test_actual_catalogue_envelope_decode_is_unchanged_and_hooks_restore(tmp_pat
 
 def test_nested_runtime_observers_restore_after_actual_decode_failure(tmp_path: Path) -> None:
     original = vars(BaseModel)["model_validate_json"]
+    original_worker_constructor = ProfileWorkerProcess.__init__
+    original_frontend_login = RuntimeFrontendClient.login_password
+    original_worker_login = ProfileWorkerHumanLogin.authenticate
     outer = RuntimeBenchmarkRecorder(tmp_path, role="parent")
     inner = RuntimeBenchmarkRecorder(tmp_path, role="worker")
     invalid_wire = "synthetic-private-invalid-catalogue"
 
     with observe_runtime_boundaries(outer):
         outer_descriptor = vars(BaseModel)["model_validate_json"]
+        outer_constructor = ProfileWorkerProcess.__init__
+        outer_frontend_login = RuntimeFrontendClient.login_password
+        outer_worker_login = ProfileWorkerHumanLogin.authenticate
         with pytest.raises(ValidationError), observe_runtime_boundaries(inner):
             Envelope[CalculationRevisionCatalogue].model_validate_json(invalid_wire)
         assert vars(BaseModel)["model_validate_json"] is outer_descriptor
+        assert ProfileWorkerProcess.__init__ is outer_constructor
+        assert RuntimeFrontendClient.login_password is outer_frontend_login
+        assert ProfileWorkerHumanLogin.authenticate is outer_worker_login
 
     assert vars(BaseModel)["model_validate_json"] is original
+    assert ProfileWorkerProcess.__init__ is original_worker_constructor
+    assert RuntimeFrontendClient.login_password is original_frontend_login
+    assert ProfileWorkerHumanLogin.authenticate is original_worker_login
     for recorder in (outer, inner):
         raw = recorder.path.read_bytes()
         assert invalid_wire.encode() not in raw
         finishes = [row for row in _records(raw) if row["event"] == "finish"]
         assert len(finishes) == 1
         assert finishes[0]["outcome"] == "ValidationError"
+
+
+def test_observed_real_cli_materialization_keeps_its_cache_and_restores_after_failure(tmp_path: Path) -> None:
+    original = cli_runner.cadrumo_click_command
+    expected = original()
+    recorder = RuntimeBenchmarkRecorder(tmp_path, role="parent")
+
+    with pytest.raises(RuntimeError), observe_runtime_boundaries(recorder):
+        first = cli_runner.cadrumo_click_command()
+        second = cli_runner.cadrumo_click_command()
+        assert first is second is expected
+        raise RuntimeError("leave the observed CLI scope")
+
+    assert cli_runner.cadrumo_click_command is original
+    assert original() is expected
+    finished = [
+        row
+        for row in _records(recorder.path.read_bytes())
+        if row["event"] == "finish" and row["boundary"] == "cli.cached_command"
+    ]
+    assert [row["call"] for row in finished] == [1, 2]
+    assert all(row["outcome"] == "ok" for row in finished)

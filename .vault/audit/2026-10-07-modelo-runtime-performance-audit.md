@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fa3f6e9fc1a23996562a467fc629f5f51410e1829f650a942b5c47935e52e9c'
+body_hash: 'sha256:663c03fd4dfe48315a2cda06add1094a5b4d86cf2bf67de4d91d6b66033f1a02'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
   - "[[2026-10-07-blocking-code-quality-repair-audit]]"
@@ -46,6 +46,10 @@ Unchanged canonical tests observed through an ephemeral payload-free plugin all 
 ### synchronous-selector-read-repair | low | One freshly validated catalogue serves one synchronous selection
 
 S05 retains one repository-validated calculation catalogue only as a local value in the synchronous selector/capture invocation. CURRENT, EXPLICIT and FILED reads fall from two to one; natural capture two to one, exact capture three to one, positional work-id capture four to one. Export filed/current/fallback helpers share that one value without an await, write or intervening guard. Every coordinate, parent/profile, state, ambiguity and report-grant check remains, and all separate native access resolutions and persistence compare-and-swap reads remain fresh. Twenty-eight focused cases pass, including later SUBMIT/START resolution after work-row removal, next-call selector after catalogue removal, stale coordinate and foreign-parent refusals, complete exact capture projection and draft-export refusal. All configured scoped type engines, Ruff and formatting passed. Evidence .tmp/s05-selector-read-dedup-evidence.txt; log var/storage/development/.logs/test-runs/2026-10-07/20261007T120159.293746Z-pytest-80348-495d2154/run.log. Route savings are measured separately by root; read-count reductions are controlled proof, not an inferred whole-route timing.
+
+### bounded-startup-and-selector-route-evidence | low | Original double journey completes with more margin and measured startup boundaries
+
+S06 adds scoped real synchronous CLI, worker creation, native launch/connect, frontend/worker password admission and custody-unlock measurements. Arguments, return values, exceptions, cached CLI identity and native ownership remain unchanged; nested failure tests prove full restoration. Sixteen focused cases and final cache-case rerun pass; Ruff/format/ty pass. Manifest .tmp/modelo-performance-startup-observability.json records exact public targets and limitations: observer preimports are outside the default benchmark sequence clock, and parent worker construction includes child bootstrap before the child composition recorder begins. A subsequent original double-run canonical fixture with S05/S06 passed all three assertions at 260.66 s setup, 267.60 s total pytest; observed scope 262.00 s and process-tree CPU 238.06 s. First profile edit 13.10 s, worker creation 5.95 s, native CreateProcess 0.010 s, frontend admission 10.10 s including construction/registry, child password proof 0.41 s and existing-envelope unwrap 0.38 s. The earlier 45 s extra startup wait did not recur and is not assigned an unproved cause. Calculation frame had additional wall variation (45.53 s versus 25.09 s earlier), while actual calculation body was 9.42 s wall/6.20 s CPU. Completion and catalogue repetition remain final uninstrumented S04 obligations after S07. Evidence .tmp/modelo-runtime-canonical-startup and .tmp/m100-performance-canonical-startup.txt; durable log var/storage/development/.logs/test-runs/2026-10-07/20261007T115931.317558Z-pytest-31056-026f3357/run.log.
 
 ## Recommendations
 
