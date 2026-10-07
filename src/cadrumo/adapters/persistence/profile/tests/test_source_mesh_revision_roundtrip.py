@@ -40,6 +40,7 @@ from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
+from .....domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.row_casilla import DirectRowMaterializationProvenance
@@ -241,6 +242,66 @@ def test_row_casilla_materialization_roundtrips_only_through_encrypted_revision(
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
     assert repository.load().get(original.calculation_revision_id) == original
+
+
+def _revision_with_closed_rows() -> CalculationRevision:
+    original = _revision(_source_provenance())
+    closed = ClosedRecordRowSet(
+        record_id="fictional-record",
+        bucket_id=_BUCKET_ID,
+        work_unit_id=original.work_unit_id,
+        registry_snapshot_ref=original.registry_snapshot_ref,
+        authority_generation="6" * 64,
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        source_ref="opaque-closed-collection-canary",
+        source_fingerprint="7" * 64,
+        rows=(RecordRowMembership(row_index=1, binding_ids=("fictional-country", "fictional-quota"), occupied=False),),
+    )
+    candidate = original.model_copy(update={"closed_record_row_sets": (closed,)})
+    return CalculationRevision.model_validate(
+        {**dict(candidate), "calculation_revision_id": derive_calculation_revision_id_from_revision(candidate)}
+    )
+
+
+def test_closed_record_rows_survive_real_encrypted_storage(secure_objects: SecureObjectRepository) -> None:
+    original = _revision_with_closed_rows()
+    repository = _repository_with_parent_work_unit(secure_objects)
+    repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
+    loaded = repository.load().get(original.calculation_revision_id)
+    assert loaded == original
+    assert loaded is not None
+    assert loaded.closed_record_row_sets[0].unused_binding_ids == {"fictional-country", "fictional-quota"}
+    assert "opaque-closed-collection-canary" not in loaded.model_dump_json()
+    database = Path(str(secure_objects._engine.url.database))
+    wal = database.with_name(database.name + "-wal")
+    at_rest = database.read_bytes() + (wal.read_bytes() if wal.exists() else b"")
+    assert b"opaque-closed-collection-canary" not in at_rest
+
+
+@pytest.mark.parametrize("change", ["remove", "occupied", "fingerprint"])
+def test_changed_closed_rows_are_refused_at_encrypted_load(
+    secure_objects: SecureObjectRepository, change: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    original = _revision_with_closed_rows()
+    repository = _repository_with_parent_work_unit(secure_objects)
+    repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
+
+    def mutate(document: dict[str, Any]) -> None:
+        saved = next(iter(document["payload"]["revisions"].values()))
+        if change == "remove":
+            del saved["closed_record_row_sets"]
+        elif change == "occupied":
+            saved["closed_record_row_sets"][0]["rows"][0]["occupied"] = True
+        else:
+            saved["closed_record_row_sets"][0]["source_fingerprint"] = "8" * 64
+
+    mutate_encrypted_secure_object_json(
+        secure_objects._engine, row_statement=_calculation_row_statement(), mutate=mutate
+    )
+    with pytest.raises(CalculationRevisionPersistenceError) as failure:
+        repository.load()
+    assert "opaque-closed-collection-canary" not in str(failure.value)
+    assert "opaque-closed-collection-canary" not in caplog.text
 
 
 def test_row_casilla_target_row_must_equal_direct_source_row() -> None:

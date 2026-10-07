@@ -70,6 +70,7 @@ _EXPECTED_KEYS = {
     "app_modelo_describe",
     "app_modelo_export",
     "app_modelo_filing_record",
+    "app_modelo_filing_record_export",
     "app_modelo_filing_record_import",
     "app_modelo_filing_record_list",
     "app_modelo_filing_record_observe_local",
@@ -98,6 +99,7 @@ _EXPECTED_KEYS = {
     "app_modelo_m360_list",
     "app_modelo_m360_remove",
     "app_modelo_reconcile",
+    "app_modelo_reconcile_export",
     "app_modelo_reconcile_import",
     "app_modelo_reconcile_list",
     "app_modelo_reconcile_pull",
@@ -563,7 +565,7 @@ def test_calculation_and_filing_common_parameters_keep_exact_order_and_identity(
 
 def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() -> None:
     executable = tuple(spec for spec in MODELO_NONWORK_COMMAND_SPECS if spec.handler is not None)
-    assert len(executable) == 49
+    assert len(executable) == 51
     for spec in executable:
         assert spec.handler is not None and spec.handler.target is not None
         target = spec.handler.target

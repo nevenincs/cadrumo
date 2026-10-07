@@ -117,6 +117,7 @@ _RENDERED_PLAN_FACETS: Final[frozenset[str]] = frozenset(
         "value_cells",
         "merged_ranges",
         "row_heights",
+        "hidden_rows",
     },
 )
 
@@ -217,6 +218,8 @@ def materialize_export_plan(plan: AnySheetExportPlan) -> bytes:
         )
     for height in plan.row_heights:
         sheets[height.tab].row_dimensions[height.row].height = height.height_pixels * 0.75
+    for hidden in plan.hidden_rows:
+        sheets[hidden.tab].row_dimensions[hidden.row].hidden = True
     _stamp_identity(workbook, plan)
 
     return _deterministic_payload(workbook, plan)

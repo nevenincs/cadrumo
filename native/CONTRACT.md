@@ -622,10 +622,21 @@ that contract.
 
 ### Launch projection and storage root
 
+The Windows desktop image uses the GUI subsystem, so Explorer does not allocate
+a console window. CLI launches attach to an existing parent console while
+preserving inherited file and pipe handles; they never allocate a new console.
+
 The host takes its package root from `CADRUMO_DESKTOP_PACKAGE_ROOT` when that is
 set and otherwise from its own directory. It checks the package manifest's
 platform and ABI against the generated contract and the interpreter against its
-manifest digest. It then runs the fixed query `src-tauri/src/python/environment.py`
+manifest digest. On Windows, default member settings use the shared native
+platform preparation and generated canonical Settings, storage and logging
+defaults, without starting Python. Explicit nonblank member overrides or an
+unusual home-directory configuration use the fixed query below. Profile and
+pointer validation stays with the canonical account CLI read after the window
+opens. Other platforms always use the query.
+
+The fallback runs the fixed query `src-tauri/src/python/environment.py`
 as `python.exe -I -c` with the caller's environment and working directory, a 30 s
 deadline, 1 MiB of standard output and 64 KiB of standard error. The output is
 parsed and never retained, because the environment can hold credentials.
@@ -643,7 +654,7 @@ host, every terminal kind and the CLI passthrough therefore share one root
 whatever their working directory. The host adds no storage, log or Settings
 variable of its own.
 
-The webview profile directory is the absolute path the query resolves for the
+The webview profile directory is the absolute path the projection resolves for the
 storage taxonomy's `webview` member (`U/webview`, override
 `CADRUMO_WEBVIEW_DIR`), and the host refuses a projection without one. The
 window state, `window-state.json`, lives in the same directory: the host restores
@@ -798,6 +809,18 @@ webview.
 
 ### Terminal sessions
 
+The optional console/Python panel is closed by default. Each terminal is created
+only on its first visible selection; a remembered open tab starts that tab alone.
+Hiding or switching an activated tab retains its terminal and process.
+
+Before opening xterm, the shell loads every bundled JetBrains Mono subset so
+its glyph-width cache never measures a temporary fallback font. A failed font
+load selects a system-only fallback for the document's lifetime. The WebGL
+renderer positions cells explicitly and draws continuous box/block glyphs at
+unit line height. Unsupported graphics or unrecovered context loss falls back
+to xterm's DOM renderer without replacing the PTY. Hidden font-size changes
+defer fitting until the pane has dimensions again.
+
 `src-tauri/src/terminal/` keeps at most one live PTY session per kind:
 
 | Kind | Program | Starts in | Process role |
@@ -851,8 +874,8 @@ bytes never enter host diagnostics or the log view.
 
 ### Log aggregation
 
-`src-tauri/src/logs/` merges two sources, polled every 100 ms. `source` is an
-open enumeration:
+`src-tauri/src/logs/` merges Python file records and in-memory native events,
+polled every 100 ms. `source` is an open enumeration:
 
 - `python`: the log file the query reports (`cadrumo.log` in the log directory)
   and its numbered rotations, which Python writes through its secret-scrubbing
@@ -860,11 +883,29 @@ open enumeration:
   line format comes from the query, so the host holds no copy of it.
   Continuation lines such as tracebacks become the record's `detail`, up to
   64 KiB. A record completes after its file has been quiet for 250 ms. Python
-  records carry the raw `asctime` with `timestampMs` and `process` null, because
-  that time has no UTC offset.
+  records carry their raw timestamp and parse canonical UTC timestamps with
+  milliseconds into `timestampMs`. Older offset-free timestamps retain a null
+  `timestampMs`. The projected `diagnostic_context` suffix on the first physical
+  header line supplies a bounded
+  JSON object of scrubbed scalar fields, including the writing process role and
+  pid and an opaque `diagnostic_id` when an attempt is active. A missing or
+  truncated suffix leaves the original message readable without attribution.
+  Multiline message continuations and tracebacks remain detail; JSON-looking
+  continuation text never replaces the header's context.
 - `host`: the host's diagnostics events, logged as `desktop`, with an RFC 3339
-  UTC timestamp, a level and the process role and pid where the event has one.
+  UTC timestamp, a level and the child role and pid, or the host's identity for
+  host events. Monotonic event sequences avoid replay after ring rotation. The
+  scalar context carries lifecycle stage/outcome, child phase/exit code and
+  safe failure code, operation, OS error kind and numeric OS code when known.
   Captured child output is never requested, so terminal bytes cannot appear.
+
+Each record exposes `context` alongside `process`. Parsed instants display in
+the viewer's local timezone; offset-free legacy timestamps display unchanged.
+Process identity, startup phase, outcome and correlation are visible in the row,
+with complete scalar context beside continuation lines in the expanded detail.
+Text filtering and copied lines include this context; copied timestamps retain
+the original text. Python suffix objects are limited to 32 scalar fields with
+strings of at most 512 characters.
 
 The reader identifies a file by its first 1 KiB, not its name, and keeps a read
 offset per file, so late, skipped, partial or racing rotations lose and repeat

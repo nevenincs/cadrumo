@@ -33,13 +33,16 @@ from ...core.async_cleanup import (
     close_async_resources,
 )
 from ...core.config import override_settings
-from ...core.logging import configure_logging
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
+from ...core.logging import configure_logging, get_logger
 from ..adapter_composition import profile_adapter_composition
 from ..exchange_rate_composition import live_exchange_rate_composition
 from . import worker_cleanup as _worker_cleanup
 from . import worker_service as _worker_service
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
+
+_LOGGER = get_logger(__name__)
 
 
 def _require_native_parent(channel: WorkerChannel, parent_pid: int) -> None:
@@ -162,6 +165,7 @@ def _serve_connected_worker(
             )
         )
         configure_logging()
+        diagnostic_event(_LOGGER, "profile_worker_admitted", fields={"parent_process_id": options.parent_pid})
         composition.enter_context((composition_factory or installed_profile_worker_composition)())
         operations = ProfileWorkerOperationHost(
             custody,
@@ -244,6 +248,32 @@ def run(
     composition_factory: Callable[[], AbstractContextManager[None]] | None = None,
 ) -> int:
     """Admit only an exact native runtime parent and a contained current-cohort worker."""
+    with diagnostic_process("profile_worker"), diagnostic_scope():
+        diagnostic_event(_LOGGER, "profile_worker_process_started")
+        try:
+            exit_code = _run_process(arguments, composition_factory=composition_factory)
+        except BaseException as error:
+            diagnostic_event(
+                _LOGGER,
+                "profile_worker_process_failed",
+                fields={
+                    **diagnostic_error_fields(error),
+                    "outcome": "failed",
+                    "reason_code": "unexpected_worker_failure",
+                },
+                level=40,
+                primary_error=error,
+            )
+            raise
+        diagnostic_event(_LOGGER, "profile_worker_process_exited", fields={"exit_code": exit_code, "outcome": "exited"})
+        return exit_code
+
+
+def _run_process(
+    arguments: list[str] | None,
+    *,
+    composition_factory: Callable[[], AbstractContextManager[None]] | None,
+) -> int:
     options = _parse_worker_arguments(arguments)
     if sys.platform not in {"win32", "linux", "darwin"} or not sys.flags.isolated:
         return 2
@@ -253,6 +283,19 @@ def run(
         _run_worker(options, resources, composition_factory)
     except (RuntimeRefusalError, AutomationCustodyError) as error:
         refusal = error
+        diagnostic_event(
+            _LOGGER,
+            "profile_worker_admission_refused",
+            fields={
+                **diagnostic_error_fields(error),
+                "reason_code": error.reason.value
+                if isinstance(error, RuntimeRefusalError)
+                else "automation_custody_refused",
+                "outcome": "refused",
+            },
+            level=30,
+            primary_error=error,
+        )
     finally:
         _release_worker_resources(resources, sys.exception() or refusal)
     if refusal is not None:

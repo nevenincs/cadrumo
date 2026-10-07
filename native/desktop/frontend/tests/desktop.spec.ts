@@ -32,6 +32,8 @@ async function signInHost(
         signOuts: 0,
         tuiStarts: 0,
         tuiCloses: 0,
+        terminalStarts: [] as string[],
+        terminalCloses: 0,
         rawPassword: false,
         tokenHeader: false,
         secretCleared: false,
@@ -147,6 +149,8 @@ async function signInHost(
                   },
                 };
               case "terminal_open":
+                if (!(args instanceof Uint8Array))
+                  state.terminalStarts.push(String(args.kind));
                 if (!(args instanceof Uint8Array) && args.kind === "tui") {
                   ++state.tuiStarts;
                   state.exitTui = () =>
@@ -166,6 +170,7 @@ async function signInHost(
                       : ++id,
                 };
               case "terminal_close":
+                ++state.terminalCloses;
                 if (!(args instanceof Uint8Array) && args.session === 99)
                   ++state.tuiCloses;
                 return {};
@@ -193,6 +198,74 @@ const signInState = (target: Page) =>
       (window as unknown as { __signInTest: Record<string, unknown> })
         .__signInTest,
   );
+
+test("optional terminals start on first opening and survive hiding and switching", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await expect(target.locator(".sign-in")).toBeVisible();
+  expect((await signInState(target)).terminalStarts).toEqual([]);
+  await expect(target.locator("section.panel")).toBeHidden();
+  await expect(target.locator(".xterm")).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  const rail = target.getByRole("navigation", {
+    name: label("desktop.rail.label"),
+  });
+  for (const kind of ["console", "python"] as const) {
+    await rail
+      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
+      .click();
+    const pane = target.locator(`[data-terminal="${kind}"]`);
+    await expect(pane.locator("textarea")).toBeFocused();
+    await expect(pane.locator(".xterm")).toHaveCount(1);
+    await pane.locator(".xterm").evaluate((element) => {
+      element.setAttribute("data-session-marker", "retained");
+    });
+    await rail
+      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
+      .click();
+    await expect(pane).toBeHidden();
+    await expect(pane.locator("textarea")).not.toBeFocused();
+  }
+  for (const kind of ["console", "python"] as const) {
+    await rail
+      .getByRole("button", { name: label(`desktop.rail.${kind}`) })
+      .click();
+    const pane = target.locator(`[data-terminal="${kind}"]`);
+    await expect(pane.locator("textarea")).toBeFocused();
+    await expect(pane.locator(".xterm")).toHaveAttribute(
+      "data-session-marker",
+      "retained",
+    );
+  }
+  expect((await signInState(target)).terminalStarts).toEqual([
+    "console",
+    "python",
+  ]);
+  expect((await signInState(target)).terminalCloses).toBe(0);
+});
+
+test("a remembered open terminal starts without opening the other tab", async ({
+  page: target,
+}) => {
+  await target.addInitScript(() => {
+    localStorage.setItem(
+      "cadrumo-shell-layout",
+      JSON.stringify({ layout: { panelOpen: true, tab: "python" } }),
+    );
+  });
+  await signInHost(target);
+  await expect(target.locator(".sign-in")).toBeVisible();
+  await expect
+    .poll(async () => (await signInState(target)).terminalStarts)
+    .toEqual(["python"]);
+  await expect(target.locator('[data-terminal="console"] .xterm')).toHaveCount(
+    0,
+  );
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeFocused();
+});
 
 test("startup focus events share one pending sign-in status read", async ({
   page: target,
@@ -807,7 +880,10 @@ test("bridge messages from any window but the documentation frame are ignored", 
   });
   await target.waitForTimeout(300);
   await expect(
-    target.getByRole("tab", { name: label("desktop.rail.console") }),
+    target.getByRole("tab", {
+      name: label("desktop.rail.console"),
+      includeHidden: true,
+    }),
   ).toHaveAttribute("aria-selected", "true");
 });
 
@@ -999,6 +1075,10 @@ test("the shell runs under the window's content security policy without a violat
   await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
     "Stand-in documentation",
   );
+  await target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.rail.console") })
+    .click();
   await expect(target.locator(".xterm").first()).toBeVisible();
   expect(
     await target.evaluate(

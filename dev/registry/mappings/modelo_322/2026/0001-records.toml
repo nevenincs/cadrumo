@@ -2520,8 +2520,8 @@ ordinal = '23'
 
 [[entries]]
 export_field_id = 'modelo-322-page-02-338'
-kind = 'computed'
-computed_key = 'm303_no_activity_marker'
+kind = 'casilla'
+casilla_id = 'decl.sin-actividad'
 legal_refs = [
     'orden-eha-3434-2007:art-1',
     'rd-1624-1992:art-71',

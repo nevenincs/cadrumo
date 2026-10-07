@@ -1,3 +1,32 @@
+# Annex II's euro form and instructions are retained separately from the
+# abbreviated HTML excerpt below. Later record designs own electronic fields
+# such as IBAN; this source does not backdate those fields or freeze tax rates.
+[sources."boe-modelo-341-2000-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2000-22794-modelo-341.pdf"
+sha256 = "b833029bab3840d8ff99d8b8858a81506de140059a2619b6a0b8019e108a523b"
+bytes = 2092750
+retrieved_at = 2026-10-06
+published_at = 2000-12-18
+applies_from = 2001-01-01
+source_url = "https://www.boe.es/boe/dias/2000/12/18/pdfs/A44299-44309.pdf"
+review_status = "pending_review"
+
+[sources."boe-modelo-341-2000-instructions-pdf"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2000-22794-modelo-341.pdf"
+sha256 = "b833029bab3840d8ff99d8b8858a81506de140059a2619b6a0b8019e108a523b"
+bytes = 2092750
+retrieved_at = 2026-10-06
+published_at = 2000-12-18
+applies_from = 2001-01-01
+source_url = "https://www.boe.es/boe/dias/2000/12/18/pdfs/A44299-44309.pdf"
+review_status = "pending_review"
+
 [legal."orden-min-2000-12-15-m341:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

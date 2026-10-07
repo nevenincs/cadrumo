@@ -7,6 +7,7 @@ from typing import override
 
 import pytest
 
+from ..logging import get_logger
 from ..startup_phase_log import log_startup_phase, startup_phase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -36,6 +37,7 @@ def _raising_filter(error: BaseException) -> logging.Filter:
 
 
 def _logger() -> tuple[logging.Logger, _Capture]:
+    get_logger("cadrumo.tests.startup_phase_log")
     logger = logging.Logger("cadrumo.tests.startup_phase_log", level=logging.INFO)
     logger.propagate = False
     capture = _Capture()
@@ -61,6 +63,7 @@ def test_enter_record_has_fixed_message_and_extras() -> None:
     assert record.name == "cadrumo.tests.startup_phase_log"
     assert record.getMessage() == "runtime_startup phase=manager_start transition=enter elapsed_seconds=0.000000"
     assert _fields(record) == ("manager_start", "enter", 0.0)
+    assert record.__dict__["outcome"] == "entered"
 
 
 def test_context_manager_emits_enter_then_non_negative_leave() -> None:
@@ -76,6 +79,8 @@ def test_context_manager_emits_enter_then_non_negative_leave() -> None:
     assert isinstance(elapsed, float)
     assert elapsed >= 0.0
     assert leave.getMessage() == f"runtime_startup phase=readiness_wait transition=leave elapsed_seconds={elapsed:.6f}"
+    assert leave.__dict__["outcome"] == "completed"
+    assert enter.__dict__["_cadrumo_diagnostic_id"] == leave.__dict__["_cadrumo_diagnostic_id"]
 
 
 def test_ordinary_logging_failure_is_swallowed() -> None:
@@ -116,6 +121,10 @@ def test_context_manager_propagates_body_error_as_the_primary() -> None:
 
     assert raised.value is primary
     assert [_fields(r)[:2] for r in capture.records] == [("manager_inspect", "enter"), ("manager_inspect", "leave")]
+    assert capture.records[-1].levelno == logging.WARNING
+    assert capture.records[-1].__dict__["outcome"] == "failed"
+    assert capture.records[-1].__dict__["error_type"] == "ValueError"
+    assert "body failure" not in capture.records[-1].getMessage()
 
 
 def test_context_manager_keeps_body_error_when_leave_logging_is_interrupted() -> None:

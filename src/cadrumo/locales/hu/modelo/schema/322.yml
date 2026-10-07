@@ -582,6 +582,18 @@ modelo:
           m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica:
             label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
               [124]
+          m322-papel-actividad-otras-1-descripcion:
+            label: 1. egyéb tevékenység leírása
+          m322-papel-actividad-otras-2-descripcion:
+            label: 2. egyéb tevékenység leírása
+          m322-papel-actividad-otras-3-descripcion:
+            label: 3. egyéb tevékenység leírása
+          m322-papel-actividad-otras-4-descripcion:
+            label: 4. egyéb tevékenység leírása
+          m322-papel-actividad-otras-5-descripcion:
+            label: 5. egyéb tevékenység leírása
+          m322-papel-actividad-principal-descripcion:
+            label: Főtevékenység leírása
           m322-prorratas-1-codigo-cnae:
             label: Prorrata - 1 - CNAE-kód [500]
           m322-prorratas-1-importe-operaciones:
@@ -634,6 +646,9 @@ modelo:
             label: Prorrata - 5 - Arányosítás típusa [523]
           m322-regularizacion-cuotas-art-80-cinco-5-liva:
             label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
+          m322-sin-actividad:
+            label: Tevékenység nélkül (X, ha az időszakban sem fizetendő, sem előzetesen
+              felszámított áfa nem keletkezett)
       construct:
         modelo-322-iva-grupo-individual:
           field:
@@ -642,6 +657,134 @@ modelo:
         official_name: Modelo 322. Hozzáadottérték-adó. Cégcsoport. Egyedi nyomtatvány.
           Havi önbevallás.
         title: IVA. Cégcsoport. Egyedi nyomtatvány. Havi önbevallás
+      form:
+        authored:
+          actividad:
+            heading: Tevékenység
+          actividades:
+            heading: Tevékenységek az ügyletforgalom csökkenő sorrendjében
+          adicional:
+            heading: További adatok
+          aib:
+            heading: Közösségen belüli termék- és szolgáltatásbeszerzések
+          aib-corriente:
+            heading: 'Közösségen belüli beszerzés: folyó termékek és szolgáltatások'
+          aib-inversion:
+            heading: 'Közösségen belüli beszerzés: beruházási javak'
+          anuales:
+            heading: Az év során végzett ügyletek
+          caja:
+            heading: Pénzforgalmi elszámolás alá eső beszerzések
+          clave-actividad:
+            heading: Kód
+          cnae:
+            heading: CNAE
+          codigo:
+            heading: Tevékenységi kód
+          compensacion:
+            heading: Mezőgazdasági, állattenyésztési és halászati rendszer kompenzációja
+          complementaria:
+            heading: Kiegészítő bevallás
+          deducible:
+            heading: Levonható áfa
+          dependiente:
+            heading: Leányvállalat
+          derecho:
+            heading: Levonási jogot biztosító ügyletek
+          descripcion:
+            heading: Tevékenység leírása
+          devengado:
+            heading: Fizetendő áfa
+          devengo:
+            heading: Adómegállapítási időszak
+          dominante:
+            heading: Anyavállalat
+          general:
+            heading: Egyéb általános rendszerű ügyletek
+          grupo-1:
+            heading: 'Levonható áfa: 1. csoport'
+          grupo-2:
+            heading: 'Levonható áfa: 2. csoport'
+          iae:
+            heading: IAE-besorolás
+          identificacion:
+            heading: Azonosítás
+          importacion-corriente:
+            heading: 'Import: folyó termékek'
+          importacion-inversion:
+            heading: 'Import: beruházási javak'
+          importe:
+            heading: Ügyletek teljes összege
+          interiores-corriente:
+            heading: 'Belföldi ügyletek: folyó termékek és szolgáltatások'
+          interiores-inversion:
+            heading: 'Belföldi ügyletek: beruházási javak'
+          intra:
+            heading: Csoporton belüli ügyletek
+          intra-corriente:
+            heading: Csoporton belüli folyó ügyletek
+          intra-inversion:
+            heading: Csoporton belüli beruházási ügyletek
+          inversion:
+            heading: Egyéb fordított adózású ügyletek
+          justificante:
+            heading: Korábbi bevallás bizonylatszáma
+          marca-complementaria:
+            heading: Kiegészítő bevallás
+          mod-general:
+            heading: Általános rendszerű adóalap és áfa módosítása
+          mod-intra:
+            heading: Csoporton belüli adóalap és áfa módosítása
+          mod-recargo:
+            heading: Kiegyenlítő pótlék alapjának és összegének módosítása
+          nif:
+            heading: Adóalany adóazonosítója
+          ninguna:
+            heading: Sem választás, sem visszavonás
+          'no':
+            heading: Nem
+          nombre:
+            heading: Cégnév
+          opcion:
+            heading: Különös arányos levonás választása
+          otras:
+            heading: Egyéb tevékenységek
+          page-1:
+            heading: Azonosítás és áfaelszámolás
+          page-2:
+            heading: Eredmény és további adatok
+          page-3:
+            heading: 'Utolsó időszak: tevékenységek és éves ügyletek'
+          page-4:
+            heading: Arányosítás és elkülönült levonási rendszerek
+          porcentaje:
+            heading: Arányosítási százalék
+          principal:
+            heading: Főtevékenység
+          prorrata:
+            heading: Arányos levonás
+          recargo:
+            heading: Kiegyenlítő pótlék
+          rect-intra:
+            heading: Csoporton belüli levonások helyesbítése
+          rect-otras:
+            heading: Csoporton kívüli levonások helyesbítése
+          rectificacion:
+            heading: Levonások helyesbítése
+          resultado:
+            heading: Áfaelszámolás (folytatás)
+          revocacion:
+            heading: Választás visszavonása
+          si:
+            heading: Igen
+          sin-actividad:
+            heading: Tevékenység nélkül
+          sin-marca:
+            heading: Nincs megjelölve
+          territorio:
+            heading: Területi adóztatás
+          tipo-prorrata:
+            heading: Arányosítás típusa
       revision:
         2008-2022:
           casilla:

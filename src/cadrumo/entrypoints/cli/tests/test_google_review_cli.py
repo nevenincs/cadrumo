@@ -41,6 +41,7 @@ def _review(request: GoogleReviewRequest) -> GoogleReviewProjection:
         profile_id=request.profile_id,
         publication_id=request.publication_id,
         calculation_revision_id=request.calculation_revision_id,
+        filing_record_id=request.filing_record_id,
         root_folder_id="confirmed-profile-root",
         snapshot_digest="c" * 64,
         payload_categories=(ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.LEDGER),
@@ -53,6 +54,7 @@ def test_publish_help_exposes_saved_revision_and_readable_disclosure() -> None:
     assert result.exit_code == 0, result.output
     assert "--calculation-revision-id" in result.output
     assert "--publication-id" in result.output
+    assert "--filing-record-id" in result.output
     assert "--accept-readable-export" in result.output
 
 
@@ -85,6 +87,7 @@ def test_explicit_disclosure_accepts_exact_runtime_review() -> None:
         {"profile_id": UUID("7cc00000-0000-4000-8000-0000000000cc")},
         {"publication_id": UUID("7cc00000-0000-4000-8000-0000000000cc")},
         {"calculation_revision_id": "e" * 64},
+        {"filing_record_id": "e" * 64},
         {"root_folder_id": " "},
         {"payload_categories": ()},
         {"payload_categories": (ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.ORIGINAL_ATTACHMENT)},
@@ -105,3 +108,10 @@ def test_other_operation_identity_is_refused(change: dict[str, object]) -> None:
     review = review.model_copy(update={"identity": review.identity.model_copy(update=change)})
     with pytest.raises(ValueError, match="does not match"):
         accept_google_review(request, review)
+
+
+def test_exact_historical_filing_disclosure_retains_the_selected_identity() -> None:
+    request = _request().model_copy(update={"filing_record_id": "e" * 64})
+    assert accept_google_review(request, _review(request)) == "apply"
+    with pytest.raises(ValueError, match="does not match"):
+        accept_google_review(request, _review(request).model_copy(update={"filing_record_id": None}))

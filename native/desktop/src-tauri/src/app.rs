@@ -2,6 +2,7 @@ use crate::{
     docs,
     environment::Launch,
     logs,
+    manager::{self, ManagerStart},
     shell::{self, token::ShellToken},
     terminal::{self, TerminalState},
 };
@@ -130,6 +131,7 @@ pub fn run(launch: Launch) -> Result<i32> {
             logs::commands(),
             shell::commands(),
             shell::sign_in::commands(),
+            manager::commands(),
         ],
         token,
         diagnostics.clone(),
@@ -140,14 +142,21 @@ pub fn run(launch: Launch) -> Result<i32> {
         .plugin(logs::plugin(&launch))
         .plugin(shell::plugin(&launch))
         .plugin(shell::clipboard_plugin());
+    let manager_start = Arc::new(ManagerStart::new(&launch));
+    let startup_manager = manager_start.clone();
     let state = Arc::new(TerminalState::new(launch));
     let setup_diagnostics = diagnostics.clone();
     let navigation_diagnostics = diagnostics.clone();
     let app = builder
         .manage(state.clone())
+        .manage(manager_start)
         .invoke_handler(handler)
         .channel_interceptor(shell::channel::interceptor(diagnostics.clone()))
         .setup(move |app| {
+            tauri::async_runtime::spawn(async move {
+                // Failures are retained in diagnostics; the window remains usable.
+                let _ = startup_manager.start(false).await;
+            });
             let outcome = (|| {
                 let config = app.config().app.windows.first().ok_or_else(|| {
                     ApplicationError::new(ErrorCode::InvalidArguments, Operation::Webview)
@@ -185,6 +194,8 @@ pub fn run(launch: Launch) -> Result<i32> {
         .on_window_event(|window, event| {
             let state = window.state::<Arc<TerminalState>>();
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let manager = window.state::<Arc<ManagerStart>>();
+                tauri::async_runtime::block_on(manager.close());
                 let sign_in = window.state::<Arc<shell::sign_in::SignIn>>();
                 if let Err(error) = sign_in.children.stop() {
                     api.prevent_close();
@@ -205,7 +216,9 @@ pub fn run(launch: Launch) -> Result<i32> {
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
     let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
+    let manager = app.state::<Arc<ManagerStart>>().inner().clone();
     let code = app.run_return(|_, _| {});
+    tauri::async_runtime::block_on(manager.close());
     let sign_in_cleanup = sign_in.children.stop();
     let terminal_cleanup = state.stop();
     sign_in_cleanup?;
@@ -235,6 +248,7 @@ mod tests {
             logs::commands(),
             shell::commands(),
             shell::sign_in::commands(),
+            manager::commands(),
         ];
         let names: Vec<&str> = modules
             .iter()

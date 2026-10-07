@@ -1,14 +1,18 @@
+#![cfg_attr(windows, windows_subsystem = "windows")]
+
 mod app;
 mod docs;
 mod environment;
 mod launch;
 mod logs;
+mod manager;
 mod shell;
+mod startup_logging;
 mod terminal;
 
 use cadrumo_application::{
     child::ChildConfiguration,
-    diagnostics::{Diagnostics, EventKind},
+    diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     process,
 };
@@ -27,15 +31,20 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
     let arguments = std::env::args_os().skip(1).collect();
     let mode = launch::select(arguments, launch::desktop_available());
     diagnostics.event(EventKind::HostStarted, None, None);
+    diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
     // The GUI claims the per-user instance before any per-user state opens.
     let _instance = match &mode {
         Ok(mode) => match shell::single_instance::admit(mode)? {
-            shell::single_instance::Admission::Activated => return Ok(0),
+            shell::single_instance::Admission::Activated => {
+                diagnostics.host_outcome(HostStage::Admission, HostOutcome::AlreadyRunning);
+                return Ok(0);
+            }
             shell::single_instance::Admission::Primary(primary) => Some(primary),
             shell::single_instance::Admission::Headless => None,
         },
         Err(_) => None,
     };
+    diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
     let root = match std::env::var_os("CADRUMO_DESKTOP_PACKAGE_ROOT").filter(|v| !v.is_empty()) {
         Some(path) => PathBuf::from(path),
         None => std::env::current_exe()
@@ -45,8 +54,14 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             .to_owned(),
     };
     let parent = environment::Parent::current()?;
+    startup_logging::configure(&parent, &diagnostics);
+    diagnostics.host_event(EventKind::StageStarted, HostStage::Environment);
     let launch =
-        tauri::async_runtime::block_on(environment::resolve(root, &parent, diagnostics.clone()))?;
+        tauri::async_runtime::block_on(environment::resolve(root, &parent, diagnostics.clone()))
+            .inspect_err(|error| {
+                diagnostics.host_failure(HostStage::Environment, error.clone());
+            })?;
+    diagnostics.host_outcome(HostStage::Environment, HostOutcome::Ready);
     match mode? {
         launch::Mode::Gui => app::run(launch),
         launch::Mode::Cli(arguments) => {
@@ -78,6 +93,10 @@ fn launch_error() -> ApplicationError {
 }
 
 fn main() {
+    // A GUI launch never allocates a console. CLI callers may already have one;
+    // attach before Rust initializes its standard streams, preserving redirection.
+    #[cfg(windows)]
+    cadrumo_platform::desktop::attach_parent_console();
     let diagnostics = Arc::new(Diagnostics::default());
     // Report after unwinding: hooks run before locks held by the panicking code release.
     // Suppress Rust's default hook, which can expose private payloads on stderr.
@@ -101,6 +120,6 @@ fn main() {
             }
         }
     };
-    diagnostics.event(EventKind::HostStopped, None, None);
+    diagnostics.host_stopped(code);
     std::process::exit(code);
 }

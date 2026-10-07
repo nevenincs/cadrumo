@@ -2,6 +2,8 @@
 //! reports. The host holds no copy of that format: it compiles whatever
 //! `%`-style mapping format Python configured.
 use serde::Serialize;
+use serde_json::Value;
+use std::collections::BTreeMap;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "UPPERCASE")]
@@ -32,6 +34,7 @@ enum Field {
     Level,
     Logger,
     Message,
+    Context,
     Other,
 }
 
@@ -48,6 +51,7 @@ pub struct Head<'a> {
     pub level: Option<Level>,
     pub logger: Option<&'a str>,
     pub message: &'a str,
+    pub context: BTreeMap<String, Value>,
 }
 
 #[derive(Debug)]
@@ -105,6 +109,7 @@ impl LinePattern {
                 "levelname" => Field::Level,
                 "name" => Field::Logger,
                 "message" => Field::Message,
+                "diagnostic_context" => Field::Context,
                 _ => Field::Other,
             }));
         }
@@ -140,6 +145,27 @@ impl LinePattern {
                     position += text.len();
                 }
                 Piece::Field(field) => {
+                    // The projected context suffix may be absent in older
+                    // rotations or cut off by the bounded line reader. Only
+                    // a complete scalar object claims a suffix; delimiters
+                    // in the message or a JSON string remain ordinary text.
+                    if *field == Field::Message
+                        && let Some(Piece::Literal(delimiter)) = self.pieces.get(index + 1)
+                        && self.pieces.get(index + 2) == Some(&Piece::Field(Field::Context))
+                        && index + 3 == self.pieces.len()
+                    {
+                        if let Some((at, context)) =
+                            rest.rmatch_indices(delimiter.as_str()).find_map(|(at, _)| {
+                                context(&rest[at + delimiter.len()..]).map(|context| (at, context))
+                            })
+                        {
+                            head.message = &rest[..at];
+                            head.context = context;
+                        } else {
+                            head.message = rest;
+                        }
+                        return Some(head);
+                    }
                     let length = match self.pieces.get(index + 1) {
                         Some(Piece::Literal(next)) => rest.find(next.as_str())?,
                         _ => rest.len(),
@@ -161,6 +187,7 @@ impl LinePattern {
                         Field::Level => head.level = Some(Level::parse(value.trim())?),
                         Field::Logger => head.logger = Some(value.trim()),
                         Field::Message => head.message = value,
+                        Field::Context => head.context = context(value)?,
                         Field::Other => {}
                     }
                 }
@@ -168,6 +195,32 @@ impl LinePattern {
         }
         (position == line.len()).then_some(head)
     }
+}
+
+fn context(text: &str) -> Option<BTreeMap<String, Value>> {
+    if !text.starts_with('{') {
+        return None;
+    }
+    let Value::Object(values) = serde_json::from_str(text).ok()? else {
+        return None;
+    };
+    if values.len() > 32
+        || values.iter().any(|(key, value)| {
+            key.is_empty()
+                || key.len() > 64
+                || !key
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+                || match value {
+                    Value::String(text) => text.chars().count() > 512,
+                    Value::Array(_) | Value::Object(_) => true,
+                    _ => false,
+                }
+        })
+    {
+        return None;
+    }
+    Some(values.into_iter().collect())
 }
 
 #[cfg(test)]
@@ -188,6 +241,7 @@ mod tests {
                 level: Some(Level::Warning),
                 logger: Some("cadrumo.tui.app"),
                 message: "lost [x]: y",
+                context: BTreeMap::new(),
             })
         );
         assert_eq!(
@@ -211,6 +265,27 @@ mod tests {
             "",
         ] {
             assert_eq!(pattern.head(line), None, "{line}");
+        }
+    }
+
+    #[test]
+    fn projected_context_suffix_preserves_delimiters_and_legacy_records() {
+        let pattern =
+            LinePattern::compile(&format!("{CONFIGURED} | %(diagnostic_context)s")).unwrap();
+        let head = pattern.head(r#"2026-10-04T12:30:01.042Z [INFO] cadrumo: before | after | {"diagnostic_id":"attempt-7","note":"a | b","process_id":412,"process_role":"runtime_worker","ready":true}"#).unwrap();
+        assert_eq!(head.message, "before | after");
+        assert_eq!(head.context["diagnostic_id"], "attempt-7");
+        assert_eq!(head.context["note"], "a | b");
+        assert_eq!(head.context["process_id"], 412);
+        for message in [
+            "legacy record",
+            "truncated | {\"process_id\":",
+            "body | {\"nested\":{\"value\":1}}",
+        ] {
+            let text = format!("2026-10-04 12:30:01,042 [INFO] cadrumo: {message}");
+            let head = pattern.head(&text).unwrap();
+            assert_eq!(head.message, message);
+            assert!(head.context.is_empty());
         }
     }
 

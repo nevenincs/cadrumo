@@ -110,6 +110,10 @@ from ..application.diagnostics_operation import (
     build_diagnostics_read_registration,
 )
 from ..application.exchange_rate_provider import exchange_rate_provider
+from ..application.export.calculation_review_xlsx_operation import (
+    build_calculation_review_xlsx_definition,
+    build_calculation_review_xlsx_registration,
+)
 from ..application.export.google_operation import (
     GoogleSheetsExportAuthDependencyError,
     GoogleSheetsExportClientMissingError,
@@ -569,6 +573,10 @@ from ..application.modelo.query_read_operation import (
     build_modelo_requires_registration,
 )
 from ..application.modelo.quickfile_operation import build_quickfile_definition, build_quickfile_registration
+from ..application.modelo.reconciliation_export_operation import (
+    build_reconciliation_export_xlsx_definition,
+    build_reconciliation_export_xlsx_registration,
+)
 from ..application.modelo.reconciliation_import_operation import (
     build_modelo_reconciliation_import_definition,
     build_modelo_reconciliation_import_registration,
@@ -786,6 +794,7 @@ from .adapter_composition import (
 from .auth_apoderado_composition import build_apoderado_operation_ports, build_auth_diagnostic_report_ports
 from .auth_read_composition import compose_auth_read_ports
 from .calculation_report_verification_operation_composition import build_modelo_calculation_report_verification_ports
+from .calculation_review_xlsx_operation_composition import build_calculation_review_xlsx_ports
 from .diagnostics_operation_composition import build_diagnostics_read_ports
 from .evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from .google_configuration_operation_composition import build_google_configuration_operation_ports
@@ -823,6 +832,7 @@ from .overview_pipeline_composition import build_pipeline_read_ports
 from .overview_read_composition import build_overview_read_ports
 from .profile_archive_operation_composition import build_profile_archive_operation_ports
 from .quickfile_operation_composition import build_quickfile_operation_ports
+from .reconciliation_export_operation_composition import build_reconciliation_export_xlsx_ports
 from .review_package_exchange_operation_composition import build_review_package_exchange_operation_ports
 from .workflow_run_composition import build_workflow_run_read_ports
 from .workstation_check_operation_composition import build_workstation_check_operation_ports
@@ -1196,6 +1206,10 @@ def build_production_operation_registry(
     )
     resolved_google_export_definition = _production_registry_google_export(google_export_definition, resolved_settings)
     google_review_definition = build_google_review_operation_definition(build_google_review_ports)
+    calculation_review_xlsx_definition = build_calculation_review_xlsx_definition(build_calculation_review_xlsx_ports)
+    reconciliation_export_xlsx_definition = build_reconciliation_export_xlsx_definition(
+        build_reconciliation_export_xlsx_ports
+    )
     filed_history_definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository,
         composition_factory=compose_live_state,
@@ -1633,6 +1647,8 @@ def build_production_operation_registry(
                 justificante_show_definition,
                 resolved_google_export_definition,
                 google_review_definition,
+                calculation_review_xlsx_definition,
+                reconciliation_export_xlsx_definition,
                 local_reader_definition,
                 workbench_definition,
                 metadata_definition,
@@ -1839,6 +1855,8 @@ def build_production_operation_registry(
                 build_justificante_show_registration(justificante_show_definition),
                 build_google_sheets_export_operation_registration(resolved_google_export_definition),
                 build_google_review_operation_registration(google_review_definition),
+                build_calculation_review_xlsx_registration(calculation_review_xlsx_definition),
+                build_reconciliation_export_xlsx_registration(reconciliation_export_xlsx_definition),
                 build_local_reader_operation_registration(local_reader_definition),
                 build_workbench_generation_operation_registration(workbench_definition),
                 build_modelo_metadata_registration(metadata_definition, work_lifecycle_ports_factory),

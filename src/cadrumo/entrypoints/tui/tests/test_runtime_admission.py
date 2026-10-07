@@ -141,6 +141,7 @@ async def test_login_scope_keeps_one_exact_client_until_frontend_finishes(root_f
         return client
 
     async def sign_in(pilot: Pilot[object]) -> None:
+        await pilot.resize_terminal(140, 60)
         await pilot.pause()
         pilot.app.screen.query_one("#runtime-login-credential", Input).value = "synthetic-proof"
         await pilot.click("#runtime-login-submit")
@@ -229,6 +230,7 @@ async def test_stored_reference_handoff_stays_owned_through_restricted_session_s
         return client
 
     async def sign_in(pilot: Pilot[object]) -> None:
+        await pilot.resize_terminal(140, 60)
         await pilot.pause()
         pilot.app.screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.API_REFERENCE
         await pilot.pause()
@@ -283,6 +285,7 @@ async def test_accepted_handoff_failed_close_retains_owner_and_exact_body(body: 
 
     async def sign_in(pilot: Pilot[object]) -> None:
         await pilot.pause()
+        await pilot.resize_terminal(140, 60)
         pilot.app.screen.query_one("#runtime-login-credential", Input).value = "synthetic-proof"
         await pilot.click("#runtime-login-submit")
 

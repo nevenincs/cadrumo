@@ -58,6 +58,7 @@ from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.event_repository import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets.event_repository import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
@@ -90,6 +91,8 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
+from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -291,6 +294,7 @@ def _build_calculation_revision(
     binding_overrides: dict[BindingId, str],
     row_binding_values: dict[BindingId, dict[str, str]],
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...],
     row_casilla_values: Mapping[RowCasillaKey, Decimal],
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
     relation_overrides: dict[RelationId, str],
@@ -301,6 +305,7 @@ def _build_calculation_revision(
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     cleared_casilla_ids: tuple[CasillaId, ...],
     operator_layer: CalculationOperatorLayer | None,
+    rendering_snapshot: CalculationRenderingSnapshot | None,
     casilla_values: dict[CasillaId, Decimal],
     observations: tuple[CasillaObservation, ...],
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
@@ -322,6 +327,7 @@ def _build_calculation_revision(
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values=row_casilla_values,
         row_casilla_provenance=row_casilla_provenance,
         relation_overrides=relation_overrides,
@@ -332,6 +338,7 @@ def _build_calculation_revision(
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
+        rendering_snapshot=rendering_snapshot,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
@@ -547,6 +554,7 @@ def persist_calculation_revision(
     binding_overrides: dict[BindingId, str],
     row_binding_values: dict[BindingId, dict[str, str]],
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal],
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
     relation_overrides: dict[RelationId, str],
@@ -557,6 +565,7 @@ def persist_calculation_revision(
     observations: tuple[CasillaObservation, ...],
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
     operator_layer: CalculationOperatorLayer | None = None,
+    rendering_snapshot: CalculationRenderingSnapshot | None = None,
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...],
     source_issues: tuple[CalculationSourceIssue, ...] = (),
@@ -635,12 +644,26 @@ def persist_calculation_revision(
         row_casilla_provenance=row_casilla_provenance,
         filing_instance_evidence=filing_instance_evidence,
     )
+    if rendering_snapshot is not None and (
+        rendering_snapshot.authority_generation != operation.pin().logical_generation
+        or rendering_snapshot.registry_snapshot.snapshot_ref != registry_snapshot_ref
+    ):
+        raise ModeloValidationError("rendering snapshot does not belong to the admitted calculation scope")
+    if any(
+        row_set.bucket_id != work_unit.bucket_id
+        or row_set.work_unit_id != work_unit_id
+        or row_set.registry_snapshot_ref != registry_snapshot_ref
+        or row_set.authority_generation != operation.pin().logical_generation
+        for row_set in closed_record_row_sets
+    ):
+        raise ModeloValidationError("closed record rows do not belong to the admitted calculation scope")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values=row_casilla_values,
         row_casilla_provenance=row_casilla_provenance,
         relation_overrides=relation_overrides,
@@ -657,6 +680,7 @@ def persist_calculation_revision(
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
+        rendering_snapshot=rendering_snapshot,
     )
     stamped_annual_summary_handoff = _stamp_annual_summary_handoff(
         m303_regimen_simplificado_annual_summary_handoff,
@@ -686,6 +710,7 @@ def persist_calculation_revision(
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values=row_casilla_values,
         row_casilla_provenance=row_casilla_provenance,
         relation_overrides=relation_overrides,
@@ -696,6 +721,7 @@ def persist_calculation_revision(
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
+        rendering_snapshot=rendering_snapshot,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,

@@ -2101,6 +2101,25 @@ application:
           sources: Forráshoz rendelés
           status: Rögzített állapotkód
           status_incomplete: Hiányos
+          calculation_state: 'A mentett számítás állapota'
+          current_calculation: 'Aktuális számítás az exportáláskor'
+          current_filing: 'Aktuális helyi benyújtás az exportáláskor'
+          filing_status: 'Mentett bevallási rekord állapota'
+          filing_record: 'Kiválasztott bevallási rekord'
+          filing_status_vigente: 'Aktuális'
+          filing_status_supersedido: 'Felváltott — előzmény'
+          aeat_confirmation: 'AEAT-visszaigazolás'
+          'yes': 'Igen'
+          'no': 'Nem'
+          calculation_state_borrador: 'Piszkozat — előzetes'
+          calculation_state_verificado_completo: 'Ellenőrzött helyi számítás'
+          calculation_state_presentado: 'Helyben benyújtott'
+          calculation_state_presentado_supersedido: 'Korábbi helyi benyújtás — felváltva'
+          calculation_state_descartado: 'Elvetett számítás'
+          aeat_confirmation_pendiente: 'Függőben — nincs megfigyelt AEAT-elfogadás'
+          aeat_confirmation_confirmada: 'Mentett AEAT-bizonyíték igazolja'
+          aeat_confirmation_discrepante: 'Eltér az AEAT-bizonyítéktól'
+          aeat_confirmation_descartada: 'Az AEAT-visszaigazolás előtt elvetve'
           status_provisional: Előzetes
           status_verified: Ellenőrzött helyi adatok
           taxable_base: Adóalap (numerikus megjelenítés)
@@ -2301,3 +2320,39 @@ application:
       validation_clean: Az ellenőrzés blokkoló problémák nélkül befejeződött.
       validation_failed: Az ellenőrzés blokkoló problémákat talált.
       workflow_failure: A munkafolyamatot nem sikerült befejezni.
+
+  reconciliation_export:
+    title: "Mentett egyeztetések"
+    saved_comparison_notice: "A mentett összehasonlítások az eredeti értékeket és hivatkozásokat őrzik. Az üres érték ismeretlen. A figyelmeztetések jelzik az ellenőrzés korlátait; egy hivatkozás nem bizonyítja a dokumentum bájtjainak megőrzését."
+    record: "Egyeztetés"
+    date: "Dátum"
+    verdict: "Összehasonlítás eredménye"
+    modelo: "Modelo"
+    year: "Év"
+    period: "Időszak"
+    registry_revision: "Mentett nyilvántartási verzió"
+    work_unit: "Munkaegység"
+    calculation_revision: "Mentett számítás"
+    evidence_kind: "Bizonyíték típusa"
+    evidence_reference: "Bizonyíték hivatkozása"
+    actor: "Felelős"
+    difference_count: "Eltérések"
+    advisory_count: "Figyelmeztetések"
+    difference_kind: "Eltérés típusa"
+    field: "Mező vagy rovat"
+    saved_value: "Mentett számítás értéke"
+    evidence_value: "Bizonyíték értéke"
+    difference_reason: "Eltérés oka"
+    legal_refs: "Jogi hivatkozások"
+    source_refs: "Hivatalos források"
+    advisory_code: "Figyelmeztetés kódja"
+    advisory: "Figyelmeztetés"
+    context: "Kontextus"
+    record_identity: "Teljes rekordazonosító"
+    verdict_matches: "Az értékek egyeznek"
+    verdict_mismatches: "Eltérések találhatók"
+    evidence_kind_justificante: "Benyújtási bizonylat"
+    evidence_kind_declaration: "Benyújtott bevallás"
+    difference_kind_header_field: "Bizonylat azonosító adatai"
+    difference_kind_total: "Benyújtott végösszeg"
+    difference_kind_casilla: "Mezőérték"

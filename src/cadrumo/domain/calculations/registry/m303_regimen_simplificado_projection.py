@@ -57,10 +57,34 @@ _MESA_FACTS = frozenset(
 )
 _MESA_SUB_INDICES = frozenset({1, 2, 3, 4})
 _REPEATING_FACT_SUB_INDICES = frozenset({1, 2, 3, 4})
-_EARLY_DP30302_EPOCHS = frozenset({"2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t"})
+_EARLY_DP30302_EPOCHS = frozenset({"2022", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t"})
 _LATE_DP30302_EPOCHS = frozenset({"2025", "2026-y-siguientes"})
 _HORNO_DIAS = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE
 _HORNO_SUPERFICIE = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE
+
+# The 2022 record has only the two agricultural and two non-agricultural
+# activity slots printed in BOE-A-2021-10509 Annex II, page 75944. It has none
+# of the later electronic worksheets with indexed table/oven particulars.
+_SINGLE_PAGE_FACTS = frozenset(
+    {
+        M303RegimenSimplificadoFact.VOLUMEN_INGRESOS,
+        M303RegimenSimplificadoFact.INDICE_CUOTA,
+        M303RegimenSimplificadoFact.CUOTA_DEVENGADA,
+        M303RegimenSimplificadoFact.PORCENTAJE_INGRESO_CUENTA,
+        M303RegimenSimplificadoFact.INGRESO_CUENTA,
+        M303RegimenSimplificadoFact.CUOTA_SOPORTADA_OPERACIONES_CORRIENTES,
+        M303RegimenSimplificadoFact.CUOTA_ANUAL_DERIVADA_REGIMEN_SIMPLIFICADO,
+        M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
+        M303RegimenSimplificadoFact.REDUCCIONES,
+        M303RegimenSimplificadoFact.INDICE_CORRECTOR_ACTIVIDAD_TEMPORADA,
+        M303RegimenSimplificadoFact.CUOTAS_SOPORTADAS_OPERACIONES_CORRIENTES,
+        M303RegimenSimplificadoFact.INDICE_CORRECTOR_ACTIVIDADES_TEMPORADA,
+        M303RegimenSimplificadoFact.RESULTADO_CUARTO_TRIMESTRE,
+        M303RegimenSimplificadoFact.PORCENTAJE_CUOTA_MINIMA,
+        M303RegimenSimplificadoFact.DEVOLUCION_CUOTAS_SOPORTADAS_OTROS_PAISES,
+        M303RegimenSimplificadoFact.CUOTA_MINIMA,
+    }
+)
 
 
 def _validate_m303_regimen_simplificado_revision_epoch(revision_id: str) -> bool:
@@ -105,6 +129,8 @@ def validate_m303_regimen_simplificado_endpoint_epoch(
     for ref in refs:
         if not isinstance(ref, M303RegimenSimplificadoFactProjectionRef):
             continue
+        if revision_id == "2022" and (ref.fact not in _SINGLE_PAGE_FACTS or ref.sub_index is not None):
+            raise RegistryValidationError("fact is not admitted by the single-page 2022 record")
         _validate_mesa_fact_epoch(ref)
         _validate_horno_days_fact_epoch(ref, revision_id=revision_id, early_epoch=early_epoch)
         _validate_horno_surface_fact_epoch(ref, revision_id=revision_id, early_epoch=early_epoch)

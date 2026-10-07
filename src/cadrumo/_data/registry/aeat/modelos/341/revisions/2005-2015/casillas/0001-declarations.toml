@@ -55,6 +55,8 @@ legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-
 
 [[revisions."2005-2015".casillas]]
 id = "07"
+input_kind = "computed"
+formula = "modelo-341-compensacion-07"
 continuidad_id = "reagp-importe-compensacion"
 number = "07"
 section = ["iva", "reagp", "compensacion", "importe"]
@@ -63,6 +65,8 @@ legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-1
 
 [[revisions."2005-2015".casillas]]
 id = "08"
+input_kind = "computed"
+formula = "modelo-341-compensacion-08"
 continuidad_id = "08"
 number = "08"
 section = ["iva", "reagp", "compensacion", "importe"]
@@ -71,6 +75,8 @@ legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-1
 
 [[revisions."2005-2015".casillas]]
 id = "09"
+input_kind = "computed"
+formula = "modelo-341-compensacion-09"
 continuidad_id = "09"
 number = "09"
 section = ["iva", "reagp", "compensacion", "importe"]
@@ -79,6 +85,8 @@ legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-1
 
 [[revisions."2005-2015".casillas]]
 id = "10"
+input_kind = "computed"
+formula = "modelo-341-compensacion-total"
 continuidad_id = "reagp-importe-compensacion-total"
 number = "10"
 section = ["iva", "reagp", "compensacion", "totales"]
@@ -144,3 +152,157 @@ section = ["presentacion"]
 data_type = "text"
 semantic_role = "observaciones_presentacion"
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-nombre-completo"
+continuidad_id = "m341-papel-nombre-completo"
+number = "papel.nombre-completo"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_nombre_completo"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-tipo-via"
+continuidad_id = "m341-papel-domicilio-tipo-via"
+number = "papel.domicilio-tipo-via"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_tipo_via"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-via"
+continuidad_id = "m341-papel-domicilio-via"
+number = "papel.domicilio-via"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_via"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-numero"
+continuidad_id = "m341-papel-domicilio-numero"
+number = "papel.domicilio-numero"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_numero"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-escalera"
+continuidad_id = "m341-papel-domicilio-escalera"
+number = "papel.domicilio-escalera"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_escalera"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-piso"
+continuidad_id = "m341-papel-domicilio-piso"
+number = "papel.domicilio-piso"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_piso"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-puerta"
+continuidad_id = "m341-papel-domicilio-puerta"
+number = "papel.domicilio-puerta"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_puerta"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-telefono"
+continuidad_id = "m341-papel-domicilio-telefono"
+number = "papel.domicilio-telefono"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_telefono"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-municipio"
+continuidad_id = "m341-papel-domicilio-municipio"
+number = "papel.domicilio-municipio"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_municipio"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-provincia"
+continuidad_id = "m341-papel-domicilio-provincia"
+number = "papel.domicilio-provincia"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_provincia"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-domicilio-codigo-postal"
+continuidad_id = "m341-papel-domicilio-codigo-postal"
+number = "papel.domicilio-codigo-postal"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m341_papel_domicilio_codigo_postal"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-firma-lugar"
+continuidad_id = "m341-papel-firma-lugar"
+number = "papel.firma-lugar"
+section = ["firma"]
+data_type = "text"
+semantic_role = "m341_papel_firma_lugar"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-firma-fecha"
+continuidad_id = "m341-papel-firma-fecha"
+number = "papel.firma-fecha"
+section = ["firma"]
+data_type = "date"
+semantic_role = "m341_papel_firma_fecha"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".casillas]]
+id = "papel-firma"
+continuidad_id = "m341-papel-firma"
+number = "papel.firma"
+section = ["firma"]
+data_type = "text"
+semantic_role = "m341_papel_firma"
+input_kind = "informational"
+required = false
+source_refs = ["boe-modelo-341-2000-form-pdf"]

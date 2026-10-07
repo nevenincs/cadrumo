@@ -13,6 +13,78 @@ modelo:
           than those carried out in that territory.
         title: VAT. Application for refund of VAT incurred in other Member States
           (Eighth Directive)
+      form:
+        authored:
+          actividades:
+            heading: Activities
+          anexos:
+            heading: 7. Attachments
+          apartado:
+            heading: Post office box in Spain
+          banco:
+            heading: 6. Bank details
+          bienes:
+            heading: Nature of goods and services acquired
+          codigo:
+            heading: Code
+          descripcion:
+            heading: Description
+          devolucion:
+            heading: 4. Requested refund
+          domicilio:
+            heading: Address in Spain
+          establecimiento:
+            heading: Place of establishment
+          extranjero:
+            heading: Foreign address
+          fila-1:
+            heading: '1'
+          fila-10:
+            heading: '10'
+          fila-2:
+            heading: '2'
+          fila-3:
+            heading: '3'
+          fila-4:
+            heading: '4'
+          fila-5:
+            heading: '5'
+          fila-6:
+            heading: '6'
+          fila-7:
+            heading: '7'
+          fila-8:
+            heading: '8'
+          fila-9:
+            heading: '9'
+          idioma:
+            heading: Language
+          nif:
+            heading: Applicant tax ID
+          nombre:
+            heading: Full name or legal name
+          operacion-1:
+            heading: Transaction 1
+          operacion-2:
+            heading: Transaction 2
+          operaciones:
+            heading: Transactions
+          pagina1:
+            heading: Application and applicant
+          pagina2:
+            heading: Representative, refund and attachments
+          prorrata:
+            heading: 5. Previous-year deductible proportion adjustment
+          proveedor:
+            heading: Supplier of goods or services
+          registro:
+            heading: Registration number
+          representante:
+            heading: 3. Representative
+          solicitante:
+            heading: 2. Applicant
+          solicitud:
+            heading: 1. Country, year and application reason
       revision:
         2010-y-siguientes:
           casilla:

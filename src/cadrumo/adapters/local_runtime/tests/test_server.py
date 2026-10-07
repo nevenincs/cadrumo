@@ -79,7 +79,9 @@ def test_connection_identity_and_disconnect_are_independent(server) -> None:
             "runtime_boot_id",
             "connection_id",
             "code",
+            "sign_in",
         }
+        assert again.sign_in is None
     finally:
         first.close()
         second.close()
@@ -173,6 +175,10 @@ def test_duplicate_hello_keys_refuse_before_credential_frames(server) -> None:
 def test_accept_loop_tick_and_open_connections_are_observable(server) -> None:
     host, endpoint = server
     age = host.accept_tick_age()
+    deadline = time.monotonic() + 2
+    while age is None and time.monotonic() < deadline:
+        time.sleep(0.005)
+        age = host.accept_tick_age()
     assert age is not None and age < 2
     assert host.open_connection_count() == 0
     client = connect(endpoint)

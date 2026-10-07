@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-workbook-compiler'
 date: '2026-10-05'
-modified: '2026-10-06'
+modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:307af3a79a9bd1da10709984e0622ab17ad0556f53f58362f136a1c831a60cd9'
+body_hash: 'sha256:092ab66d4e5c31e5113fee19d03d8cd2b470edad0f4d647cd01dd69f6c3fe20b'
 related:
   - "[[2026-10-05-registry-workbook-compiler-plan]]"
 ---
@@ -46,7 +46,6 @@ Pydantic JSON hydration of Decimal-or-string values can interpret numeric-lookin
 
 Separate fictional demonstration Sheets were created in the existing Cadrumo Drive folder from generated plans: 130 file 1b3ZioPa0Auwh5TgsQ8qF_r5qsk2omrbvmwBDWcM4aeU, 303 file 1Faxt1Uk0tpQvJiHhxKowG0jY1VcYzeAoRL4VLk6hRn4, 349 file 1AZLIlOBdOtQ58ItnjIWVWw3ZX6oLuH6fabxLr7b0nxI. All three form ranges had zero formula errors. Google calculated 130 result 6373 and 303 result 1680. Changing 130 income by 100 produced 6393, clearing it produced Sin dato, then the original was restored and verified at 6373. Two 349 records showed amounts 12000 and 4500. Connector publication is not a production artifact-receipt test. No browser screenshot or official visual fidelity for all modelos is claimed.
 
-
 ### final-gate | low | Shared-tree verification remains pending
 
 The final boundary run 20261005T182716 kept all 15 contracts but the governed tree changed concurrently; three unrelated ledger evidence modules also failed import through core.operations. Final scoped ty and Ruff passed. The latest 16 compiler/geometry cases include two new text-format cases, alongside the previously passing 25 other unit and 5 integration cases. No commit or complete repository acceptance is claimed. Native perturbation and blank-input results were restored and verified; temporary bridge request files were removed from the delivered artifact folder.
@@ -79,7 +78,6 @@ A populated131 source-backed test exposed that the planner allocated only formul
 
 The1312019 activity result bindings are declared manual inputs. The generated table correctly mirrors these inputs, but does not derive them from rendimiento neto times porcentaje. This is an outstanding registry/domain authoring requirement, not a proven arithmetic feature. Full-form identity/context, remaining revisions and native live verification are still incomplete. No fresh live Sheet was published in this checkpoint.
 
-
 ### 2026-10-05 supporting calculations and live Modelo 131 increment
 
 Supporting calculation cells now retain the canonical formula as the populated branch and return Sin dato when a transitive scalar input is blank. This matches the form guard and conservatively requires all branches. Explicit numeric zero remains supplied data. Focused form tests: 21 passed. Demo integration tests: 7 passed. Demo Ruff, formatting and ty passed after widening the typed activity input map. Independent compiler review found no concrete defect in this increment.
@@ -90,20 +88,17 @@ Native Modelo 131 demonstration: https://docs.google.com/spreadsheets/d/1pJkK3ym
 
 Y drive reported zero free space. Moved only this task's temporary 131 publication request directory to C:/Users/hello/AppData/Local/Temp/cadrumo-131-native-proof-20261005. Subsequent drive check showed approximately 458 MB free. No project data deleted. Temporary request files are implementation intermediates, not user deliverables.
 
-
 ### 2026-10-05 authored Modelo 111 calculation layout and native proof
 
 Downloaded and visually inspected BOE-A-2011-4948 consolidated PDF Annex I, page 13 (declarante). Enrolled the PDF and canonical extraction sidecars, source boe-2011-4948-modelo-111-form, raw SHA256 d082dfa133ce258b49b6aa689de9f7b10d680ef2d6eeeb06f9379009e31f7dae, 495375 bytes. The authored 2019-y-siguientes calculation layout retains all 30 casillas, restores the nine three-column rows01–27 (the generated source had flattened sectionsII andV), and quotes full official section headings. New presentation keys have real es/en/ca/hu translations through dev.locales. Review remains generated: identification, payment, complementary-return context and signature are still not represented by this partial calculation layout.
 
 Verification:21 form generation/integrity/stability/regeneration tests passed;8 populated demo integration tests passed including111; scoped demo Ruff/ty passed. Independent review found no material defect in this increment and checked source and sidecar pins. Native example created in the existing Cadrumo folder: https://docs.google.com/spreadsheets/d/1ZnIO0dxOS7us8vfH3e2UeO7EJPLRHRM00KYqBcKP4UY/edit#gid=100 . Published from the actual typed plan through the shared value stream and formatting builders. Native API readback: Modelo J33 and Cálculos D3 both1150; changing Entradas D4 from1000 to1100 gives1250; clearing gives Sin dato; restored1000 and confirmed1150. API checks across every populated tab found zero formula error values and consistent Arial text; form cells wrap. This is API/format evidence, not browser visual acceptance or complete-form fidelity. No original prototype modified.
 
-
 ### 2026-10-05 missing input names and repeating-record geometry
 
 Enumerated36 missing binding display names across17 revisions of180,190,193,200,714,720, including blockers hidden behind each first refusal. Authored144 translations via dev.locales (es/en/ca/hu), grounded in typed selectors, source casillas, profile fields and official record descriptions. Preserved annual source-model/box meaning, forestry specificity and new-entity first-two-profit-period eligibility. Review corrected193 recipient totals to include both withholdings and payments on account in all four languages; finding closed by inspection.
 
 Actual form compilation then exposed190's oversized banner: concatenating all repeating-record headings produced540–720 pixel row heights, beyond the409 pixel contract. The shared renderer now emits each heading on its own row, preserving every heading. No truncation or row-height limit bypass. Acceptance evidence across final affected checks:13 unaffected revision cases passed; corrected190 geometry, translation and specificity rerun33passed. Together all46 acceptance cases have passing evidence. Seven locale-governance checks also passed. Final full160 probe running under worker session82990 at checkpoint; do not infer a completed full-inventory count until its terminal report. No further material review finding; official-fidelity and populated per-template completion remain outstanding.
-
 
 Final full-inventory follow-up: session82990 terminated successfully. Current report accounts for all160 revisions:78 empty structural scenarios compile,9 compiler refusals remain,52 calculation-grade snapshot refusals and21 unsupported frames; zero unexpected errors and no remaining missing-label blocking references. All17 original human-label refusals are resolved. Remaining compiler refusals are Modelo100/2022–2025 and210/2023–2026+ unsupported formula operations, plus145 symbolic comunicacion period. These counts do not claim official fidelity, populated results or native proof for78 templates. Worker processes for this increment are complete.
 
@@ -357,7 +352,6 @@ Independent compiler_review found a hole in exact-A1 matching: containing ranges
 
 Regenerated existing native122 content from the typed plan, clearing the previous used rectangles so stale captions did not survive. Readback of Modelo A1:M47, Entradas A1:D23 and Procedencia A1:C23 confirms no transport-field captions/codes and no formula errors; result remains300. Form surface is now43rows, provenance21rows; removed obsolete bottom merges and shortened existing form protection to43rows. Native URL remains https://docs.google.com/spreadsheets/d/1ThWfH2Yy70pFlXQyzgypmjtedZycyLtqAIGpfxh59Xg/edit#gid=100 . API verification only. Full inventory classification, historical122 fidelity, repeated detail, payment/signature, automatic122 calculation and browser visual review remain pending.
 
-
 ### Modelo 145 authored family grids and communication coordinates | medium | Historical draft compiles; current-form fidelity remains open
 
 Inspected the current AEAT mod145_es_es.pdf page 1 visually and the pinned DR145 v2.0 (31/01/2012) record description. The registry's sole 2012+ revision retains prolongacion-actividad-laboral; the current facsimile instead asks about irregular-income reductions over prior periods. Do not claim that a faithful current form can be generated from this revision unchanged. The authored layout now preserves all 56 placements in seven record-grounded sections, including four descendant rows with five columns and two ascendant rows with four columns. The complementary-page control remains auxiliary; code-to-human checkbox presentation, transport cleanup, signature geometry, historical housing wording and additional copies remain open. New headings are translated through dev.locales in all four locales. The visible title and review notes explicitly disclose the 2012 draft. No source/authority/review grade was promoted.
@@ -370,9 +364,7 @@ Verification: 30 layout/generation tests passed (20261005T225006.936405Z-pytest-
 
 Confirmed that the installed casilla declaration already records the AEAT export design's omission of spouse boxes574/575 from its result formula. The enrolled BOE2018 form page8 itself contains XXX placeholders in the corresponding expression. Neither source establishes a complete unambiguous calculation; no replacement arithmetic was invented. Native122 manual-result disclosure remains necessary.
 
-
 Modelo145 guide correction follow-up: final focused integration completed, 2 passed (20261005T225520.238371Z-pytest-75024-276f3d09), including explicit absence of the unsupported pull instruction from the generic communication guide. All tests launched in this increment are terminal. This closes the reviewer's guide finding; native and current-form fidelity gaps above remain open.
-
 
 ### Modelo 145 native populated proof | medium | Historical design proven through native API; current fidelity remains open
 
@@ -384,9 +376,7 @@ Classified DR145 row2/byte10 complementary-record marker as an explicit workbook
 
 Focused authoring plus145integration:3passed (20261005T230115.826427Z-pytest-30020-511a97c6). Scoped Ruff lint/format and ty pass. Final locale-consistency integration is running at this checkpoint. Current-form reconciliation, full checkbox/signature/copy fidelity, and all-modelo native coverage remain open; no plan step closed.
 
-
 145 final follow-up: locale-consistency integration completed,2passed (20261005T230324.910026Z-pytest-64468-a86dbdae), including rendering under an English setting while preserving Spanish workbook captions. The first final format check found a mixed-line-ending edit in form_workbook.py; Ruff normalized it and the complete scoped format recheck passed. No test process remains active. The preceding format-pass ledger entry applies to this corrected final state.
-
 
 ### Modelo 202 current Part 1 layout | medium | Four-rate and correction grids authored; remaining official details explicit
 
@@ -398,7 +388,6 @@ Added a fictional19200 demo with explicitly fictional four rates10/15/20/25 appl
 
 Verification: initial bounded run8pass/1fail at producer admission (20261005T231022.341607Z-pytest-45664-e79621b8); after correction3explicit202tests passed (20261005T231212.437996Z-pytest-9172-e9fcc0dd), including typed registry hydration, layout integrity, XLSX materialization and independent domain arithmetic. Scoped Ruff lint/format and ty pass. No process remains active. Native202 Sheet creation and full official-form fidelity are not yet verified; all-template goal remains open.
 
-
 ### Modelo 202 native current proof and historical Part1 layouts | medium | Three revision layouts authored; historical native proof pending
 
 Created current202 native Sheet in the Cadrumo folder: https://docs.google.com/spreadsheets/d/1i1BG4Y_msG4X1EB0U8Dg3SpQLNgzCLGlS7XuanxMXLo/edit#gid=100 . Original typed plan materialized via shared cell streams and adapter formatting builders. Eight tabs; Modelo81rows,135merges,protected82x13,Arial. Read all populated tab rectangles:655nonempty displayed cells, no formula errors,64-character hashes,replacement characters or tested internal IDs. Native row amounts22/25/63/66 are1000/3000/6000/10000;26=20000;32/34=19200. Six live mutations passed:64=44000→34=20200;64=0→9200;64blank→Sin dato;65blank→Sin dato;33blank→Sin dato;33=21000→21000. Other rate rows unchanged. Restored64=40000,65=25,33=0 and read final19200 back. API style/geometry inspection only; no browser visual-fit claim.
@@ -406,7 +395,6 @@ Created current202 native Sheet in the Cadrumo folder: https://docs.google.com/s
 Downloaded and enrolled original historical BOE PDFs: 2018-12515,558599bytes,SHA2568ca22ddbe8f1812e7bf175dba00dac9d83f72a8dd83d1765f598c832f4b9cd8f;2023-8120,5094990bytes,SHA256826304a374caf88485fb8e15d62a51a4f2c7ddf059d5ca181ccbfa75e6e3e7a1. Visually inspected2018PDFpages7/8(printed88843/88844) and2023PDFpages3/4(printed46667/46668). Authored2019-2022 and2023-2024 Part1 layouts:54casillas each, two rate rows, no2025ICcorrection67, andB.1onpage1. All11context references remapped through each revision's existing unique producer/draft-attribute definitions rather than copying field addresses. Existing financial formulas unchanged. Shared generic human headings reuse the2025-authored label namespace without claiming temporal identity of laws. Same current-registry gaps remain explicit: regime/election controls,fiscal-start context,payment details,Part2 and producer admission.
 
 Two historical fictional demos use10000×10%+20000×15%−100−200−500=3200. Tests prove changing second-row base to22000 changes result to3500 and never introduces61–67. Independent reviewer found no material issue. Full current/historical authoring plus demonstration test suite:48passed (20261005T231855.207836Z-pytest-85716-8709e34e). Scoped Ruff/ty pass. Tests terminal; historical native Sheets not yet created. All-template/full-fidelity goal remains open.
-
 
 ### Modelo 202 historical native proofs — 2026-10-06
 
@@ -423,7 +411,6 @@ Six isolated live mutations passed per workbook: casilla 23=22000 produced resul
 
 All three enrolled Modelo 202 revisions now have populated native Part 1 demonstration proofs. This does not close full-form fidelity: regime/election fields, detailed Part 2 disclosures and the refused complete producer-profile contract remain outstanding as recorded above. Identity fields remain unknown; no invented identity/profile or tax-rate applicability is claimed. Full 58-modelo/160-revision scope and S05/S06 remain open. The preceding goal turn only restated status and asked a clarification; this continuation resumed concrete native generation and verification.
 
-
 ### Modelo 202 current additional-data section — 2026-10-06
 
 Inspected pinned BOE-A-2025-5407 Annex I Part 1 page 1 and Part 2 pages 1–2 (printed 36464, 36466–36467), and re-opened the official PDF URL. Canonical derived export-layout inspection found only two records for the current revision; Part 2 detailed corrections/financial-expense disclosures are not represented by those current record bindings. The full-form gap remains open; no invented Part 2 cells or facts were added.
@@ -434,7 +421,6 @@ Added binding-order/identity and rendered unknown-value/translation regressions.
 
 Refreshed only the Modelo tab of the existing current example https://docs.google.com/spreadsheets/d/1i1BG4Y_msG4X1EB0U8Dg3SpQLNgzCLGlS7XuanxMXLo/edit#gid=100 . Verified all 222 prior planned form cells against live entered values before replacement (allowing Google's harmless removal of quotes around simple tab names and empty-string normalization). Local comparison confirmed every non-form content request unchanged. Native readback shows Datos adicionales at B15, ten labels B16:B25, and ten unknown values I16:I25. The form is now 92 rows, 156 merges, protected A1:M93; result casilla 34 is J73 and still computes 19200. Inputs/support tabs were not written. No native formula error appeared in the updated form. API geometry/style verification only; no browser-fit claim. Earlier current-form row coordinates in this audit are historical evidence, superseded by this refreshed layout.
 
-
 ### Modelo 202 historical additional-data fields — 2026-10-06
 
 Compared official BOE-A-2018-12515 printed page 88843 and BOE-A-2023-8120 printed page 46667 visually against each historical revision's canonical derived export fields. Added seven exact-bound regime/turnover/rate contexts to 2019–2022 and eight to 2023–2024. The under-one-million prior-period turnover field is present only in the later revision and follows the rate field, as printed. Historical small-enterprise wording retains Article 101 plus Article 29.1 first-paragraph rate, with a distinct authored-historical locale key translated in es/en/ca/hu. Common labels reuse the inspected unchanged captions; producer coordinates are resolved per revision rather than copied from 2025.
@@ -444,7 +430,6 @@ The historical export has m202.cooperativa_o_multiples_tipos as one producer, wh
 The first source candidate was correctly refused because its locale key contained an uppercase letter; no layout was written by that failed candidate. Locale keys were repaired through dev.locales remove-batch/set-batch and the valid candidate installed. Initial tests consequently failed for missing sections (run 20261005T233541.226432Z-pytest-61928-6137e968). Corrected selected 202-related suite passed 20 tests with 32 deselected (20261005T233628.870624Z-pytest-78436-babe1f0e). Scoped Ruff lint/format and ty passed. Independent compiler_review inspection passed the historical field sets, ordering, translations and explicit aggregate-value refusal.
 
 Refreshed only Modelo in both existing native examples, after comparing all 205 prior planned form cells against freshly read entered values (normalizing Google's simple-tab quote and empty-string conventions). Inputs and support tabs were not written. 2022 file 11jNyEDqcsLThoKnuxO4jbfBrHt8XCP15YTGc3bMqmmU now has an 86-row form, 147 merges, protected A1:M87, seven Sin dato values I16:I22, and result34 at J67=3200. 2024 file 1XZMFieUSYhshRdHDamAk3_1D4st5mC_iAgMjeXx4erY now has 87 rows,149 merges, protected A1:M88, eight Sin dato values I16:I23, and result34 at J68=3200. Complete changed-form readback found no formula errors. This verifies native cells, formulas and API formatting/structure, not browser fit. Earlier row coordinates are superseded; earlier six mutation checks per workbook remain applicable to unchanged inputs and financial formulas.
-
 
 ### Modelo 222 current Part 1 authoring — 2026-10-06
 
@@ -458,7 +443,6 @@ Added a fictional current 222 demonstration with four explicitly invented test p
 
 Four focused tests passed (20261005T234355.718361Z-pytest-21356-2b763756): layout/bindings, source-to-workbook/XLSX generation, authority refusal, and group-specific calculation effects. Casilla57=300 raises result34 from19200 to19500; casilla43=300 lowers it to18900; casilla64=44000 yields20200. These are local automated evaluations and workbook/formula checks, not live Google recalculation. Scoped Ruff lint/format and ty passed after formatting repairs. The first layout candidate was refused for dotted block IDs; corrected normalized block IDs passed integrity before source write. Native Sheet proof for 222 is still pending.
 
-
 ### Modelo 222 current native proof and transport-control repair — 2026-10-06
 
 Created https://docs.google.com/spreadsheets/d/11FSLfAaMU1f2JP4uSZuQT2WJe8Xh1zdmV3_yD03V-ec/edit#gid=100 in Cadrumo folder 1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ from the current typed registry demonstration and existing Google formatting builders. The first live readback found a human-facing I/U/G/N result-type code description and an unknown auxiliary year. Corrected the registry presentation before accepting the demonstration: decl.tipo-declaracion is now explicitly transport_control, justified by the actual f006 filing.result_disposition export producer, and remains subject to shared no-financial/no-binding/no-dependency guards. decl.ejercicio is explicitly set to the fictional scenario filing year. All registry placements remain; no fiscal input/formula is removed.
@@ -471,7 +455,6 @@ Nine live mutation checks passed:57=300 ->19500;43=300 ->18900;64=44000 ->20200;
 
 The demonstration remains calculation-grade and fictional with no group profile supplied. Historical222 revisions, regime/territorial/election controls, payment details, Part2 and browser visual fit remain open. The previous current222 native-pending statement is now superseded, but full official form/inventory completion is not established.
 
-
 ### Modelo 222 historical Part 1 authoring — 2026-10-06
 
 Visually inspected pinned BOE-A-2018-12515 Annex II printed88847–88848 for2022 and BOE-A-2023-8120 Annex II printed46671–46672 for2023/2024. The latter revisions share the declared2023–2024 DR evidence window; no later geometry was inferred from filenames or latest-year selection. Authored all three historical layouts with their own DR pins and the applicable exact PDF pin.2022 preserves67placements;2023 and2024 preserve69each. Two rate rows20/21/22 and23/24/25; no later61–67 boxes. Group adjustment59/60 is absent2022 and present2023/2024. Existing group/pre-entry corrections, two-page placement and all11additional financial fields remain.
@@ -479,7 +462,6 @@ Visually inspected pinned BOE-A-2018-12515 Annex II printed88847–88848 for2022
 Every context coordinate is uniquely remapped through this revision's actual producer/draft semantic field, with no2025field address carried across. Historical result-type transport controls receive the same explicit guarded omission as current222; all financial/year facts remain. Layouts retain generated review state and explicitly disclose missing regimes, territory/representative/modality/payment controls and Part2. Shared generic caption reuse is not a continuity adjudication.
 
 Added separate calculation-grade fictional demos for2022,2023,2024 with own-year decl.ejercicio, two invented test percentages and expected3200. Local independent scenario checks establish57=300 ->3500 and43=300 ->2900, and rule out later rate inputs. Source-to-plan/XLSX generation passed for allfour222revisions.13focused tests passed with48deselected (20261005T235247.420409Z-pytest-48596-da3c8298); scoped Ruff lint/format and ty passed. Independent compiler_review inspection found no material defect. No production authority promotion or actual group profile supplied. Native historical222Sheet proofs remain pending; current222native proof remains separate evidence.
-
 
 ### Historical Modelo 222 native proofs and computed-input fixture defect — 2026-10-06
 
@@ -495,7 +477,6 @@ Patched only Entradas!D4 and Guía!A3 of these newly created examples using valu
 All-tab bounded readback after correction covered697nonempty cells for2022 and717each for2023/2024, with no formula errors, tested internal field identifiers, 64hex digests, replacement characters or result-code labels. Each year matches its filing coordinate.2022:100-row form,172merges, protectedA1:M101, result34=Modelo!J75.2023/2024:102-row form,176merges, protectedA1:M103, result34=Modelo!J77. All three show19=30000,23=20000,result34=3200.
 
 Nine live mutations per workbook passed:57=300 ->3500;43=300 ->2900;04=32000 ->3500;04=10000 ->200; missing04,57,24or33 each ->Sin dato;33=4000 ->4000. First rate-row result22 remained1000 throughout. Finally restored04/57/43/24/33 to30000/0/0/15/0 and independently read back3200 for every workbook. Guide text and upstream04 were read back after all tests. All four enrolled222revisions now have native Part1 proof, with explicit fictional/calculation-grade scope. This is native API formula/structure/style verification, not browser fit, populated real-group integration, full controls/Part2, or full inventory completion.
-
 
 ### All-demo computed-input audit and refusal controls — 2026-10-06
 
@@ -583,6 +564,42 @@ Independent code review of the readonly scalar-summary addition found no high or
 Populated production TUI summaries remain unproven: work_form_layout delegates to project_binding_field, which reads saved binding_overrides; the synthetic saved revisions have row values but no scalar overrides, and the new walker test covers unknown only. The passing native workbook evidence does not establish populated TUI parity. Do not infer or recompute absent saved facts. Official-form completeness, browser visual inspection, source-currentness and production authority adoption remain outside this bounded verdict.
 
 The live source inventory on 2026-10-06 contains 160 revisions: 54 marked authored and 106 otherwise generated. Authorship is not completed fidelity or live verification.
+
+### Operator export integration | medium | fixed registration and historical selection defects; final verification pending
+
+The S07-S09 architecture pass found that saved calculations had no local review export operation, production registration initially rejected the new result projector contract, historical filing views could substitute present-day observation values, and reconciliation listings discarded saved difference details. Implementations now register separate guarded local XLSX exports, retain selected historical values, and expose saved reconciliation details. Existing sealed report and filing gates remain intact. Root production composition ran 12 passing tests with one stale custody-error assertion; the corrected assertion and both export registrations passed the targeted two-test rerun (20261007T040822.352712Z-pytest-54988-4bb57f58).
+
+Independent lifecycle review identified scalar binding-context capture failure and legacy review dependence on current template resolution; the lifecycle worker corrected both, with final persistence/materialization verification pending. New calculation rendering captures original geometry and labels with identity-bound digests; old records retain explicit table-only fallback. Existing M303 catalogue aggregate validation still resolves current authority and must not be bypassed to claim unconditional historical independence.
+
+The repository import gate detected two new test-only outward dependencies; materialization tests were moved to adapter/entrypoint owners. Import-load metadata requires regeneration after file creation settles. Repository-wide type measurement reported 59 diagnostics during concurrent edits; detailed classification is pending. The checkout authority predates authored layouts and needs canonical publication before real form-path acceptance. No live Google or browser verification is claimed for this pass.
+
+### Actual export controls and saved forms | low | scoped functional PASS; repository-wide gates remain PENDING
+
+S07-S09 now have production CLI and TUI routes for saved calculation review, exact historical filing selection and saved reconciliation differences. Native Google saved review is connected to visible controls and the registered manual disclosure/consent flow; 59 previously unenrolled shared labels now exist in four real locale catalogues. New saves capture the separately published FORM_LAYOUT under the original operation pin, preserve complete original schema/labels in encrypted storage, and use literal saved values in both renderers. Baselines never become current-ledger recalculations. Local filenames are explicit operator choices; native copies have readable status and UTC date/version titles. Calculation, filing, superseded and AEAT confirmation states remain separate.
+
+Verification includes four real encrypted local-worker XLSX acceptance cases (draft, completed, exact historical filing, exact reconciliation event); 13 production composition tests; 86 shared template/live-formula/repeating-form regressions; 21 save/reload/local/native-loopback cases; 24 final Google operation/digest cases; 45 historical/reconciliation cases; 22 UI/help, 30 retained adapter contract, 15 Google CLI and 14 real-locale Google TUI integration cases. Counts identify overlapping suites and are not an aggregate unique test count. Google TUI tests explicitly exercise human apply/reject, changed-at-click disclosure, scope expansion, session replacement and mismatched receipts. No live Google upload, desktop browser inspection, AEAT submission or source-control publication occurred.
+
+Final broad type sweep reported 44 diagnostics. Three materializer-protocol consumer errors exposed by the widened shared transport were corrected afterward, with focused ty/Ruff and all four workbook-export tests passing (20261007T043512.228834Z-pytest-76064-99becf74). Remaining diagnostics include documentation/packaging tooling and earlier compiler/test debt; the full type gate is not claimed clean. Import checking loaded all 4518 governed modules and kept all 15 layer contracts with zero new dependency occurrences, but reported 14 hard findings in documentation/packaging and earlier registry tests; concurrent source edits also invalidated the stable-graph verdict. Thus repository-wide signoff remains PENDING, and S07-S09 are not formally closed.
+
+Remaining product limits: native Google publication of reconciliation workbooks is not enrolled; reconciliation exports retain evidence references rather than attachment bytes. Old calculations without retained layouts use disclosed table-only fallback, and missing retained historical calculations are refused. M303 catalogue validation still depends on current authority for rectificativa aggregate checks; this guard was not bypassed. Existing modelo enrollment/fidelity work remains deferred under the user's architectural priority.
+
+### Live CLI and TUI acceptance follow-up | medium | live CLI PASS; TUI defects fixed with recovery verification pending
+
+Root executed the actual CLI in Windows interactive Session 1 against the isolated encrypted Session02 Google Review profile, reusing its saved Google session. Session 0 refusal remained intact. Run 07b57878-a996-44e6-b2dd-eab667cb525a saved a new calculation, verified the local seven-tab XLSX byte receipt, and published native spreadsheet 1rCD8Gi2dyYGAXJPHQ8fSDGWPdk6gIKKfQak1n-pzPYU in managed folder 1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ. Independent Google metadata and bounded cell readback verified the folder, Spanish tab names, provisional title and saved values. This is synthetic worktree-runtime verification, not installed-release, official-form-fidelity or AEAT filing proof.
+
+Actual TUI execution exposed CLI-only operation admission, an initially enabled unpopulated Apply control, and lost explicit CLI input ownership. Fixes admit human TUI under the existing exact consent guard, keep response buttons disabled until observation, and retain validated caller inputs before source aggregation. The fresh save/encrypted reload/production form-load regression verifies the bound manual value while excluding backend values from ownership. Existing unknown immutable revisions are not retrofitted. Focused checks passed: 64 native formatting cases, 28 form-note/attention cases, the production encrypted-save round trip and 50 TUI/acceptance cases (overlapping scopes, not an aggregate unique count).
+
+Independent provider readback also found generic decimals displaying zero as 0,; the Google renderer now requires one fractional digit while preserving twelve-digit capacity. Native readback of the corrected format remains pending. Fresh acceptance run 173e0388-5d07-4163-9b89-a1f2ef8f24ad saved the corrected-provenance calculation and XLSX. Its Google attempt refused because an earlier interrupted TUI review retained the operation subject while waiting for consent. Investigation found a real orphaned-unconsumed review recovery gap; canonical refusal settlement is in progress and must preserve proof non-transferability and consumed-Apply reconciliation. Failed TUI evidence is preserved under the original acceptance run. No fabricated consent, provider shortcut, OAuth restart or manual journal alteration was used. Repository-wide signoff and plan steps remain open.
+
+### Live CLI and TUI closure | low | bounded live export acceptance PASS
+
+The corrected production path completed in Windows Session 1 with native admission, encrypted synthetic profile storage and the saved Google session. Run 173e0388-5d07-4163-9b89-a1f2ef8f24ad saved calculation4550af0e0b05fea199cca93c76c1d3d7e2cbd3b461660caad1a30859816923bf, exported and byte-verified the seven-tab XLSX, and published CLI Sheet1iuz1peIY1a9YWBq7Sox0CBj4OfyUjPdCaH8k4XrXS7c. The real TUI acceptance then navigated the production declarations/workbench, clicked the visible Google review control, waited for the registered disclosure and exact selected revision, explicitly clicked Publish and observed Published and verified with Sheet1y76HHzuLb_lGVCRPb2a7zbi4dg4WQYrJ6dJvAbXx2Zc. Both native copies and local XLSX carry identical revision and snapshot57102693e2efcc7525fd68c3170aa54526b49e9c9674474c07543426a7fa385f.
+
+Independent Google connector reads confirmed both native files under managed folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ, seven Spanish tabs, es_ES locale, provisional titles and the exact synthetic values: casilla05=143397.89, casilla07=-143397.89. Native zero formatting now reads0,0 rather than0,. Root rasterized and inspected actual Textual screenshots: the retained manual input is visible with override provenance, consent discloses readable financial contents, and terminal publication shows a usable spreadsheet link. This was a real runtime/provider path driven through Textual's headless test pilot, not a manual desktop-browser inspection or installed-wheel test. Saved baselines intentionally contain literal values, not scenario formulas.
+
+Canonical recovery of abandoned unconsumed review a828d9899c3b202b4aa5606fada669b8ea4858677b98f5d6c8af7b767d9e2f7a was verified live as REFUSED/NONE with no Apply request. Recovery does not transfer response proof or call the provider for unconsumed consent; consumed approval and malformed-checkpoint handling retain their existing safety checks. The helper now rejects its own unapproved review while original session authority remains available and avoids cleanup after a publication attempt. Additional focused recovery/cleanup tests passed, including18 integration and11 publication/resume cases. Independent integrated code reviews found no material issues. The final owned runner stopped normally with its supervised runtime; no new OAuth, AEAT filing or source-control publication occurred.
+
+Evidence lives under the normal profile logs/live-export-acceptance directory (verified-result.json, acceptance-journal.json, TUI evidence.json and four SVG screenshots), and earlier failed attempts remain preserved. This closes the bounded live verification gap, not the original all-modelo completion goal. Repository-wide type/import gates remain pending from the prior pass; native reconciliation publication, release-package verification and deferred modelo fidelity remain outside this PASS.
 
 ## Recommendations
 

@@ -115,7 +115,10 @@ def test_packaged_catalogues_render_real_calculation_and_ledger_plans(
         label=labels,
     )
     cells = {cell.address.qualified(): cell.value for cell in plan.value_cells}
-    assert plan.metadata.title == overview
+    if ledger_only:
+        assert plan.metadata.title == labels("ledger") + " · aaaaaaaaaaaa"
+    else:
+        assert plan.metadata.title == "Modelo 303 · 2026 · 1T · " + labels("not_captured") + " · cccccccccccc"
     assert cells["'Guía'!A1"] == overview
     assert cells["'Guía'!B6"] == provisional
     assert cells["'Entradas'!A1"] == review

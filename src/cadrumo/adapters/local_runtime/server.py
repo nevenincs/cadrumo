@@ -20,6 +20,7 @@ from ...application.runtime.profile_access import (
     RuntimeProfileHandler,
 )
 from ...core.async_cleanup import AsyncResourceCleanupError, attach_async_cleanup_error
+from ...core.diagnostic_log import diagnostic_event
 from ...core.logging import get_logger
 from ...core.startup_phase_log import startup_phase
 from .runtime_transport_cleanup import RuntimeTransportCleanup, close_runtime_transport_after_failure
@@ -113,18 +114,38 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             workers = ThreadPoolExecutor(max_workers=32, thread_name_prefix="cadrumo-ipc")
             try:
                 self.ready.set()
+                accept_error: BaseException | None = None
                 try:
+                    diagnostic_event(
+                        _LOGGER,
+                        "runtime_listener_ready",
+                        fields={
+                            "runtime_boot_id": str(self.identity.boot_id),
+                            "runtime_version": self.identity.product_version,
+                        },
+                    )
                     self._accept_connections(workers)
+                except BaseException as error:
+                    accept_error = error
+                    raise
                 finally:
                     self.stop.set()
-                    deadline = time.monotonic() + self.DRAIN_SECONDS
                     try:
-                        result = self._drain_owned_resources(deadline=deadline)
-                    except BaseException:
-                        incomplete.set()
-                        raise
-                    if result is not None and result.lacks_settlement_evidence:
-                        self._failed.set()
+                        diagnostic_event(
+                            _LOGGER,
+                            "runtime_listener_drain_started",
+                            fields={"drain_timeout_seconds": self.DRAIN_SECONDS},
+                            primary_error=accept_error,
+                        )
+                    finally:
+                        deadline = time.monotonic() + self.DRAIN_SECONDS
+                        try:
+                            result = self._drain_owned_resources(deadline=deadline)
+                        except BaseException:
+                            incomplete.set()
+                            raise
+                        if result is not None and result.lacks_settlement_evidence:
+                            self._failed.set()
             finally:
                 workers.shutdown(wait=False, cancel_futures=True)
             if self._failed.is_set():
@@ -136,6 +157,15 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             self.ready.clear()
             if not incomplete.is_set():
                 self._release_listener(primary_error)
+            diagnostic_event(
+                _LOGGER,
+                "runtime_listener_stopped",
+                fields={
+                    "cleanup_incomplete": incomplete.is_set(),
+                    "outcome": "incomplete" if incomplete.is_set() else "stopped",
+                },
+                primary_error=primary_error,
+            )
 
     def _drain_owned_resources(self, *, deadline: float) -> RuntimeProfileDrainResult | None:
         if not self._drain_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):

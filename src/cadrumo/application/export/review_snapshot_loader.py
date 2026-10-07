@@ -8,24 +8,32 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     assert_revision_snapshot_evidence_coverage,
 )
+from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
+from .review_form_data import capture_review_form
 from .review_snapshot import (
     CalculationReviewSelection,
     EvidenceDisposition,
     EvidenceInventoryItem,
     ReviewAmount,
+    ReviewCalculationLifecycle,
     ReviewContribution,
     ReviewFinding,
     ReviewSnapshot,
     ReviewSnapshotContent,
     ReviewSourceKind,
     ReviewStatus,
+    ReviewTextValue,
     seal_review_snapshot,
 )
 
 
 def build_calculation_review_snapshot(
-    *, selection: CalculationReviewSelection, revision: CalculationRevision, work_unit: WorkUnit
+    *,
+    selection: CalculationReviewSelection,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
+    filing_record: ModeloRecord | None = None,
 ) -> ReviewSnapshot:
     """Retain saved values and captured evidence, with explicit attribution gaps.
 
@@ -47,6 +55,15 @@ def build_calculation_review_snapshot(
     ):
         raise ValueError("saved review selection does not match its persisted revision and profile")
     assert_revision_snapshot_evidence_coverage(revision)
+    if filing_record is not None and (
+        filing_record.bucket_id != str(selection.profile_id)
+        or filing_record.work_unit_id != selection.work_unit_id
+        or filing_record.calculation_revision_id != selection.calculation_revision_id
+        or str(filing_record.modelo) != selection.modelo
+        or filing_record.filing_year != selection.filing_year
+        or filing_record.period.registry_token != selection.period
+    ):
+        raise ValueError("saved review filing record does not match the selected revision and profile")
     ledger = revision.ledger_filing_evidence
     rows = ledger.rows if ledger is not None else ()
     fingerprint_snapshot = revision.ledger_filing_snapshot
@@ -61,14 +78,29 @@ def build_calculation_review_snapshot(
             code="review.original_authority_generation_unavailable",
             detail=(
                 "The saved revision retains registry coordinates but not its original authority generation. "
-                "Selection authority identifiers describe the pinned publication authority."
+                "Selection generation identifies the publication authority; registry digest identifies "
+                "retained coordinates only, not an original or current rendering schema."
             ),
         ),
         ReviewFinding(
             code="review.saved_display_semantics_unavailable",
             detail="Values retain their saved decimal precision; currency, unit and rounding policy are not inferred.",
         ),
+        ReviewFinding(
+            code="review.saved_form_layout_unavailable",
+            detail=(
+                "The saved revision did not retain its original form layout. "
+                "This review presents saved tables; a current template was not substituted."
+            ),
+        ),
     ]
+    saved_form = capture_review_form(revision)
+    if revision.rendering_snapshot is not None:
+        findings = [
+            finding for finding in findings if finding.code != "review.original_authority_generation_unavailable"
+        ]
+    if saved_form is not None:
+        findings = [finding for finding in findings if finding.code != "review.saved_form_layout_unavailable"]
     if revision.source_transaction_ids and ledger is None:
         findings.append(
             ReviewFinding(
@@ -89,6 +121,7 @@ def build_calculation_review_snapshot(
     observations = {item.casilla_id: item for item in revision.observations}
     contributions: list[ReviewContribution] = []
     amounts: list[ReviewAmount] = []
+    text_values: list[ReviewTextValue] = []
     for casilla_id, value in sorted(revision.casilla_values.items()):
         amount_id = f"casilla:{casilla_id}"
         contribution_id = f"source:{amount_id}"
@@ -145,6 +178,31 @@ def build_calculation_review_snapshot(
                 contribution_ids=(contribution_id,),
             )
         )
+    for observation in sorted(revision.observations, key=lambda item: item.casilla_id):
+        if not isinstance(observation.value, str):
+            continue
+        value_id = f"text:{observation.casilla_id}"
+        contribution_id = f"source:{value_id}"
+        contributions.append(
+            ReviewContribution(
+                contribution_id=contribution_id,
+                kind=ReviewSourceKind.UNAVAILABLE,
+                source_id=value_id,
+                source_revision=revision.calculation_revision_id,
+                detail="Exact saved text observation; individual source attribution was not captured for review.",
+            )
+        )
+        text_values.append(
+            ReviewTextValue(
+                value_id=value_id,
+                casilla_id=observation.casilla_id,
+                value=observation.value,
+                contribution_ids=(contribution_id,),
+                formula_reference=observation.formula_id,
+                legal_refs=observation.legal_refs,
+                source_refs=observation.source_refs,
+            )
+        )
     if any(item.kind is ReviewSourceKind.UNAVAILABLE for item in contributions):
         findings.append(
             ReviewFinding(
@@ -154,9 +212,20 @@ def build_calculation_review_snapshot(
         )
     return seal_review_snapshot(
         ReviewSnapshotContent(
+            schema_version=2,
             selection=selection,
             status=ReviewStatus.INCOMPLETE,
+            saved_form=saved_form,
+            calculation_lifecycle=ReviewCalculationLifecycle(
+                state=revision.state,
+                is_current_calculation=work_unit.current_calculation_revision_id == revision.calculation_revision_id,
+                is_current_filing=work_unit.filed_calculation_revision_id == revision.calculation_revision_id,
+                filing_record_id=filing_record.filing_record_id if filing_record is not None else None,
+                filing_status=filing_record.status if filing_record is not None else None,
+                aeat_confirmation=filing_record.confirmation if filing_record is not None else None,
+            ),
             amounts=tuple(amounts),
+            text_values=tuple(text_values),
             ledger_rows=rows,
             contributions=tuple(contributions),
             evidence=evidence,

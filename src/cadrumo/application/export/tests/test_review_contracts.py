@@ -9,6 +9,7 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
+from ....core.hashing import content_hash_hex
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..managed_artifact_ports import ArtifactCreationReceipt, ManagedArtifactKind
 from ..publication_receipt import PublicationFailure, PublicationReceipt, PublicationState
@@ -104,6 +105,18 @@ def test_snapshot_roundtrip_and_tampered_amount_digest_refusal() -> None:
     changed["amounts"][0]["value"] = "999.00"
     with pytest.raises(ValidationError, match="digest"):
         ReviewSnapshot.model_validate_json(json.dumps(changed))
+
+
+def test_v1_snapshot_preserves_original_wire_digest_without_new_optional_fields() -> None:
+    content = ReviewSnapshotContent(selection=_selection(), status=ReviewStatus.PROVISIONAL)
+    wire = content.model_dump(mode="json")
+    assert wire["schema_version"] == 1
+    assert "saved_form" not in wire and "calculation_lifecycle" not in wire and "text_values" not in wire
+    # Independent old wire payload remains readable and keeps its exact digest.
+    old_digest = content_hash_hex(wire)
+    snapshot = ReviewSnapshot.model_validate_json(json.dumps({**wire, "snapshot_digest": old_digest}))
+    assert snapshot.snapshot_digest == old_digest
+    assert snapshot.model_dump(mode="json", exclude={"snapshot_digest"}) == wire
 
 
 def test_ledger_selection_has_no_calculation_and_refuses_invented_amounts() -> None:

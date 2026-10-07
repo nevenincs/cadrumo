@@ -4,47 +4,46 @@ modelo:
       casilla:
         continuidad:
           a-deducir-23:
-            label: Settlement (8) - To deduct [23]
+            label: Settlement - To deduct [23]
           adjudicatario-apellidos:
-            label: Awardee (4) - Surnames or company name
+            label: Awardee - Surnames or company name
           adjudicatario-nif:
-            label: Awardee (4) - NIF
+            label: Awardee - NIF
           adjudicatario-nombre:
-            label: Awardee (4) - Given name
+            label: Awardee - Given name
           aeronave-ano:
-            label: Characteristics and technical data (7) - Aircraft - Year of manufacture
+            label: Characteristics and technical data - Aircraft - Year of manufacture
           aeronave-fabricante:
-            label: Characteristics and technical data (7) - Aircraft - Manufacturer
+            label: Characteristics and technical data - Aircraft - Manufacturer
           aeronave-marca:
-            label: Characteristics and technical data (7) - Aircraft - Make - Type
-              - Model
+            label: Characteristics and technical data - Aircraft - Make - Type - Model
           aeronave-peso:
-            label: Characteristics and technical data (7) - Aircraft - Maximum take-off
+            label: Characteristics and technical data - Aircraft - Maximum take-off
               weight (kg)
           aeronave-serie:
-            label: Characteristics and technical data (7) - Aircraft - Serial no.
+            label: Characteristics and technical data - Aircraft - Serial no.
           cuota-a-ingresar:
             label: Amount payable
           cuota-devengada-22:
             label: Total VAT due
           declaracion-complementaria:
-            label: Supplementary return (9)
+            label: Supplementary return
           declaracion-periodo-309:
             label: Accrual. Period
           declaracion-tipo-309:
             label: Return type
           declarante-nombre-309:
-            label: Identification (1) - Given name
+            label: Identification - Given name
           embarcacion-eslora:
-            label: Characteristics and technical data (7) - Vessels - Maximum length
+            label: Characteristics and technical data - Vessels - Maximum length
           embarcacion-fabricante:
-            label: Characteristics and technical data (7) - Vessels - Manufacturer
+            label: Characteristics and technical data - Vessels - Manufacturer
           embarcacion-tipo:
-            label: Characteristics and technical data (7) - Vessels - Type-Model
+            label: Characteristics and technical data - Vessels - Type-Model
           filing-year:
             label: Filing year to which the return relates
           hecho-imponible:
-            label: 'Taxable event (6):'
+            label: 'Taxable event:'
           hecho-imponible-adquisicion-intracomunitaria:
             label: 'Taxable event: intra-Community acquisition of goods'
           hecho-imponible-entrega-inversion-inmobiliaria:
@@ -67,16 +66,76 @@ modelo:
             label: Input VAT borne by retailers under the equivalence surcharge (traveller
               refund)
           justificante-anterior:
-            label: Receipt number of the previous return (9)
+            label: Receipt number of the previous return
           letras-etiqueta-persona-fisica:
             label: Identification label letters
+          m309-papel-ccc-cuenta:
+            label: 'CCC: account number'
+          m309-papel-ccc-dc:
+            label: 'CCC: check digits'
+          m309-papel-ccc-entidad:
+            label: 'CCC: bank'
+          m309-papel-ccc-oficina:
+            label: 'CCC: branch'
+          m309-papel-complementaria:
+            label: Supplementary return
+          m309-papel-domicilio-codigo-postal:
+            label: Postal code
+          m309-papel-domicilio-escalera:
+            label: Staircase
+          m309-papel-domicilio-municipio:
+            label: Municipality
+          m309-papel-domicilio-numero:
+            label: Street number
+          m309-papel-domicilio-piso:
+            label: Floor
+          m309-papel-domicilio-provincia:
+            label: Province
+          m309-papel-domicilio-puerta:
+            label: Door
+          m309-papel-domicilio-telefono:
+            label: Telephone
+          m309-papel-domicilio-tipo-via:
+            label: Street type
+          m309-papel-domicilio-via:
+            label: 'Tax address: street'
+          m309-papel-nombre-completo:
+            label: Full name or company name
           motivo-declaracion-no-periodica:
             label: Reason for the non-periodic return
           mtn-embarcacion-identificacion:
-            label: Characteristics and technical data (7) - Vessels - Identification
-              (build no.)
+            label: Characteristics and technical data - Vessels - Identification (build
+              no.)
           observaciones-presentacion:
             label: Observations
+          papel-ccc-cuenta:
+            label: null
+          papel-ccc-dc:
+            label: null
+          papel-ccc-entidad:
+            label: null
+          papel-ccc-oficina:
+            label: null
+          papel-domicilio-codigo-postal:
+            label: null
+          papel-domicilio-escalera:
+            label: null
+          papel-domicilio-municipio:
+            label: null
+          papel-domicilio-numero:
+            label: null
+          papel-domicilio-piso:
+            label: null
+          papel-domicilio-provincia:
+            label: null
+          papel-domicilio-puerta:
+            label: null
+          papel-domicilio-telefono:
+            label: null
+          papel-domicilio-tipo-via:
+            label: null
+          papel-domicilio-via:
+            label: null
           papel-firma:
             help: Space for signing the printed form. A name entered here is neither
               an electronic signature nor a submission.
@@ -92,55 +151,55 @@ modelo:
               replaces the return type.
             label: Payment method
           re-base-10:
-            label: Settlement (8) - Equivalence surcharge - Taxable base [10]
+            label: Settlement - Equivalence surcharge - Taxable base [10]
           re-base-13:
-            label: Settlement (8) - Equivalence surcharge - Taxable base [13]
+            label: Settlement - Equivalence surcharge - Taxable base [13]
           re-base-16:
-            label: Settlement (8) - Equivalence surcharge - Taxable base [16]
+            label: Settlement - Equivalence surcharge - Taxable base [16]
           re-base-19:
-            label: Settlement (8) - Equivalence surcharge - Taxable base [19]
+            label: Settlement - Equivalence surcharge - Taxable base [19]
           re-cuota-12:
-            label: Settlement (8) - Equivalence surcharge - Tax amount [12]
+            label: Settlement - Equivalence surcharge - Tax amount [12]
           re-cuota-15:
-            label: Settlement (8) - Equivalence surcharge - Tax amount [15]
+            label: Settlement - Equivalence surcharge - Tax amount [15]
           re-cuota-18:
-            label: Settlement (8) - Equivalence surcharge - Tax amount [18]
+            label: Settlement - Equivalence surcharge - Tax amount [18]
           re-cuota-21:
-            label: Settlement (8) - Equivalence surcharge - Tax amount [21]
+            label: Settlement - Equivalence surcharge - Tax amount [21]
           re-tipo-11:
-            label: Settlement (8) - Equivalence surcharge - Rate % [11]
+            label: Settlement - Equivalence surcharge - Rate % [11]
           re-tipo-14:
-            label: Settlement (8) - Equivalence surcharge - Rate % [14]
+            label: Settlement - Equivalence surcharge - Rate % [14]
           re-tipo-17:
-            label: Settlement (8) - Equivalence surcharge - Rate % [17]
+            label: Settlement - Equivalence surcharge - Rate % [17]
           re-tipo-20:
-            label: Settlement (8) - Equivalence surcharge - Rate % [20]
+            label: Settlement - Equivalence surcharge - Rate % [20]
           rg-base-01:
-            label: Settlement (8) - General regime - Taxable base [01]
+            label: Settlement - General regime - Taxable base [01]
           rg-base-04:
-            label: Settlement (8) - General regime - Taxable base [04]
+            label: Settlement - General regime - Taxable base [04]
           rg-base-07:
-            label: Settlement (8) - General regime - Taxable base [07]
+            label: Settlement - General regime - Taxable base [07]
           rg-base-25:
-            label: Settlement (8) - General regime - Taxable base [25]
+            label: Settlement - General regime - Taxable base [25]
           rg-cuota-03:
-            label: Settlement (8) - General regime - Tax amount [03]
+            label: Settlement - General regime - Tax amount [03]
           rg-cuota-06:
-            label: Settlement (8) - General regime - Tax amount [06]
+            label: Settlement - General regime - Tax amount [06]
           rg-cuota-09:
-            label: Settlement (8) - General regime - Tax amount [09]
+            label: Settlement - General regime - Tax amount [09]
           rg-cuota-27:
-            label: Settlement (8) - General regime - Tax amount [27]
+            label: Settlement - General regime - Tax amount [27]
           rg-tipo-02:
-            label: Settlement (8) - General regime - Rate % [02]
+            label: Settlement - General regime - Rate % [02]
           rg-tipo-05:
-            label: Settlement (8) - General regime - Rate % [05]
+            label: Settlement - General regime - Rate % [05]
           rg-tipo-08:
-            label: Settlement (8) - General regime - Rate % [08]
+            label: Settlement - General regime - Rate % [08]
           rg-tipo-26:
-            label: Settlement (8) - General regime - Rate % [26]
+            label: Settlement - General regime - Rate % [26]
           situacion-tributaria:
-            label: 'Tax situation (5):'
+            label: 'Tax situation:'
           situacion-tributaria-agricola:
             label: 'Tax status: taxpayer covered by the special agriculture, livestock
               and fisheries scheme'
@@ -156,29 +215,29 @@ modelo:
           situacion-tributaria-sin-derecho-deduccion:
             label: 'Tax status: taxpayer with no entitlement to deduct'
           transmitente-apellidos:
-            label: Transferor (3) - Surnames or company name
+            label: Transferor - Surnames or company name
           transmitente-apellidos-nombre-razon-social:
             label: Transferor - Surnames and first name or company name
           transmitente-nif:
-            label: Transferor (3) - NIF
+            label: Transferor - NIF
           transmitente-nif-iva:
-            label: Transferor (3) - NIF-IVA
+            label: Transferor - NIF-IVA
           transmitente-nombre:
-            label: Transferor (3) - Given name
+            label: Transferor - Given name
           transmitente-pais:
-            label: Transferor (3) - Country
+            label: Transferor - Country
           vehiculo-bastidor:
-            label: Characteristics and technical data (7) - Vehicles - Identification
+            label: Characteristics and technical data - Vehicles - Identification
               no. (chassis)
           vehiculo-clasificacion:
-            label: Characteristics and technical data (7) - Vehicles - Classification
+            label: Characteristics and technical data - Vehicles - Classification
           vehiculo-marca:
-            label: Characteristics and technical data (7) - Vehicles - Make
+            label: Characteristics and technical data - Vehicles - Make
           vehiculo-modelo:
-            label: 'Characteristics and technical data (7) - Vehicles - Model (commercial
+            label: 'Characteristics and technical data - Vehicles - Model (commercial
               name):'
           vehiculo-tipo:
-            label: Characteristics and technical data (7) - Vehicles - Type
+            label: Characteristics and technical data - Vehicles - Type
       field:
         official_name: Modelo 309. Value Added Tax. Non-periodic return-settlement.
         title: VAT. Non-periodic return-settlement
@@ -210,10 +269,14 @@ modelo:
           situacion-6:
             heading: Other tax situations not listed above
         context:
+          contacto:
+            heading: Contact person
           nif:
             heading: Taxpayer tax ID
           nombre:
             heading: Surnames or legal name
+          telefono:
+            heading: Contact telephone
         page:
           m30901:
             heading: VAT · Non-periodic return
@@ -243,6 +306,30 @@ modelo:
             heading: Identification (1)
           ingreso:
             heading: Payment (10)
+          legacy-aeronave:
+            heading: 6. Technical details (7) · Aircraft
+          legacy-complementaria:
+            heading: 8. Supplementary return (9)
+          legacy-devengo:
+            heading: 2. Tax period (2)
+          legacy-embarcacion:
+            heading: 6. Technical details (7) · Vessels
+          legacy-firma:
+            heading: 9. Signature (11)
+          legacy-hecho:
+            heading: 5. Taxable event (6)
+          legacy-identificacion:
+            heading: 1. Identification (1)
+          legacy-ingreso:
+            heading: 10. Payment (10)
+          legacy-liquidacion:
+            heading: 7. Tax calculation (8)
+          legacy-situacion:
+            heading: 4. Tax status (5)
+          legacy-transmitente:
+            heading: 3. Transferor (3)
+          legacy-vehiculo:
+            heading: 6. Technical details (7) · Vehicles
           liquidacion:
             heading: Tax calculation (8)
           situacion:

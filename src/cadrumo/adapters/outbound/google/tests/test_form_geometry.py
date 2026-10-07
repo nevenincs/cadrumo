@@ -14,11 +14,14 @@ from .....application.storage.calc_sheets.records import (
     SheetColumnWidth,
     SheetExportMetadata,
     SheetExportPlan,
+    SheetFormulaCell,
     SheetGuideContent,
+    SheetHiddenRow,
     SheetMergedRange,
     SheetNumberFormat,
     SheetProtectedRange,
     SheetReviewMetadata,
+    SheetRoundingRule,
     SheetRowHeight,
     SheetStyledRange,
     SheetValueCell,
@@ -34,6 +37,7 @@ from .._calc_sheets_apply_formatting import (
     build_number_format_requests,
     build_styled_range_requests,
 )
+from .._calc_sheets_apply_values import build_value_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -100,6 +104,50 @@ def test_merge_must_not_discard_another_value() -> None:
         SheetValueCell(address=SheetCellAddress.at(TabName.FORM, 2, 3), value="Do not lose", role="label"),
     )
     with pytest.raises(ValueError, match="discard"):
+        SheetExportPlan[SheetReviewMetadata].model_validate(data)
+
+
+def test_internal_row_visibility_preserves_formula_dependencies_in_both_transports() -> None:
+    data = dict(_plan())
+    data["tabs"] = (*data["tabs"], TabName.CALCULOS)
+    data["hidden_rows"] = (SheetHiddenRow(tab=TabName.CALCULOS, row=3),)
+    data["formula_cells"] = (
+        SheetFormulaCell(
+            address=SheetCellAddress.at(TabName.CALCULOS, 3, 4),
+            casilla_id="test.control",
+            formula="1",
+            rounding_rule=SheetRoundingRule.NONE,
+        ),
+        SheetFormulaCell(
+            address=SheetCellAddress.at(TabName.FORM, 4, 2),
+            casilla_id="test.resultado",
+            formula="'Cálculos'!D3+1",
+            rounding_rule=SheetRoundingRule.NONE,
+        ),
+    )
+    plan = SheetExportPlan[SheetReviewMetadata].model_validate(data)
+    restored = SheetExportPlan[SheetReviewMetadata].model_validate_json(plan.model_dump_json())
+    assert restored.hidden_rows == plan.hidden_rows
+    book = load_workbook(BytesIO(materialize_export_plan(restored)))
+    assert book["Cálculos"].row_dimensions[3].hidden
+    assert not book["Modelo"].row_dimensions[4].hidden
+    assert book["Cálculos"]["D3"].value == "=1"
+    assert book["Modelo"]["B4"].value == "='Cálculos'!D3+1"
+    requests = build_form_geometry_requests(restored, sheet_id_by_tab={"Modelo": 42, "Cálculos": 43})
+    assert {
+        "updateDimensionProperties": {
+            "range": {"sheetId": 43, "dimension": "ROWS", "startIndex": 2, "endIndex": 3},
+            "properties": {"hiddenByUser": True},
+            "fields": "hiddenByUser",
+        }
+    } in requests
+    book.close()
+
+
+def test_hidden_row_cannot_target_an_undeclared_tab() -> None:
+    data = dict(_plan())
+    data["hidden_rows"] = (SheetHiddenRow(tab=TabName.CALCULOS, row=3),)
+    with pytest.raises(ValueError, match="hidden row targets an undeclared tab"):
         SheetExportPlan[SheetReviewMetadata].model_validate(data)
 
 
@@ -219,20 +267,23 @@ def test_box_styles_match_between_transports(role, horizontal, bold) -> None:
 
 
 @pytest.mark.parametrize(
-    ("kind", "currency", "pattern"),
+    ("kind", "currency", "pattern", "native_pattern"),
     [
-        ("money", "EUR", '#,##0.00" €"'),
-        ("money", "USD", "#,##0.00"),
-        ("money", None, "#,##0.00"),
-        ("integer", None, "#,##0"),
-        ("decimal", None, "#,##0.############"),
-        ("float", None, "#,##0.############"),
-        ("ratio", None, "0.00####"),
-        ("percentage", None, "0.00####%"),
+        ("money", "EUR", '#,##0.00" €"', '#,##0.00" €"'),
+        ("money", "USD", "#,##0.00", "#,##0.00"),
+        ("money", None, "#,##0.00", "#,##0.00"),
+        ("integer", None, "#,##0", "#,##0"),
+        ("decimal", None, "#,##0.############", "#,##0.0###########"),
+        ("float", None, "#,##0.############", "#,##0.0###########"),
+        ("ratio", None, "0.00####", "0.00####"),
+        ("percentage", None, "0.00####%", "0.00####%"),
     ],
 )
-@pytest.mark.parametrize("value", [Decimal("1234.56"), Decimal("-1234.56"), Decimal(0), None])
-def test_spanish_numeric_formats_preserve_values_and_missing_cells(kind, currency, pattern, value) -> None:
+@pytest.mark.parametrize(
+    "value",
+    [Decimal("1234.56"), Decimal("-1234.56"), Decimal(0), Decimal(1234), Decimal("0.123456789012"), None],
+)
+def test_spanish_numeric_formats_preserve_values_and_missing_cells(kind, currency, pattern, native_pattern, value) -> None:
     declared = numeric_format(kind, currency=currency)
     assert declared is not None
     assert declared[1] == pattern
@@ -249,7 +300,11 @@ def test_spanish_numeric_formats_preserve_values_and_missing_cells(kind, currenc
     native = build_number_format_requests(plan, sheet_id_by_tab={"Modelo": 42})[0]["repeatCell"]["cell"][
         "userEnteredFormat"
     ]
-    assert native["numberFormat"] == {"type": "PERCENT" if kind == "percentage" else "NUMBER", "pattern": pattern}
+    assert native["numberFormat"] == {
+        "type": "PERCENT" if kind == "percentage" else "NUMBER",
+        "pattern": native_pattern,
+    }
+    assert build_value_data(plan.value_cells)[0]["values"] == [["" if value is None else float(value)]]
     assert build_base_font_requests(plan, sheet_id_by_tab={"Modelo": 42})[0] == {
         "updateSpreadsheetProperties": {"properties": {"locale": "es_ES"}, "fields": "locale"}
     }

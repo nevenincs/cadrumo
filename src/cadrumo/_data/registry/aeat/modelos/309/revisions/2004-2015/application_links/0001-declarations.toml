@@ -13,3 +13,11 @@ consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
+
+[[revisions."2004-2015".application_links]]
+id = "modelo-309-historical-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-instructions"]

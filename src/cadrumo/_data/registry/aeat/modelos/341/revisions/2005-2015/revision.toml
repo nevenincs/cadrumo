@@ -1,4 +1,5 @@
 [revisions."2005-2015"]
+formula_source_refs = ["boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
 casilla_source_refs = ["aeat-dr-341-2005-2015"]
 authority_grade = "applicability"
 # Exact 619-position fixed-width era from aeat-dr-341-2005-2015. This layout

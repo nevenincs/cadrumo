@@ -2138,6 +2138,25 @@ application:
           sources: Atribución de fuentes
           status: Código de estado registrado
           status_incomplete: Incompleto
+          calculation_state: 'Estado del cálculo guardado'
+          current_calculation: 'Cálculo actual al exportar'
+          current_filing: 'Presentación local actual al exportar'
+          filing_status: 'Estado del registro de presentación guardado'
+          filing_record: 'Registro de presentación seleccionado'
+          filing_status_vigente: 'Vigente'
+          filing_status_supersedido: 'Sustituido — histórico'
+          aeat_confirmation: 'Confirmación de la AEAT'
+          'yes': 'Sí'
+          'no': 'No'
+          calculation_state_borrador: 'Borrador — provisional'
+          calculation_state_verificado_completo: 'Cálculo local verificado'
+          calculation_state_presentado: 'Presentado localmente'
+          calculation_state_presentado_supersedido: 'Presentación local histórica — sustituida'
+          calculation_state_descartado: 'Cálculo descartado'
+          aeat_confirmation_pendiente: 'Pendiente — sin aceptación observada de la AEAT'
+          aeat_confirmation_confirmada: 'Confirmada por evidencia guardada de la AEAT'
+          aeat_confirmation_discrepante: 'Discrepancia con la evidencia de la AEAT'
+          aeat_confirmation_descartada: 'Descartada antes de la confirmación de la AEAT'
           status_provisional: Provisional
           status_verified: Datos locales verificados
           taxable_base: Base imponible (visualización numérica)
@@ -2339,3 +2358,39 @@ application:
       validation_clean: La validación se completó sin incidencias bloqueantes.
       validation_failed: La validación detectó incidencias bloqueantes.
       workflow_failure: No se pudo completar el flujo de trabajo.
+
+  reconciliation_export:
+    title: "Reconciliaciones guardadas"
+    saved_comparison_notice: "Comparaciones guardadas: valores y referencias originales. Un valor vacío es desconocido. Los avisos delimitan lo comprobado; una referencia no demuestra que se conserven los bytes del documento."
+    record: "Reconciliación"
+    date: "Fecha"
+    verdict: "Resultado de la comparación"
+    modelo: "Modelo"
+    year: "Ejercicio"
+    period: "Periodo"
+    registry_revision: "Revisión normativa guardada"
+    work_unit: "Trabajo"
+    calculation_revision: "Cálculo guardado"
+    evidence_kind: "Tipo de evidencia"
+    evidence_reference: "Referencia de evidencia"
+    actor: "Responsable"
+    difference_count: "Diferencias"
+    advisory_count: "Avisos"
+    difference_kind: "Tipo de diferencia"
+    field: "Campo o casilla"
+    saved_value: "Valor del cálculo guardado"
+    evidence_value: "Valor de la evidencia"
+    difference_reason: "Motivo de la diferencia"
+    legal_refs: "Referencias legales"
+    source_refs: "Fuentes oficiales"
+    advisory_code: "Código de aviso"
+    advisory: "Aviso"
+    context: "Contexto"
+    record_identity: "Identidad completa del registro"
+    verdict_matches: "Los valores coinciden"
+    verdict_mismatches: "Hay diferencias"
+    evidence_kind_justificante: "Justificante"
+    evidence_kind_declaration: "Declaración presentada"
+    difference_kind_header_field: "Identidad del justificante"
+    difference_kind_total: "Total presentado"
+    difference_kind_casilla: "Valor de casilla"

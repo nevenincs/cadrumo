@@ -24,6 +24,8 @@ from datetime import datetime
 from pydantic import NonNegativeInt
 
 from ...application.modelo.reconciliation_records import (
+    ModeloReconciliationAdvisory,
+    ModeloReconciliationDiff,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
@@ -128,6 +130,8 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
     advisory_count: NonNegativeInt = 0
+    diffs: tuple[ModeloReconciliationDiff, ...] = ()
+    advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
     actor: ModeloActorLabel
     reconciled_at: datetime
 

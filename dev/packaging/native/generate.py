@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.config import AuthorityRootSettings, Settings
+from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import (
     PROCESS_ENVIRONMENT,
@@ -328,6 +329,15 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "refusal": StorageRootRefusal.INVALID_PATH_INPUT.value,
         },
         "runtime_exit": runtime_exit_section(),
+        "desktop_defaults": {
+            "webview": STORAGE_TAXONOMY[StorageCategory.DESKTOP_WEBVIEW].subpath,
+            "logs": STORAGE_TAXONOMY[StorageCategory.LOGS].subpath,
+            "log_file": STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath,
+            "log_format": LOG_FILE_FORMAT,
+            "log_max_bytes": Settings.model_fields["cadrumo_log_file_max_bytes"].default,
+            "log_backups": Settings.model_fields["cadrumo_log_file_backup_count"].default,
+            "output_language": Settings.model_fields["cadrumo_output_language"].default,
+        },
     }
     _require_authority_pin()
     package_strings = {

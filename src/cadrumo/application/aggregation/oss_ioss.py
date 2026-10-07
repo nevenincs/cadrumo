@@ -32,11 +32,15 @@ from typing import Annotated, ClassVar
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.hashing import content_hash_hex
 from ...core.i18n.translatable import Translatable as tr
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
 from ...core.time.clock import today_madrid
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -49,6 +53,7 @@ from ...domain.calculations.registry.ledger_oss_bindings import (
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import (
@@ -60,7 +65,11 @@ from ...domain.iva.classification import (
 from ...domain.iva.lookup import lookup_rate
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, IvaRateKind
-from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
+from ..invoices.catalogue_reads_ports import (
+    BucketBoundCatalogueReader,
+    InvoiceCatalogueReadPersistenceError,
+    InvoiceCatalogueReadPorts,
+)
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
@@ -316,6 +325,11 @@ def _exterior_detail_binding_values(
 
 
 _MODELO_369_EXTERIOR_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
+_EXTERIOR_DETAIL_RECORD = "modelo-369-exterior-t36901"
+_EXTERIOR_DETAIL_PREFIX = "3-prestaciones-de-servicios-"
+_EXTERIOR_DETAIL_COLUMNS = frozenset(
+    {"codigo-de-pais-em-de-consumo", "tipo-iva", "tipo-de-iva", "base-imponible", "cuota-iva"}
+)
 
 
 def _exterior_projection_declarations(
@@ -465,18 +479,157 @@ def _assign_exterior_detail_bindings(
     decimal_values: dict[BindingId, Decimal],
     enum_values: dict[BindingId, str],
 ) -> None:
-    """Copy matching generated selector values into their binding channels."""
+    """Require lossless row coverage before copying generated selector values."""
+    targets: dict[str, BindingId] = {}
+    required = fields.keys() | decimals.keys()
     for binding in revision.bindings:
         provider = binding.provider
-        if not isinstance(provider, ManualInputProvider) or provider.record != "modelo-369-exterior-t36901":
+        if not isinstance(provider, ManualInputProvider) or provider.record != _EXTERIOR_DETAIL_RECORD:
             continue
         field = provider.field
-        if field is None:
+        if field is None or field not in required:
             continue
+        if field in targets:
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+        targets[field] = binding.id
+    # An overflowing row has no declared destinations. Refuse the whole
+    # projection instead of silently exporting only its representable prefix.
+    if targets.keys() != required:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    for field, binding_id in targets.items():
         if field in fields:
-            enum_values[binding.id] = fields[field]
+            enum_values[binding_id] = fields[field]
         elif field in decimals:
-            decimal_values[binding.id] = decimals[field]
+            decimal_values[binding_id] = decimals[field]
+
+
+def _exterior_record_slots(revision: ModeloRevision) -> tuple[tuple[BindingId, ...], ...]:
+    """Admit all fixed service slots against the revision's actual wire fields.
+
+    The existing Exterior projection owns these five semantic columns. Row
+    capacity and exact bindings come from the pinned export record, not from
+    the number of observations or the populated prefix of the form.
+    """
+    records = [
+        record
+        for layout in revision.export_layouts
+        for record in layout.records
+        if record.id == _EXTERIOR_DETAIL_RECORD
+    ]
+    bindings = {binding.id: binding for binding in revision.bindings}
+    rows: dict[int, dict[str, BindingId]] = {}
+    seen: set[BindingId] = set()
+    if len(records) != 1 or len(bindings) != len(revision.bindings):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    for field in records[0].fields:
+        if field.binding is None:
+            continue
+        binding = bindings.get(field.binding)
+        if binding is None:
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+        provider = binding.provider
+        if not isinstance(provider, ManualInputProvider) or provider.field is None:
+            continue
+        if not provider.field.startswith(_EXTERIOR_DETAIL_PREFIX):
+            continue
+        column, _, coordinate = provider.field.removeprefix(_EXTERIOR_DETAIL_PREFIX).rpartition("-")
+        if (
+            provider.record != _EXTERIOR_DETAIL_RECORD
+            or provider.offset != field.offset
+            or provider.length != field.length
+            or column not in _EXTERIOR_DETAIL_COLUMNS
+            or not coordinate.isascii()
+            or not coordinate.isdecimal()
+            or coordinate.startswith("0")
+            or field.binding in seen
+        ):
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+        row = rows.setdefault(int(coordinate), {})
+        if column in row:
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+        row[column] = field.binding
+        seen.add(field.binding)
+    declared = {
+        binding.id
+        for binding in revision.bindings
+        if isinstance(binding.provider, ManualInputProvider)
+        and binding.provider.record == _EXTERIOR_DETAIL_RECORD
+        and binding.provider.field is not None
+        and binding.provider.field.startswith(_EXTERIOR_DETAIL_PREFIX)
+    }
+    if (
+        not rows
+        or sorted(rows) != list(range(1, len(rows) + 1))
+        or seen != declared
+        or any(row.keys() != _EXTERIOR_DETAIL_COLUMNS for row in rows.values())
+    ):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    return tuple(tuple(sorted(rows[index].values())) for index in sorted(rows))
+
+
+def _closed_exterior_record_rows(
+    context: CalculationSourceContext,
+    projection: OssIossInvoiceProjection,
+    *,
+    supplied_binding_ids: frozenset[BindingId],
+    operation: PinnedAuthorityOperation,
+) -> tuple[ClosedRecordRowSet, ...]:
+    """Close only this source's services table after a complete bound read."""
+    if (
+        context.revision.id != "esquema-exterior"
+        or context.work_unit_id is None
+        or projection.source_bucket_id != context.bucket_id
+        or projection.catalogue_fingerprint is None
+        or not projection.candidates
+        or not supplied_binding_ids
+    ):
+        return ()
+    revision = context.revision
+    if not revision.export_layouts:
+        # Membership verification also uses the authority's lightweight revision
+        # projection. Hydrate its wire geometry through the same pinned snapshot,
+        # while requiring the binding declarations we already resolved to agree.
+        revision = operation.snapshot(
+            context.modelo,
+            filing_year=context.filing_year,
+            period=context.period.registry_token,
+            revision_id=context.revision.id,
+        ).revision
+        if revision.bindings != context.revision.bindings:
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    slots = _exterior_record_slots(revision)
+    covered = frozenset(binding for row in slots for binding in row)
+    if not supplied_binding_ids.issubset(covered) or any(
+        bool(supplied_binding_ids.intersection(row)) and not set(row).issubset(supplied_binding_ids) for row in slots
+    ):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    return (
+        ClosedRecordRowSet(
+            record_id=_EXTERIOR_DETAIL_RECORD,
+            bucket_id=context.bucket_id,
+            work_unit_id=context.work_unit_id,
+            registry_snapshot_ref=RegistrySnapshotRef(
+                modelo=context.modelo,
+                revision_id=context.revision.id,
+                modelo_year=context.filing_year,
+                period=context.period.registry_token,
+            ),
+            authority_generation=operation.pin().logical_generation,
+            source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+            # The actual profile-local singleton catalogue, not a synthesized
+            # aggregate pretending to be an independently persisted source.
+            source_ref="invoice_catalogue:catalogue",
+            source_fingerprint=projection.catalogue_fingerprint,
+            rows=tuple(
+                RecordRowMembership(
+                    row_index=index,
+                    binding_ids=row,
+                    occupied=bool(supplied_binding_ids.intersection(row)),
+                )
+                for index, row in enumerate(slots, start=1)
+            ),
+        ),
+    )
 
 
 def _candidate_for_invoice_line(
@@ -563,6 +716,8 @@ class OssIossInvoiceProjection(BaseModel):
 
     candidates: tuple[OssIossLedgerCandidate, ...] = ()
     contributing_invoices: tuple[Invoice, ...] = ()
+    source_bucket_id: BucketId | None = Field(default=None, exclude=True, repr=False)
+    catalogue_fingerprint: ContentDigest | None = Field(default=None, exclude=True, repr=False)
 
 
 def project_oss_ioss_invoices_from_repositories(
@@ -597,7 +752,8 @@ def project_oss_ioss_invoices_from_repositories(
         return OssIossInvoiceProjection()
     candidates: list[OssIossLedgerCandidate] = []
     contributing: list[Invoice] = []
-    for invoice in ports.invoice_reader.load():
+    catalogue = ports.invoice_reader.load()
+    for invoice in catalogue:
         if invoice.kind is not InvoiceKind.ISSUED:
             continue
         if not invoice_devengo_in_period(invoice, period=projection_period):
@@ -612,7 +768,15 @@ def project_oss_ioss_invoices_from_repositories(
         if projected:
             candidates.extend(projected)
             contributing.append(invoice)
-    return OssIossInvoiceProjection(candidates=tuple(candidates), contributing_invoices=tuple(contributing))
+    source_bucket_id = (
+        ports.invoice_reader.bucket_id if isinstance(ports.invoice_reader, BucketBoundCatalogueReader) else None
+    )
+    return OssIossInvoiceProjection(
+        candidates=tuple(candidates),
+        contributing_invoices=tuple(contributing),
+        source_bucket_id=source_bucket_id,
+        catalogue_fingerprint=content_hash_hex(catalogue.model_dump(mode="json")) if source_bucket_id else None,
+    )
 
 
 def oss_ioss_candidates_from_repositories(
@@ -737,6 +901,13 @@ class OssIossLedgerSourceResolver:
         """
         try:
             with source_context_operation(context) as indexed_operation:
+                if (
+                    self._candidates is None
+                    and isinstance(self._ports.invoice_reader, BucketBoundCatalogueReader)
+                    and self._ports.invoice_reader.bucket_id is not None
+                    and self._ports.invoice_reader.bucket_id != context.bucket_id
+                ):
+                    raise AggregationValidationError(tr("aggregation.source_mesh.errors.closed_record_rows_unadmitted"))
                 projection = (
                     project_oss_ioss_invoices_from_repositories(
                         period=context.period,
@@ -751,6 +922,17 @@ class OssIossLedgerSourceResolver:
                     context.revision,
                     observations,
                     operation=indexed_operation,
+                )
+                unrouted = unsupported_ledger_oss_observations(context.revision, observations)
+                closed_rows = (
+                    _closed_exterior_record_rows(
+                        context,
+                        projection,
+                        supplied_binding_ids=frozenset(exterior_values) | frozenset(exterior_enum_values),
+                        operation=indexed_operation,
+                    )
+                    if not unrouted
+                    else ()
                 )
         except InvoiceCatalogueReadPersistenceError as exc:
             return storage_degradation_resolution(
@@ -768,7 +950,6 @@ class OssIossLedgerSourceResolver:
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # OSS line whose classification tuple matches no ledger_oss_aggregation
         # binding would otherwise be silently dropped (no-silent-under-declaration).
-        unrouted = unsupported_ledger_oss_observations(context.revision, observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -777,6 +958,7 @@ class OssIossLedgerSourceResolver:
                 **exterior_values,
             },
             enum_binding_values=exterior_enum_values,
+            closed_record_row_sets=closed_rows,
             source_transaction_ids=tuple(
                 sorted({observation.ledger_id.split(":", 1)[0] for observation in observations}),
             ),

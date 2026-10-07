@@ -22,7 +22,7 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ..action_errors import ModeloAggregationBindingError
-from ..calculation_actions import _reject_caller_overrides_of_source_bindings, _source_owned_bound_casilla_ids
+from ..calculation_actions import _reject_caller_overrides_of_source_bindings
 from ..calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from ..calculation_source_policy import CALLER_OVERRIDABLE_CARRY_SOURCES
 
@@ -163,7 +163,6 @@ def test_m390_bienes_inversion_casilla_is_barred_from_operator_override(
     would prove nothing about this casilla in particular.
     """
     barred = "iva.anual.regularizacion-bienes-inversion"
-    assert barred in _source_owned_bound_casilla_ids(m390_revision, _GUARDED_SOURCES)
 
     with pytest.raises(ModeloAggregationBindingError):
         _reject_caller_overrides_of_source_bindings(
@@ -173,7 +172,6 @@ def test_m390_bienes_inversion_casilla_is_barred_from_operator_override(
             caller_casilla_inputs={barred: Decimal("1.00")},
         )
 
-    assert "44" not in _source_owned_bound_casilla_ids(m303_revision, _GUARDED_SOURCES)
     _reject_caller_overrides_of_source_bindings(
         revision=m303_revision,
         owned_sources=_GUARDED_SOURCES,

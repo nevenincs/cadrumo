@@ -44,12 +44,12 @@ def test_walker_projects_declared_year_without_a_false_casilla(snapshot, operati
 
 
 def test_walker_projects_summary_as_readonly_unknown_without_edit_address(snapshot, operation):
-    from cadrumo.application.storage.calc_sheets.tests.test_form_context_fields import _with_summary
+    from cadrumo.application.storage.calc_sheets.tests.test_form_context_fields import snapshot_with_binding_context
 
     snapshot = snapshot.model_copy(
         update={"revision": snapshot.revision.model_copy(update={"form_layouts": (_layout(snapshot),)})}
     )
-    snapshot, _block, _binding = _with_summary(snapshot)
+    snapshot, _block, _binding = snapshot_with_binding_context(snapshot)
     form = _form(snapshot, operation, layout=snapshot.revision.form_layouts[0])
     projected = form.pages[0].sections[0].blocks[0]
     assert isinstance(projected, ModeloFormContextFieldBlock)

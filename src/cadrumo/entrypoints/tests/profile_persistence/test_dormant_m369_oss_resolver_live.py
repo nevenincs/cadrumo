@@ -316,7 +316,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=m369_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
     invoice_repo.save(
         build_invoice_catalogue(
             (
@@ -366,6 +366,15 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     exterior_cuota = validated_casilla_id("iva.exterior.de.services-cuota")
     assert result.revision.input_values_by_casilla_id[period_casilla] == period_token
     assert Decimal(result.revision.casilla_values[exterior_cuota]) == Decimal("19.00")
+    (membership,) = result.revision.closed_record_row_sets
+    assert membership.work_unit_id == work_unit.work_unit_id
+    assert membership.registry_snapshot_ref.period == period_token
+    assert membership.authority_generation == operation.pin().logical_generation
+    assert len(membership.rows) == 28
+    assert sum(row.occupied for row in membership.rows) == 1
+    reloaded = cr_repo.load(operation=operation).get(result.revision.calculation_revision_id)
+    assert reloaded is not None
+    assert reloaded.closed_record_row_sets == (membership,)
     assert all(
         result.revision.binding_overrides[binding] == value for binding, value in _EXTERIOR_DECLARANT_BINDINGS.items()
     )
@@ -381,7 +390,9 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report
-    assert report.granted_verificado_completo is True, report.findings
+    assert report.granted_verificado_completo is True, [
+        (finding.message_locale_key, finding.message_facts) for finding in report.findings
+    ]
 
     output_path = tmp_path / f"modelo-369-{period_token}.txt"
     with bundled_indexed_authority().operation() as operation:

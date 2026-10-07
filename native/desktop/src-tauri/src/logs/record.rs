@@ -1,10 +1,11 @@
 //! Log records, source state, the bounded ring and paced delivery to
 //! subscribers.
 use super::format::Level;
-use cadrumo_application::{error::application::ApplicationError, process::status::ProcessRole};
+use cadrumo_application::error::application::ApplicationError;
 use serde::Serialize;
+use serde_json::Value;
 use std::{
-    collections::VecDeque,
+    collections::{BTreeMap, VecDeque},
     io,
     sync::Arc,
     time::{Duration, Instant},
@@ -20,9 +21,9 @@ pub const BATCH_RECORDS: usize = BACKLOG;
 /// script. A larger backlog spreads over several paced batches.
 pub const BATCH_BYTES: usize = 1024 * 1024;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct ProcessRef {
-    pub role: ProcessRole,
+    pub role: String,
     pub pid: u32,
 }
 
@@ -37,6 +38,7 @@ pub struct Entry {
     pub message: String,
     pub detail: Option<String>,
     pub process: Option<ProcessRef>,
+    pub context: BTreeMap<String, Value>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -51,6 +53,7 @@ pub struct LogRecord {
     pub message: String,
     pub detail: Option<String>,
     pub process: Option<ProcessRef>,
+    pub context: BTreeMap<String, Value>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
@@ -140,6 +143,7 @@ impl Prepared {
             message: entry.message,
             detail: entry.detail,
             process: entry.process,
+            context: entry.context,
         };
         // The placeholder sequence number is one digit.
         let bytes = json_len(&record).saturating_sub(1);
@@ -343,6 +347,7 @@ mod tests {
             message: message.to_owned(),
             detail: None,
             process: None,
+            context: BTreeMap::new(),
         })
     }
 

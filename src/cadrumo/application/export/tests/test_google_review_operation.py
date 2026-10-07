@@ -167,7 +167,10 @@ def _context(request: OperationRequest[BaseModel], operation: PinnedAuthorityOpe
     return value, cast(OperationExecutorContext, cast(object, value)), events, operands, fence, interactions
 
 
-def test_registration_requires_human_and_exact_profile(authority_operation: PinnedAuthorityOperation) -> None:
+@pytest.mark.parametrize("frontend", tuple(OperationFrontendProjection))
+def test_registration_requires_human_and_exact_profile(
+    authority_operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
+) -> None:
     def unused(**kwargs):
         pytest.fail("registration must not acquire credentials")
 
@@ -182,11 +185,16 @@ def test_registration_requires_human_and_exact_profile(authority_operation: Pinn
         profile_id=PROFILE_ID,
         destination_id=uuid4(),
         action=AccessAction.REVIEW,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=authority_operation,
     )
+    if frontend is OperationFrontendProjection.MCP:
+        # The native contract door enforces frontend admission before invoking
+        # this policy resolver; automation must remain excluded there.
+        assert frontend not in registration.contract.permitted_frontends
+        return
     access = resolve_operation_access(registry=registry, request=request, context=context)
     assert access.policy.requires_human and access.policy.requires_all_periods
     assert {item.category for item in access.policy.disclosures} == {
@@ -194,7 +202,53 @@ def test_registration_requires_human_and_exact_profile(authority_operation: Pinn
         DisclosureCategory.TAX_VALUES,
     }
     assert AccessAction.COMMIT in access.policy.actions
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
+    assert definition.permitted_frontends == frozenset(
+        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
+    )
+
+
+def test_optional_filing_selection_preserves_older_request_wire() -> None:
+    request = GoogleReviewRequest(profile_id=PROFILE_ID, calculation_revision_id="c" * 64, publication_id=uuid4())
+    assert "filing_record_id" not in request.model_dump(mode="json")
+    assert GoogleReviewRequest.model_validate_json(request.model_dump_json()) == request
+
+
+@pytest.mark.parametrize("loader_present", [False, True])
+def test_exact_filing_selection_cannot_publish_unrelated_calculation_baseline(
+    authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, loader_present: bool
+) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(PROFILE_ID))
+    monkeypatch.setattr(capabilities, "resolve_active_capability", lambda _: SimpleNamespace(enabled=True))
+    snapshot = acceptance_snapshot()
+    publication = acceptance_publication(snapshot)
+    request = _request(
+        GoogleReviewRequest(
+            profile_id=PROFILE_ID,
+            calculation_revision_id="c" * 64,
+            publication_id=publication.publication_id,
+            filing_record_id="d" * 64,
+        ),
+        GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
+    )
+    _, context, events, _, _, _ = _context(request, authority_operation)
+
+    def unused(*args, **kwargs):
+        pytest.fail("exact filing refusal must precede publication and ordinary calculation selection")
+
+    def factory(*, profile_id, operation):
+        return GoogleReviewOperationPorts(
+            profile_id=profile_id,
+            operation=operation,
+            load_snapshot=unused,
+            load_root=lambda: publication.root,
+            publish=unused,
+            load_publication=lambda _: None,
+            load_filing_snapshot=(lambda revision_id, filing_record_id: snapshot) if loader_present else None,
+        )
+
+    with pytest.raises(ProfileAccessRefusedError):
+        asyncio.run(GoogleReviewExecutor(factory).execute(request, context))
+    assert events.effects == [OperationEffect.NONE]
 
 
 @pytest.mark.parametrize(
@@ -287,7 +341,23 @@ def test_publication_requires_exact_review_and_preserves_effect_truth(
     pending = interactions.pending
     assert pending is not None
     raw.revision = pending.request.revision
-    assert asyncio.run(executor.resume(request, pending, context)) is None
+    if failure is None:
+        foreign = pending.model_copy(
+            update={
+                "request": pending.request.model_copy(
+                    update={"identity": pending.request.identity.model_copy(update={"operation_id": "9" * 64})}
+                )
+            }
+        )
+        events.effects.append(OperationEffect.UNKNOWN)
+        with pytest.raises(ProfileAccessRefusedError):
+            asyncio.run(executor.resume(request, foreign, context))
+        assert events.effects.pop() is OperationEffect.UNKNOWN
+        assert calls == []
+    with pytest.raises(ProfileAccessRefusedError) as lost_owner:
+        asyncio.run(executor.resume(request, pending, context))
+    assert lost_owner.value.reason.value == "response_authority_required"
+    assert calls == [] and events.effects[-1] is OperationEffect.NONE
     applied = pending.consume(
         OperationApplyResponse(
             interaction_id=pending.request.interaction_id,

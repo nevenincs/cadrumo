@@ -93,6 +93,9 @@ export function scenarioHost(
 ): Host {
   const say = (call: string) => options.onCall?.(call);
   let presence = scenario.signIn.status.state;
+  let runtimeAvailable = scenario.signIn.status.runtimeAvailable;
+  let managerDispatched = scenario.manager?.autoDispatched ?? false;
+  let managerReads = 0;
   let clipboard = "";
 
   // The profiles of this made-up computer, and the one that is selected.
@@ -119,7 +122,26 @@ export function scenarioHost(
     ...scenario.signIn.status,
     state: presence,
     active_profile: active,
+    runtimeAvailable,
   });
+
+  const manager = scenario.manager;
+  const managerCommand: Pick<Host, "startManager"> = manager
+    ? {
+        async startManager() {
+          say("startManager");
+          if (manager.result === "pending") return never();
+          await wait(manager.delayMs ?? options.latencyMs);
+          if (typeof manager.result === "object")
+            throw failure(manager.result.code, "launch");
+          if (manager.result === "dispatched") {
+            managerDispatched = true;
+            managerReads = 0;
+          }
+          return manager.result;
+        },
+      }
+    : {};
 
   const profiles: ProfileAccounts = {
     async list() {
@@ -203,6 +225,7 @@ export function scenarioHost(
     available: true,
     ...(scenario.views === "none" ? {} : { views }),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
+    ...managerCommand,
     // The shell draws its own menu here; the native popup is not simulated.
     nativeMenus: false,
 
@@ -222,6 +245,27 @@ export function scenarioHost(
       if (scenario.signIn.statusPending) return never();
       if (scenario.signIn.statusFailure)
         return Promise.reject(failure(scenario.signIn.statusFailure, "cli"));
+      if (managerDispatched && manager?.statusFailureAfterDispatch) {
+        say("managerStatusRejected");
+        return Promise.reject(
+          failure(manager.statusFailureAfterDispatch, "cli"),
+        );
+      }
+      if (
+        managerDispatched &&
+        manager?.readyAfterReads !== undefined &&
+        ++managerReads >= manager.readyAfterReads
+      ) {
+        runtimeAvailable = true;
+        presence = "absent";
+        if (manager.readyReadDelayMs !== undefined) {
+          const ready = status();
+          return wait(manager.readyReadDelayMs).then(() => {
+            say("managerReadinessResolved");
+            return ready;
+          });
+        }
+      }
       return Promise.resolve(status());
     },
 

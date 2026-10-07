@@ -38,22 +38,23 @@ function python(
   message: string,
   detail: string | null = null,
 ): LogRecord {
-  const at = new Date(START_MS + offsetMs);
-  const two = (value: number) => String(value).padStart(2, "0");
-  const timestamp =
-    `${at.getUTCFullYear()}-${two(at.getUTCMonth() + 1)}-${two(at.getUTCDate())} ` +
-    `${two(at.getUTCHours())}:${two(at.getUTCMinutes())}:${two(at.getUTCSeconds())},` +
-    String(at.getUTCMilliseconds()).padStart(3, "0");
+  const timestampMs = START_MS + offsetMs;
   return {
     seq,
     source: "python",
-    timestamp,
-    timestampMs: null,
+    timestamp: new Date(timestampMs).toISOString(),
+    timestampMs,
     level,
     logger,
     message,
     detail,
-    process: null,
+    process: { role: "tui", pid: 4208 },
+    context: {
+      process_id: 4208,
+      process_role: "tui",
+      diagnostic_id: `fixture-attempt-${seq}`,
+      outcome: level === "ERROR" ? "failed" : "ready",
+    },
   };
 }
 
@@ -76,6 +77,7 @@ function host(
     message,
     detail: null,
     process: { role, pid },
+    context: {},
   };
 }
 
@@ -124,6 +126,7 @@ export const FIXTURE_RECORDS: readonly LogRecord[] = [
     message: "A source this shell does not name still renders by its name",
     detail: null,
     process: null,
+    context: {},
   },
   python(
     9,
@@ -161,6 +164,19 @@ export const FIXTURE_RECORDS: readonly LogRecord[] = [
     message: "A line the format did not match: no timestamp, level or logger",
     detail: null,
     process: null,
+    context: {},
+  },
+  {
+    seq: 15,
+    source: "python",
+    timestamp: "2026-03-02 09:14:10,000",
+    timestampMs: null,
+    level: "INFO",
+    logger: "cadrumo.legacy",
+    message: "An older timestamp has no recorded timezone",
+    detail: null,
+    process: null,
+    context: {},
   },
 ];
 

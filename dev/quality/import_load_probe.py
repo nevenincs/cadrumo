@@ -13,6 +13,7 @@ from collections.abc import Mapping, Set
 from pathlib import Path
 from typing import Final, cast
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.tests.module_target_inventory import (
     assert_all_target_sets_current,
@@ -278,7 +279,7 @@ def write_load_target_inventory(authority: Authority) -> tuple[Path, ...]:
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     for path, payload in documents.items():
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding=UTF_8, newline="\n")
+        atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding=UTF_8)
     return tuple(documents)
 
 

@@ -6,7 +6,8 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
-from textual.widgets import DataTable, Static
+from textual.screen import Screen
+from textual.widgets import Button, DataTable, Static
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
@@ -283,3 +284,37 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
         await pilot.pause()
         assert str(detail.render()) == ""
         assert geometry_band(screen.app, 80) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "button_id", ["filing-history-export", "filing-history-reconcile-export", "filing-history-google-review"]
+)
+async def test_history_export_buttons_dispatch_the_exact_selected_filing(
+    authority_operation: PinnedAuthorityOperation, button_id: str
+) -> None:
+    projection = _chain_projection(authority_operation)
+    controller = _controller(projection)
+    selected = []
+
+    def factory(row):
+        selected.append(row)
+        return Screen()
+
+    controller.filing_google_review_factory = factory
+    controller.filing_export_factory = factory
+    controller.reconciliation_export_factory = factory
+    screen = DeclarationsFilingHistoryScreen(controller)
+    async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
+        await pilot.pause()
+        table = screen.query_one("#declarations-filings", DataTable)
+        button = screen.query_one(f"#{button_id}", Button)
+        assert button.disabled
+        historical = next(row for row in projection.filings if row.declaration_kind is FilingDeclarationKind.ORIGINAL)
+        table.move_cursor(row=table.get_row_index(f"filing:{historical.filing_record_id}"))
+        await pilot.pause()
+        assert not button.disabled
+        button.press()
+        await pilot.pause()
+        assert selected == [historical]
+        assert selected[0].calculation_revision_id == historical.calculation_revision_id

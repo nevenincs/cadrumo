@@ -149,6 +149,7 @@ class FormulaExpression(RegistryModel):
     date_binding: BindingId | None = None
     parameter: ParameterId | None = None
     literal: DecimalValue | None = None
+    text_literal: str | None = Field(default=None, min_length=1, max_length=256)
     dispatch_table: Annotated[Mapping[str, ParameterId], FROZEN_MAPPING] | None = None
 
     @model_validator(mode="before")
@@ -176,6 +177,7 @@ class FormulaExpression(RegistryModel):
             self.date_binding is not None,
             self.parameter is not None,
             self.literal is not None,
+            self.text_literal is not None,
             self.dispatch_table is not None,
         ]
         if self.op is None:
@@ -189,6 +191,14 @@ class FormulaExpression(RegistryModel):
         if sum(populated_leaves):
             raise RegistryValidationError("formula operator must not declare leaf sources")
         require_formula_operator_arity(self.op, len(self.args))
+        if self.op == "text_equal" and any(
+            arg.binding is None and arg.casilla_id is None and arg.text_literal is None for arg in self.args
+        ):
+            raise RegistryValidationError("text_equal requires binding, casilla, or text_literal leaves")
+        if self.op != "text_equal" and any(arg.text_literal is not None for arg in self.args):
+            raise RegistryValidationError("text_literal may only be an operand of text_equal")
+        if self.op == "record_row_unused" and self.args[0].binding is None:
+            raise RegistryValidationError("record_row_unused requires one binding leaf")
         return self
 
 

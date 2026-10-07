@@ -13,6 +13,78 @@ modelo:
           amb excepció de les realitzades en aquest territori.
         title: IVA. Sol·licitud de devolució de l'IVA suportat en altres estats membres
           (8a Directiva)
+      form:
+        authored:
+          actividades:
+            heading: Activitats
+          anexos:
+            heading: 7. Annexos
+          apartado:
+            heading: Apartat de correus a Espanya
+          banco:
+            heading: 6. Dades bancàries
+          bienes:
+            heading: Naturalesa dels béns i serveis adquirits
+          codigo:
+            heading: Codi
+          descripcion:
+            heading: Descripció
+          devolucion:
+            heading: 4. Devolució sol·licitada
+          domicilio:
+            heading: Domicili a Espanya
+          establecimiento:
+            heading: Àmbit d’establiment
+          extranjero:
+            heading: Adreça a l’estranger
+          fila-1:
+            heading: '1'
+          fila-10:
+            heading: '10'
+          fila-2:
+            heading: '2'
+          fila-3:
+            heading: '3'
+          fila-4:
+            heading: '4'
+          fila-5:
+            heading: '5'
+          fila-6:
+            heading: '6'
+          fila-7:
+            heading: '7'
+          fila-8:
+            heading: '8'
+          fila-9:
+            heading: '9'
+          idioma:
+            heading: Idioma
+          nif:
+            heading: NIF del sol·licitant
+          nombre:
+            heading: Cognoms i nom o denominació social
+          operacion-1:
+            heading: Operació 1
+          operacion-2:
+            heading: Operació 2
+          operaciones:
+            heading: Operacions
+          pagina1:
+            heading: Sol·licitud i sol·licitant
+          pagina2:
+            heading: Representant, devolució i annexos
+          prorrata:
+            heading: 5. Modificació de la prorrata de l’any anterior
+          proveedor:
+            heading: Proveïdor de béns o prestador de serveis
+          registro:
+            heading: Número de registre
+          representante:
+            heading: 3. Representant
+          solicitante:
+            heading: 2. Sol·licitant
+          solicitud:
+            heading: 1. País, exercici i causa de presentació
       revision:
         2010-y-siguientes:
           casilla:

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ....core.filing_projection_ref import (
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
+)
 from ..export_field_kind import CasillaFieldKind
 from .binding_value_contract import BindingValueChannel
 from .errors import RegistryValidationError
@@ -9,7 +13,7 @@ from .export import derive_export_layouts_from_bindings
 from .export_semantics import ExportDraftAttribute
 from .schema import ModeloRevision
 from .schema_exports import ExportFieldDefinition
-from .schema_form_layouts import FormContextFieldBlock
+from .schema_form_layouts import FormContextFieldBlock, FormFieldChoice
 
 
 def resolve_form_context_field(revision: ModeloRevision, block: FormContextFieldBlock) -> ExportFieldDefinition:
@@ -28,6 +32,13 @@ def resolve_form_context_field(revision: ModeloRevision, block: FormContextField
     record, field = matches[0]
     if record.repeat is not None:
         raise RegistryValidationError("scalar form context cannot address a repeating export record")
+    if block.choices and (
+        field.kind is not CasillaFieldKind.HEADER
+        or field.producer_key is None
+        or not field.allowed_values
+        or {choice.value for choice in block.choices} != set(field.allowed_values)
+    ):
+        raise RegistryValidationError("context choices must cover the exact closed domain of a header producer")
     if field.kind is CasillaFieldKind.BINDING:
         bindings = [binding for binding in revision.bindings if binding.id == field.binding]
         if len(bindings) != 1 or bindings[0].value.channel is BindingValueChannel.ROW_SET:
@@ -37,6 +48,11 @@ def resolve_form_context_field(revision: ModeloRevision, block: FormContextField
         return field
     if field.kind is CasillaFieldKind.HEADER and field.producer_key is not None:
         return field
+    if field.kind is CasillaFieldKind.PROJECTION and isinstance(
+        field.projection_ref,
+        (M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef),
+    ):
+        return field
     if field.kind is CasillaFieldKind.DRAFT and field.draft_attribute in (
         ExportDraftAttribute.FILING_YEAR,
         ExportDraftAttribute.PERIOD_CODE,
@@ -45,3 +61,14 @@ def resolve_form_context_field(revision: ModeloRevision, block: FormContextField
     ):
         return field
     raise RegistryValidationError("form context requires a filing producer or supported filing coordinate")
+
+
+def form_context_choice(block: FormContextFieldBlock, value: object) -> FormFieldChoice | None:
+    """Select only an explicitly declared code; missing facts remain unknown."""
+    if not block.choices or value is None:
+        return None
+    if isinstance(value, str) or (isinstance(value, int) and not isinstance(value, bool)):
+        for choice in block.choices:
+            if choice.value == str(value):
+                return choice
+    raise RegistryValidationError("form context value is outside its declared choice domain")

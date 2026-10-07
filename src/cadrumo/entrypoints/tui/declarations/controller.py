@@ -155,6 +155,9 @@ class DeclarationsWorkspaceController:
         self.modelo_workspace_factory = wiring.modelo_workspace_factory
         self.revision_handoff = wiring.revision_handoff
         self.filing_handoff = wiring.filing_handoff
+        self.filing_export_factory = wiring.filing_export_factory
+        self.filing_google_review_factory = wiring.filing_google_review_factory
+        self.reconciliation_export_factory = wiring.reconciliation_export_factory
         if (
             wiring.calendar_projection is not None
             and wiring.calendar_projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION

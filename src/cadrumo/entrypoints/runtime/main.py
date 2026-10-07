@@ -38,6 +38,7 @@ from ...application.runtime.login import RuntimeLoginInventory
 from ...core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures, has_async_cleanup_failure
 from ...core.child_console import isolate_child_consoles
 from ...core.config import load_settings, override_settings
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
 from ...core.logging import configure_logging, get_logger
 from ...core.startup_phase_log import startup_phase
 from ...domain.calculations.registry.authority import published_authority_generation
@@ -90,8 +91,6 @@ def _supervised_token_refused() -> bool:
 
 
 def _configure_runtime_logging(root: Path) -> None:
-    if sys.platform != "win32":
-        return
     # Respect explicit operator routing. Only handler creation sees the fallback
     # after native owner/root verification.
     settings = load_settings()
@@ -259,6 +258,32 @@ def _run_runtime_owner(
 
 def run(arguments: list[str] | None = None) -> int:
     """Run one user/root owner with independent profile admission; return its exit reason code."""
+    with diagnostic_process("runtime"), diagnostic_scope():
+        diagnostic_event(_LOGGER, "runtime_process_started")
+        try:
+            exit_code = _run_process(arguments)
+        except BaseException as error:
+            diagnostic_event(
+                _LOGGER,
+                "runtime_process_failed",
+                fields={
+                    **diagnostic_error_fields(error),
+                    "outcome": "failed",
+                    "reason_code": "unexpected_runtime_failure",
+                },
+                level=40,
+                primary_error=error,
+            )
+            raise
+        diagnostic_event(
+            _LOGGER,
+            "runtime_process_exited",
+            fields={"exit_code": exit_code, "outcome": "exited"},
+        )
+        return exit_code
+
+
+def _run_process(arguments: list[str] | None) -> int:
     options = parse_runtime_arguments(arguments)
     _accept_console_interrupts()
     stop = RuntimeStop()
@@ -292,6 +317,13 @@ def _run_runtime(options: argparse.Namespace, stop: RuntimeStop, supervision: Su
     try:
         return int(_run_runtime_owner(options, stop, previous, supervision))
     except RuntimeRefusalError as error:
+        diagnostic_event(
+            _LOGGER,
+            "runtime_owner_refused",
+            fields={**diagnostic_error_fields(error), "reason_code": error.reason.value, "outcome": "refused"},
+            level=30,
+            primary_error=error,
+        )
         if sys.platform == "win32" and has_async_cleanup_failure(error):
             raise
         sys.stderr.write(error.reason.value + "\n")

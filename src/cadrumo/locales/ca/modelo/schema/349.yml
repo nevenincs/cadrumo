@@ -10,6 +10,53 @@ modelo:
           d'operacions intracomunitàries.
         title: Declaració recapitulativa d'operacions intracomunitàries
       form:
+        authored:
+          base:
+            heading: Base imposable o import
+          base-anterior:
+            heading: Base imposable declarada anteriorment
+          base-rectificada:
+            heading: Base imposable rectificada
+          clave:
+            heading: Clau d’operació
+          contacto:
+            heading: Persona i telèfon de contacte
+          contacto-nombre:
+            heading: Persona de contacte
+          contacto-telefono:
+            heading: Telèfon de contacte
+          declaracion:
+            heading: Declaració complementària o substitutiva
+          ejercicio:
+            heading: Exercici
+          identificacion:
+            heading: Declarant
+          nif:
+            heading: NIF del declarant
+          nif-comunitario:
+            heading: NIF comunitari
+          nombre:
+            heading: Cognoms i nom o raó social
+          operaciones:
+            heading: Relació d’operacions intracomunitàries
+          operador-nombre:
+            heading: Cognoms i nom o raó social de l’operador
+          pais:
+            heading: Codi país
+          period-code:
+            heading: Període
+          periodo:
+            heading: Exercici i període
+          rectificaciones:
+            heading: Rectificacions de períodes anteriors
+          resumen:
+            heading: Full resum
+          resumen-importes:
+            heading: Resum de les dades incloses a la declaració
+          sustituto-nif:
+            heading: NIF del destinatari final substitut
+          sustituto-nombre:
+            heading: Nom del destinatari final substitut
         column:
           op-apellidos-razon-social:
             heading: Cognoms i nom o raó social de l'operador intracomunitari

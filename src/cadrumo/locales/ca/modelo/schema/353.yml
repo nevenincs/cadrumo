@@ -202,7 +202,22 @@ modelo:
               del grup
           iva-resultado-regimen-general:
             label: Resultat del grup (quota meritada agregada - quota deduïble agregada)
+          m353-importe-compensar:
+            help: Import declarat en aquest apartat. No es dedueix automàticament
+              del resultat.
+            label: Import a compensar
+          m353-importe-devolver:
+            help: Import declarat en aquest apartat. No es dedueix automàticament
+              del resultat.
+            label: Import a retornar
+          m353-importe-ingreso:
+            help: Import declarat en aquest apartat. No es dedueix automàticament
+              del resultat.
+            label: Import de l’ingrés
       construct:
+        modelo-353-importes-papel:
+          field:
+            title: Imports de compensació, ingrés i devolució
         modelo-353-iva-grupo-agregado:
           field:
             title: 'Model 353: autoliquidació mensual agregada del grup d''entitats
@@ -211,6 +226,96 @@ modelo:
         official_name: Modelo 353. Impost sobre el Valor Afegit. Grup d'entitats.
           Model agregat. Autoliquidació mensual.
         title: IVA. Grup d'entitats. Model agregat. Autoliquidació mensual
+      form:
+        authored:
+          avanzado:
+            heading: Règim especial avançat (art. 163 sexies.Cinc LIVA)
+          bic:
+            heading: Codi SWIFT-BIC
+          compensacion:
+            heading: Compensació
+          complementaria:
+            heading: Autoliquidació complementària
+          devengo:
+            heading: Meritació
+          devolucion:
+            heading: Devolució
+          dominante:
+            heading: Entitat dominant
+          entidad-1:
+            heading: Entitat dependent 1
+          entidad-10:
+            heading: Entitat dependent 10
+          entidad-11:
+            heading: Entitat dependent 11
+          entidad-12:
+            heading: Entitat dependent 12
+          entidad-13:
+            heading: Entitat dependent 13
+          entidad-14:
+            heading: Entitat dependent 14
+          entidad-15:
+            heading: Entitat dependent 15
+          entidad-16:
+            heading: Entitat dependent 16
+          entidad-17:
+            heading: Entitat dependent 17
+          entidad-18:
+            heading: Entitat dependent 18
+          entidad-19:
+            heading: Entitat dependent 19
+          entidad-2:
+            heading: Entitat dependent 2
+          entidad-20:
+            heading: Entitat dependent 20
+          entidad-3:
+            heading: Entitat dependent 3
+          entidad-4:
+            heading: Entitat dependent 4
+          entidad-5:
+            heading: Entitat dependent 5
+          entidad-6:
+            heading: Entitat dependent 6
+          entidad-7:
+            heading: Entitat dependent 7
+          entidad-8:
+            heading: Entitat dependent 8
+          entidad-9:
+            heading: Entitat dependent 9
+          entidades:
+            heading: Entitats del grup que tributen en el règim especial
+          foral:
+            heading: Grup sotmès a normativa foral
+          grupo:
+            heading: Número de grup
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Identificació
+          ingreso:
+            heading: Ingrés
+          justificante:
+            heading: Número de justificant del model 322
+          justificante-anterior:
+            heading: Número de justificant de l’autoliquidació anterior
+          liquidacion:
+            heading: Liquidació
+          nif:
+            heading: NIF
+          nombre:
+            heading: Raó o denominació social
+          page1:
+            heading: Grup d’entitats · Liquidació
+          page2:
+            heading: Compensació, ingrés i devolució
+          participacion:
+            heading: '% de participació al final del període'
+          redeme:
+            heading: Inscripció en el Registre de devolució mensual
+          resultado-entidad:
+            heading: Resultat (casella 68 del model 322)
+          sin-actividad:
+            heading: Sense activitat
       revision:
         2021-hasta-2026-01:
           casilla:

@@ -13,10 +13,11 @@
 //! platform's default sharing, so it never blocks a writer's rename.
 use super::{
     format::LinePattern,
-    record::{BATCH_BYTES, Entry, LogSourceState, SourceKind},
+    record::{BATCH_BYTES, Entry, LogSourceState, ProcessRef, SourceKind},
 };
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
 use std::{
+    collections::BTreeMap,
     fs::{self, File},
     io::{self, Read, Seek, SeekFrom},
     path::{Path, PathBuf},
@@ -50,28 +51,38 @@ struct Draft {
     message: String,
     detail: String,
     detail_lines: bool,
+    context: BTreeMap<String, serde_json::Value>,
 }
 
 impl Draft {
     fn entry(self) -> Entry {
+        let timestamp_ms = super::timestamp::milliseconds(&self.timestamp);
+        let process = self
+            .context
+            .get("process_id")
+            .and_then(serde_json::Value::as_u64)
+            .and_then(|pid| u32::try_from(pid).ok())
+            .zip(
+                self.context
+                    .get("process_role")
+                    .and_then(serde_json::Value::as_str),
+            )
+            .map(|(pid, role)| ProcessRef {
+                role: role.to_owned(),
+                pid,
+            });
         Entry {
             source: "python",
             timestamp: self.timestamp,
-            // asctime is local wall time without an offset.
-            timestamp_ms: python_timestamp_ms(),
+            timestamp_ms,
             level: self.level,
             logger: self.logger,
             message: self.message,
             detail: self.detail_lines.then_some(self.detail),
-            process: None,
+            process,
+            context: self.context,
         }
     }
-}
-
-/// The epoch milliseconds of a Python `asctime`. The configured format
-/// records local wall time with no UTC offset, so it has no single instant.
-fn python_timestamp_ms() -> Option<u64> {
-    None
 }
 
 /// Polls that may defer a new file while the current one is hidden.
@@ -154,6 +165,7 @@ impl Tracked {
                     message: head.message.to_owned(),
                     detail: String::new(),
                     detail_lines: false,
+                    context: head.context,
                 });
             }
             None if self.resync => {}
@@ -177,6 +189,7 @@ impl Tracked {
                         message: text.into_owned(),
                         detail: String::new(),
                         detail_lines: false,
+                        context: BTreeMap::new(),
                     });
                 }
             },

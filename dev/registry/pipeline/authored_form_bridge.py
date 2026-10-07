@@ -23,6 +23,7 @@ from ..form_layout.reconciliation import (
     reconcile_unreferenced_export_producers,
 )
 from ..form_layout.row_binding_reconciliation import reconcile_export_row_bindings
+from ..form_layout.scalar_source_reconciliation import reconcile_scalar_export_sources
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from ..registry_collapse_fingerprints import fingerprint_tree
 from ._form_layout_companion import _editable_form_layout_fragment
@@ -58,6 +59,7 @@ class AuthoredFormBridge:
     clearance: ExportClearanceRetirement | None = None
     casilla_splits: bool = False
     row_bindings: bool = False
+    scalar_sources: dict[str, tuple[str, str]] | None = None
 
     def require_dependencies(self, *, transaction_backup: Path | None = None, finalized: bool = False) -> None:
         """Reject source or interpreter changes since complete prevalidation."""
@@ -112,6 +114,7 @@ class AuthoredFormBridge:
             unreferenced_producers=self.unreferenced_producers,
             casilla_splits=self.casilla_splits,
             row_bindings=self.row_bindings,
+            scalar_sources=self.scalar_sources,
         )
         if self.clearance is not None:
             self.clearance.install(self.registry_root / "modelos" / self.modelo)
@@ -129,11 +132,12 @@ def prepare_authored_form_bridge(
     unreferenced_producers: bool = False,
     casilla_splits: bool = False,
     row_bindings: bool = False,
+    scalar_sources: bool = False,
 ) -> AuthoredFormBridge:
     """Reconcile one first-export candidate and validate the complete future tree."""
-    if sum((unreferenced_producers, casilla_splits, row_bindings)) > 1:
+    if sum((unreferenced_producers, casilla_splits, row_bindings, scalar_sources)) > 1:
         raise RegistryValidationError("choose one authored form reconciliation mode")
-    replacing = unreferenced_producers or casilla_splits or row_bindings
+    replacing = unreferenced_producers or casilla_splits or row_bindings or scalar_sources
     require_existing_non_link(candidate_root, subject="authored form candidate")
     if candidate_root.resolve() == registry_root.resolve() or not candidate_root.resolve().is_relative_to(
         temporary_root.resolve()
@@ -153,8 +157,30 @@ def prepare_authored_form_bridge(
     # The pipeline candidate may detach storage ancestry for isolated rendering.
     # Compare the actual future chain so no lineage or family metadata is waived.
     after = load_modelo_directory(overlay / "modelos" / modelo).revisions[revision]
+    replacements = None
+    if scalar_sources:
+        old_fields = {
+            str(field.id): field
+            for layout in before.export_layouts
+            for record in layout.records
+            for field in record.fields
+        }
+        # The reviewed semantic mapping has already rendered these endpoints.
+        # Capture exact old/new identities for the independent form-owner finish.
+        replacements = {
+            str(field.id): (str(old.binding), str(field.casilla_id))
+            for layout in after.export_layouts
+            for record in layout.records
+            for field in record.fields
+            if (old := old_fields.get(str(field.id))) is not None
+            and old.kind.value == "binding"
+            and field.kind.value == "casilla"
+            and field.casilla_id is not None
+        }
     reconciled = (
-        reconcile_export_row_bindings(before, after)
+        reconcile_scalar_export_sources(before, after, replacements=replacements)
+        if replacements is not None
+        else reconcile_export_row_bindings(before, after)
         if row_bindings
         else reconcile_export_casilla_splits(before, after)
         if casilla_splits
@@ -201,6 +227,7 @@ def prepare_authored_form_bridge(
         clearance,
         casilla_splits,
         row_bindings,
+        replacements,
     )
     bridge.require_dependencies()
     target_changed = (

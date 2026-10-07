@@ -91,7 +91,16 @@ def build_number_format_requests(
                         "userEnteredFormat": {
                             "numberFormat": {
                                 "type": _NUMBER_FORMAT_TYPE[number_format.data_type],
-                                "pattern": number_format.pattern,
+                                # Sheets always renders a declared decimal point,
+                                # even when every fractional '#' disappears. Keep
+                                # the canonical twelve-digit capacity but require
+                                # one fractional digit for zero and whole numbers.
+                                "pattern": (
+                                    "#,##0.0###########"
+                                    if number_format.data_type == "decimal"
+                                    and number_format.pattern == "#,##0.############"
+                                    else number_format.pattern
+                                ),
                             },
                         },
                     },
@@ -287,6 +296,21 @@ def build_form_geometry_requests(
                 }
             }
         )
+    for hidden in plan.hidden_rows:
+        requests.append(
+            {
+                "updateDimensionProperties": {
+                    "range": {
+                        "sheetId": sheet_id_by_tab[hidden.tab.value],
+                        "dimension": "ROWS",
+                        "startIndex": hidden.row - 1,
+                        "endIndex": hidden.row,
+                    },
+                    "properties": {"hiddenByUser": True},
+                    "fields": "hiddenByUser",
+                }
+            }
+        )
     form_id = sheet_id_by_tab.get(TabName.FORM.value)
     if TabName.FORM in plan.tabs and form_id is not None:
         requests.append(
@@ -417,6 +441,8 @@ def build_grid_resize_requests(
         bump(region.tab.value, region.end_row, region.end_column)
     for height in plan.row_heights:
         bump(height.tab.value, height.row, 1)
+    for hidden in plan.hidden_rows:
+        bump(hidden.tab.value, hidden.row, 1)
     bump("Guía", 1 + len(plan.guide.paragraphs) + 10, 4)
     for row_set in plan.row_sets:
         bump(row_set.tab.value, row_set.first_data_row + 50, len(row_set.columns))

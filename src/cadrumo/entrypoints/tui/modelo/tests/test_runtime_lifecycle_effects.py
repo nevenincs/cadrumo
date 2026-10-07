@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime
 from functools import lru_cache
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 from uuid import UUID, uuid4
@@ -12,6 +13,10 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.application.export.calculation_review_xlsx_operation import (
+    CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
+    CalculationReviewXlsxRequest,
+)
 from cadrumo.application.modelo.export_projection import (
     ModeloCalculationReportPublicReceipt,
     ModeloExportCompleteness,
@@ -43,8 +48,16 @@ from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRef
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
+from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
+from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
+from cadrumo.core.refund_election import RefundElection
 from cadrumo.entrypoints.tui.modelo import runtime_lifecycle
 from cadrumo.entrypoints.tui.modelo.lifecycle import (
     ModeloLifecycleActionUnavailableError,
@@ -86,6 +99,41 @@ def test_lifecycle_start_transport_failure_keeps_submitted_identity_and_unknown_
         "operation_id": _OPERATION_ID,
         "effect": OperationEffect.UNKNOWN.value,
     }
+
+
+def test_saved_review_choice_submits_profile_operation_with_exact_saved_revision(tmp_path: Path) -> None:
+    profile_id = UUID("5aa00000-0000-4000-8000-0000000000aa")
+    requests = []
+    controller = _StartFailureController()
+
+    async def submit(request):
+        requests.append(request)
+        return controller
+
+    door = ModeloWorkspaceLifecycleDoor(
+        work_unit_id=_WORK_UNIT_ID,
+        calculation_revision_id="c" * 64,
+        profile_id=profile_id,
+        submit_operation=cast(Any, submit),
+    )
+    output = tmp_path / "draft.xlsx"
+    with pytest.raises(ModeloLifecycleActionUnavailableError):
+        asyncio.run(
+            door.export(
+                output_path=str(output),
+                artefact=ModeloExportArtefact.CALCULATION_REVIEW_XLSX,
+                refund_election=RefundElection.COMPENSAR,
+                payment_election=PaymentElection.INGRESO,
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            )
+        )
+    (request,) = requests
+    assert request.definition_id == CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID
+    assert request.subject_ref == profile_operation_subject(str(profile_id))
+    assert isinstance(request.payload, CalculationReviewXlsxRequest)
+    assert request.payload.profile_id == profile_id
+    assert request.payload.calculation_revision_id == "c" * 64
+    assert request.payload.output_path == str(output)
 
 
 @lru_cache(maxsize=1)

@@ -19,10 +19,16 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from uuid import UUID
 
 from pydantic import BaseModel
 
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....application.export.calculation_review_xlsx_operation import (
+    CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
+    CalculationReviewXlsxRequest,
+    CalculationReviewXlsxResult,
+)
 from ....application.modelo.action_errors import modelo_edit_refusal_error
 from ....application.modelo.edit_admission import ModeloEditRenewalResultV1
 from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
@@ -57,12 +63,12 @@ from ....application.modelo.work_verification_contracts import ModeloWorkVerifyR
 from ....application.modelo.workbench_operations import ModeloEditApplyPrerequisiteV1
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.models import OperationRequest
-from ....application.runtime.contracts import RuntimeRefusalError
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language
 from ....core.modelo_export_artefact import ModeloExportArtefact
-from ....core.operations import OperationEffect, OperationTerminalCondition
+from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
@@ -97,6 +103,8 @@ class ModeloWorkspaceLifecycleDoor:
     asks_modelo_390: bool = False
     #: Reads one settled export's public result through the same runtime session.
     read_export_result: Callable[[OperationPublicProjectionV1], Awaitable[ModeloExportPublicResultV3]] | None = None
+    profile_id: UUID | None = None
+    read_review_result: Callable[[OperationPublicProjectionV1], Awaitable[CalculationReviewXlsxResult]] | None = None
 
     async def calculate(
         self,
@@ -246,6 +254,24 @@ class ModeloWorkspaceLifecycleDoor:
         AEAT-compatible filing file so a caller that offers no choice submits the
         export this door always submitted.
         """
+        if artefact is ModeloExportArtefact.CALCULATION_REVIEW_XLSX:
+            if self.profile_id is None:
+                raise ModeloLifecycleActionUnavailableError(
+                    translated_message="application.modelo.lifecycle.refusal.edit_unavailable"
+                )
+            return await self._submit(
+                OperationRequest(
+                    definition_id=CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
+                    subject_ref=profile_operation_subject(str(self.profile_id)),
+                    payload=CalculationReviewXlsxRequest(
+                        profile_id=self.profile_id,
+                        calculation_revision_id=self._require_calculation_revision(),
+                        output_path=str(Path(output_path).resolve()),
+                        replace_existing=replace_existing,
+                        report_language=OutputLanguage(output_language()),
+                    ),
+                )
+            )
         return await self._submit(
             OperationRequest(
                 definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
@@ -266,13 +292,32 @@ class ModeloWorkspaceLifecycleDoor:
             )
         )
 
-    async def settled_export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
+    async def settled_export_result(
+        self, projection: OperationPublicProjectionV1
+    ) -> ModeloExportPublicResultV3 | CalculationReviewXlsxResult | None:
         """Resolve one settled export's public result through the runtime's result door.
 
         ``None`` when the projection is not a successful export or its result
         cannot be resolved; the caller states that absence rather than inventing
         the facts the result would have carried.
         """
+        if projection.definition_id == CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID:
+            if (
+                self.read_review_result is None
+                or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+            ):
+                return None
+            try:
+                result = await self.read_review_result(projection)
+                if (
+                    result.calculation_revision_id != self.calculation_revision_id
+                    or result.work_unit_id != self.work_unit_id
+                    or result.profile_id != self.profile_id
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                return result
+            except (RuntimeRefusalError, RuntimeFrontendRefusedError):
+                return None
         if (
             self.read_export_result is None
             or projection.definition_id != MODELO_EXPORT_OPERATION_DEFINITION_ID

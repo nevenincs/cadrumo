@@ -112,7 +112,7 @@ def test_publication_is_receipted_literal_and_never_repopulates_a_retry(tmp_path
                 parent = artifacts.admit(root, purpose=ManagedArtifactPurpose.RECONCILIATION)
                 recovered = artifacts.reconcile_creation(
                     parent,
-                    name=f"{plan.metadata.title} [{publication.publication_id}]",
+                    name=plan.metadata.document_title,
                     kind=ManagedArtifactKind.REVIEW_SHEET,
                     publication_id=publication.publication_id,
                 )
@@ -128,6 +128,9 @@ def test_publication_is_receipted_literal_and_never_repopulates_a_retry(tmp_path
         assert published.state is PublicationState.PUBLISHED
         assert receipts.load_publication(publication.publication_id) == published
         identifier = published.artifacts[0].artifact_id
+        assert drive.created_bodies[-1]["name"] == plan.metadata.document_title
+        assert str(publication.publication_id) not in plan.metadata.document_title
+        assert "2026-10-05 00:00 UTC" in plan.metadata.document_title
         assert tuple(sheets.tabs[identifier]) == tuple(tab.value for tab in plan.tabs)
         assert sheets.value_bodies[0]["valueInputOption"] == "RAW"
         assert sheets.cells[identifier][("Detalle", 5, 11)] == '=IMPORTXML("https://example.invalid", "x")'

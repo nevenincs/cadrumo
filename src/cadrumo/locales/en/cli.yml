@@ -878,6 +878,9 @@ cli:
           as filed.
         work_unit_id_help: Declaration id (SHA-256 or unambiguous prefix).
       filing_record:
+        export_help: Export the selected historical filing as a saved calculation review workbook.
+        export_button: Export selected filing (XLSX)
+        export_missing: The selected historical calculation is no longer retained; export cannot use the current calculation.
         app_help: Inspect internal filing records
         bucket_id_help: Filter by profile
         evidence_kind_help: Kind of imported evidence (aeat_justificante_pdf, aeat_csv_register,
@@ -1109,6 +1112,13 @@ cli:
       readiness_help: Report whether the active profile is ready to file one modelo
         / year / period.
       reconcile:
+        export_help: Export saved reconciliation differences to a local review workbook.
+        export_button: Export declaration differences (XLSX)
+        export_work_unit_scope: Exports all saved reconciliation differences for the selected declaration.
+        export_selector_required: "Select exactly one of --event-id, --work-unit-id, or --all-history."
+        export_work_unit_id_help: Exact saved declaration id (64-character SHA-256).
+        export_event_id_help: Exact saved reconciliation event id.
+        export_all_help: Export the complete saved reconciliation history explicitly.
         app_help: 'Compare a saved local calculation with AEAT evidence: pull downloads
           a receipt or filed declaration; import compares a local PDF; list shows
           past comparisons.'
@@ -1267,7 +1277,10 @@ cli:
             publishing the selected calculation and captured ledger rows as a Google
             Sheet readable by authorized users.
           calculation_revision_id_help: Exact saved calculation revision id to publish.
+          filing_record_id_help: Exact historical filing record id paired with the saved calculation; optional.
           publication_id_help: Publication UUID; generated when omitted.
+        publish_button: Review in Google Sheets
+        review_help: Export a saved draft or completed calculation as an immutable local review workbook.
         publish_help: Publish a saved calculation as a readable native Google Sheet
           in the profile folder.
         pull:

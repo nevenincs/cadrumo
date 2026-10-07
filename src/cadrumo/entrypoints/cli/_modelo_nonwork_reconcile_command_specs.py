@@ -9,6 +9,7 @@ from ._modelo_nonwork_command_spec_policies import (
     _BROWSER_MODEL_WRITE,
     _MODEL_HANDOFF,
     _MODEL_READ,
+    _MODEL_WRITE,
 )
 from ._modelo_nonwork_common_command_parameters import (
     _optional_text_argument,
@@ -17,6 +18,8 @@ from ._modelo_nonwork_common_command_parameters import (
 )
 from .command_parameter_contracts import ArgumentSpec, OptionSpec
 from .command_shared_contracts import (
+    FLAG_VALUE,
+    PATH_VALUE,
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -42,6 +45,58 @@ RECONCILE_TARGET_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
 )
 
 MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_modelo_reconcile_export",
+        "app_modelo_reconcile",
+        "export",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.reconcile.export_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            OptionSpec(
+                name="output",
+                declarations=("--output",),
+                value=PATH_VALUE,
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.modelo.spreadsheet.export.output_help"),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _optional_text_option("event_id", ("--event-id",), "cli.app.modelo.reconcile.export_event_id_help"),
+            _optional_text_option(
+                "work_unit_id", ("--work-unit-id",), "cli.app.modelo.reconcile.export_work_unit_id_help"
+            ),
+            OptionSpec(
+                name="all_history",
+                declarations=("--all-history",),
+                value=FLAG_VALUE,
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.app.modelo.reconcile.export_all_help"),
+                is_flag=True,
+                flag_value=True,
+            ),
+            OptionSpec(
+                name="replace_existing",
+                declarations=("--replace",),
+                value=FLAG_VALUE,
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.app.modelo.export.replace_help"),
+                is_flag=True,
+                flag_value=True,
+            ),
+        ),
+        policy=_MODEL_WRITE,
+        handler=LazyBinding.available(
+            DeferredTarget(".reconciliation_export_cli", "export_reconciliation_cli", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".reconciliation_export_cli", "ReconciliationWorkbookResult", __package__),
+            identity="modelo.reconcile.export",
+        ),
+    ),
     CommandSpec(
         "app_modelo_reconcile_pull",
         "app_modelo_reconcile",

@@ -159,3 +159,156 @@ def test_2018_layout_does_not_import_the_later_rate_row_or_presenter_identity() 
         if f.id == "modelo-309-p1-nif"
     )
     assert nif.producer_key == "taxpayer.tax_id"
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "field_id", "offset"),
+    [
+        ("2004-2015", "modelo-309-historical-nif", 6),
+        ("2016-2017", "modelo-309-p1-nif", 14),
+        ("2018-2022", "modelo-309-p1-nif", 14),
+        ("2023-y-siguientes", "modelo-309-p1-nif", 14),
+    ],
+)
+def test_identification_nif_belongs_to_taxpayer_across_editions(revision_id: str, field_id: str, offset: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions[revision_id]
+    fields = [
+        field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.id == field_id
+    ]
+    (nif,) = fields
+    # Original PDF campo 4 / later XLS M30901 row 12: Identificacion - NIF.
+    assert (nif.offset, nif.length) == (offset, 9)
+    assert nif.producer_key == "taxpayer.tax_id"
+
+
+def test_original_paper_totals_calculate_and_preserve_missing_inputs() -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions["2004-2015"]
+    formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
+    assert set(formulas) == {"decl.cuota-devengada-22", "decl.resultado-24"}
+    values = {
+        "decl.rg-cuota-03": Decimal("10"),
+        "decl.rg-cuota-06": Decimal("20"),
+        "decl.rg-cuota-09": Decimal("30"),
+        "decl.re-cuota-12": Decimal("40"),
+        "decl.re-cuota-15": Decimal("50"),
+        "decl.re-cuota-18": Decimal("60"),
+        "decl.re-cuota-21": Decimal("70"),
+        "decl.a-deducir-23": Decimal("25"),
+    }
+
+    def evaluate(target: str) -> Decimal:
+        return evaluate_expression(
+            formulas[target].expression,
+            values=values,
+            binding_values={},
+            parameters={},
+            date_context={},
+            relation_values={},
+            unresolved_relation_ids=frozenset(),
+            unresolved_casilla_ids=set(),
+            operand_refs=[],
+            operand_casilla_refs=[],
+            operand_values=[],
+        )
+
+    values["decl.cuota-devengada-22"] = evaluate("decl.cuota-devengada-22")
+    assert values["decl.cuota-devengada-22"] == Decimal("280")
+    assert evaluate("decl.resultado-24") == Decimal("255")
+    for target, formula in formulas.items():
+        casilla = next(c for c in revision.casillas if c.id == target)
+        assert casilla.input_kind.value == "computed"
+        assert casilla.formula == formula.id
+        assert {"aeat-dr-309-2004", "boe-modelo-309-2003-form-pdf"} <= set(formula.source_refs)
+    del values["decl.re-cuota-21"]
+    with pytest.raises(RegistryValidationError, match="referenced before evaluation"):
+        evaluate("decl.cuota-devengada-22")
+    del values["decl.a-deducir-23"]
+    with pytest.raises(RegistryValidationError, match="referenced before evaluation"):
+        evaluate("decl.resultado-24")
+
+
+def test_2016_historical_structure_keeps_electronic_iban_separate() -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309")).revisions["2016-2017"]
+    layout = revision.form_layouts[0]
+    assert form_layout_failures(revision) == ()
+    assert {p.casilla_id for p in layout.placements} == {c.id for c in revision.casillas}
+    sections = {section.id: section for page in layout.pages for section in page.sections}
+    assert list(sections) == [
+        "identificacion",
+        "devengo",
+        "transmitente",
+        "situacion",
+        "hecho",
+        "vehiculo",
+        "embarcacion",
+        "aeronave",
+        "liquidacion",
+        "complementaria",
+        "firma",
+        "ingreso",
+        "datos-presentacion",
+    ]
+    assert "adjudicatario" not in sections
+    assert [b.casilla_id for b in sections["ingreso"].blocks if isinstance(b, FormFieldBlock)] == [
+        "decl.resultado-24",
+        "papel-forma-pago",
+        "papel-ccc-entidad",
+        "papel-ccc-oficina",
+        "papel-ccc-dc",
+        "papel-ccc-cuenta",
+    ]
+    assert any(
+        isinstance(b, FormFieldBlock) and b.casilla_id == "decl.iban" for b in sections["datos-presentacion"].blocks
+    )
+    grid = sections["liquidacion"].blocks[0]
+    assert isinstance(grid, FormGridBlock)
+    assert len(grid.rows) == 7
+    assert "Native and visual verification remain outstanding" in (layout.review.notes or "")
+
+
+def test_historical_address_and_ccc_do_not_leak_into_modern_editions_or_exports() -> None:
+    modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309"))
+    for revision_id, revision in modelo.revisions.items():
+        paper = [c for c in revision.casillas if str(c.id).startswith(("papel-domicilio-", "papel-ccc-"))]
+        if revision_id in {"2018-2022", "2023-y-siguientes"}:
+            assert paper == []
+            continue
+        assert len(paper) == 14
+        assert all(c.input_kind.value == "informational" and not c.required for c in paper)
+        assert all(c.formula is None and c.binding is None and not c.export_refs for c in paper)
+        assert all(c.data_type.value == "text" for c in paper)
+        assert all(c.source_refs == ("boe-modelo-309-2003-form-pdf",) for c in paper)
+        construct = next(c for c in revision.constructs if c.id == "modelo-309-papel-domicilio-cuenta")
+        assert set(construct.casilla_ids) == {c.id for c in paper}
+
+
+def test_original_layout_preserves_separate_marks_and_paper_only_identity() -> None:
+    modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/309"))
+    revision = modelo.revisions["2004-2015"]
+    layout = revision.form_layouts[0]
+    assert form_layout_failures(revision) == ()
+    assert {p.casilla_id for p in layout.placements} == {c.id for c in revision.casillas}
+    sections = {s.id: s for page in layout.pages for s in page.sections}
+    casillas = {c.id: c for c in revision.casillas}
+    for section in ("situacion", "hecho"):
+        blocks = sections[section].blocks
+        assert len(blocks) == 6
+        for block in blocks:
+            assert isinstance(block, FormFieldBlock)
+            assert block.casilla_id is not None
+            constraints = casillas[block.casilla_id].constraints
+            assert constraints is not None and constraints.enum == ("X", "")
+            assert not block.choices
+    paper_ids = {"papel-nombre-completo", "papel-complementaria"}
+    assert paper_ids <= casillas.keys()
+    assert all(not casillas[c].export_refs and casillas[c].input_kind.value == "informational" for c in paper_ids)
+    assert all(
+        paper_ids.isdisjoint({c.id for c in r.casillas}) for k, r in modelo.revisions.items() if k != "2004-2015"
+    )
+    assert not any(p.box_number in {"88", "89", "94", "99", "831", "931"} for p in layout.placements)
+    grid = sections["liquidacion"].blocks[0]
+    assert isinstance(grid, FormGridBlock) and len(grid.rows) == 7

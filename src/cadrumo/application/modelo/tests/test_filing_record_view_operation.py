@@ -20,6 +20,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
+from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -56,6 +57,7 @@ from ..filing_record_view_operation import (
     build_modelo_filing_record_view_definition,
     build_modelo_filing_record_view_registration,
 )
+from ..historical_filing_projection import project_historical_filing_content
 from ..verification_repository_ports import VerificationRepositoryBundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -213,6 +215,7 @@ def _bundle(
                     WorkUnitCatalogue(work_units={selected_unit.work_unit_id: selected_unit}),
                 ),
                 observation=observation_repository or _ObservationRepository(_observation_layers()),
+                calculation=_Repository(str(_PROFILE), CalculationRevisionCatalogue()),
             ),
         ),
     )
@@ -266,6 +269,7 @@ def test_view_projection_carries_both_layers_and_bounded_override_audit() -> Non
         filing_record_id=record.filing_record_id,
         record=ModeloFilingRecordListEntryProjection.from_record(record),
         observation_layers=layers,
+        historical_content=project_historical_filing_content(record, None),
     )
 
     restored = ModeloFilingRecordViewProjection.model_validate_json(projection.model_dump_json())
@@ -433,6 +437,7 @@ def test_projection_refuses_mismatched_coordinates_and_oversized_document(
             filing_record_id=record.filing_record_id,
             record=ModeloFilingRecordListEntryProjection.from_record(record),
             observation_layers=layers,
+            historical_content=project_historical_filing_content(record, None),
         )
 
     from .. import filing_record_view_operation as operation_module

@@ -8839,8 +8839,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1033-operaciones-reg-simplificado-iva-devengado-suma-cuot'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.cuota-resultante-no-agricola'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -8858,8 +8858,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1050-operaciones-reg-simplificado-iva-devengado-suma-cuot'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.cuota-resultante-agricola'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -8877,8 +8877,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1067-operaciones-reg-simplificado-iva-devengado-en-adquis'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.aic-bienes-cuota-devengada'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -8896,8 +8896,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1084-operaciones-reg-simplificado-iva-devengado-iva-deven'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.inversion-sujeto-pasivo'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -8915,8 +8915,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1101-operaciones-reg-simplificado-iva-devengado-iva-deven'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.entrega-activos-fijos'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -8953,8 +8953,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1135-operaciones-reg-simplificado-deducciones-iva-soporta'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.iva-soportado-activos-fijos'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -8972,8 +8972,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1152-operaciones-reg-simplificado-deducciones-regularizac'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.regularizacion-bienes-inversion'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -8991,8 +8991,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1169-operaciones-reg-simplificado-deducciones-suma-de-ded'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-deducciones-suma-de-deducciones'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.suma-deducciones'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -9010,8 +9010,8 @@ record_identity = 'Pág. 5'
 
 [[entries]]
 export_field_id = 'modelo-390-page-05-1186-operaciones-reg-simplificado-resultado-regimen-simpl'
-kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-resultado-regimen-simplificado'
+kind = 'casilla'
+casilla_id = 'iva.anual.regimen-simplificado.resultado'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',

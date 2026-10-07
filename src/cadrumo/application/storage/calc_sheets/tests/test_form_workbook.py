@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormGridColumn,
     FormGridRow,
     FormLayoutDefinition,
+    FormPageCondition,
     FormPageDefinition,
     FormPlacementDefinition,
     FormRepeatingColumn,
@@ -82,6 +83,22 @@ def form_source():
         update={"revision": snapshot.revision.model_copy(update={"form_layouts": (layout,)})}
     )
     return snapshot, build_export_plan(snapshot)
+
+
+@pytest.mark.parametrize("periods,visible", [(("4T", "12"), True), (("1T", "2T"), False)])
+def test_period_restricted_pages_follow_the_selected_frame(form_source, periods, visible):
+    snapshot, _ = form_source
+    layout = snapshot.revision.form_layouts[0]
+    page = layout.pages[0].model_copy(
+        update={"condition": FormPageCondition.PERIOD_RESTRICTED, "condition_periods": periods}
+    )
+    layout = layout.model_copy(update={"pages": (page,)})
+    snapshot = snapshot.model_copy(
+        update={"revision": snapshot.revision.model_copy(update={"form_layouts": (layout,)})}
+    )
+    result = add_form_workbook(build_export_plan(snapshot), snapshot)
+    form_cells = [cell for cell in result.formula_cells if cell.address.tab is TabName.FORM]
+    assert bool(form_cells) is visible
 
 
 @pytest.mark.parametrize(
@@ -418,6 +435,41 @@ def test_wide_grid_keeps_all_columns_on_one_row_and_expands_canvas(form_source, 
         assert projected.formula == original.formula or projected.formula.endswith(f',"Sin dato",{original.formula})')
 
 
+@pytest.mark.parametrize("width", (2, 3))
+def test_compact_grids_reserve_readable_amount_columns(form_source, width):
+    snapshot, _ = form_source
+    snapshot = _grid_snapshot(snapshot, width)
+    rendered = add_form_workbook(build_export_plan(snapshot), snapshot)
+    widths = {item.column: item.width for item in rendered.column_widths if item.tab is TabName.FORM}
+    ids = {casilla.id for casilla in snapshot.revision.casillas[:width]}
+    amounts = [cell for cell in rendered.formula_cells if cell.address.tab is TabName.FORM and cell.casilla_id in ids]
+    assert len(amounts) == width
+    assert all(widths[cell.address.column] >= 18 for cell in amounts)
+
+
+@pytest.mark.parametrize("heading", (None, "Página 2 bis", "Datos del representante"))
+def test_page_titles_preserve_authored_heading_without_inventing_a_second_number(form_source, heading):
+    snapshot, _ = form_source
+    layout = snapshot.revision.form_layouts[0]
+    page = layout.pages[0].model_copy(update={"official_heading": heading})
+    layout = layout.model_copy(update={"pages": (page,)})
+    snapshot = snapshot.model_copy(
+        update={"revision": snapshot.revision.model_copy(update={"form_layouts": (layout,)})}
+    )
+    rendered = add_form_workbook(build_export_plan(snapshot), snapshot)
+    titles = {
+        (style.start_row, style.start_column)
+        for style in rendered.styled_ranges
+        if style.tab is TabName.FORM and style.role is StyleRole.TITLE
+    }
+    text = [
+        cell.value
+        for cell in rendered.value_cells
+        if cell.address.tab is TabName.FORM and (cell.address.row, cell.address.column) in titles
+    ]
+    assert text[1] == (heading or "Página 1")
+
+
 def test_supporting_calculations_guard_missing_inputs_without_changing_arithmetic(form_source):
     snapshot, plan = form_source
     rendered = add_form_workbook(plan, snapshot)
@@ -457,6 +509,43 @@ def test_grid_binding_input_links_to_the_real_input_and_retains_constant(form_so
         if cell.address.tab is TabName.FORM and cell.address.row == formula.address.row and cell.address.column == 8
     )
     assert str(constant.value) == "0.20"
+
+
+def test_grid_row_height_fits_long_bound_text_and_explicit_line_breaks(form_source):
+    snapshot, original = form_source
+    binding_ids = {binding.id for binding in snapshot.revision.bindings}
+    label = next(
+        cell
+        for cell in original.value_cells
+        if cell.address.tab is TabName.ENTRADAS and cell.address.column == 3 and cell.value in binding_ids
+    )
+    snapshot = _grid_snapshot(snapshot, 3, binding_id=label.value)
+    source = build_export_plan(snapshot)
+    address = SheetCellAddress.at(TabName.ENTRADAS, label.address.row, 4)
+    for text in (
+        "Servicios de consultoría informática y mantenimiento de aplicaciones empresariales. " * 3,
+        "Primera línea\nSegunda línea\nTercera línea\nCuarta línea\nQuinta línea",
+    ):
+        # Synthetic source text isolates row geometry from fiscal calculation.
+        populated = source.model_copy(
+            update={
+                "value_cells": tuple(
+                    cell.model_copy(update={"value": text}) if cell.address == address else cell
+                    for cell in source.value_cells
+                )
+            }
+        )
+        rendered = add_form_workbook(populated, snapshot)
+        cell = next(
+            cell
+            for cell in rendered.formula_cells
+            if cell.address.tab is TabName.FORM and cell.casilla_id is None and address.qualified() in cell.formula
+        )
+        height = next(
+            h.height_pixels for h in rendered.row_heights if h.tab is TabName.FORM and h.row == cell.address.row
+        )
+        assert 98 <= height <= 409
+        assert cell.formula == f'IF(ISBLANK({address.qualified()}),"Sin dato",{address.qualified()})'
 
 
 def test_grid_refuses_unknown_binding_and_missing_headings(form_source):
@@ -515,7 +604,12 @@ def test_computed_form_guards_transitive_blank_inputs(form_source):
     computed = {c.casilla_id for c in plan.formula_cells}
     cells = [c for c in rendered.formula_cells if c.address.tab is TabName.FORM and c.casilla_id in computed]
     assert cells
-    assert all("ISBLANK('Entradas'!" in c.formula for c in cells)
+    support = {cell.casilla_id: cell for cell in rendered.formula_cells if cell.address.tab is TabName.CALCULOS}
+    for cell in cells:
+        assert '"Sin dato"' in cell.formula
+        source = support[cell.casilla_id]
+        assert '"Sin dato"' in source.formula
+        assert "ISBLANK('Entradas'!" in cell.formula or "NOT(ISNUMBER(" in cell.formula
 
 
 def test_other_revision_metadata_refused(form_source):
@@ -575,11 +669,13 @@ def test_printed_box_numbers_preserve_leading_zero_as_text(form_source):
 
 
 @pytest.mark.parametrize("width", [2, 4])
-def test_repeated_grids_use_each_saved_record_without_scalar_leakage(form_source, width):
+@pytest.mark.parametrize("row_heading", [None, "Código país del Estado miembro de consumo"])
+def test_repeated_grids_use_each_saved_record_without_scalar_leakage(form_source, width, row_heading):
     snapshot, plan = form_source
     casillas = snapshot.revision.casillas[: width + 1]
     grid = FormGridBlock(
         id="calendar",
+        official_row_heading=row_heading,
         columns=tuple(
             FormGridColumn(key=f"month-{i}", heading_key=f"test.month-{i}", official_heading=f"Mes {i}")
             for i in range(width)
@@ -627,6 +723,7 @@ def test_repeated_grids_use_each_saved_record_without_scalar_leakage(form_source
     assert cells[9, 9] == Decimal(9)
     assert not builder.formulas
     assert [c.value for c in builder.values].count("Cotización") == 2
+    assert [c.value for c in builder.values].count(row_heading or "Concepto") == 2
     assert all(c.address.column < len(builder.column_widths) for c in builder.values)
     assert len([c for c in builder.values if c.value == "Campo 1"]) == 0
     original = next(c for c in plan.value_cells if c.casilla_id == casillas[1].id)

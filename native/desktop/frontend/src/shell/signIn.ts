@@ -38,6 +38,8 @@ export type AccountPhase =
   | "no-host"
   /** The first status read has not answered yet. */
   | "checking"
+  /** The desktop is observing the manager's asynchronous startup. */
+  | "starting"
   /** This platform signs in inside the TUI; the shell offers nothing. */
   | "unsupported"
   | "signed-in"
@@ -54,6 +56,7 @@ export type AccountPhase =
 /** The phases in which the TUI is withheld until the account is settled. */
 export const GATED: ReadonlySet<AccountPhase> = new Set([
   "checking",
+  "starting",
   "services-down",
   "unknown",
   "no-profile",
@@ -107,6 +110,26 @@ export function canSignIn(
 }
 
 const COUNTDOWN_TICK_MS = 250;
+const STARTUP_WAIT_MS = 90_000;
+
+/** Bound read-only UI waits even if the transport never settles its promise.
+ * Late answers are ignored; native process cleanup remains owned by Tauri. */
+async function boundedRead<T>(read: Promise<T>): Promise<T> {
+  let timer: number | undefined;
+  try {
+    return await Promise.race([
+      read,
+      new Promise<never>((_, reject) => {
+        timer = window.setTimeout(
+          () => reject({ code: "timed_out" }),
+          STARTUP_WAIT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
 
 /** The seconds left of a refusal's wait. No timer runs unless one is owed. */
 function useCountdown(refusal: SignInRefusal | null) {
@@ -132,6 +155,12 @@ export function useSignIn(host: Host) {
   const [status, setStatus] = useState<SignInStatus | null>(null);
   const [refusal, setRefusal] = useState<SignInRefusal | null>(null);
   const [busy, setBusy] = useState(false);
+  const [startingServices, setStartingServices] = useState(false);
+  const [observingStartup, setObservingStartup] = useState(
+    host.available && host.startManager !== undefined,
+  );
+  const startingManager = useRef(false);
+  const latestStatus = useRef<SignInStatus | null>(null);
   const [handover, setHandover] = useState(false);
   // The profiles to choose from, where the host offers them; the one the
   // person chose; and what became of the last attempt to create one.
@@ -155,6 +184,7 @@ export function useSignIn(host: Host) {
     null,
   );
   const request = useRef(0);
+  const statusReadFailed = useRef(false);
   const mounted = useRef(true);
   const statusRead = useRef<{
     generation: number;
@@ -194,9 +224,11 @@ export function useSignIn(host: Host) {
           // the status is shown as soon as it is known. The profiles are
           // read only while there is a sign-in to prepare, after it; a
           // list that cannot be read is not an empty one.
-          const next = await host.signInStatus();
+          const next = await boundedRead(host.signInStatus());
           if (generation !== request.current) return;
+          statusReadFailed.current = false;
           setStatus(next);
+          latestStatus.current = next;
           // A list that names another profile as selected than the status
           // does is older than it: not shown beside it, and never a ground
           // for naming the profile a password goes to.
@@ -207,8 +239,15 @@ export function useSignIn(host: Host) {
               ? null
               : held,
           );
-          if (!host.profiles || next.state === "present") return;
-          const list = await host.profiles.list().catch(() => null);
+          if (
+            !host.profiles ||
+            !next.runtimeAvailable ||
+            next.state === "present"
+          )
+            return;
+          const list = await boundedRead(host.profiles.list()).catch(
+            () => null,
+          );
           if (generation !== request.current) return;
           listed.current = list;
           // Unread, the rows that were held are kept as what was last
@@ -221,8 +260,17 @@ export function useSignIn(host: Host) {
                 : { profiles: [], complete: false }),
           );
         } catch (error) {
-          if (generation === request.current)
-            setStatus({ ...unknownStatus, refusal: refusalFrom(error) });
+          if (generation === request.current) {
+            statusReadFailed.current = true;
+            const failed = {
+              ...unknownStatus,
+              runtimeAvailable:
+                latestStatus.current?.runtimeAvailable ?? !host.startManager,
+              refusal: refusalFrom(error),
+            };
+            latestStatus.current = failed;
+            setStatus(failed);
+          }
         } finally {
           if (statusRead.current?.generation === generation)
             statusRead.current = null;
@@ -236,23 +284,96 @@ export function useSignIn(host: Host) {
 
   useEffect(() => {
     mounted.current = true;
-    void refresh();
+    let active = true;
+    let expired = false;
+    const deadline = window.setTimeout(() => {
+      expired = true;
+      setObservingStartup(false);
+      // A missing answer is not readiness. Give a stalled initial read a
+      // visible failure instead of leaving a skeleton on screen forever.
+      if (!latestStatus.current && host.available) {
+        const unavailable = {
+          ...unknownStatus,
+          runtimeAvailable: false,
+          refusal: { code: "runtime_unavailable", retryAfterSeconds: null },
+        };
+        latestStatus.current = unavailable;
+        setStatus(unavailable);
+      }
+    }, STARTUP_WAIT_MS);
+    const observeStartup = async () => {
+      do {
+        await refresh();
+        if (!active) return;
+        if (
+          !host.startManager ||
+          statusReadFailed.current ||
+          latestStatus.current?.runtimeAvailable !== false
+        ) {
+          window.clearTimeout(deadline);
+          setObservingStartup(false);
+          return;
+        }
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 1_000));
+      } while (active && !expired);
+    };
+    void observeStartup();
     const focus = () => void refresh();
     window.addEventListener("focus", focus);
     return () => {
+      active = false;
+      window.clearTimeout(deadline);
       mounted.current = false;
       invalidate();
       window.removeEventListener("focus", focus);
     };
-  }, [refresh, invalidate]);
+  }, [refresh, invalidate, host]);
 
-  const phase = phaseOf(
+  const settledPhase = phaseOf(
     host.available,
     status,
     handover,
     profiles,
     host.profiles !== undefined && profiles === null,
   );
+  const phase: AccountPhase =
+    observingStartup &&
+    (settledPhase === "checking" || settledPhase === "services-down")
+      ? "starting"
+      : settledPhase;
+  const startServices = async () => {
+    if (!host.startManager || startingManager.current || submitting.current)
+      return;
+    startingManager.current = true;
+    setStartingServices(true);
+    setRefusal(null);
+    try {
+      const outcome = await host.startManager();
+      if (!mounted.current) return;
+      if (outcome !== "dispatched") {
+        setRefusal({ code: `manager_${outcome}`, retryAfterSeconds: null });
+        return;
+      }
+      const until = performance.now() + 90_000;
+      do {
+        await refresh();
+        if (
+          !mounted.current ||
+          statusReadFailed.current ||
+          latestStatus.current?.runtimeAvailable
+        )
+          return;
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 1_000));
+      } while (mounted.current && performance.now() < until);
+      if (mounted.current)
+        setRefusal({ code: "runtime_unavailable", retryAfterSeconds: null });
+    } catch (error) {
+      if (mounted.current) setRefusal(refusalFrom(error));
+    } finally {
+      startingManager.current = false;
+      if (mounted.current) setStartingServices(false);
+    }
+  };
   // Another profile is offered only while nobody is signed in, and known
   // not to be: signing in to one does not sign the other out.
   const offering = phase === "signed-out" || phase === "no-profile";
@@ -410,6 +531,9 @@ export function useSignIn(host: Host) {
     refusal: currentRefusal,
     retrySeconds,
     busy,
+    startingServices,
+    canStartServices: host.startManager !== undefined,
+    startServices,
     remaining,
     signOutFailure,
     gated: GATED.has(phase),

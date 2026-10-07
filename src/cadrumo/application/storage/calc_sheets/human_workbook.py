@@ -39,9 +39,11 @@ from .records import (
     SheetExportMetadata,
     SheetExportPlan,
     SheetFrozenView,
+    SheetHiddenRow,
     SheetNumberFormat,
     SheetProtectedRange,
     SheetReviewMetadata,
+    SheetRowHeight,
     SheetStyledRange,
     SheetTemplatePreviewMetadata,
     SheetValueCell,
@@ -50,6 +52,11 @@ from .records import (
 from .template_source import WorkbookTemplateSource
 from .theme import StyleRole
 from .workbook_exclusions import formula_may_read_transport_cell, workbook_transport_controls
+
+
+def guide_paragraph_height(text: str) -> int:
+    """Fit wrapped prose in the shared guide's 110-character-wide column."""
+    return max(44, 20 * ((len(text) + 99) // 100 + 1))
 
 
 def _leaves(expression: FormulaExpression) -> set[str]:
@@ -287,7 +294,12 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
             values.append(SheetValueCell(address=SheetCellAddress.at(tab, row, column), value=value, role="label"))
 
     period_suffix = f" · {frame.code}" if isinstance(frame, Period) and frame.code != AD_HOC_PERIOD_CODE else ""
-    emit(TabName.GUIDE, 1, (f"Modelo {modelo_id} · {frame.filing_year}{period_suffix}",))
+    preview_guide = isinstance(plan.metadata, SheetTemplatePreviewMetadata)
+    emit(
+        TabName.GUIDE,
+        1,
+        (plan.guide.title if preview_guide else f"Modelo {modelo_id} · {frame.filing_year}{period_suffix}",),
+    )
     emit(TabName.GUIDE, 3, ("Documento de trabajo. No acredita la presentación de una declaración.",))
     emit(
         TabName.GUIDE,
@@ -303,17 +315,26 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
         5,
         ("Una celda vacía es un dato pendiente. Complete los datos necesarios antes de utilizar el resultado.",),
     )
+    # Preview authors supply the example's assumptions and calculation limits.
+    # Keep them in the transport cells, subject to the technical-text guard below.
+    if preview_guide:
+        for row, paragraph in enumerate(plan.guide.paragraphs, 7):
+            emit(TabName.GUIDE, row, (paragraph,))
 
     emit(TabName.PROVENANCE, 1, ("Concepto", "Normativa", "Fuente oficial"))
     refs: list[tuple[str, tuple[str, ...], tuple[str, ...]]] = [
-        (c.label, tuple(c.legal_refs), tuple(c.source_refs)) for c in casillas.values() if c.id not in excluded
+        (c.label, tuple(c.legal_refs), tuple(c.source_refs))
+        for c in casillas.values()
+        if c.id not in excluded and not c.internal_only
     ]
     refs.extend(
         (labels[p.id], tuple(p.legal_refs), tuple(p.source_refs)) for p in revision.parameters if p.id in labels
     )
     refs.extend((labels[b.id], tuple(b.legal_refs), tuple(b.source_refs)) for b in revision.bindings if b.id in labels)
     refs.extend(
-        (casillas[f.target_casilla_id].label, tuple(f.legal_refs), tuple(f.source_refs)) for f in revision.formulas
+        (casillas[f.target_casilla_id].label, tuple(f.legal_refs), tuple(f.source_refs))
+        for f in revision.formulas
+        if not casillas[f.target_casilla_id].internal_only
     )
     for index, (name, legal, sources) in enumerate(refs, 2):
         emit(TabName.PROVENANCE, index, (name, legal_text(legal), source_text(sources)))
@@ -507,6 +528,13 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
         {
             **dict(plan),
             "human_presentation": True,
+            "hidden_rows": tuple(
+                SheetHiddenRow(tab=tab, row=row)
+                for tab, row in sorted(
+                    {(hidden.tab, hidden.row) for hidden in plan.hidden_rows if hidden.tab not in replaced_tabs}
+                    | {address for address, owner in rows.items() if owner.internal_only}
+                )
+            ),
             "value_cells": tuple(values),
             "cell_constraints": tuple(constraints),
             "row_sets": row_sets,
@@ -553,7 +581,18 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
             ),
             "styled_ranges": (*(style for style in plan.styled_ranges if style.tab not in replaced_tabs), *styles),
             "merged_ranges": tuple(region for region in plan.merged_ranges if region.tab not in replaced_tabs),
-            "row_heights": tuple(height for height in plan.row_heights if height.tab not in replaced_tabs),
+            "row_heights": (
+                *(height for height in plan.row_heights if height.tab not in replaced_tabs),
+                *(
+                    SheetRowHeight(
+                        tab=TabName.GUIDE,
+                        row=cell.address.row,
+                        height_pixels=guide_paragraph_height(str(cell.value)),
+                    )
+                    for cell in values
+                    if cell.address.tab is TabName.GUIDE
+                ),
+            ),
             "number_formats": (
                 *(fmt for fmt in plan.number_formats if fmt.address.tab not in replaced_tabs),
                 *evidence_formats,

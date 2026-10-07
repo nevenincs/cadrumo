@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#google-app-identity'
 date: '2026-10-04'
-modified: '2026-10-06'
+modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:3890c24aef6a304502638f37c9249f96bc141984c1331c587d65fa27da7e5ec8'
+body_hash: 'sha256:4dffdfd1d32f7306377cf14db05351a428deca782ce2a7b796917fe5a1fe4bf2'
 related:
   - "[[2026-10-04-google-app-identity-research]]"
   - "[[2026-10-04-google-app-identity-reference]]"
@@ -326,7 +326,6 @@ The product owner's Session 01 instruction authorizes the scoped wording changes
 ## Amendment 2026-10-05 - application parent layout
 
 The product owner explicitly requires My Drive/Cadrumo/Cadrumo {profile discriminator}/... . Commitment 4 now distinguishes the shared application parent from the profile content boundary, as specified in 2026-10-05-google-outbound-review-adr. Commitment 9 does not prohibit the newly authorized, identity-preserving relocation of a known current-client root with retained creation evidence: that operation changes placement, never adopts historical foreign-client state or rewrites creation history. No global/name discovery exception is inferred from the layout request; the earlier restriction remains until separately resolved. This is an authorized architecture adjustment, not a claim that the live folder has been moved.
-
 
 ## Amendment 2026-10-06 - credential provisioning outside Git
 

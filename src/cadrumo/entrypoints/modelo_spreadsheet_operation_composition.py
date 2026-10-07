@@ -16,7 +16,12 @@ from ..application.storage.calc_sheets.engine import (
     RelationResolver,
     build_export_plan,
 )
-from ..application.storage.calc_sheets.records import OperatorInputs, RelationValues, SheetExportPlan
+from ..application.storage.calc_sheets.records import (
+    AnySheetExportPlan,
+    OperatorInputs,
+    RelationValues,
+    SheetExportPlan,
+)
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
@@ -61,7 +66,7 @@ def build_modelo_spreadsheet_operation_ports(
             relation_resolver=bound_relation_resolver if relation_resolver is not None else None,
         )
 
-    def materialize(plan: SheetExportPlan) -> bytes:
+    def materialize(plan: AnySheetExportPlan) -> bytes:
         from ..adapters.outbound.workbook.calc_sheets_xlsx import materialize_export_plan
 
         require_profile()

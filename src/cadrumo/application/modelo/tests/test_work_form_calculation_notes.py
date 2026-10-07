@@ -17,6 +17,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.casilla_id import validated_casilla_id
 from ....core.external_constants import OutputLanguage
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
@@ -328,3 +329,43 @@ def test_once_checked_a_note_the_check_does_not_decide_still_blocks(operation: P
     checked = _form(operation, diagnostics=(unrouted,), verification_outcome=VerificationCompletenessStatus.COMPLETE)
 
     assert [note.reason for note in checked.blocking_calculation_notes] == ["unrouted_observation"]
+
+
+@pytest.mark.parametrize("entered", [True, False])
+def test_retained_bound_casilla_override_is_displayed_even_when_its_source_is_unresolved(
+    operation: PinnedAuthorityOperation, entered: bool
+) -> None:
+    snapshot = _snapshot(operation)
+    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
+    amount = Decimal("355926.98")
+    review = _review(operation, snapshot, zero_at=None).model_copy(
+        update={
+            "casillas": tuple(
+                row.model_copy(update={"value": amount, "realised_kind": ModeloValueKind.INHERITED})
+                if str(row.casilla_id) == "05"
+                else row
+                for row in rows
+            ),
+        }
+    )
+    form = build_modelo_work_form(
+        review=review,
+        snapshot=snapshot,
+        layout=operation.form_layout(_MODELO, snapshot.revision.id),
+        revision=None,
+        permitted_surface=None,
+        entered_casilla_ids=frozenset({validated_casilla_id("05")}) if entered else frozenset(),
+        overridden_binding_ids=frozenset(),
+        language=OutputLanguage.EN,
+        calculation_diagnostics=(_unresolved("05"),),
+    )
+    field = _field(form, "05")
+    if entered:
+        assert field.value == amount
+        assert field.origin is ModeloFormOrigin.OVERRIDES_SOURCE
+    else:
+        assert field.value is None
+        assert field.origin is ModeloFormOrigin.CALCULATION_FAILED
+    assert any(
+        note.casilla_id == "05" and note.attention is ModeloFormAttention.BLOCKS for note in form.calculation_notes
+    )

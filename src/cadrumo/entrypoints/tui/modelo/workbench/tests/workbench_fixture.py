@@ -299,6 +299,7 @@ class FakeActions:
     evidence_given: list[OrdinaryM303FilingEvidenceSubmission | None] = field(default_factory=list)
     exports: list[WorkbenchExportRequest] = field(default_factory=list)
     asks_elections: bool = False
+    export_artefacts: tuple[ModeloExportArtefact, ...] = (ModeloExportArtefact.FICHERO_BOE,)
     refusal: CadrumoError | None = None
     preflight_answer: WorkbenchPreflight = field(default_factory=WorkbenchPreflight)
     checked: list[tuple[WorkbenchChange, ...]] = field(default_factory=list)
@@ -352,7 +353,7 @@ class FakeActions:
 
     def export_offer(self) -> WorkbenchExportOffer:
         """Offer the filing file, and the payment elections when the test asks for them."""
-        return WorkbenchExportOffer(artefacts=(ModeloExportArtefact.FICHERO_BOE,), asks_elections=self.asks_elections)
+        return WorkbenchExportOffer(artefacts=self.export_artefacts, asks_elections=self.asks_elections)
 
     async def export(self, request: WorkbenchExportRequest) -> OperationControllerPort:
         """Record an export request."""

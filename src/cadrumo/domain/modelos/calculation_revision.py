@@ -66,6 +66,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnit
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
+from ..calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ..calculations.registry.ids import BindingId, RelationId
@@ -89,6 +90,7 @@ from .calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from .calculation_revision_operator_layer import CalculationOperatorLayer
+from .calculation_revision_rendering import CalculationRenderingSnapshot
 from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -196,6 +198,7 @@ class CalculationRevisionIdentityInputs(TypedDict):
     binding_overrides: Mapping[BindingId, str]
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity]
+    closed_record_row_sets: Sequence[ClosedRecordRowSet]
     row_casilla_values: Mapping[RowCasillaKey, Decimal]
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance]
     casilla_values: Mapping[CasillaId, Decimal]
@@ -213,6 +216,7 @@ class CalculationRevisionIdentityInputs(TypedDict):
     amendment_identity: CalculationRevisionAmendmentIdentity | None
     cleared_casilla_ids: Sequence[CasillaId]
     operator_layer: CalculationOperatorLayer | None
+    rendering_snapshot: CalculationRenderingSnapshot | None
 
 
 def calculation_revision_identity_inputs(
@@ -222,6 +226,7 @@ def calculation_revision_identity_inputs(
     binding_overrides: Mapping[BindingId, str],
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    closed_record_row_sets: Sequence[ClosedRecordRowSet] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -239,6 +244,7 @@ def calculation_revision_identity_inputs(
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
     cleared_casilla_ids: Sequence[CasillaId] = (),
     operator_layer: CalculationOperatorLayer | None = None,
+    rendering_snapshot: CalculationRenderingSnapshot | None = None,
 ) -> CalculationRevisionIdentityInputs:
     """Build the one complete target-id-free calculation-revision identity input.
 
@@ -253,6 +259,7 @@ def calculation_revision_identity_inputs(
         "binding_overrides": binding_overrides,
         "row_binding_values": row_binding_values,
         "row_source_identities": row_source_identities or {},
+        "closed_record_row_sets": closed_record_row_sets,
         "row_casilla_values": row_casilla_values or {},
         "row_casilla_provenance": row_casilla_provenance or {},
         "casilla_values": casilla_values,
@@ -270,6 +277,7 @@ def calculation_revision_identity_inputs(
         "amendment_identity": amendment_identity,
         "cleared_casilla_ids": cleared_casilla_ids,
         "operator_layer": operator_layer,
+        "rendering_snapshot": rendering_snapshot,
     }
 
 
@@ -280,6 +288,7 @@ def derive_calculation_revision_id(
     binding_overrides: Mapping[BindingId, str],
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    closed_record_row_sets: Sequence[ClosedRecordRowSet] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -297,6 +306,7 @@ def derive_calculation_revision_id(
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
     cleared_casilla_ids: Sequence[CasillaId] = (),
     operator_layer: CalculationOperatorLayer | None = None,
+    rendering_snapshot: CalculationRenderingSnapshot | None = None,
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt."""
     return derive_calculation_revision_id_from_identity_inputs(
@@ -306,6 +316,7 @@ def derive_calculation_revision_id(
             binding_overrides=binding_overrides,
             row_binding_values=row_binding_values,
             row_source_identities=row_source_identities,
+            closed_record_row_sets=closed_record_row_sets,
             row_casilla_values=row_casilla_values,
             row_casilla_provenance=row_casilla_provenance,
             casilla_values=casilla_values,
@@ -323,6 +334,7 @@ def derive_calculation_revision_id(
             amendment_identity=amendment_identity,
             cleared_casilla_ids=cleared_casilla_ids,
             operator_layer=operator_layer,
+            rendering_snapshot=rendering_snapshot,
         ),
     )
 
@@ -734,6 +746,18 @@ def _validate_row_casilla_coordinate(
 
 
 def _validate_row_materialization(revision: CalculationRevision) -> None:
+    try:
+        validate_closed_record_row_sets(
+            revision.closed_record_row_sets,
+            supplied_binding_ids=set(revision.binding_overrides) | set(revision.row_binding_values),
+        )
+    except ValueError as exc:
+        raise ModeloValidationError("closed record rows disagree with saved binding values or scope") from exc
+    if any(
+        row_set.work_unit_id != revision.work_unit_id or row_set.registry_snapshot_ref != revision.registry_snapshot_ref
+        for row_set in revision.closed_record_row_sets
+    ):
+        raise ModeloValidationError("closed record rows do not belong to the calculation revision")
     row_value_keys = {
         (binding_id, int(row_index)) for binding_id, rows in revision.row_binding_values.items() for row_index in rows
     }
@@ -860,6 +884,7 @@ class CalculationRevision(BaseModel):
     work_unit_id: WorkUnitId
     registry_snapshot_ref: RegistrySnapshotRef
     state: CalculationRevisionState
+    rendering_snapshot: CalculationRenderingSnapshot | None = None
     input_values_by_casilla_id: Mapping[CasillaId, str] = Field(default_factory=dict)
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
     row_binding_values: Mapping[BindingId, Mapping[str, str]] = Field(default_factory=dict)
@@ -868,6 +893,7 @@ class CalculationRevision(BaseModel):
         repr=False,
     )
     row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=empty_row_casilla_values, repr=False)
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = Field(default=(), repr=False)
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
         default_factory=empty_row_casilla_provenance,
         repr=False,
@@ -994,6 +1020,10 @@ class CalculationRevision(BaseModel):
     def _enforce_invariants(self, info: ValidationInfo) -> CalculationRevision:
         validation_context = _string_keyed_context(info.context)
         _validate_secure_revision_context(self, validation_context)
+        if self.rendering_snapshot is not None and (
+            self.rendering_snapshot.registry_snapshot.snapshot_ref != self.registry_snapshot_ref
+        ):
+            raise ModeloValidationError("saved rendering snapshot belongs to another calculation coordinate")
         _validate_source_provenance(self)
         derived = derive_calculation_revision_id_from_revision(self)
         _validate_revision_identity(self, derived)
@@ -1184,6 +1214,12 @@ class CalculationRevision(BaseModel):
             raise ModeloValidationError("row casilla provenance contains a non-positive row index")
         return dict(sorted(typed.items()))
 
+    @field_validator("closed_record_row_sets")
+    @classmethod
+    @pydantic_validation_boundary
+    def _canonical_closed_record_rows(cls, value: tuple[ClosedRecordRowSet, ...]) -> tuple[ClosedRecordRowSet, ...]:
+        return tuple(sorted(value, key=lambda row_set: row_set.record_id))
+
     @model_serializer(mode="wrap")
     def _redact_or_persist_row_materialization(
         self,
@@ -1194,8 +1230,11 @@ class CalculationRevision(BaseModel):
         if not isinstance(handled, dict):
             return handled
         payload = TypeAdapter(dict[str, object]).validate_python(handled)
+        if self.rendering_snapshot is None:
+            payload.pop("rendering_snapshot", None)
         context = _string_keyed_context(getattr(info, "context", None))
         if context is None or context.get("secure_calculation_revision") is not True:
+            payload.pop("closed_record_row_sets", None)
             payload.pop("row_source_identities", None)
             payload.pop("row_casilla_values", None)
             payload.pop("row_casilla_provenance", None)
@@ -1221,6 +1260,7 @@ def calculation_revision_identity_inputs_from_revision(
         binding_overrides=revision.binding_overrides,
         row_binding_values=revision.row_binding_values,
         row_source_identities=revision.row_source_identities,
+        closed_record_row_sets=revision.closed_record_row_sets,
         row_casilla_values=revision.row_casilla_values,
         row_casilla_provenance=revision.row_casilla_provenance,
         relation_overrides=revision.relation_overrides,
@@ -1238,6 +1278,7 @@ def calculation_revision_identity_inputs_from_revision(
         amendment_identity=revision.amendment_identity,
         cleared_casilla_ids=revision.cleared_casilla_ids,
         operator_layer=revision.operator_layer,
+        rendering_snapshot=revision.rendering_snapshot,
     )
 
 

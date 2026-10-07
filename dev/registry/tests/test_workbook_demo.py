@@ -23,7 +23,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.afiliado_contribution_bindings import AfiliadoContributionProvider
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
-from cadrumo.domain.calculations.registry.formula_runtime_ops import apply_rounding
+from cadrumo.domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError, apply_rounding
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormRepeatingGroupBlock
@@ -41,6 +41,296 @@ from ..workbook_demo_records import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+
+def test_390_demo_preserves_live_annual_totals_and_unknown_detail() -> None:
+    case = next(case for case in DEMO_CASES if case.modelo == "390")
+    snapshot, plan = build_demonstration_plan(case)
+    assert case.authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    inputs, bindings = demonstration_inputs(snapshot, case)
+    values = _numeric_inputs(inputs)
+    expected = {
+        "iva.anual.total-bases-iva": "48000",
+        "iva.anual.total-bases-cuotas-iva": "10080",
+        "iva.anual.soportado.interiores.base": "16000",
+        "iva.anual.soportado.interiores": "3360",
+        "iva.anual.resultado-liquidacion": "6720",
+        "iva.anual.volumen.total": "48000",
+    }
+    for target, amount in expected.items():
+        assert target not in values
+        assert _expected_result(snapshot, values, bindings, target) == Decimal(amount)
+        assert any(cell.casilla_id == target and cell.address.tab is TabName.FORM for cell in plan.formula_cells)
+    changed = {**values, "iva.anual.repercutido.tipo-21.cuota": Decimal("10290")}
+    assert _expected_result(snapshot, changed, bindings, "iva.anual.resultado-liquidacion") == Decimal("6930")
+    assert plan.guide and "El detalle de las deducciones" in plan.guide.paragraphs[0]
+    assert "iva.anual.deducible.interiores-corrientes.tipo-21.base" not in values
+
+
+@pytest.mark.parametrize("year", (2024, 2025))
+def test_390_identity_page_uses_year_and_keeps_unprovided_identity_unknown(year: int) -> None:
+    snapshot, plan = build_demonstration_plan(DemoCase("390", str(year), None, None, filing_year=year, period="0A"))
+    page = next(page for page in snapshot.revision.form_layouts[0].pages if page.id == "pag-1")
+    fields = {
+        block.id: block
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormContextFieldBlock)
+    }
+    assert form_context_value(snapshot, fields["year"]) == year
+    for key in ("nif", "surname", "given-name", "prior-receipt"):
+        assert form_context_value(snapshot, fields[key]) is None
+    values = [cell.value for cell in plan.value_cells if cell.address.tab is TabName.FORM]
+    assert "NIF" in values
+    assert "Apellidos o razón social" in values
+    assert "Número identificativo de la declaración anterior" in values
+    assert Decimal(year) in values
+    assert "Sin dato" in values
+    assert not any(value == "12345678Z" for value in values)
+
+
+@pytest.mark.parametrize("year", (2024, 2025))
+@pytest.mark.parametrize("section_id", ("3-activities", "4-representante-personas-juridicas"))
+def test_390_first_page_grids_preserve_independent_live_cells(year: int, section_id: str) -> None:
+    snapshot = workbook_demo.demonstration_snapshot(
+        DemoCase("390", str(year), None, None, filing_year=year, period="0A")
+    )
+    page = next(page for page in snapshot.revision.form_layouts[0].pages if page.id == "pag-1")
+    grid = next(section for section in page.sections if section.id == section_id).blocks[0]
+    assert grid.kind == "grid"
+    layout = plan_layout(snapshot.revision)
+    source = build_export_plan(snapshot)
+    seeded = {}
+    for index, row in enumerate(grid.rows):
+        if section_id == "3-activities":
+            figures = (
+                f"Arrendamiento ficticio {index + 1}: locales comerciales destinados "
+                "al ejercicio de actividades económicas.",
+                "A01",
+                "8612",
+            )
+        else:
+            figures = (
+                ("Ana Ejemplo", "Luis Ejemplo", "Eva Ejemplo"),
+                ("12345678Z", "00000000T", None),
+                ("01012024", "02012024", "03012024"),
+                ("Notaría ficticia primera", "Notaría ficticia segunda", "Notaría ficticia tercera"),
+            )[index]
+        for cell, value in zip(row.cells, figures, strict=True):
+            assert cell.binding_id is not None
+            seeded[layout.binding_cells[cell.binding_id]] = value
+    source = source.model_copy(
+        update={
+            "value_cells": tuple(
+                cell.model_copy(update={"value": seeded[cell.address]}) if cell.address in seeded else cell
+                for cell in source.value_cells
+            )
+        }
+    )
+    rendered = add_form_workbook(source, snapshot)
+    workbook = load_workbook(BytesIO(materialize_export_plan(rendered)), data_only=False)
+    for address, value in seeded.items():
+        assert workbook[address.tab.value].cell(address.row, address.column).value == value
+    rows = []
+    for row in grid.rows:
+        projected = []
+        for cell in row.cells:
+            assert cell.binding_id is not None
+            address = layout.binding_cells[cell.binding_id]
+            matches = [
+                item
+                for item in rendered.formula_cells
+                if item.address.tab is TabName.FORM
+                and item.formula == f'IF(ISBLANK({address.qualified()}),"Sin dato",{address.qualified()})'
+            ]
+            assert len(matches) == 1
+            projected.append(matches[0])
+            assert (
+                workbook[TabName.FORM.value].cell(matches[0].address.row, matches[0].address.column).value
+                == "=" + matches[0].formula
+            )
+        assert len({cell.address.row for cell in projected}) == 1
+        assert [cell.address.column for cell in projected] == [6, 8, 10]
+        rows.append(projected[0].address.row)
+    assert len(set(rows)) == (6 if section_id == "3-activities" else 4)
+    if section_id == "3-activities":
+        assert all(
+            next(h.height_pixels for h in rendered.row_heights if h.tab is TabName.FORM and h.row == row) > 44
+            for row in rows
+        )
+
+
+@pytest.mark.parametrize("year", (2024, 2025))
+def test_390_prorrata_keeps_each_description_with_its_five_live_fields(year: int) -> None:
+    snapshot = workbook_demo.demonstration_snapshot(
+        DemoCase("390", str(year), None, None, filing_year=year, period="0A")
+    )
+    page = next(page for page in snapshot.revision.form_layouts[0].pages if page.id == "pag-7")
+    section = next(s for s in page.sections if s.id == "12-prorratas")
+    layout = plan_layout(snapshot.revision)
+    seeded = {}
+    groups = []
+    for index in range(5):
+        description, grid = section.blocks[2 * index : 2 * index + 2]
+        assert description.kind == "field" and description.binding_id is not None
+        assert grid.kind == "grid"
+        bindings = [description.binding_id, *(cell.binding_id for cell in grid.rows[0].cells)]
+        values = (
+            f"Actividad ficticia {index + 1}",
+            f"0{index + 11}",
+            Decimal(1000 * index),
+            Decimal(500 * index),
+            "G",
+            None if index == 4 else Decimal(50),
+        )
+        addresses = []
+        for binding, value in zip(bindings, values, strict=True):
+            assert binding is not None
+            address = layout.binding_cells[binding]
+            seeded[address] = value
+            addresses.append(address)
+        groups.append(addresses)
+    source = build_export_plan(snapshot)
+    source = source.model_copy(
+        update={
+            "value_cells": tuple(
+                cell.model_copy(update={"value": seeded[cell.address]}) if cell.address in seeded else cell
+                for cell in source.value_cells
+            )
+        }
+    )
+    rendered = add_form_workbook(source, snapshot)
+    workbook = load_workbook(BytesIO(materialize_export_plan(rendered)), data_only=False)
+    previous_row = 0
+    for addresses in groups:
+        targets = []
+        for address in addresses:
+            assert workbook[address.tab.value][address.a1].value == seeded[address]
+            formula = f'IF(ISBLANK({address.qualified()}),"Sin dato",{address.qualified()})'
+            matches = [c for c in rendered.formula_cells if c.address.tab is TabName.FORM and c.formula == formula]
+            assert len(matches) == 1
+            target = matches[0].address
+            assert workbook[TabName.FORM.value][target.a1].value == "=" + formula
+            targets.append(target)
+        assert previous_row < targets[0].row < targets[1].row
+        assert len({target.row for target in targets[1:]}) == 1
+        assert len({target.column for target in targets[1:]}) == 5
+        previous_row = targets[1].row
+
+
+def test_303_early_2024_demo_omits_year_end_facts_and_pages() -> None:
+    case = next(case for case in DEMO_CASES if case.modelo == "303" and case.revision == "2024-hasta-08-y-2t")
+    snapshot, plan = build_demonstration_plan(case)
+    assert snapshot.period == "2T"
+    saved, _ = workbook_demo.m303_demonstration_facts(snapshot)
+    assert saved.filing_instance_evidence is not None
+    assert saved.filing_instance_evidence.m303 is not None
+    assert saved.filing_instance_evidence.m303.exonerado_390 is None
+    assert saved.filing_instance_evidence.m303.annual_volume_nonzero is None
+    assert saved.created_at.date() == date(2024, 6, 30)
+    inputs, bindings = demonstration_inputs(snapshot, case)
+    values = _numeric_inputs(inputs)
+    assert "80" not in values
+    assert _expected_result(snapshot, values, bindings, "71") == Decimal("1680")
+    assert any(cell.casilla_id == "71" and cell.address.tab is TabName.FORM for cell in plan.formula_cells)
+    assert not any(cell.casilla_id == "88" and cell.address.tab is TabName.FORM for cell in plan.formula_cells)
+    form_values = {cell.value for cell in plan.value_cells if cell.address.tab is TabName.FORM}
+    assert "Ana Ejemplo · persona ficticia" in form_values
+    assert "8612" not in form_values
+
+
+@pytest.mark.parametrize("year", [2022, 2023, 2024, 2025, 2026])
+def test_303_demo_renders_saved_facts_and_live_registry_totals(year: int) -> None:
+    case = next(
+        case for case in DEMO_CASES if case.modelo == "303" and case.filing_year == year and case.period == "4T"
+    )
+    snapshot, plan = build_demonstration_plan(case)
+    inputs, bindings = demonstration_inputs(snapshot, case)
+    values = _numeric_inputs(inputs)
+    assert _expected_result(snapshot, values, bindings, "71") == Decimal("1680")
+    assert _expected_result(snapshot, values, bindings, "88") == Decimal("48000")
+    assert _expected_result(
+        snapshot, {**values, "iva.repercutido.general": Decimal("2730")}, bindings, "71"
+    ) == Decimal("1890")
+    form_values = {cell.value for cell in plan.value_cells if cell.address.tab is TabName.FORM}
+    assert {"12345678Z", "Ana Ejemplo · persona ficticia", "Solo régimen general", "A01", "8612"} <= form_values
+    assert "Presentador ficticio" not in form_values
+    assert "fictional:workbook-303:annual-activity" not in form_values
+    assert any(cell.casilla_id == "71" and cell.address.tab is TabName.FORM for cell in plan.formula_cells)
+    assert plan.guide and "no se recalculan al editar las cifras" in plan.guide.paragraphs[0]
+    explanation = next(height for height in plan.row_heights if height.tab is TabName.GUIDE and height.row == 3)
+    assert explanation.height_pixels >= 160
+
+
+@pytest.mark.parametrize(
+    ("revision", "year", "period"),
+    [
+        ("2022", 2022, "4T"),
+        ("2023", 2023, "4T"),
+        ("2024-hasta-08-y-2t", 2024, "2T"),
+        ("2024-desde-09-y-3t", 2024, "4T"),
+        ("2025", 2025, "4T"),
+        ("2026-y-siguientes", 2026, "4T"),
+    ],
+)
+def test_303_annual_volume_matches_every_printed_addition_and_deduction(revision: str, year: int, period: str) -> None:
+    snapshot = workbook_demo.demonstration_snapshot(
+        DemoCase("303", revision, "71", Decimal("1680"), filing_year=year, period=period)
+    )
+    # Independently transcribed from BOE-A-2021-10509 p75946,
+    # 2022-19290 p158999, 2024-16129 p99219 and 2026-1761 p12132.
+    additions = (80, 81, 93, 94, 83, 84, 125, 126, 127, 128, 86, 95, 96, 97, 98)
+    deductions = (79, 99)
+    inputs = {str(box): Decimal("100") for box in (*additions, *deductions)}
+    assert _expected_result(snapshot, inputs, {}, "88") == Decimal("1300")
+    for box in additions:
+        assert _expected_result(snapshot, {**inputs, str(box): Decimal("107")}, {}, "88") == Decimal("1307")
+    for box in deductions:
+        assert _expected_result(snapshot, {**inputs, str(box): Decimal("107")}, {}, "88") == Decimal("1293")
+    assert _expected_result(snapshot, dict.fromkeys(inputs, Decimal("0")), {}, "88") == Decimal("0")
+    expression = next(f.expression for f in snapshot.revision.formulas if f.target_casilla_id == "88")
+    for omitted in inputs:
+        with pytest.raises(UnresolvedFormulaDependencyError):
+            evaluate_expression(
+                expression,
+                values={box: value for box, value in inputs.items() if box != omitted},
+                binding_values={},
+                parameters={},
+                date_context={},
+                relation_values={},
+                unresolved_relation_ids=frozenset(),
+                unresolved_casilla_ids={omitted},
+                operand_refs=[],
+                operand_casilla_refs=[],
+                operand_values=[],
+            )
+
+
+def test_322_form_uses_printed_calculations_and_independent_activity_description() -> None:
+    case = next(case for case in DEMO_CASES if case.modelo == "322")
+    snapshot, plan = build_demonstration_plan(case)
+    inputs, bindings = demonstration_inputs(snapshot, case)
+    values = _numeric_inputs(inputs)
+    for box, expected in (
+        ("38", "2100"),
+        ("62", "420"),
+        ("63", "1700"),
+        ("65", "1700"),
+        ("68", "1650"),
+        ("70", "1500"),
+        ("88", "10000"),
+    ):
+        assert _expected_result(snapshot, values, bindings, box) == Decimal(expected)
+    assert "70" not in values
+    assert "actividad.principal.codigo" not in {str(value.casilla_id) for value in inputs.values}
+    assert any(cell.value == "Distribución de carburantes · ejemplo ficticio" for cell in plan.value_cells)
+    assert any(cell.value == "Entidad ficticia del grupo Ejemplo" for cell in plan.value_cells)
+    assert any(cell.address.tab is TabName.FORM for cell in plan.formula_cells)
+    zero_boxes = {str(n) for n in (153, 154, 155, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173)}
+    zero_rules = {rule.casilla_id: rule for rule in plan.cell_constraints if rule.casilla_id in zero_boxes}
+    assert set(zero_rules) == zero_boxes
+    assert all(rule.min_value == rule.max_value == Decimal("0") for rule in zero_rules.values())
+    assert all(rule.address.tab is TabName.ENTRADAS for rule in zero_rules.values())
 
 
 @pytest.mark.parametrize("case", [case for case in DEMO_CASES if case.modelo == "194"], ids=lambda case: case.revision)
@@ -306,7 +596,7 @@ def test_184_member_amounts_are_saved_declarations_not_invented_formulas(case: D
         if cell.address.tab is TabName.FORM and cell.value in (Decimal("3600"), Decimal("2400"))
     ]
     assert len(amounts) == 2
-    assert all(formats[cell.address] == "#,##0.00" for cell in amounts)
+    assert all(formats[cell.address] == '#,##0.00" €"' for cell in amounts)
     shares = [
         cell
         for cell in plan.value_cells
@@ -372,7 +662,7 @@ def test_180_saved_recipients_remain_separate_and_missing_fields_unknown(case: D
         and cell.value in (Decimal("12000"), Decimal("6000"), Decimal("2280"), Decimal("1140"))
     ]
     assert len(money) == 4
-    assert all(formats[cell.address] == "#,##0.00" for cell in money)
+    assert all(formats[cell.address] == '#,##0.00" €"' for cell in money)
     codes = [cell for cell in plan.value_cells if cell.address.tab is TabName.FORM and cell.value == "08"]
     assert len(codes) == 2 and all(formats[cell.address] == "@" for cell in codes)
     assert not any("[78]" in str(value) or "[114]" in str(value) for value in form)
@@ -999,3 +1289,39 @@ def test_309_historical_example_keeps_seven_rows_and_cannot_acquire_filing_autho
         if cell.address.tab is TabName.FORM and cell.casilla_id == "decl.resultado-24"
     ]
     assert len(results) == 2 and results[0].formula == results[1].formula
+
+
+def test_309_2016_preview_uses_registry_layout_and_fictional_identity() -> None:
+    from ..workbook_demo_nonperiodic_historical import build_historical_nonperiodic_plan
+
+    source, plan = build_historical_nonperiodic_plan()
+    assert source.revision.id == "2016-2017"
+    assert plan.metadata.preview_year == 2016
+    assert plan.human_presentation
+    values = [c.value for c in plan.value_cells if c.address.tab is TabName.FORM]
+    assert "12345678Z" in values
+    assert "00000000T" not in values
+    assert "Ana Ejemplo" in values
+    totals = [c for c in plan.formula_cells if c.address.tab is TabName.FORM and c.casilla_id == "decl.resultado-24"]
+    assert len(totals) == 2
+    assert totals[0].formula == totals[1].formula
+    assert {c.casilla_id for c in plan.value_cells if c.value == "Ejemplo ficticio"} == {"papel-domicilio-via"}
+    assert not any(c.value for c in plan.value_cells if str(c.casilla_id).startswith("papel-ccc-"))
+
+
+def test_309_2015_preview_retains_original_mark_fields_and_paper_identity() -> None:
+    from ..workbook_demo_nonperiodic_historical import build_historical_nonperiodic_plan
+
+    source, plan = build_historical_nonperiodic_plan(year=2015)
+    assert source.revision.id == "2004-2015"
+    assert plan.metadata.preview_year == 2015
+    values = [c.value for c in plan.value_cells if c.address.tab is TabName.FORM]
+    assert "12345678Z" in values
+    inputs = {str(c.casilla_id): c.value for c in plan.value_cells if c.role == "operator_input"}
+    assert inputs["papel-nombre-completo"] == "Ana Ejemplo"
+    assert inputs["papel-complementaria"] is False
+    assert inputs["decl.hecho-imponible-medios-transporte-nuevos"] == "X"
+    assert "decl.hecho-imponible" not in inputs
+    assert "decl.situacion-tributaria" not in inputs
+    totals = [c for c in plan.formula_cells if c.address.tab is TabName.FORM and c.casilla_id == "decl.resultado-24"]
+    assert len(totals) == 2 and totals[0].formula == totals[1].formula

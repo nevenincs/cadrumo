@@ -1597,6 +1597,109 @@ modelo:
           Afegit.
         title: IVA. Declaració-resum anual
       form:
+        authored:
+          accrual:
+            heading: 2. Meritació
+          activities:
+            heading: 3. Dades estadístiques · Activitats
+          activity-code:
+            heading: Codi
+          activity-description:
+            heading: Activitat
+          activity-index:
+            heading: Índex de quota
+          activity-input-tax:
+            heading: Quotes suportades
+          activity-order:
+            heading: Ordre
+          activity-output-tax:
+            heading: Quota meritada
+          activity-result:
+            heading: Quota derivada del règim simplificat
+          activity-revenue:
+            heading: Volum d’ingressos
+          agriculture-compensation:
+            heading: Compensacions · agricultura, ramaderia i pesca
+          common-settlement:
+            heading: 7. Liquidació anual · territori comú
+          deduction-adjustment:
+            heading: Rectificació de deduccions
+          deduction-group-1:
+            heading: 13. IVA deduïble · Grup 1
+          deduction-group-2:
+            heading: 13. IVA deduïble · Grup 2
+          deduction-group-3:
+            heading: 13. IVA deduïble · Grup 3
+          deduction-total:
+            heading: Suma de deduccions
+          domestic-current:
+            heading: Operacions interiors · béns i serveis corrents
+          domestic-investment:
+            heading: Operacions interiors · béns d’inversió
+          given-name:
+            heading: Nom
+          group-periods:
+            heading: 9.2. Períodes en règim de grup d’entitats
+          iae-heading:
+            heading: Epígraf IAE
+          imports-current:
+            heading: Importacions · béns corrents
+          imports-investment:
+            heading: Importacions · béns d’inversió
+          intra-current:
+            heading: Adquisicions intracomunitàries · béns corrents i serveis
+          intra-investment:
+            heading: Adquisicions intracomunitàries · béns d’inversió
+          investment-adjustment:
+            heading: Regularització de béns d’inversió
+          module-1:
+            heading: Mòdul 1
+          module-2:
+            heading: Mòdul 2
+          module-3:
+            heading: Mòdul 3
+          module-4:
+            heading: Mòdul 4
+          module-5:
+            heading: Mòdul 5
+          module-6:
+            heading: Mòdul 6
+          module-7:
+            heading: Mòdul 7
+          module-amount:
+            heading: Import
+          module-units:
+            heading: Nombre d’unitats
+          nif:
+            heading: NIF
+          ordinary-periods:
+            heading: 9.1. Períodes fora del règim de grup d’entitats
+          other-1:
+            heading: Altra activitat 1
+          other-2:
+            heading: Altra activitat 2
+          other-3:
+            heading: Altra activitat 3
+          other-4:
+            heading: Altra activitat 4
+          other-5:
+            heading: Altra activitat 5
+          page-one:
+            heading: Pàgina 1
+          principal:
+            heading: Principal
+          prior-receipt:
+            heading: Número identificatiu de la declaració anterior
+          specific-operations:
+            heading: 11. Operacions específiques
+          surname:
+            heading: Cognoms o raó social
+          taxpayer:
+            heading: 1. Subjecte passiu
+          territorial-settlement:
+            heading: 8. Tributació a diverses administracions
+          year:
+            heading: Exercici
         column:
           actividad-desarrollada:
             heading: Activitat desenvolupada

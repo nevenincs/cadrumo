@@ -23,6 +23,7 @@ from ....core.hashing import sha256_hex
 from ....core.i18n.render import tr
 from ....core.period import Period, is_administrative_period_token
 from ....core.time.clock import now
+from ....domain.calculations.record_row_membership import ClosedRecordRowSet, resolve_closed_record_rows
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.binding_selector_utils import (
     BindingRowSetSelector,
@@ -55,6 +56,8 @@ from ._styling import compute_styling
 from ._translator import is_translatable, translate_formula
 from .errors import CalcSheetsEngineError
 from .evidence import sheet_evidence_from_ledger_filing
+from .fictional_rows import fictional_unused_form_rows
+from .formula_guards import conditional_missing_input_guard
 from .layout import SheetLayout, plan_layout
 from .number_formats import numeric_format
 from .records import (
@@ -375,6 +378,7 @@ def _formula_cells(
 ) -> tuple[SheetFormulaCell, ...]:
     by_id = casillas_by_id(revision)
     formulas = {formula.id: formula for formula in revision.formulas}
+    expressions_by_target = {formula.target_casilla_id: formula.expression for formula in revision.formulas}
     cells: list[SheetFormulaCell] = []
     for row in layout.calculos_rows:
         casilla = by_id[row.casilla_id]
@@ -390,6 +394,11 @@ def _formula_cells(
                 casilla_id=casilla.id,
                 rounding_scale=scale,
                 rounding_rule=rule,
+                missing_input_condition=conditional_missing_input_guard(
+                    formula.expression,
+                    formulas=expressions_by_target,
+                    layout=layout,
+                ),
             ),
         )
     return tuple(cells)
@@ -1043,6 +1052,7 @@ def build_export_plan(
     relation_resolver: RelationResolver | None = None,
     ledger_filing_evidence: LedgerFilingEvidence | None = None,
     casilla_ids_by_contributor_id: Mapping[str, Iterable[CasillaId]] | None = None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
 ) -> SheetExportPlan:
     """Walk a registry snapshot and produce a complete `SheetExportPlan`.
 
@@ -1087,6 +1097,9 @@ def build_export_plan(
             projection refuses to infer modelo-specific tax attribution
             from row contents and raises for an unattributed
             contributor.
+        closed_record_row_sets: Admitted source membership from the same
+            saved calculation. This enables unused-row predicates, without
+            converting an unfilled operator row into evidence of absence.
 
     Returns:
         A complete :class:`SheetExportPlan` ready for the Google apply adapter.
@@ -1113,6 +1126,21 @@ def build_export_plan(
         bracket_filter_date=filing_anchor,
         excluded_casilla_ids=excluded,
     )
+    supplied_addresses = {
+        layout.entradas_cells[item.casilla_id].qualified()
+        for item in inputs.values
+        if item.value is not None and item.casilla_id in layout.entradas_cells
+    }
+    rows = resolve_closed_record_rows(
+        snapshot,
+        closed_record_row_sets,
+        supplied_binding_ids={
+            binding
+            for binding, address in {**layout.binding_cells, **layout.date_binding_cells}.items()
+            if address.qualified() in supplied_addresses
+        },
+    )
+    layout = layout.model_copy(update={"record_rows": rows})
     relations = _relation_values_with_registry_grounding(snapshot, layout, supplied_relations)
 
     evidence = (
@@ -1155,12 +1183,17 @@ def build_template_preview_plan(
     *,
     guide: SheetGuideContent,
     operator_inputs: OperatorInputs | None = None,
+    unused_example_rows: Mapping[str, tuple[str, ...]] | None = None,
 ) -> SheetExportPlan[SheetTemplatePreviewMetadata]:
     """Compile fictional inputs without profile, evidence, or relation resolution."""
     frame = source.preview_frame
     anchor = calculation_filing_date(frame) if isinstance(frame, Period) else date(frame.filing_year, 12, 31)
     excluded = _untranslatable_internal_only_casillas(source.revision, bracket_filter_date=anchor)
     layout = plan_layout(source.revision, bracket_filter_date=anchor, excluded_casilla_ids=excluded)
+    if unused_example_rows:
+        layout = layout.model_copy(
+            update={"record_rows": fictional_unused_form_rows(source.revision, unused_example_rows)}
+        )
     return assemble_workbook_plan(
         revision=source.revision,
         layout=layout,

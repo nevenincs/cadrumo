@@ -816,10 +816,9 @@ sequence_order = {source_refs = [0, 3, 1, 2]}
 [[revisions."2023".family_overrides]]
 family = "constructs"
 selector = {revision = "2022", id = "modelo-390-iva-resumen-anual"}
-sequence_additions = {casilla_ids = ["iva.anual.repercutido.recargo.tipo-0-62.cuota"], deadline_windows = ["modelo-390-2023-0a"], export_layouts = ["generated-modelo-390-2023-fichero"], source_refs = ["aeat-dr-390-2023"]}
-sequence_removals = {deadline_windows = [0], export_layouts = [0]}
-sequence_order = {casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 80, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79], source_refs = [0, 3, 1, 2]}
-
+sequence_additions = { casilla_ids = ["iva.anual.repercutido.recargo.tipo-0-62.cuota"], deadline_windows = ["modelo-390-2023-0a"], export_layouts = ["generated-modelo-390-2023-fichero"], source_refs = ["aeat-dr-390-2023", "boe-modelo-390-2023-printed-calculations"] }
+sequence_removals = { deadline_windows = [0], export_layouts = [0] }
+sequence_order = { casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 80, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79], source_refs = [0, 4, 1, 2, 3, 5] }
 [[revisions."2023".family_overrides]]
 family = "application_links"
 selector = {revision = "2022", id = "modelo-390-calculation"}
@@ -872,6 +871,23 @@ sequence_order = {source_refs = [1, 0]}
 family = "completeness_manifest"
 selector = {revision = "2022", id = "aeat-dr-390-2022"}
 replacement_id = "aeat-dr-390-2023"
-sequence_additions = {casillas = [{casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota", number = "666"}], source_refs = ["aeat-dr-390-2023"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 145, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144], source_refs = [2, 0, 1]}
+sequence_additions = { casillas = [{ casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota", number = "666" }, { casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota", number = "664" }], source_refs = ["aeat-dr-390-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 241, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 242, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240], source_refs = [2, 0, 1] }
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = { revision = "2022", id = "modelo-390-iva-anual-cuota-devengada-total" }
+[revisions."2023".family_overrides.fields]
+source_refs = ["boe-modelo-390-2023-printed-calculations"]
+expression = { op = "add", args = [
+    { casilla_id = "iva.anual.total-bases-cuotas-iva" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.cuota" },
+    { casilla_id = "iva.anual.modificacion.recargo.cuota" },
+    { casilla_id = "iva.anual.modificacion.recargo-concurso.cuota" },
+] }
+source_citations = [{ source_ref = "boe-modelo-390-2023-printed-calculations", required_text = ["34 + 664 + 36 +666 + 600 + 602 + 42 + 44 + 46"] }]

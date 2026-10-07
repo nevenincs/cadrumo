@@ -678,6 +678,234 @@ modelo:
         official_name: Modelo 303. Value Added Tax. Self-assessment.
         title: VAT. Self-assessment (quarterly)
       form:
+        authored:
+          administracion-copy:
+            heading: Copy for the tax administration or financial institution
+          annual:
+            activity-1:
+              heading: Principal activity
+            activity-2:
+              heading: Other activity 1
+            activity-3:
+              heading: Other activity 2
+            activity-4:
+              heading: Other activity 3
+            activity-5:
+              heading: Other activity 4
+            activity-6:
+              heading: Other activity 5
+            third-parties:
+              heading: Transactions with third parties
+            third-parties-declaration:
+              heading: D · Required to submit the annual third-party transactions
+                declaration
+          annual-clave-2022:
+            heading: B · Activity code
+          banco:
+            heading: Bank name
+          bic:
+            heading: SWIFT-BIC code
+          ciudad-banco:
+            heading: City
+          complementaria:
+            heading: Supplementary return (5)
+          complementaria-2022:
+            heading: Supplementary return (8)
+          concurso:
+            heading: Insolvency declared in this period
+          conjunta:
+            heading: Joint self-assessment
+          criterio-caja:
+            heading: Cash accounting scheme
+          cuenta-bancaria:
+            heading: Bank account for payment or refund
+          deducible:
+            heading: Deductible VAT and general scheme result
+          destinatario-caja:
+            heading: Recipient of transactions under cash accounting
+          devengado:
+            heading: Output VAT
+          devengo:
+            heading: Tax period (2)
+          direccion-banco:
+            heading: Bank address
+          exonerado:
+            heading: Exempt from annual summary, form 390
+          fecha-concurso:
+            heading: Date of insolvency order
+          foral:
+            heading: Taxation exclusively by a foral administration
+          gasolinas:
+            heading: Entitlement to deduct advance payments on fuel supplies
+          grupo-1:
+            heading: 'Deductible VAT: Group 1'
+          grupo-2:
+            heading: 'Deductible VAT: Group 2'
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Identification (1)
+          importacion-corriente:
+            heading: 'Imports: current goods'
+          importacion-inversion:
+            heading: 'Imports: capital goods'
+          interior-corriente:
+            heading: 'Domestic transactions: current goods and services'
+          interior-inversion:
+            heading: 'Domestic transactions: capital goods'
+          intra-corriente:
+            heading: 'Intra-EU acquisitions: current goods and services'
+          intra-inversion:
+            heading: 'Intra-EU acquisitions: capital goods'
+          justificante:
+            heading: Previous return receipt number
+          motivo-discrepancia:
+            heading: Disagreement with administrative interpretation
+          motivo-rectificacion:
+            heading: Corrections
+          nif:
+            heading: Tax identification number
+          'no':
+            heading: 'No'
+          nombre:
+            heading: Full name or company name
+          opcion-prorrata:
+            heading: Election of special pro rata
+          operaciones-anuales:
+            heading: Transactions during the year
+          page-1:
+            heading: Identification and general scheme
+          page-2:
+            heading: Simplified scheme
+          page-3:
+            heading: Additional information and result
+          page-4:
+            heading: Annual information for taxpayers exempt from form 390
+          page-5:
+            heading: Pro rata and separate deductions
+          page-6:
+            heading: Payment, refund and bank account
+          pais-banco:
+            heading: Country code
+          reagp:
+            heading: Agriculture, livestock and fishing scheme compensation
+          rectificacion-devolucion:
+            heading: Correction refund (9)
+          rectificaciones-deducciones:
+            heading: Adjustment of deductions
+          rectificativa:
+            heading: Amendment (5)
+          redeme:
+            heading: Monthly refund register
+          regimen:
+            heading: Tax regime
+          resultado:
+            heading: Result
+          revocacion-prorrata:
+            heading: Revocation of special pro rata election
+          rg-rs:
+            heading: General and simplified schemes
+          rs:
+            actividad-a1:
+              heading: Activity A1
+            actividad-a2:
+              heading: Activity A2
+            actividad-b1:
+              heading: Activity B1
+            actividad-b2:
+              heading: Activity B2
+            activity-code:
+              heading: Activity code
+            cuota-anual-derivada-regimen-simplificado:
+              heading: Annual simplified-scheme tax
+            cuota-devengada:
+              heading: Accrued tax
+            cuota-devengada-operaciones-corrientes:
+              heading: Output VAT on current transactions
+            cuota-minima:
+              heading: Minimum tax
+            cuota-soportada-operaciones-corrientes:
+              heading: Input VAT on current transactions
+            cuotas-soportadas-operaciones-corrientes:
+              heading: Input VAT on current transactions
+            devolucion-cuotas-soportadas-otros-paises:
+              heading: Refund of input VAT incurred abroad
+            iae-epigrafe:
+              heading: IAE activity heading
+            indice-corrector-actividad-temporada:
+              heading: Seasonal activity adjustment coefficient · Q1, Q2 and Q3
+            indice-corrector-actividades-temporada:
+              heading: Seasonal activity adjustment coefficient · Q4
+            indice-cuota:
+              heading: Tax coefficient
+            ingreso-cuenta:
+              heading: Advance payment
+            modulo-1-importe:
+              heading: Module 1 · Amount
+            modulo-1-unidades:
+              heading: Module 1 · Number of units
+            modulo-2-importe:
+              heading: Module 2 · Amount
+            modulo-2-unidades:
+              heading: Module 2 · Number of units
+            modulo-3-importe:
+              heading: Module 3 · Amount
+            modulo-3-unidades:
+              heading: Module 3 · Number of units
+            modulo-4-importe:
+              heading: Module 4 · Amount
+            modulo-4-unidades:
+              heading: Module 4 · Number of units
+            modulo-5-importe:
+              heading: Module 5 · Amount
+            modulo-5-unidades:
+              heading: Module 5 · Number of units
+            modulo-6-importe:
+              heading: Module 6 · Amount
+            modulo-6-unidades:
+              heading: Module 6 · Number of units
+            modulo-7-importe:
+              heading: Module 7 · Amount
+            modulo-7-unidades:
+              heading: Module 7 · Number of units
+            porcentaje-cuota-minima:
+              heading: Minimum tax percentage
+            porcentaje-ingreso-cuenta:
+              heading: Advance payment percentage
+            reducciones:
+              heading: Reductions
+            resultado-cuarto-trimestre:
+              heading: Result · Q4
+            volumen-ingresos:
+              heading: Revenue
+          rs-anticipos:
+            heading: 'Advance payments: Q1, Q2 and Q3'
+          rs-anual:
+            heading: 'Annual liability: Q4'
+          rs-deducible:
+            heading: Deductible VAT
+          rs-devengado:
+            heading: Output VAT
+          rs-resultado:
+            heading: Simplified scheme result
+          si:
+            heading: 'Yes'
+          sii:
+            heading: Voluntarily enrolled in SII
+          sin-marca:
+            heading: Not indicated
+          solo-rg:
+            heading: General scheme only
+          solo-rs:
+            heading: Simplified scheme only
+          territorio:
+            heading: Taxation by territory
+          tipo-concurso:
+            heading: Pre-insolvency or post-insolvency return
+          total-devengado:
+            heading: Total output VAT
+          volumen:
+            heading: Non-zero annual turnover
         column:
           1t-2t-3t:
             heading: Q1/Q2/Q3

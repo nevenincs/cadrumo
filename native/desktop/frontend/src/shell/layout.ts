@@ -51,7 +51,7 @@ export const DEFAULT_PREFS: Prefs = {
 export const DEFAULT_LAYOUT: Layout = {
   tuiShown: true,
   splitRatio: 0.56,
-  panelOpen: true,
+  panelOpen: false,
   panelRatio: 0.3,
   tab: "console",
   zoom: 1,

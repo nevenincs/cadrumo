@@ -22,6 +22,7 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
+from ....application.export.calculation_review_xlsx_operation import CalculationReviewXlsxResult
 from ....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
@@ -56,6 +57,7 @@ EXPORT_ARTEFACT_LOCALE_KEYS: Final[dict[ModeloExportArtefact, str]] = {
     ModeloExportArtefact.FICHERO_BOE: "tui.modelo.export.artefact.fichero_boe",
     ModeloExportArtefact.CALCULATION_REPORT_CSV: "tui.modelo.export.artefact.calculation_report_csv",
     ModeloExportArtefact.CALCULATION_REPORT_PDF: "tui.modelo.export.artefact.calculation_report_pdf",
+    ModeloExportArtefact.CALCULATION_REVIEW_XLSX: "tui.modelo.export.artefact.calculation_review_xlsx",
 }
 #: Each evidence status in the operator's words. Every member appears, so a
 #: status the export can state is never shown as a bare token.
@@ -97,8 +99,24 @@ EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS: Final[dict[str, str]] = {
 }
 
 
-def export_result_values(result: ModeloExportPublicResultV3) -> dict[str, str]:
+def export_result_values(result: ModeloExportPublicResultV3 | CalculationReviewXlsxResult) -> dict[str, str]:
     """Return each row's displayed value, copied from the result and named in the operator's words."""
+    if isinstance(result, CalculationReviewXlsxResult):
+        return {
+            "calculation_revision_id": result.calculation_revision_id,
+            "artefact": tr(EXPORT_ARTEFACT_LOCALE_KEYS[ModeloExportArtefact.CALCULATION_REVIEW_XLSX]),
+            "export_format": f"XLSX · {result.title}",
+            "software_identity_grade": tr(SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS[None]),
+            "evidence_status": tr(
+                EXPORT_EVIDENCE_STATUS_LOCALE_KEYS[
+                    ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE
+                ]
+            ),
+            "completeness": tr(f"application.storage.calc_sheets.review.labels.status_{result.review_status.value}"),
+            "output_path": result.output_path,
+            "byte_size": str(result.byte_size),
+            "file_sha256": result.file_sha256,
+        }
     return {
         "calculation_revision_id": result.calculation_revision_id,
         "artefact": tr(EXPORT_ARTEFACT_LOCALE_KEYS[result.artefact]),
@@ -112,7 +130,9 @@ def export_result_values(result: ModeloExportPublicResultV3) -> dict[str, str]:
     }
 
 
-def export_result_warnings(result: ModeloExportPublicResultV3 | None) -> tuple[NoticePresentation, ...]:
+def export_result_warnings(
+    result: ModeloExportPublicResultV3 | CalculationReviewXlsxResult | None,
+) -> tuple[NoticePresentation, ...]:
     """Return every limit the result states on the file, most fundamental first.
 
     No export is official AEAT evidence, so that warning is always present. The
@@ -122,6 +142,14 @@ def export_result_warnings(result: ModeloExportPublicResultV3 | None) -> tuple[N
     if result is None:
         return (NoticePresentation(severity="warning", message=tr("tui.modelo.export.result.unavailable")),)
     warnings = [NoticePresentation(severity="warning", message=tr("tui.modelo.export.result.warning.not_official"))]
+    if isinstance(result, CalculationReviewXlsxResult):
+        warnings.append(
+            NoticePresentation(
+                severity="warning",
+                message=tr(f"application.storage.calc_sheets.review.labels.status_{result.review_status.value}"),
+            )
+        )
+        return tuple(warnings)
     if result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
         # A report carries no header of its own: the grade is the one the
         # filing file for its modelo would stamp, and the warning says so.
@@ -153,7 +181,7 @@ class ModeloExportResultScreen(ModalScreen[None]):
     DEFAULT_CSS = _EXPORT_RESULT_CSS
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False), Binding("t", "technical", "", show=False)]
 
-    def __init__(self, result: ModeloExportPublicResultV3 | None) -> None:
+    def __init__(self, result: ModeloExportPublicResultV3 | CalculationReviewXlsxResult | None) -> None:
         """Hold the resolved result, or ``None`` when it could not be read."""
         super().__init__()
         self._result = result
@@ -194,7 +222,8 @@ class ModeloExportResultScreen(ModalScreen[None]):
             rows.update(EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS)
         for row_key, label_key in rows.items():
             table.add_row(tr(label_key), values[row_key], key=row_key)
-        account = None if result.fichero_boe is None else result.fichero_boe.selected_account
+        receipt = result.fichero_boe if isinstance(result, ModeloExportPublicResultV3) else None
+        account = None if receipt is None else receipt.selected_account
         if account is not None:
             table.add_row(
                 tr(f"tui.modelo.export.result.label.{account.role.value}_account"),

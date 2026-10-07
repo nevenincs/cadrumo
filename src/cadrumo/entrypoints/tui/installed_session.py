@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from logging import WARNING
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -27,8 +28,10 @@ from ...application.user_profile.login_interaction import (
 )
 from ...application.user_profile.profile_record_repository import close_active_profile_record_session
 from ...core.async_cleanup import AsyncResourceCleanupError
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
+from ...core.logging import get_logger
 from ..adapter_composition import profile_adapter_composition
 from ..operation_composition import build_production_operation_registry
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
@@ -46,6 +49,8 @@ SESSION_COMPLETED = 0
 
 SESSION_INVENTORY_UNAVAILABLE = 1
 """Profile discovery or runtime admission could not be served truthfully."""
+
+_LOGGER = get_logger(__name__)
 
 
 def _release_bootstrap_custody() -> None:
@@ -67,12 +72,21 @@ def _run_registration_screen() -> bool:
     )
 
     try:
+        diagnostic_event(_LOGGER, "tui_registration_opened", fields={"stage": "bootstrap_registration"})
         outcome = run_credential_screen(
             RegistrationScreen(
                 assess=assess_profile_password,
                 register=build_profile_registration_attempt,
                 enroll_recovery=build_profile_recovery_enrollment_attempt,
             )
+        )
+        diagnostic_event(
+            _LOGGER,
+            "tui_registration_closed",
+            fields={
+                "outcome": "profile_created" if outcome is not None else "abandoned",
+                "profile_persisted": outcome is not None,
+            },
         )
         return outcome is not None
     finally:
@@ -181,6 +195,12 @@ async def _run_runtime_session(
 def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
     if inventory.state not in {ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED}:
         return None
+    diagnostic_event(
+        _LOGGER,
+        "tui_inventory_refused",
+        fields={"outcome": "refused", "reason_code": inventory.reason_code},
+        level=WARNING,
+    )
     sys.stderr.write(f"{inventory.reason_code}\n")
     return SESSION_INVENTORY_UNAVAILABLE
 
@@ -197,6 +217,13 @@ def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusal
         # A numeric refusal cannot retain an unsettled native owner.
         raise error
     reason = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
+    diagnostic_event(
+        _LOGGER,
+        "tui_runtime_session_refused",
+        fields={**diagnostic_error_fields(error), "outcome": "refused", "reason_code": reason},
+        level=WARNING,
+        primary_error=error,
+    )
     sys.stderr.write(f"{reason}\n")
     return SESSION_INVENTORY_UNAVAILABLE
 
@@ -239,12 +266,22 @@ def run_installed_workbench_session(
         operation_contracts = build_production_operation_registry().public_contract_set
         while True:
             inventory = observe_profile_login_inventory()
+            diagnostic_event(
+                _LOGGER,
+                "tui_inventory_observed",
+                fields={"inventory_state": inventory.state.value, "profile_count": len(inventory.choices)},
+            )
             unavailable = _unavailable_inventory(inventory)
             if unavailable is not None:
                 return unavailable
             if inventory.state is ProfileLoginInventoryState.EMPTY:
                 if not _registration_completed(headless):
                     return SESSION_COMPLETED
+                diagnostic_event(
+                    _LOGGER,
+                    "tui_registration_runtime_admission_pending",
+                    fields={"profile_persisted": True, "stage": "runtime_admission"},
+                )
                 continue
             if headless and auto_pilot is None:
                 return SESSION_COMPLETED
@@ -260,6 +297,7 @@ def run_installed_workbench_session(
             if recompose is None:
                 return SESSION_COMPLETED
             choose_profile = recompose.reason is AccountRecomposeReasonV1.CHANGE_USER
+            diagnostic_event(_LOGGER, "tui_session_recompose_requested", fields={"reason_code": recompose.reason.value})
 
 
 __all__ = ["SESSION_COMPLETED", "SESSION_INVENTORY_UNAVAILABLE", "run_installed_workbench_session"]

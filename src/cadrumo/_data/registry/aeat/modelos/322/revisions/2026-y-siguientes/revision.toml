@@ -470,19 +470,19 @@ restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "153" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:74 field 39 position 440 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:96 field 49 position 522 retain box[153], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "154" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_tipo",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:76 field 40 position 457 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:98 field 50 position 539 retain box[154], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 5-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "155" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:78 field 41 position 462 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:100 field 51 position 544 retain box[155], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
@@ -524,73 +524,73 @@ restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "162" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:54 field 22 position 211 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:67 field 29 position 254 retain box[162], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "163" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_tipo",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:56 field 23 position 228 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:69 field 30 position 271 retain box[163], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 5-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "164" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:58 field 24 position 233 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:71 field 31 position 276 retain box[164], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "165" }
-fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:145 (sha256 a70f3a2ca7dd) box [165] field 100 position 1350 length 17 Num; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:84 (sha256 f014cec44d49) box [165] field 43 position 444 length 17 Num; same description and content format (15 enteros + 2 decimales); only record field/position moved.", continuidad_origin = "grounded" }
+fields = { continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:145 field 100 position 1350 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:84 field 43 position 444 retain box[165], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only.", continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe"}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "166" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_tipo",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:148 field 101 position 1367 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:87 field 44 position 461 retain box[166], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 5-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "167" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:151 field 102 position 1372 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:90 field 45 position 466 retain box[167], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "168" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:154 field 103 position 1389 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:117 field 67 position 780 retain box[168], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "169" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_tipo",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:157 field 104 position 1406 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:120 field 68 position 797 retain box[169], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 5-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "170" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:160 field 105 position 1411 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:123 field 69 position 802 retain box[170], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "171" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:136 field 97 position 1311 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:55 field 23 position 176 retain box[171], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "172" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_tipo",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:139 field 98 position 1328 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:58 field 24 position 193 retain box[172], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 5-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "173" }
-fields = { continuidad_origin = "seeded" }
+fields = { continuidad_origin = "grounded", constraints = {min_value = "0", max_value = "0", legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"]},semantic_role = "m322_casilla_inhabilitada_importe",continuidad_evidence = "AEAT DR32201: 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:142 field 99 position 1333 and 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:61 field 25 position 198 retain box[173], the same intragroup/general/surcharge row, base/rate/quota meaning, Num type and 17-byte width. The 2026 source explicitly requires Note5: these boxes must contain zero. Preserve the existing lineage identity and classify the current slot as disabled amount/rate; this is a restricted continuation, not a newly repurposed legal amount. No earlier revision is claimed zero-only."}
 removed_fields = []
 restate_provenance = true
 
@@ -1310,13 +1310,13 @@ restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "decl.prorrata-especial" }
-fields = { constraints = { max_length = 1, enum = ["0", "1", "2", "3"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"] }, continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:47 (sha256 a70f3a2ca7dd) DR32201 campo 15 posicion 132 len 1 Num; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:48 (sha256 f014cec44d49) DR32201 campo 16 posicion 133 len 1 Num; mismo concepto prorrata especial; campo 15->16, pos 132->133; contenido 0/1/2 -> 0/1/2/3 (Nota 7).", continuidad_origin = "grounded" }
+fields = { constraints = {  enum = ["0", "1", "2", "3"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"] }, continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:47 (sha256 a70f3a2ca7dd) DR32201 campo 15 posicion 132 len 1 Num; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:48 (sha256 f014cec44d49) DR32201 campo 16 posicion 133 len 1 Num; mismo concepto prorrata especial; campo 15->16, pos 132->133; contenido 0/1/2 -> 0/1/2/3 (Nota 7).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2026-y-siguientes".casilla_overrides]]
 selector = { revision = "2024-2025", id = "decl.exonerado-modelo-390" }
-fields = { constraints = { max_length = 1, enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }, continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:135 (sha256 a70f3a2ca7dd) DR32201 campo 96 posicion 1310 len 1 An; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:49 (sha256 f014cec44d49) DR32201 campo 17 posicion 134 len 1 Num; descripcion pasa a Sujeto pasivo exonerado modelo 390; campo 96->17, pos 1310->134, An->Num, anade 0 (Nota 4).", continuidad_origin = "grounded" }
+fields = { constraints = {  enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }, continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:135 (sha256 a70f3a2ca7dd) DR32201 campo 96 posicion 1310 len 1 An; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:49 (sha256 f014cec44d49) DR32201 campo 17 posicion 134 len 1 Num; descripcion pasa a Sujeto pasivo exonerado modelo 390; campo 96->17, pos 1310->134, An->Num, anade 0 (Nota 4).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
 
@@ -1446,6 +1446,90 @@ fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
 
+[[revisions."2026-y-siguientes".casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions."2026-y-siguientes".casilla_overrides.selector]
+revision = "2024-2025"
+id = "actividad.otras-1.descripcion"
+
+[revisions."2026-y-siguientes".casilla_overrides.fields]
+source_refs = ["boe-modelo-390-2026-form"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2026-1761 AnnexI PDF7-8 printed12124-12125 preserves the separate Sin actividad declaration and the six activity descriptions in columnA (Principal and five Otras), with the same role and row instance as BOE-A-2022-19290 AnnexI PDF6-7. This owner continues that same declaration; no inference from the settlement or IAE code is made."
+[[revisions."2026-y-siguientes".casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions."2026-y-siguientes".casilla_overrides.selector]
+revision = "2024-2025"
+id = "actividad.otras-2.descripcion"
+
+[revisions."2026-y-siguientes".casilla_overrides.fields]
+source_refs = ["boe-modelo-390-2026-form"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2026-1761 AnnexI PDF7-8 printed12124-12125 preserves the separate Sin actividad declaration and the six activity descriptions in columnA (Principal and five Otras), with the same role and row instance as BOE-A-2022-19290 AnnexI PDF6-7. This owner continues that same declaration; no inference from the settlement or IAE code is made."
+[[revisions."2026-y-siguientes".casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions."2026-y-siguientes".casilla_overrides.selector]
+revision = "2024-2025"
+id = "actividad.otras-3.descripcion"
+
+[revisions."2026-y-siguientes".casilla_overrides.fields]
+source_refs = ["boe-modelo-390-2026-form"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2026-1761 AnnexI PDF7-8 printed12124-12125 preserves the separate Sin actividad declaration and the six activity descriptions in columnA (Principal and five Otras), with the same role and row instance as BOE-A-2022-19290 AnnexI PDF6-7. This owner continues that same declaration; no inference from the settlement or IAE code is made."
+[[revisions."2026-y-siguientes".casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions."2026-y-siguientes".casilla_overrides.selector]
+revision = "2024-2025"
+id = "actividad.otras-4.descripcion"
+
+[revisions."2026-y-siguientes".casilla_overrides.fields]
+source_refs = ["boe-modelo-390-2026-form"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2026-1761 AnnexI PDF7-8 printed12124-12125 preserves the separate Sin actividad declaration and the six activity descriptions in columnA (Principal and five Otras), with the same role and row instance as BOE-A-2022-19290 AnnexI PDF6-7. This owner continues that same declaration; no inference from the settlement or IAE code is made."
+[[revisions."2026-y-siguientes".casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions."2026-y-siguientes".casilla_overrides.selector]
+revision = "2024-2025"
+id = "actividad.otras-5.descripcion"
+
+[revisions."2026-y-siguientes".casilla_overrides.fields]
+source_refs = ["boe-modelo-390-2026-form"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2026-1761 AnnexI PDF7-8 printed12124-12125 preserves the separate Sin actividad declaration and the six activity descriptions in columnA (Principal and five Otras), with the same role and row instance as BOE-A-2022-19290 AnnexI PDF6-7. This owner continues that same declaration; no inference from the settlement or IAE code is made."
+[[revisions."2026-y-siguientes".casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions."2026-y-siguientes".casilla_overrides.selector]
+revision = "2024-2025"
+id = "actividad.principal.descripcion"
+
+[revisions."2026-y-siguientes".casilla_overrides.fields]
+source_refs = ["boe-modelo-390-2026-form"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2026-1761 AnnexI PDF7-8 printed12124-12125 preserves the separate Sin actividad declaration and the six activity descriptions in columnA (Principal and five Otras), with the same role and row instance as BOE-A-2022-19290 AnnexI PDF6-7. This owner continues that same declaration; no inference from the settlement or IAE code is made."
+[[revisions."2026-y-siguientes".casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions."2026-y-siguientes".casilla_overrides.selector]
+revision = "2024-2025"
+id = "decl.sin-actividad"
+
+[revisions."2026-y-siguientes".casilla_overrides.fields]
+source_refs = ["aeat-dr-322-2026", "boe-modelo-390-2026-form", "aeat-modelo-322-instructions-20261006"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2026-1761 AnnexI PDF7-8 printed12124-12125 preserves the separate Sin actividad declaration and the six activity descriptions in columnA (Principal and five Otras), with the same role and row instance as BOE-A-2022-19290 AnnexI PDF6-7. This owner continues that same declaration; no inference from the settlement or IAE code is made."
 [[revisions."2026-y-siguientes".casilla_positions]]
 id = "125"
 position = 82
@@ -1870,105 +1954,177 @@ sequence_order = {source_refs = [1, 0]}
 family = "completeness_manifest"
 selector = {revision = "2024-2025", id = "aeat-dr-322-2024-2025"}
 replacement_id = "aeat-dr-322-2026"
-sequence_additions = {source_refs = ["aeat-dr-322-2026"]}
+sequence_additions = {source_refs = ["aeat-dr-322-2026"],casillas = [{casilla_id = "112", number = "112"}]}
 sequence_removals = {source_refs = [0]}
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-01"}
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "constructs"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-02"}
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-papel-actividades"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-03"}
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form"]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-04"}
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [1]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-05"}
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-38"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-06"}
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+legal_refs = ["orden-hac-27-2026:disposicion-final-unica"]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-07"}
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-08"}
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-09"}
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-62"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-10"}
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+legal_refs = ["orden-hac-27-2026:disposicion-final-unica"]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-11"}
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2024-12"}
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-01"}
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-63"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-02"}
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+legal_refs = ["orden-hac-27-2026:disposicion-final-unica"]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-03"}
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-04"}
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-05"}
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-68"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-06"}
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+legal_refs = ["orden-hac-27-2026:disposicion-final-unica"]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-07"}
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-08"}
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-09"}
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-70"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-10"}
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+legal_refs = ["orden-hac-27-2026:disposicion-final-unica"]
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-11"}
+[[revisions."2026-y-siguientes".family_overrides.sequence_additions."expression.args"]]
+op = "subtract"
 
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-322-2025-12"}
+[[revisions."2026-y-siguientes".family_overrides.sequence_additions."expression.args".args]]
+casilla_id = "68"
 
+[[revisions."2026-y-siguientes".family_overrides.sequence_additions."expression.args".args]]
+casilla_id = "69"
+
+[[revisions."2026-y-siguientes".family_overrides.sequence_additions."expression.args"]]
+casilla_id = "112"
+
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
+"expression.args" = [0, 1]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
+
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-88"
+
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+legal_refs = ["orden-hac-27-2026:disposicion-final-unica"]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
+
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-717"
+
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+legal_refs = ["orden-hac-27-2026:disposicion-final-unica"]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
+
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-735"
+
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+legal_refs = ["orden-hac-27-2026:disposicion-final-unica"]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "formulas"
+
+[revisions."2026-y-siguientes".family_overrides.selector]
+revision = "2024-2025"
+id = "modelo-322-printed-65"
+
+[revisions."2026-y-siguientes".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026"]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2026-y-siguientes".family_overrides.sequence_order]
+source_refs = [0, 2, 1]
 [[revisions."2026-y-siguientes".family_removals]]
 family = "export_layouts"
 selector = {revision = "2024-2025", id = "generated-modelo-322-2024-2025-fichero"}

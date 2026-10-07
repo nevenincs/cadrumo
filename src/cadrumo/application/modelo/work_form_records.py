@@ -27,6 +27,7 @@ from ...domain.filing.protocols import ModeloInputScalar
 from ...domain.modelos.calculation_revision import CalculationRevision
 from .revision_replay_inputs import revision_detail_record_binding_inputs
 from .work_form_models import ModeloFormRepeatingRow, ModeloFormScalar
+from .work_form_projection_records import saved_projection_form_records
 
 
 def _saved_value(raw: ModeloFormScalar, data_type: str) -> ModeloFormScalar:
@@ -233,6 +234,8 @@ def saved_form_records(
     """
     if revision is None or block.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
         return False, ()
+    if any(column.export_field_id is not None for column in block.columns):
+        return saved_projection_form_records(snapshot=snapshot, revision=revision, block=block)
     matched = _matching_record(snapshot, block)
     if matched is None:
         return False, ()

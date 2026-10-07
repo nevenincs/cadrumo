@@ -9,7 +9,7 @@ family_storage_baseline = "2004-2015"
 casilla_source_refs = ["aeat-dr-309-2016"]
 live_cross_reference_source_refs = ["aeat-modelo-309-procedure"]
 application_link_source_refs = ["aeat-modelo-309-procedure"]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
+# Prepared and reviewed by an agent against the bundled diseÃƒÂ±o de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
 # than claiming the operator's own sign-off.
@@ -53,6 +53,7 @@ source_refs = [
     "aeat-modelo-309-procedure",
     "boe-modelo-309-2003-form",
 ]
+scoped_families = ["completeness_manifest"]
 
 
 
@@ -410,7 +411,7 @@ restate_provenance = true
 
 [[revisions."2016-2017".casilla_overrides]]
 selector = { revision = "2004-2015", id = "decl.cuota-devengada-22" }
-fields = { continuidad_evidence = "Same printed box [22]: 2004-2015 number 22 equals 2016-2017 form_number 22; same semantic_role and data_type. Designs print [22] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 58 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 53.", continuidad_origin = "grounded", form_number = "22", formula = "modelo-309-cuota-devengada-total", input_kind = "computed", number = "926-942", required = true }
+fields = { continuidad_evidence = "Same printed box [22]: 2004-2015 number 22 equals 2016-2017 form_number 22; same semantic_role and data_type. Designs print [22] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 58 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 53.", continuidad_origin = "grounded", form_number = "22",   number = "926-942", required = true }
 removed_fields = []
 restate_provenance = true
 
@@ -422,7 +423,7 @@ restate_provenance = true
 
 [[revisions."2016-2017".casilla_overrides]]
 selector = { revision = "2004-2015", id = "decl.resultado-24" }
-fields = { continuidad_evidence = "Same printed box [24]: 2004-2015 number 24 equals 2016-2017 form_number 24; same semantic_role and data_type. Designs print [24] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 60 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 55.", continuidad_origin = "grounded", form_number = "24", formula = "modelo-309-resultado", input_kind = "computed", number = "960-976", required = true }
+fields = { continuidad_evidence = "Same printed box [24]: 2004-2015 number 24 equals 2016-2017 form_number 24; same semantic_role and data_type. Designs print [24] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 60 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 55.", continuidad_origin = "grounded", form_number = "24",   number = "960-976", required = true }
 removed_fields = []
 restate_provenance = true
 
@@ -483,3 +484,92 @@ selector = {revision = "2004-2015", id = "modelo-309-filing"}
 sequence_additions = {legal_refs = ["rd-1624-1992:art-71"]}
 sequence_removals = {legal_refs = [1]}
 sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2016-2017".family_overrides]]
+family = "formulas"
+selector = { revision = "2004-2015", id = "modelo-309-cuota-devengada-total" }
+sequence_removals = { source_refs = [0, 1, 2], source_citations = [0] }
+sequence_additions = { source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"], source_citations = [{ source_ref = "aeat-modelo-309-instructions", required_text = ["modelo 309", "autoliquidacion no periodica", "cuotas resultantes"] }] }
+
+[[revisions."2016-2017".family_overrides]]
+family = "formulas"
+selector = { revision = "2004-2015", id = "modelo-309-resultado" }
+sequence_removals = { source_refs = [0, 1, 2], source_citations = [0] }
+sequence_additions = { source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"], source_citations = [{ source_ref = "aeat-modelo-309-instructions", required_text = ["modelo 309", "cuota"] }] }
+
+[[revisions."2016-2017".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2004-2015", id = "aeat-dr-309-2004"}
+replacement_id = "aeat-dr-309-2016"
+sequence_additions = {casillas = [{casilla_id = "iva.autorepercutido.intracomunitaria", number = "iva.autorepercutido.intracomunitaria"}, {casilla_id = "iva.soportado.recargo-equivalencia", number = "iva.soportado.recargo-equivalencia"}, {casilla_id = "decl.rg-cuota-03", number = "675-691"}, {casilla_id = "decl.rg-cuota-06", number = "714-730"}, {casilla_id = "decl.rg-cuota-09", number = "753-769"}, {casilla_id = "decl.re-cuota-12", number = "792-808"}, {casilla_id = "decl.re-cuota-15", number = "831-847"}, {casilla_id = "decl.re-cuota-18", number = "870-886"}, {casilla_id = "decl.re-cuota-21", number = "909-925"}, {casilla_id = "decl.cuota-devengada-22", number = "926-942"}, {casilla_id = "decl.a-deducir-23", number = "943-959"}, {casilla_id = "decl.resultado-24", number = "960-976"}], legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-3", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-309-2016"]}
+sequence_removals = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], source_refs = [0, 1]}
+sequence_order = {legal_refs = [1, 2, 3, 0, 4, 5]}
+[[revisions."2016-2017".family_removals]]
+family = "application_links"
+selector = { revision = "2004-2015", id = "modelo-309-historical-calculation" }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-tipo-via" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-via" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-numero" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-escalera" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-piso" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-puerta" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-telefono" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-codigo-postal" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-municipio" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-domicilio-provincia" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-ccc-entidad" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-ccc-oficina" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-ccc-dc" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_overrides]]
+selector = { revision = "2004-2015", id = "papel-ccc-cuenta" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "BOE2003 Annex I printed46407 identification address and payment CCC components. The same annex remains until replacement effective2018 by BOE-A-2017-15190 Article1 and final provision2; these paper fields are separate from the2016 electronic record." }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "papel-nombre-completo" }
+
+[[revisions."2016-2017".casilla_removals]]
+selector = { revision = "2004-2015", id = "papel-complementaria" }
+
+[[revisions."2016-2017".family_removals]]
+family = "constructs"
+selector = { revision = "2004-2015", id = "modelo-309-papel-identificacion-complementaria" }

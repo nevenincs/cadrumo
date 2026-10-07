@@ -1601,6 +1601,109 @@ modelo:
         official_name: Modelo 390. A hozzáadottérték-adó éves összesítő bevallása.
         title: IVA. Éves összesítő bevallás
       form:
+        authored:
+          accrual:
+            heading: 2. Adómegállapítási időszak
+          activities:
+            heading: 3. Statisztikai adatok · Tevékenységek
+          activity-code:
+            heading: Kód
+          activity-description:
+            heading: Tevékenység
+          activity-index:
+            heading: Adóegyüttható
+          activity-input-tax:
+            heading: Előzetesen felszámított áfa
+          activity-order:
+            heading: Sorrend
+          activity-output-tax:
+            heading: Fizetendő áfa
+          activity-result:
+            heading: Egyszerűsített rendszer szerinti adó
+          activity-revenue:
+            heading: Bevétel
+          agriculture-compensation:
+            heading: Kompenzáció · mezőgazdaság, állattenyésztés és halászat
+          common-settlement:
+            heading: 7. Éves elszámolás · közös adóterület
+          deduction-adjustment:
+            heading: Levonások helyesbítése
+          deduction-group-1:
+            heading: 13. Levonható áfa · 1. csoport
+          deduction-group-2:
+            heading: 13. Levonható áfa · 2. csoport
+          deduction-group-3:
+            heading: 13. Levonható áfa · 3. csoport
+          deduction-total:
+            heading: Levonások összege
+          domestic-current:
+            heading: Belföldi ügyletek · folyó termékek és szolgáltatások
+          domestic-investment:
+            heading: Belföldi ügyletek · beruházási javak
+          given-name:
+            heading: Utónév
+          group-periods:
+            heading: 9.2. Áfacsoportos időszakok
+          iae-heading:
+            heading: IAE-besorolás
+          imports-current:
+            heading: Import · folyó termékek
+          imports-investment:
+            heading: Import · beruházási javak
+          intra-current:
+            heading: Közösségen belüli beszerzések · folyó termékek és szolgáltatások
+          intra-investment:
+            heading: Közösségen belüli beszerzések · beruházási javak
+          investment-adjustment:
+            heading: Beruházási javak korrekciója
+          module-1:
+            heading: 1. modul
+          module-2:
+            heading: 2. modul
+          module-3:
+            heading: 3. modul
+          module-4:
+            heading: 4. modul
+          module-5:
+            heading: 5. modul
+          module-6:
+            heading: 6. modul
+          module-7:
+            heading: 7. modul
+          module-amount:
+            heading: Összeg
+          module-units:
+            heading: Egységek száma
+          nif:
+            heading: Adóazonosító szám
+          ordinary-periods:
+            heading: 9.1. Áfacsoporton kívüli időszakok
+          other-1:
+            heading: 1. egyéb tevékenység
+          other-2:
+            heading: 2. egyéb tevékenység
+          other-3:
+            heading: 3. egyéb tevékenység
+          other-4:
+            heading: 4. egyéb tevékenység
+          other-5:
+            heading: 5. egyéb tevékenység
+          page-one:
+            heading: 1. oldal
+          principal:
+            heading: Főtevékenység
+          prior-receipt:
+            heading: Az előző bevallás igazolási száma
+          specific-operations:
+            heading: 11. Egyedi ügyletek
+          surname:
+            heading: Családi név vagy cégnév
+          taxpayer:
+            heading: 1. Adóalany
+          territorial-settlement:
+            heading: 8. Adózás több adóhatóságnál
+          year:
+            heading: Adóév
         column:
           actividad-desarrollada:
             heading: Folytatott tevékenység

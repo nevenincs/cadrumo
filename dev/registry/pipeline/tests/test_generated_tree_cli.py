@@ -71,7 +71,8 @@ def _republish_invocation(expected_manifest_sha256: str) -> GeneratedTreeInvocat
     return GeneratedTreeInvocation("190", "2024", "aeat-dr-190-2024", 2024, "0A", expected_manifest_sha256)
 
 
-def test_row_binding_republication_routes_to_the_explicit_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("mode", ["row-bindings", "scalar-sources"])
+def test_field_republication_routes_to_the_explicit_mode(monkeypatch: pytest.MonkeyPatch, mode: str) -> None:
     calls = []
 
     def capture(invocation, **kwargs):
@@ -88,7 +89,7 @@ def test_row_binding_republication_routes_to_the_explicit_mode(monkeypatch: pyte
             "2025",
             "0A",
             "a" * 64,
-            "--reconcile-row-bindings",
+            f"--reconcile-{mode}",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -99,7 +100,8 @@ def test_row_binding_republication_routes_to_the_explicit_mode(monkeypatch: pyte
         "action": "republish",
         "reconcile_authored_form": False,
         "reconcile_casilla_splits": False,
-        "reconcile_row_bindings": True,
+        "reconcile_row_bindings": mode == "row-bindings",
+        "reconcile_scalar_sources": mode == "scalar-sources",
     }
 
 

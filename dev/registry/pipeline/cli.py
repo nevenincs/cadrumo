@@ -901,6 +901,7 @@ def _run(
     reconcile_authored_form: bool = False,
     reconcile_casilla_splits: bool = False,
     reconcile_row_bindings: bool = False,
+    reconcile_scalar_sources: bool = False,
     temporary_directory: Callable[..., tempfile.TemporaryDirectory[str]] = tempfile.TemporaryDirectory,
 ) -> None:
     """Run one explicit lifecycle action without retaining a staging tree."""
@@ -908,10 +909,27 @@ def _run(
         with temporary_directory(prefix="cadrumo-generated-export-") as temporary_name:
             root = Path(temporary_name)
             prepared = prepare_generated_tree_invocation(invocation, root)
-            if reconcile_authored_form or reconcile_casilla_splits or reconcile_row_bindings:
-                if sum((reconcile_authored_form, reconcile_casilla_splits, reconcile_row_bindings)) > 1:
+            if (
+                reconcile_authored_form
+                or reconcile_casilla_splits
+                or reconcile_row_bindings
+                or reconcile_scalar_sources
+            ):
+                if (
+                    sum(
+                        (
+                            reconcile_authored_form,
+                            reconcile_casilla_splits,
+                            reconcile_row_bindings,
+                            reconcile_scalar_sources,
+                        )
+                    )
+                    > 1
+                ):
                     raise ValueError("choose one authored form reconciliation mode")
-                if (reconcile_casilla_splits or reconcile_row_bindings) and action != "republish":
+                if (
+                    reconcile_casilla_splits or reconcile_row_bindings or reconcile_scalar_sources
+                ) and action != "republish":
                     raise ValueError("field reconciliation requires exclusive republication")
                 correcting_producers = action == "republish"
                 if not correcting_producers and (
@@ -949,9 +967,10 @@ def _run(
                     modelo=invocation.modelo,
                     revision=invocation.revision,
                     unreferenced_producers=correcting_producers
-                    and not (reconcile_casilla_splits or reconcile_row_bindings),
+                    and not (reconcile_casilla_splits or reconcile_row_bindings or reconcile_scalar_sources),
                     casilla_splits=reconcile_casilla_splits,
                     row_bindings=reconcile_row_bindings,
+                    scalar_sources=reconcile_scalar_sources,
                 )
                 validate_generated_export_tree(
                     context=prepared.validation,
@@ -1264,7 +1283,7 @@ def republish_target_command(
         bool,
         typer.Option(
             "--reconcile-unreferenced-producers",
-            help="Reconcile an authored draft only for header producers it does not display.",
+            help="Reconcile unseen headers or computed markers replaced by displayed manual X-or-blank casillas.",
         ),
     ] = False,
     reconcile_casilla_splits: Annotated[
@@ -1279,6 +1298,13 @@ def republish_target_command(
             "--reconcile-row-bindings", help="Preserve official positions while connecting repeated row sources."
         ),
     ] = False,
+    reconcile_scalar_sources: Annotated[
+        bool,
+        typer.Option(
+            "--reconcile-scalar-sources",
+            help="Preserve an authored draft while reviewed manual export fields use existing canonical casillas.",
+        ),
+    ] = False,
 ) -> None:
     """Digest-bound republish of one named target after its exact state was reviewed."""
     _run(
@@ -1287,6 +1313,7 @@ def republish_target_command(
         reconcile_authored_form=reconcile_unreferenced_producers,
         reconcile_casilla_splits=reconcile_casilla_splits,
         reconcile_row_bindings=reconcile_row_bindings,
+        reconcile_scalar_sources=reconcile_scalar_sources,
     )
     typer.echo(f"republish-target\tmodelo={modelo}\trevision={revision}\tsource={source_ref}")
     typer.echo(

@@ -63,6 +63,25 @@ export type Scenario = {
   docsSearch: "results" | "empty" | "slow" | "failed";
   /** Clipboard and external-link calls: served from memory, or refused. */
   services: "memory" | "refused";
+  /** Explicit manager-start scenarios only; older hosts offer no command. */
+  manager?: {
+    /** Simulate the native host's automatic dispatch before React mounts. */
+    autoDispatched?: boolean;
+    result:
+      | "dispatched"
+      | "pending"
+      | "unmanaged"
+      | "unsupported"
+      | { code: HostErrorCode };
+    /** Fixed dispatch-answer delay, independent of profile/sign-in latency. */
+    delayMs?: number;
+    /** Status reads after dispatch before the runtime becomes available. */
+    readyAfterReads?: number;
+    /** Hold a ready status answer so navigation can happen before it lands. */
+    readyReadDelayMs?: number;
+    /** Status reads fail after dispatch, following the initial unavailable read. */
+    statusFailureAfterDispatch?: HostErrorCode;
+  };
   /** The profile views: the fixture calendar and notification counts, a
    * calendar with nothing due and notifications never captured, reads that
    * are refused, or a host that offers no views at all, as the desktop host
@@ -75,6 +94,15 @@ const signedOut: Scenario["signIn"]["status"] = {
   state: "absent",
   runtimeAvailable: true,
   refusal: null,
+};
+
+const servicesDown: Scenario["signIn"] = {
+  status: { ...signedOut, state: "unknown", runtimeAvailable: false },
+  submit: {
+    kind: "refuse",
+    code: "RUNTIME_UNAVAILABLE",
+    retryAfterSeconds: null,
+  },
 };
 
 const base = {
@@ -314,6 +342,145 @@ export const SCENARIOS: readonly Scenario[] = [
       profile: null,
     },
     terminals: "silent",
+  },
+  {
+    ...base,
+    id: "runtime-starting",
+    title: "Runtime starting in background",
+    summary:
+      "The desktop stays usable while the automatically launched runtime prepares services.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "dispatched", autoDispatched: true, readyAfterReads: 5 },
+  },
+  {
+    ...base,
+    id: "runtime-startup-failed",
+    title: "Runtime startup status failed",
+    summary:
+      "The native readiness read fails rather than confirming a ready runtime.",
+    signIn: { ...servicesDown, statusFailure: "timed_out" },
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "dispatched", autoDispatched: true },
+  },
+  {
+    ...base,
+    id: "runtime-startup-stalled",
+    title: "Runtime startup status stalled",
+    summary:
+      "The initial availability read never answers; the startup deadline exposes recovery.",
+    signIn: { ...servicesDown, statusPending: true },
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "dispatched", autoDispatched: true },
+  },
+  {
+    ...base,
+    id: "manager-recovers",
+    title: "Manager restores services",
+    summary:
+      "Services are down. Starting the manager waits four seconds; later status reads restore the sign-in form.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "dispatched", delayMs: 4_000, readyAfterReads: 3 },
+  },
+  {
+    ...base,
+    id: "manager-pending",
+    title: "Manager dispatch pending",
+    summary:
+      "The manager-start request never answers; its pending button stays up while availability reads continue.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "pending" },
+  },
+  {
+    ...base,
+    id: "manager-failed",
+    title: "Manager dispatch failed",
+    summary:
+      "The manager-start request fails with the host's typed spawn_failed refusal.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: { code: "spawn_failed" } },
+  },
+  {
+    ...base,
+    id: "manager-unmanaged",
+    title: "Manager unavailable in an unmanaged package",
+    summary:
+      "The manager-start request reports an unmanaged package; services remain down.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "unmanaged" },
+  },
+  {
+    ...base,
+    id: "manager-unsupported",
+    title: "Manager dispatch unsupported",
+    summary:
+      "The manager-start request reports an unsupported platform; services remain down.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "unsupported" },
+  },
+  {
+    ...base,
+    id: "manager-still-down",
+    title: "Manager dispatched, services remain down",
+    summary:
+      "The manager-start request is dispatched but availability reads keep reporting services down through the bounded wait.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "dispatched" },
+  },
+  {
+    ...base,
+    id: "manager-readiness-delayed",
+    title: "Manager readiness answer delayed",
+    summary:
+      "Services are down. Dispatch succeeds, but the ready status answer arrives five seconds later.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: {
+      result: "dispatched",
+      readyAfterReads: 1,
+      readyReadDelayMs: 5_000,
+    },
+  },
+  {
+    ...base,
+    id: "manager-retry-delayed",
+    title: "Manager retry answer delayed",
+    summary:
+      "Each dispatch fails after four seconds, so a repeated retry can be exercised while its answer is pending.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: { code: "spawn_failed" }, delayMs: 4_000 },
+  },
+  {
+    ...base,
+    id: "manager-status-rejected",
+    title: "Manager status read rejected",
+    summary:
+      "Services are initially down. Dispatch succeeds, but subsequent availability reads fail with timed_out.",
+    signIn: servicesDown,
+    profiles: "one",
+    terminals: "silent",
+    manager: {
+      result: "dispatched",
+      statusFailureAfterDispatch: "timed_out",
+    },
   },
   {
     ...base,

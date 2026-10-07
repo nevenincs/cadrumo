@@ -671,6 +671,235 @@ modelo:
         official_name: Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.
         title: IVA. Autoliquidación (trimestral)
       form:
+        authored:
+          administracion-copy:
+            heading: Ejemplar para la Administración o entidad financiera
+          annual:
+            activity-1:
+              heading: Actividad principal
+            activity-2:
+              heading: Otra actividad 1
+            activity-3:
+              heading: Otra actividad 2
+            activity-4:
+              heading: Otra actividad 3
+            activity-5:
+              heading: Otra actividad 4
+            activity-6:
+              heading: Otra actividad 5
+            third-parties:
+              heading: Operaciones con terceras personas
+            third-parties-declaration:
+              heading: D · Obligación de presentar la declaración anual de operaciones
+                con terceras personas
+          annual-clave-2022:
+            heading: B · Clave de actividad
+          banco:
+            heading: Banco
+          bic:
+            heading: Código SWIFT-BIC
+          ciudad-banco:
+            heading: Ciudad
+          complementaria:
+            heading: Complementaria (5)
+          complementaria-2022:
+            heading: Complementaria (8)
+          concurso:
+            heading: Declaración de concurso en este período
+          conjunta:
+            heading: Autoliquidación conjunta
+          criterio-caja:
+            heading: Régimen especial del criterio de caja
+          cuenta-bancaria:
+            heading: Cuenta bancaria para ingreso o devolución
+          deducible:
+            heading: IVA deducible y resultado del régimen general
+          destinatario-caja:
+            heading: Destinatario de operaciones acogidas al criterio de caja
+          devengado:
+            heading: IVA devengado
+          devengo:
+            heading: Devengo (2)
+          direccion-banco:
+            heading: Dirección del banco
+          exonerado:
+            heading: Exonerado de la declaración-resumen anual, modelo 390
+          fecha-concurso:
+            heading: Fecha del auto de declaración de concurso
+          foral:
+            heading: Tributación exclusivamente foral
+          gasolinas:
+            heading: Derecho a deducir pagos a cuenta por entregas de carburantes
+          grupo-1:
+            heading: 'IVA deducible: Grupo 1'
+          grupo-2:
+            heading: 'IVA deducible: Grupo 2'
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Identificación (1)
+          importacion-corriente:
+            heading: 'Importaciones: bienes corrientes'
+          importacion-inversion:
+            heading: 'Importaciones: bienes de inversión'
+          interior-corriente:
+            heading: 'Operaciones interiores: bienes y servicios corrientes'
+          interior-inversion:
+            heading: 'Operaciones interiores: bienes de inversión'
+          intra-corriente:
+            heading: 'Adquisiciones intracomunitarias: bienes corrientes y servicios'
+          intra-inversion:
+            heading: 'Adquisiciones intracomunitarias: bienes de inversión'
+          justificante:
+            heading: Número de justificante de la autoliquidación anterior
+          motivo-discrepancia:
+            heading: Discrepancia de criterio administrativo
+          motivo-rectificacion:
+            heading: Rectificaciones
+          nif:
+            heading: NIF
+          'no':
+            heading: 'No'
+          nombre:
+            heading: Apellidos y nombre o Razón social
+          opcion-prorrata:
+            heading: Opción por la prorrata especial
+          operaciones-anuales:
+            heading: Operaciones realizadas en el ejercicio
+          page-1:
+            heading: Identificación y régimen general
+          page-2:
+            heading: Régimen simplificado
+          page-3:
+            heading: Información adicional y resultado
+          page-4:
+            heading: Información anual de sujetos exonerados del modelo 390
+          page-5:
+            heading: Prorrata y deducciones diferenciadas
+          page-6:
+            heading: Ingreso, devolución y cuenta bancaria
+          pais-banco:
+            heading: Código del país
+          reagp:
+            heading: Compensaciones en régimen especial de agricultura, ganadería
+              y pesca
+          rectificacion-devolucion:
+            heading: Rectificación (9)
+          rectificaciones-deducciones:
+            heading: Rectificación de deducciones
+          rectificativa:
+            heading: Rectificativa (5)
+          redeme:
+            heading: Registro de devolución mensual
+          regimen:
+            heading: Régimen de tributación
+          resultado:
+            heading: Resultado
+          revocacion-prorrata:
+            heading: Revocación de la opción por la prorrata especial
+          rg-rs:
+            heading: Régimen general y simplificado
+          rs:
+            actividad-a1:
+              heading: Actividad A1
+            actividad-a2:
+              heading: Actividad A2
+            actividad-b1:
+              heading: Actividad B1
+            actividad-b2:
+              heading: Actividad B2
+            activity-code:
+              heading: Código de actividad
+            cuota-anual-derivada-regimen-simplificado:
+              heading: Cuota anual derivada del régimen simplificado
+            cuota-devengada:
+              heading: Cuota devengada
+            cuota-devengada-operaciones-corrientes:
+              heading: Cuota devengada en operaciones corrientes
+            cuota-minima:
+              heading: Cuota mínima
+            cuota-soportada-operaciones-corrientes:
+              heading: Cuota soportada en operaciones corrientes
+            cuotas-soportadas-operaciones-corrientes:
+              heading: Cuotas soportadas en operaciones corrientes
+            devolucion-cuotas-soportadas-otros-paises:
+              heading: Devolución de cuotas soportadas en otros países
+            iae-epigrafe:
+              heading: Epígrafe IAE
+            indice-corrector-actividad-temporada:
+              heading: Índice corrector de actividades de temporada · 1T, 2T y 3T
+            indice-corrector-actividades-temporada:
+              heading: Índice corrector de actividades de temporada · 4T
+            indice-cuota:
+              heading: Índice de cuota
+            ingreso-cuenta:
+              heading: Ingreso a cuenta
+            modulo-1-importe:
+              heading: Módulo 1 · Importe
+            modulo-1-unidades:
+              heading: Módulo 1 · N.º de unidades
+            modulo-2-importe:
+              heading: Módulo 2 · Importe
+            modulo-2-unidades:
+              heading: Módulo 2 · N.º de unidades
+            modulo-3-importe:
+              heading: Módulo 3 · Importe
+            modulo-3-unidades:
+              heading: Módulo 3 · N.º de unidades
+            modulo-4-importe:
+              heading: Módulo 4 · Importe
+            modulo-4-unidades:
+              heading: Módulo 4 · N.º de unidades
+            modulo-5-importe:
+              heading: Módulo 5 · Importe
+            modulo-5-unidades:
+              heading: Módulo 5 · N.º de unidades
+            modulo-6-importe:
+              heading: Módulo 6 · Importe
+            modulo-6-unidades:
+              heading: Módulo 6 · N.º de unidades
+            modulo-7-importe:
+              heading: Módulo 7 · Importe
+            modulo-7-unidades:
+              heading: Módulo 7 · N.º de unidades
+            porcentaje-cuota-minima:
+              heading: Porcentaje de cuota mínima
+            porcentaje-ingreso-cuenta:
+              heading: Porcentaje de ingreso a cuenta
+            reducciones:
+              heading: Reducciones
+            resultado-cuarto-trimestre:
+              heading: Resultado · 4T
+            volumen-ingresos:
+              heading: Volumen de ingresos
+          rs-anticipos:
+            heading: 'Ingresos a cuenta: 1T, 2T y 3T'
+          rs-anual:
+            heading: 'Cuota anual: 4T'
+          rs-deducible:
+            heading: IVA deducible
+          rs-devengado:
+            heading: Cuotas devengadas
+          rs-resultado:
+            heading: Resultado régimen simplificado
+          si:
+            heading: Sí
+          sii:
+            heading: Acogido voluntariamente al SII
+          sin-marca:
+            heading: Sin indicación
+          solo-rg:
+            heading: Solo régimen general
+          solo-rs:
+            heading: Solo régimen simplificado
+          territorio:
+            heading: Información de la tributación por razón de territorio
+          tipo-concurso:
+            heading: Autoliquidación preconcursal o postconcursal
+          total-devengado:
+            heading: Total cuota devengada
+          volumen:
+            heading: Volumen anual de operaciones distinto de cero
         column:
           1t-2t-3t:
             heading: 1T/2T/3T

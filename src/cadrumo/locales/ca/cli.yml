@@ -943,6 +943,9 @@ cli:
           com a presentat.
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       filing_record:
+        export_help: Exportar la presentació històrica seleccionada com a llibre de revisió del càlcul desat.
+        export_button: Exporta la presentació seleccionada (XLSX)
+        export_missing: El càlcul històric seleccionat ja no es conserva; l'exportació no pot usar el càlcul actual.
         app_help: Inspeccionar els filing records interns registrats
         bucket_id_help: Filtrar per perfil
         evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf, aeat_csv_register,
@@ -1193,6 +1196,13 @@ cli:
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
         / exercici / període.
       reconcile:
+        export_help: Exportar les diferències de conciliació desades a un llibre local de revisió.
+        export_button: Exporta diferències de la declaració (XLSX)
+        export_work_unit_scope: Exporta totes les diferències de conciliació desades de la declaració seleccionada.
+        export_selector_required: "Selecciona exactament una opció: --event-id, --work-unit-id o --all-history."
+        export_work_unit_id_help: Identificador exacte de la declaració desada (SHA-256 de 64 caràcters).
+        export_event_id_help: Identificador exacte de l'esdeveniment de conciliació desat.
+        export_all_help: Exportar explícitament tot l'historial de conciliació desat.
         app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: pull descarrega
           un justificant o una declaració presentada; import compara un PDF local;
           list mostra les comparacions anteriors.'
@@ -1362,7 +1372,10 @@ cli:
             com a full de Google llegible pels usuaris autoritzats.
           calculation_revision_id_help: Identificador exacte de la revisió de càlcul
             desada que es publicarà.
+          filing_record_id_help: Identificador exacte de la presentació històrica vinculada al càlcul desat; opcional.
           publication_id_help: UUID de publicació; es genera si s'omet.
+        publish_button: Revisa a Google Sheets
+        review_help: Exportar un càlcul desat, esborrany o completat, com a llibre local de revisió immutable.
         publish_help: Publica un càlcul desat com a full natiu de Google llegible
           a la carpeta del perfil.
         pull:

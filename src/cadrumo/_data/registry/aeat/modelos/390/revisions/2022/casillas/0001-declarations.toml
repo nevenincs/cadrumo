@@ -2160,6 +2160,8 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [93] - '8. Tributación razón de territorio - Administraciones - Compens. cuotas ej. anterior atrib. territ. com. [93]' (offset 191, length 17).
+input_kind = "computed"
+formula = "modelo-390-territorial-allocation"
 [[revisions."2022".casillas]]
 id = "iva.anual.territorio.compensacion-atribuible-comun"
 number = "93"
@@ -2187,6 +2189,8 @@ legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:
 # Exact Modelo 390/2022 page-one annual simplified-regime arrival endpoints.
 # Their values are atomically supplied by the immutable M303 4T handoff; no
 # endpoint recreates a relation or accepts a manual scalar replacement.
+input_kind = "computed"
+formula = "modelo-390-territorial-settlement"
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.cuota-resultante-no-agricola"
 number = "74"
@@ -2725,6 +2729,8 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:
 # totals sum CUOTAS; the base boxes sit beside them on the form and are declared
 # in their own right, so adding these cannot alter
 # iva.anual.resultado-regimen-general.
+input_kind = "computed"
+formula = "modelo-390-annual-volume"
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.general.base"
@@ -3508,6 +3514,8 @@ semantic_role_cardinality_reason = "Distinct official AEAT box on the bundled Di
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [35] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,5% - Base imponible [35]" (offset 1237, length 17).
+input_kind = "computed"
+formula = "modelo-390-iva-anual-total-bases-iva"
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.recargo.tipo-0-5.base"
 number = "35"
@@ -4062,6 +4070,8 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [156] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes y servic. - Base imponible [156]' (offset 319, length 17).
+input_kind = "computed"
+formula = "modelo-390-deduction-group-1"
 [[revisions."2022".casillas]]
 id = "iva.anual.sector-diferenciado-2.interiores-corrientes.base"
 number = "156"
@@ -4296,6 +4306,8 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [173] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes y servic. - Base imponible [173]' (offset 625, length 17).
+input_kind = "computed"
+formula = "modelo-390-deduction-group-2"
 [[revisions."2022".casillas]]
 id = "iva.anual.sector-diferenciado-3.interiores-corrientes.base"
 number = "173"
@@ -4553,6 +4565,8 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-9
 # contains no volumen casilla. They declare no export_refs — the M390 export
 # layout is the fixed-width fichero-BOE, and adding positional fields to it is
 # a separate change with its own parity gate.
+input_kind = "computed"
+formula = "modelo-390-deduction-group-3"
 
 [[revisions."2022".casillas]]
 id = "iva.anual.volumen.entregas-intracomunitarias"

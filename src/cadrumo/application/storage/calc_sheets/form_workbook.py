@@ -10,11 +10,13 @@ import re
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
+from textwrap import wrap
 
 from ....core.i18n.render import lookup_translation, tr
 from ....core.period import AD_HOC_PERIOD_CODE, Period
 from ....domain.calculations.registry.export_semantics import ExportDraftAttribute
-from ....domain.calculations.registry.form_context import resolve_form_context_field
+from ....domain.calculations.registry.form_context import form_context_choice, resolve_form_context_field
+from ....domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.schema_form_layouts import (
@@ -33,6 +35,8 @@ from ....domain.calculations.registry.schema_verification import (
     parse_verification_predicate_expression,
 )
 from ....domain.modelos.calculation_revision import CalculationRevision
+from ...export.review_form_data import ReviewSavedForm
+from ...filing.export_producer import filing_producer_values
 from ...filing.producer_snapshot import FilingProducerSnapshot
 from ...modelo.settlement_casilla import declaration_result_casillas
 from ...modelo.value_presentation import VALUE_FALSE_LOCALE_KEY, VALUE_TRUE_LOCALE_KEY
@@ -103,7 +107,7 @@ def add_form_workbook[M: (SheetExportMetadata, SheetReviewMetadata)](
         raise CalcSheetsEngineError("saved repeating rows belong to another registry coordinate")
 
     def context(block: FormContextFieldBlock) -> ModeloFormScalar:
-        return form_context_value(snapshot, block, producer_snapshot=producer_snapshot)
+        return form_context_value(snapshot, block, producer_snapshot=producer_snapshot, revision=revision)
 
     def records(block: FormRepeatingGroupBlock) -> tuple[bool, tuple[ModeloFormRepeatingRow, ...]]:
         return saved_form_records(
@@ -127,9 +131,14 @@ def add_form_workbook[M: (SheetExportMetadata, SheetReviewMetadata)](
 
 
 def add_template_preview_form(
-    plan: SheetExportPlan[SheetTemplatePreviewMetadata], source: WorkbookTemplateSource
+    plan: SheetExportPlan[SheetTemplatePreviewMetadata],
+    source: WorkbookTemplateSource,
+    *,
+    illustrative_producer: FilingProducerSnapshot | None = None,
 ) -> SheetExportPlan[SheetTemplatePreviewMetadata]:
     """Render a fictional template without acquiring filing or saved-revision authority."""
+    if illustrative_producer is not None and str(illustrative_producer.modelo) != str(source.modelo_id):
+        raise CalcSheetsEngineError("illustrative form context belongs to another modelo")
     if TabName.FORM in plan.tabs:
         raise CalcSheetsEngineError("workbook already contains a form projection")
     if len(source.revision.form_layouts) != 1:
@@ -139,6 +148,7 @@ def add_template_preview_form(
     bindings = _binding_addresses(plan, source.revision)
     # This entry validates the full preview coordinate and digest before rendering.
     plan = human_template_preview(plan, source)
+    illustrative_values = filing_producer_values(illustrative_producer) if illustrative_producer is not None else {}
 
     def context(block: FormContextFieldBlock) -> ModeloFormScalar:
         field = resolve_form_context_field(source.revision, block)
@@ -152,7 +162,10 @@ def add_template_preview_form(
                 return frame.start_date
             if field.draft_attribute is ExportDraftAttribute.PERIOD_END_DATE:
                 return frame.end_date
-        return None
+        value = illustrative_values.get(field.producer_key) if field.producer_key else None
+        if value is None or isinstance(value, (str, bool, int, Decimal, date)):
+            return value
+        raise CalcSheetsEngineError("illustrative form context is not a supported scalar")
 
     return _project_form(
         plan,
@@ -163,6 +176,41 @@ def add_template_preview_form(
         bindings,
         context,
         lambda block: (False, ()),
+    )
+
+
+def _saved_cell_value(value: ModeloFormScalar) -> str | Decimal | bool | None:
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, int) and not isinstance(value, bool):
+        return Decimal(value)
+    return value
+
+
+def add_saved_review_form(
+    plan: SheetExportPlan[SheetReviewMetadata],
+    saved: ReviewSavedForm,
+) -> SheetExportPlan[SheetReviewMetadata]:
+    """Render original declared geometry with literal saved values and no recomputation."""
+    if plan.metadata.kind != "calculation" or TabName.FORM in plan.tabs:
+        raise CalcSheetsEngineError("saved form requires one calculation review without an existing form")
+    snapshot = saved.rendering.registry_snapshot
+    if len(snapshot.revision.form_layouts) != 1:
+        raise CalcSheetsEngineError("saved form requires exactly one captured layout")
+    layout = snapshot.revision.form_layouts[0]
+    _validate_layout(layout, snapshot.revision)
+    contexts = {item.id: item.value for item in saved.contexts}
+    records = {item.block_id: (item.known, item.rows) for item in saved.records}
+    return _project_form(
+        plan,
+        snapshot.revision,
+        str(snapshot.modelo.id),
+        snapshot.filing_period or Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+        layout,
+        {},
+        lambda block: contexts.get(block.id),
+        lambda block: records.get(block.id, (False, ())),
+        saved_form=saved,
     )
 
 
@@ -203,8 +251,10 @@ def _project_form[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePre
     bindings: dict[str, SheetCellAddress],
     context: Callable[[FormContextFieldBlock], ModeloFormScalar],
     records: Callable[[FormRepeatingGroupBlock], tuple[bool, tuple[ModeloFormRepeatingRow, ...]]],
+    *,
+    saved_form: ReviewSavedForm | None = None,
 ) -> SheetExportPlan[M]:
-    builder = _FormBuilder(plan, registry_revision, modelo_id, frame, layout, context, records)
+    builder = _FormBuilder(plan, registry_revision, modelo_id, frame, layout, context, records, saved_form=saved_form)
     builder.binding_addresses = bindings
     builder.render()
     roles = {
@@ -269,6 +319,8 @@ def _validate_layout(layout: FormLayoutDefinition, registry_revision: ModeloRevi
                     shown.extend(cell.casilla_id for row in block.rows for cell in row.cells if cell.casilla_id)
                 elif isinstance(block, FormRepeatingGroupBlock):
                     shown.extend(column.casilla_id for column in block.columns if column.casilla_id)
+                    if any(column.export_field_id is not None for column in block.columns):
+                        resolve_form_projection_fields(registry_revision, block)
                 for casilla_id in shown[before:]:
                     positions.setdefault(casilla_id, []).append((page.id, section.id))
     on_form = {p.casilla_id for p in layout.placements if p.kind is FormPlacementKind.ON_FORM}
@@ -295,6 +347,8 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         layout: FormLayoutDefinition,
         context: Callable[[FormContextFieldBlock], ModeloFormScalar],
         records: Callable[[FormRepeatingGroupBlock], tuple[bool, tuple[ModeloFormRepeatingRow, ...]]],
+        *,
+        saved_form: ReviewSavedForm | None = None,
     ) -> None:
         self.plan = plan
         self.registry_revision = registry_revision
@@ -303,6 +357,8 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         self.layout = layout
         self.context = context
         self.records = records
+        self.saved_form = saved_form
+        self.saved_labels = {label.key: label.text for label in saved_form.rendering.labels} if saved_form else None
         self.casillas = {c.id: c for c in registry_revision.casillas}
         self.compact_dates = compact_date_casillas(registry_revision)
         result = declaration_result_casillas(modelo_id, registry_revision)
@@ -314,6 +370,17 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                 if cell.casilla_id in self.sources:
                     raise CalcSheetsEngineError("form source contains ambiguous duplicate casilla values")
                 self.sources[cell.casilla_id] = cell
+        if saved_form is not None:
+            self.sources = {
+                item.id: SheetValueCell(
+                    address=SheetCellAddress.at(TabName.CALCULOS, index, 4),
+                    value=_saved_cell_value(item.value),
+                    casilla_id=item.id,
+                    role="source_value",
+                )
+                for index, item in enumerate(saved_form.scalars, 1)
+                if item.id in self.casillas
+            }
         self.address_sources = {c.address.qualified(): c for c in (*plan.value_cells, *plan.formula_cells)}
         self.values: list[SheetValueCell] = []
         self.formulas: list[SheetFormulaCell] = []
@@ -342,7 +409,24 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         self.column_widths: tuple[int, ...] = (
             (3, 12, 12, 12, 12, *(width for _ in range(widest_grid) for width in (9, 18)), 3)
             if widest_grid > 3
+            else (3, 12, 12, 12, 12, 12, 18, 12, 18, 10, 18, 10, 3)
+            if widest_grid
             else (3, 12, 12, 12, 12, 12, 12, 12, 7, 10, 10, 10, 3)
+        )
+
+    def localized(self, key: str | None) -> str | None:
+        """Use captured original wording for a saved form, never today's catalogue."""
+        if key is None:
+            return None
+        return self.saved_labels.get(key) if self.saved_labels is not None else lookup_translation(key, locale="es")
+
+    def casilla_label(self, casilla_id: str) -> str:
+        """Resolve one saved label from the original immutable presentation metadata."""
+        casilla = self.casillas[casilla_id]
+        if self.saved_labels is None:
+            return casilla.label
+        return next(
+            (self.saved_labels[key] for key in casilla.localization_keys if key in self.saved_labels), "Dato guardado"
         )
 
     def text(self, text: str | Decimal | bool | None, column: int = 2) -> None:
@@ -392,11 +476,15 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             self.text(Decimal(constant).scaleb(-decimals) if decimals is not None else constant, column)
         elif source is None:
             self.text("Sin dato", column)
+        elif self.saved_form is not None and isinstance(source, SheetValueCell):
+            self.text(source.value, column)
         else:
             reference = source.address.qualified()
             leaves = self.input_leaves(source, frozenset())
             guards = ",".join(f"ISBLANK({leaf})" for leaf in sorted(leaves))
             guard = f"OR({guards})" if len(leaves) > 1 else guards or f"ISBLANK({reference})"
+            if isinstance(source, SheetFormulaCell) and source.missing_input_condition is not None:
+                guard = source.missing_input_condition
             displayed = compact_date_expression(reference) if casilla_id in self.compact_dates else reference
             self.formulas.append(
                 SheetFormulaCell(
@@ -430,6 +518,11 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         """
         guarded: list[SheetFormulaCell] = []
         for cell in self.plan.formula_cells:
+            if cell.missing_input_condition is not None:
+                guarded.append(
+                    cell.model_copy(update={"formula": f'IF({cell.missing_input_condition},"Sin dato",{cell.formula})'})
+                )
+                continue
             leaves = sorted(self.input_leaves(cell, frozenset()))
             if not leaves:
                 guarded.append(cell)
@@ -471,10 +564,12 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             raise CalcSheetsEngineError("form choices require values in the casilla's closed text domain")
         source = self.sources.get(block.casilla_id)
         for choice in block.choices:
-            self.text(lookup_translation(choice.heading_key, locale="es") or choice.official_heading or "Opción")
+            self.text(self.localized(choice.heading_key) or choice.official_heading or "Opción")
             self.span(2, 8, StyleRole.FORM_LABEL)
             if source is None:
                 self.text("Sin dato", 10)
+            elif self.saved_form is not None and isinstance(source, SheetValueCell):
+                self.text("Sin dato" if source.value is None else "X" if source.value == choice.value else "", 10)
             else:
                 reference = source.address.qualified()
                 literal = choice.value.replace('"', '""')
@@ -494,14 +589,17 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             self.row += 1
 
     def field(self, casilla_id: str, *, constant: str | None = None, decimals: int | None = None) -> None:
-        casilla = self.casillas[casilla_id]
-        self.text(casilla.label)
+        self.text(self.casilla_label(casilla_id))
         self.span(2, 8, StyleRole.FORM_LABEL)
         self.text(str(self.placements[casilla_id].box_number or ""), 9)
         self.span(9, 9, StyleRole.CASILLA, boxed=True)
         self.value(casilla_id, 10, 12, constant=constant, decimals=decimals)
         self.heights.append(
-            SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=max(30, 18 * (1 + len(casilla.label) // 65)))
+            SheetRowHeight(
+                tab=TabName.FORM,
+                row=self.row,
+                height_pixels=max(30, 18 * (1 + len(self.casilla_label(casilla_id)) // 65)),
+            )
         )
         self.row += 1
 
@@ -528,6 +626,16 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         """Link a declared binding to its existing value without inventing a zero."""
         if binding_id not in {binding.id for binding in self.registry_revision.bindings}:
             raise CalcSheetsEngineError("form references an unknown binding")
+        if self.saved_form is not None:
+            bindings = {item.id: item.value for item in self.saved_form.bindings}
+            value = bindings.get(binding_id)
+            if value is None:
+                owners = [casilla.id for casilla in self.casillas.values() if casilla.binding == binding_id]
+                source = self.sources.get(owners[0]) if len(owners) == 1 else None
+                value = source.value if isinstance(source, SheetValueCell) else None
+            self.text(_saved_cell_value(value) if value is not None else "Sin dato", column)
+            self.span(column, end, StyleRole.FORM_COMPUTED, boxed=True)
+            return
         address = self.binding_addresses.get(binding_id)
         if address is None:
             owners = [casilla for casilla in self.casillas.values() if casilla.binding == binding_id]
@@ -541,6 +649,8 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         guards = ",".join(f"ISBLANK({leaf})" for leaf in sorted(leaves))
         reference = address.qualified()
         guard = f"OR({guards})" if len(leaves) > 1 else guards or f"ISBLANK({reference})"
+        if isinstance(source, SheetFormulaCell) and source.missing_input_condition is not None:
+            guard = source.missing_input_condition
         target = SheetCellAddress.at(TabName.FORM, self.row, column)
         self.formulas.append(
             SheetFormulaCell(
@@ -558,12 +668,11 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
     def grid(self, block: FormGridBlock, *, record_values: dict[str, ModeloFormScalar] | None = None) -> None:
         # A declared row is one row across every column. Splitting the columns
         # into vertical chunks severs the relationships in official tables.
-        headings = [
-            lookup_translation(column.heading_key, locale="es") or column.official_heading for column in block.columns
-        ]
+        headings = [self.localized(column.heading_key) or column.official_heading for column in block.columns]
         if any(not heading for heading in headings):
             raise CalcSheetsEngineError("form grid requires an authored column heading")
-        self.text("Concepto")
+        row_heading = self.localized(block.row_heading_key) or block.official_row_heading or "Concepto"
+        self.text(row_heading)
         self.span(2, 5, StyleRole.FORM_SECTION)
         for index, heading in enumerate(headings):
             start = 6 + index * 2
@@ -573,28 +682,39 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             SheetRowHeight(
                 tab=TabName.FORM,
                 row=self.row,
-                height_pixels=min(409, max(44, 18 * (1 + max(len(heading or "") for heading in headings) // 24))),
+                height_pixels=min(
+                    409, max(44, 18 * (1 + max(len(heading or "") for heading in [row_heading, *headings]) // 24))
+                ),
             )
         )
         self.row += 1
         for row in block.rows:
-            heading = lookup_translation(row.heading_key, locale="es") or row.official_heading
+            heading = self.localized(row.heading_key) or row.official_heading
             if not heading:
                 raise CalcSheetsEngineError("form grid requires an authored row heading")
             self.text(heading)
             self.span(2, 5, StyleRole.FORM_LABEL)
+            text_lines = sum(max(1, len(wrap(line, width=44))) for line in heading.splitlines())
             for column_index, cell in enumerate(row.cells):
                 start = 6 + column_index * 2
+                visible_value: ModeloFormScalar = None
+                text_width = sum(self.column_widths[start - 1 : start + 1]) - 2
                 if cell.casilla_id:
+                    text_width = self.column_widths[start] - 2
                     self.text(str(self.placements[cell.casilla_id].box_number or ""), start)
                     self.span(start, start, StyleRole.CASILLA, boxed=True)
                     if record_values is None:
                         self.value(
                             cell.casilla_id, start + 1, start + 1, constant=cell.literal, decimals=cell.literal_decimals
                         )
+                        source = self.sources.get(cell.casilla_id)
+                        if isinstance(source, SheetValueCell):
+                            visible_value = source.value
                     else:
                         self.record_value(cell.casilla_id, record_values[cell.casilla_id], start + 1, start + 1)
+                        visible_value = record_values[cell.casilla_id]
                 elif cell.kind is FormCellKind.DESIGN_CONSTANT:
+                    visible_value = cell.literal
                     self.text(
                         Decimal(cell.literal).scaleb(-cell.literal_decimals)
                         if cell.literal_decimals is not None and cell.literal is not None
@@ -606,14 +726,23 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                     if cell.binding_id is None:
                         raise CalcSheetsEngineError("form grid binding cell has no declared binding")
                     self.binding_value(cell.binding_id, start, start + 1)
+                    address = self.binding_addresses.get(cell.binding_id)
+                    source = self.address_sources.get(address.qualified()) if address is not None else None
+                    if isinstance(source, SheetValueCell):
+                        visible_value = source.value
+                if isinstance(visible_value, str):
+                    text_lines = max(
+                        text_lines,
+                        sum(max(1, len(wrap(line, width=max(1, text_width)))) for line in visible_value.splitlines()),
+                    )
             self.heights.append(
-                SheetRowHeight(
-                    tab=TabName.FORM, row=self.row, height_pixels=min(409, max(44, 18 * (1 + len(heading) // 44)))
-                )
+                SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=min(409, max(44, 18 * text_lines + 8)))
             )
             self.row += 1
 
-    def record_value(self, casilla_id: str | None, value: ModeloFormScalar, column: int, end: int) -> None:
+    def record_value(
+        self, casilla_id: str | None, value: ModeloFormScalar, column: int, end: int, *, data_type: str | None = None
+    ) -> None:
         """Render a saved record value; scalar sources contribute formatting only."""
         self.text(
             value.isoformat()
@@ -628,7 +757,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         self.span(column, end, StyleRole.FORM_COMPUTED, boxed=True)
         if isinstance(value, Decimal | int) and not isinstance(value, bool):
             casilla = self.casillas.get(casilla_id) if casilla_id else None
-            pattern = numeric_format(casilla.data_type if casilla is not None else "decimal")
+            pattern = numeric_format(data_type or (casilla.data_type if casilla is not None else "decimal"))
             if pattern is not None:
                 self.formats.append(
                     SheetNumberFormat(
@@ -640,6 +769,11 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
 
     def repeating(self, block: FormRepeatingGroupBlock) -> None:
         known, saved_rows = self.records(block)
+        projection_types = (
+            {field.id: str(field.data_type) for field in resolve_form_projection_fields(self.registry_revision, block)}
+            if any(column.export_field_id is not None for column in block.columns)
+            else {}
+        )
         if known:
             if len(saved_rows) > min(block.max_rows or 1000, 1000):
                 raise CalcSheetsEngineError("repeating form exceeds its bounded row capacity")
@@ -657,9 +791,9 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                     if column.casilla_id in gridded:
                         continue
                     label = (
-                        lookup_translation(column.heading_key, locale="es")
+                        self.localized(column.heading_key)
                         or column.official_heading
-                        or (self.casillas[column.casilla_id].label if column.casilla_id else "Dato del registro")
+                        or (self.casilla_label(column.casilla_id) if column.casilla_id else "Dato del registro")
                     )
                     box_number = self.placements[column.casilla_id].box_number if column.casilla_id else None
                     self.text(label)
@@ -667,7 +801,13 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                     if box_number:
                         self.text(str(box_number), 9)
                         self.span(9, 9, StyleRole.CASILLA, boxed=True)
-                    self.record_value(column.casilla_id, value, 10 if box_number else 9, 12)
+                    self.record_value(
+                        column.casilla_id,
+                        value,
+                        10 if box_number else 9,
+                        12,
+                        data_type=projection_types.get(column.export_field_id) if column.export_field_id else None,
+                    )
                     self.heights.append(SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=32))
                     self.row += 1
                 for grid in block.grids:
@@ -679,7 +819,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         if len(row_sets) > 1:
             raise CalcSheetsEngineError("repeating form binding has ambiguous source row sets")
         labels = [
-            column.official_heading or (self.casillas[column.casilla_id].label if column.casilla_id else f"Columna {i}")
+            column.official_heading or (self.casilla_label(column.casilla_id) if column.casilla_id else f"Columna {i}")
             for i, column in enumerate(block.columns, 1)
         ]
         # A record can have dozens of fields. Preserve each heading in its own
@@ -720,7 +860,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
     def context_field(self, block: FormContextFieldBlock) -> None:
         """Show only the explicitly declared immutable filing fact."""
         field = resolve_form_context_field(self.registry_revision, block)
-        label = lookup_translation(block.heading_key, locale="es") or block.official_heading or "Dato del formulario"
+        label = self.localized(block.heading_key) or block.official_heading or "Dato del formulario"
         self.text(label)
         value_column = 10 if block.box_number else 9
         if block.box_number:
@@ -733,6 +873,9 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             self.row += 1
             return
         value = self.context(block)
+        choice = form_context_choice(block, value)
+        if choice is not None:
+            value = self.localized(choice.heading_key) or choice.official_heading or "Opción"
         self.span(2, 8, StyleRole.FORM_LABEL)
         if value is None:
             shown: str | Decimal = "Sin dato"
@@ -745,12 +888,22 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         else:
             shown = value
         self.text(shown, value_column)
+        if field.draft_attribute is ExportDraftAttribute.FILING_YEAR and isinstance(shown, Decimal):
+            self.formats.append(
+                SheetNumberFormat(
+                    address=SheetCellAddress.at(TabName.FORM, self.row, value_column),
+                    data_type="integer",
+                    pattern="0",
+                )
+            )
         self.span(value_column, 12, StyleRole.FORM_COMPUTED, boxed=True)
         self.heights.append(SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=32))
         self.row += 1
 
     def conditional_checks(self) -> None:
         """Expose supported categorical requirements without claiming complete verification."""
+        if self.saved_form is not None:
+            return
         heading_shown = False
         for predicate in self.registry_revision.verification_predicates:
             parsed = parse_verification_predicate_expression(predicate.expression)
@@ -772,19 +925,15 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                 self.row += 1
                 self.line("Comprobaciones parciales de los datos", StyleRole.FORM_SECTION)
                 heading_shown = True
-            label = self.casillas[antecedent].label
+            label = self.casilla_label(antecedent)
             for page in self.layout.pages:
                 for section in page.sections:
                     for block in section.blocks:
                         if isinstance(block, FormFieldBlock) and block.casilla_id == antecedent:
                             for choice in block.choices:
                                 if choice.value == parsed.literal:
-                                    label = (
-                                        lookup_translation(choice.heading_key, locale="es")
-                                        or choice.official_heading
-                                        or label
-                                    )
-            self.text(f"{label}: {self.casillas[consequent].label}")
+                                    label = self.localized(choice.heading_key) or choice.official_heading or label
+            self.text(f"{label}: {self.casilla_label(consequent)}")
             self.span(2, 8, StyleRole.FORM_LABEL)
             source, target = trigger.address.qualified(), required.address.qualified()
             literal = parsed.literal.replace('"', '""')
@@ -812,7 +961,9 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             f" · {self.frame.code}" if isinstance(self.frame, Period) and self.frame.code != AD_HOC_PERIOD_CODE else ""
         )
         self.line(f"Modelo {self.modelo_id} · {self.frame.filing_year}{period_suffix}", StyleRole.TITLE)
-        if isinstance(self.plan.metadata, SheetTemplatePreviewMetadata):
+        if isinstance(self.plan.metadata, SheetReviewMetadata):
+            caption = self.plan.metadata.title + " · copia de valores guardados; no válida para presentar"
+        elif isinstance(self.plan.metadata, SheetTemplatePreviewMetadata):
             caption = "EJEMPLO FICTICIO · ejercicio y período ilustrativos · no válido para presentar"
         elif not isinstance(self.frame, Period):
             caption = tr("application.storage.calc_sheets.form.communication_caption", locale="es")
@@ -826,10 +977,16 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         else:
             self.line("Distribución revisada. Documento de trabajo; no es un justificante de presentación.")
         for page_index, page in enumerate(self.layout.pages, 1):
+            if (
+                page.condition is FormPageCondition.PERIOD_RESTRICTED
+                and isinstance(self.frame, Period)
+                and self.frame.code not in page.condition_periods
+            ):
+                continue
             self.row += 1
-            heading = lookup_translation(page.heading_key, locale="es") or page.official_heading
+            heading = self.localized(page.heading_key) or page.official_heading
             self.line(
-                f"Página {page_index}" + (f" · {heading}" if heading else ""),
+                heading or f"Página {page_index}",
                 StyleRole.TITLE,
             )
             if page.condition is not FormPageCondition.ALWAYS:
@@ -844,9 +1001,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                 self.line(descriptions[page.condition])
             for section_index, section in enumerate(page.sections, 1):
                 self.line(
-                    lookup_translation(section.heading_key, locale="es")
-                    or section.official_heading
-                    or f"Apartado {section_index}",
+                    self.localized(section.heading_key) or section.official_heading or f"Apartado {section_index}",
                     StyleRole.FORM_SECTION,
                 )
                 for block in section.blocks:
@@ -872,7 +1027,11 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             (FormPlacementKind.WORKING_FIGURE, "Datos auxiliares del cálculo"),
             (FormPlacementKind.UNPLACED, "Datos pendientes de ubicación en el formulario"),
         ):
-            placements = [p for p in self.layout.placements if p.kind is kind and p.workbook_exclusion is None]
+            placements = [
+                p
+                for p in self.layout.placements
+                if p.kind is kind and p.workbook_exclusion is None and not self.casillas[p.casilla_id].internal_only
+            ]
             if placements:
                 self.row += 1
                 self.line(title, StyleRole.FORM_SECTION)

@@ -29,8 +29,11 @@ from .account import AccountSessionExpiredError
 from .aeat_sync.routes import aeat_sync_screen_factory
 from .aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
 from .app import RootBindingV1, RootPresentationV1
+from .declarations.historical_export import HistoricalFilingExportScreen
 from .declarations.models import DeclarationsWorkspaceWiringV1
+from .declarations.reconciliation_export import ReconciliationExportScreen
 from .declarations.routes import declarations_screen_factory
+from .google_saved_review import GoogleSavedReviewScreen
 from .home import HomeScreen
 from .ledger.routes import actividad_asset_tui_actions, ledger_screen_factory
 from .ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
@@ -123,6 +126,7 @@ class _DeclarationDestination:
             source=lambda selected: RuntimeModeloWorkbenchSource(self._root._client, selected),
             door=self.lifecycle_door,
             own_accounts=compose_runtime_own_account_door(client=self._root._client, profile_label=self._root._label),
+            native_review=lambda revision_id: GoogleSavedReviewScreen(self._root._client, revision_id),
         )(declaration)
 
     def calendar_declaration(
@@ -151,6 +155,15 @@ class _DeclarationDestination:
                 revisions_action=_action("operator.modelo.work.revisions"),
                 filing_action=_action("operator.modelo.filing_record.list"),
                 modelo_workspace_factory=self.workspace_factory,
+                filing_export_factory=lambda filing: HistoricalFilingExportScreen(
+                    self._root._client, filing.filing_record_id
+                ),
+                filing_google_review_factory=lambda filing: GoogleSavedReviewScreen(
+                    self._root._client, filing.calculation_revision_id, filing_record_id=filing.filing_record_id
+                ),
+                reconciliation_export_factory=lambda filing: ReconciliationExportScreen(
+                    self._root._client, filing.work_unit_id
+                ),
                 calendar_projection=calendar,
                 calendar_entry_handoff=self.calendar_factory,
                 calendar_entry_can_open=lambda entry: self.calendar_declaration(entry) is not None,

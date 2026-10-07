@@ -3879,6 +3879,117 @@ modelo:
           servicios a personas que no tengan la condición de sujetos pasivos, que
           efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes.
         title: IVA. Autoliquidación regímenes especiales OSS / IOSS
+      form:
+        authored:
+          base:
+            heading: Base imponible (EUR)
+          clase:
+            heading: Clase de tipo (R/S)
+          correccion:
+            heading: Corrección de la cuota IVA (EUR)
+          correcciones:
+            heading: Correcciones de períodos anteriores (máximo 3 años)
+          cuota:
+            heading: Cuota IVA (EUR)
+          declarante:
+            heading: 1. Declarante
+          ejercicio:
+            heading: Ejercicio
+          ejercicio-periodo:
+            heading: 2. Ejercicio y período
+          exterior-servicios:
+            heading: 3. Prestaciones de servicios
+          fila-1:
+            heading: '1'
+          fila-10:
+            heading: '10'
+          fila-11:
+            heading: '11'
+          fila-12:
+            heading: '12'
+          fila-13:
+            heading: '13'
+          fila-14:
+            heading: '14'
+          fila-15:
+            heading: '15'
+          fila-16:
+            heading: '16'
+          fila-17:
+            heading: '17'
+          fila-18:
+            heading: '18'
+          fila-19:
+            heading: '19'
+          fila-2:
+            heading: '2'
+          fila-20:
+            heading: '20'
+          fila-21:
+            heading: '21'
+          fila-22:
+            heading: '22'
+          fila-23:
+            heading: '23'
+          fila-24:
+            heading: '24'
+          fila-25:
+            heading: '25'
+          fila-26:
+            heading: '26'
+          fila-27:
+            heading: '27'
+          fila-28:
+            heading: '28'
+          fila-3:
+            heading: '3'
+          fila-4:
+            heading: '4'
+          fila-5:
+            heading: '5'
+          fila-6:
+            heading: '6'
+          fila-7:
+            heading: '7'
+          fila-8:
+            heading: '8'
+          fila-9:
+            heading: '9'
+          identificacion:
+            heading: Identificación, período y pago
+          importaciones:
+            heading: 3. Importaciones de bienes de menos de 150 €
+          nif:
+            heading: NIF / CII
+          niva:
+            heading: NIVA u otro identificador fiscal
+          nombre:
+            heading: Apellidos y nombre o razón social
+          pago:
+            heading: Datos del pago
+          pais-consumo:
+            heading: Estado miembro de consumo
+          pais-origen:
+            heading: Estado miembro de origen
+          periodo:
+            heading: Período
+          presentacion:
+            heading: Datos complementarios de presentación
+          resultado:
+            importaciones:
+              heading: Importaciones de bienes
+          tipo:
+            heading: Tipo de IVA (%)
+          tipo-periodo:
+            heading: Tipo de período
+          union-bienes:
+            heading: 4. Entregas de bienes desde España
+          union-envio:
+            heading: 6. Entregas de bienes desde otros Estados miembros
+          union-ep:
+            heading: 5. Servicios desde establecimientos en otros Estados miembros
+          union-servicios:
+            heading: 3. Servicios desde España y establecimientos fuera de la UE
       revision:
         esquema-exterior:
           casilla:
@@ -3886,17 +3997,457 @@ modelo:
               label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
               label: Periodo de la declaración
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g64:
+              label: correcciones 1 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g68:
+              label: correcciones 2 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6c:
+              label: correcciones 3 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6g:
+              label: correcciones 4 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6k:
+              label: correcciones 5 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6o:
+              label: correcciones 6 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6s:
+              label: correcciones 7 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g70:
+              label: correcciones 8 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g74:
+              label: correcciones 9 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h60:
+              label: correcciones 10 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h64:
+              label: correcciones 11 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h68:
+              label: correcciones 12 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6c:
+              label: correcciones 13 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6g:
+              label: correcciones 14 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6k:
+              label: correcciones 15 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6o:
+              label: correcciones 16 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6s:
+              label: correcciones 17 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h70:
+              label: correcciones 18 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h74:
+              label: correcciones 19 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i60:
+              label: correcciones 20 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i64:
+              label: correcciones 21 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i68:
+              label: correcciones 22 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6c:
+              label: correcciones 23 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6g:
+              label: correcciones 24 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6k:
+              label: correcciones 25 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6o:
+              label: correcciones 26 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6s:
+              label: correcciones 27 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i70:
+              label: correcciones 28 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko32:
+              label: servicios 1 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko34:
+              label: servicios 2 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko36:
+              label: servicios 3 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko38:
+              label: servicios 4 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3a:
+              label: servicios 5 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3c:
+              label: servicios 6 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3e:
+              label: servicios 7 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3g:
+              label: servicios 8 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3i:
+              label: servicios 9 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj0:
+              label: servicios 10 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj2:
+              label: servicios 11 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj4:
+              label: servicios 12 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj6:
+              label: servicios 13 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj8:
+              label: servicios 14 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koja:
+              label: servicios 15 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kojc:
+              label: servicios 16 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koje:
+              label: servicios 17 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kojg:
+              label: servicios 18 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koji:
+              label: servicios 19 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp30:
+              label: servicios 20 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp32:
+              label: servicios 21 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp34:
+              label: servicios 22 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp36:
+              label: servicios 23 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp38:
+              label: servicios 24 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp3a:
+              label: servicios 25 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp3c:
+              label: servicios 26 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp3e:
+              label: servicios 27 - Estado de consumo reconocido
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp3g:
+              label: servicios 28 - Estado de consumo reconocido
             x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
-              label: Total cuota IVA repercutida del Esquema Exterior (suma de cuotas
-                por destino)
+              label: 'Subtotal parcial: servicios a Alemania (sin correcciones)'
             x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
               label: Cuota IVA repercutido al destino DE - servicios prestados (Esquema
                 Exterior)
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: AT - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: AT - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pi6atjfdhr6asg:
+              label: AT - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pkmspriclpm2sg:
+              label: AT - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pp6asrldhq62p3f:
+              label: AT - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5ppmasjmd5hmirrj:
+              label: AT - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: BE - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: BE - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pi6atjfdhr6asg:
+              label: BE - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pkmspriclpm2sg:
+              label: BE - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pp6asrldhq62p3f:
+              label: BE - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55ppmasjmd5hmirrj:
+              label: BE - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: BG - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: BG - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pi6atjfdhr6asg:
+              label: BG - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pkmspriclpm2sg:
+              label: BG - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pp6asrldhq62p3f:
+              label: BG - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75ppmasjmd5hmirrj:
+              label: BG - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: CY - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: CY - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pi6atjfdhr6asg:
+              label: CY - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pkmspriclpm2sg:
+              label: CY - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pp6asrldhq62p3f:
+              label: CY - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5ppmasjmd5hmirrj:
+              label: CY - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: CZ - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: CZ - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pi6atjfdhr6asg:
+              label: CZ - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pkmspriclpm2sg:
+              label: CZ - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pp6asrldhq62p3f:
+              label: CZ - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5ppmasjmd5hmirrj:
+              label: CZ - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: DE - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: DE - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pi6atjfdhr6asg:
+              label: DE - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pkmspriclpm2sg:
+              label: DE - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pp6asrldhq62p3f:
+              label: DE - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355ppmasjmd5hmirrj:
+              label: DE - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: DK - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: DK - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pi6atjfdhr6asg:
+              label: DK - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pkmspriclpm2sg:
+              label: DK - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pp6asrldhq62p3f:
+              label: DK - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5ppmasjmd5hmirrj:
+              label: DK - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: EE - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: EE - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pi6atjfdhr6asg:
+              label: EE - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pkmspriclpm2sg:
+              label: EE - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pp6asrldhq62p3f:
+              label: EE - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55ppmasjmd5hmirrj:
+              label: EE - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: ES - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: ES - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pi6atjfdhr6asg:
+              label: ES - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pkmspriclpm2sg:
+              label: ES - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pp6asrldhq62p3f:
+              label: ES - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5ppmasjmd5hmirrj:
+              label: ES - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: FI - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: FI - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pi6atjfdhr6asg:
+              label: FI - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pkmspriclpm2sg:
+              label: FI - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pp6asrldhq62p3f:
+              label: FI - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95ppmasjmd5hmirrj:
+              label: FI - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: FR - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: FR - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pi6atjfdhr6asg:
+              label: FR - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pkmspriclpm2sg:
+              label: FR - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pp6asrldhq62p3f:
+              label: FR - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5ppmasjmd5hmirrj:
+              label: FR - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: GR - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: GR - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pi6atjfdhr6asg:
+              label: GR - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pkmspriclpm2sg:
+              label: GR - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pp6asrldhq62p3f:
+              label: GR - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5ppmasjmd5hmirrj:
+              label: GR - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: HR - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: HR - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pi6atjfdhr6asg:
+              label: HR - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pkmspriclpm2sg:
+              label: HR - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pp6asrldhq62p3f:
+              label: HR - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5ppmasjmd5hmirrj:
+              label: HR - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: HU - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: HU - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pi6atjfdhr6asg:
+              label: HU - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pkmspriclpm2sg:
+              label: HU - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pp6asrldhq62p3f:
+              label: HU - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5ppmasjmd5hmirrj:
+              label: HU - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: IE - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: IE - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pi6atjfdhr6asg:
+              label: IE - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pkmspriclpm2sg:
+              label: IE - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pp6asrldhq62p3f:
+              label: IE - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55ppmasjmd5hmirrj:
+              label: IE - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: IT - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: IT - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pi6atjfdhr6asg:
+              label: IT - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pkmspriclpm2sg:
+              label: IT - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pp6asrldhq62p3f:
+              label: IT - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5ppmasjmd5hmirrj:
+              label: IT - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: LT - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: LT - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pi6atjfdhr6asg:
+              label: LT - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pkmspriclpm2sg:
+              label: LT - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pp6asrldhq62p3f:
+              label: LT - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5ppmasjmd5hmirrj:
+              label: LT - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: LU - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: LU - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pi6atjfdhr6asg:
+              label: LU - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pkmspriclpm2sg:
+              label: LU - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pp6asrldhq62p3f:
+              label: LU - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5ppmasjmd5hmirrj:
+              label: LU - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: LV - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: LV - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pi6atjfdhr6asg:
+              label: LV - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pkmspriclpm2sg:
+              label: LV - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pp6asrldhq62p3f:
+              label: LV - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5ppmasjmd5hmirrj:
+              label: LV - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: MT - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: MT - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pi6atjfdhr6asg:
+              label: MT - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pkmspriclpm2sg:
+              label: MT - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pp6asrldhq62p3f:
+              label: MT - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5ppmasjmd5hmirrj:
+              label: MT - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: NL - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: NL - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pi6atjfdhr6asg:
+              label: NL - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pkmspriclpm2sg:
+              label: NL - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pp6asrldhq62p3f:
+              label: NL - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5ppmasjmd5hmirrj:
+              label: NL - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: PL - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: PL - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pi6atjfdhr6asg:
+              label: PL - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pkmspriclpm2sg:
+              label: PL - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pp6asrldhq62p3f:
+              label: PL - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5ppmasjmd5hmirrj:
+              label: PL - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: PT - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: PT - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pi6atjfdhr6asg:
+              label: PT - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pkmspriclpm2sg:
+              label: PT - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pp6asrldhq62p3f:
+              label: PT - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5ppmasjmd5hmirrj:
+              label: PT - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: RO - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: RO - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pi6atjfdhr6asg:
+              label: RO - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pkmspriclpm2sg:
+              label: RO - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pp6asrldhq62p3f:
+              label: RO - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5ppmasjmd5hmirrj:
+              label: RO - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr1dhi6ubb9dpjn4pbjc5p2qpbje1gmso8:
+              label: Saldo a ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: SE - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: SE - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pi6atjfdhr6asg:
+              label: SE - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pkmspriclpm2sg:
+              label: SE - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pp6asrldhq62p3f:
+              label: SE - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55ppmasjmd5hmirrj:
+              label: SE - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: SI - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: SI - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pi6atjfdhr6asg:
+              label: SI - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pkmspriclpm2sg:
+              label: SI - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pp6asrldhq62p3f:
+              label: SI - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95ppmasjmd5hmirrj:
+              label: SI - Prestaciones de servicios
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: SK - Correcciones negativas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: SK - Correcciones positivas
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pi6atjfdhr6asg:
+              label: SK - A devolver por el Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pkmspriclpm2sg:
+              label: SK - A ingresar en España
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pp6asrldhq62p3f:
+              label: SK - Resultado por Estado miembro de consumo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5ppmasjmd5hmirrj:
+              label: SK - Prestaciones de servicios
           construct:
             modelo-369:
               field:
                 title: Modelo 369 - Esquema Exterior (régimen especial servicios prestados
                   por no establecidos)
+            modelo-369-exterior-resultado:
+              field:
+                title: Resultado por Estado miembro de consumo
           field:
             label: Modelo 369 - Esquema Exterior - régimen especial de servicios prestados
               por sujetos pasivos no establecidos en la Comunidad (LIVA art. 163 octiesdecies
@@ -3907,16 +4458,468 @@ modelo:
               label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
               label: Periodo de la declaración
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0c8:
+              label: Estado de consumo reconocido · pais-01
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0cg:
+              label: Estado de consumo reconocido · pais-02
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0co:
+              label: Estado de consumo reconocido · pais-03
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0d0:
+              label: Estado de consumo reconocido · pais-04
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0d8:
+              label: Estado de consumo reconocido · pais-05
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0dg:
+              label: Estado de consumo reconocido · pais-06
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0do:
+              label: Estado de consumo reconocido · pais-07
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0e0:
+              label: Estado de consumo reconocido · pais-08
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0e8:
+              label: Estado de consumo reconocido · pais-09
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2c0:
+              label: Estado de consumo reconocido · pais-10
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2c8:
+              label: Estado de consumo reconocido · pais-11
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2cg:
+              label: Estado de consumo reconocido · pais-12
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2co:
+              label: Estado de consumo reconocido · pais-13
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2d0:
+              label: Estado de consumo reconocido · pais-14
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2d8:
+              label: Estado de consumo reconocido · pais-15
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2dg:
+              label: Estado de consumo reconocido · pais-16
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2do:
+              label: Estado de consumo reconocido · pais-17
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2e0:
+              label: Estado de consumo reconocido · pais-18
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2e8:
+              label: Estado de consumo reconocido · pais-19
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4c0:
+              label: Estado de consumo reconocido · pais-20
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4c8:
+              label: Estado de consumo reconocido · pais-21
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4cg:
+              label: Estado de consumo reconocido · pais-22
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4co:
+              label: Estado de consumo reconocido · pais-23
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4d0:
+              label: Estado de consumo reconocido · pais-24
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4d8:
+              label: Estado de consumo reconocido · pais-25
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4dg:
+              label: Estado de consumo reconocido · pais-26
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4do:
+              label: Estado de consumo reconocido · pais-27
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4e0:
+              label: Estado de consumo reconocido · pais-28
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1h:
+              label: Estado de consumo reconocido · pais-01
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1i:
+              label: Estado de consumo reconocido · pais-02
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1j:
+              label: Estado de consumo reconocido · pais-03
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1k:
+              label: Estado de consumo reconocido · pais-04
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1l:
+              label: Estado de consumo reconocido · pais-05
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1m:
+              label: Estado de consumo reconocido · pais-06
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1n:
+              label: Estado de consumo reconocido · pais-07
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1o:
+              label: Estado de consumo reconocido · pais-08
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1p:
+              label: Estado de consumo reconocido · pais-09
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9g:
+              label: Estado de consumo reconocido · pais-10
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9h:
+              label: Estado de consumo reconocido · pais-11
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9i:
+              label: Estado de consumo reconocido · pais-12
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9j:
+              label: Estado de consumo reconocido · pais-13
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9k:
+              label: Estado de consumo reconocido · pais-14
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9l:
+              label: Estado de consumo reconocido · pais-15
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9m:
+              label: Estado de consumo reconocido · pais-16
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9n:
+              label: Estado de consumo reconocido · pais-17
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9o:
+              label: Estado de consumo reconocido · pais-18
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9p:
+              label: Estado de consumo reconocido · pais-19
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchg:
+              label: Estado de consumo reconocido · pais-20
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchh:
+              label: Estado de consumo reconocido · pais-21
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchi:
+              label: Estado de consumo reconocido · pais-22
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchj:
+              label: Estado de consumo reconocido · pais-23
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchk:
+              label: Estado de consumo reconocido · pais-24
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchl:
+              label: Estado de consumo reconocido · pais-25
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchm:
+              label: Estado de consumo reconocido · pais-26
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchn:
+              label: Estado de consumo reconocido · pais-27
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqcho:
+              label: Estado de consumo reconocido · pais-28
             x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
-              label: Total cuota IVA repercutida del Esquema Importación (IOSS, suma
-                por destino)
+              label: 'Subtotal parcial: importaciones a Alemania (sin correcciones)'
             x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
               label: Cuota IVA IOSS al destino DE - ventas a distancia de bienes importados
                 ≤ 150 EUR (LIVA art 163 quinvicies)
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: AT · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: AT · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj4clr6ur3mclp0:
+              label: AT · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj9dlo6usjkc5hmirreclpg:
+              label: AT · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj9dpjn4pbjc5p0:
+              label: AT · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bjiclpnar3kc5i6u:
+              label: AT · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: BE · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: BE · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj4clr6ur3mclp0:
+              label: BE · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj9dlo6usjkc5hmirreclpg:
+              label: BE · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj9dpjn4pbjc5p0:
+              label: BE · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abjiclpnar3kc5i6u:
+              label: BE · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: BG · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: BG · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj4clr6ur3mclp0:
+              label: BG · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj9dlo6usjkc5hmirreclpg:
+              label: BG · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj9dpjn4pbjc5p0:
+              label: BG · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebjiclpnar3kc5i6u:
+              label: BG · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: CY · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: CY · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj4clr6ur3mclp0:
+              label: CY · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj9dlo6usjkc5hmirreclpg:
+              label: CY · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj9dpjn4pbjc5p0:
+              label: CY · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibjiclpnar3kc5i6u:
+              label: CY · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: CZ · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: CZ · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj4clr6ur3mclp0:
+              label: CZ · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj9dlo6usjkc5hmirreclpg:
+              label: CZ · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj9dpjn4pbjc5p0:
+              label: CZ · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbjiclpnar3kc5i6u:
+              label: CZ · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: DE · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: DE · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj4clr6ur3mclp0:
+              label: DE · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj9dlo6usjkc5hmirreclpg:
+              label: DE · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj9dpjn4pbjc5p0:
+              label: DE · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abjiclpnar3kc5i6u:
+              label: DE · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: DK · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: DK · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj4clr6ur3mclp0:
+              label: DK · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj9dlo6usjkc5hmirreclpg:
+              label: DK · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj9dpjn4pbjc5p0:
+              label: DK · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbjiclpnar3kc5i6u:
+              label: DK · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: EE · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: EE · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj4clr6ur3mclp0:
+              label: EE · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj9dlo6usjkc5hmirreclpg:
+              label: EE · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj9dpjn4pbjc5p0:
+              label: EE · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabjiclpnar3kc5i6u:
+              label: EE · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: ES · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: ES · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj4clr6ur3mclp0:
+              label: ES · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj9dlo6usjkc5hmirreclpg:
+              label: ES · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj9dpjn4pbjc5p0:
+              label: ES · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bjiclpnar3kc5i6u:
+              label: ES · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: FI · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: FI · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj4clr6ur3mclp0:
+              label: FI · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj9dlo6usjkc5hmirreclpg:
+              label: FI · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj9dpjn4pbjc5p0:
+              label: FI · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibjiclpnar3kc5i6u:
+              label: FI · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: FR · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: FR · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj4clr6ur3mclp0:
+              label: FR · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj9dlo6usjkc5hmirreclpg:
+              label: FR · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj9dpjn4pbjc5p0:
+              label: FR · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bjiclpnar3kc5i6u:
+              label: FR · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: GR · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: GR · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj4clr6ur3mclp0:
+              label: GR · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj9dlo6usjkc5hmirreclpg:
+              label: GR · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj9dpjn4pbjc5p0:
+              label: GR · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bjiclpnar3kc5i6u:
+              label: GR · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: HR · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: HR · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj4clr6ur3mclp0:
+              label: HR · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj9dlo6usjkc5hmirreclpg:
+              label: HR · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj9dpjn4pbjc5p0:
+              label: HR · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bjiclpnar3kc5i6u:
+              label: HR · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: HU · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: HU · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj4clr6ur3mclp0:
+              label: HU · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj9dlo6usjkc5hmirreclpg:
+              label: HU · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj9dpjn4pbjc5p0:
+              label: HU · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abjiclpnar3kc5i6u:
+              label: HU · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: IE · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: IE · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj4clr6ur3mclp0:
+              label: IE · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj9dlo6usjkc5hmirreclpg:
+              label: IE · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj9dpjn4pbjc5p0:
+              label: IE · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabjiclpnar3kc5i6u:
+              label: IE · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: IT · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: IT · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj4clr6ur3mclp0:
+              label: IT · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj9dlo6usjkc5hmirreclpg:
+              label: IT · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj9dpjn4pbjc5p0:
+              label: IT · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bjiclpnar3kc5i6u:
+              label: IT · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: LT · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: LT · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj4clr6ur3mclp0:
+              label: LT · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj9dlo6usjkc5hmirreclpg:
+              label: LT · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj9dpjn4pbjc5p0:
+              label: LT · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bjiclpnar3kc5i6u:
+              label: LT · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: LU · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: LU · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj4clr6ur3mclp0:
+              label: LU · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj9dlo6usjkc5hmirreclpg:
+              label: LU · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj9dpjn4pbjc5p0:
+              label: LU · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abjiclpnar3kc5i6u:
+              label: LU · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: LV · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: LV · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj4clr6ur3mclp0:
+              label: LV · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj9dlo6usjkc5hmirreclpg:
+              label: LV · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj9dpjn4pbjc5p0:
+              label: LV · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbjiclpnar3kc5i6u:
+              label: LV · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: MT · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: MT · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj4clr6ur3mclp0:
+              label: MT · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj9dlo6usjkc5hmirreclpg:
+              label: MT · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj9dpjn4pbjc5p0:
+              label: MT · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bjiclpnar3kc5i6u:
+              label: MT · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: NL · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: NL · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj4clr6ur3mclp0:
+              label: NL · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj9dlo6usjkc5hmirreclpg:
+              label: NL · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj9dpjn4pbjc5p0:
+              label: NL · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6objiclpnar3kc5i6u:
+              label: NL · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: PL · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: PL · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj4clr6ur3mclp0:
+              label: PL · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj9dlo6usjkc5hmirreclpg:
+              label: PL · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj9dpjn4pbjc5p0:
+              label: PL · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6objiclpnar3kc5i6u:
+              label: PL · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: PT · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: PT · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj4clr6ur3mclp0:
+              label: PT · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj9dlo6usjkc5hmirreclpg:
+              label: PT · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj9dpjn4pbjc5p0:
+              label: PT · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bjiclpnar3kc5i6u:
+              label: PT · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: RO · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: RO · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj4clr6ur3mclp0:
+              label: RO · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj9dlo6usjkc5hmirreclpg:
+              label: RO · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj9dpjn4pbjc5p0:
+              label: RO · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubjiclpnar3kc5i6u:
+              label: RO · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppm2r34dsmmirj7e9in6obi5lin6s31dpgg:
+              label: Saldo a ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: SE · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: SE · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj4clr6ur3mclp0:
+              label: SE · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj9dlo6usjkc5hmirreclpg:
+              label: SE · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj9dpjn4pbjc5p0:
+              label: SE · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabjiclpnar3kc5i6u:
+              label: SE · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: SI · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: SI · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj4clr6ur3mclp0:
+              label: SI · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj9dlo6usjkc5hmirreclpg:
+              label: SI · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj9dpjn4pbjc5p0:
+              label: SI · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibjiclpnar3kc5i6u:
+              label: SI · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: SK · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: SK · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj4clr6ur3mclp0:
+              label: SK · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj9dlo6usjkc5hmirreclpg:
+              label: SK · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj9dpjn4pbjc5p0:
+              label: SK · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbjiclpnar3kc5i6u:
+              label: SK · Resultado por Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: XI · Correcciones negativas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: XI · Correcciones positivas
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj4clr6ur3mclp0:
+              label: XI · A devolver por el Estado miembro de consumo
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj9dlo6usjkc5hmirreclpg:
+              label: XI · Importaciones de bienes
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj9dpjn4pbjc5p0:
+              label: XI · A ingresar en España
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibjiclpnar3kc5i6u:
+              label: XI · Resultado por Estado miembro de consumo
           construct:
             modelo-369:
               field:
                 title: Modelo 369 - Esquema Importación (régimen especial IOSS)
+            modelo-369-importacion-resultado:
+              field:
+                title: Resultado por Estado miembro de consumo
           field:
             label: Modelo 369 - Esquema Importación (IOSS) - régimen especial de ventas
               a distancia de bienes importados (LIVA art. 163 quinvicies a octovicies).
@@ -3927,9 +4930,289 @@ modelo:
               label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
               label: Periodo de la declaración
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko32:
+              label: Validación del país correcciones 1
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko34:
+              label: Validación del país correcciones 2
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko36:
+              label: Validación del país correcciones 3
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko38:
+              label: Validación del país correcciones 4
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3a:
+              label: Validación del país correcciones 5
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3c:
+              label: Validación del país correcciones 6
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3e:
+              label: Validación del país correcciones 7
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3g:
+              label: Validación del país correcciones 8
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3i:
+              label: Validación del país correcciones 9
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj0:
+              label: Validación del país correcciones 10
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj2:
+              label: Validación del país correcciones 11
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj4:
+              label: Validación del país correcciones 12
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj6:
+              label: Validación del país correcciones 13
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj8:
+              label: Validación del país correcciones 14
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koja:
+              label: Validación del país correcciones 15
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kojc:
+              label: Validación del país correcciones 16
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koje:
+              label: Validación del país correcciones 17
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kojg:
+              label: Validación del país correcciones 18
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koji:
+              label: Validación del país correcciones 19
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp30:
+              label: Validación del país correcciones 20
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp32:
+              label: Validación del país correcciones 21
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp34:
+              label: Validación del país correcciones 22
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp36:
+              label: Validación del país correcciones 23
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp38:
+              label: Validación del país correcciones 24
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp3a:
+              label: Validación del país correcciones 25
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp3c:
+              label: Validación del país correcciones 26
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp3e:
+              label: Validación del país correcciones 27
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp3g:
+              label: Validación del país correcciones 28
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko32:
+              label: Validación del país union-bienes 1
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko34:
+              label: Validación del país union-bienes 2
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko36:
+              label: Validación del país union-bienes 3
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko38:
+              label: Validación del país union-bienes 4
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3a:
+              label: Validación del país union-bienes 5
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3c:
+              label: Validación del país union-bienes 6
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3e:
+              label: Validación del país union-bienes 7
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3g:
+              label: Validación del país union-bienes 8
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3i:
+              label: Validación del país union-bienes 9
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj0:
+              label: Validación del país union-bienes 10
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj2:
+              label: Validación del país union-bienes 11
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj4:
+              label: Validación del país union-bienes 12
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj6:
+              label: Validación del país union-bienes 13
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj8:
+              label: Validación del país union-bienes 14
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koja:
+              label: Validación del país union-bienes 15
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kojc:
+              label: Validación del país union-bienes 16
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koje:
+              label: Validación del país union-bienes 17
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kojg:
+              label: Validación del país union-bienes 18
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koji:
+              label: Validación del país union-bienes 19
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp30:
+              label: Validación del país union-bienes 20
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp32:
+              label: Validación del país union-bienes 21
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp34:
+              label: Validación del país union-bienes 22
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp36:
+              label: Validación del país union-bienes 23
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp38:
+              label: Validación del país union-bienes 24
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp3a:
+              label: Validación del país union-bienes 25
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp3c:
+              label: Validación del país union-bienes 26
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp3e:
+              label: Validación del país union-bienes 27
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp3g:
+              label: Validación del país union-bienes 28
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60og:
+              label: Validación del país union-envio 1
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60p0:
+              label: Validación del país union-envio 2
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60pg:
+              label: Validación del país union-envio 3
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60q0:
+              label: Validación del país union-envio 4
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60qg:
+              label: Validación del país union-envio 5
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60r0:
+              label: Validación del país union-envio 6
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60rg:
+              label: Validación del país union-envio 7
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60s0:
+              label: Validación del país union-envio 8
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60sg:
+              label: Validación del país union-envio 9
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64o0:
+              label: Validación del país union-envio 10
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64og:
+              label: Validación del país union-envio 11
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64p0:
+              label: Validación del país union-envio 12
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64pg:
+              label: Validación del país union-envio 13
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64q0:
+              label: Validación del país union-envio 14
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64qg:
+              label: Validación del país union-envio 15
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64r0:
+              label: Validación del país union-envio 16
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64rg:
+              label: Validación del país union-envio 17
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64s0:
+              label: Validación del país union-envio 18
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64sg:
+              label: Validación del país union-envio 19
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68o0:
+              label: Validación del país union-envio 20
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68og:
+              label: Validación del país union-envio 21
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68p0:
+              label: Validación del país union-envio 22
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68pg:
+              label: Validación del país union-envio 23
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68q0:
+              label: Validación del país union-envio 24
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68qg:
+              label: Validación del país union-envio 25
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68r0:
+              label: Validación del país union-envio 26
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68rg:
+              label: Validación del país union-envio 27
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68s0:
+              label: Validación del país union-envio 28
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0c8:
+              label: Validación del país union-ep 1
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0cg:
+              label: Validación del país union-ep 2
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0co:
+              label: Validación del país union-ep 3
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0d0:
+              label: Validación del país union-ep 4
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0d8:
+              label: Validación del país union-ep 5
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0dg:
+              label: Validación del país union-ep 6
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0do:
+              label: Validación del país union-ep 7
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0e0:
+              label: Validación del país union-ep 8
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0e8:
+              label: Validación del país union-ep 9
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2c0:
+              label: Validación del país union-ep 10
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2c8:
+              label: Validación del país union-ep 11
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2cg:
+              label: Validación del país union-ep 12
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2co:
+              label: Validación del país union-ep 13
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2d0:
+              label: Validación del país union-ep 14
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2d8:
+              label: Validación del país union-ep 15
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2dg:
+              label: Validación del país union-ep 16
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2do:
+              label: Validación del país union-ep 17
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2e0:
+              label: Validación del país union-ep 18
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2e8:
+              label: Validación del país union-ep 19
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4c0:
+              label: Validación del país union-ep 20
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4c8:
+              label: Validación del país union-ep 21
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4cg:
+              label: Validación del país union-ep 22
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4co:
+              label: Validación del país union-ep 23
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4d0:
+              label: Validación del país union-ep 24
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4d8:
+              label: Validación del país union-ep 25
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4dg:
+              label: Validación del país union-ep 26
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4do:
+              label: Validación del país union-ep 27
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4e0:
+              label: Validación del país union-ep 28
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g64:
+              label: Validación del país union-servicios 1
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g68:
+              label: Validación del país union-servicios 2
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6c:
+              label: Validación del país union-servicios 3
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6g:
+              label: Validación del país union-servicios 4
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6k:
+              label: Validación del país union-servicios 5
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6o:
+              label: Validación del país union-servicios 6
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6s:
+              label: Validación del país union-servicios 7
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g70:
+              label: Validación del país union-servicios 8
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g74:
+              label: Validación del país union-servicios 9
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h60:
+              label: Validación del país union-servicios 10
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h64:
+              label: Validación del país union-servicios 11
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h68:
+              label: Validación del país union-servicios 12
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6c:
+              label: Validación del país union-servicios 13
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6g:
+              label: Validación del país union-servicios 14
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6k:
+              label: Validación del país union-servicios 15
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6o:
+              label: Validación del país union-servicios 16
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6s:
+              label: Validación del país union-servicios 17
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h70:
+              label: Validación del país union-servicios 18
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h74:
+              label: Validación del país union-servicios 19
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i60:
+              label: Validación del país union-servicios 20
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i64:
+              label: Validación del país union-servicios 21
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i68:
+              label: Validación del país union-servicios 22
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6c:
+              label: Validación del país union-servicios 23
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6g:
+              label: Validación del país union-servicios 24
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6k:
+              label: Validación del país union-servicios 25
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6o:
+              label: Validación del país union-servicios 26
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6s:
+              label: Validación del país union-servicios 27
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i70:
+              label: Validación del país union-servicios 28
             x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
-              label: Total cuota IVA repercutida del Esquema Unión (suma cross-destination,
-                cross-flow)
+              label: 'Subtotal parcial: servicios a Alemania y Francia y bienes a
+                Alemania (sin correcciones)'
             x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
               label: Cuota IVA OSS Unión al destino DE - ventas a distancia + interfaces
                 electrónicas
@@ -3939,10 +5222,687 @@ modelo:
             x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
               label: Cuota IVA OSS Unión al destino FR - servicios prestados (LIVA
                 art 163 unvicies)
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspdclpn0obec4:
+              label: AT — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspddtq74rrj:
+              label: AT — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: AT — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: AT — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sp35epnmotj5e8:
+              label: AT — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sqbectp6asr1e8:
+              label: AT — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssj5edqmot31chng:
+              label: AT — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: AT — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: AT — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobb5edo62rj1:
+              label: AT — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbfehp6uso:
+              label: AT — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbgclp6irr4ds:
+              label: AT — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspdclpn0obec4:
+              label: BE — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspddtq74rrj:
+              label: BE — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: BE — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: BE — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisp35epnmotj5e8:
+              label: BE — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisqbectp6asr1e8:
+              label: BE — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissj5edqmot31chng:
+              label: BE — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqpbje1gmso8:
+              label: BE — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqrrke9nn6:
+              label: BE — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobb5edo62rj1:
+              label: BE — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbfehp6uso:
+              label: BE — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbgclp6irr4ds:
+              label: BE — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspdclpn0obec4:
+              label: BG — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspddtq74rrj:
+              label: BG — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: BG — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: BG — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisp35epnmotj5e8:
+              label: BG — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisqbectp6asr1e8:
+              label: BG — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissj5edqmot31chng:
+              label: BG — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqpbje1gmso8:
+              label: BG — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqrrke9nn6:
+              label: BG — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobb5edo62rj1:
+              label: BG — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbfehp6uso:
+              label: BG — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbgclp6irr4ds:
+              label: BG — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspdclpn0obec4:
+              label: CY — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspddtq74rrj:
+              label: CY — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: CY — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: CY — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisp35epnmotj5e8:
+              label: CY — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisqbectp6asr1e8:
+              label: CY — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissj5edqmot31chng:
+              label: CY — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqpbje1gmso8:
+              label: CY — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqrrke9nn6:
+              label: CY — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobb5edo62rj1:
+              label: CY — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbfehp6uso:
+              label: CY — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbgclp6irr4ds:
+              label: CY — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspdclpn0obec4:
+              label: CZ — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspddtq74rrj:
+              label: CZ — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: CZ — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: CZ — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sp35epnmotj5e8:
+              label: CZ — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sqbectp6asr1e8:
+              label: CZ — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssj5edqmot31chng:
+              label: CZ — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: CZ — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: CZ — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobb5edo62rj1:
+              label: CZ — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbfehp6uso:
+              label: CZ — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbgclp6irr4ds:
+              label: CZ — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspdclpn0obec4:
+              label: DE — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspddtq74rrj:
+              label: DE — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: DE — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: DE — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisp35epnmotj5e8:
+              label: DE — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisqbectp6asr1e8:
+              label: DE — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissj5edqmot31chng:
+              label: DE — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqpbje1gmso8:
+              label: DE — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqrrke9nn6:
+              label: DE — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobb5edo62rj1:
+              label: DE — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbfehp6uso:
+              label: DE — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbgclp6irr4ds:
+              label: DE — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspdclpn0obec4:
+              label: DK — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspddtq74rrj:
+              label: DK — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: DK — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: DK — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisp35epnmotj5e8:
+              label: DK — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisqbectp6asr1e8:
+              label: DK — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissj5edqmot31chng:
+              label: DK — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqpbje1gmso8:
+              label: DK — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqrrke9nn6:
+              label: DK — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobb5edo62rj1:
+              label: DK — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbfehp6uso:
+              label: DK — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbgclp6irr4ds:
+              label: DK — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspdclpn0obec4:
+              label: EE — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspddtq74rrj:
+              label: EE — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: EE — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: EE — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisp35epnmotj5e8:
+              label: EE — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisqbectp6asr1e8:
+              label: EE — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissj5edqmot31chng:
+              label: EE — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqpbje1gmso8:
+              label: EE — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqrrke9nn6:
+              label: EE — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobb5edo62rj1:
+              label: EE — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbfehp6uso:
+              label: EE — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbgclp6irr4ds:
+              label: EE — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspdclpn0obec4:
+              label: ES — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspddtq74rrj:
+              label: ES — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: ES — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: ES — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisp35epnmotj5e8:
+              label: ES — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisqbectp6asr1e8:
+              label: ES — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissj5edqmot31chng:
+              label: ES — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqpbje1gmso8:
+              label: ES — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqrrke9nn6:
+              label: ES — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobb5edo62rj1:
+              label: ES — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbfehp6uso:
+              label: ES — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbgclp6irr4ds:
+              label: ES — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspdclpn0obec4:
+              label: FI — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspddtq74rrj:
+              label: FI — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: FI — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: FI — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisp35epnmotj5e8:
+              label: FI — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisqbectp6asr1e8:
+              label: FI — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissj5edqmot31chng:
+              label: FI — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqpbje1gmso8:
+              label: FI — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqrrke9nn6:
+              label: FI — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobb5edo62rj1:
+              label: FI — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbfehp6uso:
+              label: FI — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbgclp6irr4ds:
+              label: FI — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspdclpn0obec4:
+              label: FR — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspddtq74rrj:
+              label: FR — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: FR — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: FR — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sp35epnmotj5e8:
+              label: FR — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sqbectp6asr1e8:
+              label: FR — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssj5edqmot31chng:
+              label: FR — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: FR — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: FR — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobb5edo62rj1:
+              label: FR — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbfehp6uso:
+              label: FR — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbgclp6irr4ds:
+              label: FR — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspdclpn0obec4:
+              label: GR — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspddtq74rrj:
+              label: GR — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: GR — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: GR — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sp35epnmotj5e8:
+              label: GR — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sqbectp6asr1e8:
+              label: GR — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssj5edqmot31chng:
+              label: GR — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: GR — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: GR — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobb5edo62rj1:
+              label: GR — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbfehp6uso:
+              label: GR — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbgclp6irr4ds:
+              label: GR — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspdclpn0obec4:
+              label: HR — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspddtq74rrj:
+              label: HR — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: HR — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: HR — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sp35epnmotj5e8:
+              label: HR — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sqbectp6asr1e8:
+              label: HR — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssj5edqmot31chng:
+              label: HR — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: HR — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: HR — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobb5edo62rj1:
+              label: HR — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbfehp6uso:
+              label: HR — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbgclp6irr4ds:
+              label: HR — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspdclpn0obec4:
+              label: HU — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspddtq74rrj:
+              label: HU — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: HU — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: HU — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisp35epnmotj5e8:
+              label: HU — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisqbectp6asr1e8:
+              label: HU — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissj5edqmot31chng:
+              label: HU — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqpbje1gmso8:
+              label: HU — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqrrke9nn6:
+              label: HU — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobb5edo62rj1:
+              label: HU — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbfehp6uso:
+              label: HU — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbgclp6irr4ds:
+              label: HU — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspdclpn0obec4:
+              label: IE — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspddtq74rrj:
+              label: IE — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: IE — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: IE — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisp35epnmotj5e8:
+              label: IE — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisqbectp6asr1e8:
+              label: IE — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissj5edqmot31chng:
+              label: IE — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqpbje1gmso8:
+              label: IE — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqrrke9nn6:
+              label: IE — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobb5edo62rj1:
+              label: IE — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbfehp6uso:
+              label: IE — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbgclp6irr4ds:
+              label: IE — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspdclpn0obec4:
+              label: IT — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspddtq74rrj:
+              label: IT — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: IT — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: IT — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sp35epnmotj5e8:
+              label: IT — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sqbectp6asr1e8:
+              label: IT — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssj5edqmot31chng:
+              label: IT — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: IT — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: IT — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobb5edo62rj1:
+              label: IT — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbfehp6uso:
+              label: IT — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbgclp6irr4ds:
+              label: IT — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspdclpn0obec4:
+              label: LT — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspddtq74rrj:
+              label: LT — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: LT — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: LT — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sp35epnmotj5e8:
+              label: LT — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sqbectp6asr1e8:
+              label: LT — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssj5edqmot31chng:
+              label: LT — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: LT — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: LT — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobb5edo62rj1:
+              label: LT — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbfehp6uso:
+              label: LT — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbgclp6irr4ds:
+              label: LT — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspdclpn0obec4:
+              label: LU — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspddtq74rrj:
+              label: LU — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: LU — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: LU — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisp35epnmotj5e8:
+              label: LU — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisqbectp6asr1e8:
+              label: LU — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissj5edqmot31chng:
+              label: LU — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqpbje1gmso8:
+              label: LU — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqrrke9nn6:
+              label: LU — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobb5edo62rj1:
+              label: LU — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbfehp6uso:
+              label: LU — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbgclp6irr4ds:
+              label: LU — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspdclpn0obec4:
+              label: LV — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspddtq74rrj:
+              label: LV — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: LV — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: LV — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sp35epnmotj5e8:
+              label: LV — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sqbectp6asr1e8:
+              label: LV — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssj5edqmot31chng:
+              label: LV — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: LV — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: LV — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobb5edo62rj1:
+              label: LV — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbfehp6uso:
+              label: LV — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbgclp6irr4ds:
+              label: LV — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspdclpn0obec4:
+              label: MT — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspddtq74rrj:
+              label: MT — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: MT — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: MT — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sp35epnmotj5e8:
+              label: MT — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sqbectp6asr1e8:
+              label: MT — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssj5edqmot31chng:
+              label: MT — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: MT — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: MT — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobb5edo62rj1:
+              label: MT — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbfehp6uso:
+              label: MT — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbgclp6irr4ds:
+              label: MT — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspdclpn0obec4:
+              label: NL — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspddtq74rrj:
+              label: NL — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: NL — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: NL — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sp35epnmotj5e8:
+              label: NL — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sqbectp6asr1e8:
+              label: NL — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssj5edqmot31chng:
+              label: NL — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: NL — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: NL — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobb5edo62rj1:
+              label: NL — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbfehp6uso:
+              label: NL — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbgclp6irr4ds:
+              label: NL — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspdclpn0obec4:
+              label: PL — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspddtq74rrj:
+              label: PL — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: PL — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: PL — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sp35epnmotj5e8:
+              label: PL — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sqbectp6asr1e8:
+              label: PL — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssj5edqmot31chng:
+              label: PL — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: PL — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: PL — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobb5edo62rj1:
+              label: PL — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbfehp6uso:
+              label: PL — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbgclp6irr4ds:
+              label: PL — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspdclpn0obec4:
+              label: PT — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspddtq74rrj:
+              label: PT — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: PT — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: PT — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sp35epnmotj5e8:
+              label: PT — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sqbectp6asr1e8:
+              label: PT — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssj5edqmot31chng:
+              label: PT — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: PT — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: PT — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobb5edo62rj1:
+              label: PT — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbfehp6uso:
+              label: PT — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbgclp6irr4ds:
+              label: PT — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspdclpn0obec4:
+              label: RO — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspddtq74rrj:
+              label: RO — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: RO — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: RO — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisp35epnmotj5e8:
+              label: RO — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisqbectp6asr1e8:
+              label: RO — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissj5edqmot31chng:
+              label: RO — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqpbje1gmso8:
+              label: RO — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqrrke9nn6:
+              label: RO — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobb5edo62rj1:
+              label: RO — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbfehp6uso:
+              label: RO — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbgclp6irr4ds:
+              label: RO — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedgmop3f5lkmspriclpm2shdclpn0obec4:
+              label: Saldo a ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspdclpn0obec4:
+              label: SE — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspddtq74rrj:
+              label: SE — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: SE — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: SE — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisp35epnmotj5e8:
+              label: SE — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisqbectp6asr1e8:
+              label: SE — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissj5edqmot31chng:
+              label: SE — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqpbje1gmso8:
+              label: SE — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqrrke9nn6:
+              label: SE — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobb5edo62rj1:
+              label: SE — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbfehp6uso:
+              label: SE — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbgclp6irr4ds:
+              label: SE — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspdclpn0obec4:
+              label: SI — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspddtq74rrj:
+              label: SI — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: SI — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: SI — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisp35epnmotj5e8:
+              label: SI — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisqbectp6asr1e8:
+              label: SI — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissj5edqmot31chng:
+              label: SI — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqpbje1gmso8:
+              label: SI — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqrrke9nn6:
+              label: SI — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobb5edo62rj1:
+              label: SI — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbfehp6uso:
+              label: SI — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbgclp6irr4ds:
+              label: SI — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspdclpn0obec4:
+              label: SK — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspddtq74rrj:
+              label: SK — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: SK — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: SK — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisp35epnmotj5e8:
+              label: SK — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisqbectp6asr1e8:
+              label: SK — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissj5edqmot31chng:
+              label: SK — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqpbje1gmso8:
+              label: SK — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqrrke9nn6:
+              label: SK — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobb5edo62rj1:
+              label: SK — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbfehp6uso:
+              label: SK — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbgclp6irr4ds:
+              label: SK — Total cuotas del período
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspdclpn0obec4:
+              label: XI — Bienes desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspddtq74rrj:
+              label: XI — Bienes desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: XI — Correcciones negativas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: XI — Correcciones positivas
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisp35epnmotj5e8:
+              label: XI — A devolver por el Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisqbectp6asr1e8:
+              label: XI — A ingresar en España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissj5edqmot31chng:
+              label: XI — Resultado por Estado miembro
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqpbje1gmso8:
+              label: XI — Servicios desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqrrke9nn6:
+              label: XI — Servicios desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobb5edo62rj1:
+              label: XI — Total desde España
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbfehp6uso:
+              label: XI — Total desde otros Estados miembros
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbgclp6irr4ds:
+              label: XI — Total cuotas del período
           construct:
             modelo-369:
               field:
                 title: Modelo 369 - Esquema Unión (régimen especial OSS Unión)
+            modelo-369-union-resultado:
+              field:
+                title: Resultado por Estado miembro de consumo
           field:
             label: Modelo 369 - Esquema Unión - régimen especial de ventas intracomunitarias
               a distancia, interfaces electrónicas y servicios establecidos en la

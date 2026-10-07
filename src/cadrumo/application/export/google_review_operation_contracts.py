@@ -7,9 +7,10 @@ from dataclasses import dataclass
 from typing import Literal, Protocol
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -36,6 +37,7 @@ class GoogleReviewRequest(CredentialFreeOperationRequest):
     profile_id: UUID
     calculation_revision_id: CalculationRevisionId
     publication_id: UUID
+    filing_record_id: Hex64Str | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class GoogleReviewProposal(BaseModel):
@@ -65,6 +67,7 @@ class GoogleReviewProjection(BaseModel):
     profile_id: UUID
     publication_id: UUID
     calculation_revision_id: CalculationRevisionId
+    filing_record_id: Hex64Str | None = Field(default=None, exclude_if=lambda value: value is None)
     root_folder_id: str
     snapshot_digest: ContentDigest
     payload_categories: tuple[ReadablePayloadCategory, ...]
@@ -128,6 +131,7 @@ class GoogleReviewOperationPorts:
     load_root: Callable[[], ArtifactCreationReceipt]
     publish: GoogleReviewPublish
     load_publication: Callable[[UUID], PublicationReceipt | None]
+    load_filing_snapshot: Callable[[CalculationRevisionId, Hex64Str], ReviewSnapshot] | None = None
 
 
 class GoogleReviewOperationPortsFactory(Protocol):

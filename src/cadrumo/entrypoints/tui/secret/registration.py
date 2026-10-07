@@ -41,6 +41,7 @@ from __future__ import annotations
 
 from contextvars import copy_context
 from dataclasses import dataclass
+from logging import ERROR, WARNING
 from threading import Event
 from typing import TYPE_CHECKING, ClassVar, cast, override
 
@@ -53,9 +54,11 @@ from textual.widgets import Button, Footer, Input, Label, Select, Static
 from textual.worker import Worker, WorkerState
 
 from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
+from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_scope
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from ....core.i18n.render import output_language, tr
+from ....core.logging import get_logger
 from ..components.app_access import TypedAppAccess
 from ..components.status import PinnedStatusBar
 from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
@@ -113,6 +116,8 @@ _SURFACE_REFUSAL_LOCALE_KEYS: dict[str, str] = {
 _RECOVERY_HANDOFF_POLL_SECONDS = 0.1
 
 _RECOVERY_ENROLLMENT_WORKER = "profile-recovery-enrollment"
+
+_LOGGER = get_logger(__name__)
 
 
 class RecoveryHandoverDeclinedError(CadrumoError):
@@ -880,25 +885,56 @@ def build_profile_registration_attempt(
     from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from ....domain.user_profile.values import UserProfileFact
 
-    try:
-        with bundled_indexed_authority().operation() as operation:
-            outcome = register_profile_with_credentials(
-                label=label,
-                passphrase=candidate_passphrase,
-                facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
-                profile_create_context=operation.profile_create_context(),
-                profile_decode_context=operation.profile_decode_context(),
+    with diagnostic_scope(new=True):
+        diagnostic_event(_LOGGER, "tui_profile_registration_started")
+        try:
+            with bundled_indexed_authority().operation() as operation:
+                outcome = register_profile_with_credentials(
+                    label=label,
+                    passphrase=candidate_passphrase,
+                    facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
+                    profile_create_context=operation.profile_create_context(),
+                    profile_decode_context=operation.profile_decode_context(),
+                )
+        except ProfileRegistrationError as refusal:
+            diagnostic_event(
+                _LOGGER,
+                "tui_profile_registration_refused",
+                fields={
+                    "reason_code": refusal.translated_message or "profile_registration_refused",
+                    "error_type": type(refusal).__name__,
+                    "outcome": "refused",
+                },
+                level=WARNING,
+                primary_error=refusal,
             )
-    except ProfileRegistrationError as refusal:
-        if refusal.translated_message is None:
+            if refusal.translated_message is None:
+                raise
+            return RegistrationAttempt(
+                expected_refusal=RegistrationRefusal(
+                    message_key=refusal.translated_message,
+                    context=tuple((refusal.context or {}).items()),
+                )
+            )
+        except BaseException as error:
+            diagnostic_event(
+                _LOGGER,
+                "tui_profile_registration_failed",
+                fields={
+                    **diagnostic_error_fields(error),
+                    "reason_code": "unexpected_registration_failure",
+                    "outcome": "failed",
+                },
+                level=ERROR,
+                primary_error=error,
+            )
             raise
-        return RegistrationAttempt(
-            expected_refusal=RegistrationRefusal(
-                message_key=refusal.translated_message,
-                context=tuple((refusal.context or {}).items()),
-            )
+        diagnostic_event(
+            _LOGGER,
+            "tui_profile_registration_persisted",
+            fields={"profile_persisted": True, "outcome": "created", "runtime_admitted": False},
         )
-    return RegistrationAttempt(outcome=outcome)
+        return RegistrationAttempt(outcome=outcome)
 
 
 def build_profile_recovery_enrollment_attempt(

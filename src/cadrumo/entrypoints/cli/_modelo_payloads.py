@@ -45,6 +45,7 @@ from ...application.modelo.calculation_report_verification import (
     CalculationSummaryVerificationReason,
 )
 from ...application.modelo.export_projection import ModeloIvaWalletDecisionPublicProvenance
+from ...application.modelo.historical_filing_projection import ModeloHistoricalFilingContentProjection
 from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.work_plazo import validate_modelo_work_deadline_posture
 from ...application.modelo.work_review import (
@@ -995,6 +996,7 @@ class ModeloRecordShowResult(ModeloRecordPayload):
 
     operation: str = "modelo.filing_record.show"
     observation_layers: ObservationLayersPayload
+    historical_content: ModeloHistoricalFilingContentProjection
 
 
 class VerificationReportListResult(OutputSchema):

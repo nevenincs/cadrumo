@@ -16,6 +16,11 @@ test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
+    // Exercise the full panel layout as a returning user's saved choice.
+    localStorage.setItem(
+      "cadrumo-shell-layout",
+      JSON.stringify({ layout: { panelOpen: true } }),
+    );
     sessionStorage.setItem("layout-cleared", "1");
   });
 });

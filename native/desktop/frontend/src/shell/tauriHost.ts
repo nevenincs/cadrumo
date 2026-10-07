@@ -45,6 +45,7 @@ export function tauriHost(): Host {
     nativeMenus: true,
     environment: () => call("desktop_environment", {}),
     signInStatus: () => call("sign_in_status", {}),
+    startManager: () => call("manager_start", {}),
     signOut: () => call("sign_out", {}),
     signIn: (password, profile) => submit("sign_in_submit", password, profile),
     profiles: {

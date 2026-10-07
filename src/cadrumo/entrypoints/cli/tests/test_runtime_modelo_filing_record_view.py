@@ -21,6 +21,7 @@ from ....application.modelo.filing_record_view_operation import (
     ModeloFilingRecordViewProjection,
     ModeloFilingRecordViewRequest,
 )
+from ....application.modelo.historical_filing_projection import ModeloHistoricalFilingContentProjection
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.modelos.filing_record import (
@@ -106,6 +107,9 @@ def _projection(*, profile_id: UUID = _PROFILE, request_id: str | None = None):
         filing_record_id=request_id or filing_id,
         record=ModeloFilingRecordListEntryProjection.from_record(record),
         observation_layers=layers,
+        historical_content=ModeloHistoricalFilingContentProjection(
+            calculation_revision_id=record.calculation_revision_id, availability="missing"
+        ),
     )
 
 
@@ -147,7 +151,9 @@ def test_bridge_submits_bound_profile_and_restores_renderer_payload(monkeypatch:
         submitted,
     )
 
-    record, layers = _invoke(projection.filing_record_id)
+    record, layers, historical = _invoke(projection.filing_record_id)
+    assert historical == projection.historical_content
+    assert historical.availability == "missing"
 
     assert record.filing_record_id == projection.filing_record_id
     assert record.bucket_id == str(_PROFILE)
@@ -187,6 +193,7 @@ def test_bridge_submits_bound_profile_and_restores_renderer_payload(monkeypatch:
         "receipt",
         "effect",
         "terminal",
+        "historical_revision",
     ],
 )
 def test_bridge_rejects_profile_receipt_effect_or_terminal_mismatch(
@@ -205,6 +212,14 @@ def test_bridge_rejects_profile_receipt_effect_or_terminal_mismatch(
     elif invalid_case == "receipt":
         projection = ModeloFilingRecordViewProjection.model_construct(
             **(projection.model_dump(mode="python") | {"filing_record_id": "c" * 64})
+        )
+    elif invalid_case == "historical_revision":
+        projection = projection.model_copy(
+            update={
+                "historical_content": ModeloHistoricalFilingContentProjection(
+                    calculation_revision_id="e" * 64, availability="missing"
+                )
+            }
         )
     submitted: list[ModeloFilingRecordViewRequest] = []
     _bind(

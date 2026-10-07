@@ -125,6 +125,8 @@ aggregation:
     errors:
       exterior_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
         Modelo 369 országkódja, ezért szolgáltatásai nem vallhatók be ezen a nyomtatványon.
+      exterior_detail_not_representable: A nem uniós séma nem tud minden sort vagy
+        mezőt megjeleníteni. A folytatás előtt ellenőrizd a részleteket.
       exterior_rate_kind_unsupported: Az egyablakos rendszer külső sémája csak a fogyasztás
         szerinti tagállam általános vagy kedvezményes adómértékével nyújtott szolgáltatásokat
         fogadja el. A megadott megfigyelés más adómérték-típust jelöl, amely ebben
@@ -204,6 +206,10 @@ aggregation:
         {second_resolver}).'
       binding_source_mismatch: A source_kind és a binding_source eltérő értékforrás-családra
         hivatkozik.
+      closed_record_rows_conflict: A sorok tagsága és értékei egymással összeegyeztethetetlen
+        forrásból származnak.
+      closed_record_rows_unadmitted: Hiányos vagy nem elfogadott forrás nem igazolhat
+        teljes táblázatot.
       duplicate_binding_owner: 'Belső hiba: ugyanannak az értékforrásnak két tulajdonosa
         van a forráshálón.'
       duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő tulajdonos egy értékforrással
@@ -716,6 +722,7 @@ desktop:
     show_password: Jelszó megjelenítése
     signed_out_lead: Jelentkezz be, hogy megnyisd a munkaterületedet a TUI-ban.
     start_services: Háttérszolgáltatások indítása
+    starting_services: Háttérszolgáltatások indítása…
     submit: Bejelentkezés
     submitting: Bejelentkezés…
     title: Jelentkezz be a Cadrumóba
@@ -928,6 +935,82 @@ filing:
     out_of_range: Az érték kívül esik az engedélyezett tartományon.
     required_missing: Kötelező mező hiányzik.
     schema_mismatch: Eltérés a várt sémától.
+google_review:
+  cancel: Közzététel visszavonása
+  category:
+    calculation: Mentett számítás értékei
+    evidence_package: Bizonyítékcsomag
+    ledger: Mentett főkönyvi sorok
+    original_attachment: Eredeti mellékletek
+  close: Bezárás
+  destination:
+    managed_google_folder: Beállított, kezelt Google-mappa
+  failure:
+    admission: A közzétételi engedélyt elutasították.
+    cancelled: A közzétételt visszavonták.
+    create_unknown: A távoli dokumentum létrehozása nem igazolható.
+    custody: A közzététel megőrzési bizonylata nem őrizhető meg.
+    integrity: A távoli tartalom ellenőrzése sikertelen.
+    population: A kiválasztott mentett tartalom kiírása sikertelen.
+  field: Mező
+  key: Hivatkozás
+  label:
+    amount_count: Mentett értékek
+    calculation_revision_id: Mentett számítás hivatkozása
+    destination: Célhely
+    evidence_count: Bizonyítékhivatkozások
+    finding_count: Áttekintési megállapítások
+    ledger_row_count: Mentett főkönyvi sorok
+    ledger_snapshot_id: Mentett főkönyv hivatkozása
+    package_digest: Bizonyítékcsomag lenyomata
+    payload_categories: Olvasható tartalom
+    publication_id: Közzététel hivatkozása
+    publication_state: Közzététel állapota
+    registry_digest: Nyilvántartás lenyomata
+    review_status: Áttekintés minősége
+    root_folder_id: Kezelt mappa hivatkozása
+    selection: Mentett kiválasztás
+    snapshot_digest: Mentett pillanatkép lenyomata
+    work_unit_id: Munka hivatkozása
+  notice:
+    calculation_required: Közzététel előtt válasszon mentett számítást.
+    evidence_index: A bizonyítékhivatkozások szerepelnek a másolatban; az eredeti
+      mellékletek tartalma nem kerül közzétételre.
+    external_copy: A közzététel olvasható másolatot hoz létre a Google rendszerében.
+      A célhelyhez hozzáférő jogosult felhasználók elolvashatják a pénzügyi tartalmat.
+    incomplete: Ennek a mentett áttekintésnek a bizonyítékai vagy az eredethozzárendelései
+      hiányosak.
+    missing_evidence: Egyes kiválasztott bizonyítékok nem érhetők el; a hiányzó adatok
+      ismeretlenek maradnak.
+    prerequisite_unavailable: A mentett áttekintés előfeltételei nem érhetők el.
+    provisional: Ez a mentett áttekintés ideiglenes.
+    receipt_unavailable: Ellenőrzött közzétételi bizonylat nem érhető el.
+    staged_edits: A mentett számítás áttekintése előtt mentse vagy vesse el a függő
+      módosításokat.
+    submission_unresolved: A közzététel eredménye még nem tisztázott. Új beküldés
+      előtt ellenőrizze a meglévő műveletet.
+  offer:
+    title: Áttekintés a Google Táblázatokban
+  open_document: Táblázat megnyitása
+  publication:
+    partial: Részben közzétéve
+    populated: Mentett tartalom kiírva
+    prepared: Helyben előkészítve
+    published: Közzétéve és ellenőrizve
+    remote-created: Távoli dokumentum létrehozva
+    uncertain: A közzététel eredménye bizonytalan
+    verified: Távoli tartalom ellenőrizve
+  publish: Olvasható másolat közzététele
+  result:
+    title: Google-áttekintés közzététele
+  selection:
+    ledger: Mentett főkönyv
+  status:
+    incomplete: Hiányos
+    provisional: Ideiglenes
+    verified: Ellenőrzött
+  technical: Technikai hivatkozások
+  value: Érték
 ledger:
   evidence:
     reader:
@@ -2489,6 +2572,7 @@ tui:
       artefact:
         calculation_report_csv: Számítási jelentés (CSV), csak helyi nyilvántartás
         calculation_report_pdf: Aláírt számítási összesítő (PDF), csak helyi nyilvántartás
+        calculation_review_xlsx: Mentett számítás áttekintése (XLSX)
         fichero_boe: BOE-fájl az AEAT-nál való benyújtáshoz
         label: Exportálandó dokumentum
       payment_election:

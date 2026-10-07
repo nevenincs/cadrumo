@@ -114,6 +114,59 @@ published_at = 2017-12-21
 applies_from = 2018-01-01
 source_url = "https://www.boe.es/boe/dias/2017/12/21/pdfs/BOE-A-2017-15190.pdf"
 review_status = "pending_review"
+
+[sources.boe-modelo-390-2026-printed-calculations]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf"
+sha256 = "0552f1b8b0e30b22a63e0cc4be29f5ba8ab050609dcb04ed16549b8eb5030694"
+bytes = 1810016
+retrieved_at = 2026-09-30
+published_at = 2026-01-26
+applies_from = 2026-01-01
+source_url = "https://www.boe.es/boe/dias/2026/01/26/pdfs/BOE-A-2026-1761.pdf"
+review_status = "pending_review"
+
+[sources.boe-modelo-390-2024-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2024-21961-modelos-322-390.pdf"
+sha256 = "62774bac10656a88ff2c7c37bc556a61d8b1e1b70442e9bed31dd0244b5451bc"
+bytes = 1935745
+retrieved_at = 2026-10-06
+published_at = 2024-10-25
+applies_from = 2024-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/boe/dias/2024/10/25/pdfs/BOE-A-2024-21961.pdf"
+review_status = "pending_review"
+
+[sources.aeat-modelo-390-2024-printed-calculations]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/aeat-modelo-390-2024-form.pdf"
+sha256 = "ce9ba218492ece55c96f63193cd87ab8d1f95b5ac49fbe6222a0eeef9da3e9ad"
+bytes = 877464
+retrieved_at = 2026-10-07
+applies_from = 2024-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Tema/Estadisticas/Estadisticas_impuesto/Iva/Ivapartidas/Documentacion/Metodologia_pdf/Modelos/mod390_2024.pdf"
+review_status = "pending_review"
+
+[sources.aeat-modelo-390-2025-instructions]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/normatives/pdf/aeat-modelo-390-2025-instructions.pdf"
+sha256 = "26028dcb993675bf91cdf9b9fb50742c473c5fe6680735e29acdc3c560d3301d"
+bytes = 355432
+retrieved_at = 2026-10-07
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G412/Instrucciones_modelo_390-2025.pdf"
+review_status = "pending_review"
 [legal."orden-hac-3625-2003:apartado-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -250,6 +303,80 @@ retrieved_at = 2026-05-06
 applies_from = 2003-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G404.shtml"
 review_status = "pending_review"
+
+# Modelo 322 Annex I: PDF pages 6-9 (printed 75939-75942).
+# Final provision: first applies to periods beginning July 2021. The January
+# 2023 form replaces this edition. This window refers to Modelo 322 only.
+[sources."boe-modelo-322-2021-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2021-10509-modelos-322-303-390.pdf"
+sha256 = "215afcbf4fda0dc396c6ba6efe90d083d91c64710b966ffe278786830a6cc559"
+bytes = 1266413
+retrieved_at = 2026-10-06
+published_at = 2021-06-24
+applies_from = 2021-07-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/boe/dias/2021/06/24/pdfs/BOE-A-2021-10509.pdf"
+review_status = "pending_review"
+
+# Modelo 322 Annex I: PDF pages 5-8 (printed 158992-158995).
+# The final provision applies this form to periods beginning January 2023.
+# The October 2024 replacement below ends this form's applicability; the
+# publication also contains other modelos, whose windows are not asserted here.
+[sources."boe-modelo-322-2023-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2022-19290-modelos-322-390.pdf"
+sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590"
+bytes = 1200305
+retrieved_at = 2026-10-06
+published_at = 2022-11-22
+applies_from = 2023-01-01
+applies_to = 2024-09-30
+source_url = "https://www.boe.es/boe/dias/2022/11/22/pdfs/BOE-A-2022-19290.pdf"
+review_status = "pending_review"
+
+# Modelo 322 Annex I: PDF pages 4-7 (printed 136891-136894).
+# Entry into force is November 1, but the final provision explicitly selects
+# the October 2024 return first. These are tax-period applicability dates.
+# BOE-A-2026-1761 replaces this form beginning with February 2026.
+[sources."boe-modelo-322-2024-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2024-21961-modelos-322-390.pdf"
+sha256 = "62774bac10656a88ff2c7c37bc556a61d8b1e1b70442e9bed31dd0244b5451bc"
+bytes = 1935745
+retrieved_at = 2026-10-06
+published_at = 2024-10-25
+applies_from = 2024-10-01
+applies_to = 2026-01-31
+source_url = "https://www.boe.es/boe/dias/2024/10/25/pdfs/BOE-A-2024-21961.pdf"
+review_status = "pending_review"
+
+[sources."aeat-modelo-322-instructions-20261006"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_322/files/modelo-322-instrucciones-20261006.html"
+sha256 = "bc060a624de7ed793094904825776affd22982d1b4a48b47a9c338e6250edbb4"
+bytes = 70817
+retrieved_at = 2026-10-06
+applies_from = 2022-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-322-iva-dades-modelo-mensual_/instrucciones.html"
+review_status = "pending_review"
+# The same stable activity descriptions and separate no-activity declaration
+# were compared against BOE-A-2021-10509 AnnexI printed75940-75941 for2022.
+# Retrieved in October2026, not a historical web capture. The activity
+# descriptions and no-activity declaration cited by historical constructs
+# corroborate BOE-A-2022-19290 AnnexI pages6-7 and BOE-A-2024-21961 pages5-6.
+# Applicability records that compared content; it does not date this capture
+# to2023 or assert every current paragraph governs every historical period.
+# Its box70 expression omits112: the2026 arithmetic remains governed by
+# BOE-A-2026-1761 AnnexI pages6-9, not that stale web expression.
 
 [sources."aeat-modelo-309-instructions"]
 evidence_tier = "official_source_guidance"
@@ -3382,4 +3509,75 @@ retrieved_at = 2026-10-06
 published_at = 2011-04-27
 applies_from = 2011-07-01
 source_url = "https://www.boe.es/boe/dias/2011/04/27/pdfs/BOE-A-2011-7479.pdf"
+review_status = "pending_review"
+
+# Annex II is the single-page Modelo 353 applicable from January 2021.
+[sources."boe-modelo-353-2021-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2020-17269-modelos-322-353-303.pdf"
+sha256 = "7a646913464d975720b9d066e19e2d74cce46f18631f13017514d6c8cb439e5a"
+bytes = 890084
+retrieved_at = 2026-10-06
+published_at = 2020-12-30
+applies_from = 2021-01-01
+applies_to = 2026-01-31
+source_url = "https://www.boe.es/boe/dias/2020/12/30/pdfs/BOE-A-2020-17269.pdf"
+review_status = "pending_review"
+
+[sources.boe-modelo-390-2022-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2022-19290-modelos-322-390.pdf"
+sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590"
+bytes = 1200305
+retrieved_at = 2026-10-07
+published_at = 2022-11-22
+applies_from = 2022-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/boe/dias/2022/11/22/pdfs/BOE-A-2022-19290.pdf"
+review_status = "pending_review"
+
+[sources.boe-modelo-390-2023-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2023-26632-modelos-036-030-390.pdf"
+sha256 = "97069814b634a6b87966e0b486956639b5a4dda36f0401c5c7f51fe12726cea3"
+bytes = 2079432
+retrieved_at = 2026-10-07
+published_at = 2023-12-29
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/boe/dias/2023/12/29/pdfs/BOE-A-2023-26632.pdf"
+review_status = "pending_review"
+
+[sources.boe-modelo-390-2022-printed-calculations]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2022-19290-modelos-322-390.pdf"
+sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590"
+bytes = 1200305
+retrieved_at = 2026-10-07
+published_at = 2022-11-22
+applies_from = 2022-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/boe/dias/2022/11/22/pdfs/BOE-A-2022-19290.pdf"
+review_status = "pending_review"
+
+[sources.boe-modelo-390-2023-printed-calculations]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2023-26632-modelos-036-030-390.pdf"
+sha256 = "97069814b634a6b87966e0b486956639b5a4dda36f0401c5c7f51fe12726cea3"
+bytes = 2079432
+retrieved_at = 2026-10-07
+published_at = 2023-12-29
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/boe/dias/2023/12/29/pdfs/BOE-A-2023-26632.pdf"
 review_status = "pending_review"

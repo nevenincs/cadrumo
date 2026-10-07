@@ -951,6 +951,9 @@ cli:
           o registrado como presentado.
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       filing_record:
+        export_help: Exportar la presentación histórica seleccionada como libro de revisión del cálculo guardado.
+        export_button: Exportar presentación seleccionada (XLSX)
+        export_missing: El cálculo histórico seleccionado ya no se conserva; la exportación no puede usar el cálculo actual.
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
         bucket_id_help: Filtrar por perfil
         evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf, aeat_csv_register,
@@ -1202,6 +1205,13 @@ cli:
       readiness_help: Informa de si el perfil activo está listo para presentar un
         modelo / ejercicio / periodo.
       reconcile:
+        export_help: Exportar las diferencias de conciliación guardadas a un libro local de revisión.
+        export_button: Exportar diferencias de la declaración (XLSX)
+        export_work_unit_scope: Exporta todas las diferencias de conciliación guardadas de la declaración seleccionada.
+        export_selector_required: "Selecciona exactamente una opción: --event-id, --work-unit-id o --all-history."
+        export_work_unit_id_help: Identificador exacto de la declaración guardada (SHA-256 de 64 caracteres).
+        export_event_id_help: Identificador exacto del evento de conciliación guardado.
+        export_all_help: Exportar explícitamente todo el historial de conciliación guardado.
         app_help: 'Compara un cálculo local guardado con evidencia de la AEAT: pull
           descarga un justificante o una declaración presentada; import compara un
           PDF local; list muestra las comparaciones anteriores.'
@@ -1372,7 +1382,10 @@ cli:
             como hoja de Google legible por usuarios autorizados.
           calculation_revision_id_help: Identificador exacto de la revisión de cálculo
             guardada que se publicará.
+          filing_record_id_help: Identificador exacto de la presentación histórica vinculada al cálculo guardado; opcional.
           publication_id_help: UUID de publicación; se genera si se omite.
+        publish_button: Revisar en Google Sheets
+        review_help: Exportar un cálculo guardado, borrador o completado, como libro local de revisión inmutable.
         publish_help: Publica un cálculo guardado como hoja nativa de Google legible
           en la carpeta del perfil.
         pull:

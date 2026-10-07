@@ -1,0 +1,96 @@
+[sources.boe-modelo-369-2021-original-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2021-10161-modelo-369.pdf"
+sha256 = "5ec990d839f8505bda2862c3b27b22f120df6b0e02edf345e726f006618eec12"
+bytes = 1109062
+retrieved_at = 2026-10-06
+published_at = 2021-06-18
+applies_from = 2021-07-01
+source_url = "https://www.boe.es/boe/dias/2021/06/18/pdfs/BOE-A-2021-10161.pdf"
+review_status = "pending_review"
+
+[sources.aeat-modelo-369-resultado-exterior-20261006]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_369/files/resultado-exterior-20261006.html"
+sha256 = "a4efe691109effd9d3fb20e786f2b48b2f8efd592d9fbf05c3e28afabeb06edb"
+bytes = 9502
+retrieved_at = 2026-10-06
+applies_from = 2026-10-06
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/modelo-369/presentacion-regimen-exterior-union/5-resultado-autoliquidacion-em-consumo.html"
+review_status = "pending_review"
+# Current capture only. Historical form geometry is independently pinned to
+# BOE-A-2021-10161; this capture does not establish historical applicability.
+
+[sources.aeat-modelo-369-resultado-union-20261006]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_369/files/resultado-union-20261006.html"
+sha256 = "8dc8ab5b7105893087329b8638cdc1369bc70028eb1aa48ace29cf507e736589"
+bytes = 9468
+retrieved_at = 2026-10-06
+applies_from = 2026-10-06
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/modelo-369/presentacion-regimen-union/8-resultado-autoliquidacion-em-consumo.html"
+review_status = "pending_review"
+# Current capture only. Historical form geometry is independently pinned to
+# BOE-A-2021-10161; this capture does not establish historical applicability.
+
+[sources.aeat-modelo-369-resultado-importacion-20261006]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_369/files/resultado-importacion-20261006.html"
+sha256 = "27548e7d360271e6a0b3173dcbe3157162bd35d295662b4ce43fc20d3140a5af"
+bytes = 9483
+retrieved_at = 2026-10-06
+applies_from = 2026-10-06
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/modelo-369/presentacion-regimen-importacion/5-resultado-autoliquidacion-em-consumo.html"
+review_status = "pending_review"
+# Current capture only. Historical form geometry is independently pinned to
+# BOE-A-2021-10161; this capture does not establish historical applicability.
+
+# Calculation instructions printed in the original annex, pages 74093, 74099 and 74102:
+# sum each scheme's operation quotas; separate corrections and country refunds.
+# Same pinned primary document as the layout reference, distinct evidence role.
+[sources.boe-modelo-369-2021-settlement-instructions]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/pdf/boe-a-2021-10161-modelo-369.pdf"
+sha256 = "5ec990d839f8505bda2862c3b27b22f120df6b0e02edf345e726f006618eec12"
+bytes = 1109062
+retrieved_at = 2026-10-06
+published_at = 2021-06-18
+applies_from = 2021-07-01
+source_url = "https://www.boe.es/boe/dias/2021/06/18/pdfs/BOE-A-2021-10161.pdf"
+review_status = "pending_review"
+
+# Current guidance capture; no inferred historical applicability.
+[sources.aeat-modelo-369-ingreso-adicional-20261006]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_369/files/ingreso-adicional-20261006.html"
+sha256 = "b310a3d1638437cf849e723e25fdbb20a37bd4dd9a182a472cfe1d20398305fe"
+bytes = 9831
+retrieved_at = 2026-10-06
+applies_from = 2026-10-06
+source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/369/Ingadicional.shtml"
+review_status = "pending_review"
+
+[sources.ec-vat-services-withdrawal-20201209]
+evidence_tier = "official_source_guidance"
+authority = "eu"
+kind = "instructions"
+corpus_path = "corpus/normatives/pdf/ec-vat-services-withdrawal-20201209.pdf"
+sha256 = "39bb50e39d9eeceb28b0b1235f51005199c0d65dfb88d0a3ebd183d062f2a8a8"
+bytes = 384643
+retrieved_at = 2026-10-06
+published_at = 2020-12-09
+applies_from = 2021-01-01
+source_url = "https://commission.europa.eu/document/download/053fe5a6-e232-4f59-97d0-6aaf9d66b05e_en"
+review_status = "pending_review"

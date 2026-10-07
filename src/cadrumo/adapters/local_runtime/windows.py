@@ -161,11 +161,23 @@ class WindowsRuntimeEndpoint:
                 if error.winerror == ERROR_PIPE_CONNECTED:
                     connected = True
                 elif error.winerror != ERROR_IO_PENDING:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+                    raise
             if not connected:
                 finish_windows_io(handle, overlapped, deadline=time.monotonic() + timeout)
             self._pending = self._new_instance(first=False)
             return WindowsRuntimeChannel(handle, server=True)
+        except pywintypes.error as error:
+            if error.winerror not in (109, 232, 233):
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+            # A client can close between CreateFile and ConnectNamedPipe (or
+            # completion of its overlapped connect). Reset this same instance:
+            # closing/recreating the last handle would expose an ownership gap.
+            try:
+                win32pipe.DisconnectNamedPipe(int(handle))
+            except pywintypes.error as reset_error:
+                if reset_error.winerror != 233:  # already disconnected
+                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED) from None
         finally:
             win32api.CloseHandle(overlapped.hEvent)
 

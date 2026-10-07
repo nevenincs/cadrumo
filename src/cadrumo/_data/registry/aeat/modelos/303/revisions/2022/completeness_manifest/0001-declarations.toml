@@ -438,3 +438,57 @@ number = "iva.cuota-devengada.reducido"
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "iva.cuota-devengada.general"
 number = "iva.cuota-devengada.general"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "80"
+number = "80"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "81"
+number = "81"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "93"
+number = "93"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "94"
+number = "94"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "83"
+number = "83"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "84"
+number = "84"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "125"
+number = "125"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "126"
+number = "126"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "127"
+number = "127"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "128"
+number = "128"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "86"
+number = "86"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "95"
+number = "95"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "96"
+number = "96"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "97"
+number = "97"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "98"
+number = "98"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "79"
+number = "79"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "99"
+number = "99"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "88"
+number = "88"

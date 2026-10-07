@@ -2,6 +2,23 @@
 
 ## Documents
 
+### Settlement instructions captured on 2026-10-06
+
+The three `files/resultado-*-20261006.html` files retain separate current
+AEAT instructions for the Exterior, Union and Import schemes. Exact retrieval
+URLs, byte counts and SHA-256 receipts are enrolled in
+`registry/aeat/legal/modelo-369-form-history.toml` under the matching
+`aeat-modelo-369-resultado-*-20261006` source identities. The capture date is
+not a publication date or evidence of historical applicability.
+
+Each section states that the country result is calculated from prior sections,
+that negative balances for one country cannot offset another country's positive
+balance, and that the amount payable in Spain sums the positive country results.
+Historical page geometry is independently grounded in BOE-A-2021-10161, rather
+than inferred from these current web captures. Source review remains pending.
+
+### Earlier captures
+
 | File | Bytes | Modified | Type |
 | ---- | ----- | -------- | ---- |
 | `files/1-declarante.html` | 7993 | 2026-08-07 22:40 | AEAT Sede HTML — manual section 1 |
@@ -76,3 +93,18 @@ of DR369e21. Sections 1, 8 and 9 are captured context and are not currently
 cited by any extraction profile. Re-fetch whenever a new clause is quoted,
 and record the URL and retrieval date at capture time so the derived
 attribution above can be replaced with a recorded one.
+
+## Additional-payment instructions captured 2026-10-06
+
+`files/ingreso-adicional-20261006.html` was fetched directly from
+https://sede.agenciatributaria.gob.es/Sede/Ayuda/369/Ingadicional.shtml.
+The 9,831-byte response has SHA-256
+`b310a3d1638437cf849e723e25fdbb20a37bd4dd9a182a472cfe1d20398305fe`.
+The source catalogue records this as current guidance, without claiming a
+historical effective date from its retrieval date.
+
+The instructions distinguish the prior declaration's registration number,
+the balance already paid in Spain, and payment reminders issued by individual
+consumption states. A reminder transfers that country's outstanding payment
+out of the amount payable through Spain. The original BOE annex page 74103
+independently establishes the printed additional-payment form's geometry.

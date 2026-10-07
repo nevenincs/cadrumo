@@ -25,11 +25,14 @@ from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConf
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from cadrumo.application.modelo.revision_persistence import persist_calculation_revision
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.errors import ModeloValidationError
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
@@ -87,6 +90,7 @@ def _persist(
     operation: PinnedAuthorityOperation,
     now: datetime,
     input_value: str,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
     additional_secure_object_writes_for_revision: (
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
@@ -106,6 +110,7 @@ def _persist(
         binding_overrides={},
         row_binding_values={},
         row_source_identities={},
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values={},
         row_casilla_provenance={},
         relation_overrides={},
@@ -125,6 +130,67 @@ def _persist(
         operation=operation,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
+
+
+@pytest.mark.parametrize(
+    "mismatch", [None, "bucket_id", "work_unit_id", "authority_generation", "registry_snapshot_ref"]
+)
+def test_publisher_preserves_closed_rows_only_in_the_admitted_scope(
+    tmp_path: Path, operation: PinnedAuthorityOperation, mismatch: str | None
+) -> None:
+    work_unit = _work_unit()
+    snapshot = RegistrySnapshotRef(
+        modelo=work_unit.modelo,
+        revision_id=work_unit.revision_id,
+        modelo_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    closed = ClosedRecordRowSet(
+        record_id="fictional-record",
+        bucket_id=work_unit.bucket_id,
+        work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=snapshot,
+        authority_generation=operation.pin().logical_generation,
+        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        source_ref="fictional-collection",
+        source_fingerprint="6" * 64,
+        rows=(RecordRowMembership(row_index=1, binding_ids=("fictional-binding",), occupied=False),),
+    )
+    if mismatch is not None:
+        value = snapshot.model_copy(update={"period": "2T"}) if mismatch == "registry_snapshot_ref" else "9" * 64
+        closed = ClosedRecordRowSet.model_validate({**dict(closed), mismatch: value})
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        work_units_repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        calculations = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        events = BucketEventHistoryRepository(objects=profile.repository)
+        work_units_repository.save(build_work_unit_catalogue((work_unit,)))
+        work_units, parent_revision = work_units_repository.load_revisioned()
+
+        def publish():
+            return _persist(
+                work_unit=work_unit,
+                work_units=work_units,
+                work_units_revision_id=parent_revision,
+                calculation_repository=calculations,
+                work_unit_repository=work_units_repository,
+                bucket_event_repository=events,
+                operation=operation,
+                now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
+                input_value="100.00",
+                closed_record_row_sets=(closed,),
+            )
+
+        if mismatch is not None:
+            before = work_units_repository.load_revisioned()
+            with pytest.raises(ModeloValidationError, match="admitted calculation scope"):
+                publish()
+            assert work_units_repository.load_revisioned() == before
+            assert not calculations.load().revisions
+        else:
+            result = publish()
+            saved = calculations.load().get(result.revision.calculation_revision_id)
+            assert saved is not None
+            assert saved.closed_record_row_sets == (closed,)
 
 
 def test_new_revision_co_commits_additional_writes_atomically(

@@ -4,49 +4,48 @@ modelo:
       casilla:
         continuidad:
           a-deducir-23:
-            label: Liquidación (8) - A deducir [23]
+            label: Liquidación - A deducir [23]
           adjudicatario-apellidos:
-            label: Adjudicatario (4) - Apellidos o Denominación Social
+            label: Adjudicatario - Apellidos o Denominación Social
           adjudicatario-nif:
-            label: Adjudicatario (4) - NIF
+            label: Adjudicatario - NIF
           adjudicatario-nombre:
-            label: Adjudicatario (4) - Nombre
+            label: Adjudicatario - Nombre
           aeronave-ano:
-            label: Características y datos técnicos (7) - Aeronaves - Año fabricación
+            label: Características y datos técnicos - Aeronaves - Año fabricación
           aeronave-fabricante:
-            label: Características y datos técnicos (7) - Aeronaves - Fabricante
+            label: Características y datos técnicos - Aeronaves - Fabricante
           aeronave-marca:
-            label: Características y datos técnicos (7) - Aeronaves - Marca - Tipo
-              - Modelo
+            label: Características y datos técnicos - Aeronaves - Marca - Tipo - Modelo
           aeronave-peso:
-            label: Características y datos técnicos (7) - Aeronaves - Peso máximo
-              despegue (en Kg.)
+            label: Características y datos técnicos - Aeronaves - Peso máximo despegue
+              (en Kg.)
           aeronave-serie:
-            label: Características y datos técnicos (7) - Aeronaves - Nº Serie
+            label: Características y datos técnicos - Aeronaves - Nº Serie
           cuota-a-ingresar:
             label: Resultado a ingresar
           cuota-devengada-22:
             label: Total cuota devengada
           declaracion-complementaria:
-            label: Declaración complementaria (9)
+            label: Declaración complementaria
           declaracion-periodo-309:
             label: Devengo. Periodo
           declaracion-tipo-309:
             label: Tipo de declaración
           declarante-nombre-309:
-            label: Identificación (1) - Nombre
+            label: Identificación - Nombre
           devolucion-iban-309:
             label: IBAN (10)
           embarcacion-eslora:
-            label: Características y datos técnicos (7) - Embarcaciones - Eslora máxima
+            label: Características y datos técnicos - Embarcaciones - Eslora máxima
           embarcacion-fabricante:
-            label: Características y datos técnicos (7) - Embarcaciones - Fabricante
+            label: Características y datos técnicos - Embarcaciones - Fabricante
           embarcacion-tipo:
-            label: Características y datos técnicos (7) - Embarcaciones - Tipo-Modelo
+            label: Características y datos técnicos - Embarcaciones - Tipo-Modelo
           filing-year:
             label: Ejercicio al que se refiere la declaración
           hecho-imponible:
-            label: 'Hecho imponible (6):'
+            label: 'Hecho imponible:'
           hecho-imponible-adquisicion-intracomunitaria:
             label: 'Hecho imponible: adquisición intracomunitaria de bienes'
           hecho-imponible-entrega-inversion-inmobiliaria:
@@ -71,16 +70,76 @@ modelo:
             label: Cuota IVA soportado por minoristas en recargo de equivalencia (devolución
               a viajeros)
           justificante-anterior:
-            label: Número de justificante de la declaración anterior (9)
+            label: Número de justificante de la declaración anterior
           letras-etiqueta-persona-fisica:
             label: Letras de la etiqueta identificativa
+          m309-papel-ccc-cuenta:
+            label: 'CCC: número de cuenta'
+          m309-papel-ccc-dc:
+            label: 'CCC: dígitos de control'
+          m309-papel-ccc-entidad:
+            label: 'CCC: entidad'
+          m309-papel-ccc-oficina:
+            label: 'CCC: oficina'
+          m309-papel-complementaria:
+            label: Declaración complementaria
+          m309-papel-domicilio-codigo-postal:
+            label: Código postal
+          m309-papel-domicilio-escalera:
+            label: Escalera
+          m309-papel-domicilio-municipio:
+            label: Municipio
+          m309-papel-domicilio-numero:
+            label: Número
+          m309-papel-domicilio-piso:
+            label: Piso
+          m309-papel-domicilio-provincia:
+            label: Provincia
+          m309-papel-domicilio-puerta:
+            label: Puerta
+          m309-papel-domicilio-telefono:
+            label: Teléfono
+          m309-papel-domicilio-tipo-via:
+            label: Tipo de vía
+          m309-papel-domicilio-via:
+            label: 'Domicilio fiscal: vía pública'
+          m309-papel-nombre-completo:
+            label: Apellidos y nombre o razón social
           motivo-declaracion-no-periodica:
             label: Motivo de la declaración no periódica
           mtn-embarcacion-identificacion:
-            label: Características y datos técnicos (7) - Embarcaciones - Identificación
+            label: Características y datos técnicos - Embarcaciones - Identificación
               (Nº construcción)
           observaciones-presentacion:
             label: Observaciones
+          papel-ccc-cuenta:
+            label: null
+          papel-ccc-dc:
+            label: null
+          papel-ccc-entidad:
+            label: null
+          papel-ccc-oficina:
+            label: null
+          papel-domicilio-codigo-postal:
+            label: null
+          papel-domicilio-escalera:
+            label: null
+          papel-domicilio-municipio:
+            label: null
+          papel-domicilio-numero:
+            label: null
+          papel-domicilio-piso:
+            label: null
+          papel-domicilio-provincia:
+            label: null
+          papel-domicilio-puerta:
+            label: null
+          papel-domicilio-telefono:
+            label: null
+          papel-domicilio-tipo-via:
+            label: null
+          papel-domicilio-via:
+            label: null
           papel-firma:
             help: Espacio para la firma del impreso. Escribir un nombre aquí no constituye
               una firma electrónica ni una presentación.
@@ -96,55 +155,55 @@ modelo:
               sustituye al tipo de declaración.
             label: Forma de pago
           re-base-10:
-            label: Liquidación (8) - Recargo equivalencia - Base imponible [10]
+            label: Liquidación - Recargo equivalencia - Base imponible [10]
           re-base-13:
-            label: Liquidación (8) - Recargo equivalencia - Base imponible [13]
+            label: Liquidación - Recargo equivalencia - Base imponible [13]
           re-base-16:
-            label: Liquidación (8) - Recargo equivalencia - Base imponible [16]
+            label: Liquidación - Recargo equivalencia - Base imponible [16]
           re-base-19:
-            label: Liquidación (8) - Recargo equivalencia - Base imponible [19]
+            label: Liquidación - Recargo equivalencia - Base imponible [19]
           re-cuota-12:
-            label: Liquidación (8) - Recargo equivalencia - Cuota [12]
+            label: Liquidación - Recargo equivalencia - Cuota [12]
           re-cuota-15:
-            label: Liquidación (8) - Recargo equivalencia - Cuota [15]
+            label: Liquidación - Recargo equivalencia - Cuota [15]
           re-cuota-18:
-            label: Liquidación (8) - Recargo equivalencia - Cuota [18]
+            label: Liquidación - Recargo equivalencia - Cuota [18]
           re-cuota-21:
-            label: Liquidación (8) - Recargo equivalencia - Cuota [21]
+            label: Liquidación - Recargo equivalencia - Cuota [21]
           re-tipo-11:
-            label: Liquidación (8) - Recargo equivalencia - Tipo % [11]
+            label: Liquidación - Recargo equivalencia - Tipo % [11]
           re-tipo-14:
-            label: Liquidación (8) - Recargo equivalencia - Tipo % [14]
+            label: Liquidación - Recargo equivalencia - Tipo % [14]
           re-tipo-17:
-            label: Liquidación (8) - Recargo equivalencia - Tipo % [17]
+            label: Liquidación - Recargo equivalencia - Tipo % [17]
           re-tipo-20:
-            label: Liquidación (8) - Recargo equivalencia - Tipo % [20]
+            label: Liquidación - Recargo equivalencia - Tipo % [20]
           rg-base-01:
-            label: Liquidación (8) - Régimen General - Base imponible [01]
+            label: Liquidación - Régimen General - Base imponible [01]
           rg-base-04:
-            label: Liquidación (8) - Régimen General - Base imponible [04]
+            label: Liquidación - Régimen General - Base imponible [04]
           rg-base-07:
-            label: Liquidación (8) - Régimen General - Base imponible [07]
+            label: Liquidación - Régimen General - Base imponible [07]
           rg-base-25:
-            label: Liquidación (8) - Régimen General - Base imponible [25]
+            label: Liquidación - Régimen General - Base imponible [25]
           rg-cuota-03:
-            label: Liquidación (8) - Régimen General - Cuota [03]
+            label: Liquidación - Régimen General - Cuota [03]
           rg-cuota-06:
-            label: Liquidación (8) - Régimen General - Cuota [06]
+            label: Liquidación - Régimen General - Cuota [06]
           rg-cuota-09:
-            label: Liquidación (8) - Régimen General - Cuota [09]
+            label: Liquidación - Régimen General - Cuota [09]
           rg-cuota-27:
-            label: Liquidación (8) -Régimen General - Cuota [27]
+            label: Liquidación -Régimen General - Cuota [27]
           rg-tipo-02:
-            label: Liquidación (8) - Régimen General - Tipo % [02]
+            label: Liquidación - Régimen General - Tipo % [02]
           rg-tipo-05:
-            label: Liquidación (8) - Régimen General - Tipo % [05]
+            label: Liquidación - Régimen General - Tipo % [05]
           rg-tipo-08:
-            label: Liquidación (8) - Régimen General - Tipo % [08]
+            label: Liquidación - Régimen General - Tipo % [08]
           rg-tipo-26:
-            label: Liquidación (8) - Régimen General - Tipo % [26]
+            label: Liquidación - Régimen General - Tipo % [26]
           situacion-tributaria:
-            label: 'Situación tributaria (5):'
+            label: 'Situación tributaria:'
           situacion-tributaria-agricola:
             label: 'Situación tributaria: sujeto acogido al régimen especial de agricultura,
               ganadería y pesca'
@@ -162,29 +221,29 @@ modelo:
           situacion-tributaria-sin-derecho-deduccion:
             label: 'Situación tributaria: sujeto pasivo sin derecho a deducción'
           transmitente-apellidos:
-            label: Transmitente (3) - Apellidos o Denominación Social
+            label: Transmitente - Apellidos o Denominación Social
           transmitente-apellidos-nombre-razon-social:
             label: Transmitente - Apellidos y nombre o razón social
           transmitente-nif:
-            label: Transmitente (3) - NIF
+            label: Transmitente - NIF
           transmitente-nif-iva:
-            label: Transmitente (3)- NIF-IVA
+            label: Transmitente- NIF-IVA
           transmitente-nombre:
-            label: Transmitente (3) - Nombre
+            label: Transmitente - Nombre
           transmitente-pais:
-            label: Transmitente (3) - País
+            label: Transmitente - País
           vehiculo-bastidor:
-            label: Características y datos técnicos (7) - Vehículos - Nº identificación
+            label: Características y datos técnicos - Vehículos - Nº identificación
               (bastidor)
           vehiculo-clasificacion:
-            label: Características y datos técnicos (7) - Vehículos - Clasificación
+            label: Características y datos técnicos - Vehículos - Clasificación
           vehiculo-marca:
-            label: Características y datos técnicos (7) - Vehículos - Marca
+            label: Características y datos técnicos - Vehículos - Marca
           vehiculo-modelo:
-            label: 'Características y datos técnicos (7) - Vehículos - Modelo (denominación
+            label: 'Características y datos técnicos - Vehículos - Modelo (denominación
               comercial):'
           vehiculo-tipo:
-            label: Características y datos técnicos (7) - Vehículos - Tipo
+            label: Características y datos técnicos - Vehículos - Tipo
       field:
         official_name: Modelo 309. Impuesto sobre el Valor Añadido. Declaración-liquidación
           no periódica.
@@ -217,10 +276,14 @@ modelo:
           situacion-6:
             heading: Otras situaciones tributarias no contempladas anteriormente
         context:
+          contacto:
+            heading: Persona de contacto
           nif:
             heading: NIF del declarante
           nombre:
             heading: Apellidos o razón social
+          telefono:
+            heading: Teléfono de contacto
         page:
           m30901:
             heading: IVA · Declaración-liquidación no periódica
@@ -250,6 +313,30 @@ modelo:
             heading: Identificación (1)
           ingreso:
             heading: Ingreso (10)
+          legacy-aeronave:
+            heading: 6. Características y datos técnicos (7) · Aeronaves
+          legacy-complementaria:
+            heading: 8. Declaración complementaria (9)
+          legacy-devengo:
+            heading: 2. Devengo (2)
+          legacy-embarcacion:
+            heading: 6. Características y datos técnicos (7) · Embarcaciones
+          legacy-firma:
+            heading: 9. Firma (11)
+          legacy-hecho:
+            heading: 5. Hecho imponible (6)
+          legacy-identificacion:
+            heading: 1. Identificación (1)
+          legacy-ingreso:
+            heading: 10. Ingreso (10)
+          legacy-liquidacion:
+            heading: 7. Liquidación (8)
+          legacy-situacion:
+            heading: 4. Situación tributaria (5)
+          legacy-transmitente:
+            heading: 3. Transmitente (3)
+          legacy-vehiculo:
+            heading: 6. Características y datos técnicos (7) · Vehículos
           liquidacion:
             heading: Liquidación (8)
           situacion:

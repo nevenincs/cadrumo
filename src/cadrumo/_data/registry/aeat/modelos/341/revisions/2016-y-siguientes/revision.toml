@@ -1,4 +1,5 @@
 [revisions."2016-y-siguientes"]
+formula_source_refs = ["boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
 predecessor = "2005-2015"
 casilla_source_refs = ["aeat-dr-341-2016"]
 reviewed_against = "2005-2015"
@@ -33,7 +34,8 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 family_storage_baseline = "2005-2015"
-scoped_families = ["export_layouts", "workbook_parity_refs"]
+# Both record eras retain Annex II's complete 01–10 arithmetic table.
+scoped_families = ["export_layouts", "workbook_parity_refs", "completeness_manifest"]
 
 [[revisions."2016-y-siguientes".lineage_attestations]]
 family = "casillas"
@@ -168,3 +170,52 @@ selector = {revision = "2005-2015", id = "modelo-341-fichero"}
 [[revisions."2016-y-siguientes".family_removals]]
 family = "workbook_parity_refs"
 selector = {revision = "2005-2015", id = "modelo-341-record-design"}
+
+# Original paper-only identity/address/signature fields are not adopted by the
+# electronic 2016 design. Its exact identity producers remain in the export.
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-nombre-completo" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-tipo-via" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-via" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-numero" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-escalera" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-piso" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-puerta" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-telefono" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-municipio" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-provincia" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-domicilio-codigo-postal" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-firma-lugar" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-firma-fecha" }
+
+[[revisions."2016-y-siguientes".casilla_removals]]
+selector = { revision = "2005-2015", id = "papel-firma" }
+
+[[revisions."2016-y-siguientes".family_removals]]
+family = "constructs"
+selector = { revision = "2005-2015", id = "modelo-341-papel-identificacion-firma" }

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-export-workbook-parity'
 date: '2026-06-03'
-modified: '2026-10-06'
-body_hash: 'sha256:c2419e64057072b90d7e6cabe411783fd8339fb9d51e134d16838aa527a3645c'
+modified: '2026-10-07'
+body_hash: 'sha256:5b6784227589377fa9f99755fece77bcf14b784a83b3fedeab064cd46970732e'
 related:
   - "[[2026-06-03-modelo-export-evidence-parity-research]]"
   - "[[2026-06-03-modelo-export-evidence-parity-adr]]"
@@ -107,7 +107,6 @@ plan, so both carry the evidence surface identically.
 The user's approved registry-workbook-compiler continuation explicitly requires removal of technical internals from human documents while retaining all financial inputs, calculations and references. Within that scope, a human workbook may omit an explicitly authored transport-control placement with a grounded reason. This is a workbook-only presentation exception to the displayed casilla-set rule above: it does not delete the casilla, its value, its export mapping or its ordinary application form projection. Registry placement coverage remains total and the filing export remains unchanged.
 
 Omission is limited to unnumbered working figures classified as transport controls, not computed internal financial intermediates or merely unplaced fields. The shared workbook builder must refuse omission of financial/bound fields, declared calculation/binding/page dependencies, generated sheet-formula references or recorded evidence. Both transports consume the same resulting plan. A source classification without evidence is not authority to infer omissions by field name, numeric position or regular expression. Verification must prove retained financial data and refusal paths, as well as absence of the technical controls from rendered workbook surfaces. Existing unclassified placements retain their previous behavior. This amendment records the user's requested scope and the bounded implementation contract, not complete inventory classification or completed delivery.
-
 
 ### Administrative communication workbooks (2026-10-06)
 

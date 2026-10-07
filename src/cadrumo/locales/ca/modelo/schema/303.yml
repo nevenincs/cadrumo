@@ -677,6 +677,234 @@ modelo:
         official_name: Modelo 303. Impost sobre el Valor Afegit. Autoliquidació.
         title: IVA. Autoliquidació (trimestral)
       form:
+        authored:
+          administracion-copy:
+            heading: Exemplar per a l’Administració o entitat financera
+          annual:
+            activity-1:
+              heading: Activitat principal
+            activity-2:
+              heading: Altra activitat 1
+            activity-3:
+              heading: Altra activitat 2
+            activity-4:
+              heading: Altra activitat 3
+            activity-5:
+              heading: Altra activitat 4
+            activity-6:
+              heading: Altra activitat 5
+            third-parties:
+              heading: Operacions amb terceres persones
+            third-parties-declaration:
+              heading: D · Obligació de presentar la declaració anual d’operacions
+                amb terceres persones
+          annual-clave-2022:
+            heading: B · Clau d’activitat
+          banco:
+            heading: Banc
+          bic:
+            heading: Codi SWIFT-BIC
+          ciudad-banco:
+            heading: Ciutat
+          complementaria:
+            heading: Complementària (5)
+          complementaria-2022:
+            heading: Complementària (8)
+          concurso:
+            heading: Declaració de concurs en aquest període
+          conjunta:
+            heading: Autoliquidació conjunta
+          criterio-caja:
+            heading: Règim especial del criteri de caixa
+          cuenta-bancaria:
+            heading: Compte bancari per a ingrés o devolució
+          deducible:
+            heading: IVA deduïble i resultat del règim general
+          destinatario-caja:
+            heading: Destinatari d’operacions acollides al criteri de caixa
+          devengado:
+            heading: IVA meritat
+          devengo:
+            heading: Meritació (2)
+          direccion-banco:
+            heading: Adreça del banc
+          exonerado:
+            heading: Exonerat de la declaració resum anual, model 390
+          fecha-concurso:
+            heading: Data de la interlocutòria de declaració de concurs
+          foral:
+            heading: Tributació exclusivament foral
+          gasolinas:
+            heading: Dret a deduir pagaments a compte per lliuraments de carburants
+          grupo-1:
+            heading: 'IVA deduïble: Grup 1'
+          grupo-2:
+            heading: 'IVA deduïble: Grup 2'
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Identificació (1)
+          importacion-corriente:
+            heading: 'Importacions: béns corrents'
+          importacion-inversion:
+            heading: 'Importacions: béns d’inversió'
+          interior-corriente:
+            heading: 'Operacions interiors: béns i serveis corrents'
+          interior-inversion:
+            heading: 'Operacions interiors: béns d’inversió'
+          intra-corriente:
+            heading: 'Adquisicions intracomunitàries: béns corrents i serveis'
+          intra-inversion:
+            heading: 'Adquisicions intracomunitàries: béns d’inversió'
+          justificante:
+            heading: Número de justificant de l’autoliquidació anterior
+          motivo-discrepancia:
+            heading: Discrepància de criteri administratiu
+          motivo-rectificacion:
+            heading: Rectificacions
+          nif:
+            heading: NIF
+          'no':
+            heading: 'No'
+          nombre:
+            heading: Cognoms i nom o raó social
+          opcion-prorrata:
+            heading: Opció per la prorrata especial
+          operaciones-anuales:
+            heading: Operacions realitzades durant l’exercici
+          page-1:
+            heading: Identificació i règim general
+          page-2:
+            heading: Règim simplificat
+          page-3:
+            heading: Informació addicional i resultat
+          page-4:
+            heading: Informació anual de subjectes exonerats del model 390
+          page-5:
+            heading: Prorrata i deduccions diferenciades
+          page-6:
+            heading: Ingrés, devolució i compte bancari
+          pais-banco:
+            heading: Codi del país
+          reagp:
+            heading: Compensacions en règim especial d’agricultura, ramaderia i pesca
+          rectificacion-devolucion:
+            heading: Rectificació (9)
+          rectificaciones-deducciones:
+            heading: Rectificació de deduccions
+          rectificativa:
+            heading: Rectificativa (5)
+          redeme:
+            heading: Registre de devolució mensual
+          regimen:
+            heading: Règim de tributació
+          resultado:
+            heading: Resultat
+          revocacion-prorrata:
+            heading: Revocació de l’opció per la prorrata especial
+          rg-rs:
+            heading: Règim general i simplificat
+          rs:
+            actividad-a1:
+              heading: Activitat A1
+            actividad-a2:
+              heading: Activitat A2
+            actividad-b1:
+              heading: Activitat B1
+            actividad-b2:
+              heading: Activitat B2
+            activity-code:
+              heading: Codi d’activitat
+            cuota-anual-derivada-regimen-simplificado:
+              heading: Quota anual derivada del règim simplificat
+            cuota-devengada:
+              heading: Quota meritada
+            cuota-devengada-operaciones-corrientes:
+              heading: Quota meritada en operacions corrents
+            cuota-minima:
+              heading: Quota mínima
+            cuota-soportada-operaciones-corrientes:
+              heading: Quota suportada en operacions corrents
+            cuotas-soportadas-operaciones-corrientes:
+              heading: Quotes suportades en operacions corrents
+            devolucion-cuotas-soportadas-otros-paises:
+              heading: Devolució de quotes suportades en altres països
+            iae-epigrafe:
+              heading: Epígraf IAE
+            indice-corrector-actividad-temporada:
+              heading: Índex corrector d’activitats de temporada · 1T, 2T i 3T
+            indice-corrector-actividades-temporada:
+              heading: Índex corrector d’activitats de temporada · 4T
+            indice-cuota:
+              heading: Índex de quota
+            ingreso-cuenta:
+              heading: Ingrés a compte
+            modulo-1-importe:
+              heading: Mòdul 1 · Import
+            modulo-1-unidades:
+              heading: Mòdul 1 · Nombre d’unitats
+            modulo-2-importe:
+              heading: Mòdul 2 · Import
+            modulo-2-unidades:
+              heading: Mòdul 2 · Nombre d’unitats
+            modulo-3-importe:
+              heading: Mòdul 3 · Import
+            modulo-3-unidades:
+              heading: Mòdul 3 · Nombre d’unitats
+            modulo-4-importe:
+              heading: Mòdul 4 · Import
+            modulo-4-unidades:
+              heading: Mòdul 4 · Nombre d’unitats
+            modulo-5-importe:
+              heading: Mòdul 5 · Import
+            modulo-5-unidades:
+              heading: Mòdul 5 · Nombre d’unitats
+            modulo-6-importe:
+              heading: Mòdul 6 · Import
+            modulo-6-unidades:
+              heading: Mòdul 6 · Nombre d’unitats
+            modulo-7-importe:
+              heading: Mòdul 7 · Import
+            modulo-7-unidades:
+              heading: Mòdul 7 · Nombre d’unitats
+            porcentaje-cuota-minima:
+              heading: Percentatge de quota mínima
+            porcentaje-ingreso-cuenta:
+              heading: Percentatge d’ingrés a compte
+            reducciones:
+              heading: Reduccions
+            resultado-cuarto-trimestre:
+              heading: Resultat · 4T
+            volumen-ingresos:
+              heading: Volum d’ingressos
+          rs-anticipos:
+            heading: 'Ingressos a compte: 1T, 2T i 3T'
+          rs-anual:
+            heading: 'Quota anual: 4T'
+          rs-deducible:
+            heading: IVA deduïble
+          rs-devengado:
+            heading: Quotes meritades
+          rs-resultado:
+            heading: Resultat del règim simplificat
+          si:
+            heading: Sí
+          sii:
+            heading: Acollit voluntàriament al SII
+          sin-marca:
+            heading: Sense indicació
+          solo-rg:
+            heading: Només règim general
+          solo-rs:
+            heading: Només règim simplificat
+          territorio:
+            heading: Informació de la tributació per raó de territori
+          tipo-concurso:
+            heading: Autoliquidació preconcursal o postconcursal
+          total-devengado:
+            heading: Total quota meritada
+          volumen:
+            heading: Volum anual d’operacions diferent de zero
         column:
           1t-2t-3t:
             heading: 1T/2T/3T

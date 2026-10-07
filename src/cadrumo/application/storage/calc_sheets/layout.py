@@ -44,6 +44,7 @@ from pydantic import BaseModel, Field
 
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....domain.calculations.record_row_membership import RecordRowMembership
 from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.form_context import resolve_form_context_field
@@ -133,6 +134,7 @@ class SheetLayout(BaseModel):
     calculos_cells: Mapping[CasillaId, SheetCellAddress]
     binding_cells: Mapping[BindingId, SheetCellAddress]
     date_binding_cells: Mapping[BindingId, SheetCellAddress] = Field(default_factory=dict)
+    record_rows: Mapping[BindingId, RecordRowMembership] = Field(default_factory=dict, exclude=True, repr=False)
     filing_year: int = 0
     parameter_cells: Mapping[ParameterId, ParameterCell]
     relation_cells: Mapping[RelationId, SheetCellAddress]
@@ -506,11 +508,13 @@ def _layout_bindings(
             owners.append(binding.provider.casilla_id)
         if any(key not in existing_inputs for key in owners):
             raise CalcSheetsEngineError("manual form binding target is not an editable casilla")
-        addresses = {existing_inputs[key] for key in owners if key in existing_inputs}
+        addresses = {existing_inputs[key].qualified(): existing_inputs[key] for key in owners if key in existing_inputs}
         if len(addresses) > 1:
             raise CalcSheetsEngineError("form binding has ambiguous existing casilla input cells")
         address = (
-            next(iter(addresses)) if addresses else SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
+            next(iter(addresses.values()))
+            if addresses
+            else SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
         )
         target = date_binding_cells if binding.value.channel is BindingValueChannel.DATE else binding_cells
         target[binding_id] = address

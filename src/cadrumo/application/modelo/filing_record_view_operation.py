@@ -47,6 +47,7 @@ from ..user_profile.access_contracts import (
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from .filing_record_ownership import load_profile_filing_record
+from .historical_filing_projection import ModeloHistoricalFilingContentProjection, project_historical_filing_content
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
 
 MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID = "modelo.filing_record.view"
@@ -201,6 +202,7 @@ class ModeloFilingRecordViewProjection(BaseModel):
     filing_record_id: FilingRecordId
     record: ModeloFilingRecordListEntryProjection
     observation_layers: ModeloFilingObservationLayersProjection
+    historical_content: ModeloHistoricalFilingContentProjection
 
     @model_validator(mode="after")
     def _bound_result(self) -> Self:
@@ -213,6 +215,7 @@ class ModeloFilingRecordViewProjection(BaseModel):
             or record.filing_year != layers.filing_year
             or record.period != layers.period
             or record.member_nif != layers.member_nif
+            or self.historical_content.calculation_revision_id != record.calculation_revision_id
         ):
             raise ValueError("filing view coordinates do not match the selected profile and receipt")
         return self
@@ -241,11 +244,15 @@ def _capture(
         bundle, profile_id=payload.profile_id, filing_record_id=payload.filing_record_id
     )
     layers = bundle.observation.load_observation_layers(str(record.modelo), record.period, member_nif=record.member_nif)
+    if bundle.calculation.bucket_id != str(payload.profile_id):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    revision = bundle.calculation.load().get(record.calculation_revision_id)
     projection = ModeloFilingRecordViewProjection(
         profile_id=payload.profile_id,
         filing_record_id=payload.filing_record_id,
         record=ModeloFilingRecordListEntryProjection.from_record(record),
         observation_layers=ModeloFilingObservationLayersProjection.from_layers(layers),
+        historical_content=project_historical_filing_content(record, revision),
     )
     if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -294,7 +301,7 @@ def build_modelo_filing_record_view_definition(
         executor_type=ModeloFilingRecordViewExecutor,
         build=lambda: ModeloFilingRecordViewExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

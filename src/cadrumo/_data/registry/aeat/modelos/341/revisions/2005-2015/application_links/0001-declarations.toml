@@ -1,4 +1,12 @@
 [[revisions."2005-2015".application_links]]
+id = "modelo-341-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-min-2000-12-15-m341:art-1"]
+source_refs = ["boe-modelo-341-2000-instructions-pdf"]
+
+[[revisions."2005-2015".application_links]]
 id = "modelo-341-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"

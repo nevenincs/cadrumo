@@ -8,7 +8,8 @@ if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
 from ...core.casilla_id import CasillaId
-from ...domain.calculations.registry.form_context import resolve_form_context_field
+from ...domain.calculations.registry.form_context import form_context_choice, resolve_form_context_field
+from ...domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
@@ -162,8 +163,16 @@ class LayoutWalker:
             value = (
                 project_binding_field(str(owner.binding), self.context).value
                 if owner.binding is not None
-                else form_context_value(self.context.snapshot, block, producer_snapshot=self.producer_snapshot)
+                else form_context_value(
+                    self.context.snapshot,
+                    block,
+                    producer_snapshot=self.producer_snapshot,
+                    revision=self.context.revision,
+                )
             )
+            choice = form_context_choice(block, value)
+            if choice is not None:
+                value = localized_heading(choice.heading_key, choice.official_heading, "Opción", language).text
             return ModeloFormContextFieldBlock(id=block.id, label=label, value=value)
         if isinstance(block, FormFieldBlock):
             field = (
@@ -237,6 +246,10 @@ class LayoutWalker:
         )
         self._remember_placed_columns(column_casillas)
         data_types = self._column_data_types(column_casillas)
+        if any(column.export_field_id is not None for column in block.columns):
+            data_types = tuple(
+                str(field.data_type) for field in resolve_form_projection_fields(self.context.snapshot.revision, block)
+            )
         rows_known, rows = saved_form_records(
             snapshot=self.context.snapshot,
             revision=self.context.revision,

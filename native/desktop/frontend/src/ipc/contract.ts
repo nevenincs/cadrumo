@@ -100,10 +100,20 @@ export type HostFailure = {
   code: HostErrorCode;
   operation: HostOperation;
   message: string;
+  /** Safe OS classification; original error text and paths stay native. */
+  ioKind?: string;
+  osCode?: number;
 };
 
 /** `ProcessRole` in `native/application/src/process/status.rs`. */
-export type ProcessRole = "environment" | "cli" | "tui" | "repl" | "console";
+export type ProcessRole =
+  | "environment"
+  | "cli"
+  | "tui"
+  | "repl"
+  | "console"
+  | "sign_in"
+  | "manager_dispatch";
 
 // ---------------------------------------------------------------------------
 // desktop_environment
@@ -139,7 +149,10 @@ export type LogLevel = "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL";
 /** Open enumeration: `"python"` and `"host"` today; render unknown sources. */
 export type LogSource = "python" | "host" | (string & {});
 
-export type LogProcess = { role: ProcessRole; pid: number };
+/** Roles are open: Python workers and agents also write records. */
+export type LogProcess = { role: string; pid: number };
+
+export type LogContext = Record<string, string | number | boolean | null>;
 
 export type LogRecord = {
   /** Increases by one per record across the host's ring. */
@@ -148,9 +161,8 @@ export type LogRecord = {
   /** The timestamp as written; empty when the line carried none. */
   timestamp: string;
   /**
-   * Unix milliseconds in UTC for host records. Always null for Python file
-   * records: their line records local wall time with no offset, so it names
-   * no single instant.
+   * Unix milliseconds in UTC when the record names an instant. Null for
+   * legacy Python timestamps written without a timezone and unmatched lines.
    */
   timestampMs: number | null;
   level: LogLevel | null;
@@ -158,8 +170,10 @@ export type LogRecord = {
   message: string;
   /** Continuation lines, such as a traceback. */
   detail: string | null;
-  /** The host process an event concerns; null for Python file records. */
+  /** The writer or child process the event concerns, when known. */
   process: LogProcess | null;
+  /** Bounded, scrubbed scalar diagnostic fields, including correlation. */
+  context: LogContext;
 };
 
 export type LogSourceKind = "available" | "missing" | "unreadable";
@@ -393,6 +407,8 @@ export type TerminalWriteLimit = 65536;
 
 export type DiagnosticsEventKind =
   | "host_started"
+  | "stage_started"
+  | "stage_completed"
   | "headless_selected"
   | "gui_selected"
   | "child_started"
@@ -422,6 +438,9 @@ export type ProcessStatus = {
 };
 
 export type DiagnosticsEvent = {
+  /** Monotonic identity within this diagnostics instance. */
+  sequence: number;
+  source: "desktop" | "manager";
   timestampMs: number;
   hostPid: number;
   kind: DiagnosticsEventKind;
@@ -429,6 +448,15 @@ export type DiagnosticsEvent = {
   process: number | null;
   failure: HostFailure | null;
   status: ProcessStatus | null;
+  stage?: "admission" | "environment" | "manager" | "window" | "shutdown";
+  role?: ProcessRole;
+  outcome?:
+    | "ready"
+    | "already_running"
+    | "dispatched"
+    | "skipped_unmanaged"
+    | "unavailable";
+  hostExitCode?: number;
 };
 
 /** Captured output, kept in memory only and bounded to 256 KiB in total. */
@@ -516,6 +544,10 @@ export type ProfileCreateResult =
   { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
 export interface HostCommands {
+  manager_start: {
+    args: Authorized;
+    result: "dispatched" | "unmanaged" | "unsupported";
+  };
   sign_in_status: { args: Authorized; result: SignInStatus };
   sign_out: { args: Authorized; result: SignOutResult };
   /** Needs no password, session or runtime, and changes nothing. */

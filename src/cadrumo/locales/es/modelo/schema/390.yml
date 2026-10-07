@@ -1606,6 +1606,109 @@ modelo:
           Valor Añadido.
         title: IVA. Declaración-resumen anual
       form:
+        authored:
+          accrual:
+            heading: 2. Devengo
+          activities:
+            heading: 3. Datos estadísticos · Actividades
+          activity-code:
+            heading: Código
+          activity-description:
+            heading: Actividad
+          activity-index:
+            heading: Índice de cuota
+          activity-input-tax:
+            heading: Cuotas soportadas
+          activity-order:
+            heading: Orden
+          activity-output-tax:
+            heading: Cuota devengada
+          activity-result:
+            heading: Cuota derivada del régimen simplificado
+          activity-revenue:
+            heading: Volumen de ingresos
+          agriculture-compensation:
+            heading: Compensaciones · agricultura, ganadería y pesca
+          common-settlement:
+            heading: 7. Liquidación anual · territorio común
+          deduction-adjustment:
+            heading: Rectificación de deducciones
+          deduction-group-1:
+            heading: 13. IVA deducible · Grupo 1
+          deduction-group-2:
+            heading: 13. IVA deducible · Grupo 2
+          deduction-group-3:
+            heading: 13. IVA deducible · Grupo 3
+          deduction-total:
+            heading: Suma de deducciones
+          domestic-current:
+            heading: Operaciones interiores · bienes y servicios corrientes
+          domestic-investment:
+            heading: Operaciones interiores · bienes de inversión
+          given-name:
+            heading: Nombre
+          group-periods:
+            heading: 9.2. Períodos en régimen de grupo de entidades
+          iae-heading:
+            heading: Epígrafe IAE
+          imports-current:
+            heading: Importaciones · bienes corrientes
+          imports-investment:
+            heading: Importaciones · bienes de inversión
+          intra-current:
+            heading: Adquisiciones intracomunitarias · bienes corrientes y servicios
+          intra-investment:
+            heading: Adquisiciones intracomunitarias · bienes de inversión
+          investment-adjustment:
+            heading: Regularización de bienes de inversión
+          module-1:
+            heading: Módulo 1
+          module-2:
+            heading: Módulo 2
+          module-3:
+            heading: Módulo 3
+          module-4:
+            heading: Módulo 4
+          module-5:
+            heading: Módulo 5
+          module-6:
+            heading: Módulo 6
+          module-7:
+            heading: Módulo 7
+          module-amount:
+            heading: Importe
+          module-units:
+            heading: Número de unidades
+          nif:
+            heading: NIF
+          ordinary-periods:
+            heading: 9.1. Períodos fuera del régimen de grupo de entidades
+          other-1:
+            heading: Otra actividad 1
+          other-2:
+            heading: Otra actividad 2
+          other-3:
+            heading: Otra actividad 3
+          other-4:
+            heading: Otra actividad 4
+          other-5:
+            heading: Otra actividad 5
+          page-one:
+            heading: Página 1
+          principal:
+            heading: Principal
+          prior-receipt:
+            heading: Número identificativo de la declaración anterior
+          specific-operations:
+            heading: 11. Operaciones específicas
+          surname:
+            heading: Apellidos o razón social
+          taxpayer:
+            heading: 1. Sujeto pasivo
+          territorial-settlement:
+            heading: 8. Tributación a varias Administraciones
+          year:
+            heading: Ejercicio
         column:
           actividad-desarrollada:
             heading: Actividad desarrollada

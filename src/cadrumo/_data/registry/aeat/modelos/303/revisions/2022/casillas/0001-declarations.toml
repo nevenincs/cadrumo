@@ -561,7 +561,7 @@ semantic_role = "dr303_71"
 input_kind = "computed"
 formula = "modelo-303-iva-resultado-final"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "500"
 number = "500"
 section = ["iva", "prorrata", "actividad", "fila_1", "cnae"]
@@ -576,7 +576,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 min_length = 3
 max_length = 3
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "501"
 number = "501"
 section = ["iva", "prorrata", "actividad", "fila_1", "operaciones_total"]
@@ -590,7 +590,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "502"
 number = "502"
 section = ["iva", "prorrata", "actividad", "fila_1", "operaciones_con_derecho"]
@@ -604,7 +604,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "503"
 number = "503"
 section = ["iva", "prorrata", "actividad", "fila_1", "tipo"]
@@ -619,7 +619,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "504"
 number = "504"
 section = ["iva", "prorrata", "actividad", "fila_1", "porcentaje"]
@@ -636,7 +636,7 @@ min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "505"
 number = "505"
 section = ["iva", "prorrata", "actividad", "fila_2", "cnae"]
@@ -651,7 +651,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 min_length = 3
 max_length = 3
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "506"
 number = "506"
 section = ["iva", "prorrata", "actividad", "fila_2", "operaciones_total"]
@@ -665,7 +665,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "507"
 number = "507"
 section = ["iva", "prorrata", "actividad", "fila_2", "operaciones_con_derecho"]
@@ -679,7 +679,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "508"
 number = "508"
 section = ["iva", "prorrata", "actividad", "fila_2", "tipo"]
@@ -694,7 +694,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "509"
 number = "509"
 section = ["iva", "prorrata", "actividad", "fila_2", "porcentaje"]
@@ -711,7 +711,7 @@ min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "510"
 number = "510"
 section = ["iva", "prorrata", "actividad", "fila_3", "cnae"]
@@ -726,7 +726,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 min_length = 3
 max_length = 3
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "511"
 number = "511"
 section = ["iva", "prorrata", "actividad", "fila_3", "operaciones_total"]
@@ -740,7 +740,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "512"
 number = "512"
 section = ["iva", "prorrata", "actividad", "fila_3", "operaciones_con_derecho"]
@@ -754,7 +754,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "513"
 number = "513"
 section = ["iva", "prorrata", "actividad", "fila_3", "tipo"]
@@ -769,7 +769,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "514"
 number = "514"
 section = ["iva", "prorrata", "actividad", "fila_3", "porcentaje"]
@@ -786,7 +786,7 @@ min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "515"
 number = "515"
 section = ["iva", "prorrata", "actividad", "fila_4", "cnae"]
@@ -801,7 +801,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 min_length = 3
 max_length = 3
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "516"
 number = "516"
 section = ["iva", "prorrata", "actividad", "fila_4", "operaciones_total"]
@@ -815,7 +815,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "517"
 number = "517"
 section = ["iva", "prorrata", "actividad", "fila_4", "operaciones_con_derecho"]
@@ -829,7 +829,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "518"
 number = "518"
 section = ["iva", "prorrata", "actividad", "fila_4", "tipo"]
@@ -844,7 +844,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "519"
 number = "519"
 section = ["iva", "prorrata", "actividad", "fila_4", "porcentaje"]
@@ -861,7 +861,7 @@ min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "520"
 number = "520"
 section = ["iva", "prorrata", "actividad", "fila_5", "cnae"]
@@ -876,7 +876,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 min_length = 3
 max_length = 3
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "521"
 number = "521"
 section = ["iva", "prorrata", "actividad", "fila_5", "operaciones_total"]
@@ -890,7 +890,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "522"
 number = "522"
 section = ["iva", "prorrata", "actividad", "fila_5", "operaciones_con_derecho"]
@@ -904,7 +904,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "523"
 number = "523"
 section = ["iva", "prorrata", "actividad", "fila_5", "tipo"]
@@ -919,7 +919,7 @@ additional_source_refs = ["aeat-modelo-303-procedure"]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "524"
 number = "524"
 section = ["iva", "prorrata", "actividad", "fila_5", "porcentaje"]
@@ -936,7 +936,7 @@ min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "700"
 number = "700"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_current_base"]
@@ -947,7 +947,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "701"
 number = "701"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_current_cuota"]
@@ -958,7 +958,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "702"
 number = "702"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_investment_base"]
@@ -969,7 +969,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "703"
 number = "703"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "domestic_investment_cuota"]
@@ -980,7 +980,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "704"
 number = "704"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_current_base"]
@@ -991,7 +991,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "705"
 number = "705"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_current_cuota"]
@@ -1002,7 +1002,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "706"
 number = "706"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_investment_base"]
@@ -1013,7 +1013,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "707"
 number = "707"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "import_investment_cuota"]
@@ -1024,7 +1024,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "708"
 number = "708"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_current_base"]
@@ -1035,7 +1035,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "709"
 number = "709"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_current_cuota"]
@@ -1046,7 +1046,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "710"
 number = "710"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_investment_base"]
@@ -1057,7 +1057,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "711"
 number = "711"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "intra_eu_investment_cuota"]
@@ -1068,7 +1068,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "712"
 number = "712"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "reagp_base"]
@@ -1079,7 +1079,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "713"
 number = "713"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "reagp_cuota"]
@@ -1090,7 +1090,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "714"
 number = "714"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "rectification_base"]
@@ -1100,7 +1100,7 @@ input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "715"
 number = "715"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "rectification_cuota"]
@@ -1110,7 +1110,7 @@ input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "716"
 number = "716"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "investment_regularisation"]
@@ -1120,7 +1120,7 @@ input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "717"
 number = "717"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_1", "total"]
@@ -1130,7 +1130,7 @@ input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "718"
 number = "718"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_current_base"]
@@ -1141,7 +1141,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "719"
 number = "719"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_current_cuota"]
@@ -1152,7 +1152,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "720"
 number = "720"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_investment_base"]
@@ -1163,7 +1163,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "721"
 number = "721"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "domestic_investment_cuota"]
@@ -1174,7 +1174,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "722"
 number = "722"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_current_base"]
@@ -1185,7 +1185,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "723"
 number = "723"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_current_cuota"]
@@ -1196,7 +1196,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "724"
 number = "724"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_investment_base"]
@@ -1207,7 +1207,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "725"
 number = "725"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "import_investment_cuota"]
@@ -1218,7 +1218,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "726"
 number = "726"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_current_base"]
@@ -1229,7 +1229,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "727"
 number = "727"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_current_cuota"]
@@ -1240,7 +1240,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "728"
 number = "728"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_investment_base"]
@@ -1251,7 +1251,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "729"
 number = "729"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "intra_eu_investment_cuota"]
@@ -1262,7 +1262,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "730"
 number = "730"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "reagp_base"]
@@ -1273,7 +1273,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "731"
 number = "731"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "reagp_cuota"]
@@ -1284,7 +1284,7 @@ legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008
 additional_source_refs = ["aeat-modelo-303-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "732"
 number = "732"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "rectification_base"]
@@ -1294,7 +1294,7 @@ input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "733"
 number = "733"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "rectification_cuota"]
@@ -1304,7 +1304,7 @@ input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "734"
 number = "734"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "investment_regularisation"]
@@ -1314,7 +1314,7 @@ input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions."2022".casillas]]
+[[revisions.2022.casillas]]
 id = "735"
 number = "735"
 section = ["iva", "deducciones", "sectores_diferenciados", "sector_2", "total"]
@@ -1409,6 +1409,8 @@ semantic_role = "m303_exonerado_390_88"
 continuidad_id = "m303-exonerado-390-88"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 additional_source_refs = ["aeat-modelo-303-procedure"]
+input_kind = "computed"
+formula = "modelo-303-volumen-operaciones-anual"
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"

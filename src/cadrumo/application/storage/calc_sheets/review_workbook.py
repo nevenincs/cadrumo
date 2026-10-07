@@ -8,6 +8,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from ...export.review_snapshot import CalculationReviewSelection, ReviewSnapshot, ReviewSourceKind
+from .form_workbook import add_saved_review_form
 from .number_formats import numeric_format
 from .records import (
     SheetAutoFilter,
@@ -186,6 +187,12 @@ def build_review_workbook(
     amount_addresses = {
         item.amount_id: f"'Cálculos'!A{index}" for index, item in enumerate(snapshot.amounts, _FIRST_ROW)
     }
+    amount_addresses.update(
+        {
+            item.value_id: f"'Cálculos'!A{index}"
+            for index, item in enumerate(snapshot.text_values, _FIRST_ROW + len(snapshot.amounts))
+        }
+    )
     source_addresses = {
         item.contribution_id: f"'Procedencia'!A{index}" for index, item in enumerate(snapshot.contributions, _FIRST_ROW)
     }
@@ -199,6 +206,9 @@ def build_review_workbook(
     for amount in snapshot.amounts:
         for source_id in amount.contribution_ids:
             source_amounts[source_id].append(amount_addresses[amount.amount_id])
+    for item in snapshot.text_values:
+        for source_id in item.contribution_ids:
+            source_amounts[source_id].append(amount_addresses[item.value_id])
 
     overview: list[tuple[SheetCellValue, ...]] = [
         (label("status"), snapshot.status.value),
@@ -211,6 +221,44 @@ def build_review_workbook(
         (label("missing_data"), label("not_captured_notice")),
     ]
     if isinstance(selection, CalculationReviewSelection):
+        lifecycle = snapshot.calculation_lifecycle
+        overview.extend(
+            (
+                (
+                    label("calculation_state"),
+                    label("calculation_state_" + lifecycle.state.value) if lifecycle else label("not_captured"),
+                ),
+                (
+                    label("current_calculation"),
+                    label("yes")
+                    if lifecycle and lifecycle.is_current_calculation
+                    else label("no")
+                    if lifecycle
+                    else label("not_captured"),
+                ),
+                (
+                    label("current_filing"),
+                    label("yes")
+                    if lifecycle and lifecycle.is_current_filing
+                    else label("no")
+                    if lifecycle
+                    else label("not_captured"),
+                ),
+                (
+                    label("aeat_confirmation"),
+                    label("aeat_confirmation_" + lifecycle.aeat_confirmation.value)
+                    if lifecycle and lifecycle.aeat_confirmation
+                    else label("not_captured"),
+                ),
+                (
+                    label("filing_status"),
+                    label("filing_status_" + lifecycle.filing_status.value)
+                    if lifecycle and lifecycle.filing_status
+                    else label("not_captured"),
+                ),
+                (label("filing_record"), lifecycle.filing_record_id if lifecycle else None),
+            )
+        )
         overview.extend(
             (
                 (label("modelo"), selection.modelo),
@@ -233,7 +281,7 @@ def build_review_workbook(
     overview.extend(
         (label(key), Decimal(count))
         for key, count in (
-            ("result_count", len(snapshot.amounts)),
+            ("result_count", len(snapshot.amounts) + len(snapshot.text_values)),
             ("ledger_row_count", len(snapshot.ledger_rows)),
             ("contribution_count", len(snapshot.contributions)),
             ("evidence_count", len(snapshot.evidence)),
@@ -290,6 +338,23 @@ def build_review_workbook(
                     "\n".join(item.source_refs),
                 )
                 for item in snapshot.amounts
+            ]
+            + [
+                (
+                    item.value_id,
+                    item.casilla_id,
+                    None,
+                    item.value,
+                    item.value,
+                    "text",
+                    None,
+                    label("not_captured"),
+                    "\n".join(source_addresses[key] for key in item.contribution_ids),
+                    item.formula_reference,
+                    "\n".join(item.legal_refs),
+                    "\n".join(item.source_refs),
+                )
+                for item in snapshot.text_values
             ],
         )
         for index, amount in enumerate(snapshot.amounts, _FIRST_ROW):
@@ -550,12 +615,22 @@ def build_review_workbook(
         [(None,) * 6 for _ in range(_REVIEW_ROWS)],
     )
     layout.style(TabName.ENTRADAS, _FIRST_ROW, _HEADER_ROW + _REVIEW_ROWS, 6, StyleRole.INPUT)
-    return SheetExportPlan[SheetReviewMetadata](
+    plan = SheetExportPlan[SheetReviewMetadata](
         metadata=SheetReviewMetadata(
             kind=selection.kind,
             snapshot_digest=snapshot.snapshot_digest,
             publication_id=publication_id,
-            title=label("overview"),
+            title=(
+                f"Modelo {selection.modelo} · {selection.filing_year} · {selection.period} · "
+                + (
+                    label("calculation_state_" + snapshot.calculation_lifecycle.state.value)
+                    if snapshot.calculation_lifecycle
+                    else label("not_captured")
+                )
+                + f" · {selection.calculation_revision_id[:12]}"
+                if isinstance(selection, CalculationReviewSelection)
+                else label("ledger") + f" · {selection.ledger_snapshot_id[:12]}"
+            ),
             exported_at=exported_at,
         ),
         tabs=tuple(layout.tabs),
@@ -567,3 +642,4 @@ def build_review_workbook(
         auto_filters=tuple(layout.filters),
         guide=SheetGuideContent(title=label("overview"), paragraphs=(label("baseline_notice"),)),
     )
+    return add_saved_review_form(plan, snapshot.saved_form) if snapshot.saved_form is not None else plan

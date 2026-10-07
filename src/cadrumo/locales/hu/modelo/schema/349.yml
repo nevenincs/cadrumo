@@ -11,6 +11,53 @@ modelo:
           ügyletek összesítő nyilatkozata.
         title: A Közösségen belüli ügyletek összesítő nyilatkozata
       form:
+        authored:
+          base:
+            heading: Adóalap vagy összeg
+          base-anterior:
+            heading: Korábban bevallott adóalap
+          base-rectificada:
+            heading: Helyesbített adóalap
+          clave:
+            heading: Ügyletkód
+          contacto:
+            heading: Kapcsolattartó és telefonszáma
+          contacto-nombre:
+            heading: Kapcsolattartó
+          contacto-telefono:
+            heading: Kapcsolattartó telefonszáma
+          declaracion:
+            heading: Kiegészítő vagy helyettesítő nyilatkozat
+          ejercicio:
+            heading: Év
+          identificacion:
+            heading: Nyilatkozattevő
+          nif:
+            heading: A nyilatkozattevő adóazonosítója
+          nif-comunitario:
+            heading: Közösségi adószám
+          nombre:
+            heading: Teljes név vagy cégnév
+          operaciones:
+            heading: Közösségen belüli ügyletek
+          operador-nombre:
+            heading: A partner neve
+          pais:
+            heading: Országkód
+          period-code:
+            heading: Időszak
+          periodo:
+            heading: Év és időszak
+          rectificaciones:
+            heading: Korábbi időszakok helyesbítései
+          resumen:
+            heading: Összesítő lap
+          resumen-importes:
+            heading: A nyilatkozat összesítése
+          sustituto-nif:
+            heading: Az új végső címzett adószáma
+          sustituto-nombre:
+            heading: Az új végső címzett neve
         column:
           op-apellidos-razon-social:
             heading: A közösségen belüli szereplő vezeték- és keresztneve vagy cégneve

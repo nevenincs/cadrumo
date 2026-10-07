@@ -35,6 +35,8 @@ from ..user_profile.access_contracts import (
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .reconciliation_records import (
+    ModeloReconciliationAdvisory,
+    ModeloReconciliationDiff,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationVerdict,
@@ -58,8 +60,23 @@ class ModeloReconciliationListRequest(CredentialFreeOperationRequest):
     work_unit_id: WorkUnitId | None = None
 
 
+class ModeloReconciliationAdvisoryProjection(BaseModel):
+    """Immutable schema-safe copy of a stored advisory's complete context."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    code: str
+    message: str
+    context: tuple[tuple[str, str], ...] = ()
+
+    @classmethod
+    def from_advisory(cls, advisory: ModeloReconciliationAdvisory) -> ModeloReconciliationAdvisoryProjection:
+        """Copy context pairs without interpreting or dropping them."""
+        return cls(code=advisory.code, message=advisory.message, context=tuple(sorted(advisory.context.items())))
+
+
 class ModeloReconciliationListEntryProjection(BaseModel):
-    """The established CLI history fields without persisted reconciliation detail."""
+    """Saved history and grounded differences without re-reading external evidence."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -73,6 +90,8 @@ class ModeloReconciliationListEntryProjection(BaseModel):
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
     advisory_count: NonNegativeInt = 0
+    diffs: tuple[ModeloReconciliationDiff, ...] = ()
+    advisories: tuple[ModeloReconciliationAdvisoryProjection, ...] = ()
     actor: ModeloActorLabel
     reconciled_at: datetime
 
@@ -100,6 +119,8 @@ class ModeloReconciliationListEntryProjection(BaseModel):
             verdict=entry.verdict,
             diff_count=entry.diff_count,
             advisory_count=entry.advisory_count,
+            diffs=entry.diffs,
+            advisories=tuple(ModeloReconciliationAdvisoryProjection.from_advisory(row) for row in entry.advisories),
             actor=entry.actor,
             reconciled_at=entry.reconciled_at,
         )

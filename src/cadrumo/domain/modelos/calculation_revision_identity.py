@@ -17,6 +17,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import content_hash_hex
 from ...core.irnr import M210GrossIncomeSourceMode
+from ..calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.ids import BindingId, RelationId
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
@@ -384,10 +385,17 @@ def _relation_overrides_revision_id_payload(
     }
 
 
+def canonical_closed_record_row_sets(row_sets: Sequence[ClosedRecordRowSet]) -> list[dict[str, object]]:
+    """Preserve complete membership and all source/scope axes in content identity."""
+    validate_closed_record_row_sets(row_sets, supplied_binding_ids=set())
+    return [row_set.model_dump(mode="json") for row_set in sorted(row_sets, key=lambda value: value.record_id)]
+
+
 def _row_identity_revision_id_payload(
     *,
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    closed_record_row_sets: Sequence[ClosedRecordRowSet],
     row_casilla_values: Mapping[RowCasillaKey, Decimal],
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
 ) -> dict[str, object]:
@@ -405,6 +413,8 @@ def _row_identity_revision_id_payload(
     canonical_row_identities = canonical_row_source_identities(row_source_identities)
     if canonical_row_identities:
         payload["row_source_identities"] = canonical_row_identities
+    if closed_record_row_sets:
+        payload["closed_record_row_sets"] = canonical_closed_record_row_sets(closed_record_row_sets)
     canonical_casilla_values = canonical_row_casilla_values(row_casilla_values)
     if canonical_casilla_values:
         payload["row_casilla_values"] = canonical_casilla_values
@@ -464,6 +474,7 @@ def derive_calculation_revision_id_from_identity_inputs(
     binding_overrides = identity_inputs["binding_overrides"]
     row_binding_values = identity_inputs["row_binding_values"]
     row_source_identities = identity_inputs["row_source_identities"]
+    closed_record_row_sets = identity_inputs["closed_record_row_sets"]
     row_casilla_values = identity_inputs["row_casilla_values"]
     row_casilla_provenance = identity_inputs["row_casilla_provenance"]
     casilla_values = identity_inputs["casilla_values"]
@@ -498,6 +509,7 @@ def derive_calculation_revision_id_from_identity_inputs(
         _row_identity_revision_id_payload(
             row_binding_values=row_binding_values,
             row_source_identities=row_source_identities,
+            closed_record_row_sets=closed_record_row_sets,
             row_casilla_values=row_casilla_values,
             row_casilla_provenance=row_casilla_provenance,
         ),
@@ -517,6 +529,13 @@ def derive_calculation_revision_id_from_identity_inputs(
     payload.update(_amendment_revision_id_payload(amendment_identity))
     payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
     payload.update(_operator_layer_revision_id_payload(operator_layer))
+    rendering = identity_inputs["rendering_snapshot"]
+    if rendering is not None:
+        payload["rendering_snapshot"] = {
+            "authority_generation": rendering.authority_generation,
+            "registry_digest": rendering.registry_digest,
+            "rendering_digest": rendering.rendering_digest,
+        }
     return content_hash_hex(payload)
 
 

@@ -200,7 +200,22 @@ modelo:
           iva-resultado-regimen-general:
             label: A csoport eredménye (összesített keletkezett ÁFA mínusz összesített
               levonható ÁFA)
+          m353-importe-compensar:
+            help: Az ebben a részben bevallott összeg. Az eredményből nem következik
+              automatikusan.
+            label: Továbbvihető összeg
+          m353-importe-devolver:
+            help: Az ebben a részben bevallott összeg. Az eredményből nem következik
+              automatikusan.
+            label: Visszaigényelt összeg
+          m353-importe-ingreso:
+            help: Az ebben a részben bevallott összeg. Az eredményből nem következik
+              automatikusan.
+            label: Befizetett összeg
       construct:
+        modelo-353-importes-papel:
+          field:
+            title: Továbbviteli, befizetési és visszaigénylési összegek
         modelo-353-iva-grupo-agregado:
           field:
             title: 'Modelo 353 nyomtatvány: az áfacsoport havi összesített önadózása'
@@ -208,6 +223,96 @@ modelo:
         official_name: Modelo 353. Hozzáadottérték-adó. Cégcsoport. Összesített nyomtatvány.
           Havi önbevallás.
         title: IVA. Cégcsoport. Összesített nyomtatvány. Havi önbevallás
+      form:
+        authored:
+          avanzado:
+            heading: Különös szabályozás, emelt szint (LIVA 163 sexies.5)
+          bic:
+            heading: SWIFT-BIC kód
+          compensacion:
+            heading: Továbbvihető adó
+          complementaria:
+            heading: Kiegészítő bevallás
+          devengo:
+            heading: Adómegállapítási időszak
+          devolucion:
+            heading: Visszaigénylés
+          dominante:
+            heading: Anyavállalat
+          entidad-1:
+            heading: 1. leányvállalat
+          entidad-10:
+            heading: 10. leányvállalat
+          entidad-11:
+            heading: 11. leányvállalat
+          entidad-12:
+            heading: 12. leányvállalat
+          entidad-13:
+            heading: 13. leányvállalat
+          entidad-14:
+            heading: 14. leányvállalat
+          entidad-15:
+            heading: 15. leányvállalat
+          entidad-16:
+            heading: 16. leányvállalat
+          entidad-17:
+            heading: 17. leányvállalat
+          entidad-18:
+            heading: 18. leányvállalat
+          entidad-19:
+            heading: 19. leányvállalat
+          entidad-2:
+            heading: 2. leányvállalat
+          entidad-20:
+            heading: 20. leányvállalat
+          entidad-3:
+            heading: 3. leányvállalat
+          entidad-4:
+            heading: 4. leányvállalat
+          entidad-5:
+            heading: 5. leányvállalat
+          entidad-6:
+            heading: 6. leányvállalat
+          entidad-7:
+            heading: 7. leányvállalat
+          entidad-8:
+            heading: 8. leányvállalat
+          entidad-9:
+            heading: 9. leányvállalat
+          entidades:
+            heading: A különös szabályozás szerinti csoporttagok
+          foral:
+            heading: Forális szabályozás alá tartozó csoport
+          grupo:
+            heading: Csoportazonosító
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Azonosító adatok
+          ingreso:
+            heading: Befizetés
+          justificante:
+            heading: A 322-es nyomtatvány bizonylatszáma
+          justificante-anterior:
+            heading: Az előző bevallás bizonylatszáma
+          liquidacion:
+            heading: Elszámolás
+          nif:
+            heading: Adóazonosító szám
+          nombre:
+            heading: Cégnév
+          page1:
+            heading: Vállalatcsoport · Elszámolás
+          page2:
+            heading: Továbbvitel, befizetés és visszaigénylés
+          participacion:
+            heading: Időszak végi részesedés (%)
+          redeme:
+            heading: Havi visszaigénylési nyilvántartásba vétel
+          resultado-entidad:
+            heading: Eredmény (322-es nyomtatvány, 68-as mező)
+          sin-actividad:
+            heading: Nem volt tevékenység
       revision:
         2021-hasta-2026-01:
           casilla:

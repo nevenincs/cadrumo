@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import replace
 from functools import partial
 from typing import TYPE_CHECKING
 
+from .....application.export.calculation_review_xlsx_operation import CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID
 from .....application.modelo.action_errors import ModeloEditBaselineStaleError
 from .....application.modelo.operation_definitions import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
@@ -18,6 +20,7 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
+from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationTerminalCondition
 from ...components.dialogs import ConfirmScreen
 from ...operations.controller_port import OperationControllerPort
@@ -95,23 +98,55 @@ class WorkbenchOperationMixin:
         return True
 
     def action_export(self: ModeloWorkbenchScreen) -> None:
-        """Export the verified declaration where and how the filer asks, once nothing withholds it."""
+        """Offer saved review reports separately from filing-ready artefacts."""
         actions = self._actions
         load = self._load
         if actions is None or load is None:
             self._edit_unavailable()
             return
-        if self._filing_withheld():
+        if self._session.dirty:
+            self._filing_withheld()
             return
-        if not load.verified:
+        offer = actions.export_offer()
+        filing_ready = load.verified and not self._progress(load).filing_withheld
+        artefacts = tuple(
+            artefact
+            for artefact in offer.artefacts
+            if (
+                artefact is ModeloExportArtefact.CALCULATION_REVIEW_XLSX
+                or (filing_ready if artefact is ModeloExportArtefact.FICHERO_BOE else load.verified)
+            )
+        )
+        if not artefacts:
+            if self._filing_withheld():
+                return
             self._notice(tr("tui.modelo.workbench.export.verify_first"))
             return
+        if load.form.calculation_revision_id is None:
+            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            return
+        offer = replace(
+            offer,
+            artefacts=artefacts,
+            asks_elections=offer.asks_elections and ModeloExportArtefact.FICHERO_BOE in artefacts,
+        )
 
         def asked(request: WorkbenchExportRequest | None) -> None:
-            if request is not None and not self._filing_withheld():
-                self._run_operation(partial(actions.export, request))
+            if request is None:
+                return
+            if self._session.dirty:
+                self._filing_withheld()
+                return
+            if request.artefact is ModeloExportArtefact.FICHERO_BOE and self._filing_withheld():
+                return
+            if request.artefact is not ModeloExportArtefact.CALCULATION_REVIEW_XLSX and (
+                self._load is None or not self._load.verified
+            ):
+                self._notice(tr("tui.modelo.workbench.export.verify_first"))
+                return
+            self._run_operation(partial(actions.export, request))
 
-        self.app.push_screen(WorkbenchExportScreen(actions.export_offer()), asked)
+        self.app.push_screen(WorkbenchExportScreen(offer), asked)
 
     def _confirm_file(self: ModeloWorkbenchScreen, submit: Callable[[], Awaitable[OperationControllerPort]]) -> None:
         if self._filing_withheld() or self._file_out_of_date():
@@ -235,7 +270,11 @@ class WorkbenchOperationMixin:
         yours: frozenset[AddressKey],
         reporting: str | None,
     ) -> None:
-        if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and actions is not None:
+        if (
+            projection.definition_id
+            in {MODELO_EXPORT_OPERATION_DEFINITION_ID, CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID}
+            and actions is not None
+        ):
             self.run_worker(partial(self._state_export_result, actions, projection), group="workbench-export")
         changes_values = projection.definition_id in _VALUE_CHANGING_OPERATIONS
         original = before if changes_values else None

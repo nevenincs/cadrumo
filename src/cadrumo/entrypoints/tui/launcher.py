@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from logging import ERROR
 from typing import TYPE_CHECKING
 
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
 from ...core.errors.hierarchy import CadrumoError
+from ...core.logging import get_logger
+
+_LOGGER = get_logger(__name__)
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -59,15 +64,33 @@ def main(
     from ...core.logging import configure_logging
     from ...domain.calculations.registry.authority import release_bundled_indexed_authority
 
-    configure_logging()
-    from .installed_session import run_installed_workbench_session
+    with diagnostic_process("tui"), diagnostic_scope():
+        configure_logging()
+        diagnostic_event(_LOGGER, "tui_process_started", fields={"headless": headless})
+        try:
+            from .installed_session import run_installed_workbench_session
 
-    status = run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
-    # Reached only when the session ended in order: a failure propagates past
-    # this line, so releasing the shared registry authority can never stand in
-    # for the error that ended the process.
-    release_bundled_indexed_authority()
-    return status
+            status = run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
+        except BaseException as error:
+            diagnostic_event(
+                _LOGGER,
+                "tui_process_failed",
+                fields={**diagnostic_error_fields(error), "reason_code": "tui_session_failed", "outcome": "failed"},
+                level=ERROR,
+                primary_error=error,
+            )
+            raise
+        try:
+            diagnostic_event(
+                _LOGGER,
+                "tui_process_exited",
+                fields={"exit_code": status, "outcome": "completed" if status == 0 else "refused"},
+            )
+        finally:
+            # The scrubber may borrow shared authority; release after the final
+            # orderly record, even when its sink interrupts the completed session.
+            release_bundled_indexed_authority()
+        return status
 
 
 __all__ = [

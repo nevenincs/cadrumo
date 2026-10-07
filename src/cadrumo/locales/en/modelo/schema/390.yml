@@ -1603,6 +1603,109 @@ modelo:
         official_name: Modelo 390. Annual summary return for Value Added Tax.
         title: VAT. Annual summary return
       form:
+        authored:
+          accrual:
+            heading: 2. Tax period
+          activities:
+            heading: 3. Statistical information · Activities
+          activity-code:
+            heading: Code
+          activity-description:
+            heading: Activity
+          activity-index:
+            heading: Tax coefficient
+          activity-input-tax:
+            heading: Input VAT
+          activity-order:
+            heading: Order
+          activity-output-tax:
+            heading: Output VAT
+          activity-result:
+            heading: Simplified-regime tax
+          activity-revenue:
+            heading: Revenue
+          agriculture-compensation:
+            heading: Compensation · agriculture, livestock and fishing
+          common-settlement:
+            heading: 7. Annual settlement · common territory
+          deduction-adjustment:
+            heading: Adjustment of deductions
+          deduction-group-1:
+            heading: 13. Deductible VAT · Group 1
+          deduction-group-2:
+            heading: 13. Deductible VAT · Group 2
+          deduction-group-3:
+            heading: 13. Deductible VAT · Group 3
+          deduction-total:
+            heading: Total deductions
+          domestic-current:
+            heading: Domestic transactions · current goods and services
+          domestic-investment:
+            heading: Domestic transactions · investment goods
+          given-name:
+            heading: Given name
+          group-periods:
+            heading: 9.2. Periods under the VAT group scheme
+          iae-heading:
+            heading: IAE heading
+          imports-current:
+            heading: Imports · current goods
+          imports-investment:
+            heading: Imports · investment goods
+          intra-current:
+            heading: Intra-Community acquisitions · current goods and services
+          intra-investment:
+            heading: Intra-Community acquisitions · investment goods
+          investment-adjustment:
+            heading: Adjustment for investment goods
+          module-1:
+            heading: Module 1
+          module-2:
+            heading: Module 2
+          module-3:
+            heading: Module 3
+          module-4:
+            heading: Module 4
+          module-5:
+            heading: Module 5
+          module-6:
+            heading: Module 6
+          module-7:
+            heading: Module 7
+          module-amount:
+            heading: Amount
+          module-units:
+            heading: Number of units
+          nif:
+            heading: Tax identification number
+          ordinary-periods:
+            heading: 9.1. Periods outside the VAT group scheme
+          other-1:
+            heading: Other activity 1
+          other-2:
+            heading: Other activity 2
+          other-3:
+            heading: Other activity 3
+          other-4:
+            heading: Other activity 4
+          other-5:
+            heading: Other activity 5
+          page-one:
+            heading: Page 1
+          principal:
+            heading: Principal
+          prior-receipt:
+            heading: Previous declaration receipt number
+          specific-operations:
+            heading: 11. Specific transactions
+          surname:
+            heading: Surnames or legal name
+          taxpayer:
+            heading: 1. Taxpayer
+          territorial-settlement:
+            heading: 8. Taxation across several administrations
+          year:
+            heading: Tax year
         column:
           actividad-desarrollada:
             heading: Activity carried on

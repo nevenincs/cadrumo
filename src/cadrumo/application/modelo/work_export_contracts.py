@@ -62,6 +62,8 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
 
     @model_validator(mode="after")
     def _absolute_output_path(self) -> Self:
+        if self.artefact is ModeloExportArtefact.CALCULATION_REVIEW_XLSX:
+            raise ValueError("saved review XLSX requires export.calculation-review-xlsx")
         if not Path(self.output_path).is_absolute():
             raise ValueError("export output path must be resolved by the requesting frontend")
         return self

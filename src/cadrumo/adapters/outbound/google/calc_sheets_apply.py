@@ -935,7 +935,7 @@ def publish_review_plan(
     ):
         raise managed_artifact_refusal("publication_binding_mismatch")
     retained = artifacts.receipts.load_publication(publication.publication_id)
-    name = f"{plan.metadata.title} [{publication.publication_id}]"
+    name = plan.metadata.document_title
     if retained is not None:
         if (
             retained.profile_id != publication.profile_id

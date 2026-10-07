@@ -1,0 +1,1347 @@
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.servicios-espana"
+number = "iva.union.resultado.at.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.bienes-espana"
+number = "iva.union.resultado.at.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.total-espana"
+number = "iva.union.resultado.at.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.servicios-otros"
+number = "iva.union.resultado.at.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.bienes-otros"
+number = "iva.union.resultado.at.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.total-otros"
+number = "iva.union.resultado.at.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.total-periodo"
+number = "iva.union.resultado.at.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.correcciones-positivas"
+number = "iva.union.resultado.at.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.correcciones-negativas"
+number = "iva.union.resultado.at.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.resultado"
+number = "iva.union.resultado.at.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.ingresar"
+number = "iva.union.resultado.at.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.at.devolver"
+number = "iva.union.resultado.at.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.servicios-espana"
+number = "iva.union.resultado.be.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.bienes-espana"
+number = "iva.union.resultado.be.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.total-espana"
+number = "iva.union.resultado.be.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.servicios-otros"
+number = "iva.union.resultado.be.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.bienes-otros"
+number = "iva.union.resultado.be.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.total-otros"
+number = "iva.union.resultado.be.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.total-periodo"
+number = "iva.union.resultado.be.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.correcciones-positivas"
+number = "iva.union.resultado.be.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.correcciones-negativas"
+number = "iva.union.resultado.be.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.resultado"
+number = "iva.union.resultado.be.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.ingresar"
+number = "iva.union.resultado.be.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.be.devolver"
+number = "iva.union.resultado.be.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.servicios-espana"
+number = "iva.union.resultado.bg.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.bienes-espana"
+number = "iva.union.resultado.bg.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.total-espana"
+number = "iva.union.resultado.bg.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.servicios-otros"
+number = "iva.union.resultado.bg.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.bienes-otros"
+number = "iva.union.resultado.bg.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.total-otros"
+number = "iva.union.resultado.bg.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.total-periodo"
+number = "iva.union.resultado.bg.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.correcciones-positivas"
+number = "iva.union.resultado.bg.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.correcciones-negativas"
+number = "iva.union.resultado.bg.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.resultado"
+number = "iva.union.resultado.bg.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.ingresar"
+number = "iva.union.resultado.bg.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.bg.devolver"
+number = "iva.union.resultado.bg.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.servicios-espana"
+number = "iva.union.resultado.cy.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.bienes-espana"
+number = "iva.union.resultado.cy.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.total-espana"
+number = "iva.union.resultado.cy.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.servicios-otros"
+number = "iva.union.resultado.cy.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.bienes-otros"
+number = "iva.union.resultado.cy.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.total-otros"
+number = "iva.union.resultado.cy.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.total-periodo"
+number = "iva.union.resultado.cy.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.correcciones-positivas"
+number = "iva.union.resultado.cy.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.correcciones-negativas"
+number = "iva.union.resultado.cy.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.resultado"
+number = "iva.union.resultado.cy.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.ingresar"
+number = "iva.union.resultado.cy.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cy.devolver"
+number = "iva.union.resultado.cy.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.servicios-espana"
+number = "iva.union.resultado.cz.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.bienes-espana"
+number = "iva.union.resultado.cz.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.total-espana"
+number = "iva.union.resultado.cz.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.servicios-otros"
+number = "iva.union.resultado.cz.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.bienes-otros"
+number = "iva.union.resultado.cz.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.total-otros"
+number = "iva.union.resultado.cz.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.total-periodo"
+number = "iva.union.resultado.cz.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.correcciones-positivas"
+number = "iva.union.resultado.cz.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.correcciones-negativas"
+number = "iva.union.resultado.cz.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.resultado"
+number = "iva.union.resultado.cz.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.ingresar"
+number = "iva.union.resultado.cz.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.cz.devolver"
+number = "iva.union.resultado.cz.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.servicios-espana"
+number = "iva.union.resultado.de.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.bienes-espana"
+number = "iva.union.resultado.de.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.total-espana"
+number = "iva.union.resultado.de.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.servicios-otros"
+number = "iva.union.resultado.de.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.bienes-otros"
+number = "iva.union.resultado.de.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.total-otros"
+number = "iva.union.resultado.de.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.total-periodo"
+number = "iva.union.resultado.de.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.correcciones-positivas"
+number = "iva.union.resultado.de.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.correcciones-negativas"
+number = "iva.union.resultado.de.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.resultado"
+number = "iva.union.resultado.de.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.ingresar"
+number = "iva.union.resultado.de.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.de.devolver"
+number = "iva.union.resultado.de.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.servicios-espana"
+number = "iva.union.resultado.dk.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.bienes-espana"
+number = "iva.union.resultado.dk.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.total-espana"
+number = "iva.union.resultado.dk.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.servicios-otros"
+number = "iva.union.resultado.dk.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.bienes-otros"
+number = "iva.union.resultado.dk.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.total-otros"
+number = "iva.union.resultado.dk.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.total-periodo"
+number = "iva.union.resultado.dk.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.correcciones-positivas"
+number = "iva.union.resultado.dk.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.correcciones-negativas"
+number = "iva.union.resultado.dk.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.resultado"
+number = "iva.union.resultado.dk.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.ingresar"
+number = "iva.union.resultado.dk.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.dk.devolver"
+number = "iva.union.resultado.dk.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.servicios-espana"
+number = "iva.union.resultado.ee.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.bienes-espana"
+number = "iva.union.resultado.ee.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.total-espana"
+number = "iva.union.resultado.ee.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.servicios-otros"
+number = "iva.union.resultado.ee.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.bienes-otros"
+number = "iva.union.resultado.ee.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.total-otros"
+number = "iva.union.resultado.ee.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.total-periodo"
+number = "iva.union.resultado.ee.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.correcciones-positivas"
+number = "iva.union.resultado.ee.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.correcciones-negativas"
+number = "iva.union.resultado.ee.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.resultado"
+number = "iva.union.resultado.ee.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.ingresar"
+number = "iva.union.resultado.ee.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ee.devolver"
+number = "iva.union.resultado.ee.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.servicios-espana"
+number = "iva.union.resultado.es.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.bienes-espana"
+number = "iva.union.resultado.es.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.total-espana"
+number = "iva.union.resultado.es.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.servicios-otros"
+number = "iva.union.resultado.es.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.bienes-otros"
+number = "iva.union.resultado.es.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.total-otros"
+number = "iva.union.resultado.es.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.total-periodo"
+number = "iva.union.resultado.es.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.correcciones-positivas"
+number = "iva.union.resultado.es.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.correcciones-negativas"
+number = "iva.union.resultado.es.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.resultado"
+number = "iva.union.resultado.es.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.ingresar"
+number = "iva.union.resultado.es.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.es.devolver"
+number = "iva.union.resultado.es.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.servicios-espana"
+number = "iva.union.resultado.fi.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.bienes-espana"
+number = "iva.union.resultado.fi.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.total-espana"
+number = "iva.union.resultado.fi.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.servicios-otros"
+number = "iva.union.resultado.fi.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.bienes-otros"
+number = "iva.union.resultado.fi.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.total-otros"
+number = "iva.union.resultado.fi.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.total-periodo"
+number = "iva.union.resultado.fi.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.correcciones-positivas"
+number = "iva.union.resultado.fi.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.correcciones-negativas"
+number = "iva.union.resultado.fi.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.resultado"
+number = "iva.union.resultado.fi.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.ingresar"
+number = "iva.union.resultado.fi.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fi.devolver"
+number = "iva.union.resultado.fi.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.servicios-espana"
+number = "iva.union.resultado.fr.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.bienes-espana"
+number = "iva.union.resultado.fr.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.total-espana"
+number = "iva.union.resultado.fr.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.servicios-otros"
+number = "iva.union.resultado.fr.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.bienes-otros"
+number = "iva.union.resultado.fr.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.total-otros"
+number = "iva.union.resultado.fr.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.total-periodo"
+number = "iva.union.resultado.fr.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.correcciones-positivas"
+number = "iva.union.resultado.fr.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.correcciones-negativas"
+number = "iva.union.resultado.fr.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.resultado"
+number = "iva.union.resultado.fr.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.ingresar"
+number = "iva.union.resultado.fr.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.fr.devolver"
+number = "iva.union.resultado.fr.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.servicios-espana"
+number = "iva.union.resultado.gr.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.bienes-espana"
+number = "iva.union.resultado.gr.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.total-espana"
+number = "iva.union.resultado.gr.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.servicios-otros"
+number = "iva.union.resultado.gr.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.bienes-otros"
+number = "iva.union.resultado.gr.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.total-otros"
+number = "iva.union.resultado.gr.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.total-periodo"
+number = "iva.union.resultado.gr.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.correcciones-positivas"
+number = "iva.union.resultado.gr.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.correcciones-negativas"
+number = "iva.union.resultado.gr.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.resultado"
+number = "iva.union.resultado.gr.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.ingresar"
+number = "iva.union.resultado.gr.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.gr.devolver"
+number = "iva.union.resultado.gr.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.servicios-espana"
+number = "iva.union.resultado.hr.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.bienes-espana"
+number = "iva.union.resultado.hr.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.total-espana"
+number = "iva.union.resultado.hr.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.servicios-otros"
+number = "iva.union.resultado.hr.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.bienes-otros"
+number = "iva.union.resultado.hr.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.total-otros"
+number = "iva.union.resultado.hr.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.total-periodo"
+number = "iva.union.resultado.hr.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.correcciones-positivas"
+number = "iva.union.resultado.hr.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.correcciones-negativas"
+number = "iva.union.resultado.hr.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.resultado"
+number = "iva.union.resultado.hr.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.ingresar"
+number = "iva.union.resultado.hr.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hr.devolver"
+number = "iva.union.resultado.hr.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.servicios-espana"
+number = "iva.union.resultado.hu.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.bienes-espana"
+number = "iva.union.resultado.hu.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.total-espana"
+number = "iva.union.resultado.hu.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.servicios-otros"
+number = "iva.union.resultado.hu.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.bienes-otros"
+number = "iva.union.resultado.hu.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.total-otros"
+number = "iva.union.resultado.hu.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.total-periodo"
+number = "iva.union.resultado.hu.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.correcciones-positivas"
+number = "iva.union.resultado.hu.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.correcciones-negativas"
+number = "iva.union.resultado.hu.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.resultado"
+number = "iva.union.resultado.hu.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.ingresar"
+number = "iva.union.resultado.hu.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.hu.devolver"
+number = "iva.union.resultado.hu.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.servicios-espana"
+number = "iva.union.resultado.ie.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.bienes-espana"
+number = "iva.union.resultado.ie.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.total-espana"
+number = "iva.union.resultado.ie.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.servicios-otros"
+number = "iva.union.resultado.ie.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.bienes-otros"
+number = "iva.union.resultado.ie.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.total-otros"
+number = "iva.union.resultado.ie.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.total-periodo"
+number = "iva.union.resultado.ie.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.correcciones-positivas"
+number = "iva.union.resultado.ie.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.correcciones-negativas"
+number = "iva.union.resultado.ie.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.resultado"
+number = "iva.union.resultado.ie.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.ingresar"
+number = "iva.union.resultado.ie.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ie.devolver"
+number = "iva.union.resultado.ie.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.servicios-espana"
+number = "iva.union.resultado.it.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.bienes-espana"
+number = "iva.union.resultado.it.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.total-espana"
+number = "iva.union.resultado.it.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.servicios-otros"
+number = "iva.union.resultado.it.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.bienes-otros"
+number = "iva.union.resultado.it.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.total-otros"
+number = "iva.union.resultado.it.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.total-periodo"
+number = "iva.union.resultado.it.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.correcciones-positivas"
+number = "iva.union.resultado.it.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.correcciones-negativas"
+number = "iva.union.resultado.it.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.resultado"
+number = "iva.union.resultado.it.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.ingresar"
+number = "iva.union.resultado.it.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.it.devolver"
+number = "iva.union.resultado.it.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.servicios-espana"
+number = "iva.union.resultado.lt.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.bienes-espana"
+number = "iva.union.resultado.lt.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.total-espana"
+number = "iva.union.resultado.lt.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.servicios-otros"
+number = "iva.union.resultado.lt.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.bienes-otros"
+number = "iva.union.resultado.lt.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.total-otros"
+number = "iva.union.resultado.lt.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.total-periodo"
+number = "iva.union.resultado.lt.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.correcciones-positivas"
+number = "iva.union.resultado.lt.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.correcciones-negativas"
+number = "iva.union.resultado.lt.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.resultado"
+number = "iva.union.resultado.lt.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.ingresar"
+number = "iva.union.resultado.lt.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lt.devolver"
+number = "iva.union.resultado.lt.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.servicios-espana"
+number = "iva.union.resultado.lu.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.bienes-espana"
+number = "iva.union.resultado.lu.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.total-espana"
+number = "iva.union.resultado.lu.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.servicios-otros"
+number = "iva.union.resultado.lu.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.bienes-otros"
+number = "iva.union.resultado.lu.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.total-otros"
+number = "iva.union.resultado.lu.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.total-periodo"
+number = "iva.union.resultado.lu.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.correcciones-positivas"
+number = "iva.union.resultado.lu.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.correcciones-negativas"
+number = "iva.union.resultado.lu.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.resultado"
+number = "iva.union.resultado.lu.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.ingresar"
+number = "iva.union.resultado.lu.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lu.devolver"
+number = "iva.union.resultado.lu.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.servicios-espana"
+number = "iva.union.resultado.lv.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.bienes-espana"
+number = "iva.union.resultado.lv.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.total-espana"
+number = "iva.union.resultado.lv.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.servicios-otros"
+number = "iva.union.resultado.lv.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.bienes-otros"
+number = "iva.union.resultado.lv.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.total-otros"
+number = "iva.union.resultado.lv.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.total-periodo"
+number = "iva.union.resultado.lv.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.correcciones-positivas"
+number = "iva.union.resultado.lv.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.correcciones-negativas"
+number = "iva.union.resultado.lv.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.resultado"
+number = "iva.union.resultado.lv.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.ingresar"
+number = "iva.union.resultado.lv.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.lv.devolver"
+number = "iva.union.resultado.lv.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.servicios-espana"
+number = "iva.union.resultado.mt.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.bienes-espana"
+number = "iva.union.resultado.mt.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.total-espana"
+number = "iva.union.resultado.mt.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.servicios-otros"
+number = "iva.union.resultado.mt.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.bienes-otros"
+number = "iva.union.resultado.mt.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.total-otros"
+number = "iva.union.resultado.mt.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.total-periodo"
+number = "iva.union.resultado.mt.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.correcciones-positivas"
+number = "iva.union.resultado.mt.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.correcciones-negativas"
+number = "iva.union.resultado.mt.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.resultado"
+number = "iva.union.resultado.mt.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.ingresar"
+number = "iva.union.resultado.mt.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.mt.devolver"
+number = "iva.union.resultado.mt.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.servicios-espana"
+number = "iva.union.resultado.nl.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.bienes-espana"
+number = "iva.union.resultado.nl.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.total-espana"
+number = "iva.union.resultado.nl.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.servicios-otros"
+number = "iva.union.resultado.nl.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.bienes-otros"
+number = "iva.union.resultado.nl.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.total-otros"
+number = "iva.union.resultado.nl.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.total-periodo"
+number = "iva.union.resultado.nl.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.correcciones-positivas"
+number = "iva.union.resultado.nl.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.correcciones-negativas"
+number = "iva.union.resultado.nl.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.resultado"
+number = "iva.union.resultado.nl.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.ingresar"
+number = "iva.union.resultado.nl.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.nl.devolver"
+number = "iva.union.resultado.nl.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.servicios-espana"
+number = "iva.union.resultado.pl.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.bienes-espana"
+number = "iva.union.resultado.pl.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.total-espana"
+number = "iva.union.resultado.pl.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.servicios-otros"
+number = "iva.union.resultado.pl.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.bienes-otros"
+number = "iva.union.resultado.pl.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.total-otros"
+number = "iva.union.resultado.pl.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.total-periodo"
+number = "iva.union.resultado.pl.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.correcciones-positivas"
+number = "iva.union.resultado.pl.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.correcciones-negativas"
+number = "iva.union.resultado.pl.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.resultado"
+number = "iva.union.resultado.pl.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.ingresar"
+number = "iva.union.resultado.pl.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pl.devolver"
+number = "iva.union.resultado.pl.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.servicios-espana"
+number = "iva.union.resultado.pt.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.bienes-espana"
+number = "iva.union.resultado.pt.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.total-espana"
+number = "iva.union.resultado.pt.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.servicios-otros"
+number = "iva.union.resultado.pt.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.bienes-otros"
+number = "iva.union.resultado.pt.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.total-otros"
+number = "iva.union.resultado.pt.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.total-periodo"
+number = "iva.union.resultado.pt.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.correcciones-positivas"
+number = "iva.union.resultado.pt.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.correcciones-negativas"
+number = "iva.union.resultado.pt.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.resultado"
+number = "iva.union.resultado.pt.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.ingresar"
+number = "iva.union.resultado.pt.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.pt.devolver"
+number = "iva.union.resultado.pt.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.servicios-espana"
+number = "iva.union.resultado.ro.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.bienes-espana"
+number = "iva.union.resultado.ro.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.total-espana"
+number = "iva.union.resultado.ro.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.servicios-otros"
+number = "iva.union.resultado.ro.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.bienes-otros"
+number = "iva.union.resultado.ro.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.total-otros"
+number = "iva.union.resultado.ro.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.total-periodo"
+number = "iva.union.resultado.ro.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.correcciones-positivas"
+number = "iva.union.resultado.ro.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.correcciones-negativas"
+number = "iva.union.resultado.ro.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.resultado"
+number = "iva.union.resultado.ro.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.ingresar"
+number = "iva.union.resultado.ro.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.ro.devolver"
+number = "iva.union.resultado.ro.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.servicios-espana"
+number = "iva.union.resultado.se.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.bienes-espana"
+number = "iva.union.resultado.se.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.total-espana"
+number = "iva.union.resultado.se.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.servicios-otros"
+number = "iva.union.resultado.se.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.bienes-otros"
+number = "iva.union.resultado.se.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.total-otros"
+number = "iva.union.resultado.se.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.total-periodo"
+number = "iva.union.resultado.se.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.correcciones-positivas"
+number = "iva.union.resultado.se.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.correcciones-negativas"
+number = "iva.union.resultado.se.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.resultado"
+number = "iva.union.resultado.se.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.ingresar"
+number = "iva.union.resultado.se.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.se.devolver"
+number = "iva.union.resultado.se.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.servicios-espana"
+number = "iva.union.resultado.si.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.bienes-espana"
+number = "iva.union.resultado.si.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.total-espana"
+number = "iva.union.resultado.si.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.servicios-otros"
+number = "iva.union.resultado.si.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.bienes-otros"
+number = "iva.union.resultado.si.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.total-otros"
+number = "iva.union.resultado.si.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.total-periodo"
+number = "iva.union.resultado.si.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.correcciones-positivas"
+number = "iva.union.resultado.si.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.correcciones-negativas"
+number = "iva.union.resultado.si.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.resultado"
+number = "iva.union.resultado.si.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.ingresar"
+number = "iva.union.resultado.si.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.si.devolver"
+number = "iva.union.resultado.si.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.servicios-espana"
+number = "iva.union.resultado.sk.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.bienes-espana"
+number = "iva.union.resultado.sk.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.total-espana"
+number = "iva.union.resultado.sk.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.servicios-otros"
+number = "iva.union.resultado.sk.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.bienes-otros"
+number = "iva.union.resultado.sk.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.total-otros"
+number = "iva.union.resultado.sk.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.total-periodo"
+number = "iva.union.resultado.sk.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.correcciones-positivas"
+number = "iva.union.resultado.sk.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.correcciones-negativas"
+number = "iva.union.resultado.sk.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.resultado"
+number = "iva.union.resultado.sk.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.ingresar"
+number = "iva.union.resultado.sk.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.sk.devolver"
+number = "iva.union.resultado.sk.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.servicios-espana"
+number = "iva.union.resultado.xi.servicios-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.bienes-espana"
+number = "iva.union.resultado.xi.bienes-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.total-espana"
+number = "iva.union.resultado.xi.total-espana"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.servicios-otros"
+number = "iva.union.resultado.xi.servicios-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.bienes-otros"
+number = "iva.union.resultado.xi.bienes-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.total-otros"
+number = "iva.union.resultado.xi.total-otros"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.total-periodo"
+number = "iva.union.resultado.xi.total-periodo"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.correcciones-positivas"
+number = "iva.union.resultado.xi.correcciones-positivas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.correcciones-negativas"
+number = "iva.union.resultado.xi.correcciones-negativas"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.resultado"
+number = "iva.union.resultado.xi.resultado"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.ingresar"
+number = "iva.union.resultado.xi.ingresar"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.xi.devolver"
+number = "iva.union.resultado.xi.devolver"
+
+[[revisions.esquema-union.completeness_manifest.casillas]]
+casilla_id = "iva.union.resultado.saldo-ingresar-espana"
+number = "iva.union.resultado.saldo-ingresar-espana"

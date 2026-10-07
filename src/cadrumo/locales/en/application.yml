@@ -2013,6 +2013,25 @@ application:
           source_revision: Source revision
           sources: Source attribution
           status: Recorded status code
+          calculation_state: 'Saved calculation state'
+          current_calculation: 'Current calculation at export'
+          current_filing: 'Current local filing at export'
+          filing_status: 'Saved filing record status'
+          filing_record: 'Selected filing record'
+          filing_status_vigente: 'Current'
+          filing_status_supersedido: 'Superseded — historical'
+          aeat_confirmation: 'AEAT confirmation'
+          'yes': 'Yes'
+          'no': 'No'
+          calculation_state_borrador: 'Draft — provisional'
+          calculation_state_verificado_completo: 'Verified local calculation'
+          calculation_state_presentado: 'Filed locally'
+          calculation_state_presentado_supersedido: 'Historical local filing — superseded'
+          calculation_state_descartado: 'Discarded calculation'
+          aeat_confirmation_pendiente: 'Pending — no observed AEAT acceptance'
+          aeat_confirmation_confirmada: 'Confirmed by saved AEAT evidence'
+          aeat_confirmation_discrepante: 'Discrepant with AEAT evidence'
+          aeat_confirmation_descartada: 'Discarded before AEAT confirmation'
           status_incomplete: Incomplete
           status_provisional: Provisional
           status_verified: Verified local baseline
@@ -2205,3 +2224,39 @@ application:
       validation_clean: Validation completed without blocking issues.
       validation_failed: Validation found blocking issues.
       workflow_failure: Workflow could not be completed.
+
+  reconciliation_export:
+    title: "Saved reconciliations"
+    saved_comparison_notice: "Saved comparisons retain original values and references. A blank value is unknown. Advisories describe what was checked; a reference does not prove that document bytes are retained."
+    record: "Reconciliation"
+    date: "Date"
+    verdict: "Comparison result"
+    modelo: "Modelo"
+    year: "Year"
+    period: "Period"
+    registry_revision: "Saved registry revision"
+    work_unit: "Work unit"
+    calculation_revision: "Saved calculation"
+    evidence_kind: "Evidence kind"
+    evidence_reference: "Evidence reference"
+    actor: "Actor"
+    difference_count: "Differences"
+    advisory_count: "Advisories"
+    difference_kind: "Difference kind"
+    field: "Field or box"
+    saved_value: "Saved calculation value"
+    evidence_value: "Evidence value"
+    difference_reason: "Difference reason"
+    legal_refs: "Legal references"
+    source_refs: "Official sources"
+    advisory_code: "Advisory code"
+    advisory: "Advisory"
+    context: "Context"
+    record_identity: "Full record identity"
+    verdict_matches: "Values match"
+    verdict_mismatches: "Differences found"
+    evidence_kind_justificante: "Filing receipt"
+    evidence_kind_declaration: "Filed declaration"
+    difference_kind_header_field: "Receipt identity"
+    difference_kind_total: "Filed total"
+    difference_kind_casilla: "Box value"

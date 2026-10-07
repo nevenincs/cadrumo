@@ -44,11 +44,15 @@ pub fn verify(
     filesystem::absolute_root(path)?;
     filesystem::require_executable(path)?;
     let file = File::open(path)?;
-    if !file.metadata()?.is_file() {
+    let metadata = file.metadata()?;
+    if !metadata.is_file() {
         return Err(Error::Integrity("expected a regular executable".into()));
     }
-    let mut bytes = Vec::new();
     const LIMIT: u64 = 128 * 1024 * 1024;
+    if metadata.len() > LIMIT {
+        return Err(Error::LimitExceeded);
+    }
+    let mut bytes = Vec::new();
     file.take(LIMIT + 1).read_to_end(&mut bytes)?;
     if bytes.len() as u64 > LIMIT {
         return Err(Error::LimitExceeded);

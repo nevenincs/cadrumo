@@ -1,0 +1,6 @@
+[[revisions."2021-hasta-2026-01".constructs]]
+id = "modelo-353-importes-papel"
+casilla_ids = ["06", "07", "papel.importe-ingreso"]
+legal_refs = ["orden-eha-3434-2007:art-2"]
+# The procedure identifies the obligation; Annex II owns the printed amount fields.
+source_refs = ["boe-modelo-353-2021-form-pdf", "aeat-modelo-353-procedure"]

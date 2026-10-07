@@ -10,6 +10,8 @@ import {
 } from "../shell/host";
 import { useStrings } from "../shell/strings";
 import { failureCode } from "../errors";
+import { terminalFont } from "../shell/terminalFont";
+import { terminalRenderer } from "../shell/terminalRenderer";
 import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 
@@ -63,6 +65,10 @@ export function TerminalPane({
   const t = useStrings();
   const container = useRef<HTMLDivElement>(null);
   const terminal = useRef<{ term: Terminal; fit: FitAddon } | null>(null);
+  // Optional terminals acquire resources only when first opened. Once used,
+  // keep their buffer and session while hidden; the account gate owns TUI.
+  const [activated, setActivated] = useState(kind === "tui" || shown);
+  if (shown && !activated) setActivated(true);
   // The session effect runs once per pane; everything else it reads is live.
   const live = useRef({
     isShellChord,
@@ -72,6 +78,7 @@ export function TerminalPane({
     theme,
     fontSize,
     t,
+    shown,
   });
   live.current = {
     isShellChord,
@@ -81,23 +88,41 @@ export function TerminalPane({
     theme,
     fontSize,
     t,
+    shown,
   };
   const [unavailable, setUnavailable] = useState(false);
+  const [fontFamily, setFontFamily] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!activated) return;
+    let cancelled = false;
+    void terminalFont().then((family) => {
+      if (!cancelled) setFontFamily(family);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activated]);
+
+  useEffect(() => {
+    if (!activated || !fontFamily) return;
     const element = container.current;
     if (!element) return;
     const term = new Terminal({
       cursorBlink: true,
-      fontFamily: '"JetBrains Mono", "Cascadia Code", Consolas, monospace',
+      fontFamily,
       fontSize: live.current.fontSize,
-      lineHeight: 1.15,
+      lineHeight: 1,
+      rescaleOverlappingGlyphs: true,
       scrollback: 5000,
       theme: live.current.theme,
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(element);
+    const disposeRenderer = terminalRenderer(term, () => {
+      if (element.clientWidth > 0 && element.clientHeight > 0) fit.fit();
+    });
     terminal.current = { term, fit };
     // Shell chords never reach the session; every other key belongs to it.
     term.attachCustomKeyEventHandler(
@@ -212,7 +237,9 @@ export function TerminalPane({
     element.addEventListener("contextmenu", menu);
 
     live.current.register(kind, {
-      focus: () => term.focus(),
+      focus: () => {
+        if (live.current.shown && element.offsetParent !== null) term.focus();
+      },
       selection: () => term.getSelection(),
       hasSelection: () => term.hasSelection(),
       selectAll: () => term.selectAll(),
@@ -244,10 +271,11 @@ export function TerminalPane({
       // Close at once: closing stops any write still waiting on the host's
       // queue, so it cannot hold the session open.
       void session?.close().catch(() => undefined);
+      disposeRenderer();
       term.dispose();
       terminal.current = null;
     };
-  }, [host, kind]);
+  }, [host, kind, activated, fontFamily]);
 
   useEffect(() => {
     if (terminal.current) terminal.current.term.options.theme = theme;
@@ -257,7 +285,12 @@ export function TerminalPane({
     const current = terminal.current;
     if (!current) return;
     current.term.options.fontSize = fontSize;
-    requestAnimationFrame(() => current.fit.fit());
+    const frame = requestAnimationFrame(() => {
+      const element = container.current;
+      if (element && element.clientWidth > 0 && element.clientHeight > 0)
+        current.fit.fit();
+    });
+    return () => cancelAnimationFrame(frame);
   }, [fontSize]);
 
   return (

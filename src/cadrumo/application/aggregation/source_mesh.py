@@ -41,6 +41,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import (
@@ -904,6 +905,7 @@ class CalculationSourceResolution(BaseModel):
         exclude=True,
         repr=False,
     )
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = Field(default=(), exclude=True, repr=False)
     row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=empty_row_casilla_values)
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
         default_factory=empty_row_casilla_provenance,
@@ -1206,6 +1208,29 @@ class CalculationSourceResolution(BaseModel):
         if len(normalized) != len(set(normalized)):
             raise SourceMeshError("aggregation.source_mesh.errors.source_transaction_ids_duplicate")
         return tuple(sorted(normalized))
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _closed_record_rows_agree_with_values(self) -> CalculationSourceResolution:
+        supplied = (
+            set(self.binding_values)
+            | set(self.enum_binding_values)
+            | set(self.date_binding_values)
+            | set(self.boolean_binding_values)
+            | {binding_id for binding_id, _ in self.row_binding_values}
+        )
+        try:
+            validate_closed_record_row_sets(self.closed_record_row_sets, supplied_binding_ids=supplied)
+        except ValueError as exc:
+            raise SourceMeshError("aggregation.source_mesh.errors.closed_record_rows_conflict") from exc
+        for row_set in self.closed_record_row_sets:
+            if row_set.source_kind not in self.owned_sources or any(
+                diagnostic.binding_source is row_set.source_kind
+                and diagnostic.reason in ("storage_degraded", "unrouted_observation")
+                for diagnostic in self.diagnostics
+            ):
+                raise SourceMeshError("aggregation.source_mesh.errors.closed_record_rows_unadmitted")
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

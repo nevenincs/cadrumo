@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -25,6 +25,7 @@ from cadrumo.application.filing.producer_snapshot import (
 )
 from cadrumo.application.storage.calc_sheets.engine import build_export_plan
 from cadrumo.application.storage.calc_sheets.form_workbook import add_form_workbook
+from cadrumo.application.storage.calc_sheets.human_workbook import guide_paragraph_height
 from cadrumo.application.storage.calc_sheets.layout import plan_layout
 from cadrumo.application.storage.calc_sheets.records import (
     OperatorInput,
@@ -37,7 +38,6 @@ from cadrumo.application.storage.calc_sheets.records import (
 from cadrumo.application.storage.calc_sheets.theme import StyleRole
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.config import override_settings
-from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
@@ -47,15 +47,13 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.withholding_bindings import resolve_withholding_binding_values
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.period import calculation_filing_date
 
 from .compiler.authority import compiled_bundled_authority
+from .workbook_demo_group_vat import group_vat_inputs
+from .workbook_demo_intracommunity import intracommunity_records, intracommunity_summary
+from .workbook_demo_m303 import m303_demonstration_facts
 from .workbook_demo_members import contribution_member_records, contribution_members
 from .workbook_demo_nonperiodic import nonperiodic_vat_inputs
 from .workbook_demo_records import (
@@ -85,7 +83,25 @@ class DemoCase:
 
 DEMO_CASES = (
     DemoCase("130", "2019-y-siguientes", "19", Decimal("6373")),
+    DemoCase("303", "2022", "71", Decimal("1680"), filing_year=2022),
+    DemoCase("303", "2023", "71", Decimal("1680"), filing_year=2023),
+    DemoCase("303", "2024-hasta-08-y-2t", "71", Decimal("1680"), filing_year=2024, period="2T"),
+    DemoCase("303", "2024-desde-09-y-3t", "71", Decimal("1680"), filing_year=2024),
     DemoCase("303", "2025", "71", Decimal("1680")),
+    DemoCase("303", "2026-y-siguientes", "71", Decimal("1680"), filing_year=2026),
+    DemoCase(
+        "390",
+        "2026",
+        "iva.anual.resultado-liquidacion",
+        Decimal("6720"),
+        filing_year=2026,
+        period="0A",
+        authority_grade=RegistryAuthorityGrade.APPLICABILITY,
+    ),
+    DemoCase(
+        "390", "2024", "iva.anual.sector-diferenciado-1.suma-deducciones", Decimal("900"), filing_year=2024, period="0A"
+    ),
+    DemoCase("390", "2025", "iva.anual.sector-diferenciado-1.suma-deducciones", Decimal("900"), period="0A"),
     DemoCase("349", "2020-y-siguientes", None, None),
     DemoCase("347", "2011-2024", None, None, filing_year=2024, period="0A"),
     DemoCase("347", "2025-y-siguientes", None, None, period="0A"),
@@ -191,6 +207,7 @@ DEMO_CASES = (
     DemoCase("156", "2003-y-siguientes", None, None, period="0A", authority_grade=RegistryAuthorityGrade.APPLICABILITY),
     DemoCase("308", "2019-y-siguientes", "decl.req-iva-devolver-17", Decimal("250.35"), period="AD-HOC"),
     DemoCase("309", "2023-y-siguientes", "decl.resultado-24", Decimal("210"), period="AD-HOC"),
+    DemoCase("322", "2026-y-siguientes", "70", Decimal("1500"), filing_year=2026, period="12"),
     DemoCase(
         "309",
         "2018-2022",
@@ -253,12 +270,23 @@ def _scenario_leaves(snapshot: RegistrySnapshot, result: str) -> tuple[set[str],
 
 def demonstration_inputs(snapshot: RegistrySnapshot, case: DemoCase) -> tuple[OperatorInputs, dict[str, Decimal]]:
     """Seed fictional figures and declared context; unselected branches remain unknown."""
+    if case.modelo == "322":
+        return group_vat_inputs(case.filing_year, case.period), {}
     if case.modelo == "308":
         return refund_inputs(case.filing_year), {}
     if case.modelo == "309":
         return nonperiodic_vat_inputs(
             case.filing_year,
             additional_rate_row=any(c.id == "decl.rg-base-25" for c in snapshot.revision.casillas),
+        ), {}
+    if case.modelo == "349":
+        totals = intracommunity_summary(snapshot)
+        return OperatorInputs(
+            values=tuple(
+                OperatorInput(casilla_id=str(c.id), value=totals[c.binding])
+                for c in snapshot.revision.casillas
+                if c.binding is not None and c.binding in totals
+            )
         ), {}
     if case.modelo == "347":
         with validating_governed_facts(compiled_bundled_authority()):
@@ -478,6 +506,11 @@ def demonstration_inputs(snapshot: RegistrySnapshot, case: DemoCase) -> tuple[Op
         values.update({"01": Decimal("70200"), "02": Decimal("10835"), "05": Decimal("2950"), "06": Decimal("2550")})
         bindings["irpf.previous_year_economic_activity_net_income"] = Decimal("18000")
     elif case.modelo == "303":
+        if case.period == "4T" and any(formula.target_casilla_id == "88" for formula in snapshot.revision.formulas):
+            annual_leaves, annual_bindings = _scenario_leaves(snapshot, "88")
+            values.update(dict.fromkeys(annual_leaves, Decimal("0")))
+            bindings.update(dict.fromkeys(annual_bindings, Decimal("0")))
+            values["80"] = Decimal("48000")
         values.update(
             {
                 "iva.repercutido.general.base": Decimal("12000"),
@@ -485,6 +518,37 @@ def demonstration_inputs(snapshot: RegistrySnapshot, case: DemoCase) -> tuple[Op
                 "iva.soportado.interiores.base": Decimal("4000"),
                 "iva.soportado.interiores": Decimal("840"),
                 "65": Decimal("100"),
+            }
+        )
+    elif case.modelo == "390" and case.revision in {"2024", "2025"}:
+        # Populate independent deduction groups through their registered DAGs.
+        # Annual VAT settlement and taxpayer facts remain unknown in this example.
+        for group in range(1, 4):
+            target = f"iva.anual.sector-diferenciado-{group}.suma-deducciones"
+            group_leaves, group_bindings = _scenario_leaves(snapshot, target)
+            values.update(dict.fromkeys(group_leaves, Decimal(group * 100)))
+            bindings.update(dict.fromkeys(group_bindings, Decimal(group * 100)))
+            binding_ids.update(group_bindings)
+    elif case.modelo == "390":
+        # Annual figures are explicitly supplied fictional observations. The
+        # registry calculates totals; this fixture does not calculate VAT rates
+        # or pretend that an annual return was imported from a taxpayer profile.
+        for target in (
+            "iva.anual.total-bases-iva",
+            "iva.anual.soportado.interiores.base",
+            "iva.anual.volumen.total",
+        ):
+            extra_leaves, extra_bindings = _scenario_leaves(snapshot, target)
+            values.update(dict.fromkeys(extra_leaves, Decimal("0")))
+            bindings.update(dict.fromkeys(extra_bindings, Decimal("0")))
+            binding_ids.update(extra_bindings)
+        values.update(
+            {
+                "iva.anual.repercutido.tipo-21.base": Decimal("48000"),
+                "iva.anual.repercutido.tipo-21.cuota": Decimal("10080"),
+                "iva.anual.deducible.interiores-corrientes.soportado.base": Decimal("16000"),
+                "iva.anual.deducible.interiores-corrientes.soportado.cuota": Decimal("3360"),
+                "iva.anual.volumen.regimen-general": Decimal("48000"),
             }
         )
     elif case.modelo in {"202", "222"}:
@@ -663,45 +727,9 @@ def demonstration_records(snapshot: RegistrySnapshot) -> CalculationRevision | N
         return annual_rent_records(snapshot)
     if snapshot.modelo.id == "184":
         return member_attribution_records(snapshot)
-    if snapshot.modelo.id != "349":
-        return None
-    rows = tuple(
-        Modelo349OperadorRow.model_validate(
-            {
-                "codigo_pais": country,
-                "nif_comunitario": nif,
-                "razon_social": name,
-                "clave_operacion": "E",
-                "importe": amount,
-            }
-        )
-        for country, nif, name, amount in (
-            ("DE", "DE123456789", "Empresa ficticia A", Decimal("12000")),
-            ("FR", "FR12345678901", "Empresa ficticia B", Decimal("4500")),
-        )
-    )
-    work_unit_id = sha256_hex(b"registry-workbook-compiler-fictional-349-2025-4T")
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values={},
-        detail_rows=rows,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    timestamp = datetime(2025, 12, 31, tzinfo=UTC)
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit_id,
-        registry_snapshot_ref=snapshot.snapshot_ref,
-        state=CalculationRevisionState.BORRADOR,
-        detail_rows=rows,
-        created_at=timestamp,
-        updated_at=timestamp,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
+    if snapshot.modelo.id == "349":
+        return intracommunity_records(snapshot)
+    return None
 
 
 def demonstration_producer(case: DemoCase) -> FilingProducerSnapshot | None:
@@ -724,27 +752,33 @@ def demonstration_producer(case: DemoCase) -> FilingProducerSnapshot | None:
         "156",
         "216",
         "347",
+        "349",
         "308",
         "309",
+        "322",
     }:
         return None
     entity_name = {
+        "322": "Entidad ficticia del grupo Ejemplo",
         "184": "Comunidad ficticia Ejemplo",
         "190": "Empresa ficticia Ejemplo",
         "193": "Empresa ficticia Ejemplo",
         "194": "Entidad financiera ficticia Ejemplo",
         "156": "Mutualidad ficticia Ejemplo",
         "347": "Empresa ficticia Ejemplo",
+        "349": "Empresa ficticia Ejemplo",
     }.get(case.modelo)
     return build_filing_producer_snapshot(
         modelo=Modelo(case.modelo),
         taxpayer_tax_id={
+            "322": "B12345674",
             "156": "B12345674",
             "184": "E00000000",
             "190": "B12345674",
             "193": "B12345674",
             "194": "B12345674",
             "347": "B12345674",
+            "349": "B12345674",
         }.get(case.modelo, "12345678Z"),
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=entity_name,
@@ -806,11 +840,16 @@ def build_demonstration_plan(case: DemoCase) -> tuple[RegistrySnapshot, SheetExp
             for cell in plan.value_cells
         )
         plan = SheetExportPlan.model_validate({**dict(plan), "value_cells": cells})
+        saved, producer = (
+            m303_demonstration_facts(snapshot)
+            if case.modelo == "303"
+            else (demonstration_records(snapshot), demonstration_producer(case))
+        )
         plan = add_form_workbook(
             plan,
             snapshot,
-            revision=demonstration_records(snapshot),
-            producer_snapshot=demonstration_producer(case),
+            revision=saved,
+            producer_snapshot=producer,
         )
     title_regions = {(s.tab, s.start_row, s.start_column) for s in plan.styled_ranges if s.role == StyleRole.TITLE}
     cells = tuple(
@@ -826,6 +865,29 @@ def build_demonstration_plan(case: DemoCase) -> tuple[RegistrySnapshot, SheetExp
         if case.modelo == "131"
         else ""
     )
+    if case.modelo == "303":
+        notice += (
+            " Las bases y cuotas son entradas ficticias del ejemplo; los totales y el resultado usan las fórmulas "
+            "del modelo. Los datos de identificación y, cuando corresponde, actividad anual proceden "
+            "de hechos guardados del ejemplo "
+            "y no se recalculan al editar las cifras. Este documento no está listo para presentar."
+        )
+    if case.modelo == "390" and case.revision in {"2024", "2025"}:
+        notice += (
+            " Ejemplo ficticio de actividades con regímenes de deducción diferenciados: "
+            "las nueve cuotas de cada grupo se han fijado en 100, 200 y 300 euros respectivamente. "
+            "Las sumas de deducciones se calculan con las fórmulas del registro. "
+            "Las bases, la identificación, la liquidación anual y las demás secciones siguen sin datos; "
+            "este documento no está listo para presentar."
+        )
+    elif case.modelo == "390":
+        notice += (
+            " Resumen anual ficticio: bases de ventas de 48.000 euros, IVA devengado de 10.080 euros "
+            "y cuotas deducibles de 3.360 euros. Las bases y cuotas son datos introducidos; "
+            "las cuotas por tipo no se recalculan al cambiar la base. Los totales usan las fórmulas "
+            "del modelo. El detalle de las deducciones, la identificación y otras secciones siguen "
+            "pendientes; este documento no está listo para presentar."
+        )
     if case.modelo == "136":
         notice += (
             " La cuantía exenta es un dato introducido para este ejemplo de titular único; "
@@ -838,6 +900,15 @@ def build_demonstration_plan(case: DemoCase) -> tuple[RegistrySnapshot, SheetExp
             "al cambiar la base o el tipo. Los totales 22 y 24 sí se calculan con las fórmulas del modelo. "
             "El importe mostrado en Ingreso es el resultado a ingresar y no acredita un pago. "
             "Los datos sin completar siguen pendientes; este ejemplo no está listo para presentar."
+        )
+    if case.modelo == "322":
+        notice += (
+            " Las bases, tipos y cuotas por operación son entradas del ejemplo; las cuotas por fila no se "
+            "recalculan al cambiar la base o el tipo. Los totales y el resultado sí usan las fórmulas del modelo. "
+            "Los 150 euros de pago a cuenta son un dato ficticio, no un pago acreditado. "
+            "Sin actividad se deja sin marcar porque este ejemplo tiene operaciones; "
+            "un resultado cero no prueba ausencia de actividad. "
+            "Los códigos y datos pendientes no se han completado: este ejemplo no está listo para presentar."
         )
     if case.modelo == "122":
         notice += (
@@ -959,6 +1030,17 @@ def build_demonstration_plan(case: DemoCase) -> tuple[RegistrySnapshot, SheetExp
             "Desde 2025 se adapta el diseño electrónico, sin la numeración de la antigua hoja impresa. "
             "No constituye una declaración presentada."
         )
+    if case.modelo == "349":
+        notice = (
+            "EJEMPLO FICTICIO. Dos facturas de 7.000 y 5.000 euros del mismo operador se agrupan "
+            "en una operación de 12.000 euros; otro operador aporta 4.500 euros. "
+            "El resumen muestra dos operadores y 16.500 euros. Una rectificación del tercer trimestre "
+            "sustituye 1.000 euros por 900 euros: la casilla 04 recoge 900 euros, no la diferencia de −100. "
+            "El resumen y el detalle proceden de las mismas facturas ficticias procesadas por la aplicación. "
+            "Las claves E y S identifican entregas de bienes y prestaciones de servicios, respectivamente. "
+            "El detalle guardado es de consulta: editar una celda de la hoja no vuelve a agregar las facturas. "
+            "Los datos no aportados permanecen sin dato. No constituye una declaración presentada."
+        )
     if case.modelo == "189":
         notice = (
             "EJEMPLO FICTICIO. Una entidad depositaria y una titular inventadas. "
@@ -1023,7 +1105,15 @@ def build_demonstration_plan(case: DemoCase) -> tuple[RegistrySnapshot, SheetExp
             "Edite las entradas azules de la hoja Entradas para explorar este escenario independiente.",
         ),
     )
-    return snapshot, SheetExportPlan.model_validate({**dict(plan), "value_cells": cells, "guide": guide})
+    heights = tuple(
+        height.model_copy(update={"height_pixels": guide_paragraph_height(notice)})
+        if height.tab is TabName.GUIDE and height.row == 3
+        else height
+        for height in plan.row_heights
+    )
+    return snapshot, SheetExportPlan.model_validate(
+        {**dict(plan), "value_cells": cells, "guide": guide, "row_heights": heights}
+    )
 
 
 def main() -> None:

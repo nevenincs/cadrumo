@@ -207,6 +207,51 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
+        "app_modelo_spreadsheet_review",
+        "app_modelo_spreadsheet",
+        "review",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.spreadsheet.review_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            _option(
+                "calculation_revision_id",
+                ("--calculation-revision-id",),
+                TEXT_VALUE,
+                "cli.app.modelo.spreadsheet.publish.calculation_revision_id_help",
+                required=True,
+            ),
+            _option(
+                "output",
+                ("--output",),
+                PATH_VALUE,
+                "cli.app.modelo.spreadsheet.export.output_help",
+                required=True,
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _option(
+                "replace_existing",
+                ("--replace",),
+                FLAG_VALUE,
+                "cli.app.modelo.export.replace_help",
+                default=False,
+                flag=True,
+            ),
+        ),
+        policy=_OFFLINE_WORKBOOK_EXPORT,
+        handler=LazyBinding.available(
+            DeferredTarget(".calculation_review_cli", "export_calculation_review_cli", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".calculation_review_cli", "CalculationReviewWorkbookResult", __package__),
+            identity="modelo.spreadsheet.review",
+        ),
+    ),
+    CommandSpec(
         "app_modelo_spreadsheet_publish",
         "app_modelo_spreadsheet",
         "publish",
@@ -221,6 +266,12 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 TEXT_VALUE,
                 "cli.app.modelo.spreadsheet.publish.calculation_revision_id_help",
                 required=True,
+            ),
+            _option(
+                "filing_record_id",
+                ("--filing-record-id",),
+                TEXT_VALUE,
+                "cli.app.modelo.spreadsheet.publish.filing_record_id_help",
             ),
             _option(
                 "publication_id",

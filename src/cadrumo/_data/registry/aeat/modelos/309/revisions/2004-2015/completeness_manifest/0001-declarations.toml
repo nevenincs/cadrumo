@@ -1,0 +1,45 @@
+# Printed BOE 2003 form boxes 22 and 24, corroborated by AEAT record campos 58 and 60.
+[revisions."2004-2015".completeness_manifest]
+source_ref = "aeat-dr-309-2004"
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-03"
+number = "03"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-06"
+number = "06"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-09"
+number = "09"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-12"
+number = "12"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-15"
+number = "15"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-18"
+number = "18"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-21"
+number = "21"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.cuota-devengada-22"
+number = "22"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.a-deducir-23"
+number = "23"
+
+[[revisions."2004-2015".completeness_manifest.casillas]]
+casilla_id = "decl.resultado-24"
+number = "24"

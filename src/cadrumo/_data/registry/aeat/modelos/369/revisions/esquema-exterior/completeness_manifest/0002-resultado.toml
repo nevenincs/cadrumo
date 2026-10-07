@@ -1,0 +1,651 @@
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.at.servicios"
+number = "iva.exterior.resultado.at.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.at.correcciones-positivas"
+number = "iva.exterior.resultado.at.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.at.correcciones-negativas"
+number = "iva.exterior.resultado.at.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.at.resultado"
+number = "iva.exterior.resultado.at.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.at.ingresar"
+number = "iva.exterior.resultado.at.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.at.devolver"
+number = "iva.exterior.resultado.at.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.be.servicios"
+number = "iva.exterior.resultado.be.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.be.correcciones-positivas"
+number = "iva.exterior.resultado.be.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.be.correcciones-negativas"
+number = "iva.exterior.resultado.be.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.be.resultado"
+number = "iva.exterior.resultado.be.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.be.ingresar"
+number = "iva.exterior.resultado.be.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.be.devolver"
+number = "iva.exterior.resultado.be.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.bg.servicios"
+number = "iva.exterior.resultado.bg.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.bg.correcciones-positivas"
+number = "iva.exterior.resultado.bg.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.bg.correcciones-negativas"
+number = "iva.exterior.resultado.bg.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.bg.resultado"
+number = "iva.exterior.resultado.bg.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.bg.ingresar"
+number = "iva.exterior.resultado.bg.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.bg.devolver"
+number = "iva.exterior.resultado.bg.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cy.servicios"
+number = "iva.exterior.resultado.cy.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cy.correcciones-positivas"
+number = "iva.exterior.resultado.cy.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cy.correcciones-negativas"
+number = "iva.exterior.resultado.cy.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cy.resultado"
+number = "iva.exterior.resultado.cy.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cy.ingresar"
+number = "iva.exterior.resultado.cy.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cy.devolver"
+number = "iva.exterior.resultado.cy.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cz.servicios"
+number = "iva.exterior.resultado.cz.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cz.correcciones-positivas"
+number = "iva.exterior.resultado.cz.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cz.correcciones-negativas"
+number = "iva.exterior.resultado.cz.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cz.resultado"
+number = "iva.exterior.resultado.cz.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cz.ingresar"
+number = "iva.exterior.resultado.cz.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.cz.devolver"
+number = "iva.exterior.resultado.cz.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.de.servicios"
+number = "iva.exterior.resultado.de.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.de.correcciones-positivas"
+number = "iva.exterior.resultado.de.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.de.correcciones-negativas"
+number = "iva.exterior.resultado.de.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.de.resultado"
+number = "iva.exterior.resultado.de.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.de.ingresar"
+number = "iva.exterior.resultado.de.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.de.devolver"
+number = "iva.exterior.resultado.de.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.dk.servicios"
+number = "iva.exterior.resultado.dk.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.dk.correcciones-positivas"
+number = "iva.exterior.resultado.dk.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.dk.correcciones-negativas"
+number = "iva.exterior.resultado.dk.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.dk.resultado"
+number = "iva.exterior.resultado.dk.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.dk.ingresar"
+number = "iva.exterior.resultado.dk.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.dk.devolver"
+number = "iva.exterior.resultado.dk.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ee.servicios"
+number = "iva.exterior.resultado.ee.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ee.correcciones-positivas"
+number = "iva.exterior.resultado.ee.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ee.correcciones-negativas"
+number = "iva.exterior.resultado.ee.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ee.resultado"
+number = "iva.exterior.resultado.ee.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ee.ingresar"
+number = "iva.exterior.resultado.ee.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ee.devolver"
+number = "iva.exterior.resultado.ee.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.es.servicios"
+number = "iva.exterior.resultado.es.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.es.correcciones-positivas"
+number = "iva.exterior.resultado.es.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.es.correcciones-negativas"
+number = "iva.exterior.resultado.es.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.es.resultado"
+number = "iva.exterior.resultado.es.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.es.ingresar"
+number = "iva.exterior.resultado.es.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.es.devolver"
+number = "iva.exterior.resultado.es.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fi.servicios"
+number = "iva.exterior.resultado.fi.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fi.correcciones-positivas"
+number = "iva.exterior.resultado.fi.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fi.correcciones-negativas"
+number = "iva.exterior.resultado.fi.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fi.resultado"
+number = "iva.exterior.resultado.fi.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fi.ingresar"
+number = "iva.exterior.resultado.fi.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fi.devolver"
+number = "iva.exterior.resultado.fi.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fr.servicios"
+number = "iva.exterior.resultado.fr.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fr.correcciones-positivas"
+number = "iva.exterior.resultado.fr.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fr.correcciones-negativas"
+number = "iva.exterior.resultado.fr.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fr.resultado"
+number = "iva.exterior.resultado.fr.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fr.ingresar"
+number = "iva.exterior.resultado.fr.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.fr.devolver"
+number = "iva.exterior.resultado.fr.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.gr.servicios"
+number = "iva.exterior.resultado.gr.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.gr.correcciones-positivas"
+number = "iva.exterior.resultado.gr.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.gr.correcciones-negativas"
+number = "iva.exterior.resultado.gr.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.gr.resultado"
+number = "iva.exterior.resultado.gr.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.gr.ingresar"
+number = "iva.exterior.resultado.gr.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.gr.devolver"
+number = "iva.exterior.resultado.gr.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hr.servicios"
+number = "iva.exterior.resultado.hr.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hr.correcciones-positivas"
+number = "iva.exterior.resultado.hr.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hr.correcciones-negativas"
+number = "iva.exterior.resultado.hr.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hr.resultado"
+number = "iva.exterior.resultado.hr.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hr.ingresar"
+number = "iva.exterior.resultado.hr.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hr.devolver"
+number = "iva.exterior.resultado.hr.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hu.servicios"
+number = "iva.exterior.resultado.hu.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hu.correcciones-positivas"
+number = "iva.exterior.resultado.hu.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hu.correcciones-negativas"
+number = "iva.exterior.resultado.hu.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hu.resultado"
+number = "iva.exterior.resultado.hu.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hu.ingresar"
+number = "iva.exterior.resultado.hu.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.hu.devolver"
+number = "iva.exterior.resultado.hu.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ie.servicios"
+number = "iva.exterior.resultado.ie.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ie.correcciones-positivas"
+number = "iva.exterior.resultado.ie.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ie.correcciones-negativas"
+number = "iva.exterior.resultado.ie.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ie.resultado"
+number = "iva.exterior.resultado.ie.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ie.ingresar"
+number = "iva.exterior.resultado.ie.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ie.devolver"
+number = "iva.exterior.resultado.ie.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.it.servicios"
+number = "iva.exterior.resultado.it.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.it.correcciones-positivas"
+number = "iva.exterior.resultado.it.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.it.correcciones-negativas"
+number = "iva.exterior.resultado.it.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.it.resultado"
+number = "iva.exterior.resultado.it.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.it.ingresar"
+number = "iva.exterior.resultado.it.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.it.devolver"
+number = "iva.exterior.resultado.it.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lt.servicios"
+number = "iva.exterior.resultado.lt.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lt.correcciones-positivas"
+number = "iva.exterior.resultado.lt.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lt.correcciones-negativas"
+number = "iva.exterior.resultado.lt.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lt.resultado"
+number = "iva.exterior.resultado.lt.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lt.ingresar"
+number = "iva.exterior.resultado.lt.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lt.devolver"
+number = "iva.exterior.resultado.lt.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lu.servicios"
+number = "iva.exterior.resultado.lu.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lu.correcciones-positivas"
+number = "iva.exterior.resultado.lu.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lu.correcciones-negativas"
+number = "iva.exterior.resultado.lu.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lu.resultado"
+number = "iva.exterior.resultado.lu.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lu.ingresar"
+number = "iva.exterior.resultado.lu.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lu.devolver"
+number = "iva.exterior.resultado.lu.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lv.servicios"
+number = "iva.exterior.resultado.lv.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lv.correcciones-positivas"
+number = "iva.exterior.resultado.lv.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lv.correcciones-negativas"
+number = "iva.exterior.resultado.lv.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lv.resultado"
+number = "iva.exterior.resultado.lv.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lv.ingresar"
+number = "iva.exterior.resultado.lv.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.lv.devolver"
+number = "iva.exterior.resultado.lv.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.mt.servicios"
+number = "iva.exterior.resultado.mt.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.mt.correcciones-positivas"
+number = "iva.exterior.resultado.mt.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.mt.correcciones-negativas"
+number = "iva.exterior.resultado.mt.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.mt.resultado"
+number = "iva.exterior.resultado.mt.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.mt.ingresar"
+number = "iva.exterior.resultado.mt.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.mt.devolver"
+number = "iva.exterior.resultado.mt.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.nl.servicios"
+number = "iva.exterior.resultado.nl.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.nl.correcciones-positivas"
+number = "iva.exterior.resultado.nl.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.nl.correcciones-negativas"
+number = "iva.exterior.resultado.nl.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.nl.resultado"
+number = "iva.exterior.resultado.nl.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.nl.ingresar"
+number = "iva.exterior.resultado.nl.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.nl.devolver"
+number = "iva.exterior.resultado.nl.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pl.servicios"
+number = "iva.exterior.resultado.pl.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pl.correcciones-positivas"
+number = "iva.exterior.resultado.pl.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pl.correcciones-negativas"
+number = "iva.exterior.resultado.pl.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pl.resultado"
+number = "iva.exterior.resultado.pl.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pl.ingresar"
+number = "iva.exterior.resultado.pl.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pl.devolver"
+number = "iva.exterior.resultado.pl.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pt.servicios"
+number = "iva.exterior.resultado.pt.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pt.correcciones-positivas"
+number = "iva.exterior.resultado.pt.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pt.correcciones-negativas"
+number = "iva.exterior.resultado.pt.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pt.resultado"
+number = "iva.exterior.resultado.pt.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pt.ingresar"
+number = "iva.exterior.resultado.pt.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.pt.devolver"
+number = "iva.exterior.resultado.pt.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ro.servicios"
+number = "iva.exterior.resultado.ro.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ro.correcciones-positivas"
+number = "iva.exterior.resultado.ro.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ro.correcciones-negativas"
+number = "iva.exterior.resultado.ro.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ro.resultado"
+number = "iva.exterior.resultado.ro.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ro.ingresar"
+number = "iva.exterior.resultado.ro.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.ro.devolver"
+number = "iva.exterior.resultado.ro.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.se.servicios"
+number = "iva.exterior.resultado.se.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.se.correcciones-positivas"
+number = "iva.exterior.resultado.se.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.se.correcciones-negativas"
+number = "iva.exterior.resultado.se.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.se.resultado"
+number = "iva.exterior.resultado.se.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.se.ingresar"
+number = "iva.exterior.resultado.se.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.se.devolver"
+number = "iva.exterior.resultado.se.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.si.servicios"
+number = "iva.exterior.resultado.si.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.si.correcciones-positivas"
+number = "iva.exterior.resultado.si.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.si.correcciones-negativas"
+number = "iva.exterior.resultado.si.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.si.resultado"
+number = "iva.exterior.resultado.si.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.si.ingresar"
+number = "iva.exterior.resultado.si.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.si.devolver"
+number = "iva.exterior.resultado.si.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.sk.servicios"
+number = "iva.exterior.resultado.sk.servicios"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.sk.correcciones-positivas"
+number = "iva.exterior.resultado.sk.correcciones-positivas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.sk.correcciones-negativas"
+number = "iva.exterior.resultado.sk.correcciones-negativas"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.sk.resultado"
+number = "iva.exterior.resultado.sk.resultado"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.sk.ingresar"
+number = "iva.exterior.resultado.sk.ingresar"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.sk.devolver"
+number = "iva.exterior.resultado.sk.devolver"
+
+[[revisions.esquema-exterior.completeness_manifest.casillas]]
+casilla_id = "iva.exterior.resultado.saldo-ingresar-espana"
+number = "iva.exterior.resultado.saldo-ingresar-espana"

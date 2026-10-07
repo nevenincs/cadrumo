@@ -929,6 +929,9 @@ cli:
           számítása.'
         work_unit_id_help: Bevallásazonosító (SHA-256 vagy egyértelmű előtag).
       filing_record:
+        export_help: A kiválasztott korábbi bevallás exportálása a mentett számítás áttekintő munkafüzeteként.
+        export_button: Kiválasztott benyújtás exportálása (XLSX)
+        export_missing: A kiválasztott korábbi számítás már nem érhető el; az export nem használhatja az aktuális számítást.
         app_help: Belső benyújtási rekordok vizsgálata.
         bucket_id_help: Szűrés profil szerint.
         evidence_kind_help: Importált bizonyíték típusa (aeat_justificante_pdf, aeat_csv_register,
@@ -1172,6 +1175,13 @@ cli:
       readiness_help: Jelentés arról, hogy az aktív profil készen áll-e egy nyomtatvány/év/időszak
         benyújtására.
       reconcile:
+        export_help: Mentett egyeztetési eltérések exportálása helyi áttekintő munkafüzetbe.
+        export_button: Bevallási eltérések exportálása (XLSX)
+        export_work_unit_scope: A kiválasztott bevallás összes mentett egyeztetési eltérését exportálja.
+        export_selector_required: "Pontosan egyet válasszon: --event-id, --work-unit-id vagy --all-history."
+        export_work_unit_id_help: A mentett bevallás pontos azonosítója (64 karakteres SHA-256).
+        export_event_id_help: A mentett egyeztetési esemény pontos azonosítója.
+        export_all_help: A teljes mentett egyeztetési előzmény kifejezett exportálása.
         app_help: 'Hasonlítsd össze a mentett helyi számítást az AEAT adataival: a
           pull igazolást vagy benyújtott bevallást tölt le; az import helyi PDF-et
           hasonlít össze; a list a korábbi összehasonlításokat mutatja.'
@@ -1348,7 +1358,10 @@ cli:
             jogosult felhasználók által olvasható Google-táblázatként.
           calculation_revision_id_help: A közzéteendő mentett számítási változat pontos
             azonosítója.
+          filing_record_id_help: A mentett számításhoz tartozó történeti benyújtás pontos azonosítója; nem kötelező.
           publication_id_help: Közzétételi UUID; elhagyásakor automatikusan létrejön.
+        publish_button: Áttekintés a Google Táblázatokban
+        review_help: Mentett vázlat vagy kész számítás exportálása változatlan helyi áttekintő munkafüzetként.
         publish_help: Mentett számítás közzététele olvasható natív Google-táblázatként
           a profil mappájában.
         pull:

@@ -112,6 +112,7 @@ def project_google_review(value: BaseModel, interaction: OperationInteractionReq
         profile_id=proposal.request.profile_id,
         publication_id=proposal.request.publication_id,
         calculation_revision_id=proposal.request.calculation_revision_id,
+        filing_record_id=proposal.request.filing_record_id,
         root_folder_id=proposal.publication.root.artifact_id,
         snapshot_digest=proposal.snapshot_digest,
         payload_categories=proposal.payload_categories,
@@ -171,7 +172,7 @@ def build_google_review_operation_definition(factory: GoogleReviewOperationPorts
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

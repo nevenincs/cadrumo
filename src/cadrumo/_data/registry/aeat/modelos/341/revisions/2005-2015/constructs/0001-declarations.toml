@@ -1,7 +1,7 @@
 [[revisions."2005-2015".constructs]]
 id = "modelo-341-autoliquidacion"
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-341-procedure", "aeat-dr-341-2005-2015"]
+source_refs = ["enrolled-modelo-341-procedure", "aeat-dr-341-2005-2015", "boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
 casilla_ids = [
     "decl.ejercicio",
     "decl.periodo",
@@ -20,5 +20,7 @@ casilla_ids = [
     "wire.observaciones",
 ]
 export_layouts = ["modelo-341-fichero"]
-application_links = ["modelo-341-filing", "modelo-341-deadline", "modelo-341-export"]
+application_links = ["modelo-341-filing", "modelo-341-deadline", "modelo-341-export", "modelo-341-calculation"]
 workbook_parity_refs = ["modelo-341-record-design"]
+
+formulas = ["modelo-341-compensacion-07", "modelo-341-compensacion-08", "modelo-341-compensacion-09", "modelo-341-compensacion-total"]

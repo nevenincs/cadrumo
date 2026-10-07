@@ -9,6 +9,8 @@ use std::{
 #[serde(rename_all = "snake_case")]
 pub enum ProcessRole {
     Environment,
+    SignIn,
+    ManagerDispatch,
     Cli,
     Tui,
     /// The packaged interpreter as an interactive REPL.

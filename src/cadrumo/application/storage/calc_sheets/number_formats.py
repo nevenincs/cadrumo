@@ -24,6 +24,8 @@ def numeric_format(data_type: str, *, currency: str | None = "EUR") -> tuple[Num
         return "money", '#,##0.00" €"' if currency == "EUR" else "#,##0.00"
     if data_type == "integer":
         return "integer", "#,##0"
+    if data_type == "year":
+        return "integer", "0"
     if data_type == "ratio":
         return "decimal", "0.00####"
     if data_type in {"decimal", "float"}:

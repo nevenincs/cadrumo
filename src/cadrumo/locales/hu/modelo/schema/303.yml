@@ -689,6 +689,235 @@ modelo:
         official_name: Modelo 303. Hozzáadottérték-adó. Önbevallás.
         title: IVA. Önbevallás (negyedéves)
       form:
+        authored:
+          administracion-copy:
+            heading: Az adóhatóság vagy a pénzintézet példánya
+          annual:
+            activity-1:
+              heading: Főtevékenység
+            activity-2:
+              heading: 1. egyéb tevékenység
+            activity-3:
+              heading: 2. egyéb tevékenység
+            activity-4:
+              heading: 3. egyéb tevékenység
+            activity-5:
+              heading: 4. egyéb tevékenység
+            activity-6:
+              heading: 5. egyéb tevékenység
+            third-parties:
+              heading: Harmadik felekkel folytatott ügyletek
+            third-parties-declaration:
+              heading: D · Harmadik felekkel folytatott ügyletek éves bevallásának
+                kötelezettsége
+          annual-clave-2022:
+            heading: B · Tevékenységkód
+          banco:
+            heading: Bank neve
+          bic:
+            heading: SWIFT-BIC kód
+          ciudad-banco:
+            heading: Város
+          complementaria:
+            heading: Kiegészítő bevallás (5)
+          complementaria-2022:
+            heading: Kiegészítő bevallás (8)
+          concurso:
+            heading: Fizetésképtelenség megállapítása ebben az időszakban
+          conjunta:
+            heading: Közös önadózás
+          criterio-caja:
+            heading: Pénzforgalmi elszámolás
+          cuenta-bancaria:
+            heading: Bankszámla befizetéshez vagy visszatérítéshez
+          deducible:
+            heading: Levonható áfa és az általános rendszer eredménye
+          destinatario-caja:
+            heading: Pénzforgalmi elszámolású ügyletek címzettje
+          devengado:
+            heading: Fizetendő áfa
+          devengo:
+            heading: Adóidőszak (2)
+          direccion-banco:
+            heading: Bank címe
+          exonerado:
+            heading: Mentes a 390-es éves összesítő bevallás alól
+          fecha-concurso:
+            heading: Fizetésképtelenségi végzés dátuma
+          foral:
+            heading: Kizárólag forális adózás
+          gasolinas:
+            heading: Üzemanyag-értékesítési adóelőlegek levonására való jogosultság
+          grupo-1:
+            heading: 'Levonható áfa: 1. csoport'
+          grupo-2:
+            heading: 'Levonható áfa: 2. csoport'
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Azonosítás (1)
+          importacion-corriente:
+            heading: 'Import: folyó termékek'
+          importacion-inversion:
+            heading: 'Import: beruházási javak'
+          interior-corriente:
+            heading: 'Belföldi ügyletek: folyó termékek és szolgáltatások'
+          interior-inversion:
+            heading: 'Belföldi ügyletek: beruházási javak'
+          intra-corriente:
+            heading: 'Közösségen belüli beszerzések: folyó termékek és szolgáltatások'
+          intra-inversion:
+            heading: 'Közösségen belüli beszerzések: beruházási javak'
+          justificante:
+            heading: Korábbi bevallás igazolási száma
+          motivo-discrepancia:
+            heading: Eltérés a hatósági értelmezéstől
+          motivo-rectificacion:
+            heading: Helyesbítések
+          nif:
+            heading: Adóazonosító szám
+          'no':
+            heading: Nem
+          nombre:
+            heading: Teljes név vagy cégnév
+          opcion-prorrata:
+            heading: Különleges levonási hányad választása
+          operaciones-anuales:
+            heading: Az év során végzett ügyletek
+          page-1:
+            heading: Azonosítás és általános rendszer
+          page-2:
+            heading: Egyszerűsített rendszer
+          page-3:
+            heading: Kiegészítő adatok és eredmény
+          page-4:
+            heading: Éves adatok a 390-es bevallás alól menteseknek
+          page-5:
+            heading: Levonási hányad és elkülönített levonások
+          page-6:
+            heading: Befizetés, visszatérítés és bankszámla
+          pais-banco:
+            heading: Országkód
+          reagp:
+            heading: Mezőgazdasági, állattenyésztési és halászati rendszer kompenzációja
+          rectificacion-devolucion:
+            heading: Helyesbítés miatti visszatérítés (9)
+          rectificaciones-deducciones:
+            heading: Levonások helyesbítése
+          rectificativa:
+            heading: Helyesbítés (5)
+          redeme:
+            heading: Havi visszatérítési nyilvántartás
+          regimen:
+            heading: Adózási rendszer
+          resultado:
+            heading: Eredmény
+          revocacion-prorrata:
+            heading: Különleges levonási hányad választásának visszavonása
+          rg-rs:
+            heading: Általános és egyszerűsített rendszer
+          rs:
+            actividad-a1:
+              heading: A1 tevékenység
+            actividad-a2:
+              heading: A2 tevékenység
+            actividad-b1:
+              heading: B1 tevékenység
+            actividad-b2:
+              heading: B2 tevékenység
+            activity-code:
+              heading: Tevékenységkód
+            cuota-anual-derivada-regimen-simplificado:
+              heading: Egyszerűsített rendszer éves adója
+            cuota-devengada:
+              heading: Keletkezett adó
+            cuota-devengada-operaciones-corrientes:
+              heading: Folyó ügyletek fizetendő áfája
+            cuota-minima:
+              heading: Minimumadó
+            cuota-soportada-operaciones-corrientes:
+              heading: Folyó ügyletek előzetesen felszámított áfája
+            cuotas-soportadas-operaciones-corrientes:
+              heading: Folyó ügyletek előzetesen felszámított áfája
+            devolucion-cuotas-soportadas-otros-paises:
+              heading: Külföldön felszámított áfa visszatérítése
+            iae-epigrafe:
+              heading: IAE tevékenységi tétel
+            indice-corrector-actividad-temporada:
+              heading: Idényjellegű tevékenység korrekciós együtthatója · 1., 2. és
+                3. negyedév
+            indice-corrector-actividades-temporada:
+              heading: Idényjellegű tevékenység korrekciós együtthatója · 4. negyedév
+            indice-cuota:
+              heading: Adóegyüttható
+            ingreso-cuenta:
+              heading: Adóelőleg
+            modulo-1-importe:
+              heading: 1. modul · Összeg
+            modulo-1-unidades:
+              heading: 1. modul · Egységek száma
+            modulo-2-importe:
+              heading: 2. modul · Összeg
+            modulo-2-unidades:
+              heading: 2. modul · Egységek száma
+            modulo-3-importe:
+              heading: 3. modul · Összeg
+            modulo-3-unidades:
+              heading: 3. modul · Egységek száma
+            modulo-4-importe:
+              heading: 4. modul · Összeg
+            modulo-4-unidades:
+              heading: 4. modul · Egységek száma
+            modulo-5-importe:
+              heading: 5. modul · Összeg
+            modulo-5-unidades:
+              heading: 5. modul · Egységek száma
+            modulo-6-importe:
+              heading: 6. modul · Összeg
+            modulo-6-unidades:
+              heading: 6. modul · Egységek száma
+            modulo-7-importe:
+              heading: 7. modul · Összeg
+            modulo-7-unidades:
+              heading: 7. modul · Egységek száma
+            porcentaje-cuota-minima:
+              heading: Minimumadó százaléka
+            porcentaje-ingreso-cuenta:
+              heading: Adóelőleg százaléka
+            reducciones:
+              heading: Csökkentések
+            resultado-cuarto-trimestre:
+              heading: Eredmény · 4. negyedév
+            volumen-ingresos:
+              heading: Bevétel
+          rs-anticipos:
+            heading: 'Adóelőlegek: 1., 2. és 3. negyedév'
+          rs-anual:
+            heading: 'Éves adó: 4. negyedév'
+          rs-deducible:
+            heading: Levonható áfa
+          rs-devengado:
+            heading: Fizetendő áfa
+          rs-resultado:
+            heading: Egyszerűsített rendszer eredménye
+          si:
+            heading: Igen
+          sii:
+            heading: Önkéntes SII-részvétel
+          sin-marca:
+            heading: Nincs megjelölve
+          solo-rg:
+            heading: Csak általános rendszer
+          solo-rs:
+            heading: Csak egyszerűsített rendszer
+          territorio:
+            heading: Adózás területenként
+          tipo-concurso:
+            heading: Fizetésképtelenség előtti vagy utáni bevallás
+          total-devengado:
+            heading: Összes fizetendő áfa
+          volumen:
+            heading: Nullától eltérő éves forgalom
         column:
           1t-2t-3t:
             heading: 1–3. negyedév

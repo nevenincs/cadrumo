@@ -390,6 +390,7 @@ def test_reconciliation_with_no_persisted_revision_still_persists_and_reads_back
     assert len(stored) == 1
     advisory_reasons = {advisory.context.get("reason") for advisory in stored[0].advisories}
     assert "no_persisted_revision" in advisory_reasons
+    assert entries[0].advisories == stored[0].advisories
 
 
 def test_grounded_diffs_survive_the_persist_and_read_back_cycle() -> None:

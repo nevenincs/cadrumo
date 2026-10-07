@@ -56,6 +56,7 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.time.clock import now as _utc_now
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
@@ -91,6 +92,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
@@ -308,6 +310,7 @@ def calculate_modelo_revision(
         backend_binding_values=backend_binding_values,
         row_binding_values=row_binding_values,
         row_source_identities=None,
+        closed_record_row_sets=(),
         backend_casilla_inputs=backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
         borrador_snapshot_id=borrador_snapshot_id,
@@ -408,6 +411,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
     row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
@@ -567,6 +571,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
             unresolved_binding_ids=unresolved_binding_ids,
             date_binding_values=prepared.channels.date_bindings,
             boolean_binding_values=prepared.channels.boolean_bindings,
+            closed_record_row_sets=closed_record_row_sets,
         )
     except RegistryValidationError as error:
         missing = ModeloWorkMissingInputError.from_registry_error(error)
@@ -616,6 +621,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         operation=ports.operation,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
+        rendering_snapshot=_capture_calculation_rendering(snapshot, operation=ports.operation),
         work_unit=work_unit,
         work_units=work_units,
         work_units_revision_id=prepared.work_units_revision_id,
@@ -631,6 +637,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,
         row_source_identities=_optional_mapping_as_dict(row_source_identities),
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values=_optional_mapping_as_dict(row_casilla_values),
         row_casilla_provenance=_optional_mapping_as_dict(row_casilla_provenance),
         relation_overrides=replay_payloads.relation_overrides,
@@ -679,6 +686,18 @@ def _reject_clears_of_source_fed_casillas(
         )
 
 
+def _capture_calculation_rendering(
+    snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation
+) -> CalculationRenderingSnapshot:
+    """Join the separately published form under the actual calculation's leased pin."""
+    layout = operation.form_layout(str(snapshot.modelo.id), str(snapshot.revision.id))
+    if layout is not None:
+        snapshot = snapshot.model_copy(
+            update={"revision": snapshot.revision.model_copy(update={"form_layouts": (layout,)})}
+        )
+    return CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
+
+
 def _calculate_prepared_registry_snapshot(
     snapshot: RegistrySnapshot,
     *,
@@ -692,6 +711,7 @@ def _calculate_prepared_registry_snapshot(
     unresolved_binding_ids: tuple[BindingId, ...],
     date_binding_values: Mapping[BindingId, date],
     boolean_binding_values: Mapping[BindingId, bool],
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
 ) -> RegistryCalculationResult:
     """Evaluate the registry after application channels have been resolved."""
     return calculate_registry_snapshot(
@@ -706,6 +726,7 @@ def _calculate_prepared_registry_snapshot(
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=date_binding_values or None,
         boolean_binding_values=boolean_binding_values or None,
+        closed_record_row_sets=closed_record_row_sets,
     )
 
 
@@ -1392,6 +1413,8 @@ def _resolve_bucket_aggregation_source_resolution(
         owned_sources=frozenset(source_resolution.owned_sources) - CALLER_OVERRIDABLE_CARRY_SOURCES,
         caller_binding_values=preparation.binding_values,
         caller_casilla_inputs=preparation.casilla_inputs,
+        caller_enum_binding_values=enum_binding_values,
+        closed_record_row_sets=source_resolution.closed_record_row_sets,
     )
     return source_resolution
 
@@ -1607,6 +1630,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         backend_binding_values=channels.backend_binding_values,
         row_binding_values=channels.source_resolution.row_binding_values,
         row_source_identities=channels.source_resolution.row_source_identities,
+        closed_record_row_sets=channels.source_resolution.closed_record_row_sets,
         row_casilla_values=channels.source_resolution.row_casilla_values,
         row_casilla_provenance=channels.source_resolution.row_casilla_provenance,
         backend_casilla_inputs=channels.backend_casilla_inputs,
@@ -2065,15 +2089,13 @@ def _source_owned_binding_ids(
     return frozenset(binding.id for binding in revision.bindings if binding.source in owned_sources)
 
 
-def _source_owned_bound_casilla_ids(
-    revision: ModeloRevision, owned_sources: frozenset[BindingSourceKind]
+def _bound_casilla_ids_for_bindings(
+    revision: ModeloRevision, binding_ids: frozenset[BindingId]
 ) -> frozenset[CasillaId]:
-    source_owned_binding_ids = _source_owned_binding_ids(revision, owned_sources)
     return frozenset(
         casilla.id
         for casilla in revision.casillas
-        if casilla.input_kind == InputKind.BOUND
-        and source_owned_binding_ids.intersection(bound_casilla_binding_ids(casilla))
+        if casilla.input_kind == InputKind.BOUND and binding_ids.intersection(bound_casilla_binding_ids(casilla))
     )
 
 
@@ -2083,6 +2105,8 @@ def _reject_caller_overrides_of_source_bindings(
     owned_sources: frozenset[BindingSourceKind],
     caller_binding_values: Mapping[BindingId, Decimal],
     caller_casilla_inputs: Mapping[CasillaId, Decimal],
+    caller_enum_binding_values: Mapping[BindingId, str] | None = None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
 ) -> None:
     """Refuse caller-supplied bindings or casilla inputs that collide with values bucket source resolvers own.
 
@@ -2093,8 +2117,15 @@ def _reject_caller_overrides_of_source_bindings(
     to aggregate. Both collisions are rejected before any value reaches
     the engine.
     """
+    # A closed table can populate positional manual-input bindings. Its actual
+    # ownership therefore cannot be inferred from the binding's provider kind.
+    # Keep all rows (including occupied ones) coupled to their source evidence
+    # before the caller's enum channel is overlaid during preparation.
+    protected_binding_ids = _source_owned_binding_ids(revision, owned_sources) | frozenset(
+        binding_id for row_set in closed_record_row_sets for binding_id in row_set.binding_ids
+    )
     rejected_bindings = sorted(
-        set(caller_binding_values).intersection(_source_owned_binding_ids(revision, owned_sources)),
+        (set(caller_binding_values) | set(caller_enum_binding_values or {})).intersection(protected_binding_ids),
     )
     if rejected_bindings:
         raise ModeloAggregationBindingError(
@@ -2112,9 +2143,8 @@ def _reject_caller_overrides_of_source_bindings(
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )
-    rejected_casillas = sorted(
-        set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources)),
-    )
+    protected_casilla_ids = _bound_casilla_ids_for_bindings(revision, protected_binding_ids)
+    rejected_casillas = sorted(set(caller_casilla_inputs).intersection(protected_casilla_ids))
     if rejected_casillas:
         raise ModeloAggregationBindingError(
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",

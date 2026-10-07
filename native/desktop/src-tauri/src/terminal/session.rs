@@ -75,6 +75,7 @@ type Killer = Box<dyn ChildKiller + Send + Sync>;
 
 /// State shared between the session handle and its workers.
 struct Shared {
+    process: u64,
     credit: Credit,
     input_stopped: AtomicBool,
     stop_requested: AtomicBool,
@@ -85,8 +86,9 @@ struct Shared {
 }
 
 impl Shared {
-    fn new(killer: Killer) -> Self {
+    fn new(killer: Killer, process: u64) -> Self {
         Self {
+            process,
             credit: Credit::default(),
             input_stopped: AtomicBool::new(false),
             stop_requested: AtomicBool::new(false),
@@ -113,7 +115,10 @@ impl Shared {
         if !self.exited.load(Ordering::Acquire)
             && let Err(error) = self.killer.lock().unwrap_or_else(|e| e.into_inner()).kill()
         {
-            diagnostics.failure(failure(ErrorCode::CleanupFailed).caused_by(error));
+            diagnostics.failure_for(
+                self.process,
+                failure(ErrorCode::CleanupFailed).caused_by(error),
+            );
         }
     }
 }
@@ -148,7 +153,7 @@ fn end_of_output(error: &std::io::Error) -> bool {
 /// Sends one frame; a frame that cannot be delivered abandons the session.
 fn deliver(sink: &Sink, frame: Frame<'_>, shared: &Shared, diagnostics: &Diagnostics) {
     if let Err(error) = frame.encode().and_then(|bytes| sink(bytes)) {
-        diagnostics.failure(error);
+        diagnostics.failure_for(shared.process, error);
         shared.abandon(diagnostics);
     }
 }
@@ -163,7 +168,11 @@ impl Session {
     ) -> Result<Self> {
         let pair = native_pty_system()
             .openpty(size(cols, rows)?)
-            .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(e)))?;
+            .map_err(|cause| {
+                let error = failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(cause));
+                diagnostics.spawn_failure(program.role, error.clone());
+                error
+            })?;
         let mut command = CommandBuilder::new(&program.executable);
         command.env_clear();
         for (key, value) in &program.environment {
@@ -173,24 +182,27 @@ impl Session {
         command.env("COLORTERM", "truecolor");
         command.cwd(&program.directory);
         command.args(&program.arguments);
-        let mut reader = pair
-            .master
-            .try_clone_reader()
-            .map_err(|e| failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(e)))?;
-        let mut writer = pair
-            .master
-            .take_writer()
-            .map_err(|e| failure(ErrorCode::WriteFailed).caused_by(std::io::Error::other(e)))?;
-        let mut child = pair
-            .slave
-            .spawn_command(command)
-            .map_err(|e| failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(e)))?;
+        let mut reader = pair.master.try_clone_reader().map_err(|cause| {
+            let error = failure(ErrorCode::ReadFailed).caused_by(std::io::Error::other(cause));
+            diagnostics.spawn_failure(program.role, error.clone());
+            error
+        })?;
+        let mut writer = pair.master.take_writer().map_err(|cause| {
+            let error = failure(ErrorCode::WriteFailed).caused_by(std::io::Error::other(cause));
+            diagnostics.spawn_failure(program.role, error.clone());
+            error
+        })?;
+        let mut child = pair.slave.spawn_command(command).map_err(|cause| {
+            let error = failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(cause));
+            diagnostics.spawn_failure(program.role, error.clone());
+            error
+        })?;
         drop(pair.slave);
         let pid = child.process_id().unwrap_or(0);
         let process = diagnostics.start(pid, program.role);
         let mut killer = child.clone_killer();
         let master: Master = Arc::new(Mutex::new(Some(pair.master)));
-        let shared = Arc::new(Shared::new(child.clone_killer()));
+        let shared = Arc::new(Shared::new(child.clone_killer(), process));
         let (deliver_workers, workers) = mpsc::sync_channel::<Workers>(1);
         let finisher = {
             let shared = shared.clone();
@@ -219,6 +231,9 @@ impl Session {
                         .err()
                         .map(|e| failure(ErrorCode::ReadFailed).caused_by(e));
                     let write_error = shared.write_error().clone();
+                    for error in [&wait_error, &write_error].into_iter().flatten() {
+                        diagnostics.failure_for(process, error.clone());
+                    }
                     if !shared.credit.stopped() {
                         for error in [&wait_error, &write_error].into_iter().flatten() {
                             deliver(&sink, Frame::Failed(error), &shared, &diagnostics);
@@ -239,11 +254,14 @@ impl Session {
             Err(error) => {
                 // Nothing can wait for this child; terminate it and close the PTY.
                 if let Err(kill) = killer.kill() {
-                    diagnostics.failure(failure(ErrorCode::CleanupFailed).caused_by(kill));
+                    diagnostics
+                        .failure_for(process, failure(ErrorCode::CleanupFailed).caused_by(kill));
                 }
                 drop(take_master(&master));
                 diagnostics.finish(process, None, ProcessPhase::Failed);
-                return Err(failure(ErrorCode::SpawnFailed).caused_by(error));
+                let error = failure(ErrorCode::SpawnFailed).caused_by(error);
+                diagnostics.failure_for(process, error.clone());
+                return Err(error);
             }
         };
         let (input, queued) = mpsc::sync_channel::<Vec<u8>>(INPUT_QUEUE);
@@ -260,7 +278,7 @@ impl Session {
         };
         deliver(&sink, Frame::Started { pid }, &shared, &diagnostics);
         let mut spawned = Workers::default();
-        let outcome = (|| {
+        let outcome: Result<()> = (|| {
             let input_shared = shared.clone();
             spawned.writer = Some(
                 thread::Builder::new()
@@ -318,7 +336,7 @@ impl Session {
                                             &output_diagnostics,
                                         );
                                     }
-                                    output_diagnostics.failure(error);
+                                    output_diagnostics.failure_for(process, error);
                                     break;
                                 }
                             }
@@ -330,7 +348,12 @@ impl Session {
         })();
         // The finisher joins whatever was spawned, even after a failure here.
         if deliver_workers.send(spawned).is_err() {
-            session.diagnostics.failure(failure(ErrorCode::Panic));
+            session
+                .diagnostics
+                .failure_for(process, failure(ErrorCode::Panic));
+        }
+        if let Err(error) = &outcome {
+            diagnostics.failure_for(process, error.clone());
         }
         outcome.map(|()| session)
     }
@@ -350,6 +373,16 @@ impl Session {
     pub fn live(&self) -> bool {
         !self.shared.stop_requested.load(Ordering::Acquire)
             && self.finisher.as_ref().is_some_and(|f| !f.is_finished())
+    }
+
+    pub fn record<T>(&self, outcome: Result<T>) -> Result<T> {
+        if let Err(error) = &outcome
+            && error.code != ErrorCode::QueueFull
+        {
+            self.diagnostics
+                .failure_for(self.shared.process, error.clone());
+        }
+        outcome
     }
 
     pub fn write(&self, bytes: &[u8]) -> Result<()> {
@@ -427,15 +460,18 @@ impl Session {
                 self.settled = true;
                 self.kill_error = None;
                 if let Err(error) = outcome {
-                    self.diagnostics.failure(error);
+                    self.diagnostics.failure_for(self.shared.process, error);
                 }
                 return Ok(());
             }
             if Instant::now() >= deadline {
-                return Err(self
+                let error = self
                     .kill_error
                     .clone()
-                    .unwrap_or_else(|| failure(ErrorCode::CleanupFailed)));
+                    .unwrap_or_else(|| failure(ErrorCode::CleanupFailed));
+                self.diagnostics
+                    .failure_for(self.shared.process, error.clone());
+                return Err(error);
             }
             thread::sleep(Duration::from_millis(5));
         }
@@ -452,7 +488,7 @@ impl Drop for Session {
         if let Err(error) = self.stop() {
             // Normal settlement keeps a failed session owned. Unexpected host
             // destruction cannot establish joined cleanup; report it.
-            self.diagnostics.failure(error);
+            self.diagnostics.failure_for(self.shared.process, error);
         }
     }
 }

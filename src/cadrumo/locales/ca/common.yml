@@ -130,6 +130,8 @@ aggregation:
       exterior_country_code_undeclared: L'Estat membre de consum no té cap codi de
         país declarat per al model 369, de manera que els seus serveis no es poden
         declarar en aquest model.
+      exterior_detail_not_representable: El disseny del règim exterior no pot representar
+        totes les files o tots els seus camps. Revisa el detall abans de continuar.
       exterior_rate_kind_unsupported: El règim exterior de la finestreta única només
         admet serveis al tipus general o reduït de l'Estat membre de consum. L'observació
         aportada declara un altre tipus de gravamen, que no es pot agregar en aquest
@@ -209,6 +211,10 @@ aggregation:
         immutable del resum anual del model 303 (primer {first_resolver}; segon {second_resolver}).
       binding_source_mismatch: source_kind i binding_source fan referència a famílies
         d'origen del valor diferents.
+      closed_record_rows_conflict: La pertinença de les files i els seus valors tenen
+        fonts incompatibles.
+      closed_record_rows_unadmitted: No es pot acreditar una taula completa des d’una
+        font incompleta o no admesa.
       duplicate_binding_owner: 'Error intern: el mateix origen del valor té dos propietaris
         a la malla de fonts.'
       duplicate_bound_casilla_owner: 'Error intern: propietari duplicat d''una casella
@@ -729,6 +735,7 @@ desktop:
     show_password: Mostra la contrasenya
     signed_out_lead: Inicia la sessió per obrir el teu espai de treball a la TUI.
     start_services: Inicia els serveis en segon pla
+    starting_services: S’estan iniciant els serveis en segon pla…
     submit: Inicia la sessió
     submitting: S'està iniciant la sessió…
     title: Inicia la sessió a Cadrumo
@@ -933,6 +940,82 @@ filing:
     out_of_range: Valor fora de rang permès
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
+google_review:
+  cancel: Cancel·lar la publicació
+  category:
+    calculation: Valors del càlcul desat
+    evidence_package: Paquet de proves
+    ledger: Files del llibre desades
+    original_attachment: Fitxers adjunts originals
+  close: Tancar
+  destination:
+    managed_google_folder: Carpeta de Google configurada i gestionada
+  failure:
+    admission: S’ha rebutjat el permís de publicació.
+    cancelled: S’ha cancel·lat la publicació.
+    create_unknown: No s’ha pogut confirmar la creació del document remot.
+    custody: No s’ha pogut conservar el rebut de custòdia de la publicació.
+    integrity: El contingut remot no ha superat la verificació.
+    population: Ha fallat l’escriptura del contingut desat seleccionat.
+  field: Camp
+  key: Referència
+  label:
+    amount_count: Valors desats
+    calculation_revision_id: Referència del càlcul desat
+    destination: Destinació
+    evidence_count: Referències de proves
+    finding_count: Resultats de la revisió
+    ledger_row_count: Files del llibre desades
+    ledger_snapshot_id: Referència del llibre desat
+    package_digest: Empremta del paquet de proves
+    payload_categories: Contingut llegible
+    publication_id: Referència de la publicació
+    publication_state: Estat de la publicació
+    registry_digest: Empremta del registre
+    review_status: Qualitat de la revisió
+    root_folder_id: Referència de la carpeta gestionada
+    selection: Selecció desada
+    snapshot_digest: Empremta de la instantània desada
+    work_unit_id: Referència del treball
+  notice:
+    calculation_required: Seleccioneu un càlcul desat abans de publicar.
+    evidence_index: S’hi inclouen referències de proves; no es publiquen els fitxers
+      adjunts originals.
+    external_copy: La publicació crea una còpia llegible a Google. Els usuaris autoritzats
+      per accedir a la destinació poden llegir-ne el contingut financer.
+    incomplete: Aquesta revisió desada té proves o atribucions incompletes.
+    missing_evidence: Algunes proves seleccionades no estan disponibles; les dades
+      absents continuen sent desconegudes.
+    prerequisite_unavailable: No estan disponibles els requisits previs de la revisió
+      desada.
+    provisional: Aquesta revisió desada és provisional.
+    receipt_unavailable: No està disponible un rebut de publicació verificat.
+    staged_edits: Deseu o descarteu els canvis pendents abans de revisar el càlcul
+      desat.
+    submission_unresolved: El resultat de la publicació està pendent de resoldre.
+      Consulteu l’operació existent abans de tornar-la a sol·licitar.
+  offer:
+    title: Revisar a Google Sheets
+  open_document: Obrir el full de càlcul
+  publication:
+    partial: Publicada parcialment
+    populated: Contingut desat escrit
+    prepared: Preparada localment
+    published: Publicada i verificada
+    remote-created: Document remot creat
+    uncertain: Resultat de la publicació incert
+    verified: Contingut remot verificat
+  publish: Publicar una còpia llegible
+  result:
+    title: Publicació de la revisió a Google
+  selection:
+    ledger: Llibre desat
+  status:
+    incomplete: Incompleta
+    provisional: Provisional
+    verified: Verificada
+  technical: Referències tècniques
+  value: Valor
 ledger:
   evidence:
     reader:
@@ -2501,6 +2584,7 @@ tui:
       artefact:
         calculation_report_csv: Informe de càlcul (CSV), només registre local
         calculation_report_pdf: Resum del càlcul signat (PDF), només registre local
+        calculation_review_xlsx: Revisió del càlcul desat (XLSX)
         fichero_boe: Fitxer BOE per presentar a l'AEAT
         label: Document a exportar
       payment_election:

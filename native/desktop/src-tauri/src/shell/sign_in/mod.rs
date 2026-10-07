@@ -107,7 +107,7 @@ impl SignIn {
     pub fn new(launch: &Launch) -> Self {
         Self {
             child: resolve_cli(launch),
-            children: Children::default(),
+            children: Children::new(launch.diagnostics.clone()),
         }
     }
 
@@ -209,10 +209,16 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
 }
 
 #[tauri::command]
-pub async fn sign_in_status(state: State<'_, Arc<SignIn>>) -> Result<SignInStatus> {
+pub async fn sign_in_status(
+    state: State<'_, Arc<SignIn>>,
+    manager: State<'_, Arc<crate::manager::ManagerStart>>,
+) -> Result<SignInStatus> {
     if !supported() {
         return Ok(SignInStatus::unsupported());
     }
+    // Dispatch completion is not runtime readiness. The canonical CLI below
+    // remains the only authority on availability and authentication.
+    let _ = manager.start(false).await;
     let state = state.inner().clone();
     super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await
 }

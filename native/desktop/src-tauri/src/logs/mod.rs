@@ -14,6 +14,7 @@ mod record;
 mod tail;
 #[cfg(test)]
 mod tests;
+mod timestamp;
 
 use crate::{app::Commands, environment::Launch, shell::channel::Deliveries};
 use cadrumo_application::{

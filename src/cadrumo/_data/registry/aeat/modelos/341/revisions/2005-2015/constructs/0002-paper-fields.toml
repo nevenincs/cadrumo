@@ -1,0 +1,5 @@
+[[revisions."2005-2015".constructs]]
+id = "modelo-341-papel-identificacion-firma"
+legal_refs = ["orden-min-2000-12-15-m341:art-1"]
+source_refs = ["boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
+casilla_ids = ["papel-nombre-completo", "papel-domicilio-tipo-via", "papel-domicilio-via", "papel-domicilio-numero", "papel-domicilio-escalera", "papel-domicilio-piso", "papel-domicilio-puerta", "papel-domicilio-telefono", "papel-domicilio-municipio", "papel-domicilio-provincia", "papel-domicilio-codigo-postal", "papel-firma-lugar", "papel-firma-fecha", "papel-firma"]

@@ -157,6 +157,7 @@ def reconcile_file_verb(
 
 def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> None:
     """List past reconciliations recorded in the active profile."""
+    from ...application.modelo.reconciliation_records import ModeloReconciliationAdvisory
     from ._modelo_payloads_m036 import ModeloReconciliationHistoryResult, ModeloReconciliationHistoryRowPayload
     from .runtime_modelo_reconciliation_list import read_modelo_reconciliation_list
 
@@ -184,6 +185,11 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
                 verdict=entry.verdict,
                 diff_count=entry.diff_count,
                 advisory_count=entry.advisory_count,
+                diffs=entry.diffs,
+                advisories=tuple(
+                    ModeloReconciliationAdvisory(code=item.code, message=item.message, context=dict(item.context))
+                    for item in entry.advisories
+                ),
                 actor=entry.actor,
                 reconciled_at=entry.reconciled_at,
             )
@@ -219,5 +225,13 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
             tr(
                 "cli.app.modelo.reconcile.list_empty",
             )
+        )
+    for entry in entries:
+        lines.extend(
+            f"diff\t{entry.event_id}\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}"
+            for diff in entry.diffs
+        )
+        lines.extend(
+            f"advisory\t{entry.event_id}\t{advisory.code}\t{advisory.message}" for advisory in entry.advisories
         )
     emit_envelope(ctx, command="modelo.reconcile.list", result=result, lines=lines)

@@ -42,6 +42,7 @@ import type { AccountPhase, SignInController } from "../shell/signIn";
 import { useStrings } from "../shell/strings";
 import { accountLabel, GATES } from "./accountWords";
 import { Logo } from "./Logo";
+import { AccountLoading } from "./AccountLoading";
 
 type Tone = "neutral" | "warning" | "danger";
 
@@ -245,7 +246,8 @@ export function SignInDialog({
 
   // Nothing to show until the account is known: a dialog opened on a
   // guess would put the keyboard on a way out that is about to change.
-  if (!status || account.phase === "checking") return null;
+  if (!status || account.phase === "checking" || account.phase === "starting")
+    return null;
 
   const seconds = account.retrySeconds;
   const rejected = refusalCode(account.refusal) === "CREDENTIAL_REJECTED";
@@ -254,6 +256,8 @@ export function SignInDialog({
   // says so in its title, as the rest of the window does.
   const setUpInTui = account.phase === "no-profile" && !creating;
   const servicesDown = account.phase === "services-down";
+  const waitingForServices =
+    account.startingServices && !status.runtimeAvailable;
   const answerable = !creating && status.runtimeAvailable && account.canSignIn;
   // The choice is offered only while nobody is signed in, from a list
   // that was read coherently.
@@ -280,11 +284,13 @@ export function SignInDialog({
             ? null
             : t("desktop.signin.open_tui_hint");
   // Titled as a sign-in only where there is something to sign in with.
-  const title = creating
-    ? "desktop.account.create.title"
-    : answerable
-      ? "desktop.signin.title"
-      : (accountLabel(account.phase) ?? "desktop.signin.title");
+  const title = waitingForServices
+    ? "desktop.signin.starting_services"
+    : creating
+      ? "desktop.account.create.title"
+      : answerable
+        ? "desktop.signin.title"
+        : (accountLabel(account.phase) ?? "desktop.signin.title");
 
   return (
     <Dialog
@@ -331,6 +337,8 @@ export function SignInDialog({
             {t("desktop.signin.profiles_unread")}
           </Alert>
         )}
+
+        {waitingForServices && <AccountLoading starting />}
 
         {creating ? (
           <CreateProfile
@@ -480,8 +488,22 @@ export function SignInDialog({
               {t(busy ? "desktop.signin.submitting" : "desktop.signin.submit")}
             </Button>
           </form>
-        ) : setUpInTui || servicesDown ? null : (
+        ) : setUpInTui ? null : (
           <Refusal refusal={account.refusal} seconds={seconds} />
+        )}
+
+        {!creating && servicesDown && account.canStartServices && (
+          <Button
+            className="w-full"
+            pending={account.startingServices}
+            onClick={() => void account.startServices()}
+          >
+            {t(
+              account.startingServices
+                ? "desktop.signin.starting_services"
+                : "desktop.signin.start_services",
+            )}
+          </Button>
         )}
 
         {creating ? null : answerable ? (
@@ -808,6 +830,17 @@ export function SignedOut({
 }) {
   const t = useStrings();
   const gate = GATES[account.phase];
+  if (
+    account.phase === "checking" ||
+    account.phase === "starting" ||
+    (account.startingServices && !account.status?.runtimeAvailable)
+  )
+    return (
+      <AccountLoading
+        starting={account.phase === "starting" || account.startingServices}
+        quiet={quiet}
+      />
+    );
   if (!gate)
     return (
       <Empty role="status">

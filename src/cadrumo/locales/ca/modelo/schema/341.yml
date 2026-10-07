@@ -23,6 +23,48 @@ modelo:
             label: Exercici a què es refereix l'autoliquidació
           letras-etiqueta-persona-fisica:
             label: Lletres de l'etiqueta identificativa
+          m341-papel-domicilio-codigo-postal:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Codi postal
+          m341-papel-domicilio-escalera:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Escala
+          m341-papel-domicilio-municipio:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Municipi
+          m341-papel-domicilio-numero:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Número
+          m341-papel-domicilio-piso:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Pis
+          m341-papel-domicilio-provincia:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Província
+          m341-papel-domicilio-puerta:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Porta
+          m341-papel-domicilio-telefono:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Telèfon
+          m341-papel-domicilio-tipo-via:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Tipus de via
+          m341-papel-domicilio-via:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Nom de la via pública
+          m341-papel-firma:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Signatura
+          m341-papel-firma-fecha:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Data de signatura
+          m341-papel-firma-lugar:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Lloc de signatura
+          m341-papel-nombre-completo:
+            help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
+            label: Cognoms i nom o raó social
           observaciones-presentacion:
             label: Observacions
           reagp-importe-compensacion:
@@ -37,11 +79,54 @@ modelo:
         modelo-341-autoliquidacion:
           field:
             title: Modelo 341 autoliquidació del IVA
+        modelo-341-papel-identificacion-firma:
+          field:
+            title: Identificació i signatura en paper
       field:
         official_name: Modelo 341. Sol·licitud de reintegrament de compensacions en
           el règim especial de l'agricultura, la ramaderia i la pesca.
         title: Reintegrament de compensacions del règim especial de l'agricultura,
           la ramaderia i la pesca de l'IVA
+      form:
+        authored:
+          apellidos:
+            heading: Cognoms o raó social
+          base:
+            heading: Import de les operacions
+          bic:
+            heading: SWIFT/BIC
+          compensacion:
+            heading: Compensació
+          contacto:
+            heading: Persona de contacte
+          devengo:
+            heading: Meritació
+          devolucion:
+            heading: Devolució
+          fila-1:
+            heading: Operacions 1
+          fila-2:
+            heading: Operacions 2
+          fila-3:
+            heading: Operacions 3
+          firma:
+            heading: Subjecte passiu · Signatura
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Identificació
+          importe:
+            heading: Import de la compensació
+          nif:
+            heading: NIF
+          nombre:
+            heading: Nom
+          porcentaje:
+            heading: Percentatge de compensació
+          presentacion:
+            heading: Dades de presentació
+          telefono:
+            heading: Telèfon de contacte
       revision:
         2005-2015:
           field:

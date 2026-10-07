@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.binding_value_contract import BindingV
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
+from cadrumo.domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
@@ -73,6 +74,43 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
     }
     if literal_scales:
         payload["literal_scales"] = literal_scales
+    projection_blocks = tuple(
+        block
+        for layout in revision.form_layouts
+        for block in _layout_blocks(layout)
+        if isinstance(block, FormRepeatingGroupBlock)
+        and any(column.export_field_id is not None for column in block.columns)
+    )
+    if projection_blocks:
+        payload["projection_sources"] = [
+            (record.id, field.id, field.data_type, field.projection_ref.model_dump(mode="json"))
+            for layout in derive_export_layouts_from_bindings(revision)
+            for record in layout.records
+            for field in record.fields
+            if field.projection_ref is not None
+            and any(block.export_record_id == record.id for block in projection_blocks)
+        ]
+    context_projection_blocks = tuple(
+        block
+        for layout in revision.form_layouts
+        for block in _layout_blocks(layout)
+        if isinstance(block, FormContextFieldBlock)
+    )
+    context_projections = [
+        (layout.id, record.id, field.id, field.projection_ref.model_dump(mode="json"))
+        for layout in derive_export_layouts_from_bindings(revision)
+        for record in layout.records
+        for field in record.fields
+        if field.projection_ref is not None
+        and any(
+            block.export_layout_id == layout.id
+            and block.export_record_id == record.id
+            and block.export_field_id == field.id
+            for block in context_projection_blocks
+        )
+    ]
+    if context_projections:
+        payload["context_projection_sources"] = context_projections
     # Keep existing declarations' digest contract unchanged. Context-bearing
     # layouts additionally depend on the exact filing producer semantics.
     if any(
@@ -191,9 +229,15 @@ def _repeating_failures(layout: FormLayoutDefinition, revision: ModeloRevision) 
     for block in _layout_blocks(layout):
         if not isinstance(block, FormRepeatingGroupBlock):
             continue
-        failure = _repeating_block_failure(block, bindings, repeating_records)
-        if failure is not None:
-            yield failure
+        if any(column.export_field_id is not None for column in block.columns):
+            try:
+                resolve_form_projection_fields(revision, block)
+            except RegistryValidationError as exc:
+                yield f"repeating group {block.id!r}: {exc}"
+        else:
+            failure = _repeating_block_failure(block, bindings, repeating_records)
+            if failure is not None:
+                yield failure
 
 
 def _repeating_block_failure(

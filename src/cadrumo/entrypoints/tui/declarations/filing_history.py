@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Final, cast, override
 
 from textual.app import ComposeResult
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, DataTable, Static
 
 from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceFilingRefV1,
@@ -145,6 +145,13 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
             yield Static(tr("tui.declarations.filing_history.axes"), markup=False)
             yield ContentDataTable[str](id="declarations-filings", cursor_type="row", zebra_stripes=True)
             yield Static(id="declarations-filing-chain", markup=False)
+            yield Button(tr("cli.app.modelo.filing_record.export_button"), id="filing-history-export", disabled=True)
+            yield Button(
+                tr("cli.app.modelo.reconcile.export_button"), id="filing-history-reconcile-export", disabled=True
+            )
+            yield Button(
+                tr("cli.app.modelo.spreadsheet.publish_button"), id="filing-history-google-review", disabled=True
+            )
             yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 
@@ -170,6 +177,42 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
         )
         detail = self.query_one("#declarations-filing-chain", Static)
         detail.update("" if row is None else _chain_detail(row))
+        self.selected_filing_record_id = None if row is None else row.filing_record_id
+        self.query_one("#filing-history-export", Button).disabled = (
+            row is None or self.controller.filing_export_factory is None
+        )
+        self.query_one("#filing-history-google-review", Button).disabled = (
+            row is None or self.controller.filing_google_review_factory is None
+        )
+        self.query_one("#filing-history-reconcile-export", Button).disabled = (
+            row is None or self.controller.reconciliation_export_factory is None
+        )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Export the exact highlighted filing or its declaration's saved comparisons."""
+        if event.button.id not in {
+            "filing-history-export",
+            "filing-history-reconcile-export",
+            "filing-history-google-review",
+        }:
+            return
+        row = next(
+            (
+                item
+                for item in self.controller.projection.filings
+                if item.filing_record_id == self.selected_filing_record_id
+            ),
+            None,
+        )
+        factory = (
+            self.controller.filing_export_factory
+            if event.button.id == "filing-history-export"
+            else self.controller.reconciliation_export_factory
+        )
+        if event.button.id == "filing-history-google-review":
+            factory = self.controller.filing_google_review_factory
+        if row is not None and factory is not None:
+            self.app.push_screen(factory(row))
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route a navigation row or invoke the injected filing handoff."""

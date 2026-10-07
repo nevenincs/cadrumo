@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import time
+from logging import ERROR, INFO, WARNING
 from typing import Protocol
 
 from ...application.runtime.contracts import (
@@ -18,6 +20,7 @@ from ...core.async_cleanup import (
     await_cancellation_complete,
     close_async_resources,
 )
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_scope
 from ...core.logging import get_logger
 from ...core.startup_phase_log import startup_phase
 from .framing import VerifiedRuntimeConnection
@@ -89,6 +92,54 @@ class RuntimeLaunchDoor:
 
     async def open(self, *, timeout: float = 10) -> VerifiedRuntimeConnection:
         """Return a peer/cohort-verified connection without transmitting credentials."""
+        with diagnostic_scope():
+            started = time.monotonic()
+            diagnostic_event(_LOGGER, "runtime_connect_started", fields={"timeout_seconds": timeout})
+            opened: VerifiedRuntimeConnection | None = None
+            try:
+                opened = await self._open_connection(timeout=timeout)
+                diagnostic_event(
+                    _LOGGER,
+                    "runtime_connect_finished",
+                    fields={
+                        "outcome": "connected",
+                        "elapsed_seconds": time.monotonic() - started,
+                        "runtime_boot_id": str(opened.hello.boot_id),
+                        "runtime_version": opened.hello.product_version,
+                    },
+                )
+            except BaseException as error:
+                if opened is not None:
+                    await close_async_resources(
+                        RuntimeTransportCleanup(opened),
+                        task_name="runtime-connect-result-diagnostic-close",
+                        primary_error=error,
+                    )
+                refusal = isinstance(error, RuntimeRefusalError)
+                cancelled = isinstance(error, asyncio.CancelledError)
+                diagnostic_event(
+                    _LOGGER,
+                    "runtime_connect_finished",
+                    fields={
+                        **diagnostic_error_fields(error),
+                        "outcome": "cancelled" if cancelled else "refused" if refusal else "failed",
+                        "reason_code": (
+                            error.reason.value
+                            if isinstance(error, RuntimeRefusalError)
+                            else "operation_cancelled"
+                            if cancelled
+                            else "unexpected_failure"
+                        ),
+                        "elapsed_seconds": time.monotonic() - started,
+                        "cleanup_incomplete": bool(async_cleanup_failures(error)),
+                    },
+                    level=INFO if cancelled else WARNING if refusal else ERROR,
+                    primary_error=error,
+                )
+                raise
+            return opened
+
+    async def _open_connection(self, *, timeout: float) -> VerifiedRuntimeConnection:
         deadline = deadline_after(timeout)
         opened: VerifiedRuntimeConnection | None = None
         try:

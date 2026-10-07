@@ -265,6 +265,8 @@ class SheetFormulaCell(BaseModel):
     rounding_scale: int | None = Field(default=None, ge=0, le=12)
     rounding_rule: SheetRoundingRuleValue
     note: str | None = None
+    missing_input_condition: str | None = Field(default=None, min_length=1)
+    """Compiler-owned branch-sensitive absence check, never visible metadata."""
 
 
 class SheetCellConstraint(BaseModel):
@@ -563,6 +565,15 @@ class SheetRowHeight(BaseModel):
     tab: TabName
     row: int = Field(ge=1)
     height_pixels: int = Field(ge=1, le=409)
+
+
+class SheetHiddenRow(BaseModel):
+    """Calculation support retained at its address but omitted from the visible form."""
+
+    model_config = _STRICT_FROZEN
+
+    tab: TabName
+    row: int = Field(ge=1)
 
 
 class SheetColumnWidth(BaseModel):
@@ -1002,11 +1013,16 @@ class SheetReviewMetadata(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    kind: Literal["calculation", "ledger"]
+    kind: Literal["calculation", "ledger", "reconciliation"]
     snapshot_digest: Hex64Str
     publication_id: UUID
     title: str = Field(min_length=1)
     exported_at: datetime
+
+    @property
+    def document_title(self) -> str:
+        """Readable copy date and short discriminator; receipts retain full identity."""
+        return f"{self.title} · {self.exported_at:%Y-%m-%d %H:%M} UTC · {self.publication_id.hex[:8]}"
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -1072,6 +1088,7 @@ class SheetExportPlan[
     auto_filters: tuple[SheetAutoFilter, ...] = ()
     merged_ranges: tuple[SheetMergedRange, ...] = ()
     row_heights: tuple[SheetRowHeight, ...] = ()
+    hidden_rows: tuple[SheetHiddenRow, ...] = ()
     guide: SheetGuideContent
 
     @model_validator(mode="after")
@@ -1098,6 +1115,9 @@ class SheetExportPlan[
         for height in self.row_heights:
             if height.tab not in self.tabs:
                 raise ValueError("row height targets an undeclared tab")
+        for hidden in self.hidden_rows:
+            if hidden.tab not in self.tabs:
+                raise ValueError("hidden row targets an undeclared tab")
         active: list[SheetMergedRange] = []
         for region in sorted(self.merged_ranges, key=lambda item: (item.tab, item.start_row)):
             if region.tab not in self.tabs:
@@ -1161,6 +1181,7 @@ __all__ = [
     "SheetFormulaCell",
     "SheetFrozenView",
     "SheetGuideContent",
+    "SheetHiddenRow",
     "SheetNumberFormat",
     "SheetProtectedRange",
     "SheetProvenanceRow",

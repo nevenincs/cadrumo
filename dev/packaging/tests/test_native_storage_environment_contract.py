@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.config import Settings
+from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.core.storage_environment import (
     PROCESS_ENVIRONMENT,
     STORAGE_PATH_RULES,
@@ -29,6 +30,20 @@ from dev.packaging.native.storage_vectors import storage_path_vectors, storage_r
 from dev.packaging.native.verification_paths import verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_desktop_defaults_project_canonical_declarations(tmp_path: Path) -> None:
+    generate(REPO_ROOT, tmp_path)
+    contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
+    assert contract["desktop_defaults"] == {
+        "webview": STORAGE_TAXONOMY[StorageCategory.DESKTOP_WEBVIEW].subpath,
+        "logs": STORAGE_TAXONOMY[StorageCategory.LOGS].subpath,
+        "log_file": STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath,
+        "log_format": LOG_FILE_FORMAT,
+        "log_max_bytes": Settings.model_fields["cadrumo_log_file_max_bytes"].default,
+        "log_backups": Settings.model_fields["cadrumo_log_file_backup_count"].default,
+        "output_language": Settings.model_fields["cadrumo_output_language"].default,
+    }
 
 
 def test_native_storage_allowlist_tracks_settings_taxonomy_and_tool_paths(tmp_path: Path) -> None:

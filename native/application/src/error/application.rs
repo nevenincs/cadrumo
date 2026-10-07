@@ -23,6 +23,8 @@ pub enum ErrorCode {
     WebviewFailed,
     UnsupportedPlatform,
     InstanceLockForeign,
+    ManagerUnavailable,
+    ManagerDispatchFailed,
     Panic,
 }
 
@@ -37,6 +39,7 @@ pub enum Operation {
     Logging,
     Webview,
     Shutdown,
+    Manager,
 }
 
 #[derive(Clone, Serialize)]
@@ -45,6 +48,13 @@ pub struct ApplicationError {
     pub code: ErrorCode,
     pub operation: Operation,
     pub message: &'static str,
+    #[serde(
+        serialize_with = "serialize_io_kind",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub io_kind: Option<std::io::ErrorKind>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub os_code: Option<i32>,
     #[serde(skip)]
     cause: Option<Arc<dyn Error + Send + Sync>>,
 }
@@ -70,18 +80,51 @@ impl ApplicationError {
             ErrorCode::WebviewFailed => "The application window could not be created",
             ErrorCode::UnsupportedPlatform => "Desktop operation is not available on this platform",
             ErrorCode::InstanceLockForeign => "Another account holds the application lock",
+            ErrorCode::ManagerUnavailable => "The background-services manager is unavailable",
+            ErrorCode::ManagerDispatchFailed => {
+                "The background-services manager could not be started"
+            }
             ErrorCode::Panic => "An unexpected application failure occurred",
         };
         Self {
             code,
             operation,
             message,
+            io_kind: None,
+            os_code: None,
             cause: None,
         }
     }
     pub fn caused_by<E: Error + Send + Sync + 'static>(mut self, cause: E) -> Self {
+        // Wrappers can carry an I/O cause; only its enum kind and numeric OS
+        // code may leave this boundary, never its path or formatted message.
+        self.io_kind = None;
+        self.os_code = None;
+        let mut current: &(dyn Error + 'static) = &cause;
+        for _ in 0..32 {
+            if let Some(error) = current.downcast_ref::<std::io::Error>() {
+                self.io_kind = Some(error.kind());
+                self.os_code = error.raw_os_error();
+                if self.os_code.is_some() {
+                    break;
+                }
+            }
+            match current.source() {
+                Some(source) => current = source,
+                None => break,
+            }
+        }
         self.cause = Some(Arc::new(cause));
         self
+    }
+}
+fn serialize_io_kind<S: serde::Serializer>(
+    kind: &Option<std::io::ErrorKind>,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error> {
+    match kind {
+        Some(kind) => serializer.serialize_str(&format!("{kind:?}")),
+        None => serializer.serialize_none(),
     }
 }
 impl fmt::Display for ApplicationError {

@@ -13,6 +13,11 @@ from pydantic import BaseModel
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....application.export.calculation_review_xlsx_operation import (
+    CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
+    CalculationReviewXlsxRequest,
+    CalculationReviewXlsxResult,
+)
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.edit_admission import ModeloEditRenewalResultV1, ModeloEditRenewedV1
 from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
@@ -45,7 +50,7 @@ from ....application.operations.models import OperationRequest
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....core.operations import OperationEffect, OperationTerminalCondition
+from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.controller_port import OperationControllerPort
 from ..operations.runtime_controller import RuntimeOperationController, await_terminal_projection
 from .lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
@@ -178,7 +183,14 @@ class _RuntimeModeloLifecycleBindings:
         return result
 
     async def submit(self, request: OperationRequest[BaseModel]) -> OperationControllerPort:
-        if self.client.session_id != self.session_id or request.subject_ref != self.work_unit_id:
+        expected_subject = (
+            profile_operation_subject(str(self.profile_id))
+            if request.definition_id == CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID
+            and isinstance(request.payload, CalculationReviewXlsxRequest)
+            and request.payload.profile_id == self.profile_id
+            else self.work_unit_id
+        )
+        if self.client.session_id != self.session_id or request.subject_ref != expected_subject:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return await RuntimeOperationController.submit(
             self.client,
@@ -199,6 +211,21 @@ class _RuntimeModeloLifecycleBindings:
             session_id=self.session_id,
         )
         return await controller.read_settled_result(projection, ModeloExportPublicResultV3, result_version=3)
+
+    async def read_review_result(self, projection: OperationPublicProjectionV1) -> CalculationReviewXlsxResult:
+        if (
+            self.client.session_id != self.session_id
+            or projection.definition_id != CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID
+            or projection.subject_ref != profile_operation_subject(str(self.profile_id))
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        controller = RuntimeOperationController(
+            client=self.client, operation_id=projection.operation_id, session_id=self.session_id
+        )
+        result = await controller.read_settled_result(projection, CalculationReviewXlsxResult, result_version=1)
+        if result.profile_id != self.profile_id or result.work_unit_id != self.work_unit_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        return result
 
     def admit(self, observed_at: datetime) -> M303Exonerado390ApplicabilityAttestationAdmission:
         self.require_session()
@@ -293,6 +320,8 @@ def compose_runtime_modelo_lifecycle_door(
         asks_modelo_390=asks_modelo_390,
         submit_operation=bindings.submit,
         read_export_result=bindings.read_export_result,
+        profile_id=client.profile_id,
+        read_review_result=bindings.read_review_result,
     )
 
 

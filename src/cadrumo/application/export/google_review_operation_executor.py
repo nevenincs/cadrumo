@@ -11,9 +11,9 @@ from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.operations import OperationEffect
+from ...core.operations import OperationEffect, OperationInteractionKind
 from ...core.time.clock import now
-from ..operations.interactions import OperationConsumedInteraction
+from ..operations.interactions import OperationConsumedInteraction, OperationPendingInteraction
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ..operations.persistence.journal import serialize_operation_operand
@@ -154,12 +154,26 @@ class GoogleReviewExecutor:
         await context.events.phase(GOOGLE_REVIEW_OPERATION_DEFINITION_ID + ".prepare")
         await context.events.effect(OperationEffect.NONE)
         ports = self._ports(payload, context)
-        snapshot = await asyncio.to_thread(ports.load_snapshot, payload.calculation_revision_id)
+        if payload.filing_record_id is not None:
+            if ports.load_filing_snapshot is None:
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+            snapshot = await asyncio.to_thread(
+                ports.load_filing_snapshot, payload.calculation_revision_id, payload.filing_record_id
+            )
+        else:
+            snapshot = await asyncio.to_thread(ports.load_snapshot, payload.calculation_revision_id)
         selection = snapshot.selection
         if (
             not isinstance(selection, CalculationReviewSelection)
             or selection.profile_id != payload.profile_id
             or selection.calculation_revision_id != payload.calculation_revision_id
+            or (
+                payload.filing_record_id is not None
+                and (
+                    snapshot.calculation_lifecycle is None
+                    or snapshot.calculation_lifecycle.filing_record_id != payload.filing_record_id
+                )
+            )
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         root = await asyncio.to_thread(ports.load_root)
@@ -203,7 +217,20 @@ class GoogleReviewExecutor:
         """Publish only the approved frozen operand, never recalculate current values."""
         payload = require_review_request(request, context)
         if not checkpoint.consumed:
-            return None
+            # Only canonical owner-loss reconciliation resumes a pending
+            # checkpoint. Its original human response capability cannot be
+            # transferred to a fresh session. End this untouched publication
+            # so a newly reviewed invocation can acquire the profile subject.
+            if (
+                type(checkpoint) is OperationPendingInteraction
+                and checkpoint.request.identity == context.identity
+                and checkpoint.request.kind is OperationInteractionKind.REVIEW
+                and checkpoint.request.revision <= context.revision
+                and checkpoint.request.response_schema_ref
+                == operation_public_schema_reference(GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity)
+            ):
+                await context.events.effect(OperationEffect.NONE)
+            raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         if type(checkpoint) is not OperationConsumedInteraction:
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         consumed = OperationConsumedInteraction.model_validate(checkpoint.model_dump(mode="python"), strict=True)

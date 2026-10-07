@@ -15,8 +15,7 @@ from ..application.export.google_operation import publish_google_review
 from ..application.export.google_review_operation_contracts import GoogleReviewOperationPorts
 from ..application.export.managed_artifact_ports import ArtifactCreationReceipt
 from ..application.export.publication_receipt import PublicationReceipt, ReadableExportAuthorization
-from ..application.export.review_snapshot import CalculationReviewSelection, ReviewSnapshot
-from ..application.export.review_snapshot_loader import build_calculation_review_snapshot
+from ..application.export.review_snapshot import ReviewSnapshot
 from ..application.storage.calc_sheets.records import SheetExportPlan, SheetReviewMetadata
 from ..application.storage.calc_sheets.review_labels import ReviewWorkbookLabels
 from ..application.user_profile.access_contracts import AccessDenialCode
@@ -27,12 +26,11 @@ from ..application.user_profile.google_configuration_operation_ports import (
     GoogleConfigurationHandoff,
 )
 from ..core.external_constants import OutputLanguage
-from ..core.hashing import content_hash_hex
 from ..core.i18n.render import output_language
 from ..core.identity.hex_ids import CalculationRevisionId
 from ..core.time.clock import now
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from .adapter_composition import build_verification_repository_bundle
+from .calculation_review_snapshot_composition import load_calculation_review_snapshot
 
 
 def build_google_review_ports(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> GoogleReviewOperationPorts:
@@ -40,34 +38,7 @@ def build_google_review_ports(*, profile_id: UUID, operation: PinnedAuthorityOpe
     profile = str(profile_id)
 
     def load_snapshot(revision_id: CalculationRevisionId) -> ReviewSnapshot:
-        bundle = build_verification_repository_bundle(profile, operation=operation)
-        if bundle.calculation.bucket_id != profile or bundle.work_unit.bucket_id != profile:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        revision = bundle.calculation.load(operation=operation).get(revision_id)
-        if revision is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        unit = bundle.work_unit.load().get(revision.work_unit_id)
-        if unit is None or unit.bucket_id != profile:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        reference = revision.registry_snapshot_ref
-        registry = operation.snapshot(
-            reference.modelo,
-            filing_year=reference.modelo_year,
-            period=reference.period,
-            revision_id=reference.revision_id,
-        )
-        selection = CalculationReviewSelection(
-            profile_id=profile_id,
-            work_unit_id=revision.work_unit_id,
-            calculation_revision_id=revision.calculation_revision_id,
-            modelo=reference.modelo,
-            filing_year=reference.modelo_year,
-            period=reference.period,
-            registry_snapshot_ref=reference,
-            authority_generation=operation.generation.logical_generation,
-            registry_digest=content_hash_hex(registry.model_dump(mode="json")),
-        )
-        return build_calculation_review_snapshot(selection=selection, revision=revision, work_unit=unit)
+        return load_calculation_review_snapshot(revision_id, profile_id=profile_id, operation=operation)
 
     def load_root() -> ArtifactCreationReceipt:
         root_id = resolve_drive_root_folder_id(profile=profile)
@@ -128,6 +99,9 @@ def build_google_review_ports(*, profile_id: UUID, operation: PinnedAuthorityOpe
         profile_id=profile_id,
         operation=operation,
         load_snapshot=load_snapshot,
+        load_filing_snapshot=lambda revision_id, filing_record_id: load_calculation_review_snapshot(
+            revision_id, profile_id=profile_id, operation=operation, filing_record_id=filing_record_id
+        ),
         load_root=load_root,
         load_publication=load_publication,
         publish=publish,

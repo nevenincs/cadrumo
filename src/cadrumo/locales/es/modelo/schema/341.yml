@@ -23,6 +23,62 @@ modelo:
             label: Ejercicio al que se refiere la autoliquidación
           letras-etiqueta-persona-fisica:
             label: Letras de la etiqueta identificativa
+          m341-papel-domicilio-codigo-postal:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Código postal
+          m341-papel-domicilio-escalera:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Escalera
+          m341-papel-domicilio-municipio:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Municipio
+          m341-papel-domicilio-numero:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Número
+          m341-papel-domicilio-piso:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Piso
+          m341-papel-domicilio-provincia:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Provincia
+          m341-papel-domicilio-puerta:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Puerta
+          m341-papel-domicilio-telefono:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Teléfono
+          m341-papel-domicilio-tipo-via:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Tipo de vía
+          m341-papel-domicilio-via:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Nombre de la vía pública
+          m341-papel-firma:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Firma
+          m341-papel-firma-fecha:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Fecha de firma
+          m341-papel-firma-lugar:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Lugar de firma
+          m341-papel-nombre-completo:
+            help: Dato del formulario original en papel; no se incluye en el fichero
+              electrónico.
+            label: Apellidos y nombre o razón social
           observaciones-presentacion:
             label: Observaciones
           reagp-importe-compensacion:
@@ -37,11 +93,54 @@ modelo:
         modelo-341-autoliquidacion:
           field:
             title: Modelo 341 autoliquidación del IVA
+        modelo-341-papel-identificacion-firma:
+          field:
+            title: Identificación y firma en papel
       field:
         official_name: Modelo 341. Solicitud de reintegro de compensaciones en el
           régimen especial de la agricultura, ganadería y pesca.
         title: Reintegro de compensaciones del régimen especial de agricultura, ganadería
           y pesca del IVA
+      form:
+        authored:
+          apellidos:
+            heading: Apellidos o razón social
+          base:
+            heading: Importe de las operaciones
+          bic:
+            heading: SWIFT/BIC
+          compensacion:
+            heading: Compensación
+          contacto:
+            heading: Persona de contacto
+          devengo:
+            heading: Devengo
+          devolucion:
+            heading: Devolución
+          fila-1:
+            heading: Operaciones 1
+          fila-2:
+            heading: Operaciones 2
+          fila-3:
+            heading: Operaciones 3
+          firma:
+            heading: Sujeto pasivo · Firma
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Identificación
+          importe:
+            heading: Importe de la compensación
+          nif:
+            heading: NIF
+          nombre:
+            heading: Nombre
+          porcentaje:
+            heading: Porcentaje de compensación
+          presentacion:
+            heading: Datos de presentación
+          telefono:
+            heading: Teléfono de contacto
       revision:
         2005-2015:
           field:

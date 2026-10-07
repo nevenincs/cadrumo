@@ -14,9 +14,8 @@
 # member's Modelo 322 resultado -- which is exactly what AEAT's own label says,
 # "sumatorio del resultado de entidades" -- rather than recomputed from the
 # filer's ledger. The arithmetic on [09], [03] and [05] is AEAT's own, printed in
-# the design's field descriptions; nothing is inferred. Note [05] is
-# ([03] - [04]) as the design states: it does NOT subtract [10], and no such
-# subtraction is invented here.
+# the design's field descriptions. For [05], the applicable BOE-A-2026-1761
+# Annex II form explicitly deducts [10] as well: [03] - [04] - [10].
 
 [[revisions."2026-desde-02".casillas]]
 id = "10"

@@ -262,6 +262,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.signin.show_password",
         "desktop.signin.signed_out_lead",
         "desktop.signin.start_services",
+        "desktop.signin.starting_services",
         "desktop.signin.submit",
         "desktop.signin.submitting",
         "desktop.signin.title",
@@ -287,9 +288,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
 #: check holds the rest of the declaration to an exact match with the shell
 #: source and refuses any key here once the shell names it, so a key leaves
 #: this set when its view lands and the set only shrinks.
-DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset(
-    {"desktop.signin.start_services", "desktop.signin.unsupported"}
-)
+DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.signin.unsupported"})
 
 # The only placeholder form the shell substitutes: ``{name}``.
 _SHELL_PLACEHOLDER: Final[re.Pattern[str]] = re.compile(r"\{(\w+)\}")

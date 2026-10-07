@@ -134,6 +134,8 @@ aggregation:
       exterior_country_code_undeclared: El Estado miembro de consumo no tiene un código
         de país declarado para el modelo 369, por lo que sus servicios no se pueden
         declarar en este modelo.
+      exterior_detail_not_representable: El diseño del régimen exterior no puede representar
+        todas las filas o todos sus campos. Revisa el detalle antes de continuar.
       exterior_rate_kind_unsupported: El régimen exterior de la ventanilla única sólo
         admite servicios al tipo general o reducido del Estado miembro de consumo.
         La observación aportada declara otro tipo de gravamen, que no puede agregarse
@@ -214,6 +216,10 @@ aggregation:
         {second_resolver}).
       binding_source_mismatch: source_kind y binding_source se refieren a familias
         de origen del valor distintas.
+      closed_record_rows_conflict: La pertenencia de las filas y sus valores tienen
+        fuentes incompatibles.
+      closed_record_rows_unadmitted: No se puede acreditar una tabla completa desde
+        una fuente incompleta o no admitida.
       duplicate_binding_owner: 'Error interno: el mismo origen del valor tiene dos
         propietarios en la malla de fuentes.'
       duplicate_bound_casilla_owner: 'Error interno: propietario duplicado de una
@@ -732,7 +738,8 @@ desktop:
       throttled: Demasiados intentos. Podrás volver a intentarlo en {seconds} s.
     show_password: Mostrar la contraseña
     signed_out_lead: Inicia sesión para abrir tu espacio de trabajo en la TUI.
-    start_services: Iniciar los servicios en segundo plano
+    start_services: Iniciar servicios en segundo plano
+    starting_services: Iniciando servicios en segundo plano…
     submit: Iniciar sesión
     submitting: Iniciando sesión…
     title: Inicia sesión en Cadrumo
@@ -941,6 +948,82 @@ filing:
     out_of_range: Valor fuera de rango permitido
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
+google_review:
+  cancel: Cancelar publicación
+  category:
+    calculation: Valores del cálculo guardado
+    evidence_package: Paquete de evidencias
+    ledger: Filas del libro guardadas
+    original_attachment: Archivos adjuntos originales
+  close: Cerrar
+  destination:
+    managed_google_folder: Carpeta de Google configurada y gestionada
+  failure:
+    admission: Se rechazó el permiso de publicación.
+    cancelled: Se canceló la publicación.
+    create_unknown: No se pudo confirmar la creación del documento remoto.
+    custody: No se pudo conservar el recibo de custodia de la publicación.
+    integrity: El contenido remoto no superó la verificación.
+    population: Falló la escritura del contenido guardado seleccionado.
+  field: Campo
+  key: Referencia
+  label:
+    amount_count: Valores guardados
+    calculation_revision_id: Referencia del cálculo guardado
+    destination: Destino
+    evidence_count: Referencias de evidencias
+    finding_count: Hallazgos de la revisión
+    ledger_row_count: Filas del libro guardadas
+    ledger_snapshot_id: Referencia del libro guardado
+    package_digest: Huella del paquete de evidencias
+    payload_categories: Contenido legible
+    publication_id: Referencia de publicación
+    publication_state: Estado de publicación
+    registry_digest: Huella del registro
+    review_status: Calidad de la revisión
+    root_folder_id: Referencia de la carpeta gestionada
+    selection: Selección guardada
+    snapshot_digest: Huella de la instantánea guardada
+    work_unit_id: Referencia del trabajo
+  notice:
+    calculation_required: Seleccione un cálculo guardado antes de publicar.
+    evidence_index: Se incluyen referencias de evidencias; no se publican los archivos
+      adjuntos originales.
+    external_copy: La publicación crea una copia legible en Google. Los usuarios autorizados
+      para acceder al destino pueden leer su contenido financiero.
+    incomplete: Esta revisión guardada tiene evidencias o atribuciones incompletas.
+    missing_evidence: Algunas evidencias seleccionadas no están disponibles; los datos
+      ausentes siguen siendo desconocidos.
+    prerequisite_unavailable: No están disponibles los requisitos previos de la revisión
+      guardada.
+    provisional: Esta revisión guardada es provisional.
+    receipt_unavailable: No está disponible un recibo de publicación verificado.
+    staged_edits: Guarde o descarte los cambios pendientes antes de revisar el cálculo
+      guardado.
+    submission_unresolved: El resultado de la publicación está pendiente de resolver.
+      Consulte la operación existente antes de volver a solicitarla.
+  offer:
+    title: Revisar en Google Sheets
+  open_document: Abrir hoja de cálculo
+  publication:
+    partial: Publicada parcialmente
+    populated: Contenido guardado escrito
+    prepared: Preparada localmente
+    published: Publicada y verificada
+    remote-created: Documento remoto creado
+    uncertain: Resultado de publicación incierto
+    verified: Contenido remoto verificado
+  publish: Publicar copia legible
+  result:
+    title: Publicación de la revisión en Google
+  selection:
+    ledger: Libro guardado
+  status:
+    incomplete: Incompleta
+    provisional: Provisional
+    verified: Verificada
+  technical: Referencias técnicas
+  value: Valor
 ledger:
   evidence:
     reader:
@@ -2510,6 +2593,7 @@ tui:
       artefact:
         calculation_report_csv: Informe de cálculo (CSV), solo registro local
         calculation_report_pdf: Resumen del cálculo firmado (PDF), solo registro local
+        calculation_review_xlsx: Revisión del cálculo guardado (XLSX)
         fichero_boe: Fichero BOE para presentar en la AEAT
         label: Documento a exportar
       payment_election:

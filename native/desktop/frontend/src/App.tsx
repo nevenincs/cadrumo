@@ -513,11 +513,15 @@ export function App({ host }: { host: Host }) {
     view: TerminalKind | "logs";
     since: number;
     granted?: boolean;
+    waitingForTerminal?: boolean;
   } | null>(null);
   const grantFocus = useCallback(() => {
     const wish = wanted.current;
     if (!wish) return;
-    if (performance.now() > wish.since + FOCUS_WISH_MS) {
+    if (
+      !wish.waitingForTerminal &&
+      performance.now() > wish.since + FOCUS_WISH_MS
+    ) {
       wanted.current = null;
       return;
     }
@@ -543,7 +547,13 @@ export function App({ host }: { host: Host }) {
     if (wish.view === "logs") target.focus();
     else if (terminals.current[wish.view])
       terminals.current[wish.view]?.focus();
-    else return;
+    else {
+      // First opening can wait for bundled fonts. Later user input still
+      // cancels this wish; elapsed loading time alone must not lose it.
+      wish.waitingForTerminal = true;
+      return;
+    }
+    wish.waitingForTerminal = false;
     wish.granted = true;
   }, []);
   useEffect(grantFocus);
@@ -603,7 +613,8 @@ export function App({ host }: { host: Host }) {
       document.activeElement === document.body
     )
       focusView("tui");
-    stoodAtGate.current = gated && phase !== "checking" && signInDismissed;
+    stoodAtGate.current =
+      gated && phase !== "checking" && phase !== "starting" && signInDismissed;
   }, [gated, phase, signInDismissed, focusView]);
   useEffect(() => {
     // Signed out from here, no dialog follows. If the terminal that held
@@ -1077,7 +1088,11 @@ export function App({ host }: { host: Host }) {
         group: "account",
         icon: "tui",
         keywords: "unlock recovery another profile",
-        enabled: () => gated && phase !== "checking" && phase !== "no-profile",
+        enabled: () =>
+          gated &&
+          phase !== "checking" &&
+          phase !== "starting" &&
+          phase !== "no-profile",
         run: continueInTui,
       },
       {
@@ -1877,7 +1892,12 @@ export function App({ host }: { host: Host }) {
         status={
           account.gated
             ? {
-                phase: phase === "checking" ? "starting" : "unavailable",
+                phase:
+                  phase === "checking" ||
+                  phase === "starting" ||
+                  account.startingServices
+                    ? "starting"
+                    : "unavailable",
                 note: t(accountLabel(phase) ?? "desktop.account.unknown"),
               }
             : { phase: status.tui.phase, note: sessionNote("tui") }

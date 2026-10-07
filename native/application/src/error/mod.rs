@@ -37,7 +37,16 @@ impl fmt::Display for Error {
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io(error) => Some(error),
+            Self::Json(error) => Some(error),
+            Self::Archive(error) => Some(error),
+            _ => None,
+        }
+    }
+}
 impl From<io::Error> for Error {
     fn from(value: io::Error) -> Self {
         Self::Io(value)

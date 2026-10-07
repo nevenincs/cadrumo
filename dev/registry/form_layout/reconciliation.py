@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 from ..compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ..compiler.loader import load_modelo_directory
 from .row_binding_reconciliation import reconcile_export_row_bindings
+from .scalar_source_reconciliation import reconcile_scalar_export_sources
 from .serialization import form_layout_fragment_path, render_form_layout_toml
 
 
@@ -119,10 +120,12 @@ def reconcile_export_casilla_splits(before: ModeloRevision, after: ModeloRevisio
 
 
 def reconcile_unreferenced_export_producers(before: ModeloRevision, after: ModeloRevision) -> FormLayoutDefinition:
-    """Preserve a draft only when changed header producers are not displayed.
+    """Preserve a draft after an unseen header or explicit marker owner correction.
 
     This proves presentation equivalence, not correctness of the export change.
     The export publisher must separately admit its source-pinned record drift.
+    A computed X-or-blank marker may become an already displayed manual casilla;
+    all geometry, constraints, sources and other declarations must stay identical.
     """
     if not before.export_layouts or len(before.form_layouts) != 1 or before.form_layouts != after.form_layouts:
         raise RegistryValidationError("producer reconciliation requires existing exports and one unchanged form")
@@ -155,6 +158,24 @@ def reconcile_unreferenced_export_producers(before: ModeloRevision, after: Model
             if len(old_record["fields"]) != len(new_record["fields"]):
                 raise RegistryValidationError("producer reconciliation refuses field changes")
             for old_field, new_field in zip(old_record["fields"], new_record["fields"], strict=True):
+                if old_field["kind"] == "computed" and new_field["kind"] == "casilla":
+                    address = (old_layout["id"], old_record["id"], old_field["id"])
+                    owner = next((c for c in before.casillas if c.id == new_field["casilla_id"]), None)
+                    if (
+                        address in referenced
+                        or old_field["data_type"] != "text"
+                        or old_field["length"] != 1
+                        or owner is None
+                        or owner.input_kind != "manual"
+                        or owner.formula is not None
+                        or owner.binding is not None
+                        or owner.constraints is None
+                        or set(owner.constraints.enum or ()) != {"X", ""}
+                        or not any(p.casilla_id == owner.id and p.kind == "on_form" for p in layout.placements)
+                    ):
+                        raise RegistryValidationError("producer reconciliation refuses an unowned or displayed marker")
+                    old_field.update(kind="casilla", casilla_id=new_field["casilla_id"], computed_key=None)
+                    changed += 1
                 if old_field["producer_key"] == new_field["producer_key"]:
                     continue
                 address = (old_layout["id"], old_record["id"], old_field["id"])
@@ -162,6 +183,11 @@ def reconcile_unreferenced_export_producers(before: ModeloRevision, after: Model
                     raise RegistryValidationError("producer reconciliation refuses a displayed or non-header change")
                 old_field["producer_key"] = new_field["producer_key"]
                 changed += 1
+    for revision, dump in ((before, prior), (after, current)):
+        references = derive_casilla_export_refs(revision.export_layouts, revision.bindings)
+        if any(tuple(c.export_refs) != tuple(references.get(c.id, ())) for c in revision.casillas):
+            raise RegistryValidationError("producer reconciliation refuses inconsistent reverse references")
+        dump["casillas"] = [c.model_dump(mode="json", exclude={"export_refs"}) for c in revision.casillas]
     if not changed or prior != current:
         raise RegistryValidationError("producer reconciliation refuses changes beyond unreferenced header producers")
     reconciled = layout.model_copy(update={"source_state_digest": form_layout_source_digest(after)})
@@ -224,6 +250,7 @@ def install_authored_export_reconciliation(
     unreferenced_producers: bool = False,
     casilla_splits: bool = False,
     row_bindings: bool = False,
+    scalar_sources: dict[str, tuple[str, str]] | None = None,
 ) -> None:
     """Finish a prevalidated first-export source interval through the form owner.
 
@@ -232,7 +259,7 @@ def install_authored_export_reconciliation(
     live revision and both form byte receipts, never writes a caller-supplied
     form, and does not publish runtime authority.
     """
-    if sum((unreferenced_producers, casilla_splits, row_bindings)) > 1:
+    if sum((unreferenced_producers, casilla_splits, row_bindings, scalar_sources is not None)) > 1:
         raise RegistryValidationError("choose one authored form reconciliation mode")
     modelo = load_modelo_directory(modelo_root)
     after = modelo.revisions[str(before.id)]
@@ -245,7 +272,9 @@ def install_authored_export_reconciliation(
     if sha256(old_bytes).hexdigest() != expected_old_sha256:
         raise RegistryValidationError("authored form owner old fragment changed")
     layout = (
-        reconcile_export_row_bindings(before, after)
+        reconcile_scalar_export_sources(before, after, replacements=scalar_sources)
+        if scalar_sources is not None
+        else reconcile_export_row_bindings(before, after)
         if row_bindings
         else reconcile_export_casilla_splits(before, after)
         if casilla_splits

@@ -6,52 +6,98 @@ use super::{
     format::Level,
     record::{Entry, ProcessRef},
 };
-use cadrumo_application::diagnostics::{Diagnostics, Event, EventKind};
+use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, Event, EventKind};
+use serde::Serialize;
+use serde_json::Value;
+use std::collections::BTreeMap;
 
 pub const SOURCE: &str = "host";
 const LOGGER: &str = "desktop";
 
 /// Tracks which diagnostics events were already turned into records.
 ///
-/// The diagnostics ring keeps its newest events and has no sequence numbers,
-/// so new events are the part of the current ring past its longest overlap
-/// with the previous one. Identical events that also share a millisecond can
-/// make that overlap longer than the real one once the ring is full.
+/// Sequence numbers identify events even when their content and timestamps
+/// are identical and the diagnostics ring has wrapped.
 #[derive(Default)]
 pub struct HostEvents {
-    previous: Vec<String>,
+    after: u64,
 }
 
 impl HostEvents {
     pub fn poll(&mut self, diagnostics: &Diagnostics) -> Vec<Entry> {
         // A cursor past every output chunk keeps captured output out.
         let events = diagnostics.snapshot(u64::MAX).events;
-        let keys: Vec<String> = events
+        let fresh = events
             .iter()
-            .map(|event| serde_json::to_string(event).unwrap_or_default())
+            .filter(|event| event.sequence > self.after)
+            .map(entry)
             .collect();
-        let fresh = fresh(&self.previous, &keys);
-        self.previous = keys;
-        events[fresh..].iter().map(entry).collect()
+        if let Some(last) = events.last() {
+            self.after = last.sequence;
+        }
+        fresh
     }
 }
 
-/// The index in `current` where events unseen in `previous` begin.
-fn fresh(previous: &[String], current: &[String]) -> usize {
-    (0..=previous.len().min(current.len()))
-        .rev()
-        .find(|overlap| previous[previous.len() - overlap..] == current[..*overlap])
-        .unwrap_or(0)
-}
-
-fn token(kind: EventKind) -> String {
-    serde_json::to_value(kind)
+fn token(value: impl Serialize) -> String {
+    serde_json::to_value(value)
         .ok()
         .and_then(|value| value.as_str().map(str::to_owned))
         .unwrap_or_default()
 }
 
 fn entry(event: &Event) -> Entry {
+    let (source, logger) = match event.source {
+        DiagnosticSource::Desktop => (SOURCE, LOGGER),
+        DiagnosticSource::Manager => ("manager", "manager"),
+    };
+    let process = event.status.as_ref().map_or_else(
+        || ProcessRef {
+            role: logger.to_owned(),
+            pid: event.host_pid,
+        },
+        |status| ProcessRef {
+            role: token(status.role),
+            pid: status.pid,
+        },
+    );
+    let mut context = BTreeMap::from([
+        ("event_id".to_owned(), Value::from(event.sequence)),
+        ("host_pid".to_owned(), Value::from(event.host_pid)),
+        ("process_id".to_owned(), Value::from(process.pid)),
+        ("process_role".to_owned(), Value::from(process.role.clone())),
+    ]);
+    if let Some(stage) = event.stage {
+        context.insert("stage".into(), Value::from(token(stage)));
+    }
+    if let Some(outcome) = event.outcome {
+        context.insert("outcome".into(), Value::from(token(outcome)));
+    }
+    if let Some(code) = event.host_exit_code {
+        context.insert("exit_code".into(), Value::from(code));
+    }
+    if let Some(role) = event.role
+        && event.status.is_none()
+    {
+        context.insert("requested_role".into(), Value::from(token(role)));
+    }
+    if let Some(status) = &event.status {
+        context.insert("process_ref".into(), Value::from(status.id));
+        context.insert("phase".into(), Value::from(token(status.phase)));
+        if let Some(code) = status.exit_code {
+            context.insert("exit_code".into(), Value::from(code));
+        }
+    }
+    if let Some(failure) = &event.failure {
+        context.insert("reason_code".into(), Value::from(token(failure.code)));
+        context.insert("operation".into(), Value::from(token(failure.operation)));
+        if let Some(kind) = &failure.io_kind {
+            context.insert("io_kind".into(), Value::from(format!("{kind:?}")));
+        }
+        if let Some(code) = failure.os_code {
+            context.insert("os_code".into(), Value::from(code));
+        }
+    }
     let mut message = token(event.kind);
     if let Some(status) = &event.status {
         message.push_str(&format!(
@@ -94,17 +140,15 @@ fn entry(event: &Event) -> Entry {
         _ => Level::Info,
     };
     Entry {
-        source: SOURCE,
+        source,
         timestamp: utc(event.timestamp_ms),
         timestamp_ms: Some(event.timestamp_ms),
         level: Some(level),
-        logger: Some(LOGGER.to_owned()),
+        logger: Some(logger.to_owned()),
         message,
         detail: None,
-        process: event.status.as_ref().map(|status| ProcessRef {
-            role: status.role,
-            pid: status.pid,
-        }),
+        process: Some(process),
+        context,
     }
 }
 
@@ -138,20 +182,6 @@ mod tests {
         error::application::{ApplicationError, ErrorCode, Operation},
         process::status::{ProcessPhase, ProcessRole, Stream},
     };
-
-    fn keys(values: &[&str]) -> Vec<String> {
-        values.iter().map(|value| (*value).to_owned()).collect()
-    }
-
-    #[test]
-    fn overlap_finds_appended_and_shifted_events() {
-        assert_eq!(fresh(&[], &keys(&["a"])), 0);
-        assert_eq!(fresh(&keys(&["a", "b"]), &keys(&["a", "b", "c"])), 2);
-        assert_eq!(fresh(&keys(&["a", "b", "c"]), &keys(&["b", "c", "d"])), 2);
-        assert_eq!(fresh(&keys(&["a", "b"]), &keys(&["a", "b"])), 2);
-        assert_eq!(fresh(&keys(&["a", "a"]), &keys(&["a", "a", "a"])), 2);
-        assert_eq!(fresh(&keys(&["a", "b"]), &keys(&["x", "y"])), 0);
-    }
 
     #[test]
     fn utc_text_matches_known_instants() {
@@ -187,7 +217,7 @@ mod tests {
         assert_eq!(
             second[0].process,
             Some(ProcessRef {
-                role: ProcessRole::Tui,
+                role: "tui".to_owned(),
                 pid: 4242
             })
         );
@@ -215,5 +245,33 @@ mod tests {
         let fresh = host.poll(&diagnostics);
         assert_eq!(fresh.len(), 1);
         assert_eq!(fresh[0].message, "child_started: cli pid 9999");
+    }
+
+    #[test]
+    fn stage_outcomes_and_safe_failure_fields_reach_the_view() {
+        use cadrumo_application::diagnostics::{HostOutcome, HostStage};
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        diagnostics.host_outcome(HostStage::Manager, HostOutcome::AlreadyRunning);
+        diagnostics.spawn_failure(
+            ProcessRole::Tui,
+            ApplicationError::new(ErrorCode::SpawnFailed, Operation::Terminal)
+                .caused_by(std::io::Error::from_raw_os_error(2)),
+        );
+        let mut host = HostEvents::default();
+        let records = host.poll(&diagnostics);
+        assert_eq!(records[0].source, "manager");
+        assert_eq!(records[0].context["stage"], "manager");
+        assert_eq!(records[0].context["outcome"], "already_running");
+        assert_eq!(records[1].context["requested_role"], "tui");
+        assert_eq!(records[1].context["reason_code"], "spawn_failed");
+        assert_eq!(records[1].context["os_code"], 2);
+        assert_eq!(records[1].process.as_ref().unwrap().role, "manager");
+        assert!(host.poll(&diagnostics).is_empty());
+        for _ in 0..600 {
+            diagnostics.host_outcome(HostStage::Manager, HostOutcome::AlreadyRunning);
+        }
+        assert_eq!(host.poll(&diagnostics).len(), 512);
+        diagnostics.host_outcome(HostStage::Manager, HostOutcome::AlreadyRunning);
+        assert_eq!(host.poll(&diagnostics).len(), 1);
     }
 }

@@ -188,6 +188,77 @@ fn continuation_lines_crlf_truncation_and_lossy_utf8() {
 }
 
 #[test]
+fn projected_context_survives_partial_writes_and_multiline_records() {
+    let scratch = Scratch::new("diagnostic-context");
+    let format = format!("{FORMAT} | %(diagnostic_context)s");
+    let mut tail = Tail::new(scratch.log(), &format);
+    let now = Instant::now();
+    append(&scratch.log(), b"2026-10-04T12:30:01.042Z [ERROR] cadrumo.runtime: admission failed | {\"diagnostic_id\":\"attempt-7\",");
+    assert!(tail.poll(now).0.is_empty());
+    append(&scratch.log(), b"\"process_id\":412,\"process_role\":\"runtime_worker\",\"reason_code\":\"runtime_unavailable\"}\nTraceback (most recent call last):\nRuntimeError: refused\n");
+    assert!(tail.poll(now + Duration::from_millis(1)).0.is_empty());
+    let (entries, _) = tail.poll(now + SETTLE + Duration::from_millis(1));
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].timestamp_ms, Some(1_791_117_001_042));
+    assert_eq!(entries[0].message, "admission failed");
+    assert_eq!(entries[0].context["diagnostic_id"], "attempt-7");
+    assert_eq!(entries[0].context["reason_code"], "runtime_unavailable");
+    assert_eq!(
+        entries[0]
+            .process
+            .as_ref()
+            .map(|process| (process.role.as_str(), process.pid)),
+        Some(("runtime_worker", 412))
+    );
+    assert_eq!(
+        entries[0].detail.as_deref(),
+        Some("Traceback (most recent call last):\nRuntimeError: refused")
+    );
+    append(&scratch.log(), line(5).as_bytes());
+    let (legacy, _) = drain(&mut tail);
+    assert_eq!(legacy[0].message, "rec-000005");
+    assert_eq!(legacy[0].timestamp_ms, None);
+    assert!(legacy[0].process.is_none() && legacy[0].context.is_empty());
+    let long = format!(
+        "2026-10-04T12:30:01.042Z [INFO] cadrumo.runtime: {} | {{\"process_id\":412}}\n",
+        "x".repeat(LINE_BYTES * 2)
+    );
+    append(&scratch.log(), long.as_bytes());
+    let (truncated, _) = drain(&mut tail);
+    assert_eq!(truncated.len(), 1);
+    assert_eq!(truncated[0].logger.as_deref(), Some("cadrumo.runtime"));
+    assert!(truncated[0].message.starts_with("xxxx") && truncated[0].context.is_empty());
+}
+
+#[test]
+fn multiline_message_continuations_preserve_the_headers_context() {
+    let scratch = Scratch::new("multiline-message-context");
+    let format = format!("{FORMAT} | %(diagnostic_context)s");
+    append(
+        &scratch.log(),
+        b"2026-10-04T12:30:01.042Z [INFO] cadrumo.runtime: first | {\"diagnostic_id\":\"attempt-7\",\"process_id\":412,\"process_role\":\"runtime_worker\"}\nsecond | {\"process_id\":999,\"process_role\":\"foreign\"}\nthird\n",
+    );
+    let mut tail = Tail::new(scratch.log(), &format);
+    let (entries, _) = drain(&mut tail);
+    assert_eq!(entries.len(), 1);
+    let entry = &entries[0];
+    assert_eq!(entry.message, "first");
+    assert_eq!(entry.context["diagnostic_id"], "attempt-7");
+    assert_eq!(entry.context["process_id"], 412);
+    assert_eq!(
+        entry
+            .process
+            .as_ref()
+            .map(|process| (process.role.as_str(), process.pid)),
+        Some(("runtime_worker", 412))
+    );
+    assert_eq!(
+        entry.detail.as_deref(),
+        Some("second | {\"process_id\":999,\"process_role\":\"foreign\"}\nthird")
+    );
+}
+
+#[test]
 fn skipped_partial_late_and_racing_rotations_lose_and_repeat_nothing() {
     let scratch = Scratch::new("rotation");
     let base = scratch.log();
@@ -948,6 +1019,8 @@ try:
 finally:
     handler.release()
 log.info("long " * 4000)
+log.info('multiline first\nsecond | {"process_id":999,"process_role":"foreign"}\nthird',
+         extra={"reason_code": "multiline_message"})
 log.error("after")
 "#,
                 &scratch.0,
@@ -967,10 +1040,11 @@ log.error("after")
             .iter()
             .filter(|entry| entry.logger.as_deref() == Some("cadrumo.s06.probe"))
             .collect();
-        assert_eq!(probe.len(), 5, "{probe:#?}");
+        assert_eq!(probe.len(), 6, "{probe:#?}");
         assert_eq!(probe[0].message, "plain á record");
         assert_eq!(probe[0].level, Some(Level::Info));
-        assert!(!probe[0].timestamp.is_empty() && probe[0].timestamp_ms.is_none());
+        assert!(probe[0].timestamp.ends_with('Z') && probe[0].timestamp_ms.is_some());
+        assert!(probe[0].process.is_some() && probe[0].context.contains_key("process_id"));
         assert_eq!(probe[1].message, "with traceback");
         assert_eq!(probe[1].level, Some(Level::Error));
         let detail = probe[1].detail.as_deref().unwrap();
@@ -988,7 +1062,14 @@ log.error("after")
             long.len() + probe[3].timestamp.len() + " [INFO] cadrumo.s06.probe: ".len(),
             LINE_BYTES
         );
-        assert_eq!(probe[4].message, "after");
+        assert_eq!(probe[4].message, "multiline first");
+        assert_eq!(probe[4].context["reason_code"], "multiline_message");
+        assert!(probe[4].process.is_some() && probe[4].context.contains_key("process_id"));
+        assert_eq!(
+            probe[4].detail.as_deref(),
+            Some("second | {\"process_id\":999,\"process_role\":\"foreign\"}\nthird")
+        );
+        assert_eq!(probe[5].message, "after");
         assert!(entries.iter().all(|entry| entry.source == "python"));
     }
 

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-06'
+modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5554fadd6b34dfa2f877e261264648ec5b8c963ae5fc7347f3415b50e05ca2f'
+body_hash: 'sha256:8ffe7f35addcb6a7c6c9f71c2c9b352d67c061417d33c67eeddff9cb2d6b8adf'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -189,7 +189,7 @@ shell to documentation:
   - `logs_subscribe` delivers batches of at most ten per second, starting with a 5,000-record backlog from a 10,000-record ring
   - each record carries `seq`, `source`, the raw timestamp, a parsed timestamp or null, a level or null, a logger or null, the message, a detail (continuation lines) or null, and a host process
   - each batch carries the source state
-  - Rust receives the line format from the Python environment query and keeps no copy of its own.
+  - Rust receives the canonical line format from the build-generated Python defaults on the Windows default-settings path, or from the Python environment query on fallback paths. It keeps no independently authored copy.
 - Shell commands:
   - `desktop_environment`: output language and documentation origin and languages
   - `open_external`, Rust-only through the opener

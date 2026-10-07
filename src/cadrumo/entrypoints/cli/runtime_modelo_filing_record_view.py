@@ -14,6 +14,7 @@ from ...application.modelo.filing_record_view_operation import (
     ModeloFilingRecordViewProjection,
     ModeloFilingRecordViewRequest,
 )
+from ...application.modelo.historical_filing_projection import ModeloHistoricalFilingContentProjection
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ._filing_chain_payloads import (
@@ -68,8 +69,8 @@ def read_modelo_filing_record_view(
     ctx: typer.Context,
     *,
     filing_record_id: str,
-) -> tuple[ModeloRecordPayload, ObservationLayersPayload]:
-    """Return only established CLI fields and renderer-ready observation layers."""
+) -> tuple[ModeloRecordPayload, ObservationLayersPayload, ModeloHistoricalFilingContentProjection]:
+    """Return selected historical values separately from current observation layers."""
     client = bound_profile_client(ctx)
     request = ModeloFilingRecordViewRequest(
         profile_id=client.profile_id,
@@ -104,12 +105,13 @@ def read_modelo_filing_record_view(
             or layers.filing_year != record.filing_year
             or layers.period != record.period.registry_token
             or layers.member_nif != record.member_nif
+            or projection.historical_content.calculation_revision_id != record.calculation_revision_id
         ):
             raise ValueError("filing view record or observation layers exceed the submitted scope")
         payload = _observation_layers_payload(layers)
     except Exception:
         raise invalid_completion_error(completed) from None
-    return record, payload
+    return record, payload, projection.historical_content
 
 
 __all__ = ["read_modelo_filing_record_view"]

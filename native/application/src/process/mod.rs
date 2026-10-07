@@ -48,7 +48,7 @@ impl Drop for OwnedChild {
             );
             if let Err(error) = result {
                 self.diagnostics
-                    .failure(fail(ErrorCode::CleanupFailed).caused_by(error));
+                    .failure_for(self.id, fail(ErrorCode::CleanupFailed).caused_by(error));
             }
         }
     }
@@ -70,7 +70,11 @@ pub fn passthrough(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| fail(ErrorCode::SpawnFailed).caused_by(e))?;
+        .map_err(|cause| {
+            let error = fail(ErrorCode::SpawnFailed).caused_by(cause);
+            diagnostics.spawn_failure(ProcessRole::Cli, error.clone());
+            error
+        })?;
     let id = diagnostics.start(child.id(), ProcessRole::Cli);
     let mut owned = OwnedChild {
         child,
@@ -78,6 +82,16 @@ pub fn passthrough(
         id,
         finished: false,
     };
+    let outcome = relay_child(&mut owned, cancelled);
+    if let Err(error) = &outcome {
+        owned.diagnostics.failure_for(id, error.clone());
+    }
+    outcome
+}
+
+fn relay_child(owned: &mut OwnedChild, cancelled: Arc<AtomicBool>) -> Result<i32> {
+    let diagnostics = owned.diagnostics.clone();
+    let id = owned.id;
     let stdout = owned
         .child
         .stdout

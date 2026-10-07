@@ -275,7 +275,7 @@ fn normalized_absolute_components(path: &Path) -> PathBuf {
     normalized
 }
 
-pub(crate) fn validated_absolute_path(path: &Path) -> Result<PathBuf, Refusal> {
+pub fn validated_absolute_path(path: &Path) -> Result<PathBuf, Refusal> {
     absolute_path_input(path)?;
     if STORAGE_REFUSE_LINKS {
         crate::refuse_links(path)
@@ -523,6 +523,14 @@ pub(crate) fn local_app_data() -> Option<PathBuf> {
 ///
 /// The runtime manager manages a root only when `source` is [`RootSource::InstalledDefault`].
 pub fn resolve_storage_root(evidence: &Evidence) -> Result<ResolvedRoot, Refusal> {
+    resolve_storage_root_with(evidence, &|name| env::var_os(name))
+}
+
+/// Resolve against a captured environment without mutating the current process.
+pub fn resolve_storage_root_with(
+    evidence: &Evidence,
+    lookup: &dyn Fn(&str) -> Option<OsString>,
+) -> Result<ResolvedRoot, Refusal> {
     #[cfg(windows)]
     let known_folder = match evidence.mode {
         Mode::Installed => local_app_data(),
@@ -532,7 +540,7 @@ pub fn resolve_storage_root(evidence: &Evidence) -> Result<ResolvedRoot, Refusal
     let known_folder: Option<PathBuf> = None;
     resolve_root(
         evidence.mode,
-        &|name| env::var_os(name),
+        lookup,
         evidence.checkout.as_deref(),
         known_folder.as_deref(),
         BUILD_CHANNEL,

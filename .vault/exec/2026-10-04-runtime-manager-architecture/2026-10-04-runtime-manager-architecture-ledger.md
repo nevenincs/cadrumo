@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e29e2565146fd9e0785d4645ff86fcc33fca38484acc0b4cd6a008c3f9d373a7'
+body_hash: 'sha256:07f2f6a4139f23f590909578e5debfb49f9346b351df9109fc4ed7d6ff5d9296'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -262,6 +262,39 @@ related:
 - `S10` `verify:` `release Windows manifest verifier` -> `pass`
 - `S10` `verify:` `manager all-target Clippy with both test features and rustfmt` -> `pass`
 - `S10` `by:` `root`
+- `S25` `M` `src/cadrumo/adapters/local_runtime/windows.py`
+- `S25` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S25` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows.py`
+- `S25` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
+- `S25` `A` `src/cadrumo/adapters/local_runtime/tests/test_runtime_load.py`
+- `S25` `A` `src/cadrumo/entrypoints/runtime/tests/test_headless_load.py`
+- `S25` `verify:` `native transport/cleanup plus complete headless runtime (60 tests; build/runtime-load-final.log)` -> `pass`
+- `S25` `verify:` `shutdown with 16 stalled peers before handshake deadlines (build/runtime-load-shutdown.log)` -> `pass`
+- `S25` `verify:` `512 abrupt native connections (unchanged targeted rerun; build/runtime-load-churn512.log)` -> `pass`
+- `S25` `verify:` `cached current-source Rust manager adversarial suite (34 tests; 2.46 seconds)` -> `pass`
+- `S25` `verify:` `scoped Ruff lint format and ty` -> `pass`
+- `S25` `verify:` `scoped git diff --check` -> `pass`
+- `S25` `by:` `root`
+- `S25` `M` `src/cadrumo/entrypoints/runtime/tests/test_headless_load.py`
+- `S25` `verify:` `pytest headless native runtime benchmark` -> `pass`
+- `S25` `verify:` `ruff check and format headless benchmark` -> `pass`
+- `S25` `verify:` `ty check headless benchmark` -> `pass`
+- `S26` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S26` `A` `native/desktop/frontend/src/components/AccountLoading.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/accountWords.ts`
+- `S26` `M` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S26` `M` `native/desktop/frontend/src/App.tsx`
+- `S26` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S26` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S26` `M` `native/desktop/frontend/tests/scenarios/manager.spec.ts`
+- `S26` `A` `native/desktop/frontend/tests/scenarios/startup.spec.ts`
+- `S26` `M` `dev/locales/desktop_chrome.py`
+- `S26` `verify:` `Playwright startup and manager scenarios (18 tests)` -> `pass`
+- `S26` `verify:` `Playwright final retry heading and readiness replacement (2 tests)` -> `pass`
+- `S26` `verify:` `pytest desktop_chrome (16 tests)` -> `pass`
+- `S26` `verify:` `pytest real Windows headless runtime load (1 test)` -> `pass`
+- `S26` `verify:` `TypeScript noEmit and scoped ESLint Prettier Ruff ty` -> `pass`
+- `S26` `by:` `root`
 
 ## Notes
 
@@ -283,3 +316,8 @@ related:
 - `S22` Heartbeat field is required `in_flight_operations:` integer|null on both sides; unknown never proves idle. Admission retains pre-fence requests, and late observations are not reused. Shared Git index lock initially rejected S04 checkpoint; no lock removed and no hook bypassed.
 - `S08` Partial S08: installed identity/version query now implemented and tested against the pre-existing packaged interpreter, complete inventory admission and fail-closed failed-version marker. Shared Settings projection remains open. No full package/docs/frontend rebuild. Native source and binary hashes, exact package distinction and limits are in build/manager-startup-verification.json.
 - `S10` Partial S10: production startup now composes admission, single breakaway attempt, session lock, inspected installed runtime, ownership/adoption and supervisor under a hidden top-level Windows window. Session-end cancellation waits for supervisor completion. Startup failure has visible notification only after interactive admission. Real session-1 GUI/logoff and shell-dispatch fallback remain unverified/unimplemented respectively. All remaining Rust implementation/review/testing performed by root after user's no-delegation instruction. Initial checkpoint commit rejected by another shared Git index lock; no lock removed or hook bypassed.
+- `S25` Operator authorized backend/runtime optimization, headless benchmarks and adversarial multiconnection testing, preserving the fast scoped loop. Measured a Windows accept race: disconnect-before-accept terminated the listener. Reset the existing pipe instance without an ownership gap and classify ordinary disconnect as local refusal. Adaptive 1-to-50ms waits replace a fixed 50ms delay without altering framing, peer admission, concurrency limit or idle deadline.
+- `S25` Benchmark evidence: build/runtime-load-benchmark.json. Native-pipe median round trips fell from 59-61ms to 13-15ms; at 24 clients throughput rose 468 to 1436 requests/s. Full source runtime: 18.93s startup, 9.63ms p50/17.01ms p95 with eight connections, 2.75s shutdown. Requests measure typed status/refusal, not authenticated mutations. Source-only changes; no binary/package rebuild.
+- `S25` One later stress fixture exceeded its unchanged 3s startup wait on the busy shared host; the 512-client test passed unchanged on targeted rerun. Baseline race failed, fix verified. Updated two stale assertions to the existing optional `sign_in` field and tick-before-first-loop semantics. No different-user/session or GUI acceptance. Repository-wide import gates were not rerun against unrelated concurrent changes under the operator's fast scoped verification instruction.
+- `S25` Root-cause follow-up: fresh runtime startup 11605.89ms; `main_import` 5710.24ms, `registry_prepare` 5573.05ms, `listener_listen` 6.947ms. Independent unprofiled import+registry 11865.39ms. Profile: 1806 strict schema calls, 481 distinct compiled models, 14.381s of 15.422s in strict schema processing (instrumented, not benchmark latency). Separate shutdown probe: runtime returned at 214.51ms, atexit marker 215.33ms, process exit 1766.45ms. No registry semantics changed or package rebuilt; earlier 18.93s versus now 11.61s is not an optimization claim. Full evidence build/runtime-root-cause-report.json with source hashes and profile artifacts. Headless test passed in 14.89s. Shared Git index lock still present; no lock removed.
+- `S26` User authorized implementation of React ghost UI for asynchronous Tauri startup. Reused existing native manager launch and canonical readiness reads without Rust edits, new state libraries or package compilation. Corrected related missing `starting_services` declaration in canonical desktop locale projection and regenerated only chrome strings. React waits are bounded and stale read results cannot restore an unmounted owner. Evidence and source hashes: build/runtime-startup-ui/verification.json; visually inspected loading.png. Browser scenarios prove React behavior, native source runtime smoke proves native IPC; session-1 desktop GUI not claimed. Existing shared Git index.lock still blocks checkpoint; no lock removed and no other workstream staged.

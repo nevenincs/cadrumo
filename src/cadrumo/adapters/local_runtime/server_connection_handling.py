@@ -167,13 +167,19 @@ class RuntimeConnectionHandling:
 
     def _serve_connection_requests(self, channel: RuntimeByteChannel, context: RuntimeConnectionContext) -> None:
         """Serve the admitted request sequence until the peer or host closes it."""
+        idle_wait = 0.001
         while not self.stop.is_set():
             if self.profiles is not None:
                 for event in self.profiles.take_events(context):
                     write_session_event(channel, event, deadline=time.monotonic() + 5)
             if not channel.read_ready():
-                self.stop.wait(0.05)
+                # Short waits after activity avoid a fixed 50ms round-trip tax.
+                # Idle connections quickly return to the existing bounded rate;
+                # Event.wait still wakes immediately when shutdown is requested.
+                self.stop.wait(idle_wait)
+                idle_wait = min(0.05, idle_wait * 2)
                 continue
+            idle_wait = 0.001
             request = read_document(channel, RuntimeRequest, deadline=time.monotonic() + 5).root
             status = self._dispatch_profile_request(channel, context, request)
             if status is None:

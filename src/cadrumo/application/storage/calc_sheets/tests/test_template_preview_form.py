@@ -14,7 +14,7 @@ from ..export_tables import export_identity_stamps
 from ..form_workbook import add_template_preview_form
 from ..records import SheetGuideContent, TabName
 from ..template_source import WorkbookTemplateSource
-from .test_form_context_fields import _with_context
+from .test_form_context_fields import _producer, _with_context
 from .test_form_workbook import form_source as form_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -57,6 +57,28 @@ def test_preview_retains_live_missing_input_guards_and_hides_technical_identity(
     assert projected.formula == f'IF(ISBLANK({ref}),"Sin dato",{ref})'
     with pytest.raises(CalcSheetsEngineError, match="already contains"):
         add_template_preview_form(rendered, source)
+
+
+def test_preview_guide_keeps_every_assumption_in_transport_cells(form_source):
+    snapshot, _ = form_source
+    source, plan = _preview(snapshot)
+    paragraphs = ("Importes ficticios.", "El total es una entrada independiente.", "Sin cuenta bancaria.")
+    plan = plan.model_copy(update={"guide": SheetGuideContent(title="Ejemplo de revisión", paragraphs=paragraphs)})
+    rendered = add_template_preview_form(plan, source)
+    cells = {cell.address.row: cell.value for cell in rendered.value_cells if cell.address.tab is TabName.GUIDE}
+    assert cells[1] == "Ejemplo de revisión"
+    assert tuple(cells[row] for row in range(7, 10)) == paragraphs
+    assert "No acredita" in str(cells[3])
+    assert {height.row for height in rendered.row_heights if height.tab is TabName.GUIDE} >= {7, 8, 9}
+    assert any(region.tab is TabName.GUIDE and region.end_row == 9 for region in rendered.protected_ranges)
+
+
+def test_preview_guide_cannot_reintroduce_machine_identity(form_source):
+    snapshot, _ = form_source
+    source, plan = _preview(snapshot)
+    plan = plan.model_copy(update={"guide": SheetGuideContent(title="Ejemplo", paragraphs=(source.template_digest,))})
+    with pytest.raises(CalcSheetsEngineError, match="technical presentation text"):
+        add_template_preview_form(plan, source)
 
 
 @pytest.mark.parametrize(
@@ -129,3 +151,37 @@ def test_preview_repeating_rows_are_unknown_and_never_read_saved_revision(form_s
     values = [cell.value for cell in rendered.value_cells if cell.address.tab is TabName.FORM]
     assert "Sin registros aportados a esta vista. Consulte el detalle de origen." in values
     assert "No hay registros en el detalle guardado." not in values
+
+
+@pytest.mark.parametrize(
+    ("key", "expected"),
+    [(FilingProducerKey.TAXPAYER_TAX_ID, "12345678Z"), (FilingProducerKey.TAXPAYER_GIVEN_NAME, "=1+1")],
+)
+@pytest.mark.usefixtures("operation")
+def test_preview_projects_only_explicit_illustrative_identity(form_source, monkeypatch, key, expected):
+    snapshot, _ = form_source
+    snapshot, _ = _with_context(snapshot, producer=key)
+    source, plan = _preview(snapshot)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("illustrative identity invoked a production context reader")
+
+    monkeypatch.setattr("cadrumo.application.storage.calc_sheets.form_workbook.form_context_value", forbidden)
+    rendered = add_template_preview_form(plan, source, illustrative_producer=_producer())
+    label = next(c for c in rendered.value_cells if c.address.tab is TabName.FORM and c.value == "Dato declarado")
+    value = next(
+        c
+        for c in rendered.value_cells
+        if c.address.tab is TabName.FORM and c.address.row == label.address.row and c.address.column == 9
+    )
+    assert value.value == expected
+    assert not any(c.address == value.address for c in rendered.formula_cells)
+    assert export_identity_stamps(rendered) == ()
+
+
+@pytest.mark.usefixtures("operation")
+def test_preview_refuses_other_modelo_illustrative_identity_even_without_context_blocks(form_source):
+    snapshot, _ = form_source
+    source, plan = _preview(snapshot)
+    with pytest.raises(CalcSheetsEngineError, match="another modelo"):
+        add_template_preview_form(plan, source, illustrative_producer=_producer("131"))

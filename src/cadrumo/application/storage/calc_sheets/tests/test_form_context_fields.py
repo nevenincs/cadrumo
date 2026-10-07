@@ -150,7 +150,7 @@ def test_other_model_producer_refused_even_for_year(form_source):
         add_form_workbook(build_export_plan(snapshot), snapshot, producer_snapshot=_producer("131"))
 
 
-def _with_summary(snapshot, *, wire_policy=None, unused=False):
+def snapshot_with_binding_context(snapshot, *, wire_policy=None, unused=False):
     from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 
     binding = next(b for b in snapshot.revision.bindings if b.value.channel.value == "decimal")
@@ -201,7 +201,7 @@ def _with_summary(snapshot, *, wire_policy=None, unused=False):
 
 def test_summary_links_existing_scalar_without_editable_duplicate(form_source):
     snapshot, _ = form_source
-    snapshot, _block, _binding = _with_summary(snapshot)
+    snapshot, _block, _binding = snapshot_with_binding_context(snapshot)
     plan = build_export_plan(snapshot)
     result = add_form_workbook(plan, snapshot)
     label = next(c for c in result.value_cells if c.address.tab is TabName.FORM and c.value == "Importe total")
@@ -221,7 +221,7 @@ def test_summary_rejects_missing_binding(form_source):
     from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 
     snapshot, _ = form_source
-    snapshot, block, binding = _with_summary(snapshot)
+    snapshot, block, binding = snapshot_with_binding_context(snapshot)
     revision = snapshot.revision.model_copy(
         update={"bindings": tuple(b for b in snapshot.revision.bindings if b.id != binding.id)}
     )
@@ -234,7 +234,7 @@ def test_summary_rejects_row_set_binding(form_source):
     from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 
     snapshot, _ = form_source
-    snapshot, block, binding = _with_summary(snapshot)
+    snapshot, block, binding = snapshot_with_binding_context(snapshot)
     changed = binding.model_copy(
         update={"value": binding.value.model_copy(update={"channel": BindingValueChannel.ROW_SET})}
     )
@@ -253,7 +253,7 @@ def test_summary_preserves_backing_scalar_and_live_reference(form_source, value,
     snapshot, _ = form_source
     from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 
-    snapshot, _block, binding = _with_summary(
+    snapshot, _block, binding = snapshot_with_binding_context(
         snapshot, wire_policy=ExportValuePolicy(wire_policy) if wire_policy else None
     )
     plan = build_export_plan(snapshot)
@@ -278,7 +278,7 @@ def test_summary_without_formula_or_manual_consumer_allocates_readonly_source(fo
     from ..layout import plan_layout
 
     snapshot, _ = form_source
-    snapshot, _block, binding = _with_summary(snapshot, unused=True)
+    snapshot, _block, binding = snapshot_with_binding_context(snapshot, unused=True)
     layout = plan_layout(snapshot.revision)
     address = layout.binding_cells[binding.id]
     row = next(row for row in layout.binding_rows if row.binding == binding.id)

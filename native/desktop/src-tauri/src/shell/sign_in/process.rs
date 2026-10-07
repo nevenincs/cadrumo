@@ -1,11 +1,15 @@
 use super::failure;
-use cadrumo_application::error::application::{ErrorCode, Result};
+use cadrumo_application::{
+    diagnostics::Diagnostics,
+    error::application::{ErrorCode, Result},
+    process::status::{ProcessPhase, ProcessRole},
+};
 use std::{
     io::{Read, Write},
-    process::{Child, Command, Stdio},
+    process::{Child, Command, ExitStatus, Stdio},
     sync::{
+        Arc, Mutex,
         atomic::{AtomicBool, Ordering},
-        Mutex,
     },
     thread,
     time::{Duration, Instant},
@@ -28,11 +32,13 @@ struct Active {
     closed: bool,
     busy: bool,
     child: Option<Child>,
+    process: Option<u64>,
 }
 
 #[derive(Default)]
 pub struct Children {
     active: Mutex<Active>,
+    diagnostics: Arc<Diagnostics>,
 }
 
 pub struct Output {
@@ -42,6 +48,31 @@ pub struct Output {
 }
 
 impl Children {
+    pub fn new(diagnostics: Arc<Diagnostics>) -> Self {
+        Self {
+            diagnostics,
+            ..Self::default()
+        }
+    }
+
+    fn settle_active(&self, active: &mut Active) -> Result<()> {
+        let outcome = active.child.as_mut().map(settle).transpose();
+        match outcome {
+            Ok(Some((status, phase))) => {
+                if let Some(process) = active.process.take() {
+                    self.diagnostics.finish(process, status.code(), phase);
+                }
+                Ok(())
+            }
+            Ok(None) => Ok(()),
+            Err(error) => {
+                if let Some(process) = active.process {
+                    self.diagnostics.failure_for(process, error.clone());
+                }
+                Err(error)
+            }
+        }
+    }
     /// Permanently fence new commands, kill the current child and reap it.
     pub fn stop(&self) -> Result<()> {
         let mut active = self
@@ -49,9 +80,7 @@ impl Children {
             .lock()
             .map_err(|_| failure(ErrorCode::LockPoisoned))?;
         active.closed = true;
-        if let Some(child) = active.child.as_mut() {
-            settle(child)?;
-        }
+        self.settle_active(&mut active)?;
         Ok(())
     }
 
@@ -96,7 +125,7 @@ impl Children {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x08000000);
         }
-        let (stdin, stdout, stderr) = {
+        let (process, stdin, stdout, stderr) = {
             let mut active = loop {
                 let active = self
                     .active
@@ -117,28 +146,34 @@ impl Children {
                 drop(active);
                 thread::sleep(Duration::from_millis(10));
             };
-            let mut child = command
-                .spawn()
-                .map_err(|_| failure(ErrorCode::SpawnFailed))?;
+            let mut child = command.spawn().map_err(|cause| {
+                let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
+                self.diagnostics
+                    .spawn_failure(ProcessRole::SignIn, error.clone());
+                error
+            })?;
+            let process = self.diagnostics.start(child.id(), ProcessRole::SignIn);
             let pipes = (
+                process,
                 child.stdin.take(),
                 child.stdout.take().unwrap(),
                 child.stderr.take().unwrap(),
             );
             active.busy = true;
             active.child = Some(child);
+            active.process = Some(process);
             pipes
         };
         // The child's own time, from its start: not the wait for its turn.
         let start = Instant::now();
         let overflow = AtomicBool::new(false);
-        let outcome = thread::scope(|scope| {
+        let outcome: Result<Output> = thread::scope(|scope| {
             let writer = scope.spawn(move || -> Result<()> {
                 if let (Some(mut stdin), Some(secret)) = (stdin, secret) {
                     // Exactly one payload, followed by EOF; never retry login.
                     stdin
                         .write_all(&secret)
-                        .map_err(|_| failure(ErrorCode::WriteFailed))?;
+                        .map_err(|cause| failure(ErrorCode::WriteFailed).caused_by(cause))?;
                 }
                 Ok(())
             });
@@ -152,13 +187,13 @@ impl Children {
                     .active
                     .lock()
                     .map_err(|_| failure(ErrorCode::LockPoisoned))?;
-                active.child.as_mut().map(settle).transpose()
+                self.settle_active(&mut active)
             };
             let written = writer.join().map_err(|_| failure(ErrorCode::Panic))?;
             let stdout = out.join().map_err(|_| failure(ErrorCode::Panic))?;
             let stderr = err.join().map_err(|_| failure(ErrorCode::Panic))?;
             cleanup?;
-            let success = status?;
+            let success = status?.success();
             // Refusal envelopes are still useful when the child exited before
             // consuming stdin. Successful login must have consumed the write.
             if success {
@@ -176,18 +211,30 @@ impl Children {
             .map_err(|_| failure(ErrorCode::LockPoisoned))?;
         // Retain cleanup ownership if reaping could not be confirmed. A later
         // close retries it, and another command cannot replace the child.
-        if active
+        if let Some(status) = active
             .child
             .as_mut()
-            .is_some_and(|child| child.try_wait().ok().flatten().is_some())
+            .and_then(|child| child.try_wait().ok().flatten())
         {
+            if let Some(process) = active.process.take() {
+                self.diagnostics
+                    .finish(process, status.code(), ProcessPhase::Exited);
+            }
             active.child = None;
             active.busy = false;
+        }
+        if let Err(error) = &outcome {
+            self.diagnostics.failure_for(process, error.clone());
         }
         outcome
     }
 
-    fn wait(&self, overflow: &AtomicBool, start: Instant, deadline: Duration) -> Result<bool> {
+    fn wait(
+        &self,
+        overflow: &AtomicBool,
+        start: Instant,
+        deadline: Duration,
+    ) -> Result<ExitStatus> {
         loop {
             let mut active = self
                 .active
@@ -204,9 +251,9 @@ impl Children {
                 .as_mut()
                 .unwrap()
                 .try_wait()
-                .map_err(|_| failure(ErrorCode::CleanupFailed))?
+                .map_err(|cause| failure(ErrorCode::CleanupFailed).caused_by(cause))?
             {
-                return Ok(status.success());
+                return Ok(status);
             }
             if start.elapsed() >= deadline {
                 return Err(failure(ErrorCode::TimedOut));
@@ -217,20 +264,27 @@ impl Children {
     }
 }
 
-fn settle(child: &mut Child) -> Result<()> {
-    if child
+fn settle(child: &mut Child) -> Result<(ExitStatus, ProcessPhase)> {
+    let running = child
         .try_wait()
-        .map_err(|_| failure(ErrorCode::CleanupFailed))?
-        .is_none()
-    {
+        .map_err(|cause| failure(ErrorCode::CleanupFailed).caused_by(cause))?
+        .is_none();
+    if running {
         child
             .kill()
-            .map_err(|_| failure(ErrorCode::CleanupFailed))?;
+            .map_err(|cause| failure(ErrorCode::CleanupFailed).caused_by(cause))?;
     }
-    child
+    let status = child
         .wait()
-        .map_err(|_| failure(ErrorCode::CleanupFailed))?;
-    Ok(())
+        .map_err(|cause| failure(ErrorCode::CleanupFailed).caused_by(cause))?;
+    Ok((
+        status,
+        if running {
+            ProcessPhase::Terminated
+        } else {
+            ProcessPhase::Exited
+        },
+    ))
 }
 
 fn read(mut pipe: impl Read, overflow: &AtomicBool) -> Result<Zeroizing<Vec<u8>>> {
@@ -239,7 +293,7 @@ fn read(mut pipe: impl Read, overflow: &AtomicBool) -> Result<Zeroizing<Vec<u8>>
     loop {
         let count = pipe
             .read(&mut *buffer)
-            .map_err(|_| failure(ErrorCode::ReadFailed))?;
+            .map_err(|cause| failure(ErrorCode::ReadFailed).caused_by(cause))?;
         if count == 0 {
             return Ok(output);
         }
@@ -301,6 +355,17 @@ mod tests {
         assert_eq!(&*output.stdout, b"secret-channel-probe");
         assert!(output.stderr.is_empty());
         assert!(children.active.lock().unwrap().child.is_none());
+        let snapshot = children.diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes.len(), 1);
+        assert_eq!(snapshot.processes[0].role, ProcessRole::SignIn);
+        assert_eq!(snapshot.processes[0].exit_code, Some(0));
+        assert_eq!(snapshot.processes[0].phase, ProcessPhase::Exited);
+        assert!(snapshot.output.is_empty());
+        assert!(
+            !serde_json::to_string(&snapshot.events)
+                .unwrap()
+                .contains("secret-channel-probe")
+        );
     }
 
     #[cfg(windows)]
@@ -359,6 +424,9 @@ mod tests {
         });
         assert!(children.active.lock().unwrap().child.is_none());
         assert!(children.run(powershell("exit 0"), None).is_err());
+        let snapshot = children.diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes[0].phase, ProcessPhase::Terminated);
+        assert!(snapshot.output.is_empty());
     }
 
     #[cfg(windows)]
@@ -375,6 +443,15 @@ mod tests {
         assert_eq!(late.err().unwrap().code, ErrorCode::TimedOut);
         assert!(start.elapsed() < Duration::from_secs(10));
         assert!(children.active.lock().unwrap().child.is_none());
+        let snapshot = children.diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes[0].phase, ProcessPhase::Terminated);
+        assert!(snapshot.events.iter().any(|event| {
+            event.process == Some(snapshot.processes[0].id)
+                && event
+                    .failure
+                    .as_ref()
+                    .is_some_and(|error| error.code == ErrorCode::TimedOut)
+        }));
         // Within the one it is given: it runs to its end.
         let output = children
             .run_within(

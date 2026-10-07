@@ -312,7 +312,10 @@ impl TerminalState {
         id: u64,
         action: impl FnOnce(&mut Session) -> Result<T>,
     ) -> Result<T> {
-        action(self.registry()?.session(id)?)
+        let mut registry = self.registry()?;
+        let session = registry.session(id)?;
+        let outcome = action(session);
+        session.record(outcome)
     }
 
     pub fn close(&self, id: u64) -> Result<()> {

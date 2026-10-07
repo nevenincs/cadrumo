@@ -2137,6 +2137,25 @@ application:
           sources: Atribució de fonts
           status: Codi d'estat registrat
           status_incomplete: Incomplet
+          calculation_state: 'Estat del càlcul desat'
+          current_calculation: 'Càlcul actual en exportar'
+          current_filing: 'Presentació local actual en exportar'
+          filing_status: 'Estat del registre de presentació desat'
+          filing_record: 'Registre de presentació seleccionat'
+          filing_status_vigente: 'Vigent'
+          filing_status_supersedido: 'Substituït — històric'
+          aeat_confirmation: 'Confirmació de l’AEAT'
+          'yes': 'Sí'
+          'no': 'No'
+          calculation_state_borrador: 'Esborrany — provisional'
+          calculation_state_verificado_completo: 'Càlcul local verificat'
+          calculation_state_presentado: 'Presentat localment'
+          calculation_state_presentado_supersedido: 'Presentació local històrica — substituïda'
+          calculation_state_descartado: 'Càlcul descartat'
+          aeat_confirmation_pendiente: 'Pendent — sense acceptació observada de l’AEAT'
+          aeat_confirmation_confirmada: 'Confirmada per evidència desada de l’AEAT'
+          aeat_confirmation_discrepante: 'Discrepància amb l’evidència de l’AEAT'
+          aeat_confirmation_descartada: 'Descartada abans de la confirmació de l’AEAT'
           status_provisional: Provisional
           status_verified: Dades locals verificades
           taxable_base: Base imposable (visualització numèrica)
@@ -2336,3 +2355,39 @@ application:
       validation_clean: La validació s'ha completat sense incidències bloquejants.
       validation_failed: La validació ha detectat incidències que bloquegen.
       workflow_failure: No s'ha pogut completar el flux de treball.
+
+  reconciliation_export:
+    title: "Reconciliacions desades"
+    saved_comparison_notice: "Les comparacions desades conserven els valors i les referències originals. Un valor buit és desconegut. Els avisos delimiten què s'ha comprovat; una referència no demostra que es conservin els bytes del document."
+    record: "Reconciliació"
+    date: "Data"
+    verdict: "Resultat de la comparació"
+    modelo: "Model"
+    year: "Exercici"
+    period: "Període"
+    registry_revision: "Revisió normativa desada"
+    work_unit: "Treball"
+    calculation_revision: "Càlcul desat"
+    evidence_kind: "Tipus d'evidència"
+    evidence_reference: "Referència d'evidència"
+    actor: "Responsable"
+    difference_count: "Diferències"
+    advisory_count: "Avisos"
+    difference_kind: "Tipus de diferència"
+    field: "Camp o casella"
+    saved_value: "Valor del càlcul desat"
+    evidence_value: "Valor de l'evidència"
+    difference_reason: "Motiu de la diferència"
+    legal_refs: "Referències legals"
+    source_refs: "Fonts oficials"
+    advisory_code: "Codi d'avís"
+    advisory: "Avís"
+    context: "Context"
+    record_identity: "Identitat completa del registre"
+    verdict_matches: "Els valors coincideixen"
+    verdict_mismatches: "Hi ha diferències"
+    evidence_kind_justificante: "Justificant"
+    evidence_kind_declaration: "Declaració presentada"
+    difference_kind_header_field: "Identitat del justificant"
+    difference_kind_total: "Total presentat"
+    difference_kind_casilla: "Valor de casella"

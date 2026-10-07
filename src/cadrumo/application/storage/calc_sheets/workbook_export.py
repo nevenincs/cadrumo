@@ -37,7 +37,7 @@ from ....domain.calculations.registry.ids import ModeloId, RevisionId
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ...calculations.relation_prefill import resolve_relations_from_local_store
 from .engine import build_export_plan
-from .records import OperatorInputs, RelationValues, SheetExportPlan
+from .records import AnySheetExportPlan, OperatorInputs, RelationValues, SheetExportPlan
 
 type WorkbookSnapshotResolver = Callable[[ModeloId, Period], RegistrySnapshot]
 """Resolves the registry snapshot one workbook export is built from."""
@@ -55,7 +55,7 @@ class SheetWorkbookMaterializer(Protocol):
     decided once, by the plan builder.
     """
 
-    def __call__(self, plan: SheetExportPlan, /) -> bytes:
+    def __call__(self, plan: AnySheetExportPlan, /) -> bytes:
         """Return the complete bytes of the workbook ``plan`` describes."""
         ...
 

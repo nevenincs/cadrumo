@@ -13,6 +13,78 @@ modelo:
           la Comunidad con excepción de las realizadas en dicho territorio.
         title: IVA. Solicitud de devolución del IVA soportado en otros Estados miembros
           (8ª Directiva)
+      form:
+        authored:
+          actividades:
+            heading: Actividades
+          anexos:
+            heading: 7. Anexos
+          apartado:
+            heading: Apartado de correos en España
+          banco:
+            heading: 6. Datos bancarios
+          bienes:
+            heading: Naturaleza de los bienes y servicios adquiridos
+          codigo:
+            heading: Código
+          descripcion:
+            heading: Descripción
+          devolucion:
+            heading: 4. Devolución solicitada
+          domicilio:
+            heading: Domicilio en España
+          establecimiento:
+            heading: Ámbito de establecimiento
+          extranjero:
+            heading: Dirección en el extranjero
+          fila-1:
+            heading: '1'
+          fila-10:
+            heading: '10'
+          fila-2:
+            heading: '2'
+          fila-3:
+            heading: '3'
+          fila-4:
+            heading: '4'
+          fila-5:
+            heading: '5'
+          fila-6:
+            heading: '6'
+          fila-7:
+            heading: '7'
+          fila-8:
+            heading: '8'
+          fila-9:
+            heading: '9'
+          idioma:
+            heading: Idioma
+          nif:
+            heading: NIF del solicitante
+          nombre:
+            heading: Apellidos y nombre o denominación social
+          operacion-1:
+            heading: Operación 1
+          operacion-2:
+            heading: Operación 2
+          operaciones:
+            heading: Operaciones
+          pagina1:
+            heading: Solicitud y solicitante
+          pagina2:
+            heading: Representante, devolución y anexos
+          prorrata:
+            heading: 5. Modificación de la prorrata del año anterior
+          proveedor:
+            heading: Proveedor de bienes o prestador de servicios
+          registro:
+            heading: Número de registro
+          representante:
+            heading: 3. Representante
+          solicitante:
+            heading: 2. Solicitante
+          solicitud:
+            heading: 1. País, ejercicio y causa de presentación
       revision:
         2010-y-siguientes:
           casilla:

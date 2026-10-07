@@ -17,6 +17,7 @@ from ._modelo_nonwork_common_command_parameters import (
 )
 from .command_parameter_contracts import OptionSpec
 from .command_shared_contracts import (
+    PATH_VALUE,
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -29,6 +30,38 @@ from .command_shared_contracts import (
 from .command_spec import CommandSpec, InvocationSpec
 
 MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_modelo_filing_record_export",
+        "app_modelo_filing_record",
+        "export",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.filing_record.export_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            _required_text_argument("filing_record_id", "cli.app.modelo.filing_record.filing_record_id_help"),
+            OptionSpec(
+                name="output",
+                declarations=("--output",),
+                value=PATH_VALUE,
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.modelo.spreadsheet.export.output_help"),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _boolean_flag_option("replace_existing", ("--replace",), "cli.app.modelo.export.replace_help"),
+        ),
+        policy=_MODEL_WRITE,
+        handler=LazyBinding.available(
+            DeferredTarget(".historical_export_cli", "export_historical_filing_cli", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".calculation_review_cli", "CalculationReviewWorkbookResult", __package__),
+            identity="modelo.filing_record.export",
+        ),
+    ),
     CommandSpec(
         "app_modelo_filing_record_list",
         "app_modelo_filing_record",

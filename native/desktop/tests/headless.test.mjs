@@ -12,6 +12,16 @@ assert(build && isAbsolute(build) && root && isAbsolute(root) && contractPath);
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 const interpreter = resolve(root, contract.layout.paths.executable);
 const host = executable();
+if (process.platform === "win32") {
+  const image = readFileSync(host);
+  const pe = image.readUInt32LE(0x3c);
+  assert.equal(image.toString("ascii", pe, pe + 4), "PE\0\0");
+  assert.equal(
+    image.readUInt16LE(pe + 24 + 68),
+    2,
+    "The desktop image must use the GUI subsystem so Explorer never opens a console",
+  );
+}
 const cwd = resolve(buildPath("desktop_testing"), "headless");
 mkdirSync(cwd, { recursive: true });
 const env = {

@@ -41,6 +41,8 @@ export interface Host {
   readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
   signInStatus(): Promise<SignInStatus>;
+  /** Requests the independent manager, without authenticating or owning the runtime. */
+  startManager?(): Promise<"dispatched" | "unmanaged" | "unsupported">;
   /** Signs in to `profile`, by its label, or to the profile the product
    * has selected where none is named. */
   signIn(password: Uint8Array, profile?: string): Promise<SignInResult>;

@@ -65,6 +65,33 @@ def test_first_instance_survives_client_disconnect_and_releases_on_close(tmp_pat
         replacement.close()
 
 
+def test_disconnected_pending_peer_preserves_exclusive_listener_ownership(tmp_path: Path) -> None:
+    owner = WindowsRuntimeEndpoint(storage_root=tmp_path)
+    competitor = WindowsRuntimeEndpoint(storage_root=tmp_path)
+    try:
+        owner.listen()
+        abandoned = competitor.connect(timeout=1)
+        abandoned.close()
+        with pytest.raises(RuntimeRefusalError) as disconnected:
+            owner.accept(timeout=1)
+        assert disconnected.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+        with pytest.raises(RuntimeRefusalError) as occupied:
+            competitor.listen()
+        assert occupied.value.reason is RuntimeRefusalCode.OWNER_BUSY
+        # Re-arm the reset pipe concurrently, as the real accept loop does.
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(owner.accept, timeout=2)
+            client = competitor.connect(timeout=2)
+            try:
+                accepted = future.result(timeout=2)
+                accepted.close()
+            finally:
+                client.close()
+    finally:
+        owner.close()
+        competitor.close()
+
+
 def test_ready_peer_receives_secret_only_after_handshake(tmp_path: Path) -> None:
     endpoint = WindowsRuntimeEndpoint(storage_root=tmp_path)
     identity = RuntimeServerHello(

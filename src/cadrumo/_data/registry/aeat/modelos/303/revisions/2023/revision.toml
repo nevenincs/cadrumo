@@ -156,14 +156,6 @@ sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
 
 
-[[revisions.2023.casilla_positions]]
-id = "109"
-position = 196
-
-[[revisions.2023.casilla_positions]]
-id = "iva.repercutido.reducido.transitorio"
-position = 197
-
 [[revisions.2023.family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-303-compensacion-aplicada-periodo"}
@@ -1518,7 +1510,7 @@ selector = {revision = "2022", id = "aeat-dr-303-2022"}
 replacement_id = "aeat-dr-303-2023"
 sequence_additions = {casillas = [{casilla_id = "109", number = "109"}, {casilla_id = "03", number = "03"}, {casilla_id = "06", number = "06"}, {casilla_id = "09", number = "09"}, {casilla_id = "158", number = "158"}, {casilla_id = "153", number = "153"}, {casilla_id = "154", number = "154"}, {casilla_id = "155", number = "155"}, {casilla_id = "iva.repercutido.reducido.transitorio", number = "iva.repercutido.reducido.transitorio"}, {casilla_id = "152", number = "152"}], source_refs = ["aeat-dr-303-2023"]}
 sequence_removals = {source_refs = [0]}
-sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 93, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 81, 94, 95, 96, 80, 97, 98, 99, 100, 101, 102], source_refs = [2, 0, 1]}
+sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 111, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 81, 112, 113, 114, 80, 115, 116, 117, 118, 119, 120, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110], source_refs = [2, 0, 1]}
 [[revisions.2023.family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-303-iva-cuota-devengada-total"}
@@ -1780,6 +1772,27 @@ sequence_order = {legal_refs = [0, 1, 2, 3, 6, 4, 5], reconcile_when_present_cas
 family = "verification_predicates"
 selector = {revision = "2022", id = "equals-sum:dr303-27-equals-printed-summands"}
 fields = {expression = "equals_sum([\"27\", \"152\", \"03\", \"155\", \"06\", \"09\", \"11\", \"13\", \"15\", \"158\", \"18\", \"21\", \"24\", \"26\"])"}
+[[revisions.2023.family_overrides]]
+family = "formulas"
+
+[revisions.2023.family_overrides.selector]
+revision = "2022"
+id = "modelo-303-volumen-operaciones-anual"
+
+[revisions.2023.family_overrides.fields]
+source_refs = ["boe-modelo-303-2023-form-pdf", "aeat-dr-303-2023"]
+
+[[revisions.2023.family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-303-2023-form-pdf"
+required_text = ["Total volumen de operaciones", "121 Ley IVA", "97 + 98 - 79 - 99"]
+[[revisions.2023.casilla_positions]]
+id = "109"
+position = 196
+
+[[revisions.2023.casilla_positions]]
+id = "iva.repercutido.reducido.transitorio"
+position = 197
+
 [[revisions.2023.family_positions]]
 family = "formulas"
 id = "modelo-303-dr303-155-projection"

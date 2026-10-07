@@ -37,6 +37,7 @@ def accept_google_review(request: GoogleReviewRequest, review: GoogleReviewProje
         review.profile_id != request.profile_id
         or review.publication_id != request.publication_id
         or review.calculation_revision_id != request.calculation_revision_id
+        or review.filing_record_id != request.filing_record_id
         or review.identity.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
         or review.identity.subject_ref != profile_operation_subject(str(request.profile_id))
         or not review.root_folder_id.strip()
@@ -53,6 +54,7 @@ def publish_google_review_cli(
     calculation_revision_id: str,
     publication_id: str | None = None,
     accept_readable_export: bool = False,
+    filing_record_id: str | None = None,
 ) -> None:
     """Publish the exact saved revision only after destination disclosure is accepted."""
     if not accept_readable_export:
@@ -61,6 +63,7 @@ def publish_google_review_cli(
     request = GoogleReviewRequest(
         profile_id=client.profile_id,
         calculation_revision_id=calculation_revision_id,
+        filing_record_id=filing_record_id,
         publication_id=UUID(publication_id) if publication_id else uuid4(),
     )
 

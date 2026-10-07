@@ -27,7 +27,7 @@ serde_json = "1"
 ctrlc = "3"
 getrandom = "0.3"
 zeroize = "1"
-tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros"] }
+tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros", "sync"] }
 # Rust APIs only: the shell reaches them through token-checked app commands
 # and grants the webview no plugin command.
 tauri-plugin-clipboard-manager = "2.4.1"

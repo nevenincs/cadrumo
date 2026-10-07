@@ -551,3 +551,49 @@ selector = {revision = "2016-2017", id = "aeat-dr-309-2016"}
 replacement_id = "aeat-dr-309-2018"
 sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
 sequence_removals = {source_refs = [0]}
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-tipo-via" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-via" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-numero" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-escalera" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-piso" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-puerta" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-telefono" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-codigo-postal" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-municipio" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-domicilio-provincia" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-ccc-entidad" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-ccc-oficina" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-ccc-dc" }
+
+[[revisions."2018-2022".casilla_removals]]
+selector = { revision = "2016-2017", id = "papel-ccc-cuenta" }
+
+[[revisions."2018-2022".family_removals]]
+family = "constructs"
+selector = { revision = "2016-2017", id = "modelo-309-papel-domicilio-cuenta" }

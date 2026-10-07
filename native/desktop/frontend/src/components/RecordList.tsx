@@ -24,6 +24,9 @@ import { fromPointer } from "../shell/pointer";
 import {
   DEFAULT_FILTERS,
   LEVELS,
+  recordContext,
+  recordLine,
+  recordTime,
   shortLogger,
   type RecordFilters,
 } from "../shell/records";
@@ -85,6 +88,18 @@ const Row = memo(function Row({
 }) {
   const level = (record.level ?? "none").toLowerCase();
   const failed = record.level === "ERROR" || record.level === "CRITICAL";
+  const context = recordContext(record);
+  const hasContext = Object.keys(context).length > 0;
+  const hasDetails = !!record.detail || hasContext;
+  const summary = [
+    context.stage,
+    context.startup_phase,
+    context.phase,
+    context.outcome,
+    context.reason_code,
+  ]
+    .filter((value): value is string => typeof value === "string")
+    .join(" · ");
   return (
     <div
       className={cn(
@@ -104,8 +119,12 @@ const Row = memo(function Row({
       }}
     >
       <div className="grid grid-cols-[7.5em_5.5em_minmax(8em,16em)_1fr] gap-x-3 px-3 py-px @max-xl:grid-cols-[7.5em_5.5em_1fr]">
-        <time className="text-muted-foreground">
-          {record.timestamp.slice(11, 23) || record.timestamp}
+        <time
+          className="text-muted-foreground"
+          dateTime={record.timestampMs === null ? undefined : record.timestamp}
+          title={record.timestamp}
+        >
+          {recordTime(record)}
         </time>
         <span
           className={cn(
@@ -135,7 +154,7 @@ const Row = memo(function Row({
           )}
         >
           {record.message}
-          {record.detail && (
+          {hasDetails && (
             <Button
               variant="ghost"
               size="icon-xs"
@@ -153,11 +172,37 @@ const Row = memo(function Row({
               />
             </Button>
           )}
+          {(record.process ||
+            summary ||
+            typeof context.diagnostic_id === "string") && (
+            <span className="ml-2 inline-flex flex-wrap gap-x-2 text-xs text-muted-foreground">
+              {record.process && (
+                <span className="record-process">
+                  {record.process.role}:{record.process.pid}
+                </span>
+              )}
+              {summary && (
+                <span className="record-context-summary" title={summary}>
+                  {summary}
+                </span>
+              )}
+              {typeof context.diagnostic_id === "string" && (
+                <span
+                  className="record-correlation max-w-field truncate"
+                  title={context.diagnostic_id}
+                >
+                  {context.diagnostic_id}
+                </span>
+              )}
+            </span>
+          )}
         </span>
       </div>
       {open && (
         <pre className="mx-3 mt-0.5 mb-1.5 overflow-x-auto rounded-md bg-accent px-2.5 py-1.5 text-xs whitespace-pre-wrap text-muted-foreground">
           {record.detail}
+          {record.detail && hasContext && "\n\n"}
+          {hasContext && JSON.stringify(context, null, 2)}
         </pre>
       )}
     </div>
@@ -232,7 +277,7 @@ export const RecordList = memo(function RecordList({
         rank(record.level) >= filters.minLevel &&
         (!filters.logger || record.logger === filters.logger) &&
         (!text ||
-          `${record.logger ?? ""} ${record.message} ${record.detail ?? ""}`
+          `${recordLine(record)} ${record.detail ?? ""}`
             .toLowerCase()
             .includes(text)),
     );

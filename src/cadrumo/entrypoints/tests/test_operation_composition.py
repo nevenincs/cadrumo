@@ -19,7 +19,12 @@ from ...adapters.persistence.operations.typed_financial_operand_custody import (
 )
 from ...adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ...application.export.calculation_review_xlsx_operation import (
+    CalculationReviewXlsxExecutionResult,
+    CalculationReviewXlsxRequest,
+)
 from ...application.modelo.operation_definitions import ModeloWorkCalculateExecutor
+from ...application.modelo.reconciliation_export_operation import ReconciliationExportXlsxRequest
 from ...application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
@@ -35,6 +40,7 @@ from ...application.operations.projection_services import (
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
+from ...application.operations.registry import OperationFrontendProjection
 from ...application.operations.tests.authority_test_support import unread_authority_operation
 from ...core.config import load_settings
 from ...core.time.clock import now
@@ -122,6 +128,29 @@ def test_production_composition_is_available_before_profile_login(tmp_path: Path
             "auth.profile.passphrase-rotate"
         )
         asyncio.run(dependencies.shutdown())
+
+
+def test_saved_calculation_review_export_is_registered_for_both_operator_surfaces(tmp_path: Path) -> None:
+    """Local saved review export is a real runtime operation, available without Google configuration."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        assert current_active_bucket_session() is None
+        registry = build_production_operation_registry()
+        definition = registry.lookup("export.calculation-review-xlsx")
+        contract = registry.lookup_public_contract(definition.definition_id)
+        assert definition.request_type is CalculationReviewXlsxRequest
+        assert definition.result_type is CalculationReviewXlsxExecutionResult
+        assert contract.permitted_frontends == frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
+        )
+        assert (
+            registry.lookup_public_registration(definition.definition_id).contract.definition_id
+            == definition.definition_id
+        )
+        reconciliation = registry.lookup("modelo.reconcile.export-xlsx")
+        assert reconciliation.request_type is ReconciliationExportXlsxRequest
+        assert registry.lookup_public_contract(reconciliation.definition_id).permitted_frontends == frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
+        )
 
 
 def test_submission_issues_actor_bound_opaque_response_capability(tmp_path: Path) -> None:
@@ -300,5 +329,8 @@ def test_production_composition_submits_through_the_constructed_seam(tmp_path: P
 
 def test_composing_a_declaring_registry_without_custody_is_still_refused(tmp_path: Path) -> None:
     """The guard keeps biting; the wire satisfies it rather than disabling it."""
-    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(ValueError, match="transient financial operand"):
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path),
+        pytest.raises(ValueError, match="typed financial operations require hardened durable custody"),
+    ):
         _compose_declaring(tmp_path, custody=None)

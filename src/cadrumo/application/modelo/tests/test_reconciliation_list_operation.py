@@ -41,6 +41,7 @@ from ..reconciliation_list_operation import (
     build_modelo_reconciliation_list_registration,
 )
 from ..reconciliation_records import (
+    ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
@@ -132,10 +133,21 @@ def _registered():
     return definition, registration, registry
 
 
-def test_public_projection_keeps_cli_fields_and_omits_private_record_detail() -> None:
+def test_public_projection_preserves_stored_differences_and_advisories() -> None:
     reference = RegistrySnapshotRef(modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1t")
     first = _history_entry(event_id="a" * 64).model_copy(
-        update={"calculation_revision_id": "c" * 64, "registry_snapshot_ref": reference, "advisory_count": 2}
+        update={
+            "calculation_revision_id": "c" * 64,
+            "registry_snapshot_ref": reference,
+            "advisory_count": 1,
+            "advisories": (
+                ModeloReconciliationAdvisory(
+                    code="totals_not_reconciled",
+                    message="Saved receipt has no comparable total",
+                    context={"reason": "missing_total"},
+                ),
+            ),
+        }
     )
     second = _history_entry(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
     projection = ModeloReconciliationListProjection(
@@ -162,6 +174,8 @@ def test_public_projection_keeps_cli_fields_and_omits_private_record_detail() ->
         "verdict",
         "diff_count",
         "advisory_count",
+        "diffs",
+        "advisories",
         "actor",
         "reconciled_at",
     }
@@ -173,11 +187,13 @@ def test_public_projection_keeps_cli_fields_and_omits_private_record_detail() ->
         "modelo_year": 2026,
         "period": "1T",
     }
-    assert dumped["reconciliations"][0]["advisory_count"] == 2
+    assert dumped["reconciliations"][0]["advisory_count"] == 1
     assert dumped["reconciliations"][1]["calculation_revision_id"] is None
     assert dumped["reconciliations"][1]["registry_snapshot_ref"] is None
     assert dumped["reconciliations"][1]["advisory_count"] == 0
-    assert "diffs" not in dumped["reconciliations"][0]
+    assert dumped["reconciliations"][0]["diffs"][0]["work_unit_value"] == "100.00"
+    assert dumped["reconciliations"][0]["diffs"][0]["evidence_value"] == "101.00"
+    assert dumped["reconciliations"][0]["advisories"][0]["context"] == [["reason", "missing_total"]]
     assert len(dumped["reconciliations"]) == 2
 
 
@@ -276,7 +292,7 @@ def test_wrong_profile_is_refused_before_access_is_admitted() -> None:
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-def test_executor_projects_the_existing_filter_and_order_without_private_diffs(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_executor_projects_saved_differences_with_existing_filter_and_order(monkeypatch: pytest.MonkeyPatch) -> None:
     entries = (
         _history_entry(event_id="a" * 64),
         _history_entry(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC)),
@@ -333,7 +349,7 @@ def test_executor_projects_the_existing_filter_and_order_without_private_diffs(m
     projection = ModeloReconciliationListProjection.model_validate(recorded[0])
     assert tuple(row.event_id for row in projection.reconciliations) == ("a" * 64, "b" * 64)
     assert projection.work_unit_id == _WORK_A
-    assert "diffs" not in projection.model_dump_json()
+    assert projection.reconciliations[0].diffs == entries[0].diffs
 
 
 def test_executor_refuses_active_profile_mismatch_before_read(monkeypatch: pytest.MonkeyPatch) -> None:

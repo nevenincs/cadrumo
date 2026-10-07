@@ -24,6 +24,7 @@ from .....core.refund_election import RefundElection
 from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
 
 if TYPE_CHECKING:
+    from .....application.export.calculation_review_xlsx_operation import CalculationReviewXlsxResult
     from .....application.modelo.export_projection import ModeloExportPublicResultV3
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from ...ledger.own_accounts import LedgerOwnAccountDoorV1
@@ -205,7 +206,9 @@ class ModeloWorkbenchActionsV1(Protocol):
         """Export the verified calculation as the filer asked."""
         ...
 
-    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
+    async def export_result(
+        self, projection: OperationPublicProjectionV1
+    ) -> ModeloExportPublicResultV3 | CalculationReviewXlsxResult | None:
         """The facts of one settled export, or ``None`` when they cannot be read."""
         ...
 

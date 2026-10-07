@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:a553acc6e17babfc683c5d4df5edc5cd5f94da575e182c3f642d4d5a4a23ff72'
+body_hash: 'sha256:41ea790a633b2705a1c17e3ca2271aa0907d6db1fd0dfde831e5c2da08460440'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -44,6 +44,24 @@ Root personally reviewed and completed Rust startup: bounded installed-interpret
 PASS for the implemented subset: 139 native manager tests, including four composed startup cases and actual hidden-window queue delivery; a real packaged native runtime launched by the new Rust composition reached Ready and exited on SessionEnd with its boot record removed (25.16 seconds); 13 cross-language protocol tests; 51 Python unit, four ordered-settlement, 17 runtime integration and three final native worker/count cases. Manager/application Clippy, formatting, scoped Python quality checks, optimized manager-only build and release Windows manifest/admission checks pass. See build/manager-startup-verification.json for source/binary hashes and exact logs.
 
 PENDING for full S08/S10 and desktop acceptance: shared Settings projection, shell-dispatch fallback, actual session-1 GUI/logoff and installed-package acceptance. IPC/tray and version catalogue/cutover remain later work. The pre-existing desktop package was not rebuilt or updated. Git initially rejected the checkpoint because another process held the shared index lock; no lock was removed and no hook bypassed.
+
+### headless-load-and-interference | low | S25 passes scoped runtime review and benchmarks
+
+2026-10-07 root personally implemented and reviewed S25 under the operator's backend/runtime, headless, performance and adversarial-testing instruction. A native regression was demonstrated before the fix: a peer closing before ConnectNamedPipe admission raised runtime_unavailable and terminated the listener. The fix translates only disconnected-pipe errors, resets the same retained instance with DisconnectNamedPipe and preserves continuous first-instance ownership; unexpected errors still fail closed. Real native tests verify failed competing ownership, recovery, 512 abrupt connections, wrong image/root/version and healthy-client survival. No authority or credential checks were relaxed.
+
+The request loop now backs off from 1ms to its existing 50ms idle ceiling, resetting after input. Frame deadlines, operation dispatch, slot limit and stop-event cancellation are unchanged. The integrated review traced cleanup through the existing connection owner and shutdown path; 16 silent/partial-header clients close before their five-second handshake deadlines. Two old test assertions were corrected to the already-existing nullable sign_in field and accept-tick availability only after the loop starts.
+
+PASS for scoped correctness and quality: 60 combined native transport/cleanup/full headless runtime tests, the additional stalled-shutdown case, the strengthened 512-connection case, and 34 cached current-source Rust manager adversarial tests. Scoped Ruff/format/ty and diff checks pass. A transient three-second fixture setup timeout on the loaded shared host passed unchanged on targeted rerun; no deadline was loosened. Native source hashes confirm cached Rust test applicability. No Rust work was delegated.
+
+Evidence: build/runtime-load-benchmark.json and its listed logs. Native IPC p50 at 1/8/24 connections changed from 61.46/59.79/58.94ms to 15.20/12.75/13.93ms. At 24 connections throughput changed from 468 to 1436 requests/s. The complete current source runtime reached readiness in 18.93s, served eight concurrent connections at p50 9.63ms/p95 17.01ms, and exited on session-end in 2.75s. These are finite shared-host status/refusal benchmarks, not authenticated-mutation or production SLA claims; short Windows CPU observations cannot prove zero idle CPU. Startup remains a measured optimization opportunity.
+
+Repository-wide import gates and unrelated builds were not rerun under the requested fast scoped verification approach. No package/frontend/docs build, release, different-user/session exercise or GUI acceptance occurred. Other sessions' diagnostics changes in server.py, runtime main.py and worker.py were preserved and excluded from this checkpoint.
+
+### S26 React startup skeletons | low | PASS scoped startup UX and readiness review
+
+The desktop keeps its existing asynchronous Tauri manager dispatch. React now observes startup as a gated starting phase, renders shared non-interactive skeletons, and accepts runtime availability only from the existing canonical status read. Initial loading does not open a blocking sign-in dialog or list profiles before availability. Read failures and the 90-second startup/read deadlines expose recovery; timed-out promises do not indefinitely hold later retries. Status generation guards and component cleanup preserve unmount behavior. Manual startup remains deduplicated and shows a loading heading. No Rust changes or additional state library were required.
+
+Verification: 18 focused startup/manager Playwright scenarios passed, followed by 2 passing targeted checks after final retry-title refinement. TypeScript, scoped ESLint/Prettier, Ruff and ty passed. All 16 desktop chrome catalogue tests passed after enrolling the existing four-locale startup message. A fresh real Windows runtime passed 8-connection/128-request headless native IPC and interference acceptance in 24.17 seconds. Screenshot inspected with translated text. Detailed evidence/source hashes are in build/runtime-startup-ui/verification.json. These checks do not assert session-1 GUI acceptance, a rebuilt package or improved backend initialization time. Shared Git index.lock prevents the Step commit; preserve other workstreams and do not remove their lock.
 
 ## Recommendations
 

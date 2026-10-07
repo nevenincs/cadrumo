@@ -69,10 +69,11 @@ def casilla_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext, *, re
 
 
 def _source_override_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext) -> ModeloFormOrigin | None:
+    entered_bound_casilla = context.entered is not None and str(row.casilla_id) in context.entered
     overridden_binding = context.overridden is not None and any(
         str(origin.binding_id) in context.overridden for origin in row.concrete_bindings
     )
-    if row.declared_input_kind is InputKind.BOUND and overridden_binding:
+    if row.declared_input_kind is InputKind.BOUND and (overridden_binding or entered_bound_casilla):
         return ModeloFormOrigin.OVERRIDES_SOURCE
     if row.origin_anomaly is ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE:
         return ModeloFormOrigin.OVERRIDES_SOURCE

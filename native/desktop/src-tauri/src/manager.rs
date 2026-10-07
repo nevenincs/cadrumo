@@ -1,0 +1,389 @@
+//! The desktop requests manager launch; the manager alone owns runtime lifetime.
+
+use crate::environment::Launch;
+use cadrumo_application::{
+    binary::{self, BinaryExpectation},
+    child::ChildConfiguration,
+    diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage},
+    error::application::{ApplicationError, ErrorCode, Operation, Result},
+    package::PackageManifest,
+    process::status::{ProcessPhase, ProcessRole},
+    value::RelativePath,
+};
+use serde::{Deserialize, Serialize};
+use std::{
+    path::{Path, PathBuf},
+    process::Stdio,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
+    },
+    time::Duration,
+};
+use tauri::State;
+use tokio::io::AsyncReadExt;
+
+const DISPATCH: &str = include_str!("python/manager_dispatch.py");
+const DEADLINE: Duration = Duration::from_secs(15);
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StartOutcome {
+    Dispatched,
+    Unmanaged,
+    Unsupported,
+}
+
+pub struct ManagerStart {
+    package_root: Result<Option<PathBuf>>,
+    child: ChildConfiguration,
+    diagnostics: Arc<Diagnostics>,
+    attempt: Arc<tokio::sync::Mutex<Option<Result<StartOutcome>>>>,
+    generation: AtomicU64,
+    closed: AtomicBool,
+    closing: tokio::sync::Notify,
+}
+
+impl ManagerStart {
+    pub fn new(launch: &Launch) -> Self {
+        Self {
+            package_root: managed(launch)
+                .map(|managed| managed.then(|| launch.package_root.clone())),
+            child: launch.child.clone(),
+            diagnostics: launch.diagnostics.clone(),
+            attempt: Arc::new(tokio::sync::Mutex::new(None)),
+            generation: AtomicU64::new(0),
+            closed: AtomicBool::new(false),
+            closing: tokio::sync::Notify::new(),
+        }
+    }
+
+    /// Concurrent callers share the initial attempt; retries are explicit.
+    pub async fn start(self: &Arc<Self>, retry: bool) -> Result<StartOutcome> {
+        self.start_with(retry, |owner| async move { owner.dispatch().await })
+            .await
+    }
+
+    async fn start_with<F, Work>(self: &Arc<Self>, retry: bool, work: F) -> Result<StartOutcome>
+    where
+        F: FnOnce(Arc<Self>) -> Work + Send + 'static,
+        Work: std::future::Future<Output = Result<StartOutcome>> + Send + 'static,
+    {
+        let observed = self.generation.load(Ordering::Acquire);
+        let previous = self.attempt.clone().lock_owned().await;
+        if self.closed.load(Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        if (!retry || observed != self.generation.load(Ordering::Acquire))
+            && let Some(outcome) = previous.as_ref()
+        {
+            return outcome.clone();
+        }
+        let owner = self.clone();
+        // The host owns settlement even if an IPC caller abandons its answer.
+        tokio::spawn(async move { owner.complete_attempt(previous, work(owner.clone())).await })
+            .await
+            .map_err(|_| failure(ErrorCode::Panic))?
+    }
+
+    async fn complete_attempt(
+        &self,
+        mut previous: tokio::sync::OwnedMutexGuard<Option<Result<StartOutcome>>>,
+        work: impl std::future::Future<Output = Result<StartOutcome>>,
+    ) -> Result<StartOutcome> {
+        self.diagnostics
+            .host_event(EventKind::StageStarted, HostStage::Manager);
+        let outcome = work.await;
+        match &outcome {
+            Ok(StartOutcome::Dispatched) => self
+                .diagnostics
+                .host_outcome(HostStage::Manager, HostOutcome::Dispatched),
+            Ok(StartOutcome::Unmanaged) => self
+                .diagnostics
+                .host_outcome(HostStage::Manager, HostOutcome::SkippedUnmanaged),
+            Ok(StartOutcome::Unsupported) => self
+                .diagnostics
+                .host_outcome(HostStage::Manager, HostOutcome::Unavailable),
+            Err(error) => self
+                .diagnostics
+                .host_failure(HostStage::Manager, error.clone()),
+        }
+        *previous = Some(outcome.clone());
+        self.generation.fetch_add(1, Ordering::Release);
+        outcome
+    }
+
+    /// Fence new requests and settle the bounded private helper before host exit.
+    /// No manager or runtime process handle is owned or stopped here.
+    pub async fn close(&self) {
+        self.closed.store(true, Ordering::Release);
+        self.closing.notify_waiters();
+        let _settled = self.attempt.lock().await;
+    }
+
+    async fn dispatch(&self) -> Result<StartOutcome> {
+        if !cfg!(windows) {
+            return Ok(StartOutcome::Unsupported);
+        }
+        let Some(package_root) = self.package_root.as_ref().map_err(Clone::clone)? else {
+            return Ok(StartOutcome::Unmanaged);
+        };
+        let package_root = package_root.clone();
+        // Recheck package bytes on every actual attempt, off the GUI/runtime thread.
+        let target = tokio::task::spawn_blocking(move || target(&package_root))
+            .await
+            .map_err(|_| failure(ErrorCode::Panic))??;
+        if self.closed.load(Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        let mut command = tokio::process::Command::from(self.child.command());
+        command
+            .args(["-I", "-c", DISPATCH])
+            .arg(target)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .kill_on_drop(true);
+        #[cfg(windows)]
+        command.creation_flags(0x0800_0000);
+        self.run_dispatch(command, DEADLINE).await
+    }
+
+    async fn run_dispatch(
+        &self,
+        mut command: tokio::process::Command,
+        deadline: Duration,
+    ) -> Result<StartOutcome> {
+        let closing = self.closing.notified();
+        tokio::pin!(closing);
+        closing.as_mut().enable();
+        if self.closed.load(Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        let mut child = command.spawn().map_err(|error| {
+            let error = failure(ErrorCode::ManagerDispatchFailed).caused_by(error);
+            self.diagnostics
+                .spawn_failure(ProcessRole::ManagerDispatch, error.clone());
+            error
+        })?;
+        let id = self.diagnostics.start(
+            child.id().ok_or_else(|| failure(ErrorCode::SpawnFailed))?,
+            ProcessRole::ManagerDispatch,
+        );
+        let mut recorded_exit = false;
+        let read = tokio::time::timeout(deadline, async {
+            let mut stdout = child
+                .stdout
+                .take()
+                .ok_or_else(|| failure(ErrorCode::ReadFailed))?
+                .take(4097);
+            let mut bytes = Vec::new();
+            stdout
+                .read_to_end(&mut bytes)
+                .await
+                .map_err(|error| failure(ErrorCode::ReadFailed).caused_by(error))?;
+            if bytes.len() > 4096 {
+                return Err(failure(ErrorCode::OutputLimit));
+            }
+            let status = child
+                .wait()
+                .await
+                .map_err(|error| failure(ErrorCode::CleanupFailed).caused_by(error))?;
+            self.diagnostics
+                .finish(id, status.code(), ProcessPhase::Exited);
+            recorded_exit = true;
+            decode(&bytes, status.success())
+        });
+        let result = tokio::select! {
+            biased;
+            _ = &mut closing => Ok(Err(failure(ErrorCode::SessionUnavailable))),
+            result = read => result,
+        };
+        match result {
+            Ok(Ok(outcome)) => Ok(outcome),
+            other => {
+                let error = match other {
+                    Ok(Err(error)) => error,
+                    _ => failure(ErrorCode::TimedOut),
+                };
+                self.diagnostics.failure_for(id, error.clone());
+                let cleanup: Result<()> = async {
+                    if recorded_exit {
+                        return Ok(());
+                    }
+                    let (status, phase) = match child
+                        .try_wait()
+                        .map_err(|error| failure(ErrorCode::CleanupFailed).caused_by(error))?
+                    {
+                        Some(status) => (status, ProcessPhase::Exited),
+                        None => {
+                            child.kill().await.map_err(|error| {
+                                failure(ErrorCode::CleanupFailed).caused_by(error)
+                            })?;
+                            (
+                                child.wait().await.map_err(|error| {
+                                    failure(ErrorCode::CleanupFailed).caused_by(error)
+                                })?,
+                                ProcessPhase::Terminated,
+                            )
+                        }
+                    };
+                    self.diagnostics.finish(id, status.code(), phase);
+                    Ok(())
+                }
+                .await;
+                if let Err(cleanup_error) = cleanup {
+                    self.diagnostics.failure_for(id, cleanup_error);
+                }
+                Err(error)
+            }
+        }
+    }
+}
+
+fn failure(code: ErrorCode) -> ApplicationError {
+    ApplicationError::new(code, Operation::Manager)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DispatchReply {
+    dispatched: bool,
+    os_code: Option<i32>,
+}
+
+fn decode(bytes: &[u8], success: bool) -> Result<StartOutcome> {
+    let reply: DispatchReply =
+        serde_json::from_slice(bytes).map_err(|_| failure(ErrorCode::ManagerDispatchFailed))?;
+    if success && reply.dispatched && reply.os_code.is_none() {
+        return Ok(StartOutcome::Dispatched);
+    }
+    let error = failure(ErrorCode::ManagerDispatchFailed);
+    Err(match reply.os_code {
+        Some(code) => error.caused_by(std::io::Error::from_raw_os_error(code)),
+        None => error,
+    })
+}
+
+#[derive(Deserialize)]
+struct Contract {
+    layout: Layout,
+}
+#[derive(Deserialize)]
+struct Layout {
+    abi: u32,
+    platform: String,
+    application_images: Vec<Image>,
+    entrypoint_suffix: String,
+    files: Files,
+}
+#[derive(Deserialize)]
+struct Image {
+    name: String,
+    placement: String,
+    target: String,
+}
+#[derive(Deserialize)]
+struct Files {
+    package_manifest: RelativePath,
+}
+
+fn manager_member(layout: &Layout) -> Result<RelativePath> {
+    let mut candidates = layout
+        .application_images
+        .iter()
+        .filter(|image| image.target == "rust_manager");
+    let image = candidates
+        .next()
+        .ok_or_else(|| failure(ErrorCode::ManagerUnavailable))?;
+    if candidates.next().is_some() {
+        return Err(failure(ErrorCode::PackageUnavailable));
+    }
+    let name = format!("{}{}", image.name, layout.entrypoint_suffix);
+    RelativePath::new(if image.placement == "." {
+        name
+    } else {
+        format!("{}/{name}", image.placement)
+    })
+    .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))
+}
+
+fn target(package_root: &Path) -> Result<PathBuf> {
+    let contract: Contract =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
+            .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
+    let relative = manager_member(&contract.layout)?;
+    let manifest = PackageManifest::read(package_root, &contract.layout.files.package_manifest)
+        .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
+    if manifest.layout.abi != contract.layout.abi
+        || manifest.layout.platform != contract.layout.platform
+    {
+        return Err(failure(ErrorCode::PackageUnavailable));
+    }
+    let digest = manifest
+        .files
+        .get(&relative)
+        .ok_or_else(|| failure(ErrorCode::ManagerUnavailable))?;
+    let executable = relative.under(package_root);
+    binary::verify(
+        &executable,
+        digest,
+        BinaryExpectation::host()
+            .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?,
+    )
+    .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
+    Ok(executable)
+}
+
+#[cfg(windows)]
+fn managed(launch: &Launch) -> Result<bool> {
+    use cadrumo_platform::storage::{self, Mode, RootSource};
+    if storage::authority_override_present(std::env::vars_os()) {
+        return Ok(false);
+    }
+    let executable = std::env::current_exe()
+        .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?;
+    let evidence =
+        storage::detect_mode(&executable).map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
+    if evidence.mode != Mode::Installed {
+        return Ok(false);
+    }
+    let actual_package = std::fs::canonicalize(&evidence.package)
+        .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
+    let selected_package = std::fs::canonicalize(&launch.package_root)
+        .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
+    if actual_package != selected_package {
+        return Ok(false);
+    }
+    let resolved = storage::resolve_storage_root(&evidence)
+        .map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
+    if resolved.source != RootSource::InstalledDefault {
+        return Ok(false);
+    }
+    Ok(std::fs::canonicalize(&resolved.root)
+        .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?
+        == std::fs::canonicalize(&launch.working_directory)
+            .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?)
+}
+
+#[cfg(not(windows))]
+fn managed(_: &Launch) -> Result<bool> {
+    Ok(false)
+}
+
+pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
+    crate::app::commands![manager_start]
+}
+
+#[tauri::command]
+async fn manager_start(state: State<'_, Arc<ManagerStart>>) -> Result<StartOutcome> {
+    state.start(true).await
+}
+
+#[cfg(test)]
+#[path = "manager/tests.rs"]
+mod tests;
+
+#[cfg(all(test, windows))]
+#[path = "manager/package_tests.rs"]
+mod package_tests;

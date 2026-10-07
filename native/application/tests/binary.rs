@@ -6,6 +6,33 @@ use cadrumo_application::{
 use sha2::{Digest, Sha256};
 
 #[test]
+fn rejects_oversized_package_images_before_header_admission() {
+    let root = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"));
+    std::fs::create_dir_all(root).unwrap();
+    let directory = tempfile::tempdir_in(root).unwrap();
+    let path = directory.path().join("oversized-manager.exe");
+    let file = std::fs::File::create(&path).unwrap();
+    file.set_len(128 * 1024 * 1024 + 1).unwrap();
+    drop(file);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
+    }
+    let started = std::time::Instant::now();
+    let result = binary::verify(
+        &path,
+        &Sha256Digest::new("00".repeat(32)).unwrap(),
+        BinaryExpectation::host().unwrap(),
+    );
+    assert!(matches!(result, Err(Error::LimitExceeded)), "{result:?}");
+    eprintln!(
+        "oversized_image_refusal elapsed_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
 fn running_native_executable_matches_host_and_rejects_wrong_cpu_format_and_digest() {
     let path = std::env::current_exe().unwrap();
     let digest = Sha256Digest::new(format!(

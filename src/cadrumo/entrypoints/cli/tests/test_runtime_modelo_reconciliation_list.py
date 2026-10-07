@@ -12,15 +12,18 @@ import typer
 
 from ....application.modelo.reconciliation_list_operation import (
     MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
+    ModeloReconciliationAdvisoryProjection,
     ModeloReconciliationListEntryProjection,
     ModeloReconciliationListProjection,
     ModeloReconciliationListRequest,
 )
 from ....application.modelo.reconciliation_records import (
+    ModeloReconciliationDiff,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .. import _modelo_reconcile_cli as handler
 from .. import runtime_modelo_reconciliation_list as bridge
 from ..errors import CliRefusedBoundaryError
 from ..registered_operation_contracts import RegisteredOperationCompletion
@@ -202,3 +205,21 @@ def test_bridge_rejects_success_receipt_with_refusal_code(monkeypatch: pytest.Mo
         _invoke()
     assert refused.value.context is not None
     assert refused.value.context["reason"] == "runtime_invalid_frame"
+
+
+def test_history_renderer_preserves_saved_differences_and_advisory_context(monkeypatch: pytest.MonkeyPatch) -> None:
+    diff = ModeloReconciliationDiff(
+        field_name="period", work_unit_value="1T", evidence_value="2T", kind="period_mismatch"
+    )
+    advisory = ModeloReconciliationAdvisoryProjection(
+        code="missing_evidence", message="Captured content is unavailable", context=(("capture", "unavailable"),)
+    )
+    row = _row().model_copy(update={"diffs": (diff,), "advisories": (advisory,), "diff_count": 1, "advisory_count": 1})
+    monkeypatch.setattr(bridge, "read_modelo_reconciliation_list", lambda *args, **kwargs: _projection(None, (row,)))
+    emitted = {}
+    monkeypatch.setattr(handler, "emit_envelope", lambda _ctx, **kwargs: emitted.update(kwargs))
+    handler.reconcile_list_verb(cast(typer.Context, cast(object, None)))
+    payload = emitted["result"].reconciliations[0]
+    assert payload.diffs == (diff,)
+    assert dict(payload.advisories[0].context) == {"capture": "unavailable"}
+    assert any("work_unit=1T\tevidence=2T" in line for line in emitted["lines"])

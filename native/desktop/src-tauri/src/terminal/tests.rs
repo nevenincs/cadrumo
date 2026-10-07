@@ -559,8 +559,51 @@ fn a_session_whose_frames_cannot_be_delivered_stops_itself() {
     let snapshot = diagnostics.snapshot(0);
     assert_eq!(snapshot.processes.len(), 1);
     assert_eq!(snapshot.processes[0].phase, ProcessPhase::Terminated);
+    let process = &snapshot.processes[0];
+    assert!(snapshot.events.iter().any(|event| {
+        event.process == Some(process.id)
+            && event
+                .status
+                .as_ref()
+                .is_some_and(|status| status.pid == process.pid)
+            && event
+                .failure
+                .as_ref()
+                .is_some_and(|error| error.code == ErrorCode::WriteFailed)
+    }));
+    assert!(snapshot.output.is_empty());
     // The refused started frame ends delivery; later output is discarded.
     assert_eq!(attempts.load(Ordering::SeqCst), 1);
+}
+
+#[test]
+fn a_failed_terminal_launch_records_its_role_without_private_launch_data() {
+    let directory = std::env::temp_dir();
+    let diagnostics = Arc::new(Diagnostics::default());
+    let program = Program {
+        executable: directory.join(format!(
+            "synthetic-private-executable-{}",
+            std::process::id()
+        )),
+        arguments: vec!["synthetic-private-argument".into()],
+        directory,
+        environment: std::collections::BTreeMap::from([(
+            "SYNTHETIC_SECRET".into(),
+            "synthetic-private-credential".into(),
+        )]),
+        role: ProcessRole::Repl,
+    };
+    let error = Session::start(program, 80, 24, Arc::new(|_| Ok(())), diagnostics.clone())
+        .err()
+        .unwrap();
+    assert_eq!(error.code, ErrorCode::SpawnFailed);
+    let snapshot = diagnostics.snapshot(0);
+    assert!(snapshot.processes.is_empty());
+    assert_eq!(snapshot.events.len(), 1);
+    assert_eq!(snapshot.events[0].role, Some(ProcessRole::Repl));
+    let records = serde_json::to_string(&snapshot.events).unwrap();
+    assert!(!records.contains("synthetic-private"));
+    assert!(!records.contains("SYNTHETIC_SECRET"));
 }
 
 #[cfg(feature = "live-package-tests")]

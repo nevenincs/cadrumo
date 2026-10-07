@@ -283,7 +283,7 @@ class FormGridRow(RegistryModel):
 
 
 class FormFieldChoice(RegistryModel):
-    """One printed selection marker for an exact value of a single casilla."""
+    """A human label for an exact code in a declared form field."""
 
     value: str = Field(min_length=1, max_length=64)
     heading_key: FormHeadingKey
@@ -325,6 +325,8 @@ class FormGridBlock(RegistryModel):
 
     kind: Literal["grid"] = "grid"
     id: FormNodeId
+    row_heading_key: FormHeadingKey | None = None
+    official_row_heading: OfficialHeading | None = None
     columns: tuple[FormGridColumn, ...] = Field(min_length=2)
     rows: tuple[FormGridRow, ...] = Field(min_length=1)
 
@@ -351,6 +353,14 @@ class FormRepeatingColumn(RegistryModel):
     heading_key: FormHeadingKey
     official_heading: OfficialHeading | None = None
     casilla_id: CasillaId | None = None
+    export_field_id: ExportFieldId | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _one_value_owner(self) -> FormRepeatingColumn:
+        if self.casilla_id is not None and self.export_field_id is not None:
+            raise RegistryValidationError("a repeating column cannot name both a casilla and an export field")
+        return self
 
 
 class FormRepeatingGroupBlock(RegistryModel):
@@ -377,6 +387,11 @@ class FormRepeatingGroupBlock(RegistryModel):
         if self.max_rows is not None and self.max_rows < self.min_rows:
             raise RegistryValidationError(f"{owner} declares max_rows below min_rows")
         _require_unique(owner, "column keys", tuple(column.key for column in self.columns))
+        projected = tuple(column.export_field_id for column in self.columns if column.export_field_id is not None)
+        if projected:
+            if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD or len(projected) != len(self.columns):
+                raise RegistryValidationError("projected form columns require one export-record field owner each")
+            _require_unique(owner, "export fields", projected)
         if self.grids:
             if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
                 raise RegistryValidationError(f"{owner} grids require an export-record row source")
@@ -413,6 +428,8 @@ class FormContextFieldBlock(RegistryModel):
     A scalar binding owner displays its entire semantic value, even when the
     selected wire field emits only integer digits, fractional digits or a sign.
     The optional box number belongs to the paper form, never the wire offset.
+    Choices label a header producer's complete closed domain without changing
+    its stored value or the bytes emitted by the export declaration.
     """
 
     box_number: AeatBoxNumber | None = None
@@ -423,6 +440,13 @@ class FormContextFieldBlock(RegistryModel):
     export_field_id: ExportFieldId
     heading_key: FormHeadingKey
     official_heading: OfficialHeading | None = None
+    choices: tuple[FormFieldChoice, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _unique_choices(self) -> FormContextFieldBlock:
+        _require_unique(str(self.id), "choice values", tuple(choice.value for choice in self.choices))
+        return self
 
 
 FormBlockDefinition = Annotated[

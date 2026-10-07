@@ -3571,6 +3571,117 @@ modelo:
           belföldi termékértékesítéseket végző adóalanyokra alkalmazandó különleges
           szabályozások önbevallása.
         title: IVA. Az OSS / IOSS különleges szabályozások önbevallása
+      form:
+        authored:
+          base:
+            heading: Adóalap (EUR)
+          clase:
+            heading: Kulcskategória (R/S)
+          correccion:
+            heading: Áfaösszeg helyesbítése (EUR)
+          correcciones:
+            heading: Korábbi időszakok helyesbítése (legfeljebb 3 év)
+          cuota:
+            heading: Áfaösszeg (EUR)
+          declarante:
+            heading: 1. Adóalany
+          ejercicio:
+            heading: Év
+          ejercicio-periodo:
+            heading: 2. Adóév és időszak
+          exterior-servicios:
+            heading: 3. Szolgáltatásnyújtás
+          fila-1:
+            heading: '1'
+          fila-10:
+            heading: '10'
+          fila-11:
+            heading: '11'
+          fila-12:
+            heading: '12'
+          fila-13:
+            heading: '13'
+          fila-14:
+            heading: '14'
+          fila-15:
+            heading: '15'
+          fila-16:
+            heading: '16'
+          fila-17:
+            heading: '17'
+          fila-18:
+            heading: '18'
+          fila-19:
+            heading: '19'
+          fila-2:
+            heading: '2'
+          fila-20:
+            heading: '20'
+          fila-21:
+            heading: '21'
+          fila-22:
+            heading: '22'
+          fila-23:
+            heading: '23'
+          fila-24:
+            heading: '24'
+          fila-25:
+            heading: '25'
+          fila-26:
+            heading: '26'
+          fila-27:
+            heading: '27'
+          fila-28:
+            heading: '28'
+          fila-3:
+            heading: '3'
+          fila-4:
+            heading: '4'
+          fila-5:
+            heading: '5'
+          fila-6:
+            heading: '6'
+          fila-7:
+            heading: '7'
+          fila-8:
+            heading: '8'
+          fila-9:
+            heading: '9'
+          identificacion:
+            heading: Azonosítás, időszak és fizetés
+          importaciones:
+            heading: 3. 150 euró alatti termékimport
+          nif:
+            heading: Adóazonosító / CII
+          niva:
+            heading: Közösségi adószám vagy más adóazonosító
+          nombre:
+            heading: Teljes név vagy cégnév
+          pago:
+            heading: Fizetési adatok
+          pais-consumo:
+            heading: Fogyasztás tagállama
+          pais-origen:
+            heading: Származás tagállama
+          periodo:
+            heading: Időszak
+          presentacion:
+            heading: Kiegészítő benyújtási adatok
+          resultado:
+            importaciones:
+              heading: Termékimport
+          tipo:
+            heading: Áfakulcs (%)
+          tipo-periodo:
+            heading: Időszak típusa
+          union-bienes:
+            heading: 4. Spanyolországból történő termékértékesítés
+          union-envio:
+            heading: 6. Más tagállamokból történő termékértékesítés
+          union-ep:
+            heading: 5. Más tagállami telephelyekről nyújtott szolgáltatások
+          union-servicios:
+            heading: 3. Spanyolországból és EU-n kívüli telephelyekről nyújtott szolgáltatások
       revision:
         esquema-exterior:
           casilla:
@@ -3578,17 +3689,457 @@ modelo:
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               label: A bevallás időszaka
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g64:
+              label: correcciones 1 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g68:
+              label: correcciones 2 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6c:
+              label: correcciones 3 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6g:
+              label: correcciones 4 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6k:
+              label: correcciones 5 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6o:
+              label: correcciones 6 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g6s:
+              label: correcciones 7 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g70:
+              label: correcciones 8 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9g74:
+              label: correcciones 9 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h60:
+              label: correcciones 10 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h64:
+              label: correcciones 11 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h68:
+              label: correcciones 12 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6c:
+              label: correcciones 13 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6g:
+              label: correcciones 14 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6k:
+              label: correcciones 15 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6o:
+              label: correcciones 16 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h6s:
+              label: correcciones 17 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h70:
+              label: correcciones 18 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9h74:
+              label: correcciones 19 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i60:
+              label: correcciones 20 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i64:
+              label: correcciones 21 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i68:
+              label: correcciones 22 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6c:
+              label: correcciones 23 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6g:
+              label: correcciones 24 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6k:
+              label: correcciones 25 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6o:
+              label: correcciones 26 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i6s:
+              label: correcciones 27 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5phmusjiclhm6qbfdpin6bjgc5kn6b9i70:
+              label: correcciones 28 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko32:
+              label: servicios 1 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko34:
+              label: servicios 2 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko36:
+              label: servicios 3 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko38:
+              label: servicios 4 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3a:
+              label: servicios 5 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3c:
+              label: servicios 6 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3e:
+              label: servicios 7 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3g:
+              label: servicios 8 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5ko3i:
+              label: servicios 9 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj0:
+              label: servicios 10 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj2:
+              label: servicios 11 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj4:
+              label: servicios 12 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj6:
+              label: servicios 13 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koj8:
+              label: servicios 14 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koja:
+              label: servicios 15 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kojc:
+              label: servicios 16 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koje:
+              label: servicios 17 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kojg:
+              label: servicios 18 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5koji:
+              label: servicios 19 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp30:
+              label: servicios 20 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp32:
+              label: servicios 21 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp34:
+              label: servicios 22 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp36:
+              label: servicios 23 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp38:
+              label: servicios 24 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp3a:
+              label: servicios 25 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp3c:
+              label: servicios 26 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp3e:
+              label: servicios 27 - Elismert fogyasztasi tagallam
+            x-d5r62bj5f1q6asj9dtp2sorfdpq74rrc5ppmasjmd5hmirrj5po62qbj5kp3g:
+              label: servicios 28 - Elismert fogyasztasi tagallam
             x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
-              label: A nem uniós szabályozás szerinti áthárított HÉA összesen (célországonkénti
-                összegek összege)
+              label: 'Részösszeg: németországi szolgáltatások (helyesbítések nélkül)'
             x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
               label: DE célországba áthárított HÉA - nyújtott szolgáltatások (nem
                 uniós szabályozás)
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: AT - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: AT - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pi6atjfdhr6asg:
+              label: AT - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pkmspriclpm2sg:
+              label: AT - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5pp6asrldhq62p3f:
+              label: AT - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisobk5ppmasjmd5hmirrj:
+              label: AT - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: BE - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: BE - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pi6atjfdhr6asg:
+              label: BE - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pkmspriclpm2sg:
+              label: BE - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55pp6asrldhq62p3f:
+              label: BE - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj55ppmasjmd5hmirrj:
+              label: BE - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: BG - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: BG - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pi6atjfdhr6asg:
+              label: BG - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pkmspriclpm2sg:
+              label: BG - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75pp6asrldhq62p3f:
+              label: BG - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisoj75ppmasjmd5hmirrj:
+              label: BG - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: CY - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: CY - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pi6atjfdhr6asg:
+              label: CY - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pkmspriclpm2sg:
+              label: CY - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5pp6asrldhq62p3f:
+              label: CY - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorp5ppmasjmd5hmirrj:
+              label: CY - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: CZ - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: CZ - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pi6atjfdhr6asg:
+              label: CZ - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pkmspriclpm2sg:
+              label: CZ - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5pp6asrldhq62p3f:
+              label: CZ - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisorq5ppmasjmd5hmirrj:
+              label: CZ - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: DE - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: DE - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pi6atjfdhr6asg:
+              label: DE - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pkmspriclpm2sg:
+              label: DE - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355pp6asrldhq62p3f:
+              label: DE - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp355ppmasjmd5hmirrj:
+              label: DE - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: DK - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: DK - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pi6atjfdhr6asg:
+              label: DK - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pkmspriclpm2sg:
+              label: DK - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5pp6asrldhq62p3f:
+              label: DK - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisp3b5ppmasjmd5hmirrj:
+              label: DK - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: EE - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: EE - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pi6atjfdhr6asg:
+              label: EE - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pkmspriclpm2sg:
+              label: EE - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55pp6asrldhq62p3f:
+              label: EE - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispb55ppmasjmd5hmirrj:
+              label: EE - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: ES - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: ES - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pi6atjfdhr6asg:
+              label: ES - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pkmspriclpm2sg:
+              label: ES - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5pp6asrldhq62p3f:
+              label: ES - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispbj5ppmasjmd5hmirrj:
+              label: ES - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: FI - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: FI - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pi6atjfdhr6asg:
+              label: FI - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pkmspriclpm2sg:
+              label: FI - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95pp6asrldhq62p3f:
+              label: FI - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispj95ppmasjmd5hmirrj:
+              label: FI - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: FR - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: FR - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pi6atjfdhr6asg:
+              label: FR - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pkmspriclpm2sg:
+              label: FR - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5pp6asrldhq62p3f:
+              label: FR - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispji5ppmasjmd5hmirrj:
+              label: FR - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: GR - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: GR - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pi6atjfdhr6asg:
+              label: GR - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pkmspriclpm2sg:
+              label: GR - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5pp6asrldhq62p3f:
+              label: GR - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnispri5ppmasjmd5hmirrj:
+              label: GR - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: HR - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: HR - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pi6atjfdhr6asg:
+              label: HR - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pkmspriclpm2sg:
+              label: HR - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5pp6asrldhq62p3f:
+              label: HR - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3i5ppmasjmd5hmirrj:
+              label: HR - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: HU - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: HU - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pi6atjfdhr6asg:
+              label: HU - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pkmspriclpm2sg:
+              label: HU - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5pp6asrldhq62p3f:
+              label: HU - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisq3l5ppmasjmd5hmirrj:
+              label: HU - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: IE - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: IE - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pi6atjfdhr6asg:
+              label: IE - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pkmspriclpm2sg:
+              label: IE - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55pp6asrldhq62p3f:
+              label: IE - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqb55ppmasjmd5hmirrj:
+              label: IE - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: IT - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: IT - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pi6atjfdhr6asg:
+              label: IT - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pkmspriclpm2sg:
+              label: IT - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5pp6asrldhq62p3f:
+              label: IT - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisqbk5ppmasjmd5hmirrj:
+              label: IT - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: LT - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: LT - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pi6atjfdhr6asg:
+              label: LT - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pkmspriclpm2sg:
+              label: LT - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5pp6asrldhq62p3f:
+              label: LT - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3k5ppmasjmd5hmirrj:
+              label: LT - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: LU - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: LU - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pi6atjfdhr6asg:
+              label: LU - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pkmspriclpm2sg:
+              label: LU - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5pp6asrldhq62p3f:
+              label: LU - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3l5ppmasjmd5hmirrj:
+              label: LU - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: LV - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: LV - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pi6atjfdhr6asg:
+              label: LV - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pkmspriclpm2sg:
+              label: LV - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5pp6asrldhq62p3f:
+              label: LV - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisr3m5ppmasjmd5hmirrj:
+              label: LV - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: MT - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: MT - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pi6atjfdhr6asg:
+              label: MT - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pkmspriclpm2sg:
+              label: MT - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5pp6asrldhq62p3f:
+              label: MT - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrbk5ppmasjmd5hmirrj:
+              label: MT - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: NL - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: NL - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pi6atjfdhr6asg:
+              label: NL - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pkmspriclpm2sg:
+              label: NL - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5pp6asrldhq62p3f:
+              label: NL - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnisrjc5ppmasjmd5hmirrj:
+              label: NL - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: PL - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: PL - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pi6atjfdhr6asg:
+              label: PL - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pkmspriclpm2sg:
+              label: PL - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5pp6asrldhq62p3f:
+              label: PL - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3c5ppmasjmd5hmirrj:
+              label: PL - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: PT - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: PT - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pi6atjfdhr6asg:
+              label: PT - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pkmspriclpm2sg:
+              label: PT - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5pp6asrldhq62p3f:
+              label: PT - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chniss3k5ppmasjmd5hmirrj:
+              label: PT - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: RO - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: RO - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pi6atjfdhr6asg:
+              label: RO - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pkmspriclpm2sg:
+              label: RO - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5pp6asrldhq62p3f:
+              label: RO - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissjf5ppmasjmd5hmirrj:
+              label: RO - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr1dhi6ubb9dpjn4pbjc5p2qpbje1gmso8:
+              label: Spanyolorszagban fizetendo osszesen
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: SE - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: SE - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pi6atjfdhr6asg:
+              label: SE - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pkmspriclpm2sg:
+              label: SE - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55pp6asrldhq62p3f:
+              label: SE - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr55ppmasjmd5hmirrj:
+              label: SE - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: SI - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: SI - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pi6atjfdhr6asg:
+              label: SI - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pkmspriclpm2sg:
+              label: SI - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95pp6asrldhq62p3f:
+              label: SI - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissr95ppmasjmd5hmirrj:
+              label: SI - Szolgaltatasok afaosszege
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5phmusjiclhm6qbfdpin6bbecljm2t39epgn6:
+              label: SK - Negativ korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5phmusjiclhm6qbfdpin6bbgdtpmit39epgn6:
+              label: SK - Pozitiv korrekciok
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pi6atjfdhr6asg:
+              label: SK - A fogyasztas szerinti tagallam altal visszateritendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pkmspriclpm2sg:
+              label: SK - Spanyolorszagban fizetendo
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5pp6asrldhq62p3f:
+              label: SK - Egyenleg a fogyasztas szerinti tagallamban
+            x-d5r62bj5f1q6asj9dtp2ssj5edqmot31chnissrb5ppmasjmd5hmirrj:
+              label: SK - Szolgaltatasok afaosszege
           construct:
             modelo-369:
               field:
                 title: Modelo 369 nyomtatvány - Esquema Exterior (különleges szabályozás
                   a nem letelepedett szolgáltatók által nyújtott szolgáltatásokra)
+            modelo-369-exterior-resultado:
+              field:
+                title: Elszamolas a fogyasztas szerinti tagallamonkent
           field:
             label: 369-es modelo - Unión kívüli rendszer - a Közösségben nem letelepedett
               adóalanyok által nyújtott szolgáltatásokra vonatkozó különös szabályozás
@@ -3600,17 +4151,469 @@ modelo:
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               label: A bevallás időszaka
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0c8:
+              label: Elismert fogyasztási tagállam · pais-01
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0cg:
+              label: Elismert fogyasztási tagállam · pais-02
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0co:
+              label: Elismert fogyasztási tagállam · pais-03
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0d0:
+              label: Elismert fogyasztási tagállam · pais-04
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0d8:
+              label: Elismert fogyasztási tagállam · pais-05
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0dg:
+              label: Elismert fogyasztási tagállam · pais-06
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0do:
+              label: Elismert fogyasztási tagállam · pais-07
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0e0:
+              label: Elismert fogyasztási tagállam · pais-08
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj0e8:
+              label: Elismert fogyasztási tagállam · pais-09
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2c0:
+              label: Elismert fogyasztási tagállam · pais-10
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2c8:
+              label: Elismert fogyasztási tagállam · pais-11
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2cg:
+              label: Elismert fogyasztási tagállam · pais-12
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2co:
+              label: Elismert fogyasztási tagállam · pais-13
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2d0:
+              label: Elismert fogyasztási tagállam · pais-14
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2d8:
+              label: Elismert fogyasztási tagállam · pais-15
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2dg:
+              label: Elismert fogyasztási tagállam · pais-16
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2do:
+              label: Elismert fogyasztási tagállam · pais-17
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2e0:
+              label: Elismert fogyasztási tagállam · pais-18
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj2e8:
+              label: Elismert fogyasztási tagállam · pais-19
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4c0:
+              label: Elismert fogyasztási tagállam · pais-20
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4c8:
+              label: Elismert fogyasztási tagállam · pais-21
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4cg:
+              label: Elismert fogyasztási tagállam · pais-22
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4co:
+              label: Elismert fogyasztási tagállam · pais-23
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4d0:
+              label: Elismert fogyasztási tagállam · pais-24
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4d8:
+              label: Elismert fogyasztási tagállam · pais-25
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4dg:
+              label: Elismert fogyasztási tagállam · pais-26
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4do:
+              label: Elismert fogyasztási tagállam · pais-27
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj3dtp74pb3cdkmurj5ecn70ob9ecmj4e0:
+              label: Elismert fogyasztási tagállam · pais-28
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1h:
+              label: Elismert fogyasztási tagállam · pais-01
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1i:
+              label: Elismert fogyasztási tagállam · pais-02
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1j:
+              label: Elismert fogyasztási tagállam · pais-03
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1k:
+              label: Elismert fogyasztási tagállam · pais-04
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1l:
+              label: Elismert fogyasztási tagállam · pais-05
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1m:
+              label: Elismert fogyasztási tagállam · pais-06
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1n:
+              label: Elismert fogyasztási tagállam · pais-07
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1o:
+              label: Elismert fogyasztási tagállam · pais-08
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc1p:
+              label: Elismert fogyasztási tagállam · pais-09
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9g:
+              label: Elismert fogyasztási tagállam · pais-10
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9h:
+              label: Elismert fogyasztási tagállam · pais-11
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9i:
+              label: Elismert fogyasztási tagállam · pais-12
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9j:
+              label: Elismert fogyasztási tagállam · pais-13
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9k:
+              label: Elismert fogyasztási tagállam · pais-14
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9l:
+              label: Elismert fogyasztási tagállam · pais-15
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9m:
+              label: Elismert fogyasztási tagállam · pais-16
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9n:
+              label: Elismert fogyasztási tagállam · pais-17
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9o:
+              label: Elismert fogyasztási tagállam · pais-18
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqc9p:
+              label: Elismert fogyasztási tagállam · pais-19
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchg:
+              label: Elismert fogyasztási tagállam · pais-20
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchh:
+              label: Elismert fogyasztási tagállam · pais-21
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchi:
+              label: Elismert fogyasztási tagállam · pais-22
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchj:
+              label: Elismert fogyasztási tagállam · pais-23
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchk:
+              label: Elismert fogyasztási tagállam · pais-24
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchl:
+              label: Elismert fogyasztási tagállam · pais-25
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchm:
+              label: Elismert fogyasztási tagállam · pais-26
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqchn:
+              label: Elismert fogyasztási tagállam · pais-27
+            x-d5r62bj9dlo6usjkc5hmirre5phmurjke9nmobj9dlo6usjkc5hmirreclpiss31d5piqcho:
+              label: Elismert fogyasztási tagállam · pais-28
             x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
-              label: Az importszabályozás szerinti áthárított HÉA összesen (IOSS,
-                célországonkénti összeg)
+              label: 'Részösszeg: németországi import (helyesbítések nélkül)'
             x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
               label: IOSS HÉA a DE célországba - behozott áruk távértékesítése ≤ 150
                 EUR (LIVA 163. quinvicies cikk)
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: AT · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: AT · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj4clr6ur3mclp0:
+              label: AT · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj9dlo6usjkc5hmirreclpg:
+              label: AT · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bj9dpjn4pbjc5p0:
+              label: AT · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pgn8bjiclpnar3kc5i6u:
+              label: AT · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: BE · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: BE · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj4clr6ur3mclp0:
+              label: BE · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj9dlo6usjkc5hmirreclpg:
+              label: BE · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abj9dpjn4pbjc5p0:
+              label: BE · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6abjiclpnar3kc5i6u:
+              label: BE · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: BG · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: BG · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj4clr6ur3mclp0:
+              label: BG · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj9dlo6usjkc5hmirreclpg:
+              label: BG · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebj9dpjn4pbjc5p0:
+              label: BG · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ph6ebjiclpnar3kc5i6u:
+              label: BG · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: CY · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: CY · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj4clr6ur3mclp0:
+              label: CY · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj9dlo6usjkc5hmirreclpg:
+              label: CY · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibj9dpjn4pbjc5p0:
+              label: CY · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnibjiclpnar3kc5i6u:
+              label: CY · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: CZ · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: CZ · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj4clr6ur3mclp0:
+              label: CZ · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj9dlo6usjkc5hmirreclpg:
+              label: CZ · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbj9dpjn4pbjc5p0:
+              label: CZ · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5phnkbjiclpnar3kc5i6u:
+              label: CZ · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: DE · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: DE · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj4clr6ur3mclp0:
+              label: DE · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj9dlo6usjkc5hmirreclpg:
+              label: DE · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abj9dpjn4pbjc5p0:
+              label: DE · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6abjiclpnar3kc5i6u:
+              label: DE · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: DK · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: DK · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj4clr6ur3mclp0:
+              label: DK · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj9dlo6usjkc5hmirreclpg:
+              label: DK · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbj9dpjn4pbjc5p0:
+              label: DK · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pi6mbjiclpnar3kc5i6u:
+              label: DK · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: EE · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: EE · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj4clr6ur3mclp0:
+              label: EE · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj9dlo6usjkc5hmirreclpg:
+              label: EE · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabj9dpjn4pbjc5p0:
+              label: EE · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pimabjiclpnar3kc5i6u:
+              label: EE · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: ES · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: ES · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj4clr6ur3mclp0:
+              label: ES · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj9dlo6usjkc5hmirreclpg:
+              label: ES · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bj9dpjn4pbjc5p0:
+              label: ES · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pin6bjiclpnar3kc5i6u:
+              label: ES · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: FI · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: FI · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj4clr6ur3mclp0:
+              label: FI · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj9dlo6usjkc5hmirreclpg:
+              label: FI · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibj9dpjn4pbjc5p0:
+              label: FI · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj6ibjiclpnar3kc5i6u:
+              label: FI · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: FR · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: FR · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj4clr6ur3mclp0:
+              label: FR · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj9dlo6usjkc5hmirreclpg:
+              label: FR · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bj9dpjn4pbjc5p0:
+              label: FR · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pj74bjiclpnar3kc5i6u:
+              label: FR · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: GR · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: GR · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj4clr6ur3mclp0:
+              label: GR · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj9dlo6usjkc5hmirreclpg:
+              label: GR · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bj9dpjn4pbjc5p0:
+              label: GR · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pjn4bjiclpnar3kc5i6u:
+              label: GR · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: HR · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: HR · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj4clr6ur3mclp0:
+              label: HR · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj9dlo6usjkc5hmirreclpg:
+              label: HR · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bj9dpjn4pbjc5p0:
+              label: HR · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk74bjiclpnar3kc5i6u:
+              label: HR · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: HU · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: HU · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj4clr6ur3mclp0:
+              label: HU · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj9dlo6usjkc5hmirreclpg:
+              label: HU · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abj9dpjn4pbjc5p0:
+              label: HU · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pk7abjiclpnar3kc5i6u:
+              label: HU · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: IE · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: IE · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj4clr6ur3mclp0:
+              label: IE · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj9dlo6usjkc5hmirreclpg:
+              label: IE · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabj9dpjn4pbjc5p0:
+              label: IE · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkmabjiclpnar3kc5i6u:
+              label: IE · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: IT · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: IT · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj4clr6ur3mclp0:
+              label: IT · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj9dlo6usjkc5hmirreclpg:
+              label: IT · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bj9dpjn4pbjc5p0:
+              label: IT · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pkn8bjiclpnar3kc5i6u:
+              label: IT · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: LT · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: LT · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj4clr6ur3mclp0:
+              label: LT · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj9dlo6usjkc5hmirreclpg:
+              label: LT · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bj9dpjn4pbjc5p0:
+              label: LT · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm78bjiclpnar3kc5i6u:
+              label: LT · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: LU · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: LU · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj4clr6ur3mclp0:
+              label: LU · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj9dlo6usjkc5hmirreclpg:
+              label: LU · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abj9dpjn4pbjc5p0:
+              label: LU · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7abjiclpnar3kc5i6u:
+              label: LU · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: LV · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: LV · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj4clr6ur3mclp0:
+              label: LV · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj9dlo6usjkc5hmirreclpg:
+              label: LV · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbj9dpjn4pbjc5p0:
+              label: LV · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pm7cbjiclpnar3kc5i6u:
+              label: LV · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: MT · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: MT · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj4clr6ur3mclp0:
+              label: MT · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj9dlo6usjkc5hmirreclpg:
+              label: MT · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bj9dpjn4pbjc5p0:
+              label: MT · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pmn8bjiclpnar3kc5i6u:
+              label: MT · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: NL · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: NL · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj4clr6ur3mclp0:
+              label: NL · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj9dlo6usjkc5hmirreclpg:
+              label: NL · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6obj9dpjn4pbjc5p0:
+              label: NL · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pn6objiclpnar3kc5i6u:
+              label: NL · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: PL · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: PL · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj4clr6ur3mclp0:
+              label: PL · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj9dlo6usjkc5hmirreclpg:
+              label: PL · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6obj9dpjn4pbjc5p0:
+              label: PL · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po6objiclpnar3kc5i6u:
+              label: PL · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: PT · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: PT · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj4clr6ur3mclp0:
+              label: PT · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj9dlo6usjkc5hmirreclpg:
+              label: PT · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bj9dpjn4pbjc5p0:
+              label: PT · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5po78bjiclpnar3kc5i6u:
+              label: PT · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: RO · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: RO · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj4clr6ur3mclp0:
+              label: RO · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj9dlo6usjkc5hmirreclpg:
+              label: RO · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubj9dpjn4pbjc5p0:
+              label: RO · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5pp6ubjiclpnar3kc5i6u:
+              label: RO · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppm2r34dsmmirj7e9in6obi5lin6s31dpgg:
+              label: Spanyolországban fizetendő összesen
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: SE · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: SE · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj4clr6ur3mclp0:
+              label: SE · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj9dlo6usjkc5hmirreclpg:
+              label: SE · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabj9dpjn4pbjc5p0:
+              label: SE · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmabjiclpnar3kc5i6u:
+              label: SE · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: SI · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: SI · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj4clr6ur3mclp0:
+              label: SI · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj9dlo6usjkc5hmirreclpg:
+              label: SI · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibj9dpjn4pbjc5p0:
+              label: SI · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmibjiclpnar3kc5i6u:
+              label: SI · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: SK · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: SK · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj4clr6ur3mclp0:
+              label: SK · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj9dlo6usjkc5hmirreclpg:
+              label: SK · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbj9dpjn4pbjc5p0:
+              label: SK · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ppmmbjiclpnar3kc5i6u:
+              label: SK · Eredmény a fogyasztás szerinti tagállamonként
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj3dtp74pb3cdkmurj5ecmmspb7c5q6itj1ec:
+              label: XI · Negatív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj3dtp74pb3cdkmurj5ecmn0rrjd5q6itj1ec:
+              label: XI · Pozitív korrekciók
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj4clr6ur3mclp0:
+              label: XI · A fogyasztás szerinti tagállamtól visszaigényelhető
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj9dlo6usjkc5hmirreclpg:
+              label: XI · Termékimport
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibj9dpjn4pbjc5p0:
+              label: XI · Spanyolországban fizetendő
+            x-d5r62bj9dlo6usjkc5hmirre5pp6asrldhq62p3f5ps6ibjiclpnar3kc5i6u:
+              label: XI · Eredmény a fogyasztás szerinti tagállamonként
           construct:
             modelo-369:
               field:
                 title: Modelo 369 nyomtatvány - Esquema Importacion (IOSS különleges
                   szabályozás)
+            modelo-369-importacion-resultado:
+              field:
+                title: Eredmény a fogyasztás szerinti tagállamonként
           field:
             label: 369-es modelo - Importrendszer (IOSS) - importált áruk távértékesítésére
               vonatkozó különös szabályozás (LIVA 163. cikk quinvicies-octovicies).
@@ -3621,9 +4624,289 @@ modelo:
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               label: A bevallás időszaka
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko32:
+              label: Országellenőrzés correcciones 1
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko34:
+              label: Országellenőrzés correcciones 2
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko36:
+              label: Országellenőrzés correcciones 3
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko38:
+              label: Országellenőrzés correcciones 4
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3a:
+              label: Országellenőrzés correcciones 5
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3c:
+              label: Országellenőrzés correcciones 6
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3e:
+              label: Országellenőrzés correcciones 7
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3g:
+              label: Országellenőrzés correcciones 8
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5ko3i:
+              label: Országellenőrzés correcciones 9
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj0:
+              label: Országellenőrzés correcciones 10
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj2:
+              label: Országellenőrzés correcciones 11
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj4:
+              label: Országellenőrzés correcciones 12
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj6:
+              label: Országellenőrzés correcciones 13
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koj8:
+              label: Országellenőrzés correcciones 14
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koja:
+              label: Országellenőrzés correcciones 15
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kojc:
+              label: Országellenőrzés correcciones 16
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koje:
+              label: Országellenőrzés correcciones 17
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kojg:
+              label: Országellenőrzés correcciones 18
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5koji:
+              label: Országellenőrzés correcciones 19
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp30:
+              label: Országellenőrzés correcciones 20
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp32:
+              label: Országellenőrzés correcciones 21
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp34:
+              label: Országellenőrzés correcciones 22
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp36:
+              label: Országellenőrzés correcciones 23
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp38:
+              label: Országellenőrzés correcciones 24
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp3a:
+              label: Országellenőrzés correcciones 25
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp3c:
+              label: Országellenőrzés correcciones 26
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp3e:
+              label: Országellenőrzés correcciones 27
+            x-d5r62bjldpkmurhecdnmst3idtm2sorfe9p6aor3d5nmspbj5po62qbj5kp3g:
+              label: Országellenőrzés correcciones 28
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko32:
+              label: Országellenőrzés union-bienes 1
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko34:
+              label: Országellenőrzés union-bienes 2
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko36:
+              label: Országellenőrzés union-bienes 3
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko38:
+              label: Országellenőrzés union-bienes 4
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3a:
+              label: Országellenőrzés union-bienes 5
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3c:
+              label: Országellenőrzés union-bienes 6
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3e:
+              label: Országellenőrzés union-bienes 7
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3g:
+              label: Országellenőrzés union-bienes 8
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5ko3i:
+              label: Országellenőrzés union-bienes 9
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj0:
+              label: Országellenőrzés union-bienes 10
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj2:
+              label: Országellenőrzés union-bienes 11
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj4:
+              label: Országellenőrzés union-bienes 12
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj6:
+              label: Országellenőrzés union-bienes 13
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koj8:
+              label: Országellenőrzés union-bienes 14
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koja:
+              label: Országellenőrzés union-bienes 15
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kojc:
+              label: Országellenőrzés union-bienes 16
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koje:
+              label: Országellenőrzés union-bienes 17
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kojg:
+              label: Országellenőrzés union-bienes 18
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5koji:
+              label: Országellenőrzés union-bienes 19
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp30:
+              label: Országellenőrzés union-bienes 20
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp32:
+              label: Országellenőrzés union-bienes 21
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp34:
+              label: Országellenőrzés union-bienes 22
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp36:
+              label: Országellenőrzés union-bienes 23
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp38:
+              label: Országellenőrzés union-bienes 24
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp3a:
+              label: Országellenőrzés union-bienes 25
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp3c:
+              label: Országellenőrzés union-bienes 26
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp3e:
+              label: Országellenőrzés union-bienes 27
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb2d5imspbj5po62qbj5kp3g:
+              label: Országellenőrzés union-bienes 28
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60og:
+              label: Országellenőrzés union-envio 1
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60p0:
+              label: Országellenőrzés union-envio 2
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60pg:
+              label: Országellenőrzés union-envio 3
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60q0:
+              label: Országellenőrzés union-envio 4
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60qg:
+              label: Országellenőrzés union-envio 5
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60r0:
+              label: Országellenőrzés union-envio 6
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60rg:
+              label: Országellenőrzés union-envio 7
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60s0:
+              label: Országellenőrzés union-envio 8
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd60sg:
+              label: Országellenőrzés union-envio 9
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64o0:
+              label: Országellenőrzés union-envio 10
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64og:
+              label: Országellenőrzés union-envio 11
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64p0:
+              label: Országellenőrzés union-envio 12
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64pg:
+              label: Országellenőrzés union-envio 13
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64q0:
+              label: Országellenőrzés union-envio 14
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64qg:
+              label: Országellenőrzés union-envio 15
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64r0:
+              label: Országellenőrzés union-envio 16
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64rg:
+              label: Országellenőrzés union-envio 17
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64s0:
+              label: Országellenőrzés union-envio 18
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd64sg:
+              label: Országellenőrzés union-envio 19
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68o0:
+              label: Országellenőrzés union-envio 20
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68og:
+              label: Országellenőrzés union-envio 21
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68p0:
+              label: Országellenőrzés union-envio 22
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68pg:
+              label: Országellenőrzés union-envio 23
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68q0:
+              label: Országellenőrzés union-envio 24
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68qg:
+              label: Országellenőrzés union-envio 25
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68r0:
+              label: Országellenőrzés union-envio 26
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68rg:
+              label: Országellenőrzés union-envio 27
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5dpr6irpee1gmispd68s0:
+              label: Országellenőrzés union-envio 28
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0c8:
+              label: Országellenőrzés union-ep 1
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0cg:
+              label: Országellenőrzés union-ep 2
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0co:
+              label: Országellenőrzés union-ep 3
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0d0:
+              label: Országellenőrzés union-ep 4
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0d8:
+              label: Országellenőrzés union-ep 5
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0dg:
+              label: Országellenőrzés union-ep 6
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0do:
+              label: Országellenőrzés union-ep 7
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0e0:
+              label: Országellenőrzés union-ep 8
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj0e8:
+              label: Országellenőrzés union-ep 9
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2c0:
+              label: Országellenőrzés union-ep 10
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2c8:
+              label: Országellenőrzés union-ep 11
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2cg:
+              label: Országellenőrzés union-ep 12
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2co:
+              label: Országellenőrzés union-ep 13
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2d0:
+              label: Országellenőrzés union-ep 14
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2d8:
+              label: Országellenőrzés union-ep 15
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2dg:
+              label: Országellenőrzés union-ep 16
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2do:
+              label: Országellenőrzés union-ep 17
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2e0:
+              label: Országellenőrzés union-ep 18
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj2e8:
+              label: Országellenőrzés union-ep 19
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4c0:
+              label: Országellenőrzés union-ep 20
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4c8:
+              label: Országellenőrzés union-ep 21
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4cg:
+              label: Országellenőrzés union-ep 22
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4co:
+              label: Országellenőrzés union-ep 23
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4d0:
+              label: Országellenőrzés union-ep 24
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4d8:
+              label: Országellenőrzés union-ep 25
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4dg:
+              label: Országellenőrzés union-ep 26
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4do:
+              label: Országellenőrzés union-ep 27
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbb5e0n70ob9ecmj4e0:
+              label: Országellenőrzés union-ep 28
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g64:
+              label: Országellenőrzés union-servicios 1
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g68:
+              label: Országellenőrzés union-servicios 2
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6c:
+              label: Országellenőrzés union-servicios 3
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6g:
+              label: Országellenőrzés union-servicios 4
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6k:
+              label: Országellenőrzés union-servicios 5
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6o:
+              label: Országellenőrzés union-servicios 6
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g6s:
+              label: Országellenőrzés union-servicios 7
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g70:
+              label: Országellenőrzés union-servicios 8
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9g74:
+              label: Országellenőrzés union-servicios 9
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h60:
+              label: Országellenőrzés union-servicios 10
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h64:
+              label: Országellenőrzés union-servicios 11
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h68:
+              label: Országellenőrzés union-servicios 12
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6c:
+              label: Országellenőrzés union-servicios 13
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6g:
+              label: Országellenőrzés union-servicios 14
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6k:
+              label: Országellenőrzés union-servicios 15
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6o:
+              label: Országellenőrzés union-servicios 16
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h6s:
+              label: Országellenőrzés union-servicios 17
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h70:
+              label: Országellenőrzés union-servicios 18
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9h74:
+              label: Országellenőrzés union-servicios 19
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i60:
+              label: Országellenőrzés union-servicios 20
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i64:
+              label: Országellenőrzés union-servicios 21
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i68:
+              label: Országellenőrzés union-servicios 22
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6c:
+              label: Országellenőrzés union-servicios 23
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6g:
+              label: Országellenőrzés union-servicios 24
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6k:
+              label: Országellenőrzés union-servicios 25
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6o:
+              label: Országellenőrzés union-servicios 26
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i6s:
+              label: Országellenőrzés union-servicios 27
+            x-d5r62bjldpkmurhecdnmst3idtm2stbed5nmsbbjclp7cqb3d5nn6bjgc5kn6b9i70:
+              label: Országellenőrzés union-servicios 28
             x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
-              label: Az uniós rendszer felszámított IVA-összesen (célországok és folyamattípusok
-                közötti összeg)
+              label: 'Részösszeg: német és francia szolgáltatások, német termékértékesítések
+                (helyesbítések nélkül)'
             x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
               label: OSS uniós rendszer IVA-összege DE célországba - távértékesítések
                 + elektronikus felületek
@@ -3633,11 +4916,688 @@ modelo:
             x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
               label: OSS uniós rendszer IVA-összege FR célországba - nyújtott szolgáltatások
                 (LIVA 163. unvicies cikk)
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspdclpn0obec4:
+              label: AT — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspddtq74rrj:
+              label: AT — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: AT — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: AT — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sp35epnmotj5e8:
+              label: AT — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sqbectp6asr1e8:
+              label: AT — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssj5edqmot31chng:
+              label: AT — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: AT — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: AT — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobb5edo62rj1:
+              label: AT — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbfehp6uso:
+              label: AT — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbgclp6irr4ds:
+              label: AT — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspdclpn0obec4:
+              label: BE — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspddtq74rrj:
+              label: BE — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: BE — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: BE — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisp35epnmotj5e8:
+              label: BE — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisqbectp6asr1e8:
+              label: BE — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissj5edqmot31chng:
+              label: BE — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqpbje1gmso8:
+              label: BE — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqrrke9nn6:
+              label: BE — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobb5edo62rj1:
+              label: BE — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbfehp6uso:
+              label: BE — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbgclp6irr4ds:
+              label: BE — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspdclpn0obec4:
+              label: BG — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspddtq74rrj:
+              label: BG — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: BG — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: BG — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisp35epnmotj5e8:
+              label: BG — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisqbectp6asr1e8:
+              label: BG — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissj5edqmot31chng:
+              label: BG — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqpbje1gmso8:
+              label: BG — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqrrke9nn6:
+              label: BG — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobb5edo62rj1:
+              label: BG — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbfehp6uso:
+              label: BG — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbgclp6irr4ds:
+              label: BG — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspdclpn0obec4:
+              label: CY — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspddtq74rrj:
+              label: CY — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: CY — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: CY — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisp35epnmotj5e8:
+              label: CY — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisqbectp6asr1e8:
+              label: CY — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissj5edqmot31chng:
+              label: CY — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqpbje1gmso8:
+              label: CY — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqrrke9nn6:
+              label: CY — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobb5edo62rj1:
+              label: CY — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbfehp6uso:
+              label: CY — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbgclp6irr4ds:
+              label: CY — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspdclpn0obec4:
+              label: CZ — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspddtq74rrj:
+              label: CZ — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: CZ — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: CZ — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sp35epnmotj5e8:
+              label: CZ — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sqbectp6asr1e8:
+              label: CZ — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssj5edqmot31chng:
+              label: CZ — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: CZ — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: CZ — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobb5edo62rj1:
+              label: CZ — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbfehp6uso:
+              label: CZ — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbgclp6irr4ds:
+              label: CZ — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspdclpn0obec4:
+              label: DE — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspddtq74rrj:
+              label: DE — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: DE — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: DE — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisp35epnmotj5e8:
+              label: DE — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisqbectp6asr1e8:
+              label: DE — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissj5edqmot31chng:
+              label: DE — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqpbje1gmso8:
+              label: DE — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqrrke9nn6:
+              label: DE — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobb5edo62rj1:
+              label: DE — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbfehp6uso:
+              label: DE — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbgclp6irr4ds:
+              label: DE — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspdclpn0obec4:
+              label: DK — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspddtq74rrj:
+              label: DK — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: DK — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: DK — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisp35epnmotj5e8:
+              label: DK — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisqbectp6asr1e8:
+              label: DK — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissj5edqmot31chng:
+              label: DK — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqpbje1gmso8:
+              label: DK — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqrrke9nn6:
+              label: DK — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobb5edo62rj1:
+              label: DK — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbfehp6uso:
+              label: DK — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbgclp6irr4ds:
+              label: DK — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspdclpn0obec4:
+              label: EE — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspddtq74rrj:
+              label: EE — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: EE — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: EE — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisp35epnmotj5e8:
+              label: EE — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisqbectp6asr1e8:
+              label: EE — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissj5edqmot31chng:
+              label: EE — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqpbje1gmso8:
+              label: EE — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqrrke9nn6:
+              label: EE — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobb5edo62rj1:
+              label: EE — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbfehp6uso:
+              label: EE — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbgclp6irr4ds:
+              label: EE — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspdclpn0obec4:
+              label: ES — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspddtq74rrj:
+              label: ES — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: ES — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: ES — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisp35epnmotj5e8:
+              label: ES — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisqbectp6asr1e8:
+              label: ES — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissj5edqmot31chng:
+              label: ES — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqpbje1gmso8:
+              label: ES — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqrrke9nn6:
+              label: ES — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobb5edo62rj1:
+              label: ES — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbfehp6uso:
+              label: ES — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbgclp6irr4ds:
+              label: ES — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspdclpn0obec4:
+              label: FI — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspddtq74rrj:
+              label: FI — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: FI — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: FI — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisp35epnmotj5e8:
+              label: FI — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisqbectp6asr1e8:
+              label: FI — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissj5edqmot31chng:
+              label: FI — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqpbje1gmso8:
+              label: FI — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqrrke9nn6:
+              label: FI — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobb5edo62rj1:
+              label: FI — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbfehp6uso:
+              label: FI — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbgclp6irr4ds:
+              label: FI — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspdclpn0obec4:
+              label: FR — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspddtq74rrj:
+              label: FR — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: FR — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: FR — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sp35epnmotj5e8:
+              label: FR — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sqbectp6asr1e8:
+              label: FR — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssj5edqmot31chng:
+              label: FR — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: FR — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: FR — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobb5edo62rj1:
+              label: FR — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbfehp6uso:
+              label: FR — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbgclp6irr4ds:
+              label: FR — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspdclpn0obec4:
+              label: GR — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspddtq74rrj:
+              label: GR — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: GR — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: GR — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sp35epnmotj5e8:
+              label: GR — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sqbectp6asr1e8:
+              label: GR — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssj5edqmot31chng:
+              label: GR — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: GR — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: GR — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobb5edo62rj1:
+              label: GR — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbfehp6uso:
+              label: GR — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbgclp6irr4ds:
+              label: GR — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspdclpn0obec4:
+              label: HR — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspddtq74rrj:
+              label: HR — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: HR — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: HR — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sp35epnmotj5e8:
+              label: HR — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sqbectp6asr1e8:
+              label: HR — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssj5edqmot31chng:
+              label: HR — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: HR — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: HR — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobb5edo62rj1:
+              label: HR — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbfehp6uso:
+              label: HR — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbgclp6irr4ds:
+              label: HR — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspdclpn0obec4:
+              label: HU — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspddtq74rrj:
+              label: HU — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: HU — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: HU — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisp35epnmotj5e8:
+              label: HU — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisqbectp6asr1e8:
+              label: HU — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissj5edqmot31chng:
+              label: HU — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqpbje1gmso8:
+              label: HU — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqrrke9nn6:
+              label: HU — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobb5edo62rj1:
+              label: HU — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbfehp6uso:
+              label: HU — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbgclp6irr4ds:
+              label: HU — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspdclpn0obec4:
+              label: IE — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspddtq74rrj:
+              label: IE — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: IE — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: IE — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisp35epnmotj5e8:
+              label: IE — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisqbectp6asr1e8:
+              label: IE — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissj5edqmot31chng:
+              label: IE — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqpbje1gmso8:
+              label: IE — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqrrke9nn6:
+              label: IE — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobb5edo62rj1:
+              label: IE — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbfehp6uso:
+              label: IE — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbgclp6irr4ds:
+              label: IE — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspdclpn0obec4:
+              label: IT — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspddtq74rrj:
+              label: IT — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: IT — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: IT — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sp35epnmotj5e8:
+              label: IT — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sqbectp6asr1e8:
+              label: IT — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssj5edqmot31chng:
+              label: IT — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: IT — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: IT — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobb5edo62rj1:
+              label: IT — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbfehp6uso:
+              label: IT — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbgclp6irr4ds:
+              label: IT — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspdclpn0obec4:
+              label: LT — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspddtq74rrj:
+              label: LT — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: LT — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: LT — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sp35epnmotj5e8:
+              label: LT — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sqbectp6asr1e8:
+              label: LT — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssj5edqmot31chng:
+              label: LT — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: LT — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: LT — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobb5edo62rj1:
+              label: LT — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbfehp6uso:
+              label: LT — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbgclp6irr4ds:
+              label: LT — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspdclpn0obec4:
+              label: LU — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspddtq74rrj:
+              label: LU — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: LU — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: LU — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisp35epnmotj5e8:
+              label: LU — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisqbectp6asr1e8:
+              label: LU — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissj5edqmot31chng:
+              label: LU — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqpbje1gmso8:
+              label: LU — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqrrke9nn6:
+              label: LU — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobb5edo62rj1:
+              label: LU — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbfehp6uso:
+              label: LU — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbgclp6irr4ds:
+              label: LU — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspdclpn0obec4:
+              label: LV — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspddtq74rrj:
+              label: LV — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: LV — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: LV — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sp35epnmotj5e8:
+              label: LV — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sqbectp6asr1e8:
+              label: LV — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssj5edqmot31chng:
+              label: LV — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: LV — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: LV — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobb5edo62rj1:
+              label: LV — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbfehp6uso:
+              label: LV — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbgclp6irr4ds:
+              label: LV — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspdclpn0obec4:
+              label: MT — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspddtq74rrj:
+              label: MT — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: MT — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: MT — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sp35epnmotj5e8:
+              label: MT — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sqbectp6asr1e8:
+              label: MT — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssj5edqmot31chng:
+              label: MT — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: MT — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: MT — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobb5edo62rj1:
+              label: MT — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbfehp6uso:
+              label: MT — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbgclp6irr4ds:
+              label: MT — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspdclpn0obec4:
+              label: NL — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspddtq74rrj:
+              label: NL — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: NL — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: NL — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sp35epnmotj5e8:
+              label: NL — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sqbectp6asr1e8:
+              label: NL — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssj5edqmot31chng:
+              label: NL — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: NL — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: NL — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobb5edo62rj1:
+              label: NL — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbfehp6uso:
+              label: NL — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbgclp6irr4ds:
+              label: NL — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspdclpn0obec4:
+              label: PL — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspddtq74rrj:
+              label: PL — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: PL — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: PL — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sp35epnmotj5e8:
+              label: PL — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sqbectp6asr1e8:
+              label: PL — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssj5edqmot31chng:
+              label: PL — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: PL — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: PL — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobb5edo62rj1:
+              label: PL — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbfehp6uso:
+              label: PL — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbgclp6irr4ds:
+              label: PL — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspdclpn0obec4:
+              label: PT — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspddtq74rrj:
+              label: PT — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: PT — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: PT — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sp35epnmotj5e8:
+              label: PT — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sqbectp6asr1e8:
+              label: PT — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssj5edqmot31chng:
+              label: PT — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqpbje1gmso8:
+              label: PT — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqrrke9nn6:
+              label: PT — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobb5edo62rj1:
+              label: PT — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbfehp6uso:
+              label: PT — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbgclp6irr4ds:
+              label: PT — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspdclpn0obec4:
+              label: RO — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspddtq74rrj:
+              label: RO — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: RO — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: RO — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisp35epnmotj5e8:
+              label: RO — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisqbectp6asr1e8:
+              label: RO — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissj5edqmot31chng:
+              label: RO — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqpbje1gmso8:
+              label: RO — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqrrke9nn6:
+              label: RO — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobb5edo62rj1:
+              label: RO — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbfehp6uso:
+              label: RO — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbgclp6irr4ds:
+              label: RO — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedgmop3f5lkmspriclpm2shdclpn0obec4:
+              label: Spanyolországban fizetendő összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspdclpn0obec4:
+              label: SE — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspddtq74rrj:
+              label: SE — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: SE — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: SE — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisp35epnmotj5e8:
+              label: SE — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisqbectp6asr1e8:
+              label: SE — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissj5edqmot31chng:
+              label: SE — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqpbje1gmso8:
+              label: SE — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqrrke9nn6:
+              label: SE — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobb5edo62rj1:
+              label: SE — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbfehp6uso:
+              label: SE — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbgclp6irr4ds:
+              label: SE — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspdclpn0obec4:
+              label: SI — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspddtq74rrj:
+              label: SI — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: SI — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: SI — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisp35epnmotj5e8:
+              label: SI — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisqbectp6asr1e8:
+              label: SI — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissj5edqmot31chng:
+              label: SI — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqpbje1gmso8:
+              label: SI — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqrrke9nn6:
+              label: SI — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobb5edo62rj1:
+              label: SI — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbfehp6uso:
+              label: SI — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbgclp6irr4ds:
+              label: SI — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspdclpn0obec4:
+              label: SK — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspddtq74rrj:
+              label: SK — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: SK — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: SK — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisp35epnmotj5e8:
+              label: SK — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisqbectp6asr1e8:
+              label: SK — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissj5edqmot31chng:
+              label: SK — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqpbje1gmso8:
+              label: SK — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqrrke9nn6:
+              label: SK — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobb5edo62rj1:
+              label: SK — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbfehp6uso:
+              label: SK — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbgclp6irr4ds:
+              label: SK — Időszaki áfa összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspdclpn0obec4:
+              label: XI — Spanyolországból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspddtq74rrj:
+              label: XI — Más tagállamból szállított áruk
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
+              label: XI — Negatív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
+              label: XI — Pozitív korrekciók
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisp35epnmotj5e8:
+              label: XI — Tagállami visszatérítés
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisqbectp6asr1e8:
+              label: XI — Spanyolországban fizetendő
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissj5edqmot31chng:
+              label: XI — Tagállami egyenleg
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqpbje1gmso8:
+              label: XI — Spanyolországból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqrrke9nn6:
+              label: XI — Más tagállamból nyújtott szolgáltatások
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobb5edo62rj1:
+              label: XI — Spanyolországi összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbfehp6uso:
+              label: XI — Más tagállamok összesen
+            x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbgclp6irr4ds:
+              label: XI — Időszaki áfa összesen
           construct:
             modelo-369:
               field:
                 title: Modelo 369 nyomtatvány - Esquema Union (OSS Union különleges
                   szabályozás)
+            modelo-369-union-resultado:
+              field:
+                title: Elszámolás a fogyasztás szerinti tagállamonként
           field:
             label: 369-es modelo - Uniós rendszer - a Közösségen belüli távértékesítésre,
               elektronikus felületekre és a Közösségben letelepedett szolgáltatásokra

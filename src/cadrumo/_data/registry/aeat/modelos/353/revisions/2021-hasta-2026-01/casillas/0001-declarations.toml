@@ -243,3 +243,36 @@ input_kind = "computed"
 formula = "modelo-353-iva-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 export_exemption_reason = "not_in_record_design"
+
+[[revisions."2021-hasta-2026-01".casillas]]
+id = "06"
+number = "06"
+continuidad_id = "m353-importe-compensar"
+section = ["iva", "grupo_entidades", "compensacion"]
+data_type = "money"
+input_kind = "manual"
+required = false
+source_refs = ["boe-modelo-353-2021-form-pdf"]
+constraints = { sign = "non_negative" }
+
+[[revisions."2021-hasta-2026-01".casillas]]
+id = "07"
+number = "07"
+continuidad_id = "m353-importe-devolver"
+section = ["iva", "grupo_entidades", "devolucion"]
+data_type = "money"
+input_kind = "manual"
+required = false
+source_refs = ["boe-modelo-353-2021-form-pdf"]
+constraints = { sign = "non_negative" }
+
+[[revisions."2021-hasta-2026-01".casillas]]
+id = "papel.importe-ingreso"
+number = "papel.importe-ingreso"
+continuidad_id = "m353-importe-ingreso"
+section = ["iva", "grupo_entidades", "ingreso"]
+data_type = "money"
+input_kind = "manual"
+required = false
+source_refs = ["boe-modelo-353-2021-form-pdf"]
+constraints = { sign = "non_negative" }

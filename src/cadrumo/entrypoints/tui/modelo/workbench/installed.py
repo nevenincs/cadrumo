@@ -93,6 +93,7 @@ from .ports import (
 from .screen import ModeloWorkbenchScreen
 
 if TYPE_CHECKING:
+    from .....application.export.calculation_review_xlsx_operation import CalculationReviewXlsxResult
     from .....application.modelo.export_projection import ModeloExportPublicResultV3
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from ...ledger.own_accounts import LedgerOwnAccountDoorV1
@@ -378,7 +379,9 @@ class InstalledModeloWorkbench:
             refund_account_id=request.refund_account_id,
         )
 
-    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
+    async def export_result(
+        self, projection: OperationPublicProjectionV1
+    ) -> ModeloExportPublicResultV3 | CalculationReviewXlsxResult | None:
         """Resolve one settled export's facts."""
         return await self._door().settled_export_result(projection)
 
@@ -463,6 +466,7 @@ def compose_installed_modelo_workbench_factory(
     source: DeclarationSourceFactory,
     door: DeclarationDoorFactory,
     own_accounts: LedgerOwnAccountDoorV1 | None = None,
+    native_review: Callable[[str], Screen[None]] | None = None,
 ) -> ModeloWorkspaceScreenFactoryV1:
     """Open a workbench for exactly the declarations this generation admitted.
 
@@ -486,7 +490,7 @@ def compose_installed_modelo_workbench_factory(
             door=lambda read: door(declaration, read),
             own_accounts=own_accounts,
         )
-        return ModeloWorkbenchScreen(workbench, actions=workbench)
+        return ModeloWorkbenchScreen(workbench, actions=workbench, native_review=native_review)
 
     return create
 

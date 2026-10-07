@@ -657,6 +657,9 @@ def build_work_calculate_input_bundle(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         shortcut_diagnostics=shortcut_diagnostics,
+        # This builder validates the explicit caller tier. Retain its ownership
+        # before aggregation merges source values into the saved replay maps.
+        record_operator_layer=True,
     )
 
 

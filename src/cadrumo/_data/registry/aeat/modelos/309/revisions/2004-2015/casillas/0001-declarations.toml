@@ -142,6 +142,7 @@ data_type = "text"
 continuidad_id = "hecho-imponible-adquisicion-intracomunitaria"
 semantic_role = "hecho_imponible_adquisicion_intracomunitaria"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+constraints = { max_length = 1, enum = ["X", ""] }
 [[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-medios-transporte-nuevos"
 number = "95"
@@ -150,6 +151,7 @@ data_type = "text"
 continuidad_id = "hecho-imponible-medios-transporte-nuevos"
 semantic_role = "hecho_imponible_medios_transporte_nuevos"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+constraints = { max_length = 1, enum = ["X", ""] }
 [[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-inversion-sujeto-pasivo"
 number = "96"
@@ -158,6 +160,7 @@ data_type = "text"
 continuidad_id = "hecho-imponible-inversion-sujeto-pasivo"
 semantic_role = "hecho_imponible_inversion_sujeto_pasivo"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+constraints = { max_length = 1, enum = ["X", ""] }
 [[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-entrega-inversion-inmobiliaria"
 number = "97"
@@ -166,6 +169,7 @@ data_type = "text"
 continuidad_id = "hecho-imponible-entrega-inversion-inmobiliaria"
 semantic_role = "hecho_imponible_entrega_inversion_inmobiliaria"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+constraints = { max_length = 1, enum = ["X", ""] }
 [[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-procedimiento-administrativo-judicial"
 number = "98"
@@ -174,6 +178,7 @@ data_type = "text"
 continuidad_id = "hecho-imponible-procedimiento-administrativo-judicial"
 semantic_role = "hecho_imponible_procedimiento_administrativo_judicial"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+constraints = { max_length = 1, enum = ["X", ""] }
 [[revisions."2004-2015".casillas]]
 id = "decl.hecho-imponible-otros"
 number = "99"
@@ -182,6 +187,7 @@ data_type = "text"
 continuidad_id = "hecho-imponible-otros"
 semantic_role = "hecho_imponible_otros"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+constraints = { max_length = 1, enum = ["X", ""] }
 [[revisions."2004-2015".casillas]]
 id = "decl.vehiculo-marca"
 number = "100"
@@ -481,6 +487,8 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "ord
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 [[revisions."2004-2015".casillas]]
 id = "decl.cuota-devengada-22"
+input_kind = "computed"
+formula = "modelo-309-cuota-devengada-total"
 number = "22"
 section = ["declarante","liquidacion"]
 semantic_role = "cuota_devengada_22"
@@ -497,6 +505,8 @@ constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "ord
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 [[revisions."2004-2015".casillas]]
 id = "decl.resultado-24"
+input_kind = "computed"
+formula = "modelo-309-resultado"
 number = "24"
 section = ["declarante","liquidacion"]
 semantic_role = "cuota_a_ingresar"
@@ -537,5 +547,165 @@ number = "papel.papel-forma-pago"
 section = ["ingreso"]
 data_type = "text"
 semantic_role = "papel_forma_pago"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-tipo-via"
+continuidad_id = "m309-papel-domicilio-tipo-via"
+number = "papel.domicilio-tipo-via"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_tipo_via"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-via"
+continuidad_id = "m309-papel-domicilio-via"
+number = "papel.domicilio-via"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_via"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-numero"
+continuidad_id = "m309-papel-domicilio-numero"
+number = "papel.domicilio-numero"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_numero"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-escalera"
+continuidad_id = "m309-papel-domicilio-escalera"
+number = "papel.domicilio-escalera"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_escalera"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-piso"
+continuidad_id = "m309-papel-domicilio-piso"
+number = "papel.domicilio-piso"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_piso"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-puerta"
+continuidad_id = "m309-papel-domicilio-puerta"
+number = "papel.domicilio-puerta"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_puerta"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-telefono"
+continuidad_id = "m309-papel-domicilio-telefono"
+number = "papel.domicilio-telefono"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_telefono"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-codigo-postal"
+continuidad_id = "m309-papel-domicilio-codigo-postal"
+number = "papel.domicilio-codigo-postal"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_codigo_postal"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-municipio"
+continuidad_id = "m309-papel-domicilio-municipio"
+number = "papel.domicilio-municipio"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_municipio"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-domicilio-provincia"
+continuidad_id = "m309-papel-domicilio-provincia"
+number = "papel.domicilio-provincia"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_domicilio_provincia"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-ccc-entidad"
+continuidad_id = "m309-papel-ccc-entidad"
+number = "papel.ccc-entidad"
+section = ["ingreso"]
+data_type = "text"
+semantic_role = "m309_papel_ccc_entidad"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-ccc-oficina"
+continuidad_id = "m309-papel-ccc-oficina"
+number = "papel.ccc-oficina"
+section = ["ingreso"]
+data_type = "text"
+semantic_role = "m309_papel_ccc_oficina"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-ccc-dc"
+continuidad_id = "m309-papel-ccc-dc"
+number = "papel.ccc-dc"
+section = ["ingreso"]
+data_type = "text"
+semantic_role = "m309_papel_ccc_dc"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-ccc-cuenta"
+continuidad_id = "m309-papel-ccc-cuenta"
+number = "papel.ccc-cuenta"
+section = ["ingreso"]
+data_type = "text"
+semantic_role = "m309_papel_ccc_cuenta"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-nombre-completo"
+continuidad_id = "m309-papel-nombre-completo"
+number = "papel.nombre-completo"
+section = ["identificacion"]
+data_type = "text"
+semantic_role = "m309_papel_nombre_completo"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+
+[[revisions."2004-2015".casillas]]
+id = "papel-complementaria"
+continuidad_id = "m309-papel-complementaria"
+number = "papel.complementaria"
+section = ["complementaria"]
+data_type = "boolean"
+semantic_role = "m309_papel_complementaria"
 input_kind = "informational"
 source_refs = ["boe-modelo-309-2003-form-pdf"]

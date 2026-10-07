@@ -122,6 +122,8 @@ aggregation:
     errors:
       exterior_country_code_undeclared: The member state of consumption has no declared
         Modelo 369 country code, so its services cannot be declared on this modelo.
+      exterior_detail_not_representable: The external-scheme layout cannot represent
+        every row or all its fields. Review the detail before continuing.
       exterior_rate_kind_unsupported: The one-stop-shop external scheme only accepts
         services at the standard or reduced rate of the member state of consumption.
         The supplied observation declares another rate kind, which cannot be aggregated
@@ -199,6 +201,10 @@ aggregation:
         Modelo 303 annual-summary handoff (first {first_resolver}; second {second_resolver}).
       binding_source_mismatch: source_kind and binding_source refer to different families
         of value sources.
+      closed_record_rows_conflict: Row membership and its values have incompatible
+        sources.
+      closed_record_rows_unadmitted: An incomplete or unadmitted source cannot establish
+        a complete table.
       duplicate_binding_owner: 'Internal error: the same value source has two owners
         in the source mesh.'
       duplicate_bound_casilla_owner: 'Internal error: duplicate owner for a box with
@@ -707,7 +713,8 @@ desktop:
       throttled: Too many attempts. You can try again in {seconds} s.
     show_password: Show password
     signed_out_lead: Sign in to open your workspace in the TUI.
-    start_services: Start Background Services
+    start_services: Start background services
+    starting_services: Starting background services…
     submit: Sign in
     submitting: Signing in…
     title: Sign in to Cadrumo
@@ -911,6 +918,80 @@ filing:
     out_of_range: Value out of allowed range
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
+google_review:
+  cancel: Cancel publication
+  category:
+    calculation: Saved calculation values
+    evidence_package: Evidence package
+    ledger: Saved ledger rows
+    original_attachment: Original attachments
+  close: Close
+  destination:
+    managed_google_folder: Configured managed Google folder
+  failure:
+    admission: Publication permission was refused.
+    cancelled: Publication was cancelled.
+    create_unknown: Remote document creation could not be confirmed.
+    custody: The publication custody receipt could not be retained.
+    integrity: Remote contents did not pass verification.
+    population: Writing the selected saved contents failed.
+  field: Field
+  key: Reference
+  label:
+    amount_count: Saved values
+    calculation_revision_id: Saved calculation reference
+    destination: Destination
+    evidence_count: Evidence references
+    finding_count: Review findings
+    ledger_row_count: Saved ledger rows
+    ledger_snapshot_id: Saved ledger reference
+    package_digest: Evidence package digest
+    payload_categories: Readable contents
+    publication_id: Publication reference
+    publication_state: Publication state
+    registry_digest: Registry digest
+    review_status: Review quality
+    root_folder_id: Managed folder reference
+    selection: Saved selection
+    snapshot_digest: Saved snapshot digest
+    work_unit_id: Work reference
+  notice:
+    calculation_required: Select a saved calculation before publishing.
+    evidence_index: Evidence references are included; original attachment bytes are
+      not published.
+    external_copy: Publication creates a readable copy in Google. Users authorized
+      to access the destination can read its financial contents.
+    incomplete: This saved review has incomplete evidence or attribution.
+    missing_evidence: Some selected evidence is unavailable; missing data remains
+      unknown.
+    prerequisite_unavailable: Saved review prerequisites are unavailable.
+    provisional: This saved review is provisional.
+    receipt_unavailable: A verified publication receipt is unavailable.
+    staged_edits: Save or discard pending edits before reviewing the saved calculation.
+    submission_unresolved: Publication outcome is unresolved. Inspect the existing
+      operation before submitting again.
+  offer:
+    title: Review in Google Sheets
+  open_document: Open spreadsheet
+  publication:
+    partial: Partially published
+    populated: Saved contents written
+    prepared: Prepared locally
+    published: Published and verified
+    remote-created: Remote document created
+    uncertain: Publication outcome uncertain
+    verified: Remote contents verified
+  publish: Publish readable copy
+  result:
+    title: Google review publication
+  selection:
+    ledger: Saved ledger
+  status:
+    incomplete: Incomplete
+    provisional: Provisional
+    verified: Verified
+  technical: Technical references
+  value: Value
 ledger:
   evidence:
     reader:
@@ -2451,6 +2532,7 @@ tui:
       artefact:
         calculation_report_csv: Calculation report (CSV), a local record only
         calculation_report_pdf: Signed calculation summary (PDF), a local record only
+        calculation_review_xlsx: Saved calculation review (XLSX)
         fichero_boe: Fichero BOE for presentation at AEAT
         label: Document to export
       payment_election:

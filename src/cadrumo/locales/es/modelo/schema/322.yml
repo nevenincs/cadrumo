@@ -584,6 +584,18 @@ modelo:
           m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica:
             label: Operaciones sujetas y acogidas a los regímenes especiales de ventanilla
               única [124]
+          m322-papel-actividad-otras-1-descripcion:
+            label: Descripción de otra actividad 1
+          m322-papel-actividad-otras-2-descripcion:
+            label: Descripción de otra actividad 2
+          m322-papel-actividad-otras-3-descripcion:
+            label: Descripción de otra actividad 3
+          m322-papel-actividad-otras-4-descripcion:
+            label: Descripción de otra actividad 4
+          m322-papel-actividad-otras-5-descripcion:
+            label: Descripción de otra actividad 5
+          m322-papel-actividad-principal-descripcion:
+            label: Descripción de la actividad principal
           m322-prorratas-1-codigo-cnae:
             label: Prorratas - 1 - Código CNAE [500]
           m322-prorratas-1-importe-operaciones:
@@ -639,6 +651,8 @@ modelo:
             label: Prorratas - 5 - Tipo de prorrata [523]
           m322-regularizacion-cuotas-art-80-cinco-5-liva:
             label: Regularización cuotas art. 80.Cinco.5ª LIVA [76]
+          m322-sin-actividad:
+            label: Sin actividad (X si no has devengado ni soportado IVA en el período)
       construct:
         modelo-322-iva-grupo-individual:
           field:
@@ -647,6 +661,134 @@ modelo:
         official_name: Modelo 322. Impuesto sobre el Valor Añadido. Grupo de entidades.
           Modelo individual. Autoliquidación mensual.
         title: IVA. Grupo de entidades. Modelo individual. Autoliquidación mensual
+      form:
+        authored:
+          actividad:
+            heading: Actividad
+          actividades:
+            heading: Actividades de mayor a menor importancia por volumen de operaciones
+          adicional:
+            heading: Información adicional
+          aib:
+            heading: Adquisiciones intracomunitarias de bienes y servicios
+          aib-corriente:
+            heading: 'Adquisiciones intracomunitarias: bienes y servicios corrientes'
+          aib-inversion:
+            heading: 'Adquisiciones intracomunitarias: bienes de inversión'
+          anuales:
+            heading: Operaciones realizadas en el ejercicio
+          caja:
+            heading: Adquisiciones afectadas por el criterio de caja
+          clave-actividad:
+            heading: Clave
+          cnae:
+            heading: CNAE
+          codigo:
+            heading: Código de actividad
+          compensacion:
+            heading: Compensaciones del régimen de agricultura, ganadería y pesca
+          complementaria:
+            heading: Autoliquidación complementaria
+          deducible:
+            heading: IVA deducible
+          dependiente:
+            heading: Dependiente
+          derecho:
+            heading: Operaciones con derecho a deducción
+          descripcion:
+            heading: Descripción de la actividad
+          devengado:
+            heading: IVA devengado
+          devengo:
+            heading: Devengo
+          dominante:
+            heading: Dominante
+          general:
+            heading: Resto de operaciones en régimen general
+          grupo-1:
+            heading: 'IVA deducible: Grupo 1'
+          grupo-2:
+            heading: 'IVA deducible: Grupo 2'
+          iae:
+            heading: Epígrafe IAE
+          identificacion:
+            heading: Identificación
+          importacion-corriente:
+            heading: 'Importaciones: bienes corrientes'
+          importacion-inversion:
+            heading: 'Importaciones: bienes de inversión'
+          importe:
+            heading: Importe total de las operaciones
+          interiores-corriente:
+            heading: 'Operaciones interiores: bienes y servicios corrientes'
+          interiores-inversion:
+            heading: 'Operaciones interiores: bienes de inversión'
+          intra:
+            heading: Operaciones intragrupo
+          intra-corriente:
+            heading: Operaciones intragrupo corrientes
+          intra-inversion:
+            heading: Operaciones intragrupo con bienes de inversión
+          inversion:
+            heading: Otras operaciones con inversión del sujeto pasivo
+          justificante:
+            heading: Número de justificante de la autoliquidación anterior
+          marca-complementaria:
+            heading: Autoliquidación complementaria
+          mod-general:
+            heading: Modificación de bases y cuotas en régimen general
+          mod-intra:
+            heading: Modificación de bases y cuotas intragrupo
+          mod-recargo:
+            heading: Modificación de bases y cuotas del recargo de equivalencia
+          nif:
+            heading: NIF del sujeto pasivo
+          ninguna:
+            heading: Ni opción ni revocación
+          'no':
+            heading: 'No'
+          nombre:
+            heading: Razón o denominación social
+          opcion:
+            heading: Opción por la prorrata especial
+          otras:
+            heading: Otras actividades
+          page-1:
+            heading: Identificación y liquidación
+          page-2:
+            heading: Resultado e información adicional
+          page-3:
+            heading: 'Último período: actividades y operaciones anuales'
+          page-4:
+            heading: Prorrata y regímenes de deducción diferenciados
+          porcentaje:
+            heading: Porcentaje de prorrata
+          principal:
+            heading: Principal
+          prorrata:
+            heading: Prorrata
+          recargo:
+            heading: Recargo de equivalencia
+          rect-intra:
+            heading: Rectificación de deducciones intragrupo
+          rect-otras:
+            heading: Rectificación de deducciones no intragrupo
+          rectificacion:
+            heading: Rectificación de deducciones
+          resultado:
+            heading: Liquidación (continuación)
+          revocacion:
+            heading: Revocación de la opción
+          si:
+            heading: Sí
+          sin-actividad:
+            heading: Sin actividad
+          sin-marca:
+            heading: Sin marcar
+          territorio:
+            heading: Tributación por razón de territorio
+          tipo-prorrata:
+            heading: Tipo de prorrata
       revision:
         2008-2022:
           casilla:

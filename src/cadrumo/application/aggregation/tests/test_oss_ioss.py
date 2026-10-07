@@ -37,6 +37,7 @@ from ....core.directory_scan import scan_directory
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
+from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices import enums as invoice_enums
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role, resolve_iva_rate_slot
@@ -59,6 +60,48 @@ from ..oss_ioss import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+@pytest.mark.parametrize("row", [28, 29])
+def test_exterior_detail_refuses_rows_beyond_declared_capacity(row):
+    revision = published_revision("369", "esquema-exterior")
+    prefix = "3-prestaciones-de-servicios-"
+    fields = {f"{prefix}codigo-de-pais-em-de-consumo-{row}": "DE", f"{prefix}tipo-iva-{row}": "S"}
+    decimals = {
+        f"{prefix}tipo-de-iva-{row}": Decimal("19"),
+        f"{prefix}base-imponible-{row}": Decimal("1000"),
+        f"{prefix}cuota-iva-{row}": Decimal("190"),
+    }
+    amounts, texts = {}, {}
+    if row == 29:
+        with pytest.raises(AggregationValidationError):
+            oss_ioss_module._assign_exterior_detail_bindings(revision, fields, decimals, amounts, texts)
+        assert amounts == texts == {}
+    else:
+        oss_ioss_module._assign_exterior_detail_bindings(revision, fields, decimals, amounts, texts)
+        assert sorted(amounts.values()) == [Decimal("19"), Decimal("190"), Decimal("1000")]
+        assert set(texts.values()) == {"DE", "S"}
+
+
+def test_exterior_detail_refuses_partial_row_without_mutating_outputs():
+    revision = published_revision("369", "esquema-exterior")
+    country = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1"
+    missing = "3-prestaciones-de-servicios-cuota-iva-1"
+    revision = revision.model_copy(
+        update={
+            "bindings": tuple(
+                binding
+                for binding in revision.bindings
+                if not (isinstance(binding.provider, ManualInputProvider) and binding.provider.field == missing)
+            )
+        }
+    )
+    amounts, texts = {}, {}
+    with pytest.raises(AggregationValidationError):
+        oss_ioss_module._assign_exterior_detail_bindings(
+            revision, {country: "DE"}, {missing: Decimal("190")}, amounts, texts
+        )
+    assert amounts == texts == {}
 
 
 # ---------------------------------------------------------------------------

@@ -277,7 +277,11 @@ class _DiagnosticFailureHandler(Handler):
 
     @override
     def emit(self, record: LogRecord) -> None:
-        if self.armed():
+        if (
+            record.__dict__.get("startup_phase") == "existing_connect"
+            and record.__dict__.get("transition") == "leave"
+            and self.armed()
+        ):
             self.failure_calls += 1
             raise self.failure
 

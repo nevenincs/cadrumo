@@ -165,15 +165,18 @@ def filing_record_list(
 
 def filing_record_show(ctx: typer.Context, filing_record_id: str) -> None:
     """View one filing record with both observation layers of its coordinate."""
-    record, layers = read_modelo_filing_record_view(ctx, filing_record_id=filing_record_id)
+    record, layers, historical = read_modelo_filing_record_view(ctx, filing_record_id=filing_record_id)
     result = ModeloRecordShowResult.model_validate(
-        {**record.model_dump(mode="python"), "observation_layers": layers},
+        {**record.model_dump(mode="python"), "observation_layers": layers, "historical_content": historical},
     )
     lines = [
         "operation\tmodelo.filing_record.show",
         *filing_record_lines(record),
         *observation_layers_lines(layers),
+        f"historical_content\t{historical.availability}",
+        f"historical_calculation_revision_id\t{historical.calculation_revision_id}",
     ]
+    lines.extend(f"historical_value\t{row.casilla_id}\t{row.value}" for row in historical.observations)
     emit_envelope(ctx, command="modelo.filing_record.view", result=result, lines=lines)
 
 

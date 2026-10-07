@@ -13,6 +13,78 @@ modelo:
           ügyletek után.
         title: IVA. Más tagállamokban felszámított IVA visszatérítésére vonatkozó
           kérelem (8. irányelv)
+      form:
+        authored:
+          actividades:
+            heading: Tevékenységek
+          anexos:
+            heading: 7. Mellékletek
+          apartado:
+            heading: Spanyolországi postafiók
+          banco:
+            heading: 6. Banki adatok
+          bienes:
+            heading: Beszerzett termékek és szolgáltatások jellege
+          codigo:
+            heading: Kód
+          descripcion:
+            heading: Leírás
+          devolucion:
+            heading: 4. Kért visszatérítés
+          domicilio:
+            heading: Spanyolországi cím
+          establecimiento:
+            heading: Letelepedés helye
+          extranjero:
+            heading: Külföldi cím
+          fila-1:
+            heading: '1'
+          fila-10:
+            heading: '10'
+          fila-2:
+            heading: '2'
+          fila-3:
+            heading: '3'
+          fila-4:
+            heading: '4'
+          fila-5:
+            heading: '5'
+          fila-6:
+            heading: '6'
+          fila-7:
+            heading: '7'
+          fila-8:
+            heading: '8'
+          fila-9:
+            heading: '9'
+          idioma:
+            heading: Nyelv
+          nif:
+            heading: Kérelmező adóazonosítója
+          nombre:
+            heading: Teljes név vagy cégnév
+          operacion-1:
+            heading: 1. ügylet
+          operacion-2:
+            heading: 2. ügylet
+          operaciones:
+            heading: Ügyletek
+          pagina1:
+            heading: Kérelem és kérelmező
+          pagina2:
+            heading: Képviselő, visszatérítés és mellékletek
+          prorrata:
+            heading: 5. Előző évi levonási hányad módosítása
+          proveedor:
+            heading: Termékértékesítő vagy szolgáltató
+          registro:
+            heading: Nyilvántartási szám
+          representante:
+            heading: 3. Képviselő
+          solicitante:
+            heading: 2. Kérelmező
+          solicitud:
+            heading: 1. Ország, év és benyújtási ok
       revision:
         2010-y-siguientes:
           casilla:

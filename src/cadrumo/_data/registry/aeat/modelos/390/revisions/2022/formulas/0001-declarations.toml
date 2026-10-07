@@ -1,108 +1,89 @@
 [[revisions."2022".formulas]]
 id = "modelo-390-iva-anual-cuota-devengada-total"
 target_casilla_id = "iva.anual.cuota-devengada-total"
-expression = { op = "add", args = [
-    { casilla_id = "iva.anual.repercutido.general" },
-    { casilla_id = "iva.anual.repercutido.reducido" },
-    { casilla_id = "iva.anual.repercutido.super-reducido" },
-    { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
-    { casilla_id = "iva.anual.autorepercutido.interior.cuota" },
-    { casilla_id = "iva.anual.repercutido.recargo.general" },
-    { casilla_id = "iva.anual.repercutido.recargo.reducido" },
-    { casilla_id = "iva.anual.repercutido.recargo.super-reducido" },
-] }
 rounding = "money-2"
-# The recargo de equivalencia cuota tiers (LIVA art. 161) were omitted from
-# this aggregate, mirroring the M303 casilla-27 defect (see the comment on
-# modelo-303-iva-cuota-devengada-total in the M303 2023-y-siguientes
-# revision.toml): a supplier that charges recargo to a recargo-de-equivalencia
-# customer had its recargo cuota silently excluded from the annual "Total
-# cuota devengada", and therefore from iva.anual.resultado-regimen-general and
-# from the modelo-390-cuota-devengada-total-equals-reconciliacion-303
-# BLOCKING_RULE (which compares this total against the sum of the four filed
-# Modelo 303 quarters' casilla 27, which DOES include recargo per the M303
-# fix — a mismatch would have blocked every recargo-de-equivalencia filer's
-# resumen anual). Grounded and cross-validated against the AEAT Manual
-# practico IVA 2024 Cap. 9 "La declaracion-resumen anual. Modelo 390" worked
-# example (pag. 293-302), summing its own four printed quarterly "TOTAL CUOTA
-# DEVENGADA" solucion lines (1T: 23.088, 2T: 21.624, 3T: 22.290, 4T: 21.414 =
-# 88.416 anual), each of which itself sums its own printed "Recargo de
-# equivalencia" line (1T: 1.248, 2T: 624, 3T: 1.248, 4T: 624 = 3.744 anual) —
-# see test_m390_2024_annual_manual_worked_example.py. The general/reducido
-# tiers fixed the manual worked example (which charges no super-reducido
-# recargo); the super-reducido 0.5pct tier (M303 casilla 158,
-# iva.anual.repercutido.recargo.super-reducido) closes the residual gap the
-# manual example could not surface, structurally proven by
-# test_m390_super_reducido_recargo_delta.
-#
-# Box [28], the domestic inversion del sujeto pasivo devengada (LIVA art.
-# 84.Uno.2), is added as Modelo 303 adds its box [13] to [27]. Its deducible half
-# is in [49]/[51] exactly as it is in 303 [29]/[31], so leaving [28] out would
-# lower the annual result below the sum of the year's 303 results by that cuota.
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["boe-modelo-390-2022-printed-calculations"]
+expression = { op = "add", args = [
+    { casilla_id = "iva.anual.total-bases-cuotas-iva" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.cuota" },
+    { casilla_id = "iva.anual.modificacion.recargo.cuota" },
+    { casilla_id = "iva.anual.modificacion.recargo-concurso.cuota" },
+] }
+source_citations = [{ source_ref = "boe-modelo-390-2022-printed-calculations", required_text = ["34 + 36 + 600 + 602 + 42 + 44 + 46"] }]
 
-[[revisions."2022".formulas.source_citations]]
-source_ref = "aeat-modelo-390-procedure"
-required_text = ["modelo 390"]
-
-# Box [34] "Total bases y cuotas IVA - Cuota" (page 02, Reg. Gral. section) is a
-# distinct printed total from box [47] "Total cuotas IVA y recargo de
-# equivalencia" (page 02 bis): [34] sums the Reg. ordinario IVA rungs only, and
-# the recargo de equivalencia block sits in a separate section that [34] never
-# reaches. modelo-390-iva-anual-cuota-devengada-total feeds [47] (see its
-# form_number) and correctly includes recargo; that value must never be
-# written to [34], which this formula alone feeds. This total covers the five
-# devengada rungs this revision currently models (general/reducido/
-# super-reducido repercutido, autorepercutido intracomunitaria, and the domestic
-# inversion del sujeto pasivo of box [28], which the design lists inside the
-# block [34] totals); the intragrupo, criterio de caja, bienes usados and
-# agencias de viajes rungs box [34] also sums on the official design are
-# separate, already-tracked modelling gaps, not reopened here.
 [[revisions."2022".formulas]]
 id = "modelo-390-iva-anual-total-bases-cuotas-iva"
 target_casilla_id = "iva.anual.total-bases-cuotas-iva"
-expression = { op = "add", args = [
-    { casilla_id = "iva.anual.repercutido.general" },
-    { casilla_id = "iva.anual.repercutido.reducido" },
-    { casilla_id = "iva.anual.repercutido.super-reducido" },
-    { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
-    { casilla_id = "iva.anual.autorepercutido.interior.cuota" },
-] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-
-[[revisions."2022".formulas.source_citations]]
-source_ref = "aeat-modelo-390-procedure"
-required_text = ["modelo 390"]
+source_refs = ["boe-modelo-390-2022-printed-calculations"]
+expression = { op = "add", args = [
+    { casilla_id = "iva.anual.repercutido.tipo-0.cuota" },
+    { casilla_id = "iva.anual.repercutido.tipo-4.cuota" },
+    { casilla_id = "iva.anual.repercutido.tipo-5.cuota" },
+    { casilla_id = "iva.anual.repercutido.tipo-10.cuota" },
+    { casilla_id = "iva.anual.repercutido.tipo-21.cuota" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.cuota" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.cuota" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.cuota" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.cuota" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.cuota" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.cuota" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.cuota" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.cuota" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.cuota" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.cuota" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.cuota" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.cuota" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.cuota" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.cuota" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.cuota" },
+    { casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.cuota" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-0.cuota" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-4.cuota" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-5.cuota" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-10.cuota" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-21.cuota" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-0.cuota" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-4.cuota" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-5.cuota" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-10.cuota" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-21.cuota" },
+    { casilla_id = "iva.anual.autorepercutido.interior.cuota" },
+    { casilla_id = "iva.anual.modificacion.bases-cuotas.cuota" },
+    { casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.cuota" },
+    { casilla_id = "iva.anual.modificacion.concurso-acreedores.cuota" },
+] }
+source_citations = [{ source_ref = "boe-modelo-390-2022-printed-calculations", required_text = ["Total bases y cuotas IVA"] }]
 
 [[revisions."2022".formulas]]
 id = "modelo-390-iva-anual-cuota-deducible-total"
 target_casilla_id = "iva.anual.cuota-deducible-total"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-130", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["boe-modelo-390-2022-printed-calculations"]
 expression = { op = "add", args = [
     { casilla_id = "iva.anual.soportado.interiores" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.total.cuota" },
     { casilla_id = "iva.anual.deducible.interiores-inversion.total.cuota" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.total.cuota" },
     { casilla_id = "iva.anual.soportado.importaciones" },
     { casilla_id = "iva.anual.deducible.importaciones-inversion.total.cuota" },
     { casilla_id = "iva.anual.deducible.aic-corrientes.total.cuota" },
     { casilla_id = "iva.anual.deducible.aic-inversion.total.cuota" },
     { casilla_id = "iva.anual.deducible.aic-servicios.total.cuota" },
     { casilla_id = "iva.anual.deducible.compensaciones-reagp.cuota" },
+    { casilla_id = "iva.anual.deducible.resolucion-firme-tipos-no-vigentes.cuota" },
     { casilla_id = "iva.anual.deducible.rectificacion.cuota" },
+    { casilla_id = "iva.anual.deducible.rectificacion-intragrupo.cuota" },
     { casilla_id = "iva.anual.regularizacion-bienes-inversion" },
     { casilla_id = "iva.anual.regularizacion-prorrata-definitiva" },
 ] }
-rounding = "money-2"
-# [64] Suma de deducciones adds the annual counterpart of every term of Modelo
-# 303 box [45] = [29] + [31] + [33] + [35] + [37] + [39] + [41] + [42] + [43] +
-# [44]: [49], [51], [53], [55], [57] + [598] (the 390 splits [37] into bienes
-# and servicios), [59], [62], [61], [63] and [522]. Each annual box selects the
-# rows its quarterly box selects, so [64] equals the sum of the year's [45] and
-# the blocking reconciliation against the filed 303s holds box by box.
-legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-130", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-
-[[revisions."2022".formulas.source_citations]]
-source_ref = "aeat-modelo-390-procedure"
-required_text = ["modelo 390"]
+source_citations = [{ source_ref = "boe-modelo-390-2022-printed-calculations", required_text = ["49 + 513 + 51 + 521 + 53 + 55 + 57 + 59 + 598 + 61 + 661 + 62 + 652 + 63 + 522"] }]
 
 [[revisions."2022".formulas]]
 id = "modelo-390-iva-anual-resultado-regimen-general"

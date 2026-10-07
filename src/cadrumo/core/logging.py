@@ -47,6 +47,7 @@ from pydantic import ConfigDict, RootModel
 if TYPE_CHECKING:
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
+from .diagnostic_log import DiagnosticFormatter, stamp_diagnostic_record, stamp_diagnostic_scalar_fields
 from .redaction.rules import (
     ALWAYS_REDACT_KEY_TERMS,
     is_sensitive_redaction_key,
@@ -594,6 +595,7 @@ class SecretScrubbingFilter(logging.Filter):
         Returns:
             Always ``True`` — every record is allowed through after scrubbing.
         """
+        stamp_diagnostic_scalar_fields(record)
         _scrub_record_message_and_args(record)
         _scrub_record_exception(record)
         _scrub_record_extras(record)
@@ -646,6 +648,7 @@ def _install_run_context_record_factory() -> None:
         ctx = run_var.get(None)
         record.run_id = ctx.run_id if ctx is not None else ""
         record.step_id = step_var.get(None) or ""
+        stamp_diagnostic_record(record)
         return record
 
     logging.setLogRecordFactory(_factory)
@@ -717,7 +720,7 @@ OPERATOR_DOCUMENT_LOG_EXTRA = "operator_document"
 
 #: Line format of every ``cadrumo.log`` record. Readers that parse the file,
 #: such as the desktop log view, receive this value rather than a copy.
-LOG_FILE_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+LOG_FILE_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s | %(diagnostic_context)s"
 
 
 class DropOperatorDocumentEchoFilter(logging.Filter):
@@ -865,7 +868,7 @@ def configure_logging() -> None:
             "version": 1,
             "disable_existing_loggers": False,
             "formatters": {
-                "standard": {"format": LOG_FILE_FORMAT},
+                "standard": {"()": DiagnosticFormatter, "fmt": LOG_FILE_FORMAT},
             },
             "filters": {
                 "drop_run_event": {"()": f"{__name__}.DropRunEventFilter"},

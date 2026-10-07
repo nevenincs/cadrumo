@@ -40,7 +40,8 @@ from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.widgets import OptionList, Static
+from textual.screen import Screen
+from textual.widgets import Button, OptionList, Static
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from .....application.modelo.work_form_models import (
@@ -381,6 +382,7 @@ class ModeloWorkbenchScreen(
         *,
         actions: ModeloWorkbenchActionsV1 | None = None,
         navigate: Callable[[TuiNavigationTargetV1], None] | None = None,
+        native_review: Callable[[str], Screen[None]] | None = None,
         id: str | None = None,
     ) -> None:
         """Hold the ports this workbench reads and acts through, and how it opens another product area.
@@ -392,6 +394,7 @@ class ModeloWorkbenchScreen(
         self._reader = reader
         self._actions = actions
         self._navigate = navigate
+        self._native_review = native_review
         self._operation_in_flight = False
         self._apply_prerequisite: WorkbenchApplyPrerequisite | None = None
         self._load: ModeloWorkFormLoadV1 | None = None
@@ -414,6 +417,19 @@ class ModeloWorkbenchScreen(
 
     # ── composition ─────────────────────────────────────────────────────
 
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Open native review consent for the retained calculation the operator is viewing."""
+        if event.button.id != "wb-google-review" or self._native_review is None:
+            return
+        load = self._load
+        if load is None or load.form.calculation_revision_id is None:
+            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            return
+        if self._session.dirty:
+            self._filing_withheld()
+            return
+        self.app.push_screen(self._native_review(load.form.calculation_revision_id))
+
     @override
     def compose(self) -> ComposeResult:
         with Horizontal(id="wb-identity"):
@@ -432,6 +448,8 @@ class ModeloWorkbenchScreen(
             notice = NoticeLine(id="wb-notice", markup=False)
             notice.display = False
             yield notice
+            if self._native_review is not None:
+                yield Button(tr("cli.app.modelo.spreadsheet.publish_button"), id="wb-google-review")
         with SymbolsPanel(id="wb-legend"):
             yield Static(id="wb-legend-text", markup=False)
         with Horizontal(id="wb-body"):

@@ -164,8 +164,10 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 yield Static("", id="operation-modal-review")
                 yield Static("", id="operation-modal-log")
             with ItemGrid(id="operation-modal-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
-                yield Button(tr("operation.modal.action.reject"), id="btn-operation-reject")
-                yield Button(tr("operation.modal.action.apply"), id="btn-operation-apply", classes="-primary")
+                yield Button(tr("operation.modal.action.reject"), id="btn-operation-reject", disabled=True)
+                yield Button(
+                    tr("operation.modal.action.apply"), id="btn-operation-apply", classes="-primary", disabled=True
+                )
                 yield Button(tr("operation.modal.action.cancel"), id="btn-operation-cancel")
                 yield Button(tr("operation.modal.action.detach"), id="btn-operation-detach")
                 yield Button(tr("operation.modal.action.close"), id="btn-operation-close")

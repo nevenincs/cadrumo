@@ -20,6 +20,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_provider_registration import registration_for
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -131,6 +132,7 @@ class _SourceResolutionMergeState:
     boolean_binding_values: dict[BindingId, bool] = field(default_factory=dict)
     row_binding_values: dict[RowBindingKey, str | Decimal | int | bool] = field(default_factory=dict)
     row_source_identities: dict[RowBindingKey, RowSourceIdentity] = field(default_factory=dict)
+    closed_record_row_sets: list[ClosedRecordRowSet] = field(default_factory=list)
     row_casilla_values: dict[RowCasillaKey, Decimal] = field(default_factory=dict)
     row_casilla_provenance: dict[RowCasillaKey, DirectRowMaterializationProvenance] = field(default_factory=dict)
     relation_values: dict[RelationId, Decimal] = field(default_factory=dict)
@@ -152,6 +154,7 @@ class _SourceResolutionMergeState:
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
 
     def absorb(self, resolution: CalculationSourceResolution) -> None:
+        self._absorb_closed_record_rows(resolution)
         self._absorb_metadata(resolution)
         self._absorb_binding_values(resolution)
         self._absorb_row_binding_values(resolution)
@@ -161,12 +164,37 @@ class _SourceResolutionMergeState:
 
     def absorb_by_precedence(self, resolution: CalculationSourceResolution) -> None:
         """Overlay one tier, retaining the later tier's value for each key."""
+        self._absorb_closed_record_rows(resolution)
         self._absorb_metadata(resolution)
         self._absorb_precedence_values(resolution)
         self._absorb_precedence_row_bindings(resolution)
         self._absorb_precedence_row_casillas(resolution)
         self._absorb_precedence_relations(resolution)
         self.bound_inputs_by_casilla_id.update(resolution.bound_inputs_by_casilla_id)
+
+    def _absorb_closed_record_rows(self, resolution: CalculationSourceResolution) -> None:
+        """A source's membership and values cannot be overlaid independently."""
+        existing_claims = {binding for row_set in self.closed_record_row_sets for binding in row_set.binding_ids}
+        incoming_claims = {binding for row_set in resolution.closed_record_row_sets for binding in row_set.binding_ids}
+        existing_values = (
+            set(self.binding_values)
+            | set(self.enum_binding_values)
+            | set(self.date_binding_values)
+            | set(self.boolean_binding_values)
+            | {binding for binding, _ in self.row_binding_values}
+        )
+        incoming_values = (
+            set(resolution.binding_values)
+            | set(resolution.enum_binding_values)
+            | set(resolution.date_binding_values)
+            | set(resolution.boolean_binding_values)
+            | {binding for binding, _ in resolution.row_binding_values}
+        )
+        if existing_claims.intersection(incoming_claims | incoming_values) or incoming_claims.intersection(
+            existing_values
+        ):
+            raise AggregationValidationError(tr("aggregation.source_mesh.errors.closed_record_rows_conflict"))
+        self.closed_record_row_sets.extend(resolution.closed_record_row_sets)
 
     def _absorb_metadata(self, resolution: CalculationSourceResolution) -> None:
         """Accumulate source facts whose merge rule is independent of value precedence."""
@@ -290,6 +318,7 @@ class _SourceResolutionMergeState:
             boolean_binding_values=self.boolean_binding_values,
             row_binding_values=self.row_binding_values,
             row_source_identities=self.row_source_identities,
+            closed_record_row_sets=tuple(self.closed_record_row_sets),
             row_casilla_values=self.row_casilla_values,
             row_casilla_provenance=self.row_casilla_provenance,
             relation_values=self.relation_values,

@@ -8,7 +8,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId
 from ....core.period import Period
-from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.bindings import CasillaObservation, CasillaObservationValueKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -108,6 +108,31 @@ def test_saved_decimal_is_preserved_without_inventing_attribution() -> None:
     assert not snapshot.ledger_rows
 
 
+def test_legacy_revision_wire_has_no_rendering_capsule_and_retains_identity() -> None:
+    _, revision, _ = _saved()
+    wire = revision.model_dump_json(context={"secure_calculation_revision": True})
+    assert '"rendering_snapshot"' not in wire
+    restored = CalculationRevision.model_validate_json(wire, context={"secure_calculation_revision": True})
+    assert restored.rendering_snapshot is None
+    assert restored.calculation_revision_id == revision.calculation_revision_id
+
+
+def test_legacy_text_observation_is_in_digest_bound_review_without_current_template() -> None:
+    selection, revision, unit = _saved()
+    text = CasillaObservation(
+        casilla_id="decl.periodo",
+        value="1T",
+        value_kind=CasillaObservationValueKind.TEXT,
+        legal_refs=("test-law",),
+        source_refs=("test-source",),
+    )
+    revision = revision.model_copy(update={"observations": (*revision.observations, text)})
+    snapshot = build_calculation_review_snapshot(selection=selection, revision=revision, work_unit=unit)
+    assert snapshot.saved_form is None
+    assert snapshot.text_values[0].value == "1T"
+    assert snapshot.text_values[0].casilla_id == "decl.periodo"
+
+
 def test_exact_manual_input_is_distinguished_from_unknown_provenance() -> None:
     selection, revision, unit = _saved(
         manual=True, operator_layer=CalculationOperatorLayer(decimal_casilla_inputs={"01": "123.45"})
@@ -155,6 +180,24 @@ def test_new_current_pointer_does_not_replace_selected_revision() -> None:
     assert isinstance(snapshot.selection, CalculationReviewSelection)
     assert snapshot.selection.calculation_revision_id == revision.calculation_revision_id
     assert str(snapshot.amounts[0].value) == "123.4500"
+    assert snapshot.calculation_lifecycle is not None
+    assert snapshot.calculation_lifecycle.state is CalculationRevisionState.BORRADOR
+    assert not snapshot.calculation_lifecycle.is_current_calculation
+    assert not snapshot.calculation_lifecycle.is_current_filing
+    assert snapshot.calculation_lifecycle.aeat_confirmation is None
+
+
+def test_draft_review_captures_current_selection_without_claiming_filing() -> None:
+    selection, revision, unit = _saved()
+    unit = unit.model_copy(update={"current_calculation_revision_id": revision.calculation_revision_id})
+    snapshot = build_calculation_review_snapshot(selection=selection, revision=revision, work_unit=unit)
+    assert snapshot.schema_version == 2
+    assert snapshot.calculation_lifecycle is not None
+    assert snapshot.calculation_lifecycle.is_current_calculation
+    assert snapshot.calculation_lifecycle.state is CalculationRevisionState.BORRADOR
+    assert snapshot.calculation_lifecycle.aeat_confirmation is None
+    assert snapshot.calculation_lifecycle.filing_record_id is None
+    assert snapshot.status is ReviewStatus.INCOMPLETE
 
 
 def _with_captured_ledger(revision: CalculationRevision) -> CalculationRevision:

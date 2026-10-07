@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:879a945fddae5d183d110a3b62ac3a44f8ec0cba71e142ee9405a1b5b63741f8'
+body_hash: 'sha256:c675ff39f09a2b5f16c8e8ea779e200d59d1d0014f6ad42fc703009d7b3d6e55'
 ---
 
 # `runtime-manager-architecture` plan
@@ -63,6 +63,8 @@ Runtime-side supervised mode, boot record, settle and exit reasons from the supe
 - [x] `P01.S05` - Re-enable Ctrl+C processing at startup, give non-worker children their own console under --supervised, and refuse a full elevated token under --supervised; `src/cadrumo/entrypoints/runtime/main.py, src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py, src/cadrumo/adapters/outbound/browser_runtime/installer.py, owning tests`.
 - [x] `P01.S06` - Rename manager_commands.py to containment_commands.py with NativeManagerCommand, ManagerCommandResult and run_manager_command_sync, updating all consumers atomically; `src/cadrumo/adapters/local_runtime/manager_commands.py, linux_worker_process.py, macos_worker_process.py, their tests and fixtures`.
 - [x] `P01.S22` - Report exact in-flight operation counts from profile workers to the supervisor heartbeat and stop-if-idle, replacing the hosted-profile upper bound; `src/cadrumo/entrypoints/runtime/profile_connections.py, profile worker status request, supervised_channel.py, owning tests`.
+- [x] `P01.S25` - Benchmark headless runtime startup and concurrent native connections; exercise malformed, stalled, disconnected and foreign-owner interference; fix measured in-scope runtime-management bottlenecks and preserve bounded admission and cleanup; `src/cadrumo/adapters/local_runtime/, src/cadrumo/entrypoints/runtime/tests/, native/manager/ targeted tests, benchmark evidence`.
+- [x] `P01.S26` - Render React skeletons during asynchronous desktop runtime startup, settle to canonical Tauri readiness or bounded failure, and verify recovery and responsive navigation.; `native/desktop/frontend startup account hook, shared loading component, scenario fixtures and focused tests using existing Tauri manager dispatch and readiness`.
 
 ### Phase `P02` - Manager core on Windows
 

@@ -188,7 +188,9 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
             reference = terminal.terminal_receipt.result_ref
             assert reference is not None
             stored = asyncio.run(
-                operation_secure_reference_repository(objects=objects).resolve(reference, ProfilePassphraseRotationOutcome)
+                operation_secure_reference_repository(objects=objects).resolve(
+                    reference, ProfilePassphraseRotationOutcome
+                )
             )
             assert stored.profile_id == str(profile_id) and stored.password_generation == 2
         assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
