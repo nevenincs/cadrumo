@@ -1,10 +1,17 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
 import { delimiter, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "./build-paths.mjs";
 import { snapshotHostSources } from "./backend-snapshot.mjs";
+import { contentBuild, writeStable } from "./content-build.mjs";
 import {
   identity as readIdentity,
   profile,
@@ -60,12 +67,11 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     delimiter +
     (environment[pathKey] ?? "");
 }
-// The backend checks keep Cargo's incremental inputs; every other action
-// rebuilds from a fresh copy of the sources.
+// Preserve Cargo's input timestamps while synchronizing additions and removals.
 const snapshot = snapshotHostSources(
   resolve(desktop, ".."),
   buildPath("desktop_host"),
-  { incremental: backendOnly },
+  { incremental: true },
 );
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
@@ -75,13 +81,13 @@ function run(args) {
     env: environment,
   });
   if (result.error) throw result.error;
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  if (result.status !== 0)
+    throw new Error(`Tauri ${args[0]} failed: ${result.status}`);
 }
 const configDirectory = snapshot.crate;
 // tauri-build watches this directory even when no capabilities are declared.
 // A missing watched path makes Cargo rerun the build script on every test.
-if (backendOnly)
-  mkdirSync(resolve(configDirectory, "capabilities"), { recursive: true });
+mkdirSync(resolve(configDirectory, "capabilities"), { recursive: true });
 // Rust host tests exercise the real modules, not a compiled frontend. The
 // inert asset exists only in this test snapshot and is never staged.
 const frontend = backendOnly
@@ -104,23 +110,37 @@ const config = tauriConfig(
 );
 const configFile = resolve(configDirectory, "tauri.conf.json");
 const configText = JSON.stringify(config, null, 2);
-if (
-  !backendOnly ||
-  !existsSync(configFile) ||
-  readFileSync(configFile, "utf8") !== configText
-)
-  writeFileSync(configFile, configText);
-if (
-  !backendOnly ||
-  !existsSync(resolve(icons, "icon.ico")) ||
-  !existsSync(resolve(icons, "icon.png"))
-)
-  run([
-    "icon",
-    resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
-    "--output",
-    icons,
-  ]);
+writeStable(configFile, configText);
+contentBuild(
+  {
+    inputs: [
+      process.execPath,
+      fileURLToPath(import.meta.url),
+      resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+      ...readdirSync(resolve(desktop, "frontend/node_modules/@tauri-apps"))
+        .filter((name) => name === "cli" || name.startsWith("cli-"))
+        .map((name) =>
+          resolve(desktop, "frontend/node_modules/@tauri-apps", name),
+        ),
+      fileURLToPath(new URL("content-build.mjs", import.meta.url)),
+    ],
+    outputs: [icons, resolve(icons, "icon.ico"), resolve(icons, "icon.png")],
+    record: resolve(buildPath("desktop_cache"), "icons-build.json"),
+    identity: {
+      node: process.version,
+      platform: process.platform,
+      arch: process.arch,
+    },
+  },
+  () =>
+    run([
+      "icon",
+      resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+      "--output",
+      icons,
+    ]),
+);
+if (action === "prepare") process.exit(0);
 if (action === "build") {
   run([
     "build",
@@ -169,7 +189,7 @@ if (action === "build") {
     throw new Error(
       `The Cargo host image ${built} differs from the CMake declaration ${declared}.`,
     );
-  writeFileSync(artifactFile(), JSON.stringify({ executable: built }));
+  writeStable(artifactFile(), JSON.stringify({ executable: built }));
 } else if (action === "test" || action === "clippy" || backendOnly) {
   const testing = ["test", "test-unit", "test-package"].includes(action);
   const live = ["test", "test-package", "clippy"].includes(action);

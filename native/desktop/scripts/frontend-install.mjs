@@ -3,8 +3,15 @@
 // tree, so the evidence that it is current is the record npm leaves inside it,
 // not a stamp in any build directory.
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { isAbsolute, resolve } from "node:path";
+import {
+  closeSync,
+  existsSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+  rmSync,
+} from "node:fs";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // npm records every package it placed here, with the lockfile's own entry.
@@ -16,6 +23,53 @@ const DECLARED = [
   "optionalDependencies",
   "peerDependencies",
 ];
+
+function unlinkedAncestors(path) {
+  for (let at = resolve(path); ; at = dirname(at)) {
+    try {
+      if (lstatSync(at).isSymbolicLink())
+        throw new Error(
+          "Frontend dependency ownership cannot contain linked paths",
+        );
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    if (dirname(at) === at) break;
+  }
+}
+
+// All binary directories share this npm tree. Explicit cleanup and install
+// serialize against the same owner; neither may remove it beneath the other.
+export function withInstallLock(frontend, action) {
+  unlinkedAncestors(frontend);
+  const lock = resolve(frontend, ".cadrumo-npm.lock");
+  let descriptor;
+  try {
+    descriptor = openSync(lock, "wx");
+  } catch (error) {
+    if (error.code === "EEXIST")
+      throw new Error(
+        "Another frontend install or clean owns .cadrumo-npm.lock",
+      );
+    throw error;
+  }
+  try {
+    return action();
+  } finally {
+    closeSync(descriptor);
+    rmSync(lock);
+  }
+}
+
+export function cleanInstalled(frontend) {
+  return withInstallLock(frontend, () => {
+    const target = resolve(frontend, "node_modules");
+    unlinkedAncestors(target);
+    // rm removes nested package symlinks themselves; it never traverses them.
+    rmSync(target, { recursive: true, force: true });
+    return 0;
+  });
+}
 
 // npm's rule for the os, cpu and libc lists: no negated value may match, and
 // one plain value must when any is listed.
@@ -219,6 +273,12 @@ export function installDecision(frontend, platform = currentPlatform()) {
  * one line which it did and why, and returns the exit status.
  */
 export function ensureInstalled(frontend, npmCli, cleanInstall) {
+  return withInstallLock(frontend, () =>
+    installUnlocked(frontend, npmCli, cleanInstall),
+  );
+}
+
+function installUnlocked(frontend, npmCli, cleanInstall) {
   const decision = installDecision(frontend);
   if (!decision.install) {
     console.log(`Frontend dependencies: kept, ${decision.reason}.`);
@@ -246,15 +306,12 @@ if (
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
   const [npmCli, ...cleanInstall] = process.argv.slice(2);
+  const frontend = fileURLToPath(new URL("../frontend/", import.meta.url));
+  if (npmCli === "clean" && !cleanInstall.length)
+    process.exit(cleanInstalled(frontend));
   if (!npmCli || !isAbsolute(npmCli) || !cleanInstall.length)
     throw new Error(
       "Pass the absolute npm CLI and its clean-install arguments.",
     );
-  process.exit(
-    ensureInstalled(
-      fileURLToPath(new URL("../frontend/", import.meta.url)),
-      npmCli,
-      cleanInstall,
-    ),
-  );
+  process.exit(ensureInstalled(frontend, npmCli, cleanInstall));
 }
