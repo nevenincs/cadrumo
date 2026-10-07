@@ -122,39 +122,6 @@ class ManagedGoogleArtifacts:
         self.admit(receipt, purpose=ManagedArtifactPurpose.PUBLICATION)
         return receipt
 
-    def list_children(self, parent: AdmittedArtifact) -> tuple[ArtifactCreationReceipt, ...]:
-        """Fully paginate inside an admitted folder and refuse unknown copied identities."""
-        if parent.receipt.kind not in {ManagedArtifactKind.ROOT, ManagedArtifactKind.FOLDER}:
-            raise OutboundStorageConflictError("inventory requires an admitted folder")
-        parent_id = escape_google_drive_query_literal(parent.receipt.artifact_id)
-        page_token = None
-        seen_tokens: set[str] = set()
-        found: dict[str, ArtifactCreationReceipt] = {}
-        while True:
-            self._handoff(parent, "drive.files.list.managed")
-            page = execute_request(
-                self.admission.drive.files().list(
-                    q=f"'{parent_id}' in parents and trashed = false",
-                    fields="files(id),nextPageToken",
-                    pageSize=100,
-                    pageToken=page_token,
-                ),
-                action="drive.files.list.managed",
-                retry=RequestRetryPolicy.SINGLE_ATTEMPT,
-            )
-            self._acknowledge("drive.files.list.managed")
-            for entry in page.get("files", []):
-                identifier = entry.get("id", "")
-                receipt = self.admission.require(identifier)
-                if receipt.parent_id != parent.receipt.artifact_id or identifier in found:
-                    raise OutboundStorageConflictError("ambiguous managed child inventory")
-                found[identifier] = receipt
-            page_token = next_drive_page_token(
-                page.get("nextPageToken"), seen_tokens=seen_tokens, action="drive.files.list.managed"
-            )
-            if page_token is None:
-                return tuple(found.values())
-
     def reconcile_creation(
         self, parent: AdmittedArtifact, *, name: str, kind: ManagedArtifactKind, publication_id: UUID
     ) -> ArtifactCreationReceipt:

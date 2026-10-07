@@ -367,31 +367,12 @@ class ProfileCustodyLocalRecordStore(Protocol):
         """Read one bounded, no-follow local record."""
         ...
 
-    def read_optional(self, path: Path, *, maximum_bytes: int) -> bytes | None:
-        """Read one bounded local record or prove its anchored absence."""
-        ...
-
     def write(self, path: Path, payload: bytes, *, publish_once: bool) -> None:
         """Atomically persist one local record."""
         ...
 
     def clear(self, path: Path) -> None:
         """Remove one anchored local record without following its leaf."""
-        ...
-
-    def compare_and_replace_same_or_predecessor(
-        self,
-        path: Path,
-        *,
-        current: bytes,
-        predecessor: bytes | None,
-        maximum_bytes: int,
-    ) -> None:
-        """Idempotently CAS one local record without an app-layer read."""
-        ...
-
-    def compare_and_clear(self, path: Path, *, expected: bytes, maximum_bytes: int) -> None:
-        """CAS-clear one local record without a separate app-layer read."""
         ...
 
 

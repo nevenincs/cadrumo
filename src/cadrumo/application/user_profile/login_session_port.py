@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, TypeGuard
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
 
 from ...core.errors.hierarchy import InternalInvariantError
@@ -275,10 +275,6 @@ class ProfileLoginSessionPort(Protocol):
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         """Revoke one profile's split-knowledge acceleration receipt."""
-        ...
-
-    def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        """Narrow a resume record to the canonical persisted receipt DTO."""
         ...
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:

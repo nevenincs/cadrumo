@@ -105,11 +105,8 @@ from .custody.errors import (
 from .custody.filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     clear_profile_custody_local_record,
-    compare_and_clear_profile_custody_local_record,
-    compare_and_replace_same_or_predecessor_profile_custody_local_record,
     profile_custody_local_lock,
     profile_custody_root_lock,
-    read_optional_profile_custody_local_record,
     read_profile_custody_local_record,
     write_profile_custody_local_record,
 )
@@ -188,32 +185,11 @@ class _PersistenceProfileCustodyLocalRecordStore:
     def read(self, path: Path, *, maximum_bytes: int) -> bytes:
         return read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
 
-    def read_optional(self, path: Path, *, maximum_bytes: int) -> bytes | None:
-        return read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
-
     def write(self, path: Path, payload: bytes, *, publish_once: bool) -> None:
         write_profile_custody_local_record(path, payload, publish_once=publish_once)
 
     def clear(self, path: Path) -> None:
         clear_profile_custody_local_record(path)
-
-    def compare_and_replace_same_or_predecessor(
-        self,
-        path: Path,
-        *,
-        current: bytes,
-        predecessor: bytes | None,
-        maximum_bytes: int,
-    ) -> None:
-        compare_and_replace_same_or_predecessor_profile_custody_local_record(
-            path,
-            current=current,
-            predecessor=predecessor,
-            maximum_bytes=maximum_bytes,
-        )
-
-    def compare_and_clear(self, path: Path, *, expected: bytes, maximum_bytes: int) -> None:
-        compare_and_clear_profile_custody_local_record(path, expected=expected, maximum_bytes=maximum_bytes)
 
 
 class _PersistenceProfileBucketStorage:

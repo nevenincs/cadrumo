@@ -1,26 +1,10 @@
-"""Every operation that opens a bucket session seals it or leaves it bound.
-
-A bucket session owns cleartext key material. The process binds at most one,
-so a session that is neither bound nor sealed is key material nothing can
-reach any more. These cases count such sessions with the garbage collector
-after real CLI commands and after the resume door displaces or fails.
-
-The resume door needs an acceleration receipt, and a receipt needs an OS
-keychain that test hosts refuse. The resume cases therefore compose the real
-login-session adapter and replace only the keychain-backed receipt: its
-resume supplies the genuine DEK that the passphrase unlocks, and binding
-can be made to fail after the resumed session is bound.
-"""
+"""Supported CLI and explicit local authentication leave no unreachable key holders."""
 
 from __future__ import annotations
 
 import gc
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import TypeGuard
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
@@ -31,28 +15,23 @@ from cadrumo.adapters.persistence.storage.profile_login_session import build_pro
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
-from ....application.user_profile.access_contracts import ProfileAccessBinding
-from ....application.user_profile.custody_ports import (
-    load_profile_custody_password_material,
-    unlock_profile_custody_password,
-)
+from ....application.user_profile.login_session import ProfileLoginOutcome, authenticate_profile_for_invocation
 from ....application.user_profile.login_session_port import (
     ProfileBucketSessionPort,
     ProfileLoginSessionPort,
-    ProfileLoginThrottleEvaluationPort,
-    ProfilePersistedSessionPort,
-    ProfileSessionResumeOutcomePort,
-    ProfileSignInGenerationPort,
     bind_profile_login_session_port,
 )
 from ....application.user_profile.profile_record_repository import profile_record_session_if_authenticated
-from ....application.user_profile.session_admission import ProfileSessionAdmissionState, admit_profile_session
+from ....application.user_profile.session_admission import (
+    ProfileCredentialRequestV1,
+    ProfileSessionAdmissionState,
+    admit_profile_session,
+)
 from ....core.config import load_settings
 from ....core.paths import effective_storage_root
-from ....core.profile_session import ProfileSessionRefusalReason
-from ....core.time.clock import now
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
+from .portable_human_cli_runtime import portable_human_cli_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -71,11 +50,7 @@ def _live_sessions() -> list[BucketSession]:
 
 @pytest.fixture
 def unreachable_key_holders() -> Callable[[], list[BucketSession]]:
-    """Report unsealed, unbound sessions opened since the case started.
-
-    Sessions that already existed belong to other cases in this worker, so
-    they are excluded rather than blamed on this one.
-    """
+    """Report unsealed, unbound sessions opened since the case started."""
     preexisting = _live_sessions()
 
     def report() -> list[BucketSession]:
@@ -98,188 +73,20 @@ def test_read_write_and_refusal_commands_leave_no_unreachable_session(
     assert refused.exit_code != 0, refused.output
     assert unreachable_key_holders() == []
 
-    register_cli_profile(label="first", log_in=False)
-    first_session = current_active_bucket_session()
-    assert first_session is not None
-
-    written = invoke_cached_cli(list(_LEDGER_ADD))
-    assert written.exit_code == 0, written.output
-    assert unreachable_key_holders() == []
-
-    register_cli_profile(label="second", log_in=False)
-    assert first_session.sealed
-    assert unreachable_key_holders() == []
-
-    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    assert unreachable_key_holders() == []
-
-
-@dataclass(frozen=True, slots=True)
-class _ResumedRecord:
-    profile_id: UUID
-    session_id: UUID
-    custody_generation: int
-    dek_epoch: str
-    issued_at: datetime
-    idle_deadline: datetime
-    absolute_deadline: datetime
-
-
-@dataclass(frozen=True, slots=True)
-class _ResumedOutcome:
-    resumed: bool
-    refusal: ProfileSessionRefusalReason | None
-    record: ProfilePersistedSessionPort | None
-    binding: None = None
-
-
-class _ReceiptResumingPort:
-    """The real login-session adapter with only the keychain-backed receipt replaced."""
-
-    def __init__(self, real: ProfileLoginSessionPort, dek: bytes, *, refuse_binding: bool = False) -> None:
-        self._real = real
-        self._dek = dek
-        self._refuse_binding = refuse_binding
-
-    def current_session(self) -> ProfileBucketSessionPort | None:
-        return self._real.current_session()
-
-    def open_resumed_session(
-        self,
-        *,
-        bucket_id: str,
-        dek: bytes,
-        idle_minutes: int,
-        opened_at: datetime,
-        idle_deadline: datetime,
-        absolute_deadline: datetime,
-        storage_root: Path,
-    ) -> ProfileBucketSessionPort:
-        return self._real.open_resumed_session(
-            bucket_id=bucket_id,
-            dek=dek,
-            idle_minutes=idle_minutes,
-            opened_at=opened_at,
-            idle_deadline=idle_deadline,
-            absolute_deadline=absolute_deadline,
-            storage_root=storage_root,
-        )
-
-    def bind_session(self, session: ProfileBucketSessionPort) -> None:
-        self._real.bind_session(session)
-        if self._refuse_binding:
-            raise RuntimeError("session binding refused")
-
-    def close_active_session(self) -> None:
-        self._real.close_active_session()
-
-    def session_serves_bucket(self, session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:
-        return self._real.session_serves_bucket(session, bucket_id)
-
-    def evaluate_throttle(
-        self, *, storage_root: Path, bucket_id: str, now: datetime
-    ) -> ProfileLoginThrottleEvaluationPort:
-        return self._real.evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
-
-    def record_login_failure(self, *, storage_root: Path, bucket_id: str, now: datetime) -> None:
-        self._real.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
-
-    def reset_throttle(self, *, storage_root: Path, bucket_id: str) -> None:
-        self._real.reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
-
-    def acceleration_receipt_path(self, *, storage_root: Path, profile_id: UUID) -> Path:
-        return self._real.acceleration_receipt_path(storage_root=storage_root, profile_id=profile_id)
-
-    def mint_acceleration_receipt(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        dek: bytes,
-        now: datetime,
-        idle_minutes: int,
-        absolute_minutes: int,
-        login_id: str,
-        sign_in_binding: ProfileAccessBinding,
-        sign_in_generation: ProfileSignInGenerationPort,
-    ) -> ProfilePersistedSessionPort | None:
-        return self._real.mint_acceleration_receipt(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            dek=dek,
-            now=now,
-            idle_minutes=idle_minutes,
-            absolute_minutes=absolute_minutes,
-            login_id=login_id,
-            sign_in_binding=sign_in_binding,
-            sign_in_generation=sign_in_generation,
-        )
-
-    def resume_acceleration_receipt(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        del storage_root
-        record = _ResumedRecord(
-            profile_id=profile_id,
-            session_id=uuid4(),
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            issued_at=now,
-            idle_deadline=now + timedelta(minutes=5),
-            absolute_deadline=now + timedelta(minutes=30),
-        )
-        return _ResumedOutcome(resumed=True, refusal=None, record=record), bytearray(self._dek)
-
-    def borrow_acceleration_receipt_key(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return self._real.borrow_acceleration_receipt_key(storage_root=storage_root, profile_id=profile_id)
-
-    def resume_acceleration_receipt_with_key(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
-        receipt_key: bytearray,
-        login_id: str,
-        sign_in_binding: ProfileAccessBinding,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return self._real.resume_acceleration_receipt_with_key(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            now=now,
-            receipt_key=receipt_key,
-            login_id=login_id,
-            sign_in_binding=sign_in_binding,
-        )
-
-    def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
-        self._real.delete_acceleration_receipt(storage_root=storage_root, profile_id=profile_id)
-
-    def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        return self._real.is_persisted_receipt(record)
-
-    def zeroise_owned_buffer(self, buffer: bytearray) -> None:
-        self._real.zeroise_owned_buffer(buffer)
+    for label in ("first", "second"):
+        profile_id = register_cli_profile(label=label, log_in=False)
+        session = current_active_bucket_session()
+        assert session is not None
+        with portable_human_cli_runtime(
+            storage_root=effective_storage_root(),
+            profile_id=UUID(profile_id),
+            label=label,
+        ) as runtime:
+            written = runtime.invoke(list(_LEDGER_ADD))
+            assert written.exit_code == 0, written.output
+            listed = runtime.invoke(["--format", "json", "app", "ledger", "list"])
+            assert listed.exit_code == 0, listed.output
+        assert unreachable_key_holders() == []
 
 
 @pytest.fixture
@@ -288,55 +95,61 @@ def decode_context() -> Iterator[ProfileDecodeContext]:
         yield operation.profile_decode_context()
 
 
-def _unlocked_dek(profile_id: str) -> bytes:
-    material = load_profile_custody_password_material(UUID(profile_id), root=effective_storage_root())
-    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    return unlock_profile_custody_password(material, password=passphrase).dek
+def _credentials(request: ProfileCredentialRequestV1) -> ProfileLoginOutcome:
+    return authenticate_profile_for_invocation(
+        name="first",
+        passphrase_callback=lambda: load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+        profile_decode_context=request.profile_decode_context,
+    )
 
 
-def test_resuming_over_another_profile_seals_the_displaced_session(
+def test_authenticating_another_profile_seals_the_displaced_session(
     decode_context: ProfileDecodeContext,
     unreachable_key_holders: Callable[[], list[BucketSession]],
 ) -> None:
     first = register_cli_profile(label="first", log_in=False)
     second = register_cli_profile(label="second", log_in=False)
     displaced = current_active_bucket_session()
-    assert displaced is not None
-    assert displaced.bucket_id == second
+    assert displaced is not None and displaced.bucket_id == second
 
-    port = _ReceiptResumingPort(build_profile_login_session_port(), _unlocked_dek(first))
-    with bind_profile_login_session_port(port):
-        admission = admit_profile_session(bucket_id=first, profile_decode_context=decode_context, now=now())
+    admission = admit_profile_session(
+        bucket_id=first,
+        profile_decode_context=decode_context,
+        credentials=_credentials,
+    )
 
-    assert admission.state is ProfileSessionAdmissionState.RESUMED
+    assert admission.state is ProfileSessionAdmissionState.AUTHENTICATED
     assert displaced.sealed
-    resumed = current_active_bucket_session()
-    assert resumed is not None
-    assert resumed.bucket_id == first
-    assert not resumed.sealed
+    authenticated = current_active_bucket_session()
+    assert authenticated is not None and authenticated.bucket_id == first and not authenticated.sealed
     assert profile_record_session_if_authenticated(first, profile_decode_context=decode_context) is not None
     assert profile_record_session_if_authenticated(second, profile_decode_context=decode_context) is None
     assert unreachable_key_holders() == []
 
 
-def test_a_resume_that_fails_after_opening_leaves_no_key_holder_and_nothing_bound(
+def test_authentication_binding_failure_leaves_no_unreachable_key_holder(
     decode_context: ProfileDecodeContext,
     unreachable_key_holders: Callable[[], list[BucketSession]],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     first = register_cli_profile(label="first", log_in=False)
     second = register_cli_profile(label="second", log_in=False)
     displaced = current_active_bucket_session()
-    assert displaced is not None
-    assert displaced.bucket_id == second
+    assert displaced is not None and displaced.bucket_id == second
+    port = build_profile_login_session_port()
+    original_bind = type(port).bind_session
 
-    # Binding publishes the session before the injected failure; cleanup must
-    # still retire both it and the displaced key holder.
-    port = _ReceiptResumingPort(build_profile_login_session_port(), _unlocked_dek(first), refuse_binding=True)
+    def refuse_binding(self: ProfileLoginSessionPort, session: ProfileBucketSessionPort) -> None:
+        original_bind(self, session)
+        raise RuntimeError("session binding refused")
+
+    monkeypatch.setattr(type(port), "bind_session", refuse_binding)
     with bind_profile_login_session_port(port), pytest.raises(RuntimeError, match="session binding refused"):
-        admit_profile_session(bucket_id=first, profile_decode_context=decode_context, now=now())
+        admit_profile_session(bucket_id=first, profile_decode_context=decode_context, credentials=_credentials)
 
     assert displaced.sealed
-    assert current_active_bucket_session() is None
+    bound = current_active_bucket_session()
+    assert bound is None or bound.sealed
     assert profile_record_session_if_authenticated(first, profile_decode_context=decode_context) is None
     assert profile_record_session_if_authenticated(second, profile_decode_context=decode_context) is None
     assert unreachable_key_holders() == []

@@ -45,7 +45,6 @@ class RootFolderPreconditionCondition(StrEnum):
     """Closed terminal conditions owned by the profile root folder."""
 
     API_CLIENT_AVAILABLE = "google.root_folder.api_client_available"
-    OWNED_BY_APPLICATION = "google.root_folder.owned_by_application"
 
 
 def profile_root_folder_name(profile: str) -> str:

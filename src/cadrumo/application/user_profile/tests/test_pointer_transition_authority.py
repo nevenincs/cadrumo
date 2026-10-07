@@ -43,8 +43,8 @@ def _select_b_then_a_in_child(root_text: str, result_queue: Any) -> None:
     result_queue.put((selected_b, selected_a))
 
 
-def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path) -> None:
-    """A clear tombstone and restore never erase or reuse a coordinate."""
+def test_absence_idempotence_and_reselection_keep_one_durable_lineage(tmp_path: Path) -> None:
+    """A clear tombstone and reselection never erase or reuse a coordinate."""
     assert observe_active_profile_pointer(tmp_path) == BucketPointer.absent(transition_revision=0)
 
     with active_profile_pointer_transaction(tmp_path) as transaction:
@@ -52,7 +52,7 @@ def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path
         selected_a = transaction.select(_A)
         assert transaction.select(_A) == selected_a
         selected_b = transaction.select(_B)
-        restored_a = transaction.compare_and_restore(expected=selected_b, captured=selected_a)
+        restored_a = transaction.compare_and_select(expected=selected_b, bucket_id=_A)
         tombstone = transaction.clear()
         assert transaction.clear() == tombstone
 
@@ -112,13 +112,11 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
         transaction.compare_and_select(expected=initial_a, bucket_id=_B)
 
     with active_profile_pointer_transaction(tmp_path) as transaction:
-        with pytest.raises(ActiveProfilePointerTransactionError):
-            transaction.compare_and_clear(expected=initial_a)
         assert transaction.read() == selected_a_again
-        cleared = transaction.compare_and_clear(expected=selected_a_again)
+        cleared = transaction.clear()
         assert cleared.bucket_id is None
         assert cleared.transition_revision == selected_a_again.transition_revision + 1
-        assert transaction.compare_and_clear(expected=cleared) == cleared
+        assert transaction.clear() == cleared
 
 
 def test_defining_modules_are_the_only_public_pointer_transition_surface() -> None:

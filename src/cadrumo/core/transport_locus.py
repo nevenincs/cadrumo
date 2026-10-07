@@ -61,14 +61,6 @@ class TransportLocus(StrEnum):
     LOCAL_OUT = "local_out"
     """A path the command WRITES to the operator's own filesystem."""
 
-    REMOTE_HANDLE = "remote_handle"
-    """An address for something held on a machine elsewhere.
-
-    A Drive folder id, a spreadsheet id, a document link reference. Spelling is
-    free for these, because the thing being named is a counterparty's
-    identifier and no filesystem convention applies to it.
-    """
-
 
 class TransportShape(StrEnum):
     """What kind of filesystem object a local path names.

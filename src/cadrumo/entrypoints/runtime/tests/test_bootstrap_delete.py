@@ -152,7 +152,7 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                         assert isinstance(prepared, RuntimeProfileDeleteRefused)
                         assert prepared.code == ("selected_profile" if case == "selected" else "custody_changed")
                         assert capsule.exists()
-                        assert profiles.hosted_profile_count() == 0
+                        assert not profiles._profiles
                         return
                     assert isinstance(prepared, RuntimeProfileDeletePrepared)
                     assert capsule.exists()
@@ -197,7 +197,7 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
                     )
                     assert isinstance(replay, RuntimeProfileDeleted), replay
                     assert replay.receipt == deleted.receipt
-                    assert profiles.hosted_profile_count() == 0
+                    assert not profiles._profiles
                 finally:
                     wire.close()
                     if hosted_wire is not None:

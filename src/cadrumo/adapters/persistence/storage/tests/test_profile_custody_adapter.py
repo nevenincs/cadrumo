@@ -19,23 +19,22 @@ from ..custody.label_head_repository import ProfileLabelHeadRepository
 from ..custody.tests.label_head_probe import begin_advance
 from ..errors import DecryptionError
 from ..profile_custody import build_profile_custody_port
-from .local_record_probe import compare_and_replace
 from .passphrase_probe import open_with_passphrase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def test_local_record_store_preserves_atomic_compare_and_clear_semantics(tmp_path: Path) -> None:
+def test_local_record_store_preserves_bounded_read_write_and_clear(tmp_path: Path) -> None:
     store = build_profile_custody_port().local_record_store()
     record = tmp_path / "local" / "record.json"
     store.ensure_directory(record.parent)
 
     store.write(record, b"first", publish_once=True)
     assert store.read(record, maximum_bytes=16) == b"first"
-    compare_and_replace(store, record, expected=b"first", replacement=b"second", maximum_bytes=16)
-    assert store.read_optional(record, maximum_bytes=16) == b"second"
-    store.compare_and_clear(record, expected=b"second", maximum_bytes=16)
-    assert store.read_optional(record, maximum_bytes=16) is None
+    store.write(record, b"second", publish_once=False)
+    assert store.read(record, maximum_bytes=16) == b"second"
+    store.clear(record)
+    assert not record.exists()
 
 
 def test_record_crypto_returns_the_application_dto_and_refuses_tampering() -> None:

@@ -250,11 +250,6 @@ class RuntimeProfileConnections(
             total += count
         return total
 
-    def hosted_profile_count(self) -> int:
-        """Return the number of profile hosts, each owning the worker its operations run in."""
-        # One atomic length read; a supervisor heartbeat never waits on admission.
-        return len(self._profiles)
-
     def stop_if_idle(self, reason: RuntimeExitReason, *, timeout: float) -> bool:
         """Fence new submissions and stop only with a confirmed empty work inventory."""
         deadline = time.monotonic() + timeout

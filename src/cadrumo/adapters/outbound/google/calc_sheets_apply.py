@@ -136,7 +136,6 @@ class CalcSheetsApplyResult(BaseModel):
     value_cells_written: NonNegativeInt
     formula_cells_written: NonNegativeInt
     protected_ranges_written: NonNegativeInt
-    row_set_headers_written: int = Field(ge=0, default=0)
     tab_count: int = Field(ge=1)
 
 

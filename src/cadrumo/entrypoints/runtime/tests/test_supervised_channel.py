@@ -201,11 +201,11 @@ def test_idle_fence_stops_only_without_operations(tmp_path: Path) -> None:
     profile_id = uuid4()
     # A hosted worker with unknown activity cannot prove idle.
     profiles._profiles[profile_id] = _host(None)
-    assert profiles.hosted_profile_count() == 1
+    assert profile_id in profiles._profiles
     assert not profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1)
     assert not stop.is_set() and profiles._admitting()
     profiles._profiles.pop(profile_id)
-    assert profiles.hosted_profile_count() == 0
+    assert not profiles._profiles
     # An accepted bootstrap transaction can own work without any profile worker.
     profiles._custody_mutations.add(profile_id)
     assert not profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1)

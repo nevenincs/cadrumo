@@ -93,12 +93,10 @@ def _select_pointer(root: Path, bucket_id: str) -> BucketPointer:
 
 
 def _clear_expected_pointer(root: Path, expected: BucketPointer) -> BucketPointer:
-    """Model a crash boundary using the canonical compare-and-transition verb."""
+    """Model a crash boundary while retaining the canonical root lock."""
     with active_profile_pointer_transaction(root) as transaction:
-        return transaction.compare_and_restore(
-            expected=expected,
-            captured=BucketPointer.absent(transition_revision=0),
-        )
+        assert transaction.read() == expected
+        return transaction.clear()
 
 
 def _committed_capsule(
@@ -1046,10 +1044,7 @@ def test_pointer_transition_and_active_pointer_writer_share_one_root_lock(tmp_pa
             active_profile_pointer_transaction(tmp_path) as transaction,
             pytest.raises(ActiveProfilePointerTransactionError),
         ):
-            transaction.compare_and_restore(
-                expected=captured,
-                captured=BucketPointer.absent(transition_revision=0),
-            )
+            transaction.compare_and_select(expected=captured, bucket_id=str(_PROFILE_ID))
         assert _observe_pointer(tmp_path) == replacement
     finally:
         if writer.is_alive():

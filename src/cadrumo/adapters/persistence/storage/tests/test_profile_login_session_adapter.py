@@ -131,8 +131,6 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
         port.zeroise_owned_buffer(proof)
         assert not expired.resumed and expired_key is None
         assert expired.refusal is ProfileSessionRefusalReason.EXPIRED_IDLE
-        assert port.is_persisted_receipt(minted) is True
-        assert port.is_persisted_receipt(object()) is False
     finally:
         port.delete_acceleration_receipt(storage_root=tmp_path, profile_id=_PROFILE_ID)
 

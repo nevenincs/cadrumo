@@ -109,8 +109,8 @@ def test_native_creation_and_binary_population_preserve_prior_artifacts(tmp_path
         with pytest.raises(SecureObjectRevisionConflictError):
             transport.write_bytes(writer, b"replacement", expected_digest=sha256_hex(b"replacement"))
         assert drive.payloads[binary.artifact_id] == payload
-        assert sheet in transport.list_children(parent)
-        assert binary in transport.list_children(parent)
+        assert receipts.load(sheet.artifact_id) == sheet
+        assert receipts.load(binary.artifact_id) == binary
 
 
 def test_binary_digest_mismatch_and_movement_refuse_before_content(tmp_path: Path) -> None:

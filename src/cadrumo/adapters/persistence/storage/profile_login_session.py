@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import TypeGuard
 from uuid import UUID
 
 from ....application.user_profile.access_contracts import ProfileAccessBinding
@@ -24,7 +23,6 @@ from .custody.acceleration_receipt import (
     profile_session_path,
     resume_profile_session_with_key,
 )
-from .custody.acceleration_receipt_crypto import PersistedProfileSession
 from .custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from .custody.zeroise import zeroise
 from .master_key.active_session import (
@@ -169,9 +167,6 @@ class _PersistenceProfileLoginSession:
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         delete_profile_session(storage_root=storage_root, profile_id=profile_id)
-
-    def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        return isinstance(record, PersistedProfileSession)
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:
         zeroise(buffer)
