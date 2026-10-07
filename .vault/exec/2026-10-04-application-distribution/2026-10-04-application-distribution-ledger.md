@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:87a0198f538f1899808d27e4ec0d46f2fbdc875dcd774e1525321752bcda3fa2'
+body_hash: 'sha256:0886ff5dd9349cb86b879f9f467855d11ad5ff306ec5799a1e5e7e508e43f60a'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -103,6 +103,18 @@ related:
 - `S06` `verify:` `vaultspec-core vault check --feature application-distribution (0 errors, 1 stale-index warning)` -> `pass`
 - `S06` `verify:` `git diff --check` -> `pass`
 - `S06` `by:` `Codex`
+- `S07` `M` `dev/packaging/native/identity.py`
+- `S07` `A` `dev/packaging/native/windows_msi_identity.py`
+- `S07` `A` `dev/packaging/tests/test_windows_msi_identity.py`
+- `S07` `M` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S07` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S07` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/tests/test_windows_msi_identity.py dev/packaging/tests/test_distribution_identity.py (31 passed)` -> `pass`
+- `S07` `verify:` `uv run --no-sync ruff check changed MSI identity modules and test` -> `pass`
+- `S07` `verify:` `uv run --no-sync ruff format --check changed MSI identity modules and test` -> `pass`
+- `S07` `verify:` `uv run --no-sync ty check changed MSI identity modules and test after correcting test scope annotation` -> `pass`
+- `S07` `verify:` `vaultspec-core vault check --feature application-distribution (0 errors, 1 stale-index warning)` -> `pass`
+- `S07` `verify:` `git diff --check on S07 paths` -> `pass`
+- `S07` `by:` `Codex`
 
 ## Notes
 

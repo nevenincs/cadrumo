@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:031c5292d5a673a0a581979b5abad97d3147c521d6ad90f7910b7c53a75bb8c1'
+body_hash: 'sha256:1ab81d443d3e22cea5cb8a4cd9d2d429022bc0e71ad0c5947f2a5ab4a658a713'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -13,7 +13,7 @@ related:
   - "[[2026-10-04-application-distribution-audit]]"
 ---
 
-# `application-distribution` adr: `Windows immutable version products and stable registration` | (**status:** `proposed`)
+# `application-distribution` adr: `Windows immutable version products and stable registration` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -31,7 +31,7 @@ Current source, the pinned CPack template, primary Windows Installer rules and h
 
 ## Constraints
 
-This proposal remains unaccepted. No dependent product-ownership or persisted installer protocol executes until the operator accepts this choice. Manager IPC, handoff, rollback, preferences and package removal retain their accepted owners and open Steps; passing this ADR or its local tests does not complete them.
+Authorized 2026-10-07: after reviewing the concrete Windows ownership proposal and specifying MSI delivery, the operator directed continued installer and upgrade implementation. This accepts the two native MSI roles, both scopes and the preservation/publication obligations in this record; format setup alone did not constitute that acceptance. Manager IPC, handoff, rollback, preferences and package removal retain their accepted owners and open Steps; passing this ADR or its local tests does not complete them.
 
 1. The verified package remains unchanged under the canonical prefix's versions/<major.minor.patch>. Manager and desktop images remain at each package root. Only the distribution owner adds version-independent prefix resources; no business data, credential or profile connection enters an MSI.
 2. Each release/scope/channel/target has a distinct immutable version product and unique path-derived component ownership. Its MSI owns only that version. Its normal install/upgrade never schedules removal or replacement of another version. Same-version different bytes are refused; repair uses the identified release inventory, not a replacement disguised as repair.
@@ -43,8 +43,6 @@ This proposal remains unaccepted. No dependent product-ownership or persisted in
 8. Installer maintenance does not use Restart Manager to close CADRUMO processes, force a reboot or signal a runtime. Package-owned removal excludes new version launches while proving that no process in any session uses it. If exclusion or liveness cannot be proved, retain the product and report deferred maintenance. This-user cleanup is requested through its native package manager; all-users cleanup requires the next elevated maintenance run. Runtime cutover and readiness rollback stay with the manager.
 9. Uninstall removes the scoped shared registrations and stable entry, then permits running managers to detect removal and drain gracefully. In-use version products remain for safe deferred native removal; user state is preserved. Directly deleting program directories is not a substitute for native package ownership.
 10. Signing, matching WiX tools/extensions, any applicable tool terms, real release-payload proof and disposable-host acceptance remain separate gates. An artifact with no such evidence is not manager-shippable.
-
-## Implementation
 
 ## Implementation
 
@@ -60,4 +58,4 @@ Separating immutable version ownership from shared registration lets Windows Ins
 
 ## Consequences
 
-The Windows installer becomes a composed delivery rather than one combined product. Disk use increases while anchor or in-use versions are retained. Transaction publication and safe maintenance require shared catalogue integration and new native acceptance evidence. The existing accepted ADRs need no wording change or supersession. Linux/RPM/DEB and macOS ownership remain separate format decisions and platform gates; this Windows proposal establishes none of their acceptance. Approval authorizes this ownership design, not public distribution, tool-term acceptance, deployment or profile migration.
+The Windows installer becomes a composed delivery rather than one combined product. Disk use increases while anchor or in-use versions are retained. Transaction publication and safe maintenance require shared catalogue integration and new native acceptance evidence. The existing accepted ADRs need no wording change or supersession. Linux/RPM/DEB and macOS ownership remain separate platform-specific ownership and acceptance gates; this Windows proposal establishes none of their acceptance. Approval authorizes this ownership design, not public distribution, tool-term acceptance, deployment or profile migration.

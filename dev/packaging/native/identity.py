@@ -43,6 +43,15 @@ class DistributionIdentity:
     manager_name: str
 
 
+def validate_native_version(version: str) -> None:
+    """Require the canonical release spelling and MSI's three numeric field limits."""
+    if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version):
+        raise ValueError("Native releases require a numeric major.minor.patch version; use the preview channel")
+    major, minor, patch = map(int, version.split("."))
+    if major > 255 or minor > 255 or patch > 65535:
+        raise ValueError("Version exceeds the MSI ProductVersion limits (255.255.65535)")
+
+
 def identity(target: str, channel: str = "stable", *, project_file: Path | None = None) -> DistributionIdentity:
     """Use a version-independent UUIDv5 family; never regenerate it randomly."""
     if channel not in {"stable", "preview"}:
@@ -52,11 +61,7 @@ def identity(target: str, channel: str = "stable", *, project_file: Path | None 
         raise ValueError(f"Unsupported distribution target: {target}")
     project = tomllib.loads((project_file or REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
     version = project["version"]
-    if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version):
-        raise ValueError("Native releases require a numeric major.minor.patch version; use the preview channel")
-    major, minor, patch = map(int, version.split("."))
-    if major > 255 or minor > 255 or patch > 65535:
-        raise ValueError("Version exceeds the MSI ProductVersion limits (255.255.65535)")
+    validate_native_version(version)
     suffix = "" if channel == "stable" else f".{channel}"
     app_id = PRODUCT_IDENTITY.application_id + suffix
     author = project["authors"][0]
