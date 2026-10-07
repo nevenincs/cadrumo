@@ -1523,25 +1523,28 @@ docs-synonyms-maintain OBSERVATIONS:
     uv run --no-sync python -m dev.docs.terminology.synonyms mine {{quote(OBSERVATIONS)}}
 
 # Build the user-scope documentation in one language (es/en/ca/hu) into that
-# language's own root. `--out-dir` is what puts a build in a per-language
-# subdirectory; `--language` alone only selects the catalogue, so without it the
-# localized pages render into the canonical English root itself, leaving no
-# language root at all and an English root full of translated pages.
-[doc('Build one localized documentation root into disposable local output; uploads nothing.')]
+# language's own root, with a Sphinx build of its own. This is the build the one
+# compile behind `docs-langs` is proven against, and a way to look at a single
+# language; it is not how the languages are produced. `--out-dir` is what puts a
+# build in a per-language subdirectory; `--language` alone only selects the
+# catalogue, so without it the localized pages render into the canonical English
+# root itself, leaving no language root at all and an English root full of
+# translated pages.
+[doc('Build one localized documentation root with its own Sphinx build into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-lang LANG:
     uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}} --out-dir "{{CADRUMO_DOCS_BUILD_ROOT}}/html/{{LANG}}"
 
-# Build the user-scope documentation for every translation language, each into
-# its own root beside the English one. These are plain local builds: for the
-# deploy-faithful multi-root artefact (strict, record-injected index, per-root
-# canonical URLs) use `docs-site-preview`.
-[doc('Build every localized documentation root into disposable local output; uploads nothing.')]
+# Write the user-scope documentation for every language, each into its own root
+# under the English one, from ONE compile: the pages are read once however many
+# languages there are, and each root is composed from the shared structure and
+# that language's text. This is a plain local build: for the deploy-faithful
+# multi-root artefact (strict, record-injected index, per-root canonical URLs)
+# use `docs-site-preview`.
+[doc('Write every localized documentation root from one compile into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-langs:
-    just docs-lang es
-    just docs-lang ca
-    just docs-lang hu
+    uv run --no-sync python -m dev.docs.compile_once --html-root "{{CADRUMO_DOCS_BUILD_ROOT}}/html" --build-root "{{CADRUMO_DOCS_BUILD_ROOT}}" --flavor web
 
 # Build every published site root exactly as a publish builds it and run every
 # pre-upload validation against the result. It belongs in this group and not in

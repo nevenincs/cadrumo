@@ -29,9 +29,10 @@ is refused with guidance (eviction applies only to the canonical port we own).
 The first serve performs an initial build so the review is never a stale
 snapshot; subsequent edits rebuild incrementally.
 
-After each English build, the regular docs build driver refreshes the translated
-sites under their language prefixes. These builds use private source copies so
-localized generated references cannot overwrite the watched English sources.
+After each English build, one compile of the documentation writes every
+translated site under its language prefix. It reads a private copy of the
+sources, so localized generated references cannot overwrite the watched English
+ones.
 The browser refresh waits for those roots, keeping the language dropdown usable.
 
 Every rebuild is a whole-site build, so the generated references (the CLI

@@ -53,7 +53,7 @@ def test_the_compile_command_names_the_desktop_flavor_and_both_roots(
 
     def record(root: Path, **settings: object) -> object:
         recorded.update(settings, html_root=root)
-        return SimpleNamespace(languages=_LANGUAGES, seconds=0.0, html_root=root)
+        return SimpleNamespace(languages=_LANGUAGES, roots=dict.fromkeys(_LANGUAGES, root), seconds=0.0, html_root=root)
 
     monkeypatch.setattr(compile_once, "compile_language_roots", record)
     assert compile_main(command[3:]) == 0

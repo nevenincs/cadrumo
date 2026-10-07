@@ -4,32 +4,26 @@ Each translated site root used to be one nitpicky build of its own, and this
 module kept the join between the module set and the language authority. The
 documentation is now compiled once for every language
 (``test_docs_build_localized_compile``), so what remains here is the pair of
-justfile recipes a contributor builds a localized root with, and the two
-failures they have already cost this project: a hand-listed language set that
-silently falls short of the catalogue set, and ``--language`` without a matching
-``--out-dir``, which renders the localized pages into the canonical English
-root.
+justfile recipes a contributor reaches the localized roots through: the one
+compile that writes them all, which must not turn back into a build per
+language, and the single-language build it is proven against, whose
+``--language`` without a matching ``--out-dir`` renders the localized pages into
+the canonical English root.
 """
 
 from __future__ import annotations
 
 import itertools
-import re
 
 import pytest
 
 from dev._paths import REPO_ROOT
-
-from ..i18n import TARGET_LANGUAGES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 #: The repository root, three levels up from ``dev/docs/tests``.
 _REPO_ROOT = REPO_ROOT
-
-#: One delegation from the aggregate to the canonical single-language recipe.
-_LOCALIZED_BUILD_LINE_RE = re.compile(r"^\s*just\s+docs-lang\s+(?P<language>[a-z-]+)\s*$", re.MULTILINE)
 
 
 def _justfile_recipe(name: str) -> str:
@@ -43,27 +37,25 @@ def _justfile_recipe(name: str) -> str:
     pytest.fail(f"the justfile declares no {name!r} recipe")
 
 
-def test_the_localized_build_recipe_covers_every_translation_target_in_its_own_root() -> None:
-    """``docs-langs`` builds exactly the translation set, each into its own site root.
+def test_the_localized_build_recipe_compiles_once_for_every_language() -> None:
+    """``docs-langs`` is one compile under the canonical HTML root, and names no language.
 
-    Two failures this pins, both of which have already cost this project real
-    time. A hand-listed language set silently falls short of the catalogue set
-    when a translation target is added, so a root nobody built looks merely
-    absent. And ``--language`` alone only selects the catalogue: without a
-    matching ``--out-dir`` the localized pages render into the canonical
-    English root, which produced a tree carrying no language root at all while
-    the recipe appeared to build three.
-
-    English is deliberately absent: it is the msgid source with no catalogue to
-    select, and the deploy's own command builder documents that passing the
-    flag for it would force the user scope and drop the API tree.
+    The recipe used to delegate to ``docs-lang`` once per translation target,
+    which was one Sphinx build per language and a hand-listed set that could
+    fall short of the catalogue set. One compile carries every language the site
+    publishes (``test_docs_build_localized_compile`` reads that set off its
+    output), so the recipe has nothing to list, and a line that names a language
+    here is the per-language build coming back.
     """
-    matched = list(_LOCALIZED_BUILD_LINE_RE.finditer(_justfile_recipe("docs-langs")))
+    lines = [line.strip() for line in _justfile_recipe("docs-langs").splitlines() if line.strip()]
 
-    assert [match["language"] for match in matched] == list(TARGET_LANGUAGES), (
-        "docs-langs does not build exactly the translation targets "
-        f"{TARGET_LANGUAGES}: it builds {[match['language'] for match in matched]}"
+    assert len(lines) == 1, f"docs-langs runs more than the one compile: {lines}"
+    assert "-m dev.docs.compile_once" in lines[0], f"docs-langs does not run the one compile: {lines[0]}"
+    assert '--html-root "{{CADRUMO_DOCS_BUILD_ROOT}}/html"' in lines[0], (
+        f"docs-langs writes the language roots somewhere other than under the canonical HTML root: {lines[0]}"
     )
+    assert "--language" not in lines[0], f"docs-langs builds a language on its own again: {lines[0]}"
+    assert "docs-lang " not in lines[0], f"docs-langs builds a language on its own again: {lines[0]}"
 
 
 def test_the_single_language_build_recipe_renders_into_that_language_root() -> None:

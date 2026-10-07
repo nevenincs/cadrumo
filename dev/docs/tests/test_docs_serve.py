@@ -53,7 +53,7 @@ from ..serve import (
     start_ipv6_relay,
     write_state,
 )
-from ..serve_languages import language_build_command
+from ..serve_languages import languages_compile_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -125,16 +125,23 @@ def test_serve_command_open_browser_flag_is_optional() -> None:
     assert "9001" in with_browser
 
 
-def test_live_preview_builds_dropdown_destinations() -> None:
-    """Every refresh builds translated roots at the paths advertised by the header."""
+def test_live_preview_writes_dropdown_destinations_from_one_compile() -> None:
+    """Every refresh writes the translated roots under the served root, and compiles once to do it.
+
+    The compile writes each language at ``<html root>/<language>``, which is
+    where the header's dropdown sends a reader. It names no language: a command
+    that did would be one build of one language again.
+    """
     command = serve_command(_REPO_ROOT, host="127.0.0.1", port=8788, open_browser=False)
     hook = command[command.index("--post-build") + 1]
     assert shlex.split(hook) == [sys.executable, "-m", "dev.docs.serve_languages"]
-    for language in TARGET_LANGUAGES:
-        build = language_build_command(language, docs_html_root(_REPO_ROOT))
-        assert build[build.index("--language") + 1] == language
-        assert Path(build[build.index("--out-dir") + 1]) == docs_html_root(_REPO_ROOT) / language
-        assert "--isolated-source" in build
+    build = languages_compile_command(docs_html_root(_REPO_ROOT), docs_build_root(_REPO_ROOT))
+    assert build[:3] == [sys.executable, "-m", "dev.docs.compile_once"]
+    assert Path(build[build.index("--html-root") + 1]) == docs_html_root(_REPO_ROOT)
+    assert Path(build[build.index("--build-root") + 1]) == docs_build_root(_REPO_ROOT)
+    assert build[build.index("--flavor") + 1] == "web"
+    assert tuple(build[build.index("--languages") + 1 :]) == TARGET_LANGUAGES
+    assert "--language" not in build
 
 
 # ── Binding defaults ──────────────────────────────────────────────────────────

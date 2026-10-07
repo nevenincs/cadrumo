@@ -452,8 +452,12 @@ def _compile_and_compose(
     strict: bool,
     check_sequences: bool | None,
     base_url: str | None,
+    only: Sequence[str] | None = None,
 ) -> CompileOnceResult:
     """Run the one compile, store what it wrote, and compose every language from the store.
+
+    *only* names the languages whose roots are written; the compile still
+    carries every language, because that is what it stores.
 
     Every directory written is cleared first. The compile's own doctree cache
     lives inside the compiled site, which Sphinx puts it in for a build given
@@ -463,7 +467,8 @@ def _compile_and_compose(
     this one's pages.
 
     Raises:
-        SystemExit: If the Sphinx build fails, or wrote no record of its marks.
+        SystemExit: If the Sphinx build fails, wrote no record of its marks, or
+            was asked for the root of a language it does not carry.
     """
     for directory in (compiled, stored):
         if directory.exists():
@@ -505,7 +510,7 @@ def _compile_and_compose(
     files.pop(SITEMAP_FILE, None)
     store_compiled_root(files, slots, stored, language_files=language_files)
     roots: dict[str, Path] = {}
-    for language in slots.languages:
+    for language in roots_to_write(slots.languages, only):
         roots[language] = roots_in / language
         if roots[language].exists():
             shutil.rmtree(roots[language])
@@ -520,6 +525,29 @@ def _compile_and_compose(
         marks=len(slots.values),
         seconds=seconds,
     )
+
+
+def roots_to_write(carried: Sequence[str], only: Sequence[str] | None) -> tuple[str, ...]:
+    """Return the languages whose roots a compile writes, in the order it carries them.
+
+    Args:
+        carried: The languages the compile carries.
+        only: The languages a caller asked for, or None for all of them.
+
+    Raises:
+        SystemExit: If *only* names a language the compile does not carry. Such
+            a language has no text to compose a root from, and writing the
+            others would leave a site missing a root its caller counts on.
+    """
+    if only is None:
+        return tuple(carried)
+    uncarried = sorted(set(only) - set(carried))
+    if uncarried:
+        raise SystemExit(
+            f"the compile carries {', '.join(carried)} and was asked for the root of {', '.join(uncarried)}; "
+            "a language the documentation is not translated into has no root to write"
+        )
+    return tuple(language for language in carried if language in only)
 
 
 def compile_once(
@@ -577,6 +605,7 @@ def compile_language_roots(
     check_sequences: bool = True,
     base_url: str | None = None,
     stored: Path | None = None,
+    languages: Sequence[str] | None = None,
 ) -> CompiledLanguageRoots:
     """Write every language's documentation root from ONE compile.
 
@@ -605,12 +634,19 @@ def compile_language_roots(
         stored: Where to keep the structure and each language's text, or None
             to keep it beneath *build_root*. A caller that stages or ships the
             stored form rather than the composed roots names it.
+        languages: The languages whose roots are written, or None for every
+            language the compile carries. A caller whose site already has a
+            root from another build -- the published site's English root, which
+            alone carries the API reference -- names the rest, so the compile
+            leaves that root alone. The compile reads and stores every language
+            either way.
 
     Returns:
         The roots written, and what the compile cost.
 
     Raises:
-        SystemExit: If the Sphinx build fails, or wrote no record of its marks.
+        SystemExit: If the Sphinx build fails, wrote no record of its marks, or
+            was asked for the root of a language it does not carry.
     """
     result = _compile_and_compose(
         build_root / "compiled",
@@ -622,6 +658,7 @@ def compile_language_roots(
         strict=strict,
         check_sequences=check_sequences,
         base_url=base_url,
+        only=languages,
     )
     # The compiled site is scaffolding here: it carries the marks, no reader is
     # served it, and what the roots were composed from is the stored form beside
@@ -736,6 +773,12 @@ def main(argv: list[str] | None = None) -> int:
         help="The address the site is served from, above the language directories.",
     )
     parser.add_argument(
+        "--languages",
+        nargs="+",
+        default=None,
+        help="Write only these languages' roots; --html-root only. Every language is written by default.",
+    )
+    parser.add_argument(
         "--oracle",
         type=Path,
         default=None,
@@ -766,10 +809,11 @@ def main(argv: list[str] | None = None) -> int:
             # does not overrule it.
             check_sequences=os.environ.get(SEQUENCE_CHECK_SKIP_ENV) != "1",
             base_url=arguments.base_url,
+            languages=arguments.languages,
         )
         print(
             f"One compile of {len(written.languages)} language(s) in {written.seconds:.0f} s: "
-            f"{', '.join(written.languages)} under {written.html_root}",
+            f"wrote {', '.join(written.roots)} under {written.html_root}",
             flush=True,
         )
         return 0

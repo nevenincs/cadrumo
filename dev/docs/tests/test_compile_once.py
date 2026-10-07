@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ..compile_once import IntendedDifference, _per_language_inventory, compare
+from ..compile_once import IntendedDifference, _per_language_inventory, compare, roots_to_write
 from ..compile_slots import Rendering, activate, deactivate
 from ..message_marks import FRAGMENT_PREFIX
 
@@ -214,3 +214,17 @@ def test_a_declared_difference_covers_the_page_and_the_bytes_it_names_and_no_oth
     )
     assert found.intended == {}
     assert found.differences == 3
+
+
+def test_only_the_named_roots_are_written_in_the_order_the_compile_carries_them() -> None:
+    """A caller that already has one root from another build names the rest."""
+    carried = ("es", "en", "ca", "hu")
+
+    assert roots_to_write(carried, None) == carried
+    assert roots_to_write(carried, ("hu", "es", "ca")) == ("es", "ca", "hu")
+
+
+def test_a_root_asked_for_in_a_language_the_compile_does_not_carry_is_refused() -> None:
+    """Writing the others would leave a site missing a root its caller counts on."""
+    with pytest.raises(SystemExit, match="asked for the root of fr"):
+        roots_to_write(("es", "en"), ("es", "fr"))
