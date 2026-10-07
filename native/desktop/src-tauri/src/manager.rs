@@ -6,7 +6,7 @@ use cadrumo_application::{
     component::Cancellation,
     diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
-    installation::DiscoveryContract,
+    installation::{DiscoveryContract, RegistrationHints},
     process::status::{ProcessPhase, ProcessRole},
 };
 use serde::{Deserialize, Serialize};
@@ -310,19 +310,24 @@ fn target(package_root: &Path, cancellation: &Cancellation) -> Result<PathBuf> {
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
             .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     #[cfg(windows)]
-    let registered = cadrumo_platform::installation::manager_entry_points(
+    let native = cadrumo_platform::installation::manager_entry_points(
         &contract.installation_identity.application_id,
     )
     .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
+    #[cfg(windows)]
+    let registered = RegistrationHints {
+        this_user: native.this_user.as_deref(),
+        all_users: native.all_users.as_deref(),
+    };
     #[cfg(not(windows))]
-    let registered = Vec::new();
+    let registered = RegistrationHints::default();
     target_from(package_root, &contract, &registered, cancellation)
 }
 
 fn target_from(
     package_root: &Path,
     contract: &DiscoveryContract,
-    registered: &[PathBuf],
+    registered: &RegistrationHints<'_>,
     cancellation: &Cancellation,
 ) -> Result<PathBuf> {
     let member = contract

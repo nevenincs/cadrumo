@@ -1,6 +1,6 @@
 //! Stable entry dispatch precedes the session lock and runtime ownership.
 use crate::supervision::environment::ManagedLocations;
-use cadrumo_application::installation::{DiscoveryContract, Selection};
+use cadrumo_application::installation::{DiscoveryContract, RegistrationHints, Selection};
 use std::{
     io,
     os::windows::process::CommandExt,
@@ -35,13 +35,20 @@ pub fn select(image: &Path) -> io::Result<Selection> {
     let registered = cadrumo_platform::installation::manager_entry_points(
         &contract.installation_identity.application_id,
     )?;
-    discover(&contract, image, &registered)
+    discover(
+        &contract,
+        image,
+        &RegistrationHints {
+            this_user: registered.this_user.as_deref(),
+            all_users: registered.all_users.as_deref(),
+        },
+    )
 }
 
 fn discover(
     contract: &DiscoveryContract,
     image: &Path,
-    registered: &[std::path::PathBuf],
+    registered: &RegistrationHints<'_>,
 ) -> io::Result<Selection> {
     #[cfg(test)]
     DISCOVERIES.with(|count| count.set(count.get() + 1));
@@ -197,7 +204,7 @@ mod tests {
         }
 
         fn admit(&self) -> io::Result<CurrentInstallation> {
-            let selected = discover(&self.contract, &self.manager, &[])?;
+            let selected = discover(&self.contract, &self.manager, &RegistrationHints::default())?;
             current_installation(&self.manager, &selected, self.locations())?
                 .ok_or_else(|| io::ErrorKind::InvalidData.into())
         }
@@ -275,7 +282,12 @@ mod tests {
     #[test]
     fn current_proof_requires_the_selected_image_and_matching_resolved_package() {
         let fixture = Fixture::new();
-        let selected = discover(&fixture.contract, &fixture.manager, &[]).unwrap();
+        let selected = discover(
+            &fixture.contract,
+            &fixture.manager,
+            &RegistrationHints::default(),
+        )
+        .unwrap();
         let other_image = fixture.root.join("other-manager.exe");
         fs::copy(&fixture.manager, &other_image).unwrap();
         assert!(

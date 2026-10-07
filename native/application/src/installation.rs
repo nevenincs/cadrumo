@@ -81,6 +81,13 @@ pub struct Selection {
     pub version: [u32; 3],
 }
 
+/// Scoped native registrations are hints, verified through the same package catalogue.
+#[derive(Default)]
+pub struct RegistrationHints<'a> {
+    pub this_user: Option<&'a Path>,
+    pub all_users: Option<&'a Path>,
+}
+
 /// Distribution identity permits only a canonical numeric release triple.
 pub fn version(value: &str) -> Result<[u32; 3], Error> {
     let parts: Vec<_> = value.split('.').collect();
@@ -136,8 +143,13 @@ impl DiscoveryContract {
     }
 
     /// Registered entry points are hints; every prefix, complete package and executable
-    /// is verified before it can be returned. The newest compatible complete version wins.
-    pub fn discover(&self, image: &Path, registered: &[PathBuf]) -> Result<Selection, Error> {
+    /// is verified before it can be returned. A complete this-user registration wins
+    /// before version comparison across the local and all-users fallback prefixes.
+    pub fn discover(
+        &self,
+        image: &Path,
+        registered: &RegistrationHints<'_>,
+    ) -> Result<Selection, Error> {
         self.discover_cancellable(image, registered, &Cancellation::default())
     }
 
@@ -145,39 +157,54 @@ impl DiscoveryContract {
     pub fn discover_cancellable(
         &self,
         image: &Path,
-        registered: &[PathBuf],
+        registered: &RegistrationHints<'_>,
         cancellation: &Cancellation,
     ) -> Result<Selection, Error> {
         cancellation.check()?;
         let member = self.manager_member()?;
-        let mut prefixes: Vec<PathBuf> = self.local_prefix(image).into_iter().collect();
-        for entry in registered {
+        let mut prefixes: Vec<(PathBuf, bool)> = self
+            .local_prefix(image)
+            .into_iter()
+            .map(|prefix| (prefix, false))
+            .collect();
+        for (hint, this_user) in [(registered.this_user, true), (registered.all_users, false)] {
             cancellation.check()?;
+            let Some(entry) = hint else { continue };
             if entry.file_name() == Some(Path::new(member.as_str()).as_os_str())
                 && let Some(prefix) = entry.parent()
-                && !prefixes.iter().any(|p| p == prefix)
             {
-                prefixes.push(prefix.to_path_buf());
+                if let Some((_, preferred)) = prefixes.iter_mut().find(|(p, _)| p == prefix) {
+                    *preferred |= this_user;
+                } else {
+                    prefixes.push((prefix.to_path_buf(), this_user));
+                }
             }
         }
+        let mut preferred: Option<Selection> = None;
         let mut newest: Option<Selection> = None;
-        for prefix in prefixes {
+        for (prefix, this_user) in prefixes {
             cancellation.check()?;
             let inspected = self.inspect_cancellable(&prefix, cancellation);
             cancellation.check()?;
             if matches!(inspected, Err(Error::Cancelled)) {
                 return Err(Error::Cancelled);
             }
-            if let Ok(candidate) = inspected
-                && newest
+            if let Ok(candidate) = inspected {
+                let winner = if this_user {
+                    &mut preferred
+                } else {
+                    &mut newest
+                };
+                if winner
                     .as_ref()
                     .is_none_or(|old| candidate.version > old.version)
-            {
-                newest = Some(candidate);
+                {
+                    *winner = Some(candidate);
+                }
             }
         }
         cancellation.check()?;
-        newest.ok_or_else(|| {
+        preferred.or(newest).ok_or_else(|| {
             Error::Incompatible("no complete compatible manager installation".into())
         })
     }

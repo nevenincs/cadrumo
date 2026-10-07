@@ -20,8 +20,15 @@ unsafe extern "system" {
     ) -> i32;
 }
 
-/// Registry values never authorize an image; consumers validate the shared catalogue.
-pub fn manager_entry_points(application_id: &str) -> io::Result<Vec<PathBuf>> {
+/// Native registry origin is retained; neither path authorizes an image.
+#[derive(Default)]
+pub struct ManagerEntryPoints {
+    pub this_user: Option<PathBuf>,
+    pub all_users: Option<PathBuf>,
+}
+
+/// Consumers validate the shared catalogue before selecting either scope.
+pub fn manager_entry_points(application_id: &str) -> io::Result<ManagerEntryPoints> {
     if application_id.is_empty()
         || !application_id
             .bytes()
@@ -37,9 +44,12 @@ pub fn manager_entry_points(application_id: &str) -> io::Result<Vec<PathBuf>> {
         .chain([0])
         .collect();
     let value: Vec<u16> = "EntryPoint".encode_utf16().chain([0]).collect();
-    let mut paths = Vec::new();
+    let mut paths = ManagerEntryPoints::default();
     // Win32 predefined HKEY values are sign-extended LONG_PTR constants, never closed.
-    for root in [0x8000_0001u32, 0x8000_0002u32] {
+    for (root, destination) in [
+        (0x8000_0001u32, &mut paths.this_user),
+        (0x8000_0002u32, &mut paths.all_users),
+    ] {
         let mut data = vec![0u16; 32768];
         let mut bytes = (data.len() * 2) as u32;
         // SAFETY: terminated input strings and bounded writable output remain alive;
@@ -88,7 +98,7 @@ pub fn manager_entry_points(application_id: &str) -> io::Result<Vec<PathBuf>> {
                 "entry point must be absolute",
             ));
         }
-        paths.push(path);
+        *destination = Some(path);
     }
     Ok(paths)
 }

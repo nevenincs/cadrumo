@@ -9,7 +9,12 @@ use std::{
 fn target(package_root: &Path) -> Result<PathBuf> {
     let contract: DiscoveryContract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
-    super::target_from(package_root, &contract, &[], &Cancellation::default())
+    super::target_from(
+        package_root,
+        &contract,
+        &RegistrationHints::default(),
+        &Cancellation::default(),
+    )
 }
 
 struct PackageFixture {
@@ -156,9 +161,14 @@ fn cancelled_verification_maps_to_session_unavailable_without_a_dispatch() {
     let cancellation = Cancellation::default();
     cancellation.cancel();
     assert_eq!(
-        super::target_from(&fixture.root, &contract, &[], &cancellation)
-            .unwrap_err()
-            .code,
+        super::target_from(
+            &fixture.root,
+            &contract,
+            &RegistrationHints::default(),
+            &cancellation
+        )
+        .unwrap_err()
+        .code,
         ErrorCode::SessionUnavailable
     );
     assert!(target(&fixture.root).is_ok());

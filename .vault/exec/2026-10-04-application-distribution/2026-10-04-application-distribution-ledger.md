@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ea6708e1be96f50ee3f202c1b3d70b119498d3c3216ca1825a7e51594e04543'
+body_hash: 'sha256:64a0a0eb34b1abce6d244c295cd33e7ec90bd06606c38771fd3255d9492fd37b'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -131,6 +131,23 @@ related:
 - `S08` `verify:` `uv run --no-sync ty check changed MSI Python modules and tests` -> `pass`
 - `S08` `verify:` `git diff --check scoped S08 files` -> `pass`
 - `S08` `by:` `Codex`
+- `S10` `M` `native/platform/src/installation.rs`
+- `S10` `M` `native/application/src/installation.rs`
+- `S10` `M` `native/application/tests/installation.rs`
+- `S10` `M` `native/manager/src/installation.rs`
+- `S10` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S10` `M` `native/desktop/src-tauri/src/manager/package_tests.rs`
+- `S10` `M` `native/CONTRACT.md`
+- `S10` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S10` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S10` `verify:` `ctest --test-dir build/windows-x64 -C Release -R '^(application[.]rust|manager[.]rust)$' --output-on-failure --parallel 1 (2 suites; 14 installation cases)` -> `pass`
+- `S10` `verify:` `CMake-generated Release environment and tauri.mjs test-unit manager:: (19 passed; real desktop host/path crates)` -> `pass`
+- `S10` `verify:` `pinned rustfmt --check --edition 2024 --config skip_children=true six changed Rust source and test files` -> `pass`
+- `S10` `verify:` `CMake-derived application and manager clippy --all-targets -- -D warnings with pinned Rust/Clippy 1.96 PATH and RUSTUP_TOOLCHAIN` -> `pass`
+- `S10` `verify:` `CMake-generated Release environment and tauri.mjs clippy-backend --all-targets -- -D warnings` -> `pass`
+- `S10` `verify:` `git diff --check scoped S10 files` -> `pass`
+- `S10` `by:` `Codex`
+- `S10` `verify:` `vaultspec-core check --feature application-distribution (zero errors; existing stale-index warning)` -> `pass`
 
 ## Notes
 
@@ -140,3 +157,4 @@ related:
 - `S04` S04 remains open: forty-eight passing fixture tests do not establish live MSI/release acceptance. S03 reopened for the high current-template Removing major-upgrade finding. Proposed two-product MSI ownership and transaction contract requires acceptance before dependent implementation. Requested a disposable interactive Windows runner; current host is Session 0, has no VM, Sandbox disabled, Docker linux. No real install/registry/login/reboot/logoff action.
 - `S06` S06 covers format setup only. No native installer creation/install or release lifecycle acceptance; S03/S04 remain open for ownership, manager integration and disposable native runner gates.
 - `S08` Source/database authoring only. Every product retains the literal-false installation gate; S09 native transaction/scope admission and safe maintenance remain unimplemented. No product installed or release upgrade acceptance claimed.
+- `S10` Initial ad-hoc Clippy picked ambient cargo-clippy 1.99 despite pinned RUSTC and failed E0514; pinned 1.96 extension rerun passed without cleaning shared build outputs. Native transaction/scope admission and disposable-host acceptance remain open in other Steps.

@@ -1282,9 +1282,13 @@ from `native/package-layout.json`: `versions/<major.minor.patch>/` contains the
 unchanged package, including its root-level manager and desktop images. The prefix
 contains a copy of the manager image as the stable entry and a closed
 `data/installation.json` marker (schema, application ID, channel, platform and ABI).
-The distribution writes `Software/<application-id>/EntryPoint` for its current
-machine-scope MSI registration. Discovery reads the 64-bit Windows registry view
+Windows installer entry hints use `Software/<application-id>/EntryPoint`.
+Discovery reads the 64-bit Windows registry view
 in both HKCU and HKLM; archives derive their prefix from this declared layout.
+The platform adapter retains the hive origin. The shared catalogue prefers a
+verified this-user installation even when an all-users installation has a newer
+version. An incomplete or incompatible user installation permits fallback. A
+local archive prefix gains no user-scope preference without a matching registration.
 
 `native/application` owns the shared read-only catalogue. It bounds the directory
 inventory, refuses redirected paths, checks identity, target and ABI, verifies the

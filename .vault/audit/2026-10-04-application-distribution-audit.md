@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5025d0c2ebdc4988979638bb9b69cf6e15f75aeb2cadca334d1b60a93bc3b3e'
+body_hash: 'sha256:352e3fcdcfa4b9638b0c68ebf413fbd43d0d6490f2661f435878bf818a5a9e42'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -80,6 +80,14 @@ S09 must implement and prove the accepted installer-owned transaction state, all
 ### windows-scope-selection | medium | Registry-origin information is lost before catalogue selection
 
 Current native/platform/src/installation.rs manager_entry_points reads HKCU and HKLM but returns an untyped Vec<PathBuf>. native/application/src/installation.rs discover_cancellable combines these hints with the local prefix and selects the globally highest valid version; HKCU-first iteration only resolves ties. Both manager and desktop consume that route. Thus a newer machine installation can win despite a valid this-user installation if conflicting scopes coexist. This contradicts the accepted fallback in the Windows ownership decision, without showing that conflicting native products have been installed. Record the correction in S09's scoped admission/catalogue integration: preserve native registration scope as typed hints and test older-user/newer-machine selection plus invalid-user fallback. Generic local/archive prefix precedence must not be inferred from hive order.
+
+### windows-scope-selection-correction | low | Verified this-user scope now precedes newer machine installations
+
+2026-10-07 S10 integrated review against 8e5859949d and its owned working-tree successor. The earlier medium windows-scope-selection finding is corrected through the native registry adapter, shared catalogue, stable manager and desktop together. ManagerEntryPoints preserves HKCU/HKLM origin as named owned paths; RegistrationHints carries named borrowed paths into the application owner, without adding a platform dependency or granting registry values image authority. Local-prefix deduplication retains this-user origin when it matches a native hint. Candidate inspection still proves marker identity, channel, ABI, native image and complete package hashes; scope preference is applied only after inspection succeeds. The newest verified candidate in the preferred scope wins. Invalid or incomplete user packages permit local/all-users fallback. Local/archive candidates keep their existing version ordering and gain no user preference from position. Cancellation stays fatal through both candidate and prefix fallback. Manager dispatch/admission and desktop reply/error consumers remain unchanged.
+
+Fresh verification: ctest --test-dir build/windows-x64 -C Release -R '^(application\\.rust|manager\\.rust)$' --output-on-failure --parallel 1 passed both suites in 134.09 seconds. The fourteen installation cases include older-user/newer-machine precedence from both stable/versioned images, corrupt-user fallback, unregistered archive ordering, wrong entry-name refusal and existing cancellation/integrity boundaries. Evidence: build/windows-x64/verification/manager-discovery-native-tests.log. The CMake-generated Release desktop command's existing backend-only action, tauri.mjs test-unit manager::, compiled the real host and copied path crates and passed nineteen selected manager/logging cases (191 unrelated tests filtered), including package admission, relocation, cancellation, close, helper containment and reply/error attribution; no frontend or live package acceptance is implied. Evidence: build/windows-x64/desktop/test-results/manager-discovery-unit.log. All six touched Rust source/test files pass pinned rustfmt --check --edition 2024 --config skip_children=true. CMake-derived application/manager clippy --all-targets -- -D warnings and the existing desktop clippy-backend action pass with pinned Rust/Clippy 1.96.0; evidence: build/windows-x64/verification/manager-discovery-clippy.log and build/windows-x64/desktop/test-results/manager-discovery-clippy.log. The initial ad-hoc native Clippy command discovered ambient cargo-clippy 1.99 despite RUSTC being pinned, producing E0514; correcting its toolchain PATH/RUSTUP_TOOLCHAIN resolved that invocation failure without cleaning shared outputs or changing source/lint policy. Scoped git diff --check passes.
+
+S10 source/consumer verdict: PASS, with no new high or critical finding. This is read-only selection over isolated real file/binary fixtures and current source, not proof that native conflicting products coexist or that all-account installer admission is implemented. The preceding native-maintenance finding, false MSI install condition, open S09/S03/S04 and missing disposable native release acceptance remain unchanged.
 
 ## Recommendations
 

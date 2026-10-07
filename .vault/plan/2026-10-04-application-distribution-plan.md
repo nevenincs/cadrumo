@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:eb5affd751314aed85b03e8ea735f90ba75bee0403473f985233b9b78b87b81e'
+body_hash: 'sha256:50739a7156ef00bad6790af2ae700dc605ec1fb8d2cf9608bda5394175313898'
 ---
 
 # Application distribution
@@ -30,6 +30,8 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 
 2026-10-07 S07/S08 checkpoint: role/scope/release ownership identities and all four verified-stage WiX source definitions are implemented. The canonical CMake graph exposes msi-author and its cleanup; both the build target and direct CPack route refuse the unsafe combined manager MSI. The source definitions deliberately retain a literal-false install condition until S09 implements native transaction publication, scope admission, same-version byte checks, anchor retention and startup/removal exclusion. WiX 5.0.2 compiled and decompiled all four roles/scopes for desktop and runtime-only synthetic payloads, with warnings treated as errors; this establishes source/database authoring, not live release acceptance. S08 can close on that scoped evidence. S09 and the cross-plan manager lifecycle dependencies remain open implementation work. Its scope work must carry typed user/machine registration origin through the shared catalogue so the accepted this-user fallback is enforceable; the present untyped prefix list selects the globally newest valid version. No native product was installed.
 
+2026-10-07 S10 correction: the Windows registry adapter now returns named this-user and all-users origins, and manager/desktop convert them to the shared catalogue's borrowed RegistrationHints. A verified this-user prefix outranks newer machine/local fallback prefixes. Invalid user candidates permit fallback; a local archive receives no user-scope preference without matching native registration. Native application/manager CTests, all nineteen selected desktop manager backend tests and pinned Rust 1.96 Clippy for all three consumers pass. This corrects the audit's scope-selection finding without implementing S09's all-account MSI admission or publication/removal exclusion. S09 is the next source implementation Step; S03/S04 and manager lifecycle dependencies remain open.
+
 ## Steps
 
 - [x] `S01` - Generate canonical product publisher channel and platform identities for all supported targets; `src/cadrumo/core/product_identity.py and dev/packaging/native/identity.py`.
@@ -37,7 +39,7 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [x] `S06` - Expose native MSI, DMG and DEB/RPM delivery targets and presets with archives as explicit auxiliary outputs; `native/cmake/distribution, dev/packaging/native/tests/test_distribution_prepare.py and native/CONTRACT.md`.
 - [x] `S07` - Separate Windows MSI product and component identities by ownership role, installation scope and release without changing legacy identities; `dev/packaging/native/identity.py, dev/packaging/native/windows_msi_identity.py and dev/packaging/tests/test_windows_msi_identity.py`.
 - [x] `S08` - Author separate immutable version and shared registration WiX products for both scopes, with combined manager MSI refused until native maintenance is integrated; `dev/packaging/native/windows_msi.py, dev/packaging/native/windows_msi_identity.py, native/cmake/distribution, dev/packaging/tests/test_windows_msi.py, dev/packaging/native/tests/test_distribution_prepare.py and native/CONTRACT.md`.
-- [ ] `S10` - Preserve native registry scope in discovery and enforce verified this-user fallback before newer machine installations; `native/platform/src/installation.rs, native/application installation catalogue and tests, native/manager/src/installation.rs, native/desktop/src-tauri manager consumers and tests, and native/CONTRACT.md`.
+- [x] `S10` - Preserve native registry scope in discovery and enforce verified this-user fallback before newer machine installations; `native/platform/src/installation.rs, native/application installation catalogue and tests, native/manager/src/installation.rs, native/desktop/src-tauri manager consumers and tests, and native/CONTRACT.md`.
 - [ ] `S09` - Integrate native MSI transaction publication and scope admission with catalogue startup and removal exclusion; `native/application installation catalogue, native installer maintenance adapter and native/cmake/distribution`.
 - [ ] `S03` - Implement native installation registration and ownership-aware uninstall; `native/cmake, native/desktop build identity, and dev/packaging/native installation helpers`.
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.

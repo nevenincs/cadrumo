@@ -1,5 +1,9 @@
 //! Real filesystem/package/binary discovery fixtures; no installation or registry writes.
-use cadrumo_application::{component::Cancellation, error::Error, installation::DiscoveryContract};
+use cadrumo_application::{
+    component::Cancellation,
+    error::Error,
+    installation::{DiscoveryContract, RegistrationHints},
+};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::{
@@ -104,7 +108,10 @@ fn old_image_and_old_stable_entry_select_newest_complete_numeric_version() {
     fs::remove_file(incomplete.join("python.zip")).unwrap();
     let member = fixture.contract.manager_member().unwrap();
     for image in [member.under(&old), member.under(&prefix)] {
-        let result = fixture.contract.discover(&image, &[]).unwrap();
+        let result = fixture
+            .contract
+            .discover(&image, &RegistrationHints::default())
+            .unwrap();
         assert_eq!(result.package, newest);
         assert_eq!(result.manager, member.under(&newest));
         assert_eq!(result.entrypoint, member.under(&prefix));
@@ -127,7 +134,10 @@ fn pre_cancelled_discovery_and_prefix_inspection_never_fall_back() {
     assert!(matches!(
         fixture.contract.discover_cancellable(
             &member.under(&package),
-            &[member.under(&prefix)],
+            &RegistrationHints {
+                this_user: Some(&member.under(&prefix)),
+                ..Default::default()
+            },
             &cancellation
         ),
         Err(Error::Cancelled)
@@ -135,7 +145,7 @@ fn pre_cancelled_discovery_and_prefix_inspection_never_fall_back() {
     assert_eq!(
         fixture
             .contract
-            .discover(&member.under(&package), &[])
+            .discover(&member.under(&package), &RegistrationHints::default())
             .unwrap()
             .package,
         package
@@ -164,7 +174,11 @@ fn cancellation_during_candidate_verification_propagates_through_both_fallbacks(
     let worker_token = cancellation.clone();
     let member = fixture.contract.manager_member().unwrap();
     let image = member.under(&older);
-    let registered = [member.under(&fallback)];
+    let fallback_entry = member.under(&fallback);
+    let registered = RegistrationHints {
+        all_users: Some(&fallback_entry),
+        ..Default::default()
+    };
     let (entered, ready) = mpsc::channel();
     let result = thread::scope(|scope| {
         let contract = &fixture.contract;
@@ -257,7 +271,10 @@ fn moving_the_complete_prefix_keeps_versioned_and_stable_discovery_coherent() {
     let member = fixture.contract.manager_member().unwrap();
     let package = relocated.join("versions/1.0.0");
     for image in [member.under(&relocated), member.under(&package)] {
-        let selected = fixture.contract.discover(&image, &[]).unwrap();
+        let selected = fixture
+            .contract
+            .discover(&image, &RegistrationHints::default())
+            .unwrap();
         assert_eq!(selected.package, package);
         assert_eq!(selected.entrypoint, member.under(&relocated));
         assert_eq!(selected.version, [1, 0, 0]);
@@ -282,14 +299,98 @@ fn registry_hints_select_across_scopes_but_never_authorize_foreign_or_incomplete
     let member = fixture.contract.manager_member().unwrap();
     let result = fixture
         .contract
-        .discover(&member.under(&old), &[member.under(&user)])
+        .discover(
+            &member.under(&old),
+            &RegistrationHints {
+                this_user: Some(&member.under(&user)),
+                ..Default::default()
+            },
+        )
         .unwrap();
     assert_eq!(result.package, newest);
     fs::write(member.under(&user), b"damaged stable entry").unwrap();
     assert_eq!(
         fixture
             .contract
-            .discover(&member.under(&old), &[member.under(&user)])
+            .discover(
+                &member.under(&old),
+                &RegistrationHints {
+                    this_user: Some(&member.under(&user)),
+                    ..Default::default()
+                }
+            )
+            .unwrap()
+            .package,
+        old
+    );
+}
+
+#[test]
+fn verified_this_user_registration_precedes_newer_machine_and_local_versions() {
+    let fixture = Fixture::new();
+    let machine = fixture.prefix("machine ü prefix");
+    let newer_machine = fixture.version(&machine, "3.0.0");
+    let user = fixture.prefix("user ü prefix");
+    let older_user = fixture.version(&user, "1.0.0");
+    let member = fixture.contract.manager_member().unwrap();
+    let user_entry = member.under(&user);
+    let machine_entry = member.under(&machine);
+    let hints = RegistrationHints {
+        this_user: Some(&user_entry),
+        all_users: Some(&machine_entry),
+    };
+    for image in [
+        &machine_entry,
+        &member.under(&newer_machine),
+        &user_entry,
+        &member.under(&older_user),
+    ] {
+        assert_eq!(
+            fixture.contract.discover(image, &hints).unwrap().package,
+            older_user
+        );
+    }
+    fs::write(older_user.join("python.zip"), b"corrupted user package").unwrap();
+    assert_eq!(
+        fixture
+            .contract
+            .discover(&machine_entry, &hints)
+            .unwrap()
+            .package,
+        newer_machine
+    );
+}
+
+#[test]
+fn a_local_prefix_does_not_become_user_scope_without_a_matching_registration() {
+    let fixture = Fixture::new();
+    let local = fixture.prefix("unregistered archive");
+    let old = fixture.version(&local, "1.0.0");
+    let machine = fixture.prefix("registered machine");
+    let newest = fixture.version(&machine, "2.0.0");
+    let member = fixture.contract.manager_member().unwrap();
+    let machine_entry = member.under(&machine);
+    let hints = RegistrationHints {
+        all_users: Some(&machine_entry),
+        ..Default::default()
+    };
+    assert_eq!(
+        fixture
+            .contract
+            .discover(&member.under(&old), &hints)
+            .unwrap()
+            .package,
+        newest
+    );
+    let unrelated_entry = machine.join("other.exe");
+    let unrelated = RegistrationHints {
+        this_user: Some(&unrelated_entry),
+        ..Default::default()
+    };
+    assert_eq!(
+        fixture
+            .contract
+            .discover(&member.under(&old), &unrelated)
             .unwrap()
             .package,
         old
