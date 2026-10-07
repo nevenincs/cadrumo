@@ -21,8 +21,9 @@ use cadrumo_manager::supervision::launch::LaunchTarget;
 use cadrumo_manager::supervision::restart::{RestartClass, RestartPolicy};
 use cadrumo_manager::supervision::stop::PlatformStopSignal;
 use cadrumo_manager::supervision::supervisor::{
-    Collaborators, Effects, Event, Outcome, Request, SessionActivity, StandDownReason, StopCause,
-    StopPath, Supervisor, SupervisorConfig, SupervisorHandle, VersionProbe,
+    Collaborators, EVENT_QUEUE, Effects, Event, INPUT_QUEUE, Outcome, Request, SessionActivity,
+    StandDownReason, StopCause, StopPath, Supervisor, SupervisorConfig, SupervisorHandle,
+    VersionProbe,
 };
 use serde_json::Value;
 use std::io::{BufRead, BufReader, Write};
@@ -183,8 +184,8 @@ impl Case {
             versions: Box::new(Catalogue(self.installed)),
             stop_signal: Box::new(PlatformStopSignal::default()),
         };
-        let (events, observed) = mpsc::channel();
-        let mut supervisor = Supervisor::new(self.config, target, collaborators, events);
+        let (events, observed) = mpsc::sync_channel(EVENT_QUEUE);
+        let supervisor = Supervisor::new(self.config, target, collaborators, events);
         let handle = supervisor.handle();
         if self.end_before_start {
             assert!(handle.request(Request::SessionEnd));

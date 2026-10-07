@@ -24,10 +24,24 @@ impl LogPaths {
             lock: directory.join("cadrumo-native.lock"),
         })
     }
-    fn backup(&self, index: u32) -> PathBuf {
-        self.current
-            .with_file_name(format!("cadrumo-native.jsonl.{index}"))
+    pub fn for_file(current: &Path) -> Result<Self> {
+        filesystem::absolute_root(current).map_err(|e| failure().caused_by(e))?;
+        if current.file_name().is_none() {
+            return Err(failure());
+        }
+        Ok(Self {
+            current: current.to_owned(),
+            lock: suffixed(current, ".lock"),
+        })
     }
+    fn backup(&self, index: u32) -> PathBuf {
+        suffixed(&self.current, &format!(".{index}"))
+    }
+}
+fn suffixed(path: &Path, suffix: &str) -> PathBuf {
+    let mut name = path.as_os_str().to_owned();
+    name.push(suffix);
+    name.into()
 }
 fn failure() -> ApplicationError {
     ApplicationError::new(ErrorCode::LogUnavailable, Operation::Logging)
@@ -40,11 +54,17 @@ pub struct LogFile {
 }
 impl LogFile {
     pub fn new(directory: &Path, max_bytes: u64, backups: u32) -> Result<Self> {
+        Self::with_paths(LogPaths::new(directory)?, max_bytes, backups)
+    }
+    pub fn for_file(current: &Path, max_bytes: u64, backups: u32) -> Result<Self> {
+        Self::with_paths(LogPaths::for_file(current)?, max_bytes, backups)
+    }
+    fn with_paths(paths: LogPaths, max_bytes: u64, backups: u32) -> Result<Self> {
         if max_bytes == 0 {
             return Err(failure());
         }
         Ok(Self {
-            paths: LogPaths::new(directory)?,
+            paths,
             max_bytes,
             backups,
         })

@@ -11,8 +11,10 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:4a6070ceff04f73ffa86bb32cb17f9d97aa89adb3476c2d4bed621f391441573'
+body_hash: 'sha256:4352b22036b066f6e603562ac34c8b89f341b3cb69b88f4d812b4b6a9560ebfd'
 ---
+
+<!-- RETIRED: S08 -->
 
 # `runtime-lifecycle-diagnostics` plan
 
@@ -33,8 +35,14 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S03` - Parse and display diagnostic context and consistent timestamps across backend log sources; `native/desktop/src-tauri/src/logs/, frontend log contract/components/filtering/tests`.
 - [ ] `S04` - Wire desktop-owned manager discovery and shell dispatch with truthful startup and retry outcomes while preserving independent runtime ownership; `native/desktop/src-tauri manager integration, host startup, shell sign-in, frontend manager remedy, platform helpers and owning tests`.
 - [x] `S05` - Harden and measure concurrent startup, helper shutdown, package and environment refusal, relocation and diagnostic resource bounds with root-owned architectural review; `native/desktop/src-tauri/src/manager.rs and owning tests, native/application binary admission and diagnostics with owning tests, Python diagnostic concurrency tests, frontend manager scenarios, scoped measurement artifacts`.
+- [x] `S06` - Persist safe manager lifecycle diagnostics and bound supervisor queues without delaying shutdown; `native/manager startup/background/supervision/diagnostics and owning tests, native/application diagnostics sink and closed schema, canonical contract projection`.
+- [ ] `S07` - Expose manager records in the desktop log viewer and repair empty-root packaged profile acceptance ordering; `native/desktop environment and log consumer, owning frontend and backend tests, packaged sign-in/runtime fixtures, rebuilt package verification evidence`.
 
 ## Parallelization
+
+The queue hardening initially tracked as S08 is consolidated into S06: the bounded event channel, loss counter, persisted diagnostic schema and shutdown drain form one buildable producer change. S08 is retired without execution rows.
+
+For S06-S07 the operator handed remaining work to this session ("it is all yours!"). The previous implementation and manager startup are now committed and the shared index lock has cleared. Root retains architectural review and package validation; Sol 6.1 workers implement manager diagnostic production, desktop consumption, and isolated acceptance fixture ordering with disjoint write ownership. Generator changes belong to the diagnostic producer and are coordinated with the consumer. The existing distribution-owned versioned-install prerequisite remains unresolved; this work does not invent a registry or installer discovery contract. The current host is Session 0, so actual signed-in desktop acceptance requires an external interactive disposable host; package build and fixture validation proceed here.
 
 For S05 the user clarified that GPT-6.1 Sol agents may implement logging and coding work, while genuine architectural review belongs to root. Root owns lifecycle concurrency, cancellation, package admission, shutdown fixes, test strategy and integrated review. Narrow worker assignments cover Python formatter bounds and correlation, native diagnostic sink recovery, and browser lifecycle regression tests. The manager implementation remains owned by the separate session; root tests its existing fixture contract without editing its source.
 

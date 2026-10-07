@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:6278be7e47e6d3d364d2ff324f5eabc8831eddfe00b5d4b59c8126c624d9b8f8'
+body_hash: 'sha256:dffe36af960847e306c2a891d7421f6052aa578a4aa96f420a91b55b03cc0128'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -128,6 +128,31 @@ related:
 - `S05` `verify:` `root rustfmt and scoped diff check` -> `pass`
 - `S05` `verify:` `helper churn psutil no surviving child processes` -> `pass`
 - `S05` `by:` `root`
+- `S06` `M` `dev/packaging/native/generate.py`
+- `S06` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S06` `M` `native/application/src/diagnostics/logging.rs`
+- `S06` `M` `native/application/src/diagnostics/mod.rs`
+- `S06` `M` `native/application/src/error/application.rs`
+- `S06` `M` `native/application/src/process/status.rs`
+- `S06` `M` `native/application/tests/diagnostics.rs`
+- `S06` `M` `native/manager/src/background.rs`
+- `S06` `M` `native/manager/src/installed.rs`
+- `S06` `M` `native/manager/src/lib.rs`
+- `S06` `M` `native/manager/src/main.rs`
+- `S06` `M` `native/manager/src/startup.rs`
+- `S06` `M` `native/manager/src/supervision/supervisor.rs`
+- `S06` `M` `native/manager/tests/fixture/runtime.rs`
+- `S06` `M` `native/manager/tests/startup_cases/mod.rs`
+- `S06` `M` `native/manager/tests/supervision.rs`
+- `S06` `A` `native/application/src/diagnostics/lifecycle.rs`
+- `S06` `A` `native/manager/src/diagnostics.rs`
+- `S06` `A` `native/manager/tests/diagnostics.rs`
+- `S06` `verify:` `manager65lib3diagnostics37supervision` -> `pass`
+- `S06` `verify:` `manager all-target Clippy and fmt` -> `pass`
+- `S06` `verify:` `application11lib17diagnostics and Clippy` -> `pass`
+- `S06` `verify:` `canonical projection6tests Ruff ty` -> `pass`
+- `S06` `verify:` `root integrated architectural review` -> `pass`
+- `S06` `by:` `root`
 
 ## Notes
 

@@ -21,14 +21,18 @@ use crate::session::ownership::{
 };
 use std::io::{ErrorKind, Read, Write};
 use std::process::{ChildStdin, ChildStdout};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender, SyncSender, TrySendError};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, SyncSender, TrySendError};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
 const COMMAND_QUEUE: usize = 16;
 const READ_CHUNK_BYTES: usize = 4096;
+/// Bound decoded announcements and surface controls; reader threads supply backpressure.
+pub const INPUT_QUEUE: usize = 256;
+/// Bound pending observations; a slow or absent observer never blocks supervision.
+pub const EVENT_QUEUE: usize = 512;
 
 /// Timing bounds of the supervision core.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -249,10 +253,16 @@ enum Input {
 
 /// Sends requests to a running supervisor from another thread.
 #[derive(Clone)]
-pub struct SupervisorHandle(Sender<Input>, Arc<AtomicBool>, Arc<Mutex<()>>);
+pub struct SupervisorHandle(
+    SyncSender<Input>,
+    Arc<AtomicBool>,
+    Arc<Mutex<()>>,
+    Arc<AtomicU64>,
+);
 
 impl SupervisorHandle {
-    /// Queue `request`; false once the supervisor is gone.
+    /// Queue an ordinary request without waiting; false when full or disconnected.
+    /// SessionEnd remains accepted through its atomic fence even when the queue is full.
     pub fn request(&self, request: Request) -> bool {
         if request == Request::SessionEnd {
             let _launch = self.2.lock().unwrap_or_else(|error| error.into_inner());
@@ -260,7 +270,16 @@ impl SupervisorHandle {
             // while the control message is behind old channel announcements.
             self.1.store(true, Ordering::SeqCst);
         }
-        self.0.send(Input::Control(request)).is_ok()
+        match self.0.try_send(Input::Control(request)) {
+            Ok(()) => true,
+            Err(TrySendError::Full(_)) => request == Request::SessionEnd,
+            Err(TrySendError::Disconnected(_)) => false,
+        }
+    }
+
+    /// Take and reset the saturating count of observations the receiver did not accept.
+    pub fn take_dropped_events(&self) -> u64 {
+        self.3.swap(0, Ordering::Relaxed)
     }
 }
 
@@ -374,7 +393,11 @@ impl CommandWriter {
     }
 }
 
-fn spawn_reader(mut stdout: ChildStdout, generation: u64, inputs: Sender<Input>) {
+fn spawn_reader(
+    mut stdout: ChildStdout,
+    generation: u64,
+    inputs: SyncSender<Input>,
+) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let mut framing = LineFraming::default();
         let mut chunk = [0_u8; READ_CHUNK_BYTES];
@@ -393,7 +416,7 @@ fn spawn_reader(mut stdout: ChildStdout, generation: u64, inputs: Sender<Input>)
             }
         }
         let _ = inputs.send(Input::Closed { generation });
-    });
+    })
 }
 
 enum Phase {
@@ -447,15 +470,16 @@ pub struct Supervisor {
     config: SupervisorConfig,
     target: LaunchTarget,
     collaborators: Collaborators,
-    events: Sender<Event>,
+    events: SyncSender<Event>,
     inputs: Receiver<Input>,
-    sender: Sender<Input>,
+    sender: SyncSender<Input>,
     history: RestartHistory,
     generation: u64,
     reprobed: bool,
     restart_permit: Option<StartPermit>,
     session_ending: Arc<AtomicBool>,
     launch_gate: Arc<Mutex<()>>,
+    dropped_events: Arc<AtomicU64>,
 }
 
 impl Supervisor {
@@ -463,9 +487,9 @@ impl Supervisor {
         config: SupervisorConfig,
         target: LaunchTarget,
         collaborators: Collaborators,
-        events: Sender<Event>,
+        events: SyncSender<Event>,
     ) -> Self {
-        let (sender, inputs) = mpsc::channel();
+        let (sender, inputs) = mpsc::sync_channel(INPUT_QUEUE);
         Self {
             config,
             target,
@@ -479,6 +503,7 @@ impl Supervisor {
             restart_permit: None,
             session_ending: Arc::new(AtomicBool::new(false)),
             launch_gate: Arc::new(Mutex::new(())),
+            dropped_events: Arc::new(AtomicU64::new(0)),
         }
     }
 
@@ -488,15 +513,23 @@ impl Supervisor {
             self.sender.clone(),
             Arc::clone(&self.session_ending),
             Arc::clone(&self.launch_gate),
+            Arc::clone(&self.dropped_events),
         )
     }
 
     fn emit(&self, event: Event) {
-        let _ = self.events.send(event);
+        if self.events.try_send(event).is_err() {
+            let _ =
+                self.dropped_events
+                    .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |count| {
+                        Some(count.saturating_add(1))
+                    });
+        }
     }
 
     /// Supervise until a requested stop, a stand-down, a foreign owner or the ceiling.
-    pub fn run(&mut self) -> Outcome {
+    /// Consumption disconnects the input queue at return, releasing blocked readers.
+    pub fn run(mut self) -> Outcome {
         let outcome = self.run_owned(false);
         self.restart_permit = None;
         outcome
@@ -504,7 +537,7 @@ impl Supervisor {
 
     /// Inspect and adopt an existing same-session owner without first launching
     /// a competing process. Identity checks remain the adoption owner's.
-    pub fn run_adopting(&mut self) -> Outcome {
+    pub fn run_adopting(mut self) -> Outcome {
         let outcome = self.run_owned(true);
         self.restart_permit = None;
         outcome
@@ -514,7 +547,7 @@ impl Supervisor {
     /// failures and retries under the same claim, without a caller holding a competing
     /// guard while this blocking method runs. The root must be the exact pinned root
     /// for which ownership granted the permit.
-    pub fn run_with_permit(&mut self, permit: StartPermit) -> std::io::Result<Outcome> {
+    pub fn run_with_permit(mut self, permit: StartPermit) -> std::io::Result<Outcome> {
         if permit.storage_root() != self.target.storage_root() {
             return Err(std::io::Error::new(
                 ErrorKind::InvalidInput,
@@ -671,11 +704,22 @@ impl Supervisor {
         self.emit(Event::RestartScheduled { class, delay });
         let deadline = Instant::now() + delay;
         loop {
+            if self.session_ending.load(Ordering::SeqCst) {
+                return Some(Outcome::Stopped {
+                    effects: Effects::Unknown,
+                });
+            }
             let remaining = deadline.saturating_duration_since(Instant::now());
             if remaining.is_zero() {
                 return None;
             }
-            match self.inputs.recv_timeout(remaining) {
+            let input = self.inputs.recv_timeout(remaining);
+            if self.session_ending.load(Ordering::SeqCst) {
+                return Some(Outcome::Stopped {
+                    effects: Effects::Unknown,
+                });
+            }
+            match input {
                 // A session-end request must not erase the failed process's
                 // unresolved effects merely because no process is running now.
                 Ok(Input::Control(Request::SessionEnd)) => {
@@ -725,7 +769,7 @@ impl Supervisor {
         let commands = child.stdin.take().map(CommandWriter::spawn);
         let announcements_open = match child.stdout.take() {
             Some(stdout) => {
-                spawn_reader(stdout, self.generation, self.sender.clone());
+                let _reader = spawn_reader(stdout, self.generation, self.sender.clone());
                 true
             }
             None => false,
@@ -1051,6 +1095,143 @@ mod tests {
 
     fn code(code: u32) -> RuntimeExit {
         RuntimeExit::from_code(code)
+    }
+
+    struct Unused;
+
+    impl SessionActivity for Unused {
+        fn is_active(&self) -> bool {
+            true
+        }
+    }
+
+    impl VersionProbe for Unused {
+        fn reprobe(&mut self) -> Option<String> {
+            None
+        }
+    }
+
+    impl InstalledVersions for Unused {
+        fn containing(
+            &self,
+            _: &std::path::Path,
+        ) -> Option<super::super::adoption::InstalledVersion> {
+            None
+        }
+
+        fn failed(&self, _: &str) -> bool {
+            false
+        }
+    }
+
+    fn observation_supervisor() -> (Supervisor, Receiver<Event>) {
+        let (events, observed) = mpsc::sync_channel(EVENT_QUEUE);
+        let target = LaunchTarget::fixture(
+            std::env::current_exe().unwrap(),
+            std::env::temp_dir(),
+            "ab".repeat(32),
+            "synthetic-version".into(),
+        )
+        .unwrap();
+        let collaborators = Collaborators {
+            session: Box::new(Unused),
+            probe: Box::new(Unused),
+            versions: Box::new(Unused),
+            stop_signal: Box::new(super::super::stop::PlatformStopSignal::default()),
+        };
+        (
+            Supervisor::new(SupervisorConfig::default(), target, collaborators, events),
+            observed,
+        )
+    }
+
+    #[test]
+    fn event_observation_is_bounded_and_drop_count_resets_and_saturates() {
+        let (supervisor, observed) = observation_supervisor();
+        let handle = supervisor.handle();
+        for _ in 0..EVENT_QUEUE + 7 {
+            supervisor.emit(Event::AwaitingActiveSession);
+        }
+        assert_eq!(observed.try_iter().count(), EVENT_QUEUE);
+        assert_eq!(handle.take_dropped_events(), 7);
+        assert_eq!(handle.take_dropped_events(), 0);
+        drop(observed);
+        supervisor
+            .dropped_events
+            .store(u64::MAX - 1, Ordering::Relaxed);
+        supervisor.emit(Event::AwaitingActiveSession);
+        supervisor.emit(Event::AwaitingActiveSession);
+        assert_eq!(handle.take_dropped_events(), u64::MAX);
+        assert_eq!(handle.take_dropped_events(), 0);
+    }
+
+    #[test]
+    fn a_full_input_queue_refuses_ordinary_controls_but_accepts_session_end() {
+        let (sender, inputs) = mpsc::sync_channel(INPUT_QUEUE);
+        let ending = Arc::new(AtomicBool::new(false));
+        let handle = SupervisorHandle(
+            sender,
+            Arc::clone(&ending),
+            Arc::new(Mutex::new(())),
+            Arc::new(AtomicU64::new(0)),
+        );
+        for _ in 0..INPUT_QUEUE {
+            assert!(handle.request(Request::StopIfIdle));
+        }
+        assert!(!handle.request(Request::StopIfIdle));
+        assert!(!handle.request(Request::Stop));
+        assert!(handle.request(Request::SessionEnd));
+        assert!(ending.load(Ordering::SeqCst));
+        assert_eq!(inputs.try_iter().count(), INPUT_QUEUE);
+        drop(inputs);
+        assert!(!handle.request(Request::Stop));
+        assert!(!handle.request(Request::SessionEnd));
+    }
+
+    #[test]
+    fn disconnected_input_releases_a_reader_blocked_by_backpressure() {
+        use std::process::{Command, Stdio};
+        let (sender, inputs) = mpsc::sync_channel(1);
+        assert!(sender.send(Input::Control(Request::Stop)).is_ok());
+        let mut command = Command::new(std::env::current_exe().unwrap());
+        command
+            .args(["--list"])
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null());
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            command.creation_flags(0x0800_0000);
+        }
+        let mut child = command.spawn().unwrap();
+        let reader = spawn_reader(child.stdout.take().unwrap(), 1, sender);
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let exited = loop {
+            if child.try_wait().unwrap().is_some() {
+                break true;
+            }
+            if Instant::now() >= deadline {
+                child.kill().unwrap();
+                child.wait().unwrap();
+                break false;
+            }
+            thread::sleep(Duration::from_millis(5));
+        };
+        assert!(
+            exited,
+            "the child must finish while its reader is backpressured"
+        );
+        assert!(!reader.is_finished());
+        drop(inputs);
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while !reader.is_finished() && Instant::now() < deadline {
+            thread::sleep(Duration::from_millis(5));
+        }
+        assert!(
+            reader.is_finished(),
+            "disconnect must release the blocked reader"
+        );
+        reader.join().unwrap();
     }
 
     #[test]

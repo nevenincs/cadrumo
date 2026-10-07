@@ -3,7 +3,13 @@
 //! Native admission precedes package probing, ownership and runtime supervision.
 #![windows_subsystem = "windows"]
 
+#[cfg(windows)]
+use cadrumo_application::diagnostics::{
+    DiagnosticSource, Diagnostics, EventKind, HostOutcome, HostStage,
+};
 use cadrumo_manager::identity;
+#[cfg(windows)]
+use std::sync::Arc;
 use std::{
     env,
     io::{self, Write},
@@ -17,14 +23,28 @@ const ADMISSION_REFUSED: u8 = 77;
 
 fn start(breakaway_attempted: bool) -> ExitCode {
     #[cfg(windows)]
+    let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
+    #[cfg(windows)]
+    diagnostics.host_event(EventKind::HostStarted, HostStage::Admission);
+    #[cfg(windows)]
+    diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
+    #[cfg(windows)]
     if let Err(refusal) = cadrumo_manager::admission::require_current() {
+        cadrumo_manager::diagnostics::admission_refused(&diagnostics, refusal);
+        diagnostics.host_stopped(i32::from(ADMISSION_REFUSED));
         let _ = writeln!(io::stderr(), "{}", refusal.code());
         return ExitCode::from(ADMISSION_REFUSED);
     }
     #[cfg(windows)]
-    match run_windows(breakaway_attempted) {
-        Ok(()) => ExitCode::SUCCESS,
+    diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
+    #[cfg(windows)]
+    match run_windows(breakaway_attempted, diagnostics.clone()) {
+        Ok(()) => {
+            diagnostics.host_stopped(0);
+            ExitCode::SUCCESS
+        }
         Err(_) => {
+            diagnostics.host_stopped(i32::from(STARTUP_FAILED));
             let _ = writeln!(io::stderr(), "manager_startup_failed");
             cadrumo_manager::windows_lifecycle::show_startup_failure();
             ExitCode::from(STARTUP_FAILED)
@@ -39,29 +59,69 @@ fn start(breakaway_attempted: bool) -> ExitCode {
 }
 
 #[cfg(windows)]
-fn run_windows(breakaway_attempted: bool) -> io::Result<()> {
+fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::Result<()> {
+    use cadrumo_application::error::application::{ErrorCode, Operation};
     use cadrumo_manager::{
         background::Background,
+        diagnostics::{configure, inspection_failed, stage},
         installed::InstalledRuntime,
         session::{ManagerSession, instance::claim_session},
         supervision::environment::ManagedLocations,
         windows_lifecycle,
     };
-    if windows_lifecycle::escape_job(breakaway_attempted)? {
+    if stage(
+        &diagnostics,
+        HostStage::JobEscape,
+        ErrorCode::ManagerUnavailable,
+        Operation::Manager,
+        || windows_lifecycle::escape_job(breakaway_attempted),
+    )? {
+        diagnostics.host_outcome(HostStage::JobEscape, HostOutcome::Dispatched);
         return Ok(());
     }
-    let Some(_session_lock) = claim_session(identity::MANAGER_ID, std::time::Duration::ZERO)?
+    let Some(_session_lock) = stage(
+        &diagnostics,
+        HostStage::Instance,
+        ErrorCode::InstanceLockForeign,
+        Operation::Manager,
+        || claim_session(identity::MANAGER_ID, std::time::Duration::ZERO),
+    )?
     else {
+        diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
         return Ok(());
     };
-    let locations = ManagedLocations::resolve(&env::current_exe()?)?;
-    let installed = InstalledRuntime::inspect(&locations)?;
+    let locations = stage(
+        &diagnostics,
+        HostStage::Storage,
+        ErrorCode::EnvironmentFailed,
+        Operation::Environment,
+        || ManagedLocations::resolve(&env::current_exe()?),
+    )?;
+    configure(&locations, &diagnostics);
+    diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
+    let installed = InstalledRuntime::inspect(&locations)
+        .map_err(|error| inspection_failed(&diagnostics, error))?;
+    diagnostics.host_outcome(HostStage::Package, HostOutcome::Ready);
+    let session = stage(
+        &diagnostics,
+        HostStage::Session,
+        ErrorCode::SessionUnavailable,
+        Operation::Manager,
+        ManagerSession::current,
+    )?;
     let background = Background::new(
         installed,
-        ManagerSession::current()?,
+        session,
         windows_lifecycle::activity,
+        diagnostics.clone(),
     );
-    windows_lifecycle::run(background)
+    stage(
+        &diagnostics,
+        HostStage::Window,
+        ErrorCode::ManagerUnavailable,
+        Operation::Manager,
+        || windows_lifecycle::run(background),
+    )
 }
 
 fn main() -> ExitCode {

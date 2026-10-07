@@ -3,7 +3,9 @@
 use crate::session::ownership::{Ownership, Role, StartKind};
 use crate::supervision::{
     launch::LaunchTarget,
-    supervisor::{Collaborators, Event, Outcome, Supervisor, SupervisorConfig, SupervisorHandle},
+    supervisor::{
+        Collaborators, EVENT_QUEUE, Event, Outcome, Supervisor, SupervisorConfig, SupervisorHandle,
+    },
 };
 use std::{
     io,
@@ -41,8 +43,8 @@ pub fn start(
         Some(kind) => ownership.begin(kind)?,
         None => ownership.reassess(),
     };
-    let (events, receive_events) = mpsc::channel();
-    let mut supervisor = Supervisor::new(config, target, collaborators, events);
+    let (events, receive_events) = mpsc::sync_channel(EVENT_QUEUE);
+    let supervisor = Supervisor::new(config, target, collaborators, events);
     let permit = match role {
         Role::Start(permit) => Some(permit),
         Role::OwnSession { .. } => None,

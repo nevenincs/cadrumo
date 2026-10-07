@@ -39,11 +39,17 @@ def test_desktop_defaults_project_canonical_declarations(tmp_path: Path) -> None
         "webview": STORAGE_TAXONOMY[StorageCategory.DESKTOP_WEBVIEW].subpath,
         "logs": STORAGE_TAXONOMY[StorageCategory.LOGS].subpath,
         "log_file": STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath,
+        "manager_log_file": STORAGE_TAXONOMY[StorageCategory.MANAGER_LOG_FILE].subpath,
         "log_format": LOG_FILE_FORMAT,
         "log_max_bytes": Settings.model_fields["cadrumo_log_file_max_bytes"].default,
         "log_backups": Settings.model_fields["cadrumo_log_file_backup_count"].default,
         "output_language": Settings.model_fields["cadrumo_output_language"].default,
     }
+
+    generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
+    assert _rust_strings(generated, "MANAGER_LOG") == [STORAGE_TAXONOMY[StorageCategory.MANAGER_LOG_FILE].subpath]
+    assert f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};" in generated
+    assert f"pub const LOG_BACKUPS: u32 = {contract['desktop_defaults']['log_backups']};" in generated
 
 
 def test_native_storage_allowlist_tracks_settings_taxonomy_and_tool_paths(tmp_path: Path) -> None:

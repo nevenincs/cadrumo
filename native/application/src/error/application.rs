@@ -1,8 +1,8 @@
 //! Safe application-boundary failures. Original causes stay local, never serialized.
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt, sync::Arc};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorCode {
     InvalidArguments,
@@ -28,7 +28,7 @@ pub enum ErrorCode {
     Panic,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Operation {
     Launch,

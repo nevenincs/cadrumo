@@ -1,20 +1,24 @@
+pub mod lifecycle;
 pub mod logging;
 
 use crate::{
-    diagnostics::logging::{LogFile, LogPaths},
+    diagnostics::{
+        lifecycle::LifecycleFact,
+        logging::{LogFile, LogPaths},
+    },
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     process::status::{
         OutputChunk, ProcessPhase, ProcessRole, ProcessStatus, Stream, Tracker, timestamp_ms,
     },
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
     path::{Path, PathBuf},
     sync::Mutex,
 };
 
-#[derive(Clone, Copy, Debug, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EventKind {
     HostStarted,
@@ -28,14 +32,14 @@ pub enum EventKind {
     Failure,
     HostStopped,
 }
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DiagnosticSource {
     #[default]
     Desktop,
     Manager,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum HostStage {
     Admission,
@@ -43,8 +47,14 @@ pub enum HostStage {
     Manager,
     Window,
     Shutdown,
+    JobEscape,
+    Instance,
+    Storage,
+    Package,
+    Session,
+    Supervision,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum HostOutcome {
     Ready,
@@ -72,6 +82,8 @@ pub struct Event {
     pub outcome: Option<HostOutcome>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub host_exit_code: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lifecycle: Option<LifecycleFact>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -103,6 +115,7 @@ struct Context {
     role: Option<ProcessRole>,
     outcome: Option<HostOutcome>,
     host_exit_code: Option<i32>,
+    lifecycle: Option<LifecycleFact>,
 }
 #[derive(Default)]
 pub struct Diagnostics {
@@ -118,6 +131,12 @@ impl Diagnostics {
     }
     pub fn configure(&self, directory: &Path, max_bytes: u64, backups: u32) -> Result<()> {
         let file = LogFile::new(directory, max_bytes, backups)?;
+        self.configure_log(file)
+    }
+    pub fn configure_file(&self, current: &Path, max_bytes: u64, backups: u32) -> Result<()> {
+        self.configure_log(LogFile::for_file(current, max_bytes, backups)?)
+    }
+    fn configure_log(&self, file: LogFile) -> Result<()> {
         let mut state = self.state.lock().map_err(|_| poisoned())?;
         if state
             .file
@@ -187,6 +206,7 @@ impl Diagnostics {
             stage: context.stage,
             outcome: context.outcome,
             host_exit_code: context.host_exit_code,
+            lifecycle: context.lifecycle,
         };
         if let Some(file) = &state.file
             && let Err(error) = file.append(&event)
@@ -257,6 +277,24 @@ impl Diagnostics {
             Context {
                 stage: Some(HostStage::Shutdown),
                 host_exit_code: Some(code),
+                ..Context::default()
+            },
+        );
+    }
+    pub fn lifecycle(
+        &self,
+        kind: EventKind,
+        stage: HostStage,
+        fact: LifecycleFact,
+        failure: Option<ApplicationError>,
+    ) {
+        self.record(
+            kind,
+            None,
+            failure,
+            Context {
+                stage: Some(stage),
+                lifecycle: Some(fact),
                 ..Context::default()
             },
         );

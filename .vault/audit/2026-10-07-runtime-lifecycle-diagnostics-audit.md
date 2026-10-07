@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:51e7b3936a925c668815fd4372b678bc27f3c6899d6a814b4b071c41b715f491'
+body_hash: 'sha256:4acee64bd095252f5dcdf9d78a0c82521c28ea4f9340f826628fc1c574ce1304'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -85,6 +85,30 @@ The isolated 32-sample 64 KiB package verification fixture measured median 4.518
 Final S05 integrated verification: desktop backend Unit passed 179 tests with no failures or ignores, followed by backend Clippy. Root rustfmt and scoped diff checks passed. Root review approves the bounded hardening changes; the existing launcher-discovery release finding remains unresolved and S04 stays open.
 
 ## Recommendations
+
+### manager-diagnostics-follow-up | medium | Lifecycle observations must reach a durable sink
+
+After the operator handed remaining integration to this session, root reviewed the committed manager startup and found supervisor observations discarded by the background owner. S06 now routes typed startup admission, inspection refusal, ownership wait, runtime launch/readiness/exit, restart, shutdown and final outcome into the canonical manager log. The shared native sink retains its rotation, bounded replay and safe error projection. Early admission failures remain buffered/stderr until strict root admission permits a durable sink; no alternate root is invented. Package refusal categories come from owner error variants, not text matching. Dynamic version, boot identity, raw output and private paths are excluded from lifecycle facts.
+
+### manager-shutdown-and-memory | high, resolved | Observer pressure must not stall control or grow queues without bound
+
+Root review required bounded supervisor input (256) and observation (512) queues. Reader backpressure is isolated from control callers; event emission never waits for the log consumer and records a saturating loss count. SessionEnd publishes the existing atomic restart fence before attempting the full input queue. Consuming the supervisor disconnects its receiver on return, releasing blocked readers even when a control handle survives. Real subprocess flood tests cover 8,192 malformed announcements, saturated controls, absent observers and runtime cleanup.
+
+Root also corrected background ordering: request session end and wait for settlement before diagnostic file I/O. Active message-loop polls consume at most 64 events; continuously replenished events therefore cannot keep a drain loop running indefinitely. Final draining after the producer joins consumes the bounded remainder. A timed-out settlement retains cleanup ownership. This bounds queue memory and event work, not the duration of an operating-system-stalled filesystem call.
+
+Final frozen-tree evidence: 65 manager library, 3 manager diagnostic and 37 supervisor tests passed (105 total); all-target manager Clippy with fixture and live-package features, formatting and scoped diff checks passed. Commands, source hashes and logs are in `build/windows-x64/cargo/native/package-acceptance-bounded/verification.json`. Native application checks passed 11 library and 17 diagnostic tests plus Clippy; canonical projection tests passed 6 tests and scoped Ruff/ty. The source review is root-owned; Sol 6.1 workers performed implementation and supporting checks.
+
+### manager-viewer-integration | medium, resolved | Read manager records without accepting arbitrary persisted payloads
+
+S07 carries the canonical fixed manager-log path through the environment projection into the existing tail engine. Python and manager readability states are independent; malformed manager rows are counted without displaying their contents. Complete-line JSON parsing rejects foreign sources, unknown fields and unknown variants. Persisted failure message text is ignored and reconstructed from closed error codes. Actual negative tests exposed Serde's internally tagged unit-variant unknown-field acceptance; empty struct variants now preserve the wire shape while enforcing rejection. Rotation, partial lines, privacy, per-source banners and loss context have regression coverage.
+
+Root reran the complete desktop backend: 187 tests passed, followed by Clippy. Twenty distinct browser log/manager scenarios passed, including corrected source-labelled baseline expectations; TypeScript, scoped ESLint/formatting and 16 locale tests passed. Evidence is under `var/storage/development/build/runtime-release-check/` and `build/desktop-windows-x64/desktop/test-results/manager-logs-check*`.
+
+### empty-root-package-fixture | medium, resolved | A profile acceptance fixture needs a runtime before creating its profile
+
+The packaged sign-in fixture previously attempted profile creation before launching its isolated runtime. It now starts the contained empty-root runtime, verifies the handshake, creates the profile, and waits for canonical profile selection before continuing. Cleanup handles partial creation, closed stdin and failed writes, and clears the stop deadline timer. Nine focused Node tests plus Python/JavaScript formatting and syntax checks passed. Exact commands and hashes are recorded in `build/desktop-windows-x64/desktop/test-results/packaged-fixture-lifecycle/20261007T062535Z-65848.json`.
+
+This host is Windows Session 0. No interactive desktop/profile/login acceptance or live default-root manager launch is claimed. Full package rebuilding is in progress; its documentation compiler executes real CLI sequence witnesses and cannot be bypassed for a release claim. Version-independent launcher discovery and installed upgrade acceptance remain the unresolved S04 release prerequisite explicitly accepted by the user.
 
 Final shared-gate evidence: regenerating finite import-load metadata succeeded and all 4,519 governed non-test modules loaded. The aggregate gate failed: the bare PATH lacked lint-imports, the shared source tree changed during the run, and the subordinate checker reported 15 import-authority findings. Running `.venv/Scripts/lint-imports.exe` directly then passed all 15 graph contracts with zero broken contracts. These findings prevent a repository-wide clean verdict; scoped code checks remain passing. Generated inventory refresh reflects the shared source census and must not be hand-edited to isolate one module.
 

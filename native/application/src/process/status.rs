@@ -1,11 +1,11 @@
 //! Typed process lifecycle and bounded, memory-only stream capture.
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
     time::{SystemTime, UNIX_EPOCH},
 };
 
-#[derive(Clone, Copy, Debug, Serialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum ProcessRole {
     Environment,
@@ -18,7 +18,7 @@ pub enum ProcessRole {
     /// The platform's interactive system shell.
     Console,
 }
-#[derive(Clone, Copy, Debug, Serialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum ProcessPhase {
     Running,

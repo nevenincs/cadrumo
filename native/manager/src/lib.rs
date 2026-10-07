@@ -11,6 +11,7 @@ pub mod admission;
 pub mod background;
 pub mod contract;
 pub mod custody;
+pub mod diagnostics;
 pub mod identity;
 pub mod installed;
 pub mod session;

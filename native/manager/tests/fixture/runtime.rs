@@ -15,7 +15,8 @@ mod fixture {
     use cadrumo_manager::supervision::launch::LaunchTarget;
     use cadrumo_manager::supervision::stop::PlatformStopSignal;
     use cadrumo_manager::supervision::supervisor::{
-        Collaborators, Event, Request, SessionActivity, Supervisor, SupervisorConfig, VersionProbe,
+        Collaborators, EVENT_QUEUE, Event, Request, SessionActivity, Supervisor, SupervisorConfig,
+        VersionProbe,
     };
     use serde_json::{Value, json};
     use std::collections::HashMap;
@@ -353,6 +354,13 @@ mod fixture {
             announcer.0 = None;
         }
         let commands = commands(input);
+        if let Some(count) = number("announcement_flood") {
+            for _ in 0..count {
+                announcer.line("{\"type\":\"unknown-announcement\"}");
+            }
+            fs::write(arguments.root.join("fixture-flood-written"), b"done")
+                .expect("record the completed announcement flood");
+        }
         let mut answered = 0_u64;
         let mut connected = true;
         loop {
@@ -462,8 +470,8 @@ mod fixture {
             versions: Box::new(NoVersions),
             stop_signal: Box::new(PlatformStopSignal::default()),
         };
-        let (events, observed) = mpsc::channel();
-        let mut supervisor = Supervisor::new(config, target, collaborators, events);
+        let (events, observed) = mpsc::sync_channel(EVENT_QUEUE);
+        let supervisor = Supervisor::new(config, target, collaborators, events);
         let handle = supervisor.handle();
         let running = thread::spawn(move || supervisor.run());
         let mut out = std::io::stdout().lock();

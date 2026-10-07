@@ -333,6 +333,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "webview": STORAGE_TAXONOMY[StorageCategory.DESKTOP_WEBVIEW].subpath,
             "logs": STORAGE_TAXONOMY[StorageCategory.LOGS].subpath,
             "log_file": STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath,
+            "manager_log_file": STORAGE_TAXONOMY[StorageCategory.MANAGER_LOG_FILE].subpath,
             "log_format": LOG_FILE_FORMAT,
             "log_max_bytes": Settings.model_fields["cadrumo_log_file_max_bytes"].default,
             "log_backups": Settings.model_fields["cadrumo_log_file_backup_count"].default,
@@ -346,6 +347,13 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         "TEMPORARY_DEFAULT": temporary.relative_path().as_posix(),
     }
     rust = [f"pub const ABI: u32 = {layout['abi']};"]
+    rust.extend(
+        [
+            f"pub const MANAGER_LOG: &str = {_rust_string(contract['desktop_defaults']['manager_log_file'])};",
+            f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};",
+            f"pub const LOG_BACKUPS: u32 = {contract['desktop_defaults']['log_backups']};",
+        ]
+    )
     rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in package_strings.items())
     rust.append(f"pub const RESERVED_ENV: &[&str] = {_rust_strings(fields)};")
     rust.append(f"pub const TEMPORARY_CREATE_EXPLICIT: bool = {str(temporary.create_explicit_directory).lower()};")

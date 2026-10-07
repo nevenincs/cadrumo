@@ -62,6 +62,7 @@ fn rotation_bounds_files_and_capture_reports_discarded_bytes() {
             role: None,
             outcome: None,
             host_exit_code: None,
+            lifecycle: None,
         })
         .unwrap();
     }
@@ -278,6 +279,92 @@ fn logging_failure_is_observable_without_replacing_process_result() {
         ErrorCode::LogUnavailable
     );
     assert_eq!(fs::read(obstruction).unwrap(), b"original");
+}
+
+#[test]
+fn explicit_file_targets_replay_and_rotate_without_using_the_default_sink() {
+    let directory = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let current = directory.path().join("fixture-lifecycle.log");
+    let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+    diagnostics.host_event(EventKind::HostStarted, HostStage::Admission);
+    diagnostics.configure_file(&current, 1024, 2).unwrap();
+    let early = fs::read_to_string(&current).unwrap();
+    diagnostics.configure_file(&current, 1024, 2).unwrap();
+    assert_eq!(fs::read_to_string(&current).unwrap(), early);
+    for _ in 0..30 {
+        diagnostics.host_outcome(HostStage::Supervision, HostOutcome::Ready);
+    }
+    let snapshot = diagnostics.snapshot(0);
+    assert_eq!(snapshot.paths.as_ref().unwrap().current, current);
+    assert_eq!(
+        snapshot.paths.unwrap().lock,
+        directory.path().join("fixture-lifecycle.log.lock")
+    );
+    assert!(!directory.path().join("cadrumo-native.jsonl").exists());
+    assert!(!directory.path().join("cadrumo-native.lock").exists());
+    let mut records = Vec::new();
+    for name in [
+        "fixture-lifecycle.log.2",
+        "fixture-lifecycle.log.1",
+        "fixture-lifecycle.log",
+    ] {
+        let bytes = fs::read(directory.path().join(name)).unwrap();
+        assert!(bytes.len() <= 1024);
+        assert_eq!(bytes.last(), Some(&b'\n'));
+        records.extend(
+            String::from_utf8(bytes)
+                .unwrap()
+                .lines()
+                .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap()),
+        );
+    }
+    assert!(
+        records
+            .windows(2)
+            .all(|pair| pair[0]["sequence"].as_u64().unwrap() + 1 == pair[1]["sequence"])
+    );
+    assert_eq!(records.last().unwrap()["sequence"], 31);
+    assert!(
+        records
+            .iter()
+            .all(|record| record["source"] == "manager" && record.get("lifecycle").is_none())
+    );
+}
+
+#[test]
+fn explicit_file_target_refuses_relative_and_parent_paths() {
+    let directory = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+    diagnostics.host_event(EventKind::HostStarted, HostStage::Admission);
+    for path in [
+        std::path::PathBuf::from("relative.log"),
+        directory.path().join("../unresolved.log"),
+    ] {
+        assert!(diagnostics.configure_file(&path, 4096, 1).is_err());
+    }
+    assert!(diagnostics.snapshot(0).paths.is_none());
+    assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    let records = diagnostics.snapshot(0).events;
+    assert_eq!(records.len(), 1);
+}
+
+#[test]
+fn closed_lifecycle_decoder_refuses_unknown_payload_fields_and_tokens() {
+    use cadrumo_application::diagnostics::lifecycle::LifecycleFact;
+    for record in [
+        r#"{"event":"ready","pid":1,"bootId":"synthetic-private"}"#,
+        r#"{"event":"foreign","reason":"synthetic-private"}"#,
+        r#"{"event":"supervisor_started","payload":"synthetic-private"}"#,
+        r#"{"event":"exited","pid":1,"exit":{"classification":"zero","payload":"synthetic-private"},"announced":null}"#,
+        r#"{"event":"supervisor_ended","result":{"outcome":"ownership_changed","payload":"synthetic-private"}}"#,
+        r#"{"event":"stop_requested","pid":1,"cause":"session_end","path":{"delivery":"signal","payload":"synthetic-private"}}"#,
+    ] {
+        assert!(serde_json::from_str::<LifecycleFact>(record).is_err());
+    }
+    assert_eq!(
+        serde_json::from_str::<LifecycleFact>(r#"{"event":"ready","pid":1}"#).unwrap(),
+        LifecycleFact::Ready { pid: 1 }
+    );
 }
 
 #[test]
