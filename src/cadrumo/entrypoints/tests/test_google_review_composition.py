@@ -18,7 +18,10 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
+from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .. import calculation_review_snapshot_composition as snapshot_composition
 from .. import google_review_operation_composition as composition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -27,6 +30,9 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
 def _saved(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, WorkUnit]:
     registry = operation.snapshot("130", filing_year=2026, period="1T")
+    rendering = CalculationRenderingSnapshot.capture(
+        registry, authority_generation=operation.generation.logical_generation
+    )
     period = Period.from_year_and_code(2026, "1T")
     instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
     unit = WorkUnit(
@@ -51,6 +57,7 @@ def _saved(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, Wo
             casilla_values={},
             filing_instance_evidence=None,
             source_provenance=(),
+            rendering_snapshot=rendering,
         ),
         work_unit_id=unit.work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
@@ -59,6 +66,7 @@ def _saved(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, Wo
         state=CalculationRevisionState.BORRADOR,
         source_provenance=(),
         filing_instance_evidence=None,
+        rendering_snapshot=rendering,
         created_at=instant,
         updated_at=instant,
     )
@@ -86,14 +94,20 @@ def _repositories(
         def load(self) -> WorkUnitCatalogue:
             return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
 
+    class Filings:
+        bucket_id = str(_PROFILE)
+
+        def load(self) -> ModeloRecordCatalogue:
+            return ModeloRecordCatalogue()
+
     pinned = operation
 
     def factory(profile: str, *, operation: PinnedAuthorityOperation) -> SimpleNamespace:
         assert profile == str(_PROFILE)
         assert operation is pinned
-        return SimpleNamespace(calculation=Calculations(), work_unit=WorkUnits())
+        return SimpleNamespace(calculation=Calculations(), work_unit=WorkUnits(), filing=Filings())
 
-    monkeypatch.setattr(composition, "build_verification_repository_bundle", factory)
+    monkeypatch.setattr(snapshot_composition, "build_verification_repository_bundle", factory)
     return revision, unit
 
 

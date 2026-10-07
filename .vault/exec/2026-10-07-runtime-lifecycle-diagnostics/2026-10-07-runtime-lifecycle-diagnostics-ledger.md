@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:ad1bffe5dda7072a06a9f1251766265511a82ed519ab78c11d6cc61661c0df96'
+body_hash: 'sha256:ab02187084601574d2ae1bb433b3067ba0f79bdb35e8ff6e0e1d75f50a1033b1'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -290,6 +290,14 @@ related:
 - `S13` `verify:` `safe helper timing application tests and Clippy` -> `pass`
 - `S13` `verify:` `bounded submission timing harness 13 tests` -> `pass`
 - `S13` `verify:` `real oldpayload manager shutdown disposition` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S15` `M` `src/cadrumo/entrypoints/google_review_operation_composition.py`
+- `S15` `A` `src/cadrumo/entrypoints/tests/test_google_effect_imports.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_google_review_composition.py`
+- `S15` `verify:` `Google effect boundary and real review loading 20 tests` -> `pass`
+- `S15` `verify:` `scoped Ruff formatting ty and diff checks` -> `pass`
+- `S15` `verify:` `guarded alternating 3x before and after fresh import comparison` -> `pass`
+- `S15` `by:` `root architectural review; Sol6.1 implementation`
 
 ## Notes
 
@@ -318,3 +326,4 @@ related:
 - `S14` No deadline increases. Binding-only paired wall/CPU reduced49.5/46.9percent; no full-registry warm CPU improvement established. Browser21s,wire0.10s,process15.80s bodies exclude compilation. Root integrated review and full backend final checks pending; no fresh package latency acceptance.
 - `S14` Final source review PASS. Full203 bodies45.52s incremental compile0.54s; prior pending shared-check note resolved. Runtime startup, calibration and packaged latency remain open.
 - `S13` Closed phase facts omit arguments output passwords and identifiers; helper completed means native output returned only. Measured oldpayload startup, registry, KDF calibration and current binding CPU; empty-root CLI attribution remains in flight. Exact sources/logs archived in s14-helper-lanes-verification.json and sign-in-submission-timings-verification.json.
+- `S15` Structural exclusion established, no measured speedup. Preexisting review fixture owner/filing/rendering drift repaired without assertion or production changes. Performance remains open.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c4b493dc745fd2d18f677f7dbf4ac6f5af97baf2fa4ec0f16a33b84330c104a'
+body_hash: 'sha256:63dd5407a2737a746962af7a7bd03bce1424ba41700877c14fd888ad01ef8f07'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -247,3 +247,9 @@ Root reviewed the shared close/spawn fence, lane-to-fence lock order, ownership 
 Fifteen browser tests against the current production bundle passed in 21.0 seconds. They hold status and profile-list replies across login/create, prove dispatch proceeds, reject stale replies, and prove successful login makes TUI available without another automatic status invocation. A later focus refresh still observes current state. Seventeen canonical native wire tests passed in 0.10 seconds, covering persisted acknowledgement, label bounds/agreement, null outer label, malformed input and refusal. Their first isolated host compilation took approximately 144 seconds; that build cost is separate from application execution. Evidence: `var/storage/development/build/signin-latency-projection/signin-latency-verification.json` and canonical test-run logs `helper-lanes-process`, `helper-lanes-desktop-clippy`, and `helper-lanes-desktop-unit` on 2026-10-07.
 
 The S13 timing facts and S14 execution changes pass source-level integrated review. Fresh full-package performance acceptance, registry startup cost, profile calibration cost and the stable installed launcher prerequisite remain open. No timeout was increased and no latency target is marked achieved by these tests.
+
+### export-import-boundary | pass | Unused effect dependencies removed; no measured startup gain
+
+S15 moves the existing Google export implementation imports into the existing execute/publish callbacks. It changes no definition, binding, admission or export result. A fresh subprocess blocks the actual removed modules and optional client, imports local runtime successfully without effects or storage, then confirms the owning export callback fails when its implementation is unavailable. Preview/apply forwarding, publication custody callbacks and refusal propagation retain their tests. Twenty relevant tests and scoped Ruff, formatting and ty passed. Three previously stale review-loader tests now patch their canonical owner and provide a profile-bound empty filing catalogue and a genuinely captured rendering snapshot; their assertions and production financial behavior are unchanged.
+
+Three fresh-process samples per side used exact saved pre-cut files, alternating with the new files, while guarding the remaining sources and interpreter/package provenance. The import closure loses `calc_sheets_apply`, its two helper modules and `managed_artifacts`. Median runtime import was 5.638 seconds wall / 5.531 CPU before and 5.755 wall / 5.688 CPU after, with overlapping ranges. This establishes dependency separation only, not a speed improvement. The API/admission path remains loaded through Google configuration. Evidence: `build/schema-binding-latency/google-import-summary.json`, `google-import-paired.json` and the worker's scoped test logs. Root review PASS for the boundary change; startup performance remains open.

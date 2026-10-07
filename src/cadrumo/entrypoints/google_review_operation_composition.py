@@ -4,11 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from ..adapters.outbound.google.api import drive_v3_service, sheets_v4_service
-from ..adapters.outbound.google.artifact_admission import GoogleArtifactAdmission
 from ..adapters.outbound.google.artifact_receipt_store import GoogleArtifactReceiptStore
-from ..adapters.outbound.google.calc_sheets_apply import publish_review_plan
-from ..adapters.outbound.google.managed_artifacts import ManagedGoogleArtifacts
 from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..application.export.google_operation import publish_google_review
@@ -61,6 +57,11 @@ def build_google_review_ports(*, profile_id: UUID, operation: PinnedAuthorityOpe
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
     ) -> PublicationReceipt:
+        from ..adapters.outbound.google.api import drive_v3_service, sheets_v4_service
+        from ..adapters.outbound.google.artifact_admission import GoogleArtifactAdmission
+        from ..adapters.outbound.google.calc_sheets_apply import publish_review_plan
+        from ..adapters.outbound.google.managed_artifacts import ManagedGoogleArtifacts
+
         credentials = build_google_credentials(profile=profile)
         drive = drive_v3_service(credentials, unavailable_condition_id="google.review.client_available")
         sheets = sheets_v4_service(credentials, unavailable_condition_id="google.review.client_available")

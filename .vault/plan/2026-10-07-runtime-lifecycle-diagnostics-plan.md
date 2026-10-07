@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:e5cd91e32eb8a550f007c073c6a5922a29d3d7c8ea19a7eeefce4bc710589902'
+body_hash: 'sha256:b78c17976932937df61ca60bf805cc541e88fe2604f6a2e9a5635fd4dc413af2'
 ---
 
 <!-- RETIRED: S08 -->
@@ -43,7 +43,7 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S12` - Repair fresh Windows SDK provisioning after the generated destination is reset; `dev/packaging/native/platforms/windows.py provision_sdk and focused package regression tests`.
 - [ ] `S13` - Attribute runtime startup, profile creation, sign-in and shutdown latency with bounded phase and CPU measurements before optimizing; `native/desktop/src-tauri/src/shell/sign_in, native/application/src/diagnostics, native/manager/tests/runtime_identity.rs, native/desktop/tests/packaged, runtime latency evidence`.
 - [x] `S14` - Remove redundant schema binding compilation and background-read serialization from sign-in without weakening validation or increasing timeouts; `src/cadrumo/application/operations/registry.py and owning tests, native desktop sign-in process lanes and frontend sequencing, app shutdown and owning tests`.
-- [ ] `S15` - Defer unused Google export implementation imports to their operation execution boundary and measure startup CPU and dependency closure; `src/cadrumo/entrypoints/operation_composition.py, google_review_operation_composition.py, owning entrypoint tests and guarded performance evidence`.
+- [x] `S15` - Defer unused Google export implementation imports to their operation execution boundary and measure startup CPU and dependency closure; `src/cadrumo/entrypoints/operation_composition.py, google_review_operation_composition.py, owning entrypoint tests and guarded performance evidence`.
 
 ## Parallelization
 

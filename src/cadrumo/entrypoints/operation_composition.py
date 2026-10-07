@@ -17,7 +17,6 @@ from ..adapters.outbound.aeat.export.registry_record_renderer import RegistryFix
 from ..adapters.outbound.aeat.sede.groi_check import collect_groi_observations
 from ..adapters.outbound.aeat.sede.nif_iva_check import collect_nif_iva_check_observations
 from ..adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
-from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailableError
 from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
@@ -942,6 +941,8 @@ def _google_sheets_export_prepare_port():
 
         class PreparedGoogleSheetsExport:
             def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
+                from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
+
                 if dry_run:
                     preview = preview_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
                     return GoogleSheetsExportRemoteResult(
