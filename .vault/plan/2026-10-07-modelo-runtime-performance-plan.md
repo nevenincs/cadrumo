@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:02636c1671199d7189d196aadb7e75800029500cfba19cc2decf16dc2a9d468e'
+body_hash: 'sha256:3cd1c3eaf9e395191882b7d7e121c1b58db266a6da43b87885e5b07b44ab62ca'
 ---
 
 # `modelo-runtime-performance` plan
@@ -37,7 +37,7 @@ The baseline is current HEAD f0be8532f5 plus existing peer edits. Root owns the 
 - [x] `S06` - Attribute the measured cold startup wait with bounded public native launch and authentication timing; `dev/ci/modelo_runtime_benchmark.py and direct benchmark tests`.
 - [x] `S07` - Replace measured quadratic duplicate scans with one typed counting pass while preserving exact registry refusal semantics; `src/cadrumo/domain/calculations/registry/schema_surfaces.py and owning duplicate-validator tests`.
 - [x] `S08` - Repair canonical benchmark imports and enroll the actual installed schema generator base in the framework reachability contract; `dev/ci/tests/test_modelo_runtime_benchmark.py, dev/audit/unreachable_frameworks.py and owning framework contract tests`.
-- [ ] `S04` - Prove real Modelo100 completion and core loading improvement with regression controls and all blocking quality gates; `dev/docs/tests/test_sequence_goldens.py real runtime fixtures, focused Modelo100/303/131 and currentness/custody tests, generated import enrollment, feature audit and ledger`.
+- [x] `S04` - Prove real Modelo100 completion and core loading improvement with regression controls and all blocking quality gates; `dev/docs/tests/test_sequence_goldens.py real runtime fixtures, focused Modelo100/303/131 and currentness/custody tests, generated import enrollment, feature audit and ledger, unused logger residue in peer-owned src/cadrumo/application/provisioning.py and exact public contract digest field assertions in peer-owned src/cadrumo/entrypoints/tui/tests/test_installed_session.py`.
 
 ## Parallelization
 

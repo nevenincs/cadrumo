@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:567476e5d5e68bcd515f5a4e2ad7ae4783ce11ba3a0b85f183290751701568ed'
+body_hash: 'sha256:625d2c98d7e8f048e49ff7ffa34af7adcc2eff2e9986942d35d062382614ee52'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -86,3 +86,23 @@ related:
 - `S08` `verify:` `uv run --no-sync ruff check dev/ci/tests/test_modelo_runtime_benchmark.py` -> `pass`
 - `S08` `verify:` `uv run --no-sync ruff format --check dev/ci/tests/test_modelo_runtime_benchmark.py` -> `pass`
 - `S08` `verify:` `uv run --no-sync ty check dev/ci/tests/test_modelo_runtime_benchmark.py` -> `pass`
+- `S04` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S04` `M` `dev/quality/metadata/import_load_targets.json`
+- `S04` `M` `src/cadrumo/application/provisioning.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_session.py`
+- `S04` `verify:` `uv run --no-sync pytest -n 0 -m unit src/cadrumo/entrypoints/tui/tests/test_installed_session.py --tb=short` -> `pass`
+- `S04` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tui/tests/test_installed_session.py --output-format concise` -> `pass`
+- `S04` `verify:` `uv run --no-sync pyrefly check src/cadrumo/entrypoints/tui/tests/test_installed_session.py` -> `pass`
+- `S04` `verify:` `uv run --no-sync basedpyright src/cadrumo/entrypoints/tui/tests/test_installed_session.py` -> `pass`
+- `S04` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tui/tests/test_installed_session.py` -> `pass`
+- `S04` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tui/tests/test_installed_session.py` -> `pass`
+- `S04` `verify:` `just check-import-boundaries` -> `pass`
+- `S04` `verify:` `mcp__vaultspec_core__check feature=modelo-runtime-performance fix=false` -> `pass`
+- `S04` `verify:` `vaultspec-core --target Y:/code/cadrumo-worktrees/tui vault plan check modelo-runtime-performance --json` -> `pass`
+
+## Notes
+
+- `S04` The unused logger cleanup is integrated with an existing peer-owned provisioning extraction and remains in that unstaged peer diff; staging only its deletion against HEAD would invalidate the old functions, while staging the whole file would take peer changes. Generated aggregate enrollment is staged only for the owned benchmark entry.
+- `S04` Two contract digest assertion lines are repaired in a new peer-owned TUI test without staging that peer-authored file. Fresh generated enrollment for peer `runtime_file_access` remains in the peer working diff; root stages only its own benchmark enrollment entry.
+- `S04` All twelve blocking gates have passing evidence: eleven in the fourth full aggregate, with its sole concurrent-source import snapshot refusal resolved by the fresh stable import-gate pass. The aggregate exit 7 remains recorded as failed; no timeout or snapshot guard is relaxed.
+- `S04` Final feature checks report zero errors and warnings and all eight Steps are checked. Plan check succeeds with PLAN022: follow-up Steps S05-S08 were inserted before the original final verification S04 through the owning CLI. This is the intended execution order; immutable canonical Step identifiers are preserved rather than renumbered.

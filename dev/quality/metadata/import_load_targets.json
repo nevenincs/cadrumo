@@ -3539,6 +3539,7 @@
         "dev.ci.lane_reachability",
         "dev.ci.lane_recipe_commands",
         "dev.ci.lane_workflow_graph",
+        "dev.ci.modelo_runtime_benchmark",
         "dev.ci.perf_measurement",
         "dev.ci.prove_check_set_guards",
         "dev.ci.python_runtime_compatibility",
