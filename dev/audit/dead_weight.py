@@ -7,7 +7,7 @@ import json
 from dev._paths import REPO_ROOT
 from dev.exit_codes import ADVISORY_BROKEN, OK
 
-from .dead_code import DeadCodeOutcome, DeadCodeResult, run_dead_code_scan
+from .dead_code import DeadCodeOutcome, DeadCodeResult, dead_code_scope, run_dead_code_scan
 from .duplication import DuplicationOutcome, DuplicationResult, run_duplication_scan
 
 
@@ -98,6 +98,7 @@ def _dead_code_summary(dead_code: DeadCodeResult) -> dict[str, object]:
     dead_code_available = dead_code.outcome is not DeadCodeOutcome.ERROR
     dead_code_rate = round(len(dead_code.findings) / dead_code.modules_offered, 8) if dead_code.modules_offered else 0.0
     return {
+        "scope": dead_code_scope(),
         "result": (
             "unavailable"
             if dead_code.outcome is DeadCodeOutcome.ERROR

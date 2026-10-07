@@ -9,7 +9,11 @@ lane -- the gate that actually runs vulture over the tree lives in
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..dead_code import (
     DeadCodeOutcome,
@@ -138,13 +142,41 @@ def test_offered_population_counts_the_modules_the_targets_actually_hold(tmp_pat
     assert offered_module_population(tmp_path) == 3
 
 
-def test_offered_population_counts_only_production_source(tmp_path) -> None:
+def test_offered_population_counts_only_production_source(tmp_path: Path) -> None:
     """Test modules, conftest files and bundled data are not part of what vulture analyses."""
+    (tmp_path / "pyproject.toml").write_bytes((REPO_ROOT / "pyproject.toml").read_bytes())
     package = tmp_path / "src" / "cadrumo" / "domain"
     (package / "tests").mkdir(parents=True)
     (package / "_data").mkdir()
     for module in ("one.py", "test_one.py", "_test_two.py", "conftest.py", "tests/helper.py", "_data/__init__.py"):
         (package / module).write_text("", encoding="utf-8")
+
+    assert offered_module_population(tmp_path) == 1
+
+
+def test_offered_population_does_not_claim_excluded_modules_were_scanned(tmp_path: Path) -> None:
+    """An intact source tree cannot satisfy coverage after the config excludes it."""
+    package = tmp_path / "src" / "cadrumo"
+    package.mkdir(parents=True)
+    (package / "one.py").write_text("import os\n", encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text('[tool.vulture]\nexclude = ["*cadrumo*"]\n', encoding="utf-8")
+
+    assert offered_module_population(tmp_path) == 0
+
+
+def test_build_and_native_python_are_outside_the_product_population(tmp_path: Path) -> None:
+    """Embedded Python, packaging scripts and generated files cannot inflate coverage."""
+    for relative in (
+        "src/cadrumo/one.py",
+        "dev/packaging/native/build.py",
+        "packaging/hook.py",
+        "native/desktop/src-tauri/src/python/cli.py",
+        "build/runtime/copied.py",
+        "native/manager/target/generated.py",
+    ):
+        module = tmp_path / relative
+        module.parent.mkdir(parents=True, exist_ok=True)
+        module.write_text("import os\n", encoding="utf-8")
 
     assert offered_module_population(tmp_path) == 1
 

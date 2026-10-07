@@ -44,12 +44,15 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from enum import StrEnum
+from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Final
 
+from vulture.config import InputError, make_config
+
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
-from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
+from dev.first_party_source import DEVELOPMENT_TOOLING, HARNESS_PACKAGE, PACKAGING_HOOKS, PRODUCT_PACKAGE
 from dev.packaging.command_execution import CommandResult, run_command
 
 _UTF_8: Final[str] = UTF_8
@@ -190,13 +193,32 @@ class DeadCodeResult:
     def headline(self) -> str:
         """One-line human summary of the outcome."""
         if self.outcome is DeadCodeOutcome.ERROR:
-            return f"dead-code signal unavailable this cycle: {self.reason}"
+            return f"Python product dead-code signal unavailable this cycle: {self.reason}"
         if self.outcome is DeadCodeOutcome.CLEAN:
             # The denominator travels with the verdict: a green that does not say
             # how much it read cannot be told from a green that read nothing.
-            return f"no dead code found across {self.modules_offered} module(s)"
+            return f"no Python product dead code found across {self.modules_offered} module(s)"
         breakdown = ", ".join(f"{count} {label}" for label, count in self.count_by_confidence.items())
-        return f"{len(self.findings)} dead-code finding(s) past the reviewed whitelist ({breakdown})"
+        return (
+            f"{len(self.findings)} Python product dead-code finding(s) past the reviewed whitelist "
+            f"({breakdown}) across {self.modules_offered} module(s)"
+        )
+
+
+def dead_code_scope() -> dict[str, object]:
+    """Declare the Python audit's subject and the surfaces it cannot measure."""
+    return {
+        "language": "python",
+        "source_root": PRODUCT_PACKAGE,
+        "support_files": list(_TARGETS[1:]),
+        "excluded_roots": [HARNESS_PACKAGE, DEVELOPMENT_TOOLING, PACKAGING_HOOKS, "native"],
+        "excluded_surfaces": [
+            "tests and bundled data",
+            "CMake configuration and build tools",
+            "Rust, C and desktop frontend sources",
+            "generated build outputs and compiled binaries",
+        ],
+    }
 
 
 def offered_module_population(repo_root: Path) -> int:
@@ -208,21 +230,23 @@ def offered_module_population(repo_root: Path) -> int:
     denominator that distinguishes them, exactly as the sibling duplication
     and security scans use their tool-reported file counts.
 
-    Only production source counts, as :func:`dev.first_party_source.is_production_source`
-    classifies it, because that is the scope vulture's configured exclusions
-    leave it to analyse; counting the excluded test modules would inflate the
-    denominator several times over. An over-broad vulture exclude is still
-    outside what this can see. A target that has been emptied, moved, or never
-    checked out is inside it, and a module vulture was offered but could not
-    parse is caught from its stderr instead.
+    Read Vulture's effective configuration, including its defaults and CLI
+    precedence. Match its case-insensitive absolute-path exclusion rules so
+    an over-broad exclude cannot leave the population floor satisfied by
+    modules the scanner never reads. Skipped unreadable or unparseable
+    modules are caught separately from stderr.
     """
+    config = make_config(["--config", str(repo_root / "pyproject.toml"), *_TARGETS])
+    patterns = tuple(
+        (pattern if any(char in pattern for char in "*?[") else f"*{pattern}*").lower() for pattern in config["exclude"]
+    )
     offered = 0
     for target in _TARGETS:
-        candidate = repo_root / target
-        if candidate.is_file():
-            offered += 1 if is_production_source(candidate, root=repo_root) else 0
-        elif candidate.is_dir():
-            offered += sum(1 for module in candidate.rglob("*.py") if is_production_source(module, root=repo_root))
+        candidate = (repo_root / target).resolve()
+        modules = (candidate,) if candidate.is_file() else candidate.rglob("*.py") if candidate.is_dir() else ()
+        offered += sum(
+            1 for module in modules if not any(fnmatchcase(str(module).lower(), pattern) for pattern in patterns)
+        )
     return offered
 
 
@@ -293,7 +317,10 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
     ``dev.audit.dead_weight`` and ``dev.audit.advisory`` call it, so there is
     deliberately no second vulture invocation anywhere in the tree.
     """
-    offered = offered_module_population(repo_root)
+    try:
+        offered = offered_module_population(repo_root)
+    except (InputError, OSError, TypeError, ValueError, SystemExit) as exc:
+        return DeadCodeResult.error(f"vulture configuration could not be read ({exc})")
     if offered < MINIMUM_OFFERED_MODULES:
         return DeadCodeResult.error(
             f"vulture was offered {offered} Python module(s), under the "
@@ -334,9 +361,14 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
 
 def render_console_report(result: DeadCodeResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:
     """Render the operator-facing console report for ``python -m dev.audit.dead_code``."""
-    out = [f"dead code: {result.headline()}"]
+    out = [
+        f"dead code: {result.headline()}",
+        f"  scope: {PRODUCT_PACKAGE} Python source and the reviewed whitelist",
+        "  excluded: harness, dev/packaging tools, native Rust/C/desktop, CMake, build outputs and binaries; "
+        "tests and bundled data",
+    ]
     if result.outcome is not DeadCodeOutcome.FINDINGS:
-        return out[0]
+        return "\n".join(out)
 
     shown = result.findings if full else result.findings[:cap]
     for finding in shown:
@@ -373,6 +405,7 @@ def main() -> int:
                     "headline": result.headline(),
                     "count_by_confidence": result.count_by_confidence,
                     "modules_offered": result.modules_offered,
+                    "scope": dead_code_scope(),
                     "findings": [
                         {
                             "path": f.path,

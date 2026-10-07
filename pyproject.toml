@@ -1318,10 +1318,20 @@ exclude = 'tests|test_'
 min_confidence = 80
 paths = ["src/cadrumo"]
 exclude = [
-  "*test_*.py",
-  "*/tests/*",
-  "*\\tests\\*",
-  "stubs",
+  "*/src/cadrumo/*test_*.py",
+  "*\\src\\cadrumo\\*test_*.py",
+  "*/src/cadrumo/tests/*",
+  "*\\src\\cadrumo\\tests\\*",
+  "*/src/cadrumo/*/tests/*",
+  "*\\src\\cadrumo\\*\\tests\\*",
+  "*/src/cadrumo/_data/*",
+  "*\\src\\cadrumo\\_data\\*",
+  "*/src/cadrumo/*/_data/*",
+  "*\\src\\cadrumo\\*\\_data\\*",
+  "*/src/cadrumo/conftest.py",
+  "*\\src\\cadrumo\\conftest.py",
+  "*/src/cadrumo/*/conftest.py",
+  "*\\src\\cadrumo\\*\\conftest.py",
 ]
 ignore_decorators = [
   "@app.command",

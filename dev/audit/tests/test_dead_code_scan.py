@@ -20,6 +20,7 @@ from ..dead_code import (
     MINIMUM_OFFERED_MODULES,
     DeadCodeOutcome,
     offered_module_population,
+    parse_vulture_output,
     run_dead_code_scan,
     vulture_command,
 )
@@ -167,6 +168,73 @@ def test_an_emptied_production_tree_refuses_though_one_target_file_survives(tmp_
     assert result.is_green is False
     assert "1 Python module(s)" in result.reason
     assert "timeout" not in result.reason
+
+
+def test_a_config_excluding_the_product_refuses_before_launch(tmp_path: Path) -> None:
+    """A broad exclusion makes the offered population empty even with real source present."""
+    _populated_tree(tmp_path)
+    (tmp_path / "pyproject.toml").write_text('[tool.vulture]\nexclude = ["*cadrumo*"]\n', encoding="utf-8")
+
+    result = run_dead_code_scan(tmp_path, timeout=0.0)
+
+    assert result.outcome is DeadCodeOutcome.ERROR
+    assert "0 Python module(s)" in result.reason
+    assert "timeout" not in result.reason
+
+
+def test_invalid_vulture_configuration_is_unavailable(tmp_path: Path) -> None:
+    """Invalid options must produce an unavailable result instead of crashing the audit."""
+    (tmp_path / "pyproject.toml").write_text("[tool.vulture]\nunknown_option = true\n", encoding="utf-8")
+
+    result = run_dead_code_scan(tmp_path)
+
+    assert result.outcome is DeadCodeOutcome.ERROR
+    assert "configuration could not be read" in result.reason
+
+
+def test_product_exclusions_match_a_real_vulture_scan(tmp_path: Path) -> None:
+    """Real Vulture selects product source even below pytest's test-named directory."""
+    (tmp_path / "pyproject.toml").write_bytes((_REPO_ROOT / "pyproject.toml").read_bytes())
+    for relative in (
+        "src/cadrumo/domain/one.py",
+        "src/cadrumo/domain/test_one.py",
+        "src/cadrumo/domain/_test_two.py",
+        "src/cadrumo/domain/tests/helper.py",
+        "src/cadrumo/domain/_data/content.py",
+        "src/cadrumo/domain/conftest.py",
+        "native/desktop/src-tauri/src/python/cli.py",
+        "dev/packaging/native/build.py",
+        "build/runtime/copied.py",
+    ):
+        module = tmp_path / relative
+        module.parent.mkdir(parents=True, exist_ok=True)
+        module.write_text("import math\n", encoding="utf-8")
+    whitelist = tmp_path / "dev/audit/vulture_whitelist.py"
+    whitelist.parent.mkdir(parents=True, exist_ok=True)
+    whitelist.write_text("", encoding="utf-8")
+
+    completed = run_command(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(_REPO_ROOT),
+            "--no-sync",
+            "vulture",
+            "--config",
+            str(tmp_path / "pyproject.toml"),
+            str(tmp_path / "src/cadrumo"),
+            str(whitelist),
+        ],
+        cwd=_REPO_ROOT,
+    )
+
+    assert completed.returncode == 3, completed.stderr
+    findings = parse_vulture_output(completed.stdout)
+    assert [(finding.path, finding.message) for finding in findings] == [
+        (_expected_vulture_path(tmp_path / "src/cadrumo/domain/one.py").replace("\\", "/"), "unused import 'math'"),
+    ]
+    assert offered_module_population(tmp_path) == 2
 
 
 def _populated_tree(root: Path) -> Path:
