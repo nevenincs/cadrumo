@@ -140,6 +140,7 @@ __all__ = [
     "SociedadesAnnualManualCoverageDisposition",
     "SociedadesAnnualManualCoverageStatus",
     "SupportedFilingYearsCatalogue",
+    "modelo_directory_revision_ids",
 ]
 
 from ....core.filing_year import FilingYear
@@ -971,6 +972,13 @@ class ModeloDefinition(RegistryModel):
         if failures:
             raise RegistryValidationError("; ".join(failures))
         return self
+
+
+def modelo_directory_revision_ids(modelo: ModeloDefinition) -> frozenset[str]:
+    """Read the actual directory identities retained by a selected Modelo view."""
+    if modelo._directory_revision_ids is not None:
+        return modelo._directory_revision_ids
+    return frozenset(modelo.revisions)
 
 
 def _require_revision_family_storage_delta(revision: ModeloRevision) -> None:

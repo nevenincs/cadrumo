@@ -6,8 +6,10 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb2d53cec40339f9efa850351c4ced17401d586fed5c36dfd324fdef1091037e'
+body_hash: 'sha256:b15157625a6a1c88abd26607fa8a256882c5ce154a98aba5f27fa79759cfeb7f'
 related:
+  - '[[2026-10-07-blocking-code-quality-repair-audit]]'
+  - '[[2026-10-07-blocking-code-quality-repair-ledger]]'
   - '[[2026-10-07-blocking-code-quality-repair-plan]]'
 ---
 
@@ -16,6 +18,14 @@ related:
 Auto-generated index of all documents tagged with `#blocking-code-quality-repair`.
 
 ## Documents
+
+### audit
+
+- `2026-10-07-blocking-code-quality-repair-audit` - `blocking-code-quality-repair` audit: `Integrated blocking-gate repair review`
+
+### exec
+
+- `2026-10-07-blocking-code-quality-repair-ledger` - `blocking-code-quality-repair` ledger
 
 ### plan
 

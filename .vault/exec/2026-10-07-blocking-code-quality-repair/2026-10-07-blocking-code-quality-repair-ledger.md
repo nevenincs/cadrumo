@@ -5,40 +5,14 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:d1b2e756202d36c02afbd2875bb552c9dba6726915d3564ee2e50e308fe95fe4'
+body_hash: 'sha256:b8f9c51181ade18f79f5b8f873948820075d5a27a11099c6eddc9d3164b7792e'
 related:
   - "[[2026-10-07-blocking-code-quality-repair-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `blocking-code-quality-repair` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S02` `M` `src/cadrumo/domain/calculations/registry/form_projection_fields.py`
 - `S02` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
@@ -271,6 +245,17 @@ related:
 - `S04` `verify:` `foreign payload owner and routing tests 111 cases` -> `pass`
 - `S04` `verify:` `legacy logout operation refusal regression` -> `pass`
 - `S04` `by:` `vaultspec-standard-executor and supervisor`
+- `S06` `M` `src/cadrumo/domain/modelos/calculation_revision_rendering.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S06` `A` `src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`
+- `S06` `verify:` `focused Ruff lint format and ty on four S06 files` -> `pass`
+- `S06` `verify:` `actual predecessor and grounded-root saved snapshot strict roundtrip` -> `pass`
+- `S06` `verify:` `existing valid snapshot omission shape and digest preserved` -> `pass`
+- `S06` `verify:` `directory context digest tamper and malformed authored predecessor refusal` -> `pass`
+- `S06` `verify:` `domain and actual encrypted catalogue readback suite 24 cases` -> `pass`
+- `S06` `verify:` `independent corrected rendering boundary review` -> `pass`
+- `S06` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -279,3 +264,5 @@ related:
 - `S04` Root core lane had 254 passing and 5 failing cases; the strict test-model repair resolved all failures in its 111-case rerun. Eight OS credential store cases were refused by this Windows logon and one POSIX permission case was unavailable on Windows; none is claimed verified.
 - `S04` The worker first lane excluded 10 OS-keychain or external cases; 79 distinct selected behavioral cases passed after precise throttle-state and selection fixture corrections.
 - `S04` Test import migrations shared with S03 were already committed in that atomic consumer update; the remaining Step paths contain S04 production retirement and setup migrations.
+- `S06` Captured directory IDs are copied from the validated owner and participate in rendering integrity; no current authority lookup, inferred references, weakened validators or durability changes were introduced.
+- `S06` Reusable adapters retain identical validated shapes and remove measured repeated schema construction in the saved-rendering traversal.

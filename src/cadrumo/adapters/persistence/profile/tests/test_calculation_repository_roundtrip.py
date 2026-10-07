@@ -58,6 +58,7 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
+from .....domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -170,7 +171,9 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
         )
 
 
-def _populated_catalogue() -> CalculationRevisionCatalogue:
+def _populated_catalogue(
+    *, rendering_snapshot: CalculationRenderingSnapshot | None = None
+) -> CalculationRevisionCatalogue:
     """Build a catalogue whose every defaultable field is non-default.
 
     The single revision is in ``VERIFICADO_COMPLETO`` state (not the
@@ -206,6 +209,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         source_transaction_ids=source_transaction_ids,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        rendering_snapshot=rendering_snapshot,
     )
 
     observations = (
@@ -258,6 +262,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         filing_instance_evidence=filing_instance_evidence,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
+        rendering_snapshot=rendering_snapshot,
         created_at=created_at,
         updated_at=verified_at,
         verified_at=verified_at,
@@ -313,6 +318,26 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert outcome.legal_refs == ("ley-37-1992:art-90",)
     assert outcome.context == {"tipo_renta": "interest", "country": "ZW"}
     assert profile.paths.database_file.is_file()
+
+
+def test_saved_rendering_snapshot_survives_encrypted_calculation_readback(tmp_path: Path) -> None:
+    operation = published_authority_operation()
+    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
+    original = _populated_catalogue(rendering_snapshot=rendering)
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(original)
+        loaded = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert loaded == original
+    (revision,) = loaded.values()
+    assert revision.rendering_snapshot == rendering
+    assert revision.rendering_snapshot is not None
+    assert revision.rendering_snapshot.registry_snapshot.revision.predecessor == snapshot.revision.predecessor
+    assert revision.rendering_snapshot.registry_snapshot.revision.localization_key == snapshot.revision.localization_key
 
 
 def test_changed_filing_evidence_persists_as_a_distinct_revision_without_replacing_the_original(
