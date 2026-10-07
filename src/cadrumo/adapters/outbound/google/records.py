@@ -50,7 +50,7 @@ class OAuthToken(BaseModel):
 
     :func:`adapters.outbound.google.oauth_flow.run_login_flow` returns
     this record with :class:`adapters.outbound.google.records.OAuthMetadata`.
-    :func:`adapters.outbound.google.session_store.save_token` persists
+    :func:`adapters.outbound.google.session_store.save_session` persists
     it under the SECRET classification. It is written once, at sign-in.
     Access tokens are held in memory only and rebuilt from the refresh token
     on process start.
@@ -80,7 +80,7 @@ class OAuthMetadata(BaseModel):
 
     This is the non-secret companion record to
     :class:`adapters.outbound.google.records.OAuthToken`.
-    :func:`adapters.outbound.google.session_store.save_metadata`
+    :func:`adapters.outbound.google.session_store.save_session`
     persists which Google account the operator linked, which
     :data:`adapters.outbound.google.records.REQUIRED_SCOPES` the consent screen
     granted, and when the credential was issued. It records the sign-in, not
@@ -119,7 +119,7 @@ class OAuthMetadata(BaseModel):
 class DriveConfig(BaseModel):
     """Per-profile Drive backend configuration persisted alongside OAuth records.
 
-    :func:`adapters.outbound.google.session_store.save_drive_config`
+    :func:`adapters.outbound.google.session_store.save_session`
     persists the ID of the folder
     :func:`adapters.outbound.google.root_folder.ensure_profile_root_folder`
     created at sign-in. Nothing else writes it: no command, setting or

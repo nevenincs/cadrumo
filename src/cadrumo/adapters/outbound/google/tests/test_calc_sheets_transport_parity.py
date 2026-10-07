@@ -8,11 +8,8 @@ produces from the same plan.
 
 It lives beside the online adapter because the payload assembly it reads is that
 adapter's own, and it consumes the offline materializer through its public
-function. The comparison itself is the online adapter's
-:func:`changed_cell_addresses`, so this gate does not invent a second notion of
-"the same value" -- a ``Decimal`` sent to Sheets as fixed-point text and written
-offline as a number are the same figure, and an online blank matches a cell the
-offline workbook left empty.
+function. Numeric display values and literal strings compare directly, while an online
+blank matches a cell the offline workbook left empty.
 """
 
 from __future__ import annotations
@@ -37,8 +34,6 @@ from .....domain.calculations.registry.tests.published_authority import publishe
 from ...workbook.calc_sheets_xlsx import materialize_export_plan
 from .._calc_sheets_apply_values import (
     build_formula_data,
-    changed_cell_addresses,
-    payload_written_addresses,
     written_cell_values,
 )
 from ..calc_sheets_apply import _developer_metadata_pairs, _plan_value_payload
@@ -71,7 +66,7 @@ def test_human_template_preview_preserves_zero_and_blank_without_technical_metad
     )
     online_values = written_cell_values(_plan_value_payload(plan))
     offline_values = _offline_cell_values(materialize_export_plan(plan))
-    assert changed_cell_addresses(target=online_values, current=offline_values) == ()
+    assert all(offline_values.get(address, "") == value for address, value in online_values.items())
     assert offline_values == {"'Modelo'!A1": "Ejemplo ficticio", "'Modelo'!A2": 0}
     assert _developer_metadata_pairs(plan) == []
 
@@ -105,12 +100,12 @@ def test_offline_workbook_writes_exactly_the_online_payload_cells(
     plan = _plan(modelo, year, period, on)
     online_payload = _plan_value_payload(plan) + build_formula_data(plan.formula_cells)
     online_values = written_cell_values(online_payload)
-    online_addresses = payload_written_addresses(online_payload)
+    online_addresses = frozenset(online_values)
 
     offline_values = _offline_cell_values(materialize_export_plan(plan))
 
     # Nothing the online transport would write is missing or different offline.
-    assert changed_cell_addresses(target=online_values, current=offline_values) == ()
+    assert all(offline_values.get(address, "") == value for address, value in online_values.items())
     # And nothing the plan does not declare appears offline: no extra tab, no
     # extra metadata row, no cell the online workbook would not have.
     assert set(offline_values) <= online_addresses

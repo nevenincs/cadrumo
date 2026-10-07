@@ -6,7 +6,6 @@ Core types: :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapsho
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -46,8 +45,6 @@ from .modelo_spreadsheet_operation_projections import (
     ModeloSpreadsheetProjection,
 )
 
-MAX_MODELO_SPREADSHEET_SCENARIO_BYTES = PROJECTION_DOCUMENT_MAX_BYTES
-
 
 @dataclass(slots=True)
 class _SpreadsheetExecution:
@@ -59,9 +56,6 @@ class _SpreadsheetExecution:
     period: Period
     snapshot: RegistrySnapshot
     coordinate: dict[str, Any]
-    source_reader: Callable[[Path], bytes]
-    loop: asyncio.AbstractEventLoop
-    remote_dispatched: bool = False
     local_publication_started: bool = False
 
 
@@ -97,7 +91,7 @@ def _output_path_refusal(
 
 
 def _current_effect(scope: _SpreadsheetExecution) -> OperationEffect:
-    attempted = scope.remote_dispatched or scope.local_publication_started
+    attempted = scope.local_publication_started
     return OperationEffect.UNKNOWN if attempted else OperationEffect.NONE
 
 
@@ -200,12 +194,9 @@ async def _execute_scope(scope: _SpreadsheetExecution) -> OperationExecutorResul
 class ModeloSpreadsheetExecutor:
     """Retain the profile pin while delegating algorithms through canonical ports."""
 
-    def __init__(
-        self, factory: ModeloSpreadsheetOperationPortsFactory, *, source_reader: Callable[[Path], bytes]
-    ) -> None:
-        """Bind lazy profile ports and the secure source reader."""
+    def __init__(self, factory: ModeloSpreadsheetOperationPortsFactory) -> None:
+        """Bind the exact-profile local export ports."""
         self._factory = factory
-        self._source_reader = source_reader
 
     async def execute(
         self, request: OperationRequest[BaseModel], context: OperationExecutorContext
@@ -240,10 +231,8 @@ class ModeloSpreadsheetExecutor:
             period=period,
             snapshot=snapshot,
             coordinate=coordinate,
-            source_reader=self._source_reader,
-            loop=asyncio.get_running_loop(),
         )
         return await await_cancellation_complete(_execute_scope(scope), task_name=request.definition_id)
 
 
-__all__ = ["MAX_MODELO_SPREADSHEET_SCENARIO_BYTES", "ModeloSpreadsheetExecutor"]
+__all__ = ["ModeloSpreadsheetExecutor"]

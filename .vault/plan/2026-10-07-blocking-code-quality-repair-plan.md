@@ -12,7 +12,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:f0604602228e99971a40fe9003f3030a5b30001381e02020468f78a8802e667e'
+body_hash: 'sha256:dc2ab2de53595ade37cfb28f0eed988348c26af62a23f70242bda1f371675625'
 ---
 
 # `blocking-code-quality-repair` plan
@@ -31,7 +31,7 @@ The first `just check-code` observation failed seven gates: lint, format, types,
 
 - [ ] `S01` - Repair canonical tooling imports and typed developer fixtures; `dev/docs, dev/packaging, dev/registry excluding dev/quality/metadata`.
 - [x] `S02` - Repair production and Windows fixture type contracts; `src/cadrumo/domain/calculations/registry, application/operations/terminated_owner.py, entrypoints/cli/config/tests and native desktop Python`.
-- [ ] `S03` - Complete retirement of obsolete Google workbook paths and repair remaining typed renderers; `Google adapters, calc_sheets, modelo spreadsheet modules and dedicated review presentation modules`.
+- [x] `S03` - Complete retirement of obsolete Google workbook paths and repair remaining typed renderers; `Google adapters, calc_sheets, modelo spreadsheet modules and dedicated review presentation modules`.
 - [ ] `S04` - Reconcile authentication and storage symbols with their real production consumers; `profile authentication, secure custody and core storage_environment`.
 - [ ] `S05` - Regenerate import enrollment and prove the integrated blocking gate result; `dev/quality/metadata and all modified source plus focused tests`.
 

@@ -32,6 +32,7 @@ from ....persistence.storage.sql.secure_object_records import SecureObjectDeleti
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
+from . import session_records as google_session_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -46,7 +47,7 @@ _UNREGISTERED_NAMESPACE = "cadrumo.outbound.google.no-such-namespace"
 
 def _seed() -> None:
     """Persist a complete, genuine login session through the real write path."""
-    session_store.save_token(
+    google_session_records.save_token(
         _PROFILE,
         OAuthToken(
             refresh_token="1//refresh-token",
@@ -54,7 +55,7 @@ def _seed() -> None:
             token_uri="https://oauth2.googleapis.com/token",
         ),
     )
-    session_store.save_metadata(
+    google_session_records.save_metadata(
         _PROFILE,
         OAuthMetadata(
             account_email="operator@example.com",
@@ -62,7 +63,7 @@ def _seed() -> None:
             issued_at=_ISSUED_AT,
         ),
     )
-    session_store.save_drive_config(_PROFILE, DriveConfig(root_folder_id="drive-folder-id"))
+    google_session_records.save_drive_config(_PROFILE, DriveConfig(root_folder_id="drive-folder-id"))
 
 
 def test_a_clean_logout_clears_both_records_and_keeps_the_drive_config(tmp_path: Path) -> None:

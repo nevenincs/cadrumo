@@ -9,8 +9,6 @@ import zipfile
 from openpyxl import load_workbook
 
 from ...adapters.outbound.google import session_store
-from ...adapters.outbound.google.records import DriveConfig
-from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from ...application.evidence.models import EvidenceBundle
 from ...application.evidence.service import EvidenceBundleService
 from ...application.modelo.audit_operation import (
@@ -21,26 +19,17 @@ from ...application.modelo.audit_operation import (
     ModeloAuditReadRequest,
 )
 from ...application.modelo.modelo_spreadsheet_operation_contracts import (
-    MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
-    MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID,
-    MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID,
-    ModeloSpreadsheetCalculateRequest,
     ModeloSpreadsheetExportOutcome,
     ModeloSpreadsheetExportRequest,
-    ModeloSpreadsheetPullRequest,
-    ModeloSpreadsheetVerifyRequest,
 )
 from ...application.modelo.modelo_spreadsheet_operation_projections import ModeloSpreadsheetExportProjection
 from ...application.operations.public_period import PublicPeriod
 from ...application.storage.calc_sheets.records import TabName
-from ...application.user_profile.capabilities import resolve_active_capability
 from ...application.workflow.persistence import workflow_state_repository
-from ...core.capabilities import ServiceCapability
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.buckets.event import BucketEventObjectType
-from ...domain.user_profile.values import UserProfileFact
 from ..modelo_audit_operation_composition import build_modelo_audit_operation_ports
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -53,7 +42,7 @@ from .modelo_operation_test_support import seeded_modelo_work_unit
 
 _MODELO = "303"
 _PERIOD = PublicPeriod(filing_year=2025, code="1T")
-_SPREADSHEET_ID = "conformance-spreadsheet"
+_LOCAL_WORKBOOK_TABS = ("Entradas", "Cálculos", "Procedencia", "Tarifas", "Detalle", "Evidencia", "Guía")
 
 
 def _prepare_export(context: ConformanceFamilyContext) -> ConformancePreparation:
@@ -82,7 +71,7 @@ def _prepare_export(context: ConformanceFamilyContext) -> ConformancePreparation
                 output_path=str(output),
                 byte_size=len(landed),
                 sha256=sha256_hex(landed),
-                tab_names=tuple(tab.value for tab in TabName),
+                tab_names=_LOCAL_WORKBOOK_TABS,
                 casilla_count=result.result.casilla_count,
                 prefill_relations=False,
             ),
@@ -98,41 +87,9 @@ def _prepare_export(context: ConformanceFamilyContext) -> ConformancePreparation
 
 
 def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
-    definition_id = context.definition.definition_id
-    profile_id = context.profile_id
-    subject_ref = profile_operation_subject(str(profile_id))
-    if definition_id == MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID:
-        return _prepare_export(context)
-    if definition_id == MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID:
-        return ConformancePreparation(
-            subject_ref=subject_ref,
-            request=ModeloSpreadsheetPullRequest(
-                profile_id=profile_id, modelo=_MODELO, period=_PERIOD, spreadsheet_id=_SPREADSHEET_ID
-            ),
-        )
-    if definition_id == MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID:
-        return ConformancePreparation(
-            subject_ref=subject_ref,
-            request=ModeloSpreadsheetCalculateRequest(
-                profile_id=profile_id, modelo=_MODELO, period=_PERIOD, spreadsheet_id=_SPREADSHEET_ID
-            ),
-        )
-    if definition_id == MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID:
-        return ConformancePreparation(
-            subject_ref=subject_ref,
-            request=ModeloSpreadsheetVerifyRequest(profile_id=profile_id, modelo=_MODELO, period=_PERIOD),
-        )
-    raise AssertionError(f"no modelo spreadsheet conformance scenario for {definition_id}")
-
-
-def _drive_root_refusal(definition_id: str) -> RegisteredExecutorConformanceCase:
-    return RegisteredExecutorConformanceCase(
-        definition_id,
-        OperationTerminalCondition.REFUSED,
-        OperationEffect.NONE,
-        (definition_id,),
-        expected_refusal_ref="REFUSED_OUTBOUND_STORAGE_VALIDATION",
-    )
+    if context.definition.definition_id != MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID:
+        raise AssertionError(f"no local spreadsheet conformance scenario for {context.definition.definition_id}")
+    return _prepare_export(context)
 
 
 MODELO_SPREADSHEET_CONFORMANCE_FAMILY = ConformanceFamily(
@@ -143,9 +100,6 @@ MODELO_SPREADSHEET_CONFORMANCE_FAMILY = ConformanceFamily(
             OperationEffect.UPDATED,
             (MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,),
         ),
-        _drive_root_refusal(MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID),
-        _drive_root_refusal(MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID),
-        _drive_root_refusal(MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID),
     ),
     prepare=_prepare,
 )
@@ -221,35 +175,12 @@ def _retained_modelo_reports_prepare_audit(context: ConformanceFamilyContext) ->
 
 def _retained_modelo_reports_prepare_spreadsheet(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile = str(context.profile_id)
-    definition_id = context.definition.definition_id
     assert session_store.load_token(profile) is None
     assert session_store.load_drive_config(profile) is None
     output = context.input_root / "modelo-130.xlsx"
-    if definition_id == "modelo.spreadsheet.calculate":
-        session_store.save_drive_config(profile, DriveConfig(root_folder_id="conformance-selected-folder"))
-        request = ModeloSpreadsheetCalculateRequest(
-            profile_id=context.profile_id,
-            modelo="130",
-            period=_RETAINED_MODELO_REPORTS_PERIOD,
-            spreadsheet_id="conformance-workbook",
-        )
-    elif definition_id == "modelo.spreadsheet.pull":
-        request = ModeloSpreadsheetPullRequest(
-            profile_id=context.profile_id,
-            modelo="130",
-            period=_RETAINED_MODELO_REPORTS_PERIOD,
-            spreadsheet_id="conformance-workbook",
-        )
-    elif definition_id == "modelo.spreadsheet.verify":
-        upsert_test_profile_facts(profile, (UserProfileFact(path="capabilities.google_export", value=False),))
-        assert resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled is False
-        request = ModeloSpreadsheetVerifyRequest(
-            profile_id=context.profile_id, modelo="130", period=_RETAINED_MODELO_REPORTS_PERIOD
-        )
-    else:
-        request = ModeloSpreadsheetExportRequest(
-            profile_id=context.profile_id, modelo="130", period=_RETAINED_MODELO_REPORTS_PERIOD, output_path=str(output)
-        )
+    request = ModeloSpreadsheetExportRequest(
+        profile_id=context.profile_id, modelo="130", period=_RETAINED_MODELO_REPORTS_PERIOD, output_path=str(output)
+    )
     before_drive = session_store.load_drive_config(profile)
     workflow = workflow_state_repository()
     seed_workflow = workflow.load()
@@ -263,11 +194,6 @@ def _retained_modelo_reports_prepare_spreadsheet(context: ConformanceFamilyConte
         assert session_store.load_token(profile) is None
         assert session_store.load_drive_config(profile) == before_drive
         assert workflow_state_repository().load() == before_workflow
-        if definition_id != "modelo.spreadsheet.export":
-            assert not output.exists()
-            if definition_id == "modelo.spreadsheet.verify":
-                assert resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled is False
-            return
         settled = outcome.resolve_result(ModeloSpreadsheetExportOutcome)
         assert settled.outcome == "succeeded"
         assert settled.refusal is None
@@ -285,7 +211,7 @@ def _retained_modelo_reports_prepare_spreadsheet(context: ConformanceFamilyConte
         assert projection.casilla_count > 0
         workbook = load_workbook(io.BytesIO(payload), read_only=True, data_only=False)
         try:
-            assert tuple(workbook.sheetnames) == tuple(tab.value for tab in TabName)
+            assert tuple(workbook.sheetnames) == _LOCAL_WORKBOOK_TABS
             assert projection.tab_names == tuple(workbook.sheetnames)
             assert any(cell.data_type == "f" for row in workbook[TabName.CALCULOS.value] for cell in row)
             guide_values = {
@@ -320,23 +246,6 @@ MODELO_REPORTS_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
             "modelo.audit.query",
             "modelo.audit.export",
             "modelo.spreadsheet.export",
-        )
-    )
-    + tuple(
-        RegisteredExecutorConformanceCase(
-            definition_id,
-            OperationTerminalCondition.REFUSED,
-            OperationEffect.NONE,
-            (definition_id,),
-            refusal_ref,
-        )
-        # Pull has no Drive root, verify has the export capability off, and
-        # calculate reaches credential hydration in an installation that
-        # carries no Google client.
-        for definition_id, refusal_ref in (
-            ("modelo.spreadsheet.pull", "REFUSED_OUTBOUND_STORAGE_VALIDATION"),
-            ("modelo.spreadsheet.calculate", "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"),
-            ("modelo.spreadsheet.verify", "REFUSED_PROFILE_ACCESS"),
         )
     ),
     prepare=_retained_modelo_reports_prepare,

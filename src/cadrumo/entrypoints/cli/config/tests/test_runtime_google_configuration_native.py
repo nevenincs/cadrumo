@@ -24,14 +24,8 @@ from pydantic import JsonValue
 from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from .....adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
-from .....adapters.outbound.google.session_store import (
-    load_drive_config,
-    load_metadata,
-    load_token,
-    save_drive_config,
-    save_metadata,
-    save_token,
-)
+from .....adapters.outbound.google.session_store import load_drive_config, load_metadata, load_token
+from .....adapters.outbound.google.tests.session_records import save_drive_config, save_metadata, save_token
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....application.operations.frontend_requests import (
     OperationObservationSuccessV1,
@@ -53,7 +47,7 @@ from .....application.user_profile.google_configuration_operation_contracts impo
     GoogleStatusProjection,
     GoogleStatusRequest,
 )
-from .....application.user_profile.login_session import login_profile, resolve_login_target
+from .....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from .....core.hashing import canonical_json_bytes
 from .....core.operations import OperationEffect, profile_operation_subject
 from .....core.redaction.rules import redact_structured_for_cli_output
@@ -210,7 +204,7 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         assert unwrap_cli_result(invoke("folder", "view"))["configured"] is False
 
         close_active_bucket_session()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=profile.label,
             passphrase_callback=lambda: profile.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),
@@ -262,7 +256,7 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         for field, expected in expected_visible.items():
             assert linked[field] == expected
         close_active_bucket_session()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=profile.label,
             passphrase_callback=lambda: profile.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),
@@ -291,7 +285,7 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         assert logout_effects == [OperationEffect.UPDATED, OperationEffect.NONE]
         final_status = unwrap_cli_result(invoke("status"))
         assert final_status["session_present"] is False
-        login_profile(
+        authenticate_profile_for_invocation(
             name=profile.label,
             passphrase_callback=lambda: profile.passphrase,
             profile_decode_context=authority_operation.profile_decode_context(),

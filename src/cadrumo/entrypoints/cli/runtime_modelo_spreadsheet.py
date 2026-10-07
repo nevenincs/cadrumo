@@ -10,19 +10,11 @@ from pydantic import BaseModel
 
 from ...application.modelo.modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
-    MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE,
-    ModeloSpreadsheetCalculateOutcome,
-    ModeloSpreadsheetCalculateRequest,
     ModeloSpreadsheetExportOutcome,
     ModeloSpreadsheetExportRequest,
-    ModeloSpreadsheetPullOutcome,
-    ModeloSpreadsheetPullRequest,
     ModeloSpreadsheetRequest,
-    ModeloSpreadsheetVerifyOutcome,
     SpreadsheetOutputPathRefusal,
     SpreadsheetRefusal,
-    SpreadsheetRowIngressRefusal,
-    SpreadsheetSnapshotMismatchRefusal,
 )
 from ...application.modelo.modelo_spreadsheet_operation_projections import (
     ModeloSpreadsheetExportProjection,
@@ -38,7 +30,6 @@ from .runtime_profile_binding import bound_profile_client, require_profile_clien
 from .runtime_registered_operation import run_registered_operation
 
 _OUTPUT_PATH_REFUSAL_CODE = "REFUSED_MODELO_EXPORT_OUTPUT_PATH"
-_SNAPSHOT_REFUSAL_CODE = "REFUSED_OUTBOUND_STORAGE_CONFLICT"
 _OUTPUT_PATH_REASONS = {
     "empty": "path is empty",
     "existing_directory": "path is an existing directory",
@@ -47,19 +38,7 @@ _OUTPUT_PATH_REASONS = {
     "parent_not_directory": "parent path is not a directory",
     "publication_failed": "file publication failed",
 }
-_ROW_INGRESS_REASONS = {
-    "undeclared_grouping": "the row grouping is not declared",
-    "caller_binding_substitution": "the row uses a binding not declared for this grouping",
-    "unknown_field": "the row contains an unknown binding",
-    "duplicate_cell_coordinate": "the row contains a duplicate binding coordinate",
-    "row_ownership_collision": "two row sets claim the same row",
-}
-type ModeloSpreadsheetRegisteredOutcome = (
-    ModeloSpreadsheetExportOutcome
-    | ModeloSpreadsheetPullOutcome
-    | ModeloSpreadsheetCalculateOutcome
-    | ModeloSpreadsheetVerifyOutcome
-)
+type ModeloSpreadsheetRegisteredOutcome = ModeloSpreadsheetExportOutcome
 
 
 def _submit[ProjectionT: BaseModel](
@@ -108,43 +87,6 @@ def _refuse_from_correlated_outcome(
             "reason": _OUTPUT_PATH_REASONS[refusal.reason],
         }
         translated_message = "application.modelo.errors.export_output_path_invalid"
-    elif isinstance(refusal, SpreadsheetRowIngressRefusal):
-        if outcome.operation != "pull" or refusal_code != MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE:
-            raise submitted_operation_error(
-                operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=OperationTerminalCondition.REFUSED,
-                effect=effect,
-                refusal_code=refusal_code,
-            )
-        context = {
-            "row_index": refusal.row_index,
-            "validation_error_type": "row_set_ingress",
-            "validation_error_detail": _ROW_INGRESS_REASONS[refusal.reason],
-        }
-        translated_message = "application.calculations.row_set.errors.row_assembly_failed"
-    elif isinstance(refusal, SpreadsheetSnapshotMismatchRefusal):
-        if outcome.operation not in {"pull", "calculate"} or refusal_code != _SNAPSHOT_REFUSAL_CODE:
-            raise submitted_operation_error(
-                operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=OperationTerminalCondition.REFUSED,
-                effect=effect,
-                refusal_code=refusal_code,
-            )
-        context = {
-            "spreadsheet_id": refusal.spreadsheet_id,
-            "metadata_match": refusal.metadata_match,
-            "workbook_modelo": refusal.workbook_modelo,
-            "snapshot_modelo": str(refusal.snapshot_modelo),
-            "workbook_revision": refusal.workbook_revision,
-            "snapshot_revision": str(refusal.snapshot_revision),
-            "workbook_engine_version": refusal.workbook_engine_version,
-            "expected_engine_version": refusal.expected_engine_version,
-            "workbook_registry_sha": refusal.workbook_registry_sha,
-            "snapshot_registry_sha": refusal.snapshot_registry_sha,
-        }
-        translated_message = "adapters.google.calc_sheets.errors.workbook_snapshot_mismatch"
     else:
         raise submitted_operation_error(
             operation_id,
@@ -303,38 +245,6 @@ def _require_output_path_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
         raise invalid_completion_error(completed)
 
 
-def _require_row_ingress_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
-    completed: RegisteredOperationCompletion[OutcomeT],
-    request: ModeloSpreadsheetRequest,
-    operation: str,
-    refusal: SpreadsheetRowIngressRefusal,
-) -> None:
-    """Correlate this refusal with its request and admitted effects."""
-    if (
-        operation != "pull"
-        or completed.refusal_code != MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE
-        or completed.effect is not OperationEffect.NONE
-    ):
-        raise invalid_completion_error(completed)
-
-
-def _require_snapshot_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
-    completed: RegisteredOperationCompletion[OutcomeT],
-    request: ModeloSpreadsheetRequest,
-    operation: str,
-    refusal: SpreadsheetSnapshotMismatchRefusal,
-) -> None:
-    """Correlate this refusal with its request and admitted effects."""
-    if (
-        operation not in {"pull", "calculate"}
-        or not isinstance(request, (ModeloSpreadsheetPullRequest, ModeloSpreadsheetCalculateRequest))
-        or refusal.spreadsheet_id != request.spreadsheet_id
-        or completed.refusal_code != _SNAPSHOT_REFUSAL_CODE
-        or completed.effect is not OperationEffect.NONE
-    ):
-        raise invalid_completion_error(completed)
-
-
 def _require_spreadsheet_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
     completed: RegisteredOperationCompletion[OutcomeT],
     request: ModeloSpreadsheetRequest,
@@ -344,9 +254,5 @@ def _require_spreadsheet_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
     """Dispatch a correlated refusal to its closed typed contract."""
     if isinstance(refusal, SpreadsheetOutputPathRefusal):
         _require_output_path_refusal(completed, request, operation, refusal)
-    elif isinstance(refusal, SpreadsheetRowIngressRefusal):
-        _require_row_ingress_refusal(completed, request, operation, refusal)
-    elif isinstance(refusal, SpreadsheetSnapshotMismatchRefusal):
-        _require_snapshot_refusal(completed, request, operation, refusal)
     else:
         raise invalid_completion_error(completed)

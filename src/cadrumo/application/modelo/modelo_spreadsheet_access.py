@@ -9,7 +9,6 @@ from dataclasses import replace
 
 from pydantic import BaseModel
 
-from ...core.capabilities import ServiceCapability
 from ...core.period import Period
 from ...domain.calculations.registry.relations import relation_source_requirements
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -19,12 +18,10 @@ from ..operations.models import OperationRequest
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..user_profile.capabilities import resolve_active_capability
 from .modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_OPERATION_CONTRACTS,
     ModeloSpreadsheetExportRequest,
     ModeloSpreadsheetRequest,
-    ModeloSpreadsheetVerifyRequest,
 )
 
 
@@ -59,16 +56,6 @@ def _source_periods(
     return frozenset(periods)
 
 
-def _spreadsheet_provider(payload: ModeloSpreadsheetRequest) -> Availability:
-    if not isinstance(payload, ModeloSpreadsheetVerifyRequest):
-        return Availability.NOT_REQUIRED
-    return (
-        Availability.AVAILABLE
-        if resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled
-        else Availability.UNAVAILABLE
-    )
-
-
 def resolve_modelo_spreadsheet_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
@@ -85,7 +72,7 @@ def resolve_modelo_spreadsheet_access(
         {
             **dict(resolved.policy),
             "actions": resolved.policy.actions | {AccessAction.COMMIT},
-            "provider": _spreadsheet_provider(payload),
+            "provider": Availability.NOT_REQUIRED,
         }
     )
     return replace(resolved, policy=policy)

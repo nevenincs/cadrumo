@@ -41,7 +41,7 @@ def fictional_unused_form_rows(
             bindings = tuple(cell.binding_id for cell in row.cells if cell.binding_id is not None)
             if len(bindings) != len(row.cells) or not bindings or len(bindings) != len(set(bindings)):
                 raise CalcSheetsEngineError("fictional unused row must contain distinct binding inputs")
-            records = set()
+            records: set[str] = set()
             for binding in bindings:
                 provider = providers.get(binding)
                 if not isinstance(provider, ManualInputProvider) or provider.record is None:

@@ -11,7 +11,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.outbound.google.records import DriveConfig
-from ....adapters.outbound.google.session_store import save_drive_config
+from ....adapters.outbound.google.tests.session_records import save_drive_config
 from ....adapters.persistence.storage.bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.secure_object_namespaces import GOOGLE_DRIVE_CONFIG_NAMESPACE

@@ -16,19 +16,11 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....core.config import override_settings
-from ....core.hashing import canonical_json_bytes, sha256_hex
+from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.detail_record_bindings import (
-    AtributionMemberObservation,
-    Modelo720RowObservation,
-)
-from ....domain.calculations.registry.gasto193_bindings import Gasto193Observation
-from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.relations import relation_source_requirements
-from ....domain.calculations.registry.withholding296_bindings import Withholding296Observation
-from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -46,10 +38,6 @@ from ...user_profile.access_contracts import (
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..export_sink import LocalFileExportReceipt, LocalFileExportSink, ModeloExportOutputPathError
 from ..modelo_spreadsheet_executor import ModeloSpreadsheetExecutor
-from ..modelo_spreadsheet_observations import (
-    CanonicalSpreadsheetAssembledObservation,
-    project_modelo_spreadsheet_observation,
-)
 from ..modelo_spreadsheet_operation import (
     build_modelo_spreadsheet_definitions,
 )
@@ -60,11 +48,8 @@ from ..modelo_spreadsheet_operation_contracts import (
     ModeloSpreadsheetExportRequest,
     ModeloSpreadsheetOperationPorts,
     ModeloSpreadsheetOperationPortsFactory,
-    ModeloSpreadsheetVerifyRequest,
     SpreadsheetOutputPathRefusal,
-    SpreadsheetRowIngressRefusal,
 )
-from ..modelo_spreadsheet_operation_scenario import decode_modelo_spreadsheet_scenario
 from ..modelo_spreadsheet_registration import (
     build_modelo_spreadsheet_registration,
 )
@@ -84,7 +69,7 @@ def test_retired_request_is_refused_before_ports_or_provider(
     )
     request = _request(f"modelo.spreadsheet.{verb}", payload)
     scope, events, operands = _Scope(), _Events(), _Operands()
-    executor = ModeloSpreadsheetExecutor(_unavailable, source_reader=Path.read_bytes)
+    executor = ModeloSpreadsheetExecutor(_unavailable)
     with pytest.raises(ProfileAccessRefusedError) as error:
         asyncio.run(executor.execute(request, _context(request, authority_operation, scope, events, operands)))
     assert error.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
@@ -202,20 +187,6 @@ def test_every_public_spreadsheet_schema_compiles_with_secure_requests() -> None
         assert row.result_type is ModeloSpreadsheetExecutionResult
         assert len(registration.schema_bindings) == 2
         assert row.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
-
-
-def test_scenario_reference_is_paired_and_original_decoder_preserves_defaults(tmp_path: Path) -> None:
-    path = tmp_path / "scenario.json"
-    with pytest.raises(ValidationError):
-        ModeloSpreadsheetVerifyRequest(profile_id=_PROFILE, modelo="130", period=_PERIOD, scenario_path=str(path))
-    assert decode_modelo_spreadsheet_scenario(None, source_path=None).scenario_label == "empty-defaults"
-    scenario = decode_modelo_spreadsheet_scenario(
-        b'{"inputs_by_casilla_id":{"base_imponible":"125.00"},"bindings":[],"enum_bindings":{"region":42},"scenario_label":""}',
-        source_path=path,
-    )
-    assert str(scenario.inputs_by_casilla_id["base_imponible"]) == "125.00"
-    assert scenario.bindings == {} and scenario.enum_bindings == {"region": "42"}
-    assert scenario.scenario_label == "scenario"
 
 
 def test_foreign_worker_profile_is_refused_before_port_construction(
@@ -340,66 +311,6 @@ def test_prefill_admission_uses_only_published_source_periods_and_requires_a_pin
     assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 
-@pytest.mark.parametrize(
-    ("model", "fields"),
-    [
-        (
-            WithholdingObservation,
-            {
-                "perceptor_tax_id": "synthetic-id",
-                "transaction_date": "2026-01-15",
-                "clave": "A",
-                "incapacity_cash_perception": "0",
-                "incapacity_cash_withholding": "0",
-                "incapacity_kind_value": "0",
-                "incapacity_kind_ingreso_a_cuenta": "0",
-                "incapacity_kind_repercutido": "0",
-                "foral_retention_estatal": "0",
-                "foral_retention_navarra": "0",
-                "foral_retention_araba": "0",
-                "foral_retention_gipuzkoa": "0",
-                "foral_retention_bizkaia": "0",
-                "base_retenciones": "0",
-            },
-        ),
-        (
-            Modelo720RowObservation,
-            {
-                "asset_ref": "m720a_" + "f" * 32,
-                "asset_class_code": "C",
-                "country_code": "CH",
-                "currency_code": "CHF",
-                "acquisition_date": "2020-01-15",
-                "valuation_amount": "120000.00",
-                "valuation_event": "extinction",
-                "valuation_event_date": "2025-06-13",
-            },
-        ),
-        (
-            AtributionMemberObservation,
-            {
-                "member_tax_id": "synthetic-id",
-                "transaction_date": "2026-01-15",
-                "share_percentage": "50.00",
-                "base_imponible_assigned": "100.00",
-                "clave": "A",
-            },
-        ),
-        (Gasto193Observation, {"contributor_tax_id": "synthetic-id", "transaction_date": "2026-01-15"}),
-        (Withholding296Observation, {"perceptor_tax_id": "synthetic-id", "transaction_date": "2026-01-15"}),
-    ],
-)
-def test_every_canonical_observation_family_projects_without_losing_fields(
-    model: type[BaseModel],
-    fields: dict[str, str],
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    with validating_governed_facts(authority_operation):
-        canonical = model.model_validate_json(canonical_json_bytes({"source_id": "synthetic-source", **fields}))
-    wire = project_modelo_spreadsheet_observation(cast(CanonicalSpreadsheetAssembledObservation, canonical))
-    assert wire.model_dump(mode="json") == canonical.model_dump(mode="json")
-
-
 def _refusal_receipt(
     definition: OperationDefinition, evidence: OperationRefusalEvidence, effect: OperationEffect
 ) -> OperationTerminalReceipt:
@@ -484,11 +395,5 @@ def test_output_refusal_retains_closed_facts_and_actual_effect(
 
 
 def test_refusal_shape_cannot_carry_unreviewed_text_or_incomplete_coordinates() -> None:
-    with pytest.raises(ValidationError):
-        SpreadsheetRowIngressRefusal(reason="row_ownership_collision", grouping="declared", row_index=1)
-    with pytest.raises(ValidationError):
-        SpreadsheetRowIngressRefusal.model_validate(
-            {"reason": "undeclared_grouping", "grouping": "declared", "row_index": 1, "value": "SECRET"}
-        )
     with pytest.raises(ValidationError):
         SpreadsheetOutputPathRefusal.model_validate({"output_path": "output.xlsx", "reason": "SECRET-OS-TEXT"})

@@ -32,16 +32,38 @@ from ...storage.errors import (
     OutboundStorageError,
     OutboundStorageValidationError,
 )
-from ..calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
 from ..drive_entries import (
     OWNERSHIP_KEY,
     OWNERSHIP_VALUE,
     build_owned_entry_query,
+    find_owned_drive_entry,
     is_app_owned,
     require_drive_entry_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def _find_folder(drive, *, parent_id: str, name: str):
+    return find_owned_drive_entry(
+        drive,
+        parent_id=parent_id,
+        name=name,
+        mime_type="application/vnd.google-apps.folder",
+        list_action="drive.files.list",
+        conflict_message="foreign folder",
+    )
+
+
+def _find_spreadsheet(drive, *, parent_id: str, name: str):
+    return find_owned_drive_entry(
+        drive,
+        parent_id=parent_id,
+        name=name,
+        mime_type="application/vnd.google-apps.spreadsheet",
+        list_action="drive.files.list.spreadsheet",
+        conflict_message="foreign spreadsheet",
+    )
 
 
 @pytest.mark.parametrize(
@@ -202,13 +224,6 @@ def test_owned_entry_without_a_usable_id_is_refused_not_indexed(bad_id: str | No
             "identifier_type": type(bad_id).__name__,
         },
     )
-
-
-def test_ensure_folder_refuses_an_id_less_owned_entry() -> None:
-    """The caller that previously raised ``KeyError('id')`` now refuses cleanly."""
-    drive = _RecordedDrive([_owned(None)])
-    with pytest.raises(OutboundStorageValidationError):
-        _ensure_folder(_as_drive_resource(drive), parent_id="root", name="target")
 
 
 def test_spreadsheet_lookup_refuses_an_id_less_owned_entry() -> None:

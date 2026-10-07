@@ -36,7 +36,6 @@ from .._modelo_revision_payload_parts import (
     ObservationPayload,
     SourceProvenancePayload,
 )
-from .._modelo_spreadsheet_payloads import ModeloSpreadsheetCalculateCasillaPayload
 from .._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .._modelo_work_wizard_payloads import WorkWizardResult
 
@@ -224,20 +223,11 @@ def test_casilla_provenance_payloads_share_formula_identifier_validation() -> No
         legal_refs=("ley-58-2003:art-120",),
         source_refs=("libro-1",),
     )
-    google = ModeloSpreadsheetCalculateCasillaPayload(
-        casilla_id=_PAYLOAD_CASILLA,
-        value="1234.56",
-        formula_id="m130-test-formula",
-        legal_refs=("ley-58-2003:art-120",),
-        source_refs=("libro-1",),
-    )
-
-    assert observation.formula_id == delta.formula_id == google.formula_id == "m130-test-formula"
+    assert observation.formula_id == delta.formula_id == "m130-test-formula"
 
     for payload_type, payload in (
         (CasillaObservationPayload, observation.model_dump()),
         (DeltaRowPayload, delta.model_dump()),
-        (ModeloSpreadsheetCalculateCasillaPayload, google.model_dump()),
     ):
         payload["formula_id"] = "bad formula"
         with pytest.raises(ValidationError, match="String should match pattern"):

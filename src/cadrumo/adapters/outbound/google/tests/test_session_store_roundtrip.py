@@ -32,9 +32,7 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        session_store.save_token(profile, token)
-        session_store.save_metadata(profile, metadata)
-        session_store.save_drive_config(profile, drive_config)
+        session_store.save_session(profile, token, metadata, drive_config)
 
         raw_records = tuple(runtime.repository.iter_all_records_raw())
         token_rows = [row for row in raw_records if row.namespace == "cadrumo.google.oauth.token"]

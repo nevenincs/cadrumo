@@ -6,7 +6,7 @@ import os
 from datetime import UTC, datetime
 
 from ...adapters.outbound.google.records import DriveConfig
-from ...adapters.outbound.google.session_store import save_drive_config
+from ...adapters.outbound.google.tests.session_records import save_drive_config
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository, build_bucket_event_history_repository
 from ...adapters.persistence.storage.bucket.sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX
 from ...adapters.persistence.storage.secure_object_namespaces import GOOGLE_DRIVE_CONFIG_NAMESPACE

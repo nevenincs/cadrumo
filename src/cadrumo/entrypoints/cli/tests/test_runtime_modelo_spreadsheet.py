@@ -1,4 +1,4 @@
-"""The four spreadsheet CLI routes submit correlated registered requests."""
+"""Local spreadsheet export submits a correlated registered request."""
 
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ from pydantic import BaseModel
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.modelo.modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
-    MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE,
     ModeloSpreadsheetExportOutcome,
     ModeloSpreadsheetExportRequest,
     SpreadsheetOutputPathRefusal,
@@ -210,7 +209,7 @@ def test_export_does_not_translate_an_uncorrelated_output_refusal(
     refusal_code = "REFUSED_MODELO_EXPORT_OUTPUT_PATH"
     effect = OperationEffect.NONE
     if mismatch == "code":
-        refusal_code = MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE
+        refusal_code = "REFUSED_OUTBOUND_STORAGE_CONFLICT"
     elif mismatch == "effect":
         effect = OperationEffect.UPDATED
     else:

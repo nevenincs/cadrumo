@@ -17,10 +17,6 @@ import pytest
 from .....application.storage.calc_sheets.engine import build_export_plan
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .._calc_sheets_apply_values import (
-    build_formula_data,
-    changed_cell_addresses,
-    payload_written_addresses,
-    stale_addresses,
     written_cell_values,
 )
 from ..calc_sheets_apply import (
@@ -35,72 +31,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 def _m130_plan():
     snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     return build_export_plan(snapshot)
-
-
-class TestWrittenCellValuesSharesTheWrittenAddressesWalk:
-    """``written_cell_values`` and ``payload_written_addresses`` cannot drift."""
-
-    def test_a_real_plans_value_payload_yields_the_same_address_set_both_ways(self) -> None:
-        payload = _plan_value_payload(_m130_plan())
-        assert payload, "the plan produced no value payload -- the gate below would be vacuous"
-
-        addresses = payload_written_addresses(payload)
-        values = written_cell_values(payload)
-
-        assert set(values) == addresses
-        assert len(values) == len(addresses), "one address must map to exactly one value"
-
-    def test_a_multi_cell_row_carries_its_own_two_values(self) -> None:
-        entry = {"range": "'Evidencia'!B4", "values": [["left", "right"]]}
-        values = written_cell_values([entry])
-        assert values == {
-            "'Evidencia'!B4": "left",
-            "'Evidencia'!C4": "right",
-        }
-
-    def test_a_non_anchor_range_refuses_rather_than_under_reporting(self) -> None:
-        with pytest.raises(ValueError, match="single-cell anchor"):
-            written_cell_values([{"range": "'Evidencia'!A1:C9", "values": [["x"]]}])
-
-
-class TestChangedCellAddresses:
-    """A cell is only ``changed`` when its current content genuinely differs."""
-
-    def test_re_previewing_an_unchanged_spreadsheet_finds_nothing_changed(self) -> None:
-        """The byte-identical case: current content already equals every target value."""
-        target = written_cell_values(_plan_value_payload(_m130_plan()))
-        assert target, "no value payload to diff -- the positive control below would be vacuous"
-
-        changed = changed_cell_addresses(target=target, current=target)
-
-        assert changed == ()
-
-    def test_a_genuinely_different_value_is_reported_changed(self) -> None:
-        target = {"'Entradas'!B4": "100.00"}
-        current = {"'Entradas'!B4": "50.00"}
-
-        assert changed_cell_addresses(target=target, current=current) == ("'Entradas'!B4",)
-
-    def test_a_decimal_written_as_fixed_point_text_matches_the_number_sheets_already_stores(self) -> None:
-        """``coerce_decimal`` normalisation: "1234.50" (payload) == 1234.5 (Sheets)."""
-        target = {"'Entradas'!B4": "1234.50"}
-        current = {"'Entradas'!B4": 1234.5}
-
-        assert changed_cell_addresses(target=target, current=current) == ()
-
-    def test_a_cell_never_read_back_matches_only_a_blank_target(self) -> None:
-        blank_target = {"'Entradas'!B4": ""}
-        populated_target = {"'Entradas'!B4": "1.00"}
-        current: dict[str, object] = {}
-
-        assert changed_cell_addresses(target=blank_target, current=current) == ()
-        assert changed_cell_addresses(target=populated_target, current=current) == ("'Entradas'!B4",)
-
-    def test_a_boolean_cell_is_never_coerced_through_decimal(self) -> None:
-        assert changed_cell_addresses(target={"'Entradas'!B4": True}, current={"'Entradas'!B4": True}) == ()
-        assert changed_cell_addresses(target={"'Entradas'!B4": True}, current={"'Entradas'!B4": False}) == (
-            "'Entradas'!B4",
-        )
 
 
 class TestNewTargetPreview:
@@ -181,17 +111,3 @@ class TestPreviewNeverWrites:
         assert result.spreadsheet_id is None
         assert result.ranges_to_clear == ()
         assert result.value_cells_changed > 0
-
-
-class TestPreviewComputationReusesTheRealAdaptersOwnDiffPrimitives:
-    """The preview's clear-set math is the same ``stale_addresses`` the real apply uses."""
-
-    def test_a_preview_against_content_already_matching_the_plan_clears_nothing(self) -> None:
-        plan = _m130_plan()
-        payload = _plan_value_payload(plan) + build_formula_data(plan.formula_cells)
-        written = payload_written_addresses(payload)
-
-        # "Occupied" == "written" is exactly the re-apply-the-same-plan case
-        # the P01 gate already proves clears nothing on the real write path;
-        # this asserts the preview's own stale-set math agrees.
-        assert stale_addresses(occupied=written, written=written) == ()

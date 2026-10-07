@@ -59,9 +59,7 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        session_store.save_token(_PROFILE, token)
-        session_store.save_metadata(_PROFILE, metadata)
-        session_store.save_drive_config(_PROFILE, drive_config)
+        session_store.save_session(_PROFILE, token, metadata, drive_config)
 
         with session_scope(profile.repository._engine) as session:
             rows = {row.namespace: row for row in session.execute(select(SecureObjectRow)).scalars().all()}

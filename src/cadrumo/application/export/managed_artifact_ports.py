@@ -10,7 +10,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 
 
@@ -81,35 +80,4 @@ class ArtifactReceiptStore(Protocol):
 
     def root_placement(self, root_id: str) -> tuple[str, str, str] | None:
         """Return recorded application parent, its creation marker and My Drive ID."""
-        ...
-
-
-class ManagedArtifactPort(Protocol):
-    """Provider-neutral admission and ciphertext/package integrity transport."""
-
-    def admit(self, receipt: ArtifactCreationReceipt, *, purpose: ManagedArtifactPurpose) -> AdmittedArtifact:
-        """Check exact custody, profile, kind, marker, trash and known ancestry."""
-        ...
-
-    def create(
-        self,
-        parent: AdmittedArtifact,
-        *,
-        name: str,
-        kind: ManagedArtifactKind,
-        publication_id: UUID,
-    ) -> ArtifactCreationReceipt:
-        """Create a directly parented marked artifact and retain its identity."""
-        ...
-
-    def list_children(self, parent: AdmittedArtifact) -> tuple[ArtifactCreationReceipt, ...]:
-        """Enumerate admitted children fully; never adopt unknown candidates."""
-        ...
-
-    def read_bytes(self, artifact: AdmittedArtifact, *, expected_digest: Hex64Str) -> bytes:
-        """Read only for the admitted integrity purpose and verify the digest."""
-        ...
-
-    def write_bytes(self, artifact: AdmittedArtifact, payload: bytes, *, expected_digest: Hex64Str) -> None:
-        """Publish package/ciphertext bytes after fresh admission and digest verification."""
         ...

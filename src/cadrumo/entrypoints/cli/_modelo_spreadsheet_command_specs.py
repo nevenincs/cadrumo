@@ -29,12 +29,6 @@ from .command_shared_contracts import (
 from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
-_GOOGLE_CALCULATION_WRITE = ExecutionPolicySpec(
-    frozenset({"calculation", "encrypted-facts", "google", "profile-custody"}),
-    frozenset({"google", "local-state"}),
-    "external-io",
-    CommandWriteRoute.PROFILE_BOUND,
-)
 _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts", "filing", "google", "profile-custody"}),
     frozenset({"google", "local-state"}),
@@ -113,14 +107,6 @@ def _leaf(
 _MODELO = _option("modelo", ("--modelo",), TEXT_VALUE, "cli.app.modelo.spreadsheet.modelo_help", required=True)
 _PERIOD = _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.spreadsheet.period_help", required=True)
 _YEAR = _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.spreadsheet.year_help", required=True)
-_SPREADSHEET_ID = _option(
-    "spreadsheet_id",
-    ("--spreadsheet-id",),
-    TEXT_VALUE,
-    "cli.app.modelo.spreadsheet.spreadsheet_id_help",
-    required=True,
-    transport_locus=TransportLocus.REMOTE_HANDLE,
-)
 
 MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

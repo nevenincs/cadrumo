@@ -81,25 +81,6 @@ def save_session(profile: str, token: OAuthToken, metadata: OAuthMetadata, confi
     )
 
 
-def save_token(profile: str, token: OAuthToken) -> None:
-    """Persist an :class:`adapters.outbound.google.records.OAuthToken` for ``profile``.
-
-    The token is written under
-    :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_TOKEN_NAMESPACE`
-    with :class:`~core.classification.policies.SensitivityClass`
-    ``SECRET``. The CLI saves this after
-    :func:`adapters.outbound.google.oauth_flow.run_login_flow`.
-    """
-    _repository().save(
-        namespace=_NAMESPACE_TOKEN,
-        object_key=profile,
-        classification=_TOKEN_SENSITIVITY,
-        schema_version=_TOKEN_VERSION,
-        written_at=now(),
-        payload=token.model_dump_json().encode(UTF_8_ENCODING),
-    )
-
-
 def load_token(profile: str) -> OAuthToken | None:
     """Load the :class:`adapters.outbound.google.records.OAuthToken` for ``profile``.
 
@@ -118,26 +99,6 @@ def load_token(profile: str) -> OAuthToken | None:
     return OAuthToken.model_validate_json(record.payload.decode(UTF_8_ENCODING))
 
 
-def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
-    """Persist :class:`adapters.outbound.google.records.OAuthMetadata` for ``profile``.
-
-    Metadata is non-secret companion state for
-    :class:`adapters.outbound.google.records.OAuthToken`: account email, granted
-    scopes and the issue timestamp. It is written under
-    :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_OAUTH_METADATA_NAMESPACE`
-    with :class:`~core.classification.policies.SensitivityClass`
-    ``FINANCIAL``.
-    """
-    _repository().save(
-        namespace=_NAMESPACE_METADATA,
-        object_key=profile,
-        classification=_METADATA_SENSITIVITY,
-        schema_version=_METADATA_VERSION,
-        written_at=now(),
-        payload=metadata.model_dump_json().encode(UTF_8_ENCODING),
-    )
-
-
 def load_metadata(profile: str) -> OAuthMetadata | None:
     """Load the :class:`adapters.outbound.google.records.OAuthMetadata` for ``profile``.
 
@@ -154,26 +115,6 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
     if record is None:
         return None
     return OAuthMetadata.model_validate_json(record.payload.decode(UTF_8_ENCODING))
-
-
-def save_drive_config(profile: str, config: DriveConfig) -> None:
-    """Persist the per-profile :class:`adapters.outbound.google.records.DriveConfig`.
-
-    The config is written under
-    :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_DRIVE_CONFIG_NAMESPACE`
-    with :class:`~core.classification.policies.SensitivityClass`
-    ``FINANCIAL`` so
-    :func:`adapters.outbound.storage.factory.get_storage_provider` can resolve
-    the Drive root folder this application created for the profile.
-    """
-    _repository().save(
-        namespace=_NAMESPACE_DRIVE_CONFIG,
-        object_key=profile,
-        classification=_DRIVE_CONFIG_SENSITIVITY,
-        schema_version=_DRIVE_CONFIG_VERSION,
-        written_at=now(),
-        payload=config.model_dump_json().encode(UTF_8_ENCODING),
-    )
 
 
 def load_drive_config(profile: str) -> DriveConfig | None:
@@ -248,10 +189,7 @@ __all__ = [
     "load_drive_config",
     "load_metadata",
     "load_token",
-    "save_drive_config",
-    "save_metadata",
     "save_session",
-    "save_token",
 ]
 
 

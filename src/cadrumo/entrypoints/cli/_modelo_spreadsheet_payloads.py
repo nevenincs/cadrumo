@@ -1,8 +1,6 @@
 """Typed ``--json`` payload schemas for ``aeat app modelo spreadsheet``.
 
-These strict :class:`OutputSchema` records include historical shapes for
-retired pull, calculate and verify commands. Retaining a schema does not enroll
-an executable command. Active results enter :class:`SchemaEnvelope` through
+Active :class:`OutputSchema` results enter :class:`SchemaEnvelope` through
 :func:`emit_envelope`.
 
 Sequence fields use ``list`` rather than ``tuple`` because
@@ -14,11 +12,7 @@ by :mod:`calc_sheets`, and the export plan by :mod:`export`.
 
 from __future__ import annotations
 
-from ...application.storage.calc_sheets.records import SheetRelationProvenanceValue
-from ...core.casilla_id import CasillaId
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry.ids import FormulaId, LegalRefId, RelationId, SourceRefId
-from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 
 
 class ModeloSpreadsheetPushResult(OutputSchema):
@@ -84,148 +78,3 @@ class ModeloSpreadsheetExportResult(OutputSchema):
     tab_names: list[str]
     casilla_count: int
     prefill_relations: bool
-
-
-class ModeloSpreadsheetVerifyDivergencePayload(OutputSchema):
-    """One divergent casilla row in a calc verify report.
-
-    Mirrors a :class:`CasillaParity`
-    row where local Decimal output, Google Sheets output, and optionally the
-    AEAT oracle do not all agree.
-    """
-
-    casilla_id: CasillaId
-    label: str
-    local: str | None = None
-    sheets: str | None = None
-    aeat: str | None = None
-
-
-class ModeloSpreadsheetVerifyResult(OutputSchema):
-    """Historical parity-result envelope; the verify command is retired.
-
-    Retains aggregate verdict and divergent casilla rows for existing records.
-    """
-
-    operation: str = "modelo.spreadsheet.verify"
-    profile: str
-    modelo: str
-    revision: str
-    period: str
-    year: int
-    spreadsheet_id: str
-    spreadsheet_url: str
-    verdict: str
-    aeat_oracle_present: bool
-    computed_count: int
-    divergence_count: int
-    divergences: list[ModeloSpreadsheetVerifyDivergencePayload] = []
-
-
-class ModeloSpreadsheetPullOperatorEditPayload(OutputSchema):
-    """One populated operator casilla edit emitted by ``sync calc pull``.
-
-    Narrows the populated
-    :class:`OperatorEdit`
-    subset of a :class:`PullResult`
-    to the public CLI fields.
-    """
-
-    casilla_id: CasillaId
-    label: str
-    value: str | None = None
-
-
-class ModeloSpreadsheetPullRelationEditPayload(OutputSchema):
-    """One populated relation edit emitted by ``sync calc pull``, with its grounding.
-
-    The pull adapter recovers a relation's provenance, source modelo / filing
-    year / periods / casillas, legal and source references, and resolution
-    instant from the workbook's developer metadata. This surface emitted only
-    ``{relation, value}``, so every one of those recovered facts was discarded
-    AFTER a typed pull had already established them — a number reaching the
-    operator with nothing saying where it came from, when the same value can
-    be a local filing's carry, a live AEAT read, or a hand edit, and only the
-    provenance tells them apart.
-
-    Typed rather than a ``dict[str, object]`` bag so the transport contract is
-    introspectable and a future field cannot be dropped silently.
-    ``provenance`` and ``resolved_at`` stay optional because a relation edited
-    in the workbook without an apply round-trip genuinely carries neither.
-    """
-
-    relation: RelationId
-    value: str | None = None
-    provenance: SheetRelationProvenanceValue | None = None
-    source_modelo: str | None = None
-    source_filing_year: int | None = None
-    source_periods: list[str] = []
-    source_casilla_ids: list[CasillaId] = []
-    legal_refs: list[LegalRefId] = []
-    source_refs: list[SourceRefId] = []
-    resolved_at: str | None = None
-
-
-class ModeloSpreadsheetCalculateCasillaPayload(OutputSchema):
-    """One registry-computed casilla emitted by ``sync calc compute``.
-
-    Mirrors a :class:`RegistryCalculationEntry`
-    produced from a pulled workbook. Legal and source references are required so
-    the Google Sheets compute surface keeps the same grounding contract as the
-    core modelo calculation output.
-    """
-
-    casilla_id: CasillaId
-    value: str
-    formula_id: FormulaId | None = None
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
-class ModeloSpreadsheetPullResult(OutputSchema):
-    """Historical readback envelope; the pull command is retired.
-
-    Retains typed edits and provenance for existing records, with no executable
-    remote readback or calculation capability.
-    """
-
-    operation: str = "modelo.spreadsheet.pull"
-    profile: str
-    modelo: str
-    revision: str
-    period: str
-    year: int
-    spreadsheet_id: str
-    metadata_match: str
-    metadata: dict[str, object]
-    cells_read: int
-    operator_edits_total: int
-    operator_edits_populated: int
-    binding_edits_populated: int
-    relation_edits_populated: int
-    operator_edits: list[ModeloSpreadsheetPullOperatorEditPayload] = []
-    binding_edits: list[dict[str, object]] = []
-    relation_edits: list[ModeloSpreadsheetPullRelationEditPayload] = []
-    row_set_edits_populated: int
-    row_set_cells_populated: int
-    assembled_groupings: list[dict[str, object]] = []
-    assembled_observation_count: int
-    row_set_edits: list[dict[str, object]] = []
-
-
-class ModeloSpreadsheetCalculateResult(OutputSchema):
-    """Historical computed-result envelope; remote calculation is retired."""
-
-    operation: str = "modelo.spreadsheet.calculate"
-    profile: str
-    modelo: str
-    revision: str
-    period: str
-    year: int
-    spreadsheet_id: str
-    metadata_match: str
-    cells_read: int
-    operator_edits_populated: int
-    binding_edits_populated: int
-    relation_edits_populated: int
-    computed: list[ModeloSpreadsheetCalculateCasillaPayload] = []

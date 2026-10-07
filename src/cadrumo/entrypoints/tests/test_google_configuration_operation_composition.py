@@ -17,14 +17,7 @@ from ...adapters.outbound.google.errors import (
 )
 from ...adapters.outbound.google.google_configuration_refusal import google_configuration_refusal_error
 from ...adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
-from ...adapters.outbound.google.session_store import (
-    load_drive_config,
-    load_metadata,
-    load_token,
-    save_drive_config,
-    save_metadata,
-    save_token,
-)
+from ...adapters.outbound.google.session_store import load_drive_config, load_metadata, load_token
 from ...adapters.outbound.google.tests.installation_client_support import (
     SYNTHETIC_CLIENT_CREDENTIAL,
     SYNTHETIC_CLIENT_ID,
@@ -34,6 +27,7 @@ from ...adapters.outbound.google.tests.installation_client_support import (
     use_installation_client_file,
     write_installation_client,
 )
+from ...adapters.outbound.google.tests.session_records import save_drive_config, save_metadata, save_token
 from ...adapters.outbound.storage.errors import (
     OutboundStorageConflictError,
     OutboundStorageError,

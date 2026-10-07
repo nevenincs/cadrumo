@@ -22,14 +22,8 @@ from ...adapters.outbound.google.records import (
     OAuthMetadata,
     OAuthToken,
 )
-from ...adapters.outbound.google.session_store import (
-    load_drive_config,
-    load_metadata,
-    load_token,
-    save_drive_config,
-    save_metadata,
-    save_token,
-)
+from ...adapters.outbound.google.session_store import load_drive_config, load_metadata, load_token
+from ...adapters.outbound.google.tests.session_records import save_drive_config, save_metadata, save_token
 from ...application.operations.frontend_requests import OperationPublicEffectEventV1
 from ...application.operator_actions.preconditions import no_action_precondition_verdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot

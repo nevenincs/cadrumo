@@ -283,7 +283,9 @@ def test_box_styles_match_between_transports(role, horizontal, bold) -> None:
     "value",
     [Decimal("1234.56"), Decimal("-1234.56"), Decimal(0), Decimal(1234), Decimal("0.123456789012"), None],
 )
-def test_spanish_numeric_formats_preserve_values_and_missing_cells(kind, currency, pattern, native_pattern, value) -> None:
+def test_spanish_numeric_formats_preserve_values_and_missing_cells(
+    kind, currency, pattern, native_pattern, value
+) -> None:
     declared = numeric_format(kind, currency=currency)
     assert declared is not None
     assert declared[1] == pattern

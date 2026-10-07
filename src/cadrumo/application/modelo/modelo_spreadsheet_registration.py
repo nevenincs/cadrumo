@@ -17,24 +17,12 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .modelo_spreadsheet_access import resolve_modelo_spreadsheet_access
 from .modelo_spreadsheet_operation_contracts import (
-    MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_SPREADSHEET_OPERATION_CONTRACTS,
-    MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID,
     ModeloSpreadsheetExecutionResult,
     ModeloSpreadsheetOutcome,
-    SpreadsheetOutputPathRefusal,
     SpreadsheetRefusal,
     spreadsheet_refusal_code,
 )
-
-
-def _expected_effect(definition_id: str) -> OperationEffect:
-    if definition_id in {
-        MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID,
-        MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID,
-    }:
-        return OperationEffect.NONE
-    return OperationEffect.UPDATED
 
 
 def _receipt_identity_matches(
@@ -58,13 +46,8 @@ def _refusal_receipt_matches(
 ) -> bool:
     if refusal is None:
         return False
-    # Only an output-path refusal can leave an unknown effect: publication may
-    # have begun.
-    admissible_effects = (
-        (OperationEffect.NONE, OperationEffect.UNKNOWN)
-        if isinstance(refusal, SpreadsheetOutputPathRefusal)
-        else (OperationEffect.NONE,)
-    )
+    # Local output publication may have begun before the refusal settled.
+    admissible_effects = (OperationEffect.NONE, OperationEffect.UNKNOWN)
     return (
         any(
             terminal_receipt_matches(
@@ -104,7 +87,7 @@ def _project_spreadsheet_result(
             receipt,
             definition_id=definition_id,
             subject_ref=subject_ref,
-            effect=_expected_effect(definition_id),
+            effect=OperationEffect.UPDATED,
             message=message,
         )
     elif not _refusal_receipt_matches(definition_id, subject_ref, projection.refusal, receipt, declared_codes):

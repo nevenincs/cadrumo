@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from pathlib import Path
-
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -31,7 +28,7 @@ from .modelo_spreadsheet_operation_contracts import (
 
 
 def build_modelo_spreadsheet_definitions(
-    factory: ModeloSpreadsheetOperationPortsFactory, *, source_reader: Callable[[Path], bytes] = Path.read_bytes
+    factory: ModeloSpreadsheetOperationPortsFactory,
 ) -> tuple[OperationDefinition, ...]:
     """Declare local XLSX export without constructing providers."""
     definitions: list[OperationDefinition] = []
@@ -43,7 +40,7 @@ def build_modelo_spreadsheet_definitions(
                 request_type=request_type,
                 result_type=ModeloSpreadsheetExecutionResult,
                 executor_type=ModeloSpreadsheetExecutor,
-                build=lambda: ModeloSpreadsheetExecutor(factory, source_reader=source_reader),
+                build=lambda: ModeloSpreadsheetExecutor(factory),
                 capabilities=OperationCapabilities(
                     durability=OperationDurability.RECORDED,
                     cancellation=OperationCancellation.UNSUPPORTED,

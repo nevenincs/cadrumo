@@ -24,6 +24,7 @@ from ...adapters.outbound.aeat.auth import session_store as _session_store
 from ...adapters.outbound.aeat.sede.errors import ExpedienteNotFoundError
 from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.google import session_store as google_session_store
+from ...adapters.outbound.google.tests import session_records as google_session_records
 from ...adapters.persistence.llm.cache import LLMCache
 from ...adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ...adapters.persistence.llm.run_records import LLMRunRecorder
@@ -691,9 +692,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
     artefact_b, body_b = _sede_artefact(_BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        google_session_store.save_token(profile, google_a[0])
-        google_session_store.save_metadata(profile, google_a[1])
-        google_session_store.save_drive_config(profile, google_a[2])
+        google_session_records.save_token(profile, google_a[0])
+        google_session_records.save_metadata(profile, google_a[1])
+        google_session_records.save_drive_config(profile, google_a[2])
         cache.write(request, _llm_response(_BUCKET_A_ID))
         usage.record(_usage_record(_BUCKET_A_ID))
         InventoryLedgerRepository().save(
@@ -711,9 +712,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         assert InventoryLedgerRepository().load().ledgers == ()
         with pytest.raises(ExpedienteNotFoundError):
             FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(stored_a.storage_ref or "")
-        google_session_store.save_token(profile, google_b[0])
-        google_session_store.save_metadata(profile, google_b[1])
-        google_session_store.save_drive_config(profile, google_b[2])
+        google_session_records.save_token(profile, google_b[0])
+        google_session_records.save_metadata(profile, google_b[1])
+        google_session_records.save_drive_config(profile, google_b[2])
         cache.write(request, _llm_response(_BUCKET_B_ID))
         usage.record(_usage_record(_BUCKET_B_ID))
         InventoryLedgerRepository().save(

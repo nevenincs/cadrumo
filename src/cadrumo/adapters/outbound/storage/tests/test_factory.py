@@ -25,13 +25,13 @@ from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...google import root_folder
 from ...google.errors import GoogleAuthClientMetadataUnavailableError, GoogleAuthSignInRequiredError
 from ...google.records import DriveConfig, OAuthToken
-from ...google.session_store import save_drive_config, save_token
 from ...google.tests.installation_client_support import (
     SYNTHETIC_CLIENT_CREDENTIAL,
     SYNTHETIC_CLIENT_ID,
     use_absent_installation_client,
     use_installation_client,
 )
+from ...google.tests.session_records import save_drive_config, save_token
 from .._google_drive import GoogleDriveProvider
 from ..errors import OutboundStorageConflictError, OutboundStorageValidationError
 from ..factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
@@ -322,7 +322,8 @@ def test_the_drive_provider_is_built_only_after_the_stored_root_is_read_back_as_
     use_installation_client(monkeypatch, tmp_path)
     events: list[str] = []
 
-    def read_back(credentials: object, *, root_folder_id: str) -> None:
+    def read_back(credentials: object, *, root_folder_id: str, profile: str | None) -> None:
+        assert profile == "0b6d3f7a-2c1e-4a59-8d43-9e7f5a1c6b20"
         assert isinstance(credentials, OAuthCredentials) and credentials.client_id == SYNTHETIC_CLIENT_ID
         events.append(f"verify:{root_folder_id}")
 
@@ -358,7 +359,8 @@ def test_a_stored_root_that_is_not_ours_yields_no_drive_provider(
     use_installation_client(monkeypatch, tmp_path)
     events: list[str] = []
 
-    def refuse(credentials: object, *, root_folder_id: str) -> None:
+    def refuse(credentials: object, *, root_folder_id: str, profile: str | None) -> None:
+        assert profile == "6c9e2b14-5d7a-4f38-b0a1-3e8d7c5f4a92"
         raise OutboundStorageConflictError(
             "the stored Drive root is not a live folder created by this application",
             translated_message="adapters.google.root_folder.errors.root_folder_not_owned",

@@ -1,6 +1,7 @@
 """Validate explicit transport-only omissions from human workbook surfaces."""
 
 import re
+from typing import cast
 
 from ....domain.calculations.registry.schema import ModeloRevision
 from .errors import CalcSheetsEngineError
@@ -47,9 +48,9 @@ def workbook_transport_controls(revision: ModeloRevision) -> frozenset[str]:
         if isinstance(value, str):
             return value in excluded
         if isinstance(value, dict):
-            return any(references(v) for v in value.values())
+            return any(references(v) for v in cast(dict[object, object], value).values())
         if isinstance(value, (list, tuple)):
-            return any(references(v) for v in value)
+            return any(references(v) for v in cast(list[object] | tuple[object, ...], value))
         return False
 
     casillas = {str(c.id): c for c in revision.casillas}

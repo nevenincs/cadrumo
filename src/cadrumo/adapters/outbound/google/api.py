@@ -1,7 +1,6 @@
 """Shared Google API request execution with typed-error translation.
 
-Both :mod:`adapters.outbound.google.calc_sheets_apply` and
-:mod:`adapters.outbound.google.calc_sheets_pull` issue
+The outbound review and managed artifact adapters issue
 ``google-api-python-client`` requests. This module provides the single
 :func:`~adapters.outbound.google.api.execute_request` boundary they route
 through so transport failures, HTTP failures, and quota responses become the typed

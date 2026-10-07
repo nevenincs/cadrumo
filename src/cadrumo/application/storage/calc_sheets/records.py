@@ -78,12 +78,9 @@ DecimalValue = _RegistryDecimalValue
 
 
 class TabName(StrEnum):
-    """The tabs the engine emits in every workbook.
+    """The closed worksheet vocabulary for local exports and review publications.
 
-    The set is fixed so that the pull adapter and the parity oracle
-    have a stable layout to anchor against. New layers (for example a
-    future "Pagos" tab for ingreso/devolución timings) are added by
-    extending this enumeration; freeform tab names are rejected.
+    Each plan selects its own tabs; freeform names are rejected.
     """
 
     ENTRADAS = "Entradas"

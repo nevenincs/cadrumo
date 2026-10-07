@@ -16,11 +16,11 @@ from ....persistence.storage.secure_object_namespaces import (
 )
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStorageNetworkError
-from .. import session_store
 from ..api import RequestRetryPolicy, execute_request
 from ..errors import GoogleAuthPreconditionCondition, GoogleAuthSignInRequiredError
 from ..records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
 from ..sign_in_state import ended_grant_refusal, load_sign_in_record, load_token_minted_for
+from . import session_records as google_session_records
 from .installation_client_support import SYNTHETIC_CLIENT_ID, synthetic_installation_client
 from .token_endpoint_server import (
     ENDED_GRANT_RESPONSE,
@@ -61,7 +61,7 @@ def test_a_profile_that_never_signed_in_has_no_token(tmp_path: Path) -> None:
 
 def test_a_token_is_returned_to_the_client_that_minted_it(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
-        session_store.save_token(_PROFILE, _token(SYNTHETIC_CLIENT_ID))
+        google_session_records.save_token(_PROFILE, _token(SYNTHETIC_CLIENT_ID))
 
         assert load_token_minted_for(_PROFILE, synthetic_installation_client()) == _token(SYNTHETIC_CLIENT_ID)
 
@@ -69,7 +69,7 @@ def test_a_token_is_returned_to_the_client_that_minted_it(tmp_path: Path) -> Non
 def test_a_token_minted_for_another_client_is_never_handed_out(tmp_path: Path) -> None:
     """A development client's token cannot be used by an installation with the production client."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
-        session_store.save_token(_PROFILE, _token("development-client.apps.googleusercontent.com"))
+        google_session_records.save_token(_PROFILE, _token("development-client.apps.googleusercontent.com"))
 
         with pytest.raises(GoogleAuthSignInRequiredError) as refused:
             load_token_minted_for(_PROFILE, synthetic_installation_client())
@@ -108,7 +108,7 @@ def test_a_recorded_sign_in_is_read_back_and_its_absence_is_not_an_error(tmp_pat
     recorded = OAuthMetadata(account_email="operator@example.invalid", granted_scopes=REQUIRED_SCOPES, issued_at=now())
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
         assert load_sign_in_record(_PROFILE) is None
-        session_store.save_metadata(_PROFILE, recorded)
+        google_session_records.save_metadata(_PROFILE, recorded)
 
         assert load_sign_in_record(_PROFILE) == recorded
 
