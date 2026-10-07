@@ -218,6 +218,15 @@ def _enum_member[EnumT: (ModeloVerificationFindingKind, ModeloVerificationFindin
     return default
 
 
+def _locale_keys(node: ast.expr | None, locator: str) -> tuple[str, ...]:
+    """Read every literal branch; refuse a key that cannot be inspected statically."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return (node.value,)
+    if isinstance(node, ast.IfExp):
+        return tuple(dict.fromkeys((*_locale_keys(node.body, locator), *_locale_keys(node.orelse, locator))))
+    pytest.fail(f"{locator}: a finding built without a literal catalogue key")
+
+
 def _producers() -> Iterator[_Producer]:
     """Every finding construction under the source tree, read from the source as it stands."""
     for path in sorted(_SOURCE_ROOT.rglob("*.py")):
@@ -229,27 +238,26 @@ def _producers() -> Iterator[_Producer]:
                 continue
             keywords = {keyword.arg: keyword.value for keyword in node.keywords}
             locator = f"{path.relative_to(_SOURCE_ROOT).as_posix()}:{node.lineno}"
-            key_node = keywords.get("message_locale_key")
-            if not (isinstance(key_node, ast.Constant) and isinstance(key_node.value, str)):
-                pytest.fail(f"{locator}: a finding built without a literal catalogue key")
+            locale_keys = _locale_keys(keywords.get("message_locale_key"), locator)
             facts_node = keywords.get("message_facts")
             try:
                 facts = set() if facts_node is None else _fact_names(module, node, facts_node)
             except _UnreadableFactsError as error:
                 pytest.fail(f"{locator}: its facts cannot be read ({error}); an unread one would pass unchecked")
-            yield _Producer(
-                locator=locator,
-                locale_key=key_node.value,
-                kind=_enum_member(
-                    keywords.get("kind"), ModeloVerificationFindingKind, ModeloVerificationFindingKind.ADVISORY
-                ),
-                severity=_enum_member(
-                    keywords.get("severity"),
-                    ModeloVerificationFindingSeverity,
-                    ModeloVerificationFindingSeverity.WARNING,
-                ),
-                facts=frozenset(facts),
-            )
+            for locale_key in locale_keys:
+                yield _Producer(
+                    locator=locator,
+                    locale_key=locale_key,
+                    kind=_enum_member(
+                        keywords.get("kind"), ModeloVerificationFindingKind, ModeloVerificationFindingKind.ADVISORY
+                    ),
+                    severity=_enum_member(
+                        keywords.get("severity"),
+                        ModeloVerificationFindingSeverity,
+                        ModeloVerificationFindingSeverity.WARNING,
+                    ),
+                    facts=frozenset(facts),
+                )
 
 
 def _finding(producer: _Producer, variant: int) -> ModeloVerificationFinding:
@@ -281,6 +289,21 @@ def test_the_walk_reaches_the_live_producers() -> None:
 
     assert len({producer.locale_key for producer in producers}) > 20
     assert any(producer.facts for producer in producers)
+    assert {
+        "application.modelo.findings.selected_option_requires_zero",
+        "application.modelo.findings.selected_option_requires_nonzero",
+    } <= {producer.locale_key for producer in producers}
+
+
+@pytest.mark.parametrize("expression", ["unknown", "build_key()", "'known' if condition else unknown", "42"])
+def test_the_producer_walk_refuses_unreadable_catalogue_keys(expression: str) -> None:
+    with pytest.raises(pytest.fail.Exception, match="without a literal catalogue key"):
+        _locale_keys(ast.parse(expression, mode="eval").body, "fixture:1")
+
+
+def test_the_producer_walk_reads_all_nested_literal_branches() -> None:
+    expression = "'first' if a else ('second' if b else 'first')"
+    assert _locale_keys(ast.parse(expression, mode="eval").body, "fixture:1") == ("first", "second")
 
 
 def test_every_fact_a_producer_supplies_has_one_declared_way_of_being_written() -> None:
@@ -444,7 +467,7 @@ def test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_lea
 
     assert [line.where for line in lines] == [
         "Country code",
-        "NIF of the intra-community trader",
+        "EU VAT number",
         "Transaction code",
     ]
     assert {line.level for line in lines} == {IssueLevel.MISSING}

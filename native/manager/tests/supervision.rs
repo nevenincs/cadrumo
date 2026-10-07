@@ -665,7 +665,14 @@ fn a_stale_heartbeat_escalates_to_termination_and_restarts() {
     let root = Root::new(&["serve hang_after=3 hang=hard", "serve"]);
     let (seen, outcome) = Case::default().run(&root, stop_on_ready(2));
     assert_eq!(outcome, SETTLED);
-    let order: Vec<_> = events(&seen)
+    let restarted = seen
+        .iter()
+        .position(|seen| matches!(seen.event, Event::RestartScheduled { .. }))
+        .expect("the hung runtime must restart");
+    let unconfirmed = seen[..=restarted]
+        .iter()
+        .any(|seen| matches!(seen.event, Event::TerminationUnconfirmed { .. }));
+    let order: Vec<_> = events(&seen[..=restarted])
         .into_iter()
         .filter(|event| {
             matches!(
@@ -677,11 +684,9 @@ fn a_stale_heartbeat_escalates_to_termination_and_restarts() {
                     | Event::RestartScheduled { .. }
             )
         })
-        .take(5)
         .collect();
     assert!(
-        matches!(
-            order.as_slice(),
+        match order.as_slice() {
             [
                 Event::HangDetected { ready: true, .. },
                 Event::StopRequested {
@@ -695,8 +700,24 @@ fn a_stale_heartbeat_escalates_to_termination_and_restarts() {
                     class: RestartClass::Hang,
                     ..
                 },
-            ]
-        ),
+            ] => !unconfirmed,
+            [
+                Event::HangDetected { ready: true, .. },
+                Event::StopRequested {
+                    cause: StopCause::Hang,
+                    path: StopPath::Channel,
+                    ..
+                },
+                Event::EffectsUnknown { .. },
+                Event::Terminated { .. },
+                Event::EffectsUnknown { .. },
+                Event::RestartScheduled {
+                    class: RestartClass::Hang,
+                    ..
+                },
+            ] => unconfirmed,
+            _ => false,
+        },
         "{order:?}"
     );
     assert_eq!(exits(&seen)[0], RuntimeExit::Terminated);

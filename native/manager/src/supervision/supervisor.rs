@@ -20,7 +20,7 @@ use crate::session::ownership::{
     BootRecordLocator, Role, StartPermit, WaitReason, reserve_restart,
 };
 use std::io::{ErrorKind, Read, Write};
-use std::process::{ChildStdin, ChildStdout};
+use std::process::ChildStdin;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, SyncSender, TrySendError};
 use std::sync::{Arc, Mutex};
@@ -410,7 +410,7 @@ impl CommandWriter {
 }
 
 fn spawn_reader(
-    mut stdout: ChildStdout,
+    mut stdout: impl Read + Send + 'static,
     generation: u64,
     inputs: SyncSender<Input>,
 ) -> thread::JoinHandle<()> {
@@ -1269,37 +1269,37 @@ mod tests {
 
     #[test]
     fn disconnected_input_releases_a_reader_blocked_by_backpressure() {
-        use std::process::{Command, Stdio};
+        use std::io::Cursor;
+
+        struct ObservedReader {
+            bytes: Cursor<&'static [u8]>,
+            observed: mpsc::Sender<()>,
+        }
+
+        impl Read for ObservedReader {
+            fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+                let read = self.bytes.read(buffer)?;
+                if read != 0 {
+                    let _ = self.observed.send(());
+                }
+                Ok(read)
+            }
+        }
+
         let (sender, inputs) = mpsc::sync_channel(1);
         assert!(sender.send(Input::Control(Request::Stop)).is_ok());
-        let mut command = Command::new(std::env::current_exe().unwrap());
-        command
-            .args(["--list"])
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null());
-        #[cfg(windows)]
-        {
-            use std::os::windows::process::CommandExt;
-            command.creation_flags(0x0800_0000);
-        }
-        let mut child = command.spawn().unwrap();
-        let reader = spawn_reader(child.stdout.take().unwrap(), 1, sender);
-        let deadline = Instant::now() + Duration::from_secs(5);
-        let exited = loop {
-            if child.try_wait().unwrap().is_some() {
-                break true;
-            }
-            if Instant::now() >= deadline {
-                child.kill().unwrap();
-                child.wait().unwrap();
-                break false;
-            }
-            thread::sleep(Duration::from_millis(5));
-        };
-        assert!(
-            exited,
-            "the child must finish while its reader is backpressured"
+        let (observed, observation) = mpsc::channel();
+        let reader = spawn_reader(
+            ObservedReader {
+                bytes: Cursor::new(b"one announcement\n"),
+                observed,
+            },
+            1,
+            sender,
         );
+        observation
+            .recv_timeout(Duration::from_secs(5))
+            .expect("the reader must reach its full input queue");
         assert!(!reader.is_finished());
         drop(inputs);
         let deadline = Instant::now() + Duration::from_secs(5);

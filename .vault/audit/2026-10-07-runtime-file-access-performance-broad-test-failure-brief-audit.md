@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:bf52ff9983bd598a892965ab2c4a0a9fdde8cb372195ec22e27b35aad9e89df6'
+body_hash: 'sha256:e215210fd0981501fbc31369b3fb88f560f9dce58810c503de5d6a17f4b3b8c9'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -82,6 +82,32 @@ The separate native bundle attempt failed its documentation gate after 89 minute
 
 The final current-source retry, 20261007T152817.616073Z-check-import-boundaries-63064-612b3db4/artifacts/import-health.json, again loaded all 4522 modules and kept all 15 contracts with zero hard violations. Concurrent source edits changed its snapshot, so the complete gate remains unavailable. S05 stays open for that required verification; further blind retries would add cost without establishing a stable result. The scoped repair test results and 270-case census remain valid within their stated scopes.
 
+### finding-producer-discovery-and-heading | low | Seven freshly reproduced TUI failures now pass
+
+RESOLVED by bounded test-contract repairs. The producer scanner now enumerates both literal branches of a conditional catalogue key, including nested branches, while retaining refusal for dynamic, missing and non-string keys. Both selected-option zero/nonzero finding messages now enter every-language rendering checks. The published selected M349 layout explicitly binds `op.nif-comunitario` to `modelo.schema.349.form.authored.nif-comunitario.heading`; the enrolled English value is `EU VAT number`. The old expectation used the separate `form.column.op-nif-comunitario.heading` leaf (`NIF of the intra-community trader`) which that layout does not select. Only the targeted expected heading changed. No runtime finding, layout or locale content changed.
+
+All 23 tests in the owning TUI finding-word file pass in `20261007T163049.180959Z-pytest-10044-9f47f02d/run.log`, including the seven previously reproduced failures and five new discovery/refusal checks. The refreshed 492-log inventory records 46 later passes / 224 last-recorded failures among the original 270 cases; 41 formerly failed cases passed after this workstream's seven shared roots and five had other later passing evidence. Many remaining entries still refer to the original reports, so they are not asserted to be current failures. The full current import aggregate is still pending: the latest completed run loaded all 4522 modules and kept all 15 contracts but source changed during the run, including our now-completed test repair. A justified retry runs after finalizing those edits.
+
+### registry-supersession-and-predecessor-reproduction | medium | Eighteen remaining reports reproduce at stale fixture or corpus-dependent boundaries
+
+Fresh bounded run `20261007T163659.842775Z-pytest-81280-c5fcfa28/run.log` reports 16 failures, two setup errors and three passes in `test_inherited_bootstrap_supersession.py` and `test_form_layout_predecessor_layout.py` (292.22 seconds). The first group assumes M131 `2026-3t-4t` and M189 `2024`/`2025` still inherit manual export layouts; current canonical trees already publish generated export authority. The production guard correctly refuses a bootstrap supersession over an existing generated tree before later source-pin assertions, and the fixtures can no longer find their assumed manual ancestor. Ten original cases are affected. Repair these fixtures into explicit scratch pre-publication states while retaining source pins, thin-child invariants and refusal/rollback checks; do not roll back published registry data or weaken generated-authority admission.
+
+The other eight cases bind predecessor behavior to current M390 2026 assets, page labels, placements and extracted text. Their assumptions about predecessor seed kind, continuity pagination, running-head text and casilla positions fail in the current corpus. A scratch regeneration also differs from the committed current layout. This is an unresolved authoring/conformance evidence boundary: inspect the exact selected form/design references and independently grounded current page evidence, then separate immutable predecessor-algorithm fixtures from the live registry's conformance checks. Do not assert these failures prove a startup regression, and do not replace the expected layout wholesale with the current output. No production corpus or test expectation in these two files was altered by this workstream.
+
+### native-test-resource-coordination | low | Additional build-gate failures repaired without changing runtime deadlines
+
+Additional native verification failures are separate from the 270-case pytest census. The backpressure reader fixture depended on child executable startup and unbounded suite-list output; a signalled bounded `Read` fixture now exercises the same framing/send/disconnect loop and retains its original five-second termination bound. Production still supplies `ChildStdout`, with static dispatch and unchanged supervisor logic.
+
+A later manager supervision run failed the heartbeat event assertion and timed out a quit-marker observer. The heartbeat assertion now recognizes both valid trajectories: effects become unknown after confirmed termination, or become unknown first when `TerminationUnconfirmed` is emitted and remain unknown through confirmed termination and Hang restart. The latter sequence is admitted only with its explicit unconfirmed event. The real-process CTest fixture target now runs with `--test-threads=1`, preserving all readiness, drain, termination, case and backoff limits. Serial diagnostic runs passed, and the final owning current-source native gate has passed both `manager.rust` (168.35s) and `manager.supervision` (161.96s). Remaining application and package gates are still active.
+
+The configured full format/style/type checks now pass after final path fixes and concurrent packaging corrections. A stale module-target census was refreshed through `python -m dev.quality.import_load_probe --compile-targets`; the ensuing full import aggregate remains pending, so no whole-tree import PASS is claimed yet.
+
+### current-native-and-repository-verdict | low | All thirteen native checks pass while the stable import verdict is unavailable
+
+The final owning Release native verification passes all 13 CTest checks with current source, including the repaired reader, the coordinated real-process supervision suite, application probes, hostile flags and package integrity. CTest takes 650.56 seconds; its owning recipe takes 1130.925 wall / 856.938 descendant CPU seconds. ZIP creation and fresh extracted-package verification remain active. Configured format, style and current type checks pass.
+
+The last complete import aggregate, `20261007T171255.224352Z-check-import-boundaries-14976-f48cf065/artifacts/import-health.json`, loads all 4524 declared modules, retains all 15 contracts, and finds zero load failures or hard violations. The before/after source identity differs, so its complete verdict remains unavailable after 489.997 seconds. The target metadata is now current through its owning generator, but shared-source changes still prevent a stable result. Do not describe the broad suite or current import gate as green. S05 remains open for that required verification; the completed scoped repairs can be checkpointed independently.
+
 ## Recommendations
 
 Fix shared runtime/contract defects first and verify their complete affected group. Continue registry arithmetic, applicability, lineage and export failures through existing registry authoring/conformance owners with source evidence. Treat missing policy/catalogue and packaging/governance enrollments as explicit integration work. Do not silence reports through skips, weakened validation, cache admission or bulk golden updates.
@@ -96,21 +122,21 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/acceptance/income_tax/tests/test_installed_tui_child.py`
 
-- `test_admission_autopilot_refusal_never_runs_workflow_and_closes_login_client` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_admission_autopilot_transfers_exact_login_before_running_separate_root` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_admission_autopilot_refusal_never_runs_workflow_and_closes_login_client` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/agent_eval/tests/test_action_coverage.py`
 
-- `test_matrix_lookup_fails_closed_for_a_nonproduction_identity` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
-- `test_matrix_refuses_a_duplicate_resolved_production_identity` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
 - `test_production_matrix_is_live_surface_resolved_and_keeps_outcome_authority_on_profiles` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
+- `test_matrix_refuses_a_duplicate_resolved_production_identity` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
+- `test_matrix_lookup_fails_closed_for_a_nonproduction_identity` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
 
 `dev/agent_eval/tests/test_production_action_assertions.py`
 
-- `test_exit_scenario_and_verdict_carry_production_assertions_not_expected_action_fields` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
-- `test_observed_action_assertion_rejects_a_real_but_wrong_closed_outcome` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
 - `test_observed_action_assertion_uses_a_live_profile_not_a_scenario_authored_action` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
 - `test_observed_terminal_assertion_compares_the_explicit_production_outcome` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
+- `test_observed_action_assertion_rejects_a_real_but_wrong_closed_outcome` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
+- `test_exit_scenario_and_verdict_carry_production_assertions_not_expected_action_fields` — PASSED; last report `20261007T144655.852880Z-pytest-88904-9dc38d62`.
 
 `dev/ci/tests/test_core_external_constants.py`
 
@@ -152,21 +178,21 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/locales/tests/test_audit.py`
 
-- `test_committed_catalogues_carry_no_em_dash` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_committed_catalogues_follow_contextual_product_identity_contract` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_committed_catalogues_pass_production_audit` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_committed_catalogues_follow_contextual_product_identity_contract` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_committed_catalogues_carry_no_em_dash` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
 
-- `test_declaration_list_families_cover_the_live_producer_vocabularies` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_every_dynamic_prefix_is_registry_covered_or_allowlisted` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_declaration_list_families_cover_the_live_producer_vocabularies` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_language_override_sites_match_the_sanctioned_inventory` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/locales/tests/test_finding_message_facts_are_guaranteed.py`
 
-- `test_no_finding_message_renders_an_unsupplied_placeholder` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
-- `test_the_check_bites_when_a_producer_stops_supplying_a_fact` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_the_gate_reaches_the_live_producers` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_the_check_bites_when_a_producer_stops_supplying_a_fact` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_no_finding_message_renders_an_unsupplied_placeholder` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/locales/tests/test_form_layout_heading_exemption.py`
 
@@ -175,10 +201,10 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/locales/tests/test_locale_translation_honesty.py`
 
-- `test_casilla_labels_are_translated_not_copied` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_every_untranslated_label_is_a_classified_identical_term` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_modelo_spanish_values_are_authority_source` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_casilla_labels_are_translated_not_copied` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_no_translated_lineage_leaves_a_row_in_spanish` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_every_untranslated_label_is_a_classified_identical_term` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/locales/tests/test_modelo_schema_runtime_localization.py`
 
@@ -190,10 +216,10 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/locales/tests/test_shipped_casilla_catalogue.py`
 
+- `test_the_shipped_casilla_catalogue_stores_each_text_once` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_every_casilla_label_resolves_in_spanish` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_no_composed_segment_is_rendered_two_ways` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_no_rendering_stands_for_two_composed_segments` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_the_shipped_casilla_catalogue_stores_each_text_once` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/packaging/tests/test_authority_runtime_boundary.py`
 
@@ -214,8 +240,8 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 `dev/packaging/tests/test_native_artifact_identity.py`
 
 - `test_application_probe_receives_extracted_root_and_controls_acceptance[0]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
-- `test_application_probe_receives_extracted_root_and_controls_acceptance[10]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_application_probe_receives_extracted_root_and_controls_acceptance[7]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_application_probe_receives_extracted_root_and_controls_acceptance[10]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/packaging/tests/test_native_docs_staging.py`
 
@@ -263,13 +289,13 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/compiler/tests/test_export_layout_reserved_constant.py`
 
-- `test_any_other_value_in_the_reserved_bytes_is_refused` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_the_design_prescribed_constant_may_occupy_its_reserved_bytes` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_any_other_value_in_the_reserved_bytes_is_refused` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/registry/conformance/tests/test_registry_schema_part1.py`
 
-- `test_export_fields_can_reference_structured_bindings` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_validator_rejects_invalid_invoice_binding_shapes` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_export_fields_can_reference_structured_bindings` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/form_layout/tests/test_form_layout_generation.py`
 
@@ -282,19 +308,19 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/form_layout/tests/test_form_layout_official_headings.py`
 
-- `test_a_quote_for_a_part_the_design_already_names_is_refused` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_every_quote_heads_its_part_in_the_committed_layout` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_a_quote_for_a_part_the_design_already_names_is_refused` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/form_layout/tests/test_form_layout_predecessor_layout.py`
 
-- `test_390_2026_is_paginated_like_2025_for_every_box_it_declares` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
 - `test_390_2026_keeps_each_continuing_box_where_its_own_form_prints_it` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
+- `test_390_2026_is_paginated_like_2025_for_every_box_it_declares` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
+- `test_the_form_reader_sets_aside_running_heads_and_arithmetic_captions` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
+- `test_a_scratch_copy_of_the_form_reproduces_the_committed_layout` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
 - `test_a_box_its_page_no_longer_prints_falls_to_the_numbered_page` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
 - `test_a_page_label_printed_on_two_pages_confirms_neither` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
-- `test_a_revision_with_its_own_record_design_never_follows_its_predecessor` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
-- `test_a_scratch_copy_of_the_form_reproduces_the_committed_layout` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
 - `test_an_apartado_its_page_no_longer_prints_drops_its_sections` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
-- `test_the_form_reader_sets_aside_running_heads_and_arithmetic_captions` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
+- `test_a_revision_with_its_own_record_design_never_follows_its_predecessor` — FAILED; last report `20261007T144030.537469Z-pytest-23544-6ec3d06a`.
 
 `dev/registry/pipeline/tests/test_below_floor_dispositions.py`
 
@@ -306,9 +332,9 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/pipeline/tests/test_generated_export_inheritance.py`
 
-- `test_changed_source_pins_baseline_or_layout_refuse_compaction` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_real_child_delta_hydrates_to_full_render_and_old_tree_is_exact` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_static_storage_verification_refuses_a_changed_earlier_ancestor` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_real_child_delta_hydrates_to_full_render_and_old_tree_is_exact` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_changed_source_pins_baseline_or_layout_refuse_compaction` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/pipeline/tests/test_generated_tree_scope_context.py`
 
@@ -316,16 +342,16 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/pipeline/tests/test_inherited_bootstrap_supersession.py`
 
-- `test_inherited_layout_refuses_changed_or_missing_ancestor` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_inherited_publication_keeps_thin_child_and_rolls_back_on_refusal[accepted]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_inherited_publication_keeps_thin_child_and_rolls_back_on_refusal[rollback]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_reviewed_candidate_detaches_only_target_and_keeps_ancestor_intact[131-2026-3t-4t-2026-modelo-131-fichero-boe-1-aeat-dr-131-2026-late-b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_reviewed_candidate_detaches_only_target_and_keeps_ancestor_intact[189-2024-2023-modelo-189-fichero-2023-0-aeat-dr-189-2023-c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_reviewed_candidate_detaches_only_target_and_keeps_ancestor_intact[189-2025-2023-modelo-189-fichero-2023-0-aeat-dr-189-2023-c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_reviewed_inherited_manual_layout_has_unique_source_pinned_ancestor[131-2026-3t-4t-2026-modelo-131-fichero-boe-1-aeat-dr-131-2026-late-b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_reviewed_inherited_manual_layout_has_unique_source_pinned_ancestor[189-2024-2023-modelo-189-fichero-2023-0-aeat-dr-189-2023-c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_reviewed_inherited_manual_layout_has_unique_source_pinned_ancestor[189-2025-2023-modelo-189-fichero-2023-0-aeat-dr-189-2023-c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_inherited_layout_refuses_changed_or_missing_ancestor` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_reviewed_candidate_detaches_only_target_and_keeps_ancestor_intact[131-2026-3t-4t-2026-modelo-131-fichero-boe-1-aeat-dr-131-2026-late-b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_reviewed_candidate_detaches_only_target_and_keeps_ancestor_intact[189-2024-2023-modelo-189-fichero-2023-0-aeat-dr-189-2023-c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_reviewed_candidate_detaches_only_target_and_keeps_ancestor_intact[189-2025-2023-modelo-189-fichero-2023-0-aeat-dr-189-2023-c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_inherited_publication_keeps_thin_child_and_rolls_back_on_refusal[accepted]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_inherited_publication_keeps_thin_child_and_rolls_back_on_refusal[rollback]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/pipeline/tests/test_m232_form_bridge.py`
 
@@ -353,8 +379,8 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/tests/test_bundled_artifact_facts_agree_across_sources.py`
 
-- `test_a_row_that_restates_one_origin_differently_is_detected` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_every_source_citing_one_bundled_file_declares_one_origin` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_a_row_that_restates_one_origin_differently_is_detected` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py`
 
@@ -363,8 +389,8 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/tests/test_casilla_export_refs_derivation.py`
 
-- `test_a_binding_record_row_template_contributes_no_casilla_edge` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_a_row_mapped_binding_field_derives_the_back_reference_of_the_casilla_its_slot_names` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_a_binding_record_row_template_contributes_no_casilla_edge` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_casilla_fragment_naming.py`
 
@@ -390,15 +416,15 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 `dev/registry/tests/test_edition_delta_migration.py`
 
 - `test_apply_publishes_a_modelo_whose_proof_is_clean` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_work_directory_must_not_be_inside_the_production_source_tree` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_work_directory_must_not_be_inside_the_registry_root` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_work_directory_must_not_be_inside_the_production_source_tree` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_work_directory_must_not_exist_before_migration` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_export_field_value_round_trip.py`
 
+- `test_patrimonio_checkbox_values_use_the_official_numeric_flags` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_every_fixed_width_record_preserves_populated_fields_at_its_declared_offsets[0]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_every_fixed_width_record_preserves_populated_fields_at_its_declared_offsets[1]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
-- `test_patrimonio_checkbox_values_use_the_official_numeric_flags` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/registry/tests/test_facts_external_constants_retirement.py`
 
@@ -410,9 +436,9 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/tests/test_hand_authored_layouts_agree_with_type_column.py`
 
+- `test_fields_the_schema_cannot_sign_are_exactly_the_declared_ones` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_a_planted_unsigned_field_is_reported_by_name` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_a_record_that_fits_no_sheet_is_unchecked_not_passed` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
-- `test_fields_the_schema_cannot_sign_are_exactly_the_declared_ones` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/registry/tests/test_loader_directory_mode.py`
 
@@ -420,26 +446,26 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/tests/test_m303_did_account_wire_isolated_authority.py`
 
-- `test_export_draft_routes_m303_only_through_the_full_envelope_and_refuses_open_authority` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_resolver` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_export_draft_routes_m303_only_through_the_full_envelope_and_refuses_open_authority` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_filing_envelope_request_refuses_cross_source_or_digest_drift[envelope_update0-source` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_filing_envelope_request_refuses_cross_source_or_digest_drift[envelope_update1-source` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_m390_annual_manual_worked_example.py`
 
-- `test_m390_annual_devengada_anti_tautology_recargo_changes_total` — PASSED; last report `20261007T151204.398781Z-pytest-84860-2b5c7508`.
 - `test_m390_annual_manual_worked_example_devengada_deducible_resultado` — PASSED; last report `20261007T151204.398781Z-pytest-84860-2b5c7508`.
 - `test_m390_box_34_excludes_recargo_while_box_47_includes_it` — PASSED; last report `20261007T151204.398781Z-pytest-84860-2b5c7508`.
+- `test_m390_annual_devengada_anti_tautology_recargo_changes_total` — PASSED; last report `20261007T151204.398781Z-pytest-84860-2b5c7508`.
 - `test_m390_super_reducido_recargo_delta` — PASSED; last report `20261007T151204.398781Z-pytest-84860-2b5c7508`.
 
 `dev/registry/tests/test_m390_auxiliary_envelope.py`
 
-- `test_refuses_mutated_header_geometry_and_literal` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_refuses_reordered_numbered_pages` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_renders_each_real_modelo_390_header_once_before_parser_ordered_pages[aeat-dr-390-2022-2022-2022-2022]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_renders_each_real_modelo_390_header_once_before_parser_ordered_pages[aeat-dr-390-2023-2023-2023-2023]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_renders_each_real_modelo_390_header_once_before_parser_ordered_pages[aeat-dr-390-2024-2024-2024-2024]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_renders_each_real_modelo_390_header_once_before_parser_ordered_pages[aeat-dr-390-2025-2025-2025-y-siguientes-2025]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_refuses_reordered_numbered_pages` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_refuses_mutated_header_geometry_and_literal` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_modelo_131_2026_late_source_branch.py`
 
@@ -451,14 +477,14 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/tests/test_modelo_182_donor_surface_across_editions.py`
 
-- `test_donor_bindings_and_construct_hydrate_in_every_authored_year` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_donor_surface_is_stated_once_on_the_earliest_edition` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_donor_bindings_and_construct_hydrate_in_every_authored_year` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/registry/tests/test_modelo_187_188_194_registry.py`
 
 - `test_modelo_187_188_194_declare_no_formula[194]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_modelo_187_188_194_summary_is_the_printed_box_set[194-expected2]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_modelo_194_selects_only_its_three_hash_pinned_design_eras` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_modelo_187_188_194_summary_is_the_printed_box_set[194-expected2]` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_modelo_189_2022_edition.py`
 
@@ -468,22 +494,22 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/tests/test_modelo_303_binding_source_repair.py`
 
-- `test_casilla_18_carries_the_binding_only_where_its_design_pins_the_tier[2022-False]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_free_2022_rate_does_not_enroll_an_unused_fixed_tier_binding` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_casilla_18_carries_the_binding_only_where_its_design_pins_the_tier[2022-False]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/registry/tests/test_modelo_303_exonerado_390_endpoints.py`
 
-- `test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_producers` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set[2023-aeat-dr-303-2023-2023-2023-4T]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
-- `test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set[2024-desde-09-y-3t-aeat-dr-303-2024-late-2024-2024-late-4T]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set[2024-hasta-08-y-2t-aeat-dr-303-2024-early-2024-2024-early-2T]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set[2024-desde-09-y-3t-aeat-dr-303-2024-late-2024-2024-late-4T]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set[2025-aeat-dr-303-2025-2025-2025-4T]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set[2026-y-siguientes-aeat-dr-303-2026-2026-2026-4T]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_producers` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/registry/tests/test_modelo_303_printed_total_check.py`
 
-- `test_mutation_dropping_a_design_addend_breaks_design_parity` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_mutation_removing_the_predicate_lets_the_unprinted_total_through` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_mutation_dropping_a_design_addend_breaks_design_parity` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_modelo_390_base_imponible_bindings.py`
 
@@ -499,8 +525,8 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/tests/test_monetary_scale.py`
 
-- `test_the_corpus_reports_no_sibling_scale_disagreement` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_the_unusual_decimal_count_is_reported_as_an_exception` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_the_corpus_reports_no_sibling_scale_disagreement` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_narrow_mechanism_admissions.py`
 
@@ -512,8 +538,8 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/registry/tests/test_render_check.py`
 
-- `test_every_manifest_stale_tree_really_does_reproduce_its_records` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_live` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_every_manifest_stale_tree_really_does_reproduce_its_records` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `dev/registry/tests/test_revision_span_boundaries.py`
 
@@ -538,10 +564,10 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `dev/tests/test_first_party_source_is_defined_once.py`
 
-- `test_deptry_excludes_exactly_what_the_authority_rejects` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_no_development_module_restates_a_first_party_scope` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
-- `test_semgrepignore_excludes_exactly_what_the_authority_rejects` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_vulture_excludes_exactly_what_the_authority_rejects` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_semgrepignore_excludes_exactly_what_the_authority_rejects` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_deptry_excludes_exactly_what_the_authority_rejects` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `dev/tests/test_governance_corpus_isolation.py`
 
@@ -623,25 +649,25 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `src/cadrumo/application/modelo/tests/test_printed_boxes.py`
 
-- `test_a_working_figure_the_390_form_does_not_number_is_neither_stored_nor_blocking` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
-- `test_an_unresolved_390_imports_box_blocks_is_stored_and_named_by_its_printed_number` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_the_gates_printed_boxes_are_the_boxes_the_390_form_numbers` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_an_unresolved_390_imports_box_blocks_is_stored_and_named_by_its_printed_number` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_a_working_figure_the_390_form_does_not_number_is_neither_stored_nor_blocking` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `src/cadrumo/application/modelo/tests/test_source_policy.py`
 
-- `test_a_kind_outside_the_ladder_is_never_claimed_locked_or_overridable` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_source_is_nameable_in_every_language[ca]` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_source_is_nameable_in_every_language[en]` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_source_is_nameable_in_every_language[es]` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_source_is_nameable_in_every_language[hu]` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
 - `test_every_source_kind_has_exactly_one_policy` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
 - `test_locked_and_carried_policies_are_exactly_the_calculation_ladder` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
+- `test_a_kind_outside_the_ladder_is_never_claimed_locked_or_overridable` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
 - `test_undecided_policies_are_the_kinds_nobody_has_classified` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
+- `test_every_source_is_nameable_in_every_language[es]` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
+- `test_every_source_is_nameable_in_every_language[en]` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
+- `test_every_source_is_nameable_in_every_language[ca]` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
+- `test_every_source_is_nameable_in_every_language[hu]` — PASSED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
 
 `src/cadrumo/application/modelo/tests/test_unresolved_binding_reported_once.py`
 
-- `test_the_390_regularisation_left_unresolved_reads_as_one_note_on_its_box[resolver-bare]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 - `test_the_390_regularisation_left_unresolved_reads_as_one_note_on_its_box[resolver-names-the-box]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
+- `test_the_390_regularisation_left_unresolved_reads_as_one_note_on_its_box[resolver-bare]` — FAILED; last report `20261007T134204.686138Z-pytest-32336-e2b05171`.
 
 `src/cadrumo/application/tests/test_preflight.py`
 
@@ -737,8 +763,8 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py`
 
-- `test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters` — PASSED; last report `20261007T145129.922409Z-pytest-83660-f4a17da2`.
 - `test_m190_verify_accepts_observation_backed_m111_cross_period_evidence` — PASSED; last report `20261007T145129.922409Z-pytest-83660-f4a17da2`.
+- `test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters` — PASSED; last report `20261007T145129.922409Z-pytest-83660-f4a17da2`.
 - `test_m190_verify_refuses_a_work_income_row_missing_its_family_data` — PASSED; last report `20261007T145129.922409Z-pytest-83660-f4a17da2`.
 
 `src/cadrumo/entrypoints/tests/profile_persistence/test_row_field_template_input_refusal.py`
@@ -747,8 +773,8 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `src/cadrumo/entrypoints/tests/profile_persistence/test_verify_report_idempotent_collapse.py`
 
-- `test_distinct_outcome_verify_produces_a_distinct_report` — PASSED; last report `20261007T145129.922409Z-pytest-83660-f4a17da2`.
 - `test_identical_nongranting_verify_retry_collapses_to_one_report` — PASSED; last report `20261007T145129.922409Z-pytest-83660-f4a17da2`.
+- `test_distinct_outcome_verify_produces_a_distinct_report` — PASSED; last report `20261007T145129.922409Z-pytest-83660-f4a17da2`.
 
 `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`
 
@@ -757,8 +783,8 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_grid_tables_real.py`
 
 - `test_390_page_2_draws_each_group_as_its_own_base_and_tax_table` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
-- `test_a_box_the_form_sets_shows_its_figure_or_a_dot_and_never_a_word` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 - `test_the_cursor_moves_cell_by_cell_and_keeps_its_column` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
+- `test_a_box_the_form_sets_shows_its_figure_or_a_dot_and_never_a_word` — FAILED; last report `20261007T124327.041872Z-pytest-39812-287949c0`.
 
 `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_held_values_and_sources.py`
 
@@ -766,20 +792,20 @@ Use bounded current reproductions before a broader rerun. The richer safe event/
 
 `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py`
 
-- `test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_leads_to_the_table` — FAILED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_fact_a_producer_supplies_has_one_declared_way_of_being_written` — FAILED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_finding_reads_in_words_in_every_language[ca]` — FAILED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_finding_reads_in_words_in_every_language[en]` — FAILED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_finding_reads_in_words_in_every_language[es]` — FAILED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_every_finding_reads_in_words_in_every_language[hu]` — FAILED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
-- `test_the_walk_reaches_the_live_producers` — FAILED; last report `20261007T150722.083603Z-pytest-41008-03c148e0`.
+- `test_the_walk_reaches_the_live_producers` — PASSED; last report `20261007T163049.180959Z-pytest-10044-9f47f02d`.
+- `test_every_fact_a_producer_supplies_has_one_declared_way_of_being_written` — PASSED; last report `20261007T163049.180959Z-pytest-10044-9f47f02d`.
+- `test_every_finding_reads_in_words_in_every_language[es]` — PASSED; last report `20261007T163049.180959Z-pytest-10044-9f47f02d`.
+- `test_every_finding_reads_in_words_in_every_language[en]` — PASSED; last report `20261007T163049.180959Z-pytest-10044-9f47f02d`.
+- `test_every_finding_reads_in_words_in_every_language[ca]` — PASSED; last report `20261007T163049.180959Z-pytest-10044-9f47f02d`.
+- `test_every_finding_reads_in_words_in_every_language[hu]` — PASSED; last report `20261007T163049.180959Z-pytest-10044-9f47f02d`.
+- `test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_leads_to_the_table` — PASSED; last report `20261007T163049.180959Z-pytest-10044-9f47f02d`.
 
 `src/cadrumo/entrypoints/tui/tests/test_installed_session.py`
 
-- `test_each_requester_receives_the_same_fully_validated_public_contract_set[api_reference]` — PASSED; last report `20261007T130432.363194Z-pytest-42272-df87b63d`.
-- `test_each_requester_receives_the_same_fully_validated_public_contract_set[api]` — PASSED; last report `20261007T130432.363194Z-pytest-42272-df87b63d`.
-- `test_each_requester_receives_the_same_fully_validated_public_contract_set[human]` — PASSED; last report `20261007T130432.363194Z-pytest-42272-df87b63d`.
 - `test_each_requester_receives_the_same_fully_validated_public_contract_set[login]` — PASSED; last report `20261007T130432.363194Z-pytest-42272-df87b63d`.
+- `test_each_requester_receives_the_same_fully_validated_public_contract_set[api]` — PASSED; last report `20261007T130432.363194Z-pytest-42272-df87b63d`.
+- `test_each_requester_receives_the_same_fully_validated_public_contract_set[api_reference]` — PASSED; last report `20261007T130432.363194Z-pytest-42272-df87b63d`.
+- `test_each_requester_receives_the_same_fully_validated_public_contract_set[human]` — PASSED; last report `20261007T130432.363194Z-pytest-42272-df87b63d`.
 - `test_requester_contracts_are_shared_across_recomposition_but_fresh_in_a_separate_session` — PASSED; last report `20261007T130432.363194Z-pytest-42272-df87b63d`.
 
 `src/cadrumo/tests/test_dev_dotenv_bridge.py`
