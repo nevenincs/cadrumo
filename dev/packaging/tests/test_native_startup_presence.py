@@ -93,9 +93,18 @@ def symlink(tmp_path: Path) -> Callable[[Path, Path], None]:
 def link_directory(request: pytest.FixtureRequest) -> Callable[[Path, Path], None]:
     """Create each kind of directory link the platform has."""
     if request.param == "symlink":
-        return request.getfixturevalue("symlink")
+        create_symlink = request.getfixturevalue("symlink")
+
+        def symlink_directory(link: Path, target: Path) -> None:
+            create_symlink(link, target)
+
+        return symlink_directory
     winapi = pytest.importorskip("_winapi", reason="junctions exist only on Windows")
-    return lambda link, target: winapi.CreateJunction(str(target), str(link))
+
+    def junction_directory(link: Path, target: Path) -> None:
+        winapi.CreateJunction(str(target), str(link))
+
+    return junction_directory
 
 
 def _write(root: Path, names: Iterable[str]) -> dict[str, str]:

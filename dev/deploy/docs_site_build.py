@@ -13,9 +13,9 @@ from dataclasses import replace
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import UTF_8
-from dev.docs import i18n as _docs_i18n
 from dev.docs.build_paths import docs_html_root
 from dev.docs.pagefind_index import IndexedRoot
 from dev.packaging.command_execution import CommandResult, run_command
@@ -121,7 +121,7 @@ def _compose_apex(html_root: Path) -> None:
     :func:`_index_site` before this runs.
     """
     _write_language_entry(html_root)
-    source = html_root / _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    source = html_root / OutputLanguage.EN.value
     _write_apex_error_page(source / "404.html", html_root / "404.html")
     _write_apex_sitemap(html_root)
 
@@ -232,7 +232,7 @@ def _produce_language_roots(repo_root: Path, html_root: Path) -> dict[str, Path]
     return {language: html_root / language for language in localized_languages()}
 
 
-def _indexed_roots(roots: Mapping[str, Path]) -> list[IndexedRoot]:
+def indexed_roots(roots: Mapping[str, Path]) -> list[IndexedRoot]:
     """Pair each produced root with the address its pages have in the served site.
 
     Every published root sits under its own language directory -- no language
@@ -286,7 +286,7 @@ def _index_site(repo_root: Path, html_root: Path, roots: Mapping[str, Path]) -> 
     from dev.docs.pagefind_index import build_shared_search_index
     from dev.docs.pagefind_inject import InjectionStats
 
-    indexed = _indexed_roots(roots)
+    indexed = indexed_roots(roots)
     # The record projections import the application to read the registry
     # authority and the live command tree, exactly as a root build does, so they
     # get build-scoped scratch storage rather than the publishing machine's own.

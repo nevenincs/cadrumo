@@ -12,6 +12,7 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
@@ -21,7 +22,7 @@ from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
 from .build_paths import build_paths
-from .docs_stage import APEX_LANGUAGE, DocsPackagingError, declared_languages, language_roots, package_prefix
+from .docs_stage import DocsPackagingError, declared_languages, language_roots, package_prefix
 from .identity import identity
 from .layout import distribution_target, load_layout
 
@@ -210,7 +211,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
     storage.mkdir(parents=True)
     # Each root is a directory under the one HTML root the build-path owner
     # resolves, which is where the compile writes them.
-    html_root = roots[APEX_LANGUAGE].parent
+    html_root = roots[OutputLanguage.EN.value].parent
     log = work / "compile.log"
     print(f"Compiling the user documentation in {', '.join(languages)} once; log: {log}", flush=True)
     result = run_command(

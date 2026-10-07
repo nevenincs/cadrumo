@@ -68,7 +68,10 @@ def _same_directory(actual: str | Path, expected: Path) -> bool:
 
 
 def _binary_directory(project: Path, preset: dict[str, Any]) -> str:
-    expanded = preset["binaryDir"].replace("${sourceDir}", project.as_posix()).replace("${presetName}", preset["name"])
+    directory: object = preset["binaryDir"]
+    name: object = preset["name"]
+    assert isinstance(directory, str) and isinstance(name, str)
+    expanded = directory.replace("${sourceDir}", project.as_posix()).replace("${presetName}", name)
     assert "$" not in expanded, f"{preset['name']} resolves its binary directory outside the preset file"
     return expanded
 

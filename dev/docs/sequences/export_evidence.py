@@ -14,14 +14,14 @@ from typing import Literal
 from pydantic import BaseModel, Field, JsonValue, ValidationError
 
 from cadrumo.application.export.tabular import ExportSerializationFormat
-from cadrumo.application.ledger.actions_export import _ledger_export_id, _transaction_ids_digest
+from cadrumo.application.ledger.actions_export import derive_ledger_export_id
 from cadrumo.application.modelo.export_projection import (
     ModeloIvaWalletDecisionPublicProvenance,
     ModeloPriorDomiciliationPublicProvenance,
 )
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.core.errors.hierarchy import CadrumoError
-from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
 from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.payment_election import PaymentElection
@@ -187,7 +187,7 @@ def normalise_ledger_export_evidence(
     if evidence.bucket_id not in {profile_id, "<bucket-id>"} or evidence.row_count != len(evidence.rows):
         return document
     ids = tuple(row.transaction_id for row in evidence.rows)
-    if evidence.export_id != _ledger_export_id(
+    if evidence.export_id != derive_ledger_export_id(
         bucket_id=profile_id, export_format=evidence.export_format.value, sha256=evidence.sha256, transaction_ids=ids
     ):
         return document
@@ -203,7 +203,7 @@ def normalise_ledger_export_evidence(
         "byte_size": str(evidence.byte_size),
         "sha256": evidence.sha256,
         "output_path": str(destination),
-        "transaction_ids_sha256": _transaction_ids_digest(ids),
+        "transaction_ids_sha256": content_hash_hex(ids),
         "first_transaction_id": ids[0] if ids else "",
         "last_transaction_id": ids[-1] if ids else "",
     }

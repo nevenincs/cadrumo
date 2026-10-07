@@ -22,6 +22,7 @@ def test_isolated_worker_script_reaches_its_argument_parser(tmp_path: Path) -> N
         timeout=60,
     )
     assert result.returncode == 0, result.stderr
+    assert isinstance(result.stdout, str)
     assert "--storage-root" in result.stdout
     assert "--worker-id" in result.stdout
     assert "--parent-pid" in result.stdout

@@ -13,10 +13,10 @@ from cadrumo.domain.calculations.registry.export_field_casilla import (
 
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory, load_shared_catalogues
-from ...pipeline._export_tree import render_complete_export_tree
-from ...pipeline.render_check import _revision_render_inputs
-from ..reconciliation import reconcile_export_casilla_splits
-from ._member_scalar_history import scalar_member_history
+from ...form_layout.reconciliation import reconcile_export_casilla_splits
+from ...form_layout.tests.member_scalar_history import scalar_member_history
+from .._export_tree import render_complete_export_tree
+from ..render_check import _revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

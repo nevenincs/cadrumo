@@ -41,7 +41,6 @@ STAGED_PAYLOAD = "user"
 # other language one directory down, so those stay the addresses the package answers.
 # What it stores is one structure and each language's text; the manifest says which
 # address is served from which.
-APEX_LANGUAGE = OutputLanguage.EN.value
 SITE_ROOTS = frozenset(member.value for member in OutputLanguage)
 MANIFEST_SCHEMA = 2
 RECONFIGURE = (
@@ -135,14 +134,14 @@ def declared_languages(layout: Mapping[str, Any]) -> tuple[str, ...]:
         typed_languages.append(language)
     if len(set(typed_languages)) != len(typed_languages) or not set(typed_languages) <= supported:
         raise DocsPackagingError(f"Documentation languages must be unique members of {sorted(supported)}: {languages}")
-    if APEX_LANGUAGE not in typed_languages:
-        raise DocsPackagingError(f"Documentation languages must include the apex language {APEX_LANGUAGE}")
+    if OutputLanguage.EN.value not in typed_languages:
+        raise DocsPackagingError(f"Documentation languages must include the apex language {OutputLanguage.EN.value}")
     return tuple(typed_languages)
 
 
 def package_prefix(language: str) -> str:
     """Return a language's directory inside the packaged documentation, empty at the apex."""
-    return "" if language == APEX_LANGUAGE else f"{language}/"
+    return "" if language == OutputLanguage.EN.value else f"{language}/"
 
 
 def language_roots(build_root: Path, languages: tuple[str, ...]) -> dict[str, Path]:
@@ -506,10 +505,12 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
         if not (root / entry).is_file():
             problems.append(f"{language}: missing {entry} in {root}")
         # The site has one search index, at its apex, which every language's pages load.
-        if language == APEX_LANGUAGE and not (root / search).is_file():
+        if language == OutputLanguage.EN.value and not (root / search).is_file():
             problems.append(f"{language}: missing {search} in {root}")
-        if language != APEX_LANGUAGE and (root / search).is_file():
-            problems.append(f"{language}: holds its own {search}; the one search index belongs to {APEX_LANGUAGE}")
+        if language != OutputLanguage.EN.value and (root / search).is_file():
+            problems.append(
+                f"{language}: holds its own {search}; the one search index belongs to {OutputLanguage.EN.value}"
+            )
         if not root.is_dir():
             continue
         # The scheme answers any other file type with 404, so it never ships; a
@@ -576,7 +577,7 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
     manifest = {
         "schema": MANIFEST_SCHEMA,
         "languages": list(languages),
-        "apex_language": APEX_LANGUAGE,
+        "apex_language": OutputLanguage.EN.value,
         "entries": {language: package_prefix(language) + entry for language in languages},
         "search": search,
         "script_hashes": sorted(hashes),

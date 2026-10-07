@@ -43,6 +43,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+from pydantic import TypeAdapter
 
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
@@ -223,7 +224,7 @@ def _search_from(site: Path, page: str, query: str) -> list[dict[str, str]]:
             try:
                 browser_page = browser.new_page()
                 browser_page.goto(f"http://127.0.0.1:{port}/{page}", wait_until="networkidle")
-                return browser_page.evaluate(
+                rows = browser_page.evaluate(
                     """async (query) => {
                       const rows = await window.CadrumoDocs.search(query);
                       return rows.map((row) => ({
@@ -234,6 +235,7 @@ def _search_from(site: Path, page: str, query: str) -> list[dict[str, str]]:
                     }""",
                     query,
                 )
+                return TypeAdapter(list[dict[str, str]]).validate_python(rows, strict=True)
             finally:
                 browser.close()
 

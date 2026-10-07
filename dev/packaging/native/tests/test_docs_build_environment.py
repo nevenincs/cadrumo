@@ -5,14 +5,16 @@ from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev.docs import compile_once
 from dev.docs.build import DOCS_FLAVOR_ENV
 from dev.docs.compile_once import main as compile_main
+from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 from .. import docs_build
 from ..docs_build import compile_command, compile_environment
-from ..docs_stage import APEX_LANGUAGE, DocsPackagingError
+from ..docs_stage import DocsPackagingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -30,6 +32,7 @@ def test_the_compile_carries_product_storage_and_no_documentation_selector(
     """
     monkeypatch.setenv(DOCS_FLAVOR_ENV, "web")
     monkeypatch.setenv("CADRUMO_DOCS_PAGEFIND_MODE", "full")
+    monkeypatch.setenv(SEQUENCE_CHECK_SKIP_ENV, "1")
     environment = compile_environment(tmp_path / "storage")
 
     assert environment[STORAGE_ROOT.variable] == str(tmp_path / "storage")
@@ -104,5 +107,5 @@ def test_a_compile_that_wrote_no_root_for_a_declared_language_refuses(
 def test_the_apex_language_is_a_declared_root(tmp_path: Path) -> None:
     """The HTML root is read off the apex language's root, so it must be one of them."""
     roots = docs_build.language_roots(tmp_path / "build", _LANGUAGES)
-    assert APEX_LANGUAGE in roots
-    assert {root.parent for root in roots.values()} == {roots[APEX_LANGUAGE].parent}
+    assert OutputLanguage.EN.value in roots
+    assert {root.parent for root in roots.values()} == {roots[OutputLanguage.EN.value].parent}

@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportRecordRepe
 from ...compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 from ...compiler.loader import load_modelo_directory
 from ..row_binding_reconciliation import reconcile_export_row_bindings
-from ._member_scalar_history import scalar_member_history
+from .member_scalar_history import scalar_member_history
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

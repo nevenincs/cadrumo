@@ -12,7 +12,7 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:96c18a1e2473c732c49951da536993dc89211f6943bc74e7747b48e32a847e45'
+body_hash: 'sha256:688781038c27823496f098628bb4f644ed8f15ffd4a9300b7cec171e719d7197'
 ---
 
 # `blocking-code-quality-repair` plan
@@ -34,7 +34,7 @@ The first repair convergence run passed eight gates, including all configured pl
 ## Steps
 
 - [x] `S06` - Preserve authored predecessor declarations in saved rendering snapshots and verify encrypted readback; `src/cadrumo/domain/modelos/calculation_revision_rendering.py and its owning roundtrip tests`.
-- [ ] `S01` - Repair canonical tooling imports and typed developer fixtures; `dev/docs, dev/packaging, dev/registry excluding dev/quality/metadata`.
+- [x] `S01` - Repair canonical tooling imports and typed developer fixtures; `dev/docs, dev/packaging, dev/registry excluding dev/quality/metadata`.
 - [x] `S02` - Repair production and Windows fixture type contracts; `src/cadrumo/domain/calculations/registry, application/operations/terminated_owner.py, entrypoints/cli/config/tests and native desktop Python`.
 - [x] `S03` - Complete retirement of obsolete Google workbook paths and repair remaining typed renderers; `Google adapters, calc_sheets, modelo spreadsheet modules and dedicated review presentation modules`.
 - [x] `S04` - Reconcile authentication and storage symbols with their real production consumers; `profile authentication, secure custody and core storage_environment`.

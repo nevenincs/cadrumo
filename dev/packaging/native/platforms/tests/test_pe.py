@@ -6,6 +6,7 @@ import struct
 from pathlib import Path
 
 import pytest
+
 from dev.packaging.native.platforms.pe import imports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

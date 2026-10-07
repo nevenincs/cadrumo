@@ -38,7 +38,7 @@ from ..docs_delivery_contracts import (
     _REQUIRED_SITE_SEARCH_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
 )
-from ..docs_site_build import _clear_apex, _compose_apex, _indexed_roots, _run_site_builds
+from ..docs_site_build import _clear_apex, _compose_apex, _run_site_builds, indexed_roots
 from ..docs_site_download import _DOWNLOAD_LATEST_SCHEMA, _DOWNLOAD_LATEST_STATIC_PATH, _refresh_download_latest
 from ..docs_site_languages import (
     TRANSLATED_ROOTS_BUILD,
@@ -210,7 +210,7 @@ def test_language_site_url_is_a_subroot_of_the_canonical_docs_url() -> None:
     assert _language_site_url("es") == f"{CANONICAL_DOCS_BASE_URL}/es"
 
 
-_SOURCE = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+_SOURCE = OutputLanguage.EN.value
 _TRANSLATED: tuple[str, ...] = tuple(language for language in localized_languages() if language != _SOURCE)
 
 
@@ -419,7 +419,7 @@ def test_the_one_index_covers_every_root_at_its_served_address(tmp_path: Path) -
     """
     roots = {language: tmp_path / language for language in localized_languages()}
 
-    indexed = _indexed_roots(roots)
+    indexed = indexed_roots(roots)
 
     assert [root.language for root in indexed] == sorted(roots)
     assert [root.url_prefix for root in indexed] == [f"{language}/" for language in sorted(roots)]
@@ -770,7 +770,7 @@ def test_the_apex_error_page_declares_the_apex_as_its_place_in_the_site(tmp_path
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
 
-    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    source = OutputLanguage.EN.value
     assert 'content=""' in (tmp_path / "404.html").read_text(encoding="utf-8")
     assert f'content="{source}/"' in (tmp_path / source / "404.html").read_text(encoding="utf-8")
 
@@ -784,7 +784,7 @@ def test_an_error_page_declaring_no_site_prefix_stops_the_publish(tmp_path: Path
     """
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
-    source = tmp_path / _docs_i18n.DEFAULT_SOURCE_LANGUAGE / "404.html"
+    source = tmp_path / OutputLanguage.EN.value / "404.html"
     source.write_text("<html><head></head></html>", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="declares no site prefix"):

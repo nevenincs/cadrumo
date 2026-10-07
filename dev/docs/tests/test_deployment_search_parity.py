@@ -32,7 +32,7 @@ no root carries one of its own. That removes the stranding the per-root half was
 written against -- there is no second split a record can sit in -- and moves the
 property a reader depends on from "which index this root wrote" to "what this
 reader's language filter reaches in the one index". So the site is built here the
-way the publisher builds it (``dev.deploy.docs_site_build._indexed_roots`` over
+way the publisher builds it (``dev.deploy.docs_site_build.indexed_roots`` over
 four real roots into one apex index, with the injector resolved from the real
 deploy site environment), and the half below asserts, per READER LANGUAGE and
 against that BUILT ARTEFACT through ``pagefind.js``, that the reader reaches
@@ -61,13 +61,12 @@ from pathlib import Path
 
 import pytest
 
-import dev.docs.i18n as _docs_i18n
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 from dev.deploy.docs_delivery_contracts import CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL
 from dev.deploy.docs_delivery_probe import public_delivery_checks
-from dev.deploy.docs_site_build import _indexed_roots
+from dev.deploy.docs_site_build import indexed_roots
 from dev.deploy.docs_site_languages import (
     localized_languages,
     site_build_environment,
@@ -214,7 +213,7 @@ def _indexed_page_baseline(scratch: Path, roots: Mapping[str, Path]) -> int:
         copy = scratch / language
         shutil.copytree(root, copy, ignore=shutil.ignore_patterns("pagefind"))
         copies[language] = copy
-    build_shared_search_index(_indexed_roots(copies), scratch)
+    build_shared_search_index(indexed_roots(copies), scratch)
     entry = json.loads((scratch / "pagefind" / "pagefind-entry.json").read_bytes().decode("utf-8"))
     return sum(int(split["page_count"]) for split in entry["languages"].values())
 
@@ -297,7 +296,7 @@ def published_site(tmp_path_factory: pytest.TempPathFactory) -> _PublishedSite:
 
     The composition is the publisher's, not a second reading of it: the roots
     are paired with the addresses they have in the served site by
-    :func:`~dev.deploy.docs_site_build._indexed_roots`, and the injector is
+    :func:`~dev.deploy.docs_site_build.indexed_roots`, and the injector is
     resolved by the production resolver from the real deploy site environment,
     which is the environment the publisher's index pass resolves it from. A gate
     that composed its own mapping or its own mode would agree with itself while
@@ -313,7 +312,7 @@ def published_site(tmp_path_factory: pytest.TempPathFactory) -> _PublishedSite:
     indexed_pages = _indexed_page_baseline(scratch / "baseline", roots)
     captured: list[InjectionStats] = []
     build_shared_search_index(
-        _indexed_roots(roots),
+        indexed_roots(roots),
         apex,
         inject=resolve_record_injector(
             _REPO_ROOT,
@@ -329,7 +328,7 @@ def published_site(tmp_path_factory: pytest.TempPathFactory) -> _PublishedSite:
         stats=(captured[0] if captured else None),
         entry=entry,
         indexed_pages=indexed_pages,
-        any_page=_served_page(apex, _docs_i18n.DEFAULT_SOURCE_LANGUAGE),
+        any_page=_served_page(apex, OutputLanguage.EN.value),
     )
 
 
@@ -706,7 +705,7 @@ def test_every_reader_language_recalls_a_casilla_by_its_declared_localized_terms
 #: language too, but English is the msgid source with no catalogue to select,
 #: and it alone has a Sphinx build of its own.
 _TRANSLATED_LANGUAGES: tuple[str, ...] = tuple(
-    language for language in localized_languages() if language != _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    language for language in localized_languages() if language != OutputLanguage.EN.value
 )
 
 

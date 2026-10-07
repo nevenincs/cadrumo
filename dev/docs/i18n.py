@@ -156,15 +156,6 @@ SITE_ROOT_LANGUAGES: Final[tuple[str, ...]] = tuple(member.value for member in O
 #: translation -- that stays a hard refusal -- only the entry point.
 DEFAULT_SITE_LANGUAGE: Final[str] = OutputLanguage.ES.value
 
-#: The language the documentation's own prose is authored in.
-#:
-#: Kept separate from :data:`DEFAULT_SITE_LANGUAGE` because they answer
-#: different questions and no longer share an answer: this one is the msgid
-#: source every catalogue translates FROM, while the other is where a reader
-#: with no stated preference is sent. Conflating them is what put English at
-#: the apex path.
-DEFAULT_SOURCE_LANGUAGE: Final[str] = OutputLanguage.EN.value
-
 
 def _repo_root() -> Path:
     """Return the repository root for this module."""

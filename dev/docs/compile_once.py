@@ -63,13 +63,13 @@ if not __package__:
     __package__ = "dev.docs"
 
 
+from cadrumo.core.external_constants import OutputLanguage
 from dev.packaging.command_execution import run_command
 
 from .build import DOCS_FLAVOR_ENV, write_deployment_sitemap
 from .build import main as build_documentation
 from .build_paths import DOCS_BASE_URL_ENV, DOCS_BUILD_ROOT_ENV, DOCS_SITE_PREFIX_ENV, docs_site_prefixes
 from .compile_slots import SLOTS_FILE, CompileSlots, context_at, markup_contexts, read_slots
-from .i18n import DEFAULT_SOURCE_LANGUAGE
 from .language_roots import (
     STRUCTURE_DIRECTORY,
     Layout,
@@ -87,11 +87,6 @@ from .translations_js import TRANSLATIONS_SCRIPT, language_translations_js
 
 #: The environment key ``docs/conf.py`` reads to carry every language.
 MULTILINGUAL_ENV: Final[str] = "CADRUMO_DOCS_MULTILINGUAL"
-
-#: The Sphinx ``language`` the one compile builds in: the language the pages
-#: are authored in, whose messages every catalogue translates. It selects the
-#: scope and the catalogues, not the text the pages carry.
-COMPILE_LANGUAGE: Final[str] = DEFAULT_SOURCE_LANGUAGE
 
 #: The documentation settings a compile does not own, and therefore keeps from
 #: the environment it is run in: whether the network may be reached, where the
@@ -115,7 +110,7 @@ HOST_SELECTORS: Final[tuple[str, ...]] = (
 #: The language whose own build is the proof that a composed root is faithful.
 #:
 #: It is a TRANSLATED language on purpose. The compile builds in
-#: :data:`COMPILE_LANGUAGE`, so anything that silently follows the Sphinx
+#: English, so anything that silently follows the Sphinx
 #: ``language``, or that was never marked at all, is correct in English by
 #: accident: every defect of that kind in this mechanism's history showed in a
 #: translated root and in no English one.
@@ -164,7 +159,7 @@ _WITNESS_DIRECTORY: Final[str] = "witness"
 #: English build writes neither the file nor the tag that loads it, so the
 #: composed English root holds neither either.
 _DECLARED_ABSENCES: Final[Mapping[str, tuple[str, ...]]] = {
-    DEFAULT_SOURCE_LANGUAGE: (f"_static/{TRANSLATIONS_SCRIPT}",)
+    OutputLanguage.EN.value: (f"_static/{TRANSLATIONS_SCRIPT}",)
 }
 
 #: Where :func:`compile_language_roots` keeps the stored form while it composes
@@ -600,7 +595,7 @@ def _pin_build_environment(
         # The address and this root's own directory are what say so, and
         # :func:`dev.docs.build_paths.docs_site_prefixes` reads both: the
         # desktop package is the other layout, with neither.
-        os.environ[DOCS_SITE_PREFIX_ENV] = f"{COMPILE_LANGUAGE}/"
+        os.environ[DOCS_SITE_PREFIX_ENV] = f"{OutputLanguage.EN.value}/"
     if check_sequences is not None:
         if check_sequences:
             os.environ.pop(SEQUENCE_CHECK_SKIP_ENV, None)
@@ -784,7 +779,7 @@ def _compile_and_compose(
             # a build has one Sphinx ``language``. It selects the user scope and
             # the catalogues; what it no longer selects is the text on the pages.
             "--language",
-            COMPILE_LANGUAGE,
+            OutputLanguage.EN.value,
             "--isolated-source",
             *(["--strict"] if strict else []),
             "--out-dir",
@@ -822,8 +817,8 @@ def _compile_and_compose(
         layout,
         docs_site_prefixes(
             layout.languages,
-            build_language=COMPILE_LANGUAGE,
-            source_language=DEFAULT_SOURCE_LANGUAGE,
+            build_language=OutputLanguage.EN.value,
+            source_language=OutputLanguage.EN.value,
         ),
         # The error page's own links are absolute, because it is served for an
         # address that does not exist: what they are absolute to is the path the

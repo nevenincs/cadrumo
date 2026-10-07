@@ -53,7 +53,6 @@ _BOUNDED_CALLS = frozenset(
         "format_decimal",
         # Digests: one of the sanctioned remedies.
         *_HASHING_CALLS,
-        "_transaction_ids_digest",
         "_source_provenance_trace_sha256",
         # Explicitly shortens to the cap; that is its whole purpose.
         "_bounded_payload_reference",

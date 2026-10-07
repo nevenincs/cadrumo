@@ -1,15 +1,15 @@
-"""Materialize typed affiliate facts through the selected revision's bindings."""
+"""Materialize developer workbook affiliate facts through the selected revision's bindings."""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 from decimal import Decimal
 
-from ..calculations.registry.afiliado_contribution_bindings import AfiliadoContributionProvider
-from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.ids import BindingId
-from ..calculations.registry.schema import ModeloRevision
-from .m156_rows import Modelo156AfiliadoRow
+from cadrumo.domain.calculations.registry.afiliado_contribution_bindings import AfiliadoContributionProvider
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.modelos.m156_rows import Modelo156AfiliadoRow
 
 
 def _source_value(row: Modelo156AfiliadoRow, field: str) -> str | Decimal | None:
@@ -33,8 +33,7 @@ def materialize_m156_member_bindings(
 
     Reordering supplied members does not change occurrence indices. Duplicate
     identities refuse rather than double-counting a member or choosing a winner.
-    This pure projection is shared groundwork for saved replay and source routing;
-    a provider still marked deferred cannot claim production filing capability.
+    A provider still marked deferred cannot claim production filing capability.
     """
     bindings = tuple(
         (binding.id, binding.provider)

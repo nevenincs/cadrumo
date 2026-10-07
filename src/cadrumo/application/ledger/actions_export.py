@@ -117,7 +117,7 @@ def export_ledger_transactions(
             write()
         else:
             mutation_writer(write)
-    export_id = _ledger_export_id(
+    export_id = derive_ledger_export_id(
         bucket_id=command.bucket_id,
         export_format=command.export_format.value,
         sha256=serialized.sha256,
@@ -138,7 +138,7 @@ def export_ledger_transactions(
             "byte_size": str(serialized.byte_size),
             "sha256": serialized.sha256,
             "output_path": str(command.output_path) if command.output_path is not None else "",
-            "transaction_ids_sha256": _transaction_ids_digest(tuple(row.transaction_id for row in rows)),
+            "transaction_ids_sha256": content_hash_hex(tuple(row.transaction_id for row in rows)),
             "first_transaction_id": rows[0].transaction_id if rows else "",
             "last_transaction_id": rows[-1].transaction_id if rows else "",
         },
@@ -243,13 +243,14 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
     )
 
 
-def _ledger_export_id(
+def derive_ledger_export_id(
     *,
     bucket_id: str,
     export_format: str,
     sha256: str,
     transaction_ids: tuple[str, ...],
 ) -> str:
+    """Bind export identity to its profile, format, bytes and ordered row identities."""
     return content_hash_hex(
         {
             "bucket_id": bucket_id,
@@ -260,10 +261,7 @@ def _ledger_export_id(
     )
 
 
-def _transaction_ids_digest(transaction_ids: tuple[str, ...]) -> str:
-    return content_hash_hex(transaction_ids)
-
-
 __all__ = [
+    "derive_ledger_export_id",
     "export_ledger_transactions",
 ]

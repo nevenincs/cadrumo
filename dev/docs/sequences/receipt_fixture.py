@@ -10,6 +10,7 @@ import hashlib
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from pathlib import Path
+from typing import override
 
 import keyring
 import keyring.core
@@ -40,15 +41,18 @@ class SequenceReceiptKeyring(KeyringBackend):
         digest = hashlib.sha256(f"{len(service)}:{service}{account}".encode()).hexdigest()
         return self.root / digest
 
+    @override
     def get_password(self, service: str, username: str) -> str | None:
         try:
             return self._path(service, username).read_text(encoding="utf-8")
         except FileNotFoundError:
             return None
 
+    @override
     def set_password(self, service: str, username: str, password: str) -> None:
         atomic_write_bytes(self._path(service, username), password.encode())
 
+    @override
     def delete_password(self, service: str, username: str) -> None:
         try:
             self._path(service, username).unlink()

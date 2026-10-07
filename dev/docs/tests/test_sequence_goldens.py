@@ -537,12 +537,14 @@ class TestModeloExportReleaseMaskHonesty:
             assert len(problems) == 1
             assert "XML receipt does not prove its canonical export event" in problems[0]
 
-        from ..sequences.tests.test_modelo_export_evidence import _changed_event
+        from ..sequences.tests.modelo_export_evidence_support import changed_modelo_export_event
 
         changed = second.model_dump(mode="json")
         result = changed["frames"][export]["envelope"]["result"]
         result["file_sha256"] = "a" * 64
-        result["bucket_event_id"] = _changed_event(SequenceTranscript.model_validate_json(json.dumps(changed)))
+        result["bucket_event_id"] = changed_modelo_export_event(
+            SequenceTranscript.model_validate_json(json.dumps(changed))
+        )
         problems = compare_transcript_to_golden(
             SequenceTranscript.model_validate_json(json.dumps(changed)), golden, page=_EXPORT_PAGE
         )

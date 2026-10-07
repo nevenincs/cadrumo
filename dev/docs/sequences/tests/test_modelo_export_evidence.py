@@ -11,7 +11,6 @@ import pytest
 from pydantic import JsonValue
 
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from cadrumo.tests.env_scope import derived_storage_settings
 from cadrumo.tests.golden_comparison import differing_paths
 
@@ -20,6 +19,7 @@ from ..compare import compare_transcript_to_golden, evaluate_expectations
 from ..export_evidence import modelo_export_evidence_problem, normalise_modelo_export_evidence
 from ..golden_store import SANDBOX_WORKDIR_PLACEHOLDER, build_golden, normalise_document_paths
 from ..runner import SequenceTranscript, executed_sequence_sandbox
+from .modelo_export_evidence_support import changed_modelo_export_event
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -139,65 +139,6 @@ def test_malformed_modelo_event_is_not_normalised(
     assert _normalised(changed) == changed.result_frame.envelope
 
 
-def _changed_event(
-    transcript: SequenceTranscript,
-    *,
-    destination: str | None = None,
-    actor: str = "docs-sequence-sandbox",
-    unsupported: bool = False,
-) -> str:
-    """Use canonical domain derivation; public evidence alone is never sufficient for hidden branches."""
-    result = _result(transcript)
-    period = result["period"]
-    assert isinstance(period, dict)
-    prior = result["prior_domiciliation_election"]
-    assert isinstance(prior, dict)
-    payload = {
-        "calculation_revision_id": cast(str, result["calculation_revision_id"]),
-        "work_unit_id": cast(str, result["work_unit_id"]),
-        "output_path": destination or cast(str, result["output_path"]),
-        "byte_size": str(result["byte_size"]),
-        "file_sha256": cast(str, result["file_sha256"]),
-        "format": cast(str, result["format"]),
-        "modelo": cast(str, result["modelo"]),
-        "filing_year": str(result["filing_year"]),
-        "period": cast(str, period["code"]),
-        "prior_domiciliation_election": cast(str, prior["election"]),
-    }
-    for key in ("resolved_result_disposition", "payment_election", "refund_election"):
-        if result[key] is not None:
-            payload[key] = cast(str, result[key])
-    wallet = result.get("iva_wallet_decision_provenance")
-    if isinstance(wallet, dict):
-        target_period = wallet["target_period"]
-        kinds, refs = wallet["authority_source_kinds"], wallet["authority_source_refs"]
-        assert isinstance(target_period, dict) and isinstance(kinds, list) and isinstance(refs, list)
-        assert all(isinstance(value, str) for value in (*kinds, *refs))
-        payload.update(
-            {
-                "iva_wallet_decision_ref": cast(str, wallet["decision_ref"]),
-                "iva_wallet_selected_authority": cast(str, wallet["selected_authority"]),
-                "iva_wallet_divergence": cast(str, wallet["divergence"]),
-                "iva_wallet_target_year": str(wallet["target_year"]),
-                "iva_wallet_target_period": cast(str, target_period["code"]),
-                "iva_wallet_authority_source_kinds": ",".join(cast(str, value) for value in kinds),
-                "iva_wallet_authority_source_refs": ",".join(cast(str, value) for value in refs),
-            }
-        )
-    if unsupported:
-        payload["selected_account_role"] = "charge"
-        payload["selected_own_account_id"] = "private-account-reference"
-    return derive_bucket_event_id(
-        bucket_id=transcript.profile_id,
-        event_type=BucketEventType.MODELO_EXPORTED,
-        occurred_at=transcript.frozen_instant,
-        actor=actor,
-        object_type=BucketEventObjectType.CALCULATION_REVISION,
-        object_id=cast(str, result["calculation_revision_id"]),
-        payload=payload,
-    )
-
-
 def test_coherent_wrong_artifact_digest_is_rejected_before_release_mask(
     modelo_export_runs: tuple[SequenceTranscript, SequenceTranscript],
 ) -> None:
@@ -205,7 +146,7 @@ def test_coherent_wrong_artifact_digest_is_rejected_before_release_mask(
     result = deepcopy(_result(second))
     result["file_sha256"] = "a" * 64
     changed = _mutated(second, result)
-    result["bucket_event_id"] = _changed_event(changed)
+    result["bucket_event_id"] = changed_modelo_export_event(changed)
     changed = _mutated(second, result)
     assert _normalised(changed) != changed.result_frame.envelope
     problems = compare_transcript_to_golden(changed, build_golden(first), page="export-evidence")
@@ -220,7 +161,7 @@ def test_missing_artifact_is_rejected_before_release_mask(
     assert not Path(destination).exists()
     result = deepcopy(_result(second))
     result["output_path"] = destination
-    result["bucket_event_id"] = _changed_event(second, destination=destination)
+    result["bucket_event_id"] = changed_modelo_export_event(second, destination=destination)
     arguments = list(second.result_frame.argv)
     arguments[arguments.index("--output") + 1] = destination
     changed = _mutated(second, result, argv=tuple(arguments))
@@ -245,20 +186,20 @@ def test_valid_events_with_other_semantics_are_not_normalised(
     case: str,
 ) -> None:
     first, second = modelo_export_runs
-    assert _changed_event(second) == _result(second)["bucket_event_id"]
+    assert changed_modelo_export_event(second) == _result(second)["bucket_event_id"]
     result = deepcopy(_result(second))
     argv = second.result_frame.argv
     if case == "outside":
         destination = str(Path(second.workdir).parent / "outside.boe")
         result["output_path"] = destination
-        result["bucket_event_id"] = _changed_event(second, destination=destination)
+        result["bucket_event_id"] = changed_modelo_export_event(second, destination=destination)
         arguments = list(argv)
         arguments[arguments.index("--output") + 1] = destination
         argv = tuple(arguments)
     elif case == "wrong_actor":
-        result["bucket_event_id"] = _changed_event(second, actor="different-actor")
+        result["bucket_event_id"] = changed_modelo_export_event(second, actor="different-actor")
     else:
-        result["bucket_event_id"] = _changed_event(second, unsupported=True)
+        result["bucket_event_id"] = changed_modelo_export_event(second, unsupported=True)
     changed = _mutated(second, result, argv=argv)
     assert _normalised(changed) == changed.result_frame.envelope
     assert compare_transcript_to_golden(changed, build_golden(first), page="export-evidence")

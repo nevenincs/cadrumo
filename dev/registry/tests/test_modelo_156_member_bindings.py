@@ -13,10 +13,10 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import binding_
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import export_field_casilla_id
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.modelos.m156_row_materialisation import materialize_m156_member_bindings
 from cadrumo.domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 
 from ..compiler.loader import load_modelo_directory
+from ..m156_row_materialisation import materialize_m156_member_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
 from dev.docs.build_paths import DOCS_SITE_PREFIX_ENV
@@ -142,7 +143,7 @@ def source_root_build_environment(*, check_sequences: bool) -> dict[str, str]:
     gate; which build of the publish runs it is decided by :func:`site_builds`,
     never here.
     """
-    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    source = OutputLanguage.EN.value
     environment = {
         **site_build_environment(),
         "CADRUMO_DOCS_BASE_URL": _language_site_url(source),
@@ -232,7 +233,7 @@ def site_builds(html_root: Path) -> tuple[SiteBuild, ...]:
     build (silently dropping the gate from the whole deploy) cannot reach a
     published site.
     """
-    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    source = OutputLanguage.EN.value
     translated = tuple(language for language in localized_languages() if language != source)
     source_jobs, compile_jobs = site_build_jobs(os.cpu_count() or 1, translated=bool(translated))
     builds = [

@@ -40,13 +40,15 @@ from docutils import nodes
 from docutils.transforms.universal import SmartQuotes
 from sphinx.transforms import SphinxTransform
 
-from .i18n import _DOC_SUFFIXES, DEFAULT_SOURCE_LANGUAGE, _is_generated_page
+from cadrumo.core.external_constants import OutputLanguage
+
+from .i18n import _DOC_SUFFIXES, _is_generated_page
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
 #: The class docutils reads a text block's language from.
-_LANGUAGE_CLASS: Final[str] = f"language-{DEFAULT_SOURCE_LANGUAGE}"
+_LANGUAGE_CLASS: Final[str] = f"language-{OutputLanguage.EN.value}"
 
 #: The configuration value naming the pages typeset in the source language.
 PAGES_SETTING: Final[str] = "cadrumo_source_language_pages"

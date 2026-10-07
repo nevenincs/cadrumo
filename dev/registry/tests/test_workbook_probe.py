@@ -1,6 +1,7 @@
 """Whole-inventory accounting and real compiler evidence stay distinguishable."""
 
 import pytest
+from pydantic import TypeAdapter
 
 from cadrumo.application.storage.calc_sheets.errors import CalcSheetsEngineError
 
@@ -47,8 +48,10 @@ def test_inventory_accounts_for_every_revision_and_does_not_claim_live_evidence(
     monkeypatch.setattr(workbook_probe, "probe_revision", alternating_probe)
     report = probe_authority(authority)
     assert seen == [(row.modelo_id, row.revision_id) for row in inventory]
-    assert len(report["results"]) == len(inventory)
-    assert sum(report["outcomes"].values()) == len(inventory)
+    results = TypeAdapter(list[dict[str, object]]).validate_python(report["results"], strict=True)
+    outcomes = TypeAdapter(dict[str, int]).validate_python(report["outcomes"], strict=True)
+    assert len(results) == len(inventory)
+    assert sum(outcomes.values()) == len(inventory)
     assert report["full_inventory"] is True
     assert report["live_google_verification"] is False
     assert report["official_visual_verification"] is False
@@ -96,7 +99,10 @@ def test_subset_is_explicit_and_unknown_modelo_is_refused(authority, monkeypatch
     monkeypatch.setattr(workbook_probe, "probe_revision", lambda _authority, row: ProbeResult(row, "unsupported_frame"))
     report = probe_authority(authority, modelos=frozenset({"130"}))
     assert report["full_inventory"] is False
-    assert {row["modelo"] for row in report["results"]} == {"130"}
-    assert report["inventory_revisions"] > len(report["results"])
+    results = TypeAdapter(list[dict[str, object]]).validate_python(report["results"], strict=True)
+    inventory_revisions = report["inventory_revisions"]
+    assert isinstance(inventory_revisions, int)
+    assert {row["modelo"] for row in results} == {"130"}
+    assert inventory_revisions > len(results)
     with pytest.raises(ValueError, match="present in the registry"):
         probe_authority(authority, modelos=frozenset({"not-a-modelo"}))

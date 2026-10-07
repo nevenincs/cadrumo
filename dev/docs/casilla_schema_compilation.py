@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 from cadrumo.core.external_constants import OutputLanguage
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ._locale_chrome import ANCHOR_LANGUAGE
 from .casilla_reference_models import CasillaFacts, CompiledSchema, ModeloOverview
 from .compile_slots import active, language_text
 from .terminology.search_record import CasillaSearchRecord
@@ -86,7 +85,7 @@ def _compile_modelo_overviews(
             continue
         overviews[modelo_id] = ModeloOverview(
             title=language_text(modelo.get_title, language.value),
-            source_title=modelo.get_title(ANCHOR_LANGUAGE.value),
+            source_title=modelo.get_title(OutputLanguage.EN.value),
             official_name=language_text(modelo.get_official_name, language.value),
             definitions={tag: authored[modelo_id] for tag, authored in definitions.items() if modelo_id in authored},
             tax_domain=str(modelo.tax_domain),

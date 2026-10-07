@@ -9,6 +9,7 @@ from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
+from cadrumo.core.external_constants import OutputLanguage
 from dev.deploy.cloudflare_api import (
     CloudflareAccount,
 )
@@ -16,7 +17,6 @@ from dev.deploy.cloudflare_api import _call as cloudflare_call
 from dev.deploy.docs_asset_delivery import (
     CANDIDATE_SCRIPT,
 )
-from dev.docs import i18n as _docs_i18n
 
 from .docs_delivery_contracts import (
     _APEX_DEEP_LINK,
@@ -83,7 +83,7 @@ def expected_redirect(url: str) -> str:
     query = f"?{parsed.query}" if parsed.query else ""
     if path.endswith(f"/{_APEX_DEEP_LINK}"):
         mount = path[: -len(_APEX_DEEP_LINK) - 1]
-        return f"{mount}/{_docs_i18n.DEFAULT_SOURCE_LANGUAGE}/{_APEX_DEEP_LINK}{query}"
+        return f"{mount}/{OutputLanguage.EN.value}/{_APEX_DEEP_LINK}{query}"
     return f"{path}/{query}"
 
 

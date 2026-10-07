@@ -48,7 +48,7 @@ from dev.docs.pagefind_index import (
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-from ..docs_site_build import _indexed_roots, _write_apex_sitemap
+from ..docs_site_build import _write_apex_sitemap, indexed_roots
 from ..docs_site_languages import _language_site_url, _write_language_entry, localized_languages
 from ..docs_site_preflight import _require_search_index, _validate_built_site, _validate_language_roots
 
@@ -281,7 +281,7 @@ def test_the_site_index_addresses_every_root_by_the_directory_it_is_served_from(
     spanish = _retargeted_page_corpus(apex, "es")
 
     with contextlib.chdir(tmp_path):
-        build_shared_search_index(_indexed_roots({"en": english, "es": spanish}), apex)
+        build_shared_search_index(indexed_roots({"en": english, "es": spanish}), apex)
 
     assert (apex / "pagefind" / "pagefind-entry.json").is_file(), "the one index was not written at the apex"
     for root in (english, spanish):

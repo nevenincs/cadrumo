@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd7f53cb4a4717fb570a5c6acdedeb2d779c88a688554f632ad4fcbe6c2959bc'
+body_hash: 'sha256:97831ba2fc02e42da31e4be2ff50a1b276c8c562e33b1daa4a87cc7e5558946a'
 related:
   - "[[2026-10-07-blocking-code-quality-repair-plan]]"
 ---
@@ -270,6 +270,63 @@ related:
 - `S07` `verify:` `producer snapshot unit tests 62 cases` -> `pass`
 - `S07` `verify:` `AST comparison retains provider fields selector validators and projection executable bodies` -> `pass`
 - `S07` `by:` `vaultspec-standard-executor`
+- `S05` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.json`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S05` `M` `src/cadrumo/domain/modelos/calculation_revision_rendering.py`
+- `S05` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py`
+- `S05` `verify:` `directory accessor owner repair Ruff lint and format` -> `pass`
+- `S05` `verify:` `directory accessor owner repair ty basedpyright and pyrefly` -> `pass`
+- `S05` `verify:` `directory accessor owner repair domain and encrypted repository readback 24 cases` -> `pass`
+- `S05` `by:` `supervisor`
+- `S01` `M` `dev/deploy/docs_delivery_probe.py`
+- `S01` `M` `dev/deploy/docs_site_build.py`
+- `S01` `M` `dev/deploy/docs_site_languages.py`
+- `S01` `M` `dev/deploy/tests/test_docs_static_site.py`
+- `S01` `M` `dev/deploy/tests/test_publish_preflight_search_records.py`
+- `S01` `M` `dev/docs/_locale_chrome.py`
+- `S01` `M` `dev/docs/casilla_schema_compilation.py`
+- `S01` `M` `dev/docs/compile_once.py`
+- `S01` `M` `dev/docs/i18n.py`
+- `S01` `M` `dev/docs/sequences/export_evidence.py`
+- `S01` `M` `dev/docs/sequences/receipt_fixture.py`
+- `S01` `M` `dev/docs/sequences/tests/test_modelo_export_evidence.py`
+- `S01` `M` `dev/docs/sequences/tests/test_runtime_fixture.py`
+- `S01` `M` `dev/docs/tests/test_compile_once.py`
+- `S01` `M` `dev/docs/tests/test_deployment_search_parity.py`
+- `S01` `M` `dev/docs/tests/test_sequence_goldens.py`
+- `S01` `M` `dev/docs/tests/test_shared_search_index.py`
+- `S01` `M` `dev/docs/untranslated_typesetting.py`
+- `S01` `M` `dev/packaging/native/docs_build.py`
+- `S01` `M` `dev/packaging/native/docs_stage.py`
+- `S01` `M` `dev/packaging/native/platforms/tests/test_pe.py`
+- `S01` `M` `dev/packaging/native/platforms/tests/test_posix.py`
+- `S01` `M` `dev/packaging/native/tests/test_docs_build_environment.py`
+- `S01` `M` `dev/packaging/native/tests/test_standalone_presets.py`
+- `S01` `D` `dev/packaging/tests/test_native_docs_build.py`
+- `S01` `M` `dev/packaging/tests/test_native_startup_presence.py`
+- `S01` `D` `dev/registry/form_layout/tests/_member_scalar_history.py`
+- `S01` `D` `dev/registry/form_layout/tests/test_casilla_split_reconciliation.py`
+- `S01` `M` `dev/registry/form_layout/tests/test_row_binding_reconciliation.py`
+- `S01` `M` `dev/registry/tests/test_modelo_156_member_bindings.py`
+- `S01` `M` `dev/registry/tests/test_workbook_probe.py`
+- `S01` `M` `dev/registry/workbook_demo_members.py`
+- `S01` `M` `src/cadrumo/application/ledger/actions_export.py`
+- `S01` `M` `src/cadrumo/domain/buckets/tests/test_payload_value_bounding.py`
+- `S01` `D` `src/cadrumo/domain/modelos/m156_row_materialisation.py`
+- `S01` `A` `dev/docs/sequences/tests/modelo_export_evidence_support.py`
+- `S01` `A` `dev/registry/form_layout/tests/member_scalar_history.py`
+- `S01` `A` `dev/registry/m156_row_materialisation.py`
+- `S01` `A` `dev/registry/pipeline/tests/test_casilla_split_reconciliation.py`
+- `S01` `verify:` `Ruff lint and format developer tooling 1887 files` -> `pass`
+- `S01` `verify:` `ty focused developer tooling fixtures and actual consumers 29 files` -> `pass`
+- `S01` `verify:` `focused tooling consumer and boundary tests 259 cases` -> `pass`
+- `S01` `verify:` `final canonical native worker browser ledger and Modelo export evidence 49 completed cases` -> `pass`
+- `S01` `verify:` `remaining deployment selectors 4 cases` -> `pass`
+- `S01` `verify:` `all fifteen original Modelo303 native verification and export cases` -> `pass`
+- `S01` `verify:` `independent integrated source review of 39 tooling paths` -> `pass`
+- `S01` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -281,3 +338,9 @@ related:
 - `S06` Captured directory IDs are copied from the validated owner and participate in rendering integrity; no current authority lookup, inferred references, weakened validators or durability changes were introduced.
 - `S06` Reusable adapters retain identical validated shapes and remove measured repeated schema construction in the saved-rendering traversal.
 - `S07` Only the two unenrolled observation value classes and three exclusively prototype test cases were retired; actual provider registrations and typed detail-record projection are unchanged.
+- `S05` The preceding integrated run passed ten of twelve gates. Import contracts and zero debt passed but source movement invalidated graph authority; source-stable reruns remain required.
+- `S05` Five concurrent CMake type diagnostics were repaired by their peer owner and are not claimed as source edits in this Step.
+- `S05` The directory accessor now reads its unchanged private state inside ModeloDefinition; actual production and test consumers were updated atomically.
+- `S01` The final original 56-case export batch passed 49 cases before the unchanged 300-second Modelo100 double-release fixture timeout; four remaining deployment cases passed separately. Exactly 53 of that population are verified, and all three Modelo100 assertions remain unverified.
+- `S01` Isolated Modelo100 reproduced the existing timeout; one bounded copied-child profile reproduced the pre-repair runtime connection refusal shape without a serializer exception or established new regression. Payload calls totaled 4.090 seconds, and measured container validation was 0.098 seconds in the first profile. No production timing, durability, protocol, cache, skip or validator change was made.
+- `S01` All diagnostic children were closed through their fixture ownership; peer workers were preserved. S06 direct domain/encrypted and actual Modelo303 coverage supports the repaired rendering boundary.

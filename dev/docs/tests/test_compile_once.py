@@ -18,8 +18,9 @@ import sphinx
 from docutils.utils.smartquotes import smartchars
 from sphinx.config import Config
 
+from cadrumo.core.external_constants import OutputLanguage
+
 from ..compile_once import (
-    COMPILE_LANGUAGE,
     WITNESS_LANGUAGE,
     IntendedDifference,
     _per_language_inventory,
@@ -29,7 +30,7 @@ from ..compile_once import (
     witness_root,
 )
 from ..compile_slots import Rendering, activate, deactivate
-from ..i18n import DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
+from ..i18n import SITE_ROOT_LANGUAGES
 from ..message_marks import FRAGMENT_PREFIX
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -338,7 +339,7 @@ def test_the_witness_is_a_translated_language_at_neither_end_of_the_carried_orde
     language's string, or the last one's, for every language is invisible at
     whichever end it reads from.
     """
-    assert WITNESS_LANGUAGE != COMPILE_LANGUAGE, (
+    assert OutputLanguage.EN.value != WITNESS_LANGUAGE, (
         f"the witness builds in {WITNESS_LANGUAGE}, which is the language the compile itself builds in: "
         "a mechanism that never left the Sphinx language reads correctly in it"
     )
@@ -374,7 +375,7 @@ def test_every_carried_language_can_be_typeset_and_spoken_by_the_writers(languag
         f"Sphinx excludes {language} from the smart-quotes transform ({excluded}), so its own build "
         "educates nothing and the recorded strings would be educated all the same"
     )
-    translated = language != DEFAULT_SOURCE_LANGUAGE
+    translated = language != OutputLanguage.EN.value
     shipped = {name: _shipped_by_sphinx(language, name) for name in ("sphinx.mo", "sphinx.js")}
     assert shipped == dict.fromkeys(shipped, translated), (
         f"Sphinx ships {shipped} for {language}. Every language it translates its own interface into has "

@@ -12,8 +12,9 @@ from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.m156_row_materialisation import materialize_m156_member_bindings
 from cadrumo.domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
+
+from .m156_row_materialisation import materialize_m156_member_bindings
 
 
 def contribution_members() -> tuple[Modelo156AfiliadoRow, ...]:

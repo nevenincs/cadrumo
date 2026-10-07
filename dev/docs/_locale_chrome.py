@@ -34,7 +34,6 @@ from .compile_slots import CompileSlots, Rendering, active, in_language
 from .section_anchors import heading_anchor, section_anchor_directive
 
 __all__ = [
-    "ANCHOR_LANGUAGE",
     "DocsChromeError",
     "chrome_anchor",
     "docs_chrome",
@@ -81,12 +80,6 @@ def docs_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
     return _chrome(Rendering.DOCUTILS, key, language, values)
 
 
-#: The language whose words name a generated heading's anchor. Every language
-#: root publishes the same anchor, and English is the one whose roots already
-#: shipped theirs, so they keep them.
-ANCHOR_LANGUAGE = OutputLanguage.EN
-
-
 def chrome_anchor(key: str, /, **values: object) -> str:
     """Return the directive naming the anchor of the chrome heading that follows.
 
@@ -109,10 +102,10 @@ def chrome_anchor(key: str, /, **values: object) -> str:
         DocsChromeError: As :func:`docs_chrome` raises it.
     """
     read = {
-        name: in_language(value, ANCHOR_LANGUAGE.value) if isinstance(value, str) else value
+        name: in_language(value, OutputLanguage.EN.value) if isinstance(value, str) else value
         for name, value in values.items()
     }
-    return section_anchor_directive(heading_anchor(_authored(key, ANCHOR_LANGUAGE, read)))
+    return section_anchor_directive(heading_anchor(_authored(key, OutputLanguage.EN, read)))
 
 
 def template_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
