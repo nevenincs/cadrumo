@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:ab02187084601574d2ae1bb433b3067ba0f79bdb35e8ff6e0e1d75f50a1033b1'
+body_hash: 'sha256:2394ce290d7252c22714e1eff6f5a9d210503f43a3201a6d9be43dbc554a7ce2'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -298,6 +298,14 @@ related:
 - `S15` `verify:` `scoped Ruff formatting ty and diff checks` -> `pass`
 - `S15` `verify:` `guarded alternating 3x before and after fresh import comparison` -> `pass`
 - `S15` `by:` `root architectural review; Sol6.1 implementation`
+- `S17` `M` `native/application/src/package.rs`
+- `S17` `M` `native/application/src/filesystem.rs`
+- `S17` `A` `native/application/tests/package_inspection.rs`
+- `S17` `verify:` `S17 guarded cargo integrity suites 44 distinct tests` -> `pass`
+- `S17` `verify:` `S17 scoped cargo clippy rustfmt and git diff checks` -> `pass`
+- `S17` `verify:` `S17 optimized paired and final same-package probes` -> `pass`
+- `S17` `verify:` `S17 two concurrent optimized package inspections` -> `pass`
+- `S17` `by:` `root architectural review; Sol6.1 implementation`
 
 ## Notes
 
@@ -327,3 +335,4 @@ related:
 - `S14` Final source review PASS. Full203 bodies45.52s incremental compile0.54s; prior pending shared-check note resolved. Runtime startup, calibration and packaged latency remain open.
 - `S13` Closed phase facts omit arguments output passwords and identifiers; helper completed means native output returned only. Measured oldpayload startup, registry, KDF calibration and current binding CPU; empty-root CLI attribution remains in flight. Exact sources/logs archived in s14-helper-lanes-verification.json and sign-in-submission-timings-verification.json.
 - `S15` Structural exclusion established, no measured speedup. Preexisting review fixture owner/filing/rendering drift repaired without assertion or production changes. Performance remains open.
+- `S17` No timeout changes. Final median verification27.054 to3.256seconds;44 distinct tests. Concurrent proof precedes only empty-directory compatibility correction. Full metrics/source/log evidence in s17-package-inspection-verification.json; whole desktop and installed acceptance remain open.

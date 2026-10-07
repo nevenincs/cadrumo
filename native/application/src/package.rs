@@ -4,7 +4,13 @@ use crate::{
     value::{RelativePath, Sha256Digest},
 };
 use serde::Deserialize;
-use std::{collections::BTreeMap, fs, path::Path};
+use sha2::{Digest, Sha256};
+use std::{
+    collections::BTreeMap,
+    fs::{self, File},
+    io::Read,
+    path::Path,
+};
 
 pub mod release;
 
@@ -102,13 +108,8 @@ impl PackageManifest {
                 "package documentation statement disagrees with its inventory".into(),
             ));
         }
-        for (relative, expected) in &self.files {
-            if let Some(readiness) = check_file(root, relative, expected)? {
-                return Ok(readiness);
-            }
-        }
-        // Each delegated manifest was hash-checked above as a listed file before it is trusted.
         let mut inventory = self.files.clone();
+        let mut admitted_manifests = BTreeMap::new();
         for (prefix, member) in &self.delegated_inventories {
             if !self.files.contains_key(member)
                 || !member
@@ -119,7 +120,14 @@ impl PackageManifest {
                     "delegated inventory must be a listed file beneath its prefix".into(),
                 ));
             }
-            let nested: DelegatedInventory = filesystem::json_file(&member.under(root))?;
+            let expected = &self.files[member];
+            // The same bounded, digest-verified bytes supply the nested inventory.
+            // Only this small set needs a path walk before the tree is traversed.
+            let nested = match read_delegated(root, member, expected)? {
+                Admission::Admitted(nested) => nested,
+                Admission::Refused(readiness) => return Ok(readiness),
+            };
+            admitted_manifests.insert(member.clone(), expected.clone());
             for (relative, expected) in nested.files {
                 let joined =
                     RelativePath::new(format!("{}/{}", prefix.as_str(), relative.as_str()))?;
@@ -129,9 +137,6 @@ impl PackageManifest {
                         joined.as_str()
                     )));
                 }
-                if let Some(readiness) = check_file(root, &joined, &expected)? {
-                    return Ok(readiness);
-                }
                 inventory.insert(joined, expected);
             }
         }
@@ -139,46 +144,117 @@ impl PackageManifest {
         while let Some(directory) = pending.pop() {
             for entry in fs::read_dir(directory)? {
                 let path = entry?.path();
-                filesystem::refuse_links(&path)?;
-                if path.is_dir() {
-                    pending.push(path);
-                    continue;
-                }
+                // Ancestors were admitted when entering the root and each
+                // descended directory. Check this entry without following it.
+                let metadata = fs::symlink_metadata(&path)?;
+                filesystem::refuse_metadata_links(&metadata)?;
                 let relative = path
                     .strip_prefix(root)
                     .map_err(|_| Error::Invalid("package path escaped".into()))?;
+                if metadata.is_dir() {
+                    // Directories need not be inventoried. A nonportable name
+                    // cannot match an inventoried regular file; keep descending
+                    // as before, with strict relative-path checks on every leaf.
+                    if let Ok(relative) = RelativePath::from_native(relative)
+                        && inventory.contains_key(&relative)
+                    {
+                        return Ok(Readiness::Incompatible(relative.as_str().into()));
+                    }
+                    pending.push(path);
+                    continue;
+                }
                 let relative = RelativePath::from_native(relative)?;
-                if relative != *manifest_path && !inventory.contains_key(&relative) {
+                let Some(expected) = inventory.remove(&relative) else {
+                    if relative == *manifest_path && metadata.is_file() {
+                        continue;
+                    }
                     return Ok(Readiness::Incompatible(format!(
                         "unexpected file: {}",
                         relative.as_str()
                     )));
+                };
+                if !metadata.is_file() {
+                    return Ok(Readiness::Incompatible(relative.as_str().into()));
+                }
+                // Delegated bytes were already hashed before expansion. They
+                // still pass this traversal's own-entry link and type checks.
+                if admitted_manifests.get(&relative) == Some(&expected) {
+                    continue;
+                }
+                let mut file = match open_regular(&path, &relative)? {
+                    Admission::Admitted(file) => file,
+                    Admission::Refused(readiness) => return Ok(readiness),
+                };
+                if filesystem::digest_opened(&mut file)? != expected {
+                    return Ok(Readiness::Incompatible(relative.as_str().into()));
                 }
             }
+        }
+        if let Some((missing, _)) = inventory.into_iter().next() {
+            return Ok(Readiness::Missing(missing.as_str().into()));
         }
         Ok(Readiness::Ready)
     }
 }
 
-fn check_file(
+enum Admission<T> {
+    Admitted(T),
+    Refused(Readiness),
+}
+
+fn open_regular(path: &Path, member: &RelativePath) -> Result<Admission<File>, Error> {
+    let file = match File::open(path) {
+        Ok(file) => file,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(Admission::Refused(Readiness::Missing(
+                member.as_str().into(),
+            )));
+        }
+        Err(error) => return Err(error.into()),
+    };
+    if !file.metadata()?.is_file() {
+        return Ok(Admission::Refused(Readiness::Incompatible(
+            member.as_str().into(),
+        )));
+    }
+    Ok(Admission::Admitted(file))
+}
+
+fn read_delegated(
     root: &Path,
-    relative: &RelativePath,
+    member: &RelativePath,
     expected: &Sha256Digest,
-) -> Result<Option<Readiness>, Error> {
-    let path = relative.under(root);
+) -> Result<Admission<DelegatedInventory>, Error> {
+    let path = member.under(root);
     filesystem::refuse_links(&path)?;
-    match fs::metadata(&path) {
+    match fs::symlink_metadata(&path) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            return Ok(Some(Readiness::Missing(relative.as_str().into())));
+            return Ok(Admission::Refused(Readiness::Missing(
+                member.as_str().into(),
+            )));
         }
         Err(e) => return Err(e.into()),
         Ok(meta) if !meta.is_file() => {
-            return Ok(Some(Readiness::Incompatible(relative.as_str().into())));
+            return Ok(Admission::Refused(Readiness::Incompatible(
+                member.as_str().into(),
+            )));
         }
-        Ok(_) => {}
+        Ok(meta) => filesystem::refuse_metadata_links(&meta)?,
     }
-    if filesystem::digest(&path)? != *expected {
-        return Ok(Some(Readiness::Incompatible(relative.as_str().into())));
+    let file = match open_regular(&path, member)? {
+        Admission::Admitted(file) => file,
+        Admission::Refused(readiness) => return Ok(Admission::Refused(readiness)),
+    };
+    let mut bytes = Vec::new();
+    file.take(filesystem::JSON_BYTES_LIMIT + 1)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > filesystem::JSON_BYTES_LIMIT {
+        return Err(Error::LimitExceeded);
     }
-    Ok(None)
+    if Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes)))? != *expected {
+        return Ok(Admission::Refused(Readiness::Incompatible(
+            member.as_str().into(),
+        )));
+    }
+    Ok(Admission::Admitted(serde_json::from_slice(&bytes)?))
 }
