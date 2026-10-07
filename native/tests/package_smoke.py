@@ -2,6 +2,7 @@
 
 import importlib
 import importlib.metadata
+import importlib.util
 import json
 import runpy
 import subprocess
@@ -23,6 +24,14 @@ def require(condition: bool, message: str) -> None:
 
 root = Path(sys.argv[1]).resolve(strict=True)
 manifest = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+require(sys.pycache_prefix is None, "Packaged bytecode lookup must stay beside its source")
+for relative in manifest["files"]:
+    if relative.endswith(".py"):
+        cache = Path(importlib.util.cache_from_source(str(root / relative)))
+        require(
+            cache.relative_to(root).as_posix() in manifest["files"],
+            f"Bundled source has no inventoried bytecode: {relative}",
+        )
 entrypoint_smoke = runpy.run_path(str(Path(__file__).with_name("entrypoint_smoke.py")))
 entrypoint_smoke["verify_entrypoints"](
     root,

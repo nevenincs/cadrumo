@@ -12,7 +12,7 @@ related:
   - '[[2026-10-04-application-distribution-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:45b068e6813a4db563fc6b66caaca064e1a4ff20078613ece60636c0096af5e4'
+body_hash: 'sha256:b6b785529e52ef7b3b455817b7ebfd05d040cd4689974c486912f542f11fdb17'
 ---
 
 # `runtime-file-access-performance` plan
@@ -35,7 +35,7 @@ The user additionally requested a brief and assessment of the reported hundred-p
 - [x] `S02` - Remove measured redundant work at the owning call-stack boundaries; `local_observation_spreadsheet.py, inbound financial/providers/xlsx.py, inbound pdf/page_text_extraction.py, outbound calculation_summary_pdf/summary_container.py, calculation_review_xlsx_operation_composition.py, reconciliation_export_operation_composition.py and entrypoints/tests/test_operation_registry_imports.py`.
 - [ ] `S04` - Rebuild Windows binaries, measure the full attempted pipeline and verify a supported runtime package while tracking the blocked documentation gate; `Owning Windows Release build and package recipes, full documentation build failure evidence, supported CADRUMO_PACKAGE_USER_DOCS=OFF diagnostic package with its actual exclusions recorded, restored default docs configuration, process-tree measurements and rebuilt runtime startup verification`.
 - [ ] `S05` - Brief broad-suite failures and repair confirmed shared integration, finding discovery and native test coordination roots; `Existing report inventories, operator_surface/contract.py, modelo_inception.py and tests, generated_tree_inventory.py and render_check.py with tests, source_policy.py and four-locale docs/flows leaves through dev.locales, M390 worked-example fixture rate facts, test_workbench_finding_words.py finite literal-key discovery and published heading, native/manager/src/supervision/supervisor.rs signalled reader fixture, native/manager/tests/supervision.rs termination-confirmation ordering and native/cmake/Manager.cmake real-process test resource coordination, durable grouped failure brief`.
-- [ ] `S06` - Eliminate measured packaged source recompilation by publishing deterministic checked-hash bytecode after call-stack corrections; `dev/packaging/native/stdlib.py, assemble.py and focused bytecode tests, pinned compiler and relocated SDK source-hash admission, generated metadata through its owning workflow, immutable packaged source/bytecode inventory and fresh native CLI/readiness comparison after rebuild`.
+- [ ] `S06` - Eliminate measured packaged source recompilation by publishing deterministic checked-hash bytecode after call-stack corrections; `dev/packaging/native/stdlib.py and assemble.py with focused bytecode tests and native/tests/package_smoke.py source-adjacent inventory acceptance, pinned compiler and relocated SDK source-hash admission, generated metadata through its owning workflow, immutable packaged source/bytecode inventory and fresh native CLI/readiness comparison after rebuild`.
 - [ ] `S07` - Remove duplicate packaged import directories at bootstrap and verify plugin discovery and hostile-path refusals; `native/interpreter/bootstrap.py path identity comparison, owning bootstrap contract tests and windows_verify.py packaged path uniqueness assertion, pinned-SDK metadata discovery counts, packaged import profile and final native admission`.
 - [ ] `S03` - Compare source and executable file access and review justified cache opportunities; `Fresh-process measurements, configured checks and the runtime-file-access-performance audit and ledger`.
 

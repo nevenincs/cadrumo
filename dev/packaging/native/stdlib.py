@@ -10,10 +10,22 @@ import zipfile
 from pathlib import Path
 
 
-def bytecode(source: bytes, name: str) -> bytes:
-    """Use hash-based legacy pyc entries, understood directly by zipimport."""
-    code = compile(source, f"python.zip/{name}", "exec", dont_inherit=True)
+def bytecode(source: bytes, name: str, *, prefix: str = "python.zip") -> bytes:
+    """Compile checked-hash bytecode with a portable package-relative filename."""
+    code = compile(source, f"{prefix}/{name}", "exec", dont_inherit=True)
     return importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(source) + marshal.dumps(code)
+
+
+def compile_packages_bytecode(source: Path, *, prefix: str, version: str) -> None:
+    """Publish caches after package adaptations, using the pinned runtime compiler."""
+    if tuple(map(int, version.split("."))) != sys.version_info[:3]:
+        raise ValueError("Bytecode assembly requires the exact pinned development Python")
+    for file in sorted(source.rglob("*.py")):
+        # Developer tools redirect cache_from_source through sys.pycache_prefix;
+        # published bytecode belongs beside its source in the immutable package.
+        destination = file.parent / "__pycache__" / f"{file.stem}.{sys.implementation.cache_tag}.pyc"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(bytecode(file.read_bytes(), file.relative_to(source).as_posix(), prefix=prefix))
 
 
 def bundle(source: Path, destination: Path, excluded: list[str], bootstrap: dict[str, bytes], version: str) -> None:

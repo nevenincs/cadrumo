@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:16c5883caa9a75e25b0edc5295557a856fd1922fccbb1ddadfc0309f8f30cb34'
+body_hash: 'sha256:9d64d5c01f4e36097480b1cefc945de20c79035309c9991bd0f503a058e160a5'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -120,6 +120,12 @@ related:
 - `S05` `verify:` `configured current format/style/type checks` -> `pass`
 - `S05` `verify:` `current import check after owning target regeneration (20261007T171255.224352Z-check-import-boundaries-14976-f48cf065)` -> `fail`
 - `S07` `verify:` `owning native Release verification, all 13 current CTest checks` -> `pass`
+- `S05` `verify:` `safe original-case report refresh across 530 pytest logs: 110 recorded passes and 160 last failures` -> `pass`
+- `S06` `M` `dev/packaging/native/tests/test_package_bytecode.py`
+- `S06` `verify:` `scoped Ruff ty and format after explicit package cache placement` -> `pass`
+- `S06` `M` `native/tests/package_smoke.py`
+- `S06` `verify:` `41 prefix-aware bytecode assembly-tools startup-presence cases (20261007T175107.483884Z-pytest-84940-b146c00b)` -> `pass`
+- `S06` `verify:` `scoped Ruff ty and formatting for stdlib package-bytecode tests and native package smoke` -> `pass`
 
 ## Notes
 
@@ -158,3 +164,6 @@ related:
 - `S05` All 13 current native targets pass; CTest total 650.56 seconds, outer owning verification recipe 1130.925 wall / 856.938 descendant CPU seconds. Both native test reliability changes and the current package path/bytecode changes are exercised by this gate. ZIP and extracted-artifact verification remain active.
 - `S05` Current import aggregate loaded all 4524 configured modules, kept all 15 contracts, and found no load failures or hard violations, but its source identity changed in the shared tree. Duration 489.997s. The required complete stable verdict remains unavailable; S05 stays open for that verification while the completed repairs receive a durable checkpoint.
 - `S07` All native checks now pass with current path deduplication, bytecode publication and native fixture repairs. The actual fresh extracted-ZIP plugin-discovery count and runtime performance comparison remain pending, so S07 remains open at this checkpoint.
+- `S05` Additional passes come from the independent broad-test-failure-repair campaign, not from this performance workstream's seven repaired roots (41 original cases). Historical report statuses do not establish a stable whole-tree verdict.
+- `S06` Extracted optimized-candidate manifest contains zero dependency PYC files. `dev._paths` sets `sys.pycache_prefix` and `cache_from_source` redirected the producer outside the package. Corrected explicit package-local destination; strengthened matching-bytecode test to set a separate builder prefix and prove no output escapes. Actual artifact comparison and rebuilt admission remain pending.
+- `S06` Previous extracted candidate admitted successfully after 3005.168 wall seconds but contains zero dependency PYC files, so it is not S06 optimization evidence. Corrected package-local producer and source-to-cache inventory smoke guard are checkpointed with S06 open; owning rebuilt admission and measurements run in rebuild-published.

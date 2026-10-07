@@ -23,6 +23,7 @@ from .hashing import digest
 from .layout import ApplicationImage, backend, entrypoint_files, load_layout, staged_application_images
 from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
 from .stdlib import bundle as bundle_stdlib
+from .stdlib import compile_packages_bytecode
 
 
 def image_artifact(argument: str) -> tuple[str, Path]:
@@ -271,6 +272,7 @@ def assemble(
     )
     stage_sdk_licenses(root, python, contract)
     shutil.copy2(metadata, root / files["build_metadata"])
+    compile_packages_bytecode(packages, prefix=layout["packages"], version=build_identity["python"])
     startup_files = [
         layout["executable"],
         *entrypoints,
