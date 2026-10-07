@@ -12,7 +12,7 @@ from pathlib import Path
 
 def bytecode(source: bytes, name: str, *, prefix: str = "python.zip") -> bytes:
     """Compile checked-hash bytecode with a portable package-relative filename."""
-    code = compile(source, f"{prefix}/{name}", "exec", dont_inherit=True)
+    code = compile(source, f"{prefix}/{name}", "exec", dont_inherit=True, optimize=0)
     return importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(source) + marshal.dumps(code)
 
 

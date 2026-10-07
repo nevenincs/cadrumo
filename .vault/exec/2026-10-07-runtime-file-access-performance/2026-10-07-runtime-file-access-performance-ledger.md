@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d64d5c01f4e36097480b1cefc945de20c79035309c9991bd0f503a058e160a5'
+body_hash: 'sha256:2d7d200f32ff8bccd4590bf6054b9babb675c34e9c0a1693d963e3c25af3ed7a'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -126,6 +126,16 @@ related:
 - `S06` `M` `native/tests/package_smoke.py`
 - `S06` `verify:` `41 prefix-aware bytecode assembly-tools startup-presence cases (20261007T175107.483884Z-pytest-84940-b146c00b)` -> `pass`
 - `S06` `verify:` `scoped Ruff ty and formatting for stdlib package-bytecode tests and native package smoke` -> `pass`
+- `S03` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-audit.md`
+- `S03` `verify:` `latest whole-tree check-format` -> `fail`
+- `S03` `verify:` `latest whole-tree check-style` -> `fail`
+- `S03` `verify:` `latest whole-tree check-types` -> `fail`
+- `S07` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-audit.md`
+- `S07` `verify:` `current corrected assembled bundle all 13 CTest checks (528.60s)` -> `pass`
+- `S07` `verify:` `packaged staged main-import metadata text opens 160 to 80 with unchanged source/PYC attempts 2673 each` -> `pass`
+- `S07` `verify:` `packaged staged source-module compilation caller count 2673 to zero` -> `pass`
+- `S06` `verify:` `42 optimized-builder bytecode and assembly/startup checks (20261007T190818.766825Z-pytest-62120-12615dfb)` -> `pass`
+- `S06` `verify:` `scoped Ruff ty format after explicit optimization zero` -> `pass`
 
 ## Notes
 
@@ -167,3 +177,6 @@ related:
 - `S05` Additional passes come from the independent broad-test-failure-repair campaign, not from this performance workstream's seven repaired roots (41 original cases). Historical report statuses do not establish a stable whole-tree verdict.
 - `S06` Extracted optimized-candidate manifest contains zero dependency PYC files. `dev._paths` sets `sys.pycache_prefix` and `cache_from_source` redirected the producer outside the package. Corrected explicit package-local destination; strengthened matching-bytecode test to set a separate builder prefix and prove no output escapes. Actual artifact comparison and rebuilt admission remain pending.
 - `S06` Previous extracted candidate admitted successfully after 3005.168 wall seconds but contains zero dependency PYC files, so it is not S06 optimization evidence. Corrected package-local producer and source-to-cache inventory smoke guard are checkpointed with S06 open; owning rebuilt admission and measurements run in rebuild-published.
+- `S03` Current shared-tree gates report 18 format files, 40 style diagnostics and one ty invalid-argument-type in `dev/quality/tests/test_governed_fact_runtime_reads.py.` Reported paths are outside this workstream's modified packaging files; scoped producer/test/smoke Ruff ty format pass. Preserve concurrent owners and do not claim a current whole-repository PASS. Logs: build/runtime-file-access/rebuild-published/{format,style,types}.log.
+- `S07` Staged evidence identifies its manifest and runtime hashes in rebuild-published/staged-evidence-identity.json. Fresh extracted-ZIP admission and actual delivered-host readiness remain pending. Profiler totals 19.195825 to 9.629786 seconds include profiler overhead and are not native startup medians.
+- `S06` Compiler now explicitly uses optimize=0 so builder flags cannot alter published runtime checks. The optimized-builder fixture uses the owning `run_command` wrapper without lint suppressions. SDK bytecode reproduction against the final extracted artifact will establish whether current ordinary-builder bytes are identical; final admission and delivered benchmarks remain pending.

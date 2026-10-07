@@ -10,6 +10,8 @@ from types import ModuleType
 
 import pytest
 
+from ...command_execution import run_command
+from .. import stdlib
 from ..stdlib import compile_packages_bytecode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -72,3 +74,23 @@ def test_bytecode_is_identical_across_package_roots_and_compiler_pin_is_enforced
     assert outputs[0] == outputs[1]
     with pytest.raises(ValueError, match="exact pinned development Python"):
         compile_packages_bytecode(tmp_path / "first", prefix="cadrumo/site-packages", version="0.0.0")
+
+
+def test_optimized_builder_preserves_the_runtime_debug_checks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    source = tmp_path / "example.py"
+    source.write_text("runtime_checks = __debug__\n", encoding="utf-8")
+    producer = (
+        "import runpy,sys; from pathlib import Path; "
+        "tools=runpy.run_path(sys.argv[1]); "
+        "tools['compile_packages_bytecode'](Path(sys.argv[2]), prefix='packages', "
+        "version='.'.join(map(str,sys.version_info[:3])))"
+    )
+    result = run_command(
+        [sys.executable, "-O", "-c", producer, str(Path(stdlib.__file__)), str(tmp_path)], cwd=tmp_path
+    )
+    assert result.returncode == 0, result.stderr
+    monkeypatch.setattr(sys, "pycache_prefix", None)
+    monkeypatch.setattr(sys, "dont_write_bytecode", True)
+    module = ModuleType("example")
+    importlib.machinery.SourceFileLoader("example", str(source)).exec_module(module)
+    assert module.runtime_checks is True
