@@ -41,6 +41,7 @@ from pydantic import (
 )
 
 from ....core.filing_year import FilingYear
+from ....core.toml import freeze_toml_value
 from ....core.type_guards import is_object_mapping
 from .errors import RegistryValidationError
 from .ids import LegalRefId, SourceRefId
@@ -127,7 +128,9 @@ def _normalise_inception(value: object) -> object:
         value = value[_UNAUTHORED_KEY]
     if _inception_declaration_kind(value) is None:
         raise RegistryValidationError(_INCEPTION_KIND_REFUSAL)
-    return value
+    # The before-validator exposes JSON arrays as Python lists to the strict
+    # tagged member. Use the same tuple boundary as authored TOML/predecessors.
+    return freeze_toml_value(value)
 
 
 ModeloInceptionField = Annotated[

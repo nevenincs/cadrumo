@@ -16,7 +16,7 @@ from .export_fragment_provenance import (
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
 )
-from .render_check import select_revision_record_design_source
+from .render_check import RecordDesignFrameUnavailableError, select_revision_record_design_source
 
 __all__ = ["GeneratedExportTree", "generated_export_trees"]
 
@@ -102,7 +102,9 @@ def _generated_export_tree_for_revision(
         assessment_floor=assessment_floor,
     )
     historical_static = not coordinates
-    if historical_static and max(revision.period_selector.years, default=assessment_floor) < assessment_floor:
+    selector = revision.period_selector
+    last_declared_year = max(selector.years) if selector.years else selector.year_to
+    if historical_static and last_declared_year is not None and last_declared_year < assessment_floor:
         coordinates = revision_selection_coordinates(
             revision,
             assessment_horizon=min(assessment_horizon, assessment_floor - 1),
@@ -112,14 +114,21 @@ def _generated_export_tree_for_revision(
         raise AssertionError(f"generated tree {modelo.id}/{revision.id} has no law-selectable coordinate")
     filing_year, period = coordinates[0]
     if historical_static:
-        source_ref, epoch = select_revision_record_design_source(
-            authority,
-            modelo=str(modelo.id),
-            revision=str(revision.id),
-            filing_year=filing_year,
-            period=period,
-            source_ref=None,
-        )
+        for filing_year, period in coordinates:
+            try:
+                source_ref, epoch = select_revision_record_design_source(
+                    authority,
+                    modelo=str(modelo.id),
+                    revision=str(revision.id),
+                    filing_year=filing_year,
+                    period=period,
+                    source_ref=None,
+                )
+            except RecordDesignFrameUnavailableError:
+                continue
+            break
+        else:
+            raise AssertionError(f"historical generated tree {modelo.id}/{revision.id} has no source-covered frame")
         if (
             source_ref != manifest.source_ref
             or epoch != manifest.design_epoch

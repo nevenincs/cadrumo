@@ -119,6 +119,7 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
         BindingSourceKind.FOREIGN_ASSET: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.ATRIBUCION_MEMBER: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.GASTO193_CONTRIBUTOR: (SourceFamily.REGISTERS, SourceSurface.NONE),
+        BindingSourceKind.AFILIADO_COTIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.PROFILE: (SourceFamily.PROFILE, SourceSurface.PROFILE),
         BindingSourceKind.PREVIOUS_FILING: (SourceFamily.EARLIER_FILINGS, SourceSurface.DECLARATIONS),
         BindingSourceKind.RELATION_PREFILL: (SourceFamily.EARLIER_FILINGS, SourceSurface.DECLARATIONS),

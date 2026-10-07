@@ -160,6 +160,7 @@ flows:
     filter:
       option:
         binding_source:
+          afiliado_cotizacion: Tagi befizetések
           atribucion_member: Jövedelem-hozzárendelési tag
           bienes_inversion_regularizacion: Beruházási javak kiigazítása
           borrador: AEAT-tervezet

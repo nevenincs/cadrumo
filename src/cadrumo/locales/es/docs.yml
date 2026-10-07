@@ -1,6 +1,7 @@
 docs:
   casilla:
     binding_source:
+      afiliado_cotizacion: desde el calendario de cuotas de afiliados que aportaste
       atribucion_member: desde los miembros en atribución de rentas
       bienes_inversion_regularizacion: desde la regularización de bienes de inversión
       borrador: desde los datos de la AEAT (el borrador)

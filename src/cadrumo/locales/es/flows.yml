@@ -163,6 +163,7 @@ flows:
     filter:
       option:
         binding_source:
+          afiliado_cotizacion: Cuotas de afiliados
           atribucion_member: Miembro de atribución de rentas
           bienes_inversion_regularizacion: Regularización de bienes de inversión
           borrador: Borrador de la AEAT

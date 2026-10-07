@@ -12,7 +12,7 @@ related:
   - '[[2026-10-04-application-distribution-adr]]'
 modified: '2026-10-07'
 body_schema: body-v2
-body_hash: 'sha256:f7097590a3c4fb377678a991eb5bad417352814221cb8b63afe91618222b3075'
+body_hash: 'sha256:652b4cd8ae83c610702ec6d55e0b3fdd2fe8eecb192aa9270d328ab9b0799469'
 ---
 
 # `runtime-file-access-performance` plan
@@ -27,11 +27,14 @@ This work owns new developer file-access diagnostics and bounded measured produc
 
 The user additionally authorized rebuilding the binaries and benchmarking the build from start to finish on 2026-10-07. S04 uses the existing enrolled Windows Release build directory, preserving the separately retained older benchmark package. Include runtime, console, manager and desktop images, bundled documentation, ZIP packaging and native/artifact verification. Measure wall time and descendant process CPU; distinguish an incremental rebuild with managed caches from a clean build. Existing accepted interpreter-foundation, distribution and runtime-manager decisions govern this routine rebuild.
 
+The user additionally requested a brief and assessment of the reported hundred-plus test failures. S05 inventories the actual two broad pytest reports, groups cases by owning root cause and checks fresh representative results before claiming a current defect or resolution. Confirmed routine command-inventory and strict registry snapshot decoding repairs fall within this authorization; wider filing-law, localization and source-corpus issues require their owning evidence and tracked repair work rather than altered assertions.
+
 ## Steps
 
 - [x] `S01` - Measure runtime file access and attribute repeated opens to their callers; `dev/ci/runtime_file_access.py, dev/ci/tests/test_runtime_file_access.py, CLI-generated dev/quality/metadata/import_load_targets.dev.json and import_load_targets.json enrollment, plus ignored build/runtime-file-access measurements`.
 - [x] `S02` - Remove measured redundant work at the owning call-stack boundaries; `local_observation_spreadsheet.py, inbound financial/providers/xlsx.py, inbound pdf/page_text_extraction.py, outbound calculation_summary_pdf/summary_container.py, calculation_review_xlsx_operation_composition.py, reconciliation_export_operation_composition.py and entrypoints/tests/test_operation_registry_imports.py`.
-- [ ] `S04` - Rebuild the Windows runtime, manager and desktop binaries and benchmark the complete build pipeline; `Owning native/package build commands, isolated ignored build output, process-tree build measurements and rebuilt executable startup/error verification`.
+- [ ] `S04` - Rebuild Windows binaries, measure the full attempted pipeline and verify a supported runtime package while tracking the blocked documentation gate; `Owning Windows Release build and package recipes, full documentation build failure evidence, supported CADRUMO_PACKAGE_USER_DOCS=OFF diagnostic package with its actual exclusions recorded, restored default docs configuration, process-tree measurements and rebuilt runtime startup verification`.
+- [ ] `S05` - Brief broad-suite failures and repair confirmed command inventory, inception JSON decoding, historical export inventory, affiliate source policy and stale M390 observation facts; `Existing report inventories, operator_surface/contract.py, modelo_inception.py and tests, generated_tree_inventory.py and render_check.py with tests, source_policy.py and four-locale docs/flows leaves through dev.locales, M390 worked-example fixture rate facts, durable grouped failure brief`.
 - [ ] `S03` - Compare source and executable file access and review justified cache opportunities; `Fresh-process measurements, configured checks and the runtime-file-access-performance audit and ledger`.
 
 ## Parallelization

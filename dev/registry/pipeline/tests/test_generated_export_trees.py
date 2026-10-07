@@ -58,7 +58,12 @@ from ..export_fragment_provenance_projection import loader_semantic_digest
 from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
 from ..joined_record_design import design_view
-from ..render_check import compare_export_tree_roots, parsed_tree_file
+from ..render_check import (
+    RecordDesignFrameUnavailableError,
+    compare_export_tree_roots,
+    parsed_tree_file,
+    select_revision_record_design_source,
+)
 from ..source_defects import source_defects_for
 from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos, tree_inheritance
 
@@ -79,6 +84,20 @@ def test_repaired_historical_m232_tree_is_enrolled_with_its_official_frame() -> 
         "0A",
         True,
     )
+
+
+def test_historical_m341_closed_year_range_is_enrolled_without_filing_support() -> None:
+    """A closed range below the support floor remains a source-proven static tree."""
+    tree = next(item for item in _GENERATED_TREES if str(item) == "m341-2005-2015")
+    assert tree.historical_static
+    assert (tree.source_ref, tree.filing_year, tree.period) == ("aeat-dr-341-2005-2015", 2005, "2T")
+    authority = compiled_bundled_authority()
+    assert authority.catalogues.supported_filing_years is not None
+    assert tree.filing_year < authority.catalogues.supported_filing_years.floor
+    with pytest.raises(RecordDesignFrameUnavailableError, match=r"filing_year=2005.*period='1T'.*eligible=\(\)"):
+        select_revision_record_design_source(
+            authority, modelo=tree.modelo, revision=tree.revision, filing_year=2005, period="1T"
+        )
 
 
 def _expected_filing_grade_refusals() -> dict[str, str]:

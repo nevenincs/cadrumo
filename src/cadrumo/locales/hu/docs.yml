@@ -1,6 +1,7 @@
 docs:
   casilla:
     binding_source:
+      afiliado_cotizacion: az általad megadott tagi befizetési naptárból
       atribucion_member: az atribución de rentas tagjaiból
       bienes_inversion_regularizacion: a beruházási javak korrekciójából
       borrador: az AEAT-adatokból (borrador)

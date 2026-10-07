@@ -83,6 +83,7 @@ from .source_defects import source_defects_for
 
 __all__ = [
     "GeneratedExportBootstrapTransport",
+    "RecordDesignFrameUnavailableError",
     "RenderComparison",
     "compare_export_tree_roots",
     "compare_revision_against_committed",
@@ -101,6 +102,10 @@ __all__ = [
 #: which this was the one nobody would have found when it changed.
 _PROVENANCE_MANIFEST = EXPORT_FRAGMENT_PROVENANCE_FILENAME
 _AUTHORED_ROOT = Path(__file__).resolve().parent.parent
+
+
+class RecordDesignFrameUnavailableError(ValueError):
+    """No declared official design covers the requested complete filing frame."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -296,7 +301,8 @@ def _select_record_design_source(
         period=period,
     )
     if len(applicable) != 1:
-        raise ValueError(
+        error_type = RecordDesignFrameUnavailableError if not applicable else ValueError
+        raise error_type(
             f"{modelo}/{revision} requires exactly one record-design source for "
             f"filing_year={filing_year}, period={period!r}, source_ref={source_ref!r}; "
             f"eligible={tuple(map(str, applicable))!r}",

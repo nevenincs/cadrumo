@@ -158,6 +158,7 @@ flows:
     filter:
       option:
         binding_source:
+          afiliado_cotizacion: Member contributions
           atribucion_member: Income-attribution member
           bienes_inversion_regularizacion: Investment-goods adjustment
           borrador: AEAT draft

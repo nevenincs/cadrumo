@@ -162,6 +162,7 @@ flows:
     filter:
       option:
         binding_source:
+          afiliado_cotizacion: Quotes d'afiliats
           atribucion_member: Membre d'atribució de rendes
           bienes_inversion_regularizacion: Regularització de béns d'inversió
           borrador: Esborrany de l'AEAT

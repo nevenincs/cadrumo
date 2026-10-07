@@ -100,6 +100,14 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
+        child="sign-in-status",
+        operator_question="observe the active profile's human sign-in state without extending its session",
+        service_owner="cadrumo.application.user_profile",
+        mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.CUSTODY,
+        root=RootSurfaceName.CONFIG,
         child="logout",
         operator_question="close the active taxpayer profile session and clear its pointer",
         service_owner="cadrumo.application.user_profile",
