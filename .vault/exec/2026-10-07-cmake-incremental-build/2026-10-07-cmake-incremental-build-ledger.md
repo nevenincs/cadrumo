@@ -5,40 +5,14 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e47f2d72d69225118c726065eaa50ab853f4de1f2cdb8d7bc52710615aa09fef'
+body_hash: 'sha256:006322e6ffe46d4c9cce15fc981e2dc26375463ca9eb4b14cdbb5ed44c4f1b85'
 related:
   - "[[2026-10-07-cmake-incremental-build-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `cmake-incremental-build` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `native/desktop/CMakeLists.txt`
 - `S01` `M` `native/desktop/scripts/tauri.mjs`
@@ -96,8 +70,19 @@ related:
 - `S03` `verify:` `ruff check and format --check changed Python files` -> `pass`
 - `S03` `verify:` `ty check changed Python files` -> `pass`
 - `S03` `verify:` `cmake --preset windows-x64` -> `pass`
+- `S04` `M` `native/CONTRACT.md`
+- `S04` `A` `.vault/audit/2026-10-07-cmake-incremental-build-audit.md`
+- `S04` `verify:` `just check-style` -> `pass`
+- `S04` `verify:` `just check-format` -> `pass`
+- `S04` `verify:` `just check-types` -> `fail`
+- `S04` `verify:` `scoped ty check changed Python files after corrections` -> `pass`
+- `S04` `verify:` `actual native unchanged-build artifact timestamp comparison` -> `pass`
+- `S01` `verify:` `node --test native/desktop/tests/content-build.test.mjs native/desktop/tests/backend-snapshot.test.mjs native/desktop/tests/frontend-clean.test.mjs native/desktop/tests/frontend-install.test.mjs` -> `pass`
 
 ## Notes
 
 - `S02` Authority compiler fingerprint remains intentionally conservative in its canonical owner; this does not establish minimal compiler invalidation.
 - `S03` Full application ZIP acceptance is assigned to S04 and remains pending behind the foreign documentation build; real install/CPack fixtures pass.
+- `S04` S04 remains open. Full application package attempt was stopped while queued behind an already-running foreign documentation build; package-release and verify-package must be completed when that shared output is available.
+- `S04` Repository type check reported two concurrent registry schema private-usage diagnostics; five in-scope diagnostics were fixed and scoped ty now passes. No unrelated source edits reverted.
+- `S01` Exact 23-test worker invocation includes frontend-install.test.mjs; the earlier verification row listed only three of its four test files.

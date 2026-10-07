@@ -32,8 +32,9 @@ content identities and are never discovered through the runtime PATH.
 The selected host interpreter, compiler, linker, Rust tools, uv and toolchain file
 are recorded in the same builder provenance. Explicit sysroots use bounded,
 deterministic file inventories in builder sidecars; links may not escape the
-SDK or form cycles. Changed compiler, wrapper, decoder or SDK bytes require
-reconfiguration and cannot reuse an old provisioning/product cache. CMake and
+SDK or form cycles. Changed configured tool bytes require reconfiguration;
+each action invalidates only for the toolchain inputs it consumes. Pure Python
+product wheels do not include native compiler or sysroot identities. CMake and
 Cargo share the selected linker configuration; cross/sysroot builds require the
 reviewed `CADRUMO_RUST_LINKER` wrapper.
 Configured provisioning, product and build-tool actions execute the selected,
@@ -318,14 +319,15 @@ SDK and the locked base dependency closure; optional integrations remain outside
 this base package. The C host is compiled locally; CPython is the official binary
 build, with matching headers and import library. No CPython source patch is applied.
 
-The `just` recipes are the canonical entry: `just build-native`,
-`just test-native-bundle`, `just build-native-package` and `just test-native-package`,
-each for `Release` (the default) or `Debug`. They select the host's preset, supply
-the managed tool locations the `justfile` exports, and configure with
-`CADRUMO_DEV_PYTHON` set to the release-builder interpreter that
-`just setup-native-builder` converges at the pinned patch in managed storage, apart
-from the development `.venv`. The underlying CMake commands follow; entered by hand
-they use the caller's environment and the interpreter CMake finds in `.venv`.
+CMake owns configure, builder setup, registry publication, build, installation and
+ZIP packaging. A fresh configuration uses `uv` to converge the pinned release
+interpreter and locked development dependencies in `<binary-dir>/_deps/builder`.
+An explicit `CADRUMO_DEV_PYTHON` selects an externally managed release interpreter;
+setup validates its version and cleanup never removes it. Compiler, Rust, Node and
+uv executables remain host toolchain prerequisites. The `just build-native`,
+`just test-native-bundle`, `just build-native-package` and `just test-native-package`
+recipes select the host's CMake preset and target; they no longer publish authority
+or prepare a separate interpreter before CMake.
 
 ```text
 cmake --preset windows-x64
@@ -378,7 +380,9 @@ enrolled name elsewhere, stops with the enrolled names.
 
 | Path beneath the binary directory | Contents |
 | --- | --- |
-| `_deps/runtime/` | Verified CPython SDK and locked third-party wheels installed for staging |
+| `_deps/builder/` | Configure-owned release builder, retained by output cleanup |
+| `_deps/python-sdk/` | Verified pinned CPython SDK, independent of runtime wheel changes |
+| `_deps/runtime/` | Locked third-party wheels installed for staging |
 | `_deps/build-tools/` | Pinned SVG renderer; never shipped |
 | `product/build/wheels/` | Existing CADRUMO three-wheel cohort built from source |
 | `product/dependencies/` | Exact production closure plus those product wheels |
@@ -411,15 +415,24 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 
 | Target | Operation |
 | --- | --- |
-| default / `bundle` | Build native host, product wheels and complete staged package |
+| default / `zip` | Build the full application and its install-based ZIP |
+| `bundle` | Build native hosts, product wheels and complete staged package |
+| `setup-native-builder` | Converge the configure-owned builder or validate the selected external interpreter |
+| `registry_authority` | Run the canonical publisher, reusing current legal inputs after the same compiler succeeds |
+| `native_contract`, `native_metadata` | Generate content-stable C/Rust contracts and executable resources |
+| `rust_platform_static`, `rust_platform_shared`, `rust_platform_consumer` | Build one platform library format or its Rust consumer; `rust_platform` groups the libraries |
+| `rust_application`, `rust_manager`, `desktop-host-build` | Build each application library, manager executable or desktop executable |
 | `python`, `python_d` | Compile production or development host and bridge |
 | `cadrumo_entrypoint_<name>` | Compile one declared console entrypoint host, such as `cadrumo-runtime.exe` |
-| `python_dependencies` | Provision the pinned runtime and locked binary dependencies |
+| `python_sdk` | Acquire and verify the pinned CPython SDK |
+| `python_dependencies` | Install the selected runtime wheel closure, reusing the SDK |
 | `python_product` | Build and install the CADRUMO wheel cohort into dependency staging |
 | `user_docs` | Build every declared documentation language and stage the shippable subset; a `bundle` prerequisite unless `CADRUMO_PACKAGE_USER_DOCS=OFF` |
+| `user_docs_build`, `user_docs_stage` | Compile documentation or prepare its shippable subset independently |
+| `desktop-frontend-install`, `desktop-frontend-chrome`, `desktop-frontend-palette`, `desktop-frontend-build`, `desktop-host-prepare` | Prepare each desktop dependency, generated input, asset bundle or host snapshot independently |
 | `verify` | Build bundle/ABI consumers, run CTest including real dependency imports |
 | `install` / `cmake --install` | Copy staged package to the chosen prefix |
-| `package` / `zip` | CPack ZIP delivery; no native installer yet |
+| `package` | Standard CPack target; use `zip` for content-aware archive reuse |
 | `verify-package` | Build ZIP, extract into a Unicode/spaces path, run cohesion and runtime probes |
 | `clean` | Generator's standard build-output cleanup |
 | `clean-stage` | Remove stage, testing and verification trees |
@@ -428,7 +441,8 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `clean-native` | Remove bin, lib, symbols and Cargo outputs; retain configure metadata |
 | `clean-desktop` | Remove declared desktop build outputs and test state |
 | `clean-docs` | Remove documentation build roots, work state and the staged subset |
-| `clean-all` | Apply the declared bounded cleanup groups; retain CMake configuration |
+| `clean-<target>` | Remove the target's owned outputs; keep shared prerequisites and other configurations |
+| `clean-all` | Remove enrolled outputs in every configuration and bounded cleanup groups; retain configuration, builder and installation receipts |
 
 Explicit cleanup never removes source files, the installed application or an
 arbitrary path. It validates the CMake source owner and each resolved child path.
@@ -438,6 +452,31 @@ inputs participate in the product dependency graph. Do not run independent build
 or cleanup concurrently in the same binary directory.
 A subsequent build regenerates removed prerequisites. Run build before
 `cmake --install`; that command copies an already assembled tree.
+
+Content checks run on every invocation for the generated contracts/resources,
+SDK, wheel closure, frontend, documentation, assembly and ZIP. Receipts bind input
+bytes, command selections and complete output inventories. Missing or altered
+outputs invalidate reuse. Unchanged generated files retain timestamps, including
+when regenerated bytes match. Runtime wheel selection excludes development-only
+lock changes; desktop tool changes do not invalidate native provisioning. Native
+compilers and Cargo retain their normal source timestamp rules: touching a raw
+C/Rust source may rebuild its owning binary. Changes to shared code correctly
+rebuild its consumers. Individual Cargo clean targets remove public outputs;
+`clean-native` and `clean-desktop` also clear the shared compiler caches.
+Authority publication retains its canonical conservative compiler fingerprint:
+changes anywhere in its enrolled core, domain, application or compiler trees,
+or in dependency manifests, can rerun publication. This does not establish
+minimal invalidation inside that compiler.
+
+`clean-setup-native-builder` removes a CMake-owned builder and forces configure
+to restore it before the next individual build. An explicitly selected external
+interpreter is retained with an ownership message. `clean-desktop-frontend-install`
+removes the checkout's shared npm installation under the install lock; subsequent
+frontend builds restore it. That explicit cleanup affects every binary directory
+using the checkout.
+
+The root install rule preserves source permissions, including executable bits on
+POSIX hosts. Both installation and the ZIP consume the same staged application.
 
 CPack writes each configuration's artifact locator after creating its archive.
 The locator records archive and manifest SHA256 hashes and the development-host
@@ -1225,9 +1264,11 @@ Configure with CMake 4.4.3, `-S native/cmake/distribution`, the target's preset 
 `-DCADRUMO_PAYLOAD=<absolute-payload>`. The presets are `distribution-windows-x64`,
 `distribution-linux-x86-64`, `distribution-linux-aarch64` and
 `distribution-macos-arm64`; each sets `CADRUMO_TARGET` and the binary directory
-`build/<preset name>`. The installation stage in that directory belongs to the
-payload it was prepared from: configuring a different payload there is refused,
-and no cleanup target removes the stage.
+`build/<preset name>`. Build `installation_prepare` to validate and stage the
+selected payload. Changes to its contents refresh the stage during the build;
+unchanged content preserves the existing output. `clean-installation_prepare`
+removes generated staging outputs while retaining historical uninstall receipts
+under `installation/receipts`.
 Set `CADRUMO_DEV_PYTHON` explicitly when the checkout's development interpreter is
 not available. `CADRUMO_CHANNEL` selects `stable` or `preview`. An optional
 `CADRUMO_DESKTOP_EXECUTABLE` must name an actual file in the hashed payload
@@ -1237,7 +1278,9 @@ receives desktop registration. macOS requires a root-level desktop executable. I
 must be completed before a macOS application release.
 
 CPack definitions select MSI/ZIP on Windows, DEB/RPM/TGZ on Linux, and DMG/TGZ on
-macOS. Run `cpack --config <build>/CPackConfig.cmake -G <generator>` on the native
+macOS. Build the CMake `zip` target for the install-defined portable archive.
+For a native installer, first build `installation_prepare`, then run
+`cpack --config <build>/CPackConfig.cmake -G <generator>` on the native
 packaging host. WiX .NET tooling and its matching UI extension are prerequisites
 for MSI; current WiX 7 also requires operator acceptance of its OSMF EULA. CPack's
 `CPACK_WIX_VERSION=4` selects the WiX XML/tool interface, not a claim that WiX 4
@@ -1255,6 +1298,8 @@ For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
 relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact
 prefix, then build the `uninstall` target. The external `installation/metadata/installation.json`
 receipt binds removal to the installed package manifest and unchanged file hashes.
+When staging has advanced, select the retained receipt for the older installation
+with `CADRUMO_UNINSTALL_RECEIPT`.
 Changed files and unowned content remain. Symlink/junction traversal and filesystem
 root removal are refused. Native package managers own uninstall for system packages;
 the prefix helper is for isolated development installations.
