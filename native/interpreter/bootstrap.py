@@ -168,6 +168,7 @@ def install():
     _cadrumo_native.prepare(root, manifest)
     path_file = _inside(root, LAYOUT["files"]["path_file"])
     actual_paths = []
+    existing_paths = {Path(path) for path in sys.path}
     for line in path_file.read_text(encoding="utf-8").splitlines():
         if not line or line.startswith("#"):
             continue
@@ -177,8 +178,9 @@ def install():
         if not directory.is_dir():
             raise ImportError(f"Missing package path: {directory}")
         actual_paths.append(directory.relative_to(root).as_posix())
-        if str(directory) not in sys.path:
+        if directory not in existing_paths:
             sys.path.append(str(directory))
+            existing_paths.add(directory)
     if actual_paths != manifest["python_paths"]:
         raise ImportError("Package .pth does not match the assembled import contract")
     sys.meta_path.insert(0, NativeModules(root, manifest["modules"]))

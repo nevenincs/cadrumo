@@ -147,6 +147,59 @@ def _refusal(bootstrap: types.ModuleType, *, full: bool = False) -> str:
     return str(refused.value)
 
 
+@pytest.fixture
+def import_package(root: Path, bootstrap: types.ModuleType, monkeypatch: pytest.MonkeyPatch) -> None:
+    paths = ["cadrumo/site-packages", "cadrumo/site-packages/win32"]
+    for directory in paths:
+        (root / directory).mkdir(parents=True, exist_ok=True)
+    (root / PATH_FILE).write_text("site-packages\nsite-packages/win32\n", encoding="utf-8")
+    (root / NATIVE_MANIFEST).parent.mkdir(parents=True)
+    (root / NATIVE_MANIFEST).write_text(json.dumps({"python_paths": paths, "modules": {}}), encoding="utf-8")
+    files = {**_write(root, NAMES), **{name: digest(root / name) for name in (PATH_FILE, NATIVE_MANIFEST)}}
+    _stage(bootstrap, monkeypatch, root, files)
+    monkeypatch.setattr(sys, "path", [])
+    monkeypatch.setattr(sys, "meta_path", list(sys.meta_path))
+
+
+@pytest.mark.parametrize("spelling", ["native", "posix", "case"])
+def test_import_paths_keep_existing_directory_identity_and_append_only_new_paths(
+    root: Path, bootstrap: types.ModuleType, import_package: None, spelling: str
+) -> None:
+    packages = root / "cadrumo/site-packages"
+    existing = packages.as_posix() if spelling == "posix" else str(packages)
+    if spelling == "case" and os.name == "nt":
+        existing = existing.upper()
+    sys.path.append(existing)
+
+    bootstrap.install()
+
+    assert sys.path == [existing, str(packages / "win32")]
+
+
+@pytest.mark.parametrize(
+    ("content", "refusal"),
+    [
+        ("import os\n", "Executable .pth directives are forbidden"),
+        ("import\tos\n", "Executable .pth directives are forbidden"),
+        ("../../outside\n", "Invalid package-relative path"),
+        ("site-packages\n", "Package .pth does not match the assembled import contract"),
+    ],
+)
+def test_import_path_deduplication_keeps_directive_escape_and_contract_refusals(
+    root: Path,
+    bootstrap: types.ModuleType,
+    import_package: None,
+    monkeypatch: pytest.MonkeyPatch,
+    content: str,
+    refusal: str,
+) -> None:
+    (root / PATH_FILE).write_text(content, encoding="utf-8")
+    _stage(bootstrap, monkeypatch, root, {name: digest(root / name) for name in (*NAMES, PATH_FILE, NATIVE_MANIFEST)})
+
+    with pytest.raises(ImportError, match=refusal):
+        bootstrap.install()
+
+
 def test_a_complete_package_starts_and_unlisted_files_stay_a_full_check_matter(
     root: Path, bootstrap: types.ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:

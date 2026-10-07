@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb11843869d2378b9d09e40cd48edc91061ac1304af081327b6a08b4700f032a'
+body_hash: 'sha256:16c5883caa9a75e25b0edc5295557a856fd1922fccbb1ddadfc0309f8f30cb34'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -119,6 +119,7 @@ related:
 - `S05` `verify:` `final owning native verification, all 13 CTest checks` -> `pass`
 - `S05` `verify:` `configured current format/style/type checks` -> `pass`
 - `S05` `verify:` `current import check after owning target regeneration (20261007T171255.224352Z-check-import-boundaries-14976-f48cf065)` -> `fail`
+- `S07` `verify:` `owning native Release verification, all 13 current CTest checks` -> `pass`
 
 ## Notes
 
@@ -156,3 +157,4 @@ related:
 - `S07` Final native pipeline now passes manager.rust in 168.35s and real-process manager.supervision in 161.96s with the current termination-order assertion, signalled reader fixture and enrolled --test-threads=1. Whole native/application and ZIP/package checks remain pending; these target passes do not close S06/S07.
 - `S05` All 13 current native targets pass; CTest total 650.56 seconds, outer owning verification recipe 1130.925 wall / 856.938 descendant CPU seconds. Both native test reliability changes and the current package path/bytecode changes are exercised by this gate. ZIP and extracted-artifact verification remain active.
 - `S05` Current import aggregate loaded all 4524 configured modules, kept all 15 contracts, and found no load failures or hard violations, but its source identity changed in the shared tree. Duration 489.997s. The required complete stable verdict remains unavailable; S05 stays open for that verification while the completed repairs receive a durable checkpoint.
+- `S07` All native checks now pass with current path deduplication, bytecode publication and native fixture repairs. The actual fresh extracted-ZIP plugin-discovery count and runtime performance comparison remain pending, so S07 remains open at this checkpoint.
