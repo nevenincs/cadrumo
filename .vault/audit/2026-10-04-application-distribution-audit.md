@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:696b251f39ccde1a91b251817a73d20311eeaef4844c1bd396c55af591e73ce3'
+body_hash: 'sha256:76154dc6a93ef838770a74fea904d06e0e6b0af4b9c39719ba1abb25dc7cf90a'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -159,6 +159,11 @@ S09 adds shared resume guards for already durable Removing records under the pub
 Configured application.rust passed (38.28s) and installer.rust passed (9.42s); pinned Rust 1.96 all-target Clippy passed for installer (10.39s) and application (8.18s). Release DLL/runner built (25.83s); all four actual owner-CA MSIs rebuilt/decompiled and runner refusal checks passed (5.91s), log var/storage/development/.logs/test-runs/2026-10-08/20261008T125335.190766Z-pytest-50808-f4952cfc/run.log. Independent source review PASS.
 
 Microsoft's MsiBeginTransactionW/MsiEndTransaction contract establishes current-owner settlement but does not explicitly guarantee a zero-package transaction commit. Actual support for this branch remains disposable Windows acceptance work; code preserves the fence on any failure. Positive native maintenance and interactive two-release lifecycle acceptance are still unverified and all installation gates remain closed. S09 remains open.
+
+
+### 2026-10-08 native Apple SDK inventory | low | Contained framework ancestor aliases retain complete identity
+
+The genuine Apple CLT macOS 26.5 SDK includes a Ruby framework header alias pointing to its ancestor. SDK inventory now explicitly permits such contained directory aliases while recording each link and hashing each canonical directory once. Unresolved or escaping links still refuse. Generic action-cache directory inventory retains its default cycle refusal. Header mutation and link retargeting invalidate builder identity. Eleven builder-identity/action-cache tests, scoped Ruff/format/ty and independent source review pass. Actual macOS configure passed in 11.3s plus 1.9s generation using the unmodified SDK; platform static/shared, manager and application Release targets subsequently compiled successfully on arm64 with the canonical 14.0 deployment floor. This does not prove DMG assembly, login lifecycle or release signing. The isolated build uses explicit local ad-hoc identity '-' without a publisher certificate.
 
 ## Recommendations
 

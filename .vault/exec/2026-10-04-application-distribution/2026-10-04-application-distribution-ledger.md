@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f1d3e9e2f8a3eacca91b56873002481bca2d92c04fa3b4dd54782b1410baca7'
+body_hash: 'sha256:8989a1efce00aa41b713774129ff1839ede5e7a034487c5755d3e3790ccb6a8d'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -271,6 +271,12 @@ related:
 - `S09` `verify:` `installer Release DLL runner (25.83s)` -> `pass`
 - `S09` `verify:` `real four owner-MSI gate checks (5.91s)` -> `pass`
 - `S09` `verify:` `independent Removing recovery source review` -> `pass`
+- `S05` `M` `dev/packaging/native/build_toolchain.py`
+- `S05` `M` `dev/packaging/native/tests/test_builder_identity.py`
+- `S05` `verify:` `pytest builder identity and action cache (11 tests, 6.89s)` -> `pass`
+- `S05` `verify:` `scoped Ruff lint format and ty` -> `pass`
+- `S05` `verify:` `independent SDK alias identity review` -> `pass`
+- `S05` `verify:` `native Apple SDK CMake configure and platform manager application Release compilation` -> `pass`
 
 ## Notes
 
@@ -292,3 +298,4 @@ related:
 - `S05` Partial S05 checkpoint: runtime-only native packages; desktop/docs/full lifecycle acceptance remain pending. All installation gates retained.
 - `S09` Partial S09: post-removal interrupted settlement and native interactive two-release acceptance remain pending; installation gates retained.
 - `S09` Native empty-transaction settlement and interactive lifecycle acceptance remain unverified; all installation gates retained.
+- `S05` S05 remains open; native full packages and lifecycle acceptance are not established by component compilation.

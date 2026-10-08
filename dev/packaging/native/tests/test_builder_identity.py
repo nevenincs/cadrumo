@@ -103,6 +103,33 @@ def test_sdk_sidecar_contains_contained_links_and_refuses_escape_or_cycle(tmp_pa
         sysroot_inventory(sdk)
 
 
+def test_selected_sdk_retains_ancestor_alias_and_detects_header_changes(tmp_path: Path) -> None:
+    sdk = tmp_path / "sdk"
+    headers = sdk / "framework" / "Headers"
+    headers.mkdir(parents=True)
+    header = headers / "api.h"
+    header.write_bytes(b"original native API")
+    alias = headers / "framework"
+    try:
+        alias.symlink_to(headers, target_is_directory=True)
+    except OSError:
+        pytest.skip("The runner cannot create SDK directory aliases")
+    sidecar = write_sysroot_inventory(sdk, tmp_path / "evidence/sdk.json")
+    selected = {"sysroots": {"CMAKE_SYSROOT": sidecar}}
+    evidence = json.loads(Path(sidecar["inventory"]).read_text(encoding="utf-8"))
+    assert evidence["links"]["framework/Headers/framework"]["target"] == "framework/Headers"
+    assert list(evidence["files"]) == ["framework/Headers/api.h"]
+    assert header in builder_inputs(selected)
+    header.write_bytes(b"changed native API")
+    with pytest.raises(ValueError, match="resources changed; reconfigure"):
+        builder_inputs(selected)
+    header.write_bytes(b"original native API")
+    alias.unlink()
+    alias.symlink_to(sdk, target_is_directory=True)
+    with pytest.raises(ValueError, match="resources changed; reconfigure"):
+        builder_inputs(selected)
+
+
 def test_compiler_alias_retarget_cannot_admit_the_previous_resolved_file(tmp_path: Path) -> None:
     first = tmp_path / "compiler-one"
     second = tmp_path / "compiler-two"

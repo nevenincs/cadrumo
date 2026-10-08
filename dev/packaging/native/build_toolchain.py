@@ -14,8 +14,10 @@ from typing import Any
 from .hashing import digest
 
 
-def sysroot_inventory(root: Path, *, excluded: frozenset[str] = frozenset()) -> dict[str, Any]:
-    """Hash SDK files once, retaining contained link targets and refusing cycles or escapes."""
+def sysroot_inventory(
+    root: Path, *, excluded: frozenset[str] = frozenset(), allow_directory_alias_cycles: bool = False
+) -> dict[str, Any]:
+    """Hash files once, retaining contained links and refusing unresolved links or escapes."""
     root = root.resolve(strict=True)
     if not root.is_dir() or root == Path(root.anchor):
         raise ValueError("Sysroot must be an explicit SDK directory below the filesystem root")
@@ -27,7 +29,7 @@ def sysroot_inventory(root: Path, *, excluded: frozenset[str] = frozenset()) -> 
     def visit(directory: Path, ancestors: frozenset[Path]) -> None:
         nonlocal entries
         canonical = directory.resolve(strict=True)
-        if canonical in ancestors:
+        if canonical in ancestors and not allow_directory_alias_cycles:
             raise ValueError("Sysroot contains a directory link cycle")
         if canonical in seen:
             return
@@ -70,7 +72,9 @@ def _inventory_bytes(inventory: Mapping[str, Any]) -> bytes:
 
 def write_sysroot_inventory(root: Path, output: Path) -> dict[str, Any]:
     """Keep the complete SDK evidence in a builder sidecar and return one aggregate identity."""
-    inventory = sysroot_inventory(root)
+    # Apple SDKs contain framework header aliases pointing to an ancestor.
+    # Record those links, but enumerate each real directory only once.
+    inventory = sysroot_inventory(root, allow_directory_alias_cycles=True)
     content = _inventory_bytes(inventory)
     output.parent.mkdir(parents=True, exist_ok=True)
     if not output.is_file() or output.read_bytes() != content:
@@ -114,7 +118,7 @@ def builder_inputs(toolchain: Mapping[str, Any]) -> tuple[Path, ...]:
         inventory = Path(record["inventory"])
         if not inventory.is_absolute() or not inventory.is_file() or digest(inventory) != record["sha256"]:
             raise ValueError(f"Selected {name} inventory changed; reconfigure CMake")
-        current = sysroot_inventory(Path(record["root"]))
+        current = sysroot_inventory(Path(record["root"]), allow_directory_alias_cycles=True)
         if hashlib.sha256(_inventory_bytes(current)).hexdigest() != record["sha256"]:
             raise ValueError(f"Selected {name} resources changed; reconfigure CMake")
         paths.append(inventory)
