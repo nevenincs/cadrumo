@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from itertools import groupby
 
 import pytest
 from pydantic import ValidationError
@@ -397,10 +398,12 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
 
     # Whole calculation/file chain in chronological order for the bucket.
     # Work-unit creation is also persisted in this catalogue by the
-    # shared runtime path.
+    # shared runtime path. One filing emits its supersession and its new
+    # filing at the same instant; the canonical order breaks that tie by
+    # content-addressed event id, so each instant is compared as a group.
     all_events = catalogue.for_bucket(work_unit.bucket_id)
-    type_chain = tuple(
-        e.event_type
+    chain = [
+        e
         for e in all_events
         if e.event_type
         in {
@@ -408,11 +411,14 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
             BucketEventType.MODELO_FILED,
             BucketEventType.MODELO_FILED_SUPERSEDED,
         }
-    )
-    assert type_chain == (
-        BucketEventType.MODELO_CALCULATION_CREATED,
-        BucketEventType.MODELO_FILED,
-        BucketEventType.MODELO_CALCULATION_CREATED,
-        BucketEventType.MODELO_FILED_SUPERSEDED,
-        BucketEventType.MODELO_FILED,
-    )
+    ]
+    type_chain = [
+        sorted(e.event_type.value for e in same_instant)
+        for _, same_instant in groupby(chain, key=lambda event: event.occurred_at)
+    ]
+    assert type_chain == [
+        [BucketEventType.MODELO_CALCULATION_CREATED.value],
+        [BucketEventType.MODELO_FILED.value],
+        [BucketEventType.MODELO_CALCULATION_CREATED.value],
+        sorted((BucketEventType.MODELO_FILED_SUPERSEDED.value, BucketEventType.MODELO_FILED.value)),
+    ]

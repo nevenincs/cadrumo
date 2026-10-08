@@ -181,11 +181,23 @@ def open_ended_revision(modelo_id: str) -> RevisionSelectionMetadata:
     return revision
 
 
-def split_exercise_revisions(modelo_id: str) -> tuple[RevisionSelectionMetadata, RevisionSelectionMetadata]:
-    """Return the early and late revisions of the one exercise two authored designs split."""
+def split_exercise_revisions(
+    modelo_id: str, *, early_period: str, late_period: str
+) -> tuple[RevisionSelectionMetadata, RevisionSelectionMetadata]:
+    """Return the early and late revisions of the one exercise two authored designs split between two periods.
+
+    A modelo may split more than one exercise, each at its own boundary, so the
+    caller names the last period the early design serves and the first the late
+    design serves.
+    """
     revisions = authored_revisions(modelo_id)
     split = [
-        (earlier, later) for earlier, later in pairwise(revisions) if earlier.valid_from.year == later.valid_from.year
+        (earlier, later)
+        for earlier, later in pairwise(revisions)
+        if earlier.valid_from.year == later.valid_from.year
+        and early_period in earlier.period_selector.periods_for_year(earlier.valid_from.year)
+        and late_period not in earlier.period_selector.periods_for_year(earlier.valid_from.year)
+        and late_period in later.period_selector.periods_for_year(later.valid_from.year)
     ]
     if len(split) != 1:
         raise LookupError(f"modelo {modelo_id}: expected one exercise split across two designs, found {len(split)}")

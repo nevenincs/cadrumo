@@ -27,6 +27,7 @@ from ....application.modelo.action_errors import ModeloAggregationBindingError
 from ....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -190,11 +191,11 @@ def _seed_303_work_unit(
         modelo="303",
         filing_year=2026,
         period=typed_period,
-        # The law-determined M303 revision for filing_year 2026 is
-        # ``2026-y-siguientes`` (``2022`` covers only 2022).
-        # The calc-time assertion (snapshot.revision.id ==
-        # work_unit.revision_id) refuses the stale pin.
-        revision_id="2026-y-siguientes",
+        # 2026 is served by two M303 editions; the calc-time assertion
+        # (snapshot.revision.id == work_unit.revision_id) refuses any other pin.
+        revision_id=law_selected_revision_for_work_target(
+            modelo="303", filing_year=2026, period=typed_period, requested_revision_id=None, operation=operation
+        ),
         ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,

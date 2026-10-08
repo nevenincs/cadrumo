@@ -162,7 +162,7 @@ _YEAR = 2025
 _TAX_ID = "12345678Z"
 # Irene SL files the exercise whose Modelo 303 design the registry splits mid-year, so
 # the annual Modelo 390 folds quarters calculated under both designs.
-_IRENE_YEAR = split_exercise_revisions("303")[0].valid_from.year
+_IRENE_YEAR = split_exercise_revisions("303", early_period="2T", late_period="3T")[0].valid_from.year
 _IRENE_TAX_ID = "B12345674"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)

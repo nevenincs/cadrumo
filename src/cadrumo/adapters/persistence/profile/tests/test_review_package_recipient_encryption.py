@@ -99,7 +99,7 @@ _CRYPTO_CAPABILITY = RecipientEncryptionAdapter()
 
 
 def _work_unit(*, bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
@@ -114,7 +114,7 @@ def _work_unit(*, bucket_id: str) -> WorkUnit:
         filing_year=2026,
         period=period,
         revision_id="2026-y-siguientes",
-        name="303-2026-1T",
+        name="303-2026-2T",
         created_at=_NOW,
         updated_at=_NOW,
         state=WorkUnitState.BORRADOR,

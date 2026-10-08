@@ -128,7 +128,7 @@ def test_saved_rendering_snapshot_roundtrips_complete_registry_fields(
     predecessor_type: type[DeclaredPredecessor | NoPredecessor],
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot(modelo_id, filing_year=2026, period="1T")
+        snapshot = operation.snapshot(modelo_id, filing_year=2026, period="2T")
         assert isinstance(snapshot.revision.predecessor, predecessor_type)
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
@@ -175,7 +175,7 @@ def test_directory_context_is_bound_to_the_saved_rendering_digest() -> None:
 @pytest.mark.parametrize("missing_context", (False, True), ids=("missing-sibling", "missing-directory"))
 def test_a_saved_selected_view_refuses_missing_sibling_authority(missing_context: bool) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+        snapshot = operation.snapshot("303", filing_year=2026, period="2T")
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
         )
@@ -192,7 +192,7 @@ def test_a_saved_selected_view_refuses_missing_sibling_authority(missing_context
 @pytest.mark.parametrize("modelo_id", ("303", "131"), ids=("declared-predecessor", "grounded-root"))
 def test_saved_rendering_snapshot_refuses_flat_predecessor_objects(modelo_id: str) -> None:
     with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot(modelo_id, filing_year=2026, period="1T")
+        snapshot = operation.snapshot(modelo_id, filing_year=2026, period="2T")
         original = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
         )

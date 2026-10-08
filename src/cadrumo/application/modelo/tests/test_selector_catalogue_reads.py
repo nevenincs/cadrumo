@@ -84,7 +84,7 @@ class _ReadRepository(CalculationRevisionCatalogueRepositoryProtocol):
 def _facts(
     *, state: CalculationRevisionState = CalculationRevisionState.BORRADOR, profile: str = _PROFILE
 ) -> tuple[WorkUnit, CalculationRevision, CalculationRevisionCatalogue]:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     work_id = derive_work_unit_id(
         bucket_id=profile, modelo="303", filing_year=2026, period=period, revision_id="2026-y-siguientes"
     )
@@ -113,7 +113,7 @@ def _facts(
         calculation_revision_id=revision_id,
         work_unit_id=work_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="303", revision_id=unit.revision_id, modelo_year=2026, period="1T"
+            modelo="303", revision_id=unit.revision_id, modelo_year=2026, period="2T"
         ),
         state=state,
         created_at=_INSTANT,

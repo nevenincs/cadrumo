@@ -16,6 +16,7 @@ from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import CasillaConstraintViolationError
 from ....domain.filing.errors import ModeloBuilderError, ModeloDraftError
 from ....domain.filing.protocols import CasillaCollection, CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
@@ -196,14 +197,13 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
     assert values[_M130_CASILLA_19].formula_trace_casilla_ids == _M130_RESULT_TRACE
 
 
-def test_build_draft_blocks_negative_modelo_130_retenciones() -> None:
-    """Registry C06 non-negativity prevents a filing-ready Modelo 130 draft."""
-    draft = _draft(retenciones=Decimal("-100"))
+def test_build_draft_refuses_negative_modelo_130_retenciones() -> None:
+    """Registry C06 non-negativity refuses the input before any Modelo 130 draft exists."""
+    with pytest.raises(CasillaConstraintViolationError) as refused:
+        _draft(retenciones=Decimal("-100"))
 
-    assert draft.status is ModeloDraftStatus.BORRADOR
-    assert any(
-        finding.code == "casilla-out-of-range" and finding.casilla_id == _M130_CASILLA_06 for finding in draft.findings
-    )
+    assert refused.value.context["casilla_id"] == _M130_CASILLA_06
+    assert refused.value.context["value"] == "-100"
 
 
 def test_binding_provenance_rejects_empty_registry_refs() -> None:
@@ -257,31 +257,30 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
     assert values[_M111_CASILLA_30].formula_trace_casilla_ids == _M111_CASILLA_30_TRACE
 
 
-def test_build_draft_blocks_negative_modelo_111_retenciones() -> None:
-    """Registry C06 non-negativity prevents a filing-ready Modelo 111 draft."""
-    draft = build_draft(
-        modelo="111",
-        period=_PERIOD,
-        profile=_profile(),
-        inputs={
-            _M111_CASILLA_03: Decimal("180.25"),
-            _M111_CASILLA_06: Decimal("-12.10"),
-            _M111_CASILLA_09: Decimal("300.00"),
-            _M111_CASILLA_12: Decimal("14.40"),
-            _M111_CASILLA_15: Decimal("25.00"),
-            _M111_CASILLA_18: Decimal("0.50"),
-            _M111_CASILLA_21: Decimal("7.00"),
-            _M111_CASILLA_24: Decimal("8.00"),
-            _M111_CASILLA_27: Decimal("9.00"),
-            _M111_CASILLA_29: Decimal("40.00"),
-        },
-        schema_provider=_unscoped_schema_provider(),
-    )
+def test_build_draft_refuses_negative_modelo_111_retenciones() -> None:
+    """Registry C06 non-negativity refuses the input before any Modelo 111 draft exists."""
+    with pytest.raises(CasillaConstraintViolationError) as refused:
+        build_draft(
+            modelo="111",
+            period=_PERIOD,
+            profile=_profile(),
+            inputs={
+                _M111_CASILLA_03: Decimal("180.25"),
+                _M111_CASILLA_06: Decimal("-12.10"),
+                _M111_CASILLA_09: Decimal("300.00"),
+                _M111_CASILLA_12: Decimal("14.40"),
+                _M111_CASILLA_15: Decimal("25.00"),
+                _M111_CASILLA_18: Decimal("0.50"),
+                _M111_CASILLA_21: Decimal("7.00"),
+                _M111_CASILLA_24: Decimal("8.00"),
+                _M111_CASILLA_27: Decimal("9.00"),
+                _M111_CASILLA_29: Decimal("40.00"),
+            },
+            schema_provider=_unscoped_schema_provider(),
+        )
 
-    assert draft.status is ModeloDraftStatus.BORRADOR
-    assert any(
-        finding.code == "casilla-out-of-range" and finding.casilla_id == _M111_CASILLA_06 for finding in draft.findings
-    )
+    assert refused.value.context["casilla_id"] == _M111_CASILLA_06
+    assert refused.value.context["value"] == "-12.10"
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:

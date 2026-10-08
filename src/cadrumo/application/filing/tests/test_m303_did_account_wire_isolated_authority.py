@@ -175,7 +175,7 @@ def _required_iae_epigrafe(value: str | None) -> str:
 
 def _m303_2026_snapshot() -> RegistrySnapshot:
     """Load the real 2026 revision from the published authority artifact."""
-    return published_snapshot(Modelo("303").value, filing_year=2026, period="1T")
+    return published_snapshot(Modelo("303").value, filing_year=2026, period="2T")
 
 
 #: Modelo 303 prints these thirteen declared rows. Other roles in the shared
@@ -300,7 +300,7 @@ def _m303_did_producer_snapshot(
     non_agricultural_activity_count: int = 0,
 ) -> FilingProducerSnapshot:
     """Build real approved-draft producer authority for the isolated DID layout."""
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     taxpayer = _taxpayer_profile()
     iva_profile = taxpayer.iva
     assert iva_profile is not None
@@ -466,7 +466,7 @@ def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
 
 
 def _draft() -> ModeloDraft:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     timestamp = datetime(2026, 8, 11, 12, 0, tzinfo=UTC)
     return ModeloDraft(
         draft_id="d" + "0" * 63,

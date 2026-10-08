@@ -57,7 +57,7 @@ _DISPONIBLE_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _work_unit(bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
@@ -67,7 +67,7 @@ def _work_unit(bucket_id: str) -> WorkUnit:
             revision_id="2026-y-siguientes",
         ),
         bucket_id=bucket_id,
-        name="303-2026-1T",
+        name="303-2026-2T",
         modelo=Modelo("303").value,
         filing_year=2026,
         period=period,

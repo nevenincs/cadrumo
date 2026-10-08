@@ -97,7 +97,7 @@ _YEAR_N_PLUS_1 = 2026
 # their respective registry revisions.
 # The one exercise the registry authors as two Modelo 303 designs, split at 09/3T
 # into an early and a late revision.
-_EARLY_DESIGN, _LATE_DESIGN = split_exercise_revisions("303")
+_EARLY_DESIGN, _LATE_DESIGN = split_exercise_revisions("303", early_period="2T", late_period="3T")
 _SPLIT_DESIGN_EXERCISE = _EARLY_DESIGN.valid_from.year
 _EARLY_DESIGN_PERIOD = "2T"
 _LATE_DESIGN_PERIOD = "3T"

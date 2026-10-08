@@ -427,7 +427,7 @@ def test_revision_capture_passes_one_authority_pin_through_every_catalogue_read(
     *,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=str(_PROFILE),
