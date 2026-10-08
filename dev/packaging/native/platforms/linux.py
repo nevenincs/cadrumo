@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from ...runtime_wheelhouse_contract import target_platform
+from ..linux_desktop_runtime import desktop_path, external_sonames
 from .posix import (
     acquire_sdk,
     assemble,
@@ -26,6 +27,10 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
     tools = contract["native_tools"]
     system = set(contract["native_system_libraries"])
     names = dependencies_by_name(images)
+    desktop = desktop_path(contract)
+    external = external_sonames(contract, root)
+    if external.intersection(names):
+        raise ValueError("Bundled image shadows a desktop system dependency")
     machine = {"x86_64": 62, "aarch64": 183}[target.platform_machine]
     floor = (*map(int, target.floor.removeprefix("glibc-").split(".")), 0)
     for path in images:
@@ -43,6 +48,8 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
         needed = command(tools["patchelf"], "--print-needed", str(path)).splitlines()
         directories = set()
         for dependency in needed:
+            if path.relative_to(root).as_posix() == desktop and dependency in external:
+                continue
             if dependency in system:
                 if dependency in names:
                     raise ValueError(f"Bundled image shadows a system dependency: {dependency}")

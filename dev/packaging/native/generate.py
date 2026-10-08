@@ -29,6 +29,8 @@ from dev.locales.manager_chrome import manager_chrome_strings
 
 from .identity import identity
 from .layout import distribution_target, entrypoint_files, load_layout
+from .linux_desktop_runtime import declaration as desktop_runtime_declaration
+from .linux_desktop_runtime import desktop_path
 from .runtime_exit_reasons import runtime_exit_section, rust_runtime_exit_reasons
 from .stable_output import write_text
 from .storage_vectors import (
@@ -309,6 +311,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         "schema": CONTRACT_SCHEMA,
         "channel": {"build": build_channel, "installed_directory": STORAGE_ROOT.channel_directory(build_channel)},
         "layout": layout,
+        "linux_desktop_runtime": desktop_runtime_declaration(layout) if desktop_path(layout) else None,
         "installation_identity": {"application_id": release.application_id, "channel": release.channel},
         "python": version,
         "release": {

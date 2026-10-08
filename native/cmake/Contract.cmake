@@ -9,7 +9,17 @@ if(platform_contract_name STREQUAL "windows-x86-64")
 endif()
 set(platform_contract_inputs "${CADRUMO_SOURCE_ROOT}/native/platforms/${platform_contract_name}.json")
 set(contract_inputs "${CADRUMO_SOURCE_ROOT}/native/package-layout.json" ${platform_contract_inputs}
-  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py")
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/linux_desktop_runtime.py")
+if(CADRUMO_TARGET MATCHES "^linux-")
+  execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+    "from dev.packaging.native.linux_desktop_runtime import DEPENDENCY_INPUTS; print(';'.join(DEPENDENCY_INPUTS))"
+    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" OUTPUT_VARIABLE desktop_dependency_inputs
+    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+  foreach(input IN LISTS desktop_dependency_inputs)
+    list(APPEND contract_inputs "${CADRUMO_SOURCE_ROOT}/${input}")
+  endforeach()
+endif()
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${contract_inputs})
 file(GLOB settings_inputs CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/config*.py"
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/storage*.py" "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/product_identity.py"

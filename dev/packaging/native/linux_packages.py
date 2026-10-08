@@ -13,6 +13,8 @@ from .build_paths import build_paths
 from .hashing import digest
 from .identity import DistributionIdentity
 from .installation import member, verify_inventory
+from .linux_desktop_runtime import validate_payload as validate_desktop_payload
+from .linux_desktop_runtime import verify_requirements
 
 PackageFormat = Literal["deb", "rpm"]
 MAINTENANCE_GATE = (
@@ -142,6 +144,17 @@ def inspect_artifact(
         raise ValueError("Native package identity differs from the CMake identity projection")
     if gate.strip() != PREINSTALL.strip():
         raise ValueError("Linux manager package lost its unconditional installation gate")
+    desktop_requirements: str | None = None
+    for manifest_file in stage.rglob("data/package-manifest.json"):
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        if validate_desktop_payload(manifest_file.parent.parent, manifest):
+            requirements = (
+                run(["--show", "--showformat=${Depends}", str(artifact)])
+                if package_format == "deb"
+                else run(["-qp", "--requires", str(artifact)])
+            )
+            verify_requirements(requirements, package_format)
+            desktop_requirements = requirements
     expected_files = {"/" + path.relative_to(stage).as_posix() for path in stage.rglob("*") if path.is_file()}
     if owned != expected_files:
         raise ValueError("Native package ownership differs from verified installation staging")
@@ -151,6 +164,7 @@ def inspect_artifact(
         json.dumps(
             {
                 "schema": 1,
+                "desktop_runtime_dependencies": desktop_requirements,
                 "format": package_format,
                 "application_id": value.application_id,
                 "channel": value.channel,

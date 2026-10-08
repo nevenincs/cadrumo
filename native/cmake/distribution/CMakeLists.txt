@@ -24,9 +24,15 @@ include(../CachedCommand.cmake)
 set(installation_inputs "${CADRUMO_PAYLOAD}" "${CADRUMO_PATH_GENERATED}/identity.json"
   "${CMAKE_BINARY_DIR}/build-paths.json" "${CADRUMO_SOURCE_ROOT}/LICENSE" "${CADRUMO_SOURCE_ROOT}/NOTICE"
   "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-favicon.svg")
-foreach(helper installation installation_filesystem distribution_prepare build_paths hashing layout package_inventory docs_stage macos_launchagent)
+foreach(helper installation installation_filesystem distribution_prepare build_paths hashing layout package_inventory docs_stage macos_launchagent linux_desktop_runtime)
   list(APPEND installation_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
 endforeach()
+execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+  "from dev._paths import REPO_ROOT; from dev.packaging.native.linux_desktop_runtime import DEPENDENCY_INPUTS; print(';'.join((REPO_ROOT / name).as_posix() for name in DEPENDENCY_INPUTS))"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}"
+  OUTPUT_VARIABLE linux_desktop_dependency_inputs OUTPUT_STRIP_TRAILING_WHITESPACE
+  COMMAND_ERROR_IS_FATAL ANY)
+list(APPEND installation_inputs ${linux_desktop_dependency_inputs})
 cadrumo_cached_command(installation_command installation_prepare INPUTS ${installation_inputs}
   OUTPUTS "${CADRUMO_PATH_INSTALLATION_STAGE}" "${CADRUMO_PATH_INSTALLATION_METADATA}")
 add_custom_target(installation_prepare ALL
@@ -128,6 +134,17 @@ elseif(CADRUMO_TARGET MATCHES "^linux-")
   set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
   set(CPACK_RPM_PACKAGE_LICENSE "${CADRUMO_ID_LICENSE}")
   set(CPACK_RPM_PACKAGE_REQUIRES "glibc >= ${glibc_floor}")
+  execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.linux_desktop_runtime
+    --payload "${CADRUMO_PAYLOAD}" --output "${CMAKE_BINARY_DIR}/LinuxDesktopRuntime.cmake"
+    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
+  include("${CMAKE_BINARY_DIR}/LinuxDesktopRuntime.cmake")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/linux_desktop_runtime.py"
+    ${linux_desktop_dependency_inputs})
+  if(CADRUMO_LINUX_DEB_DESKTOP_DEPENDS)
+    string(APPEND CPACK_DEBIAN_PACKAGE_DEPENDS ", ${CADRUMO_LINUX_DEB_DESKTOP_DEPENDS}")
+    string(APPEND CPACK_RPM_PACKAGE_REQUIRES ", ${CADRUMO_LINUX_RPM_DESKTOP_DEPENDS}")
+  endif()
   set(CPACK_RPM_PACKAGE_AUTOREQPROV ON)
   set(CPACK_RPM_PACKAGE_RELOCATABLE OFF)
   # Assembly owns every payload byte, ELF edit and Python bootstrap. Distro

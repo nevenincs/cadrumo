@@ -23,6 +23,7 @@ from .build_timing import BuildTimings
 from .docs_stage import verified_stage
 from .hashing import digest
 from .layout import ApplicationImage, backend, entrypoint_files, load_layout, staged_application_images
+from .linux_desktop_runtime import stage as stage_linux_desktop_runtime
 from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
 from .stdlib import bundle as bundle_stdlib
 from .stdlib import compile_packages_bytecode
@@ -240,6 +241,7 @@ def assemble(
     # Application images are not interpreter hosts; each enters the startup check only by opting in.
     staged_images = staged_application_images(contract, user_docs=user_docs is not None)
     stage_application_images(root, staged_images, images, binary_dir)
+    stage_linux_desktop_runtime(root, contract)
     if development:
         development_executable = root / files["development_executable"]
         development_executable.parent.mkdir(parents=True, exist_ok=True)

@@ -19,6 +19,7 @@ from .hashing import digest
 from .identity import DistributionIdentity
 from .installation_filesystem import file_identity, remove_owned_file
 from .layout import application_images, desktop_image, load_layout
+from .linux_desktop_runtime import validate_payload as validate_linux_desktop_runtime
 from .macos_launchagent import author_agent, verify_agent
 from .package_inventory import package_inventory, user_docs_bundled
 
@@ -44,6 +45,7 @@ def validate_payload(root: Path, identity_file: Path, desktop: str | None = None
         raise ValueError("Desktop executable must use a safe payload-relative path")
     manifest_file = member(root, "data/package-manifest.json")
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    validate_linux_desktop_runtime(root, manifest)
     for key in ("application_id", "version", "target", "channel"):
         if manifest["build"].get(key) != expected[key]:
             raise ValueError(f"Payload {key} does not match requested distribution")

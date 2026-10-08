@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:f3e04989a0f109084cd01de6db2ce1efec4ed03a30ebab66dfc517f91494a360'
+body_hash: 'sha256:a7bf056d9179a29fee78dfb3e51e5797bf161c6a6faa07e7239aa2f4993f3c0b'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -356,6 +356,25 @@ related:
 - `S15` `by:` `root`
 - `S15` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
 - `S15` `verify:` `Debian12 native desktop dpkg-shlibdeps static symbol/provider proof` -> `pass`
+- `S15` `A` `dev/packaging/native/linux_desktop_runtime.py`
+- `S15` `A` `dev/packaging/native/tests/test_linux_desktop_runtime.py`
+- `S15` `M` `dev/packaging/native/assemble.py`
+- `S15` `M` `dev/packaging/native/generate.py`
+- `S15` `M` `dev/packaging/native/installation.py`
+- `S15` `M` `dev/packaging/native/linux_packages.py`
+- `S15` `M` `dev/packaging/native/platforms/linux.py`
+- `S15` `M` `dev/packaging/tests/test_native_installation.py`
+- `S15` `M` `native/cmake/Contract.cmake`
+- `S15` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S15` `M` `native/platforms/linux-aarch64.json`
+- `S15` `M` `native/platforms/linux-x86-64.json`
+- `S15` `verify:` `S15 owning106 and focused22 Python tests` -> `pass`
+- `S15` `verify:` `S15 native DEB RPM fixture inspection2tests` -> `pass`
+- `S15` `verify:` `S15 CMake contract cache input enrollment` -> `pass`
+- `S15` `verify:` `S15 both target distribution CMake projection` -> `pass`
+- `S15` `verify:` `S15 scoped Ruff format ty` -> `pass`
+- `S15` `verify:` `S15 independent source review` -> `pass`
+- `S15` `verify:` `S15 actual51ELF isolated relocation` -> `pass`
 
 ## Notes
 
@@ -396,3 +415,4 @@ related:
 - `S05` S05 remains open. Native failures and isolated diagnostics are distinct; preserve host state and existing installation gates. Linux desktop delivery boundary needs explicit refinement.
 - `S15` Accepted dependency refinement under existing all-code/build authorization; implementation and minimum-runtime/native package verification pending.
 - `S15` Static provider proof exposes WebKit2.42 and stronger package minima; no product execution/installation or minimum graphical-host claim. Darwin publication candidate research remains unaccepted.
+- `S15` S15 remains open for full product packaging evidence; native graphical minimum-host and installation acceptance remain separate gates. Windows-native-tool skips covered by isolated DEB/RPM fixture run.

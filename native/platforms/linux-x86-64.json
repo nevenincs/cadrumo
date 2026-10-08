@@ -1,6 +1,7 @@
 {
   "platform": "linux-x86-64",
   "backend": "linux",
+  "linux_desktop_runtime": "gtk3-webkit41-v1",
   "stdlib_exclude": [
     "site-packages",
     "__pycache__",
