@@ -122,7 +122,6 @@ USER ${USERNAME}
 ENV PATH="/home/${USERNAME}/.local/bin:/workspace/.venv/bin:${PATH}" \
     UV_LINK_MODE=copy \
     PLAYWRIGHT_BROWSERS_PATH=/home/${USERNAME}/.cache/ms-playwright \
-    CADRUMO_BROWSER_CHANNEL=chromium \
     CADRUMO_BROWSER_HEADLESS=true
 
 
