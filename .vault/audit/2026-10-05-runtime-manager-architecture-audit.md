@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a12a25bb1729b116c7fbadac8fcbcc357ca66cfc79aa37011803577a20eb2434'
+body_hash: 'sha256:c8a8281bba0dd8659be958571f76dc4267d9d2c7aa6ee5fd04478b4e56159ae5'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -237,6 +237,11 @@ The operator explicitly states that this Windows CI runner and gergely.wootsch@g
 ### 2026-10-08 native macOS session flags and component checks | low | Documented audit flags no longer cause false unavailability
 
 Apple Security SessionGetInfo returns AuditInfo.flags, and the real SDK bsm/audit.h defines console-access 0x2000 and authenticated 0x4000. Python and Rust now recognize those bits (known mask 0x7031) without treating them as unlocked, attended or eligible for unattended operation. The actual SSH session's 0x5020 observation is recognized but remains inactive, locked-state unknown, unattended unknown and ineligible; remote/root/non-graphical refusal is preserved. Evidence: https://raw.githubusercontent.com/apple-oss-distributions/Security/main/OSX/libsecurity_authorization/lib/Authorization.cpp and the native macOS 26.5 SDK audit.h. Twenty-two Python tests and scoped Ruff/format/ty pass; five actual native Mac foundation tests and self-process probe pass. Full CMake manager.rust passes on the actual Mac in 50.14s, and all-target pinned Rust 1.96 Clippy passes in 32.88s. The effective_uid export and function are now precisely Linux-gated to match every caller; shared POSIX custody remains available on Darwin. Independent review passed both changes. Native logs are retained under /Users/gergely.wootsch/cadrumo-builds/unsigned-installers-20261008; local foundation evidence is build/macos-process-typecheck. Manager-main/SMAppService integration, graphical lifecycle and full DMG acceptance remain open.
+
+
+### 2026-10-08 Linux placement evidence checkpoint | medium | Default GNOME autostart does not establish required native process-session mapping
+
+The linked Linux-placement research and proposed amendment are now retained as evidence, not execution authority. The isolated Ubuntu GNOME probe observed an active local X11 login but its ordinary XDG autostart process had no sd_pid_get_session mapping under the user-manager app slice. Thus direct-child launch does not repair that observed profile's admission; no supported installed lifecycle or broader session-binding design is established. Accepted decisions and Linux activation gates remain unchanged. Independent consistency review passes. The probe also explicitly refuses non-Linux use before child launch; Windows direct refusal, scoped Ruff/format and ty pass. The guest was shut down cleanly and its disk retained; no supplied non-disposable host was installed, reset or used for session-ending acceptance.
 
 ## Recommendations
 

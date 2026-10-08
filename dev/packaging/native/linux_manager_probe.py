@@ -108,6 +108,8 @@ def require_graphical(evidence: dict[str, object], uid: int) -> None:
 
 
 def _placement(mode: str) -> dict[str, object]:
+    if sys.platform != "linux":
+        raise RuntimeError("Linux is required")
     unit = f"cadrumo-placement-probe-{uuid.uuid4().hex}"
     child = [sys.executable, "-I", str(Path(__file__).resolve()), "--child"]
     command = child

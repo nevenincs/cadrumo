@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ac800631650f27a57e07012a257c03f5501e202f715fe32bc231a4f15f6204e'
+body_hash: 'sha256:bb5689100b5906aa0e4a134cc38d49fcdcac205c2517ec1b2faf4a1e95e6cafa'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -580,6 +580,13 @@ related:
 - `S19` `verify:` `actual Mac CMake manager.rust (50.14s)` -> `pass`
 - `S19` `verify:` `actual Mac Rust1.96 all-target Clippy (32.88s)` -> `pass`
 - `S19` `verify:` `independent session flags and Linux cfg review` -> `pass`
+- `S18` `M` `dev/packaging/native/linux_manager_probe.py`
+- `S18` `A` `.vault/research/2026-10-08-runtime-manager-architecture-linux-placement-research.md`
+- `S18` `A` `.vault/adr/2026-10-08-runtime-manager-architecture-linux-placement-adr.md`
+- `S18` `M` `.vault/index/runtime-manager-architecture.index.md`
+- `S18` `verify:` `probe unsupported Windows host refuses before launch` -> `pass`
+- `S18` `verify:` `probe scoped Ruff format ty` -> `pass`
+- `S18` `verify:` `independent Linux placement evidence and proposed-status review` -> `pass`
 
 ## Notes
 
@@ -623,3 +630,4 @@ related:
 - `S19` S19 remains open; actual Apple SDK build newly available on user-supplied non-disposable Mac. Preserve both existing machines and all lifecycle gates.
 - `S18` S18 remains open: manager loop, native placement and lifecycle acceptance remain unfinished; existing Windows and macOS hosts are non-disposable.
 - `S19` S19 remains open: component evidence does not establish graphical lifecycle, SMAppService activation or signed release acceptance.
+- `S18` S18 remains open; proposed direct-child amendment is unaccepted and insufficient for the observed default GNOME autostart profile. Preserved existing Windows/Mac hosts receive no destructive acceptance.
