@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:89648362961a761a861084512bf3f9b680b3efe480b0ffdde96a301a96d365dc'
+body_hash: 'sha256:95f172e23568fb03a597416197994f56c1e89bf3cec6a2deff5babebe23e1d6f'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -341,6 +341,9 @@ related:
 - `S05` `verify:` `native52-image dependency inspection against Apple SDK stubs` -> `pass`
 - `S05` `verify:` `native isolated relocation: 52 images, 138 tool commands and strict ad-hoc verification` -> `pass`
 - `S05` `verify:` `native platform enrollment: 22 tests` -> `pass`
+- `S05` `verify:` `frozen Windows full CMake native-build-404-fixed` -> `fail`
+- `S05` `verify:` `frozen Windows import-diagnostics observer` -> `pass`
+- `S05` `verify:` `frozen Windows all 13 bank-import scenarios with payload-free observer` -> `pass`
 
 ## Notes
 
@@ -376,3 +379,4 @@ related:
 - `S05` S05 remains open. Portable documentation identity retains canonical enrollment, selected authority roles, languages, mutation fences and output inventory. Actual generated Windows inputs include all six previously excluded fixture helper modules. WSL/manylinux native producer handoff remains pending; active Windows/Mac builds retain frozen inputs.
 - `S05` Mac full attempt28180 completed strict four-language docs in3112s, then failed package relocation: eight actual Apple system install-names absent from canonical allowlist. Exact SDK-corroborated entries added; ambient paths and undeclared versions remain refused. Original failure log SHA2567af45fdc2d8fe1df6467c0af787aebf2047975d2ed966a7099234c5c858dfe68 preserved. Native relocation and full installer retry pending; no DMG acceptance claim.
 - `S05` Committed 04a0faa151 was applied with before/after hashes to the stopped Mac snapshot after preserving failure evidence. All 52 original stage image hashes were unchanged by isolated relocation. Full CMake native-installer retry 74299 is running; native platform JSON changes correctly invalidate the enrolled documentation input graph. Windows 55091 and WSL 91625 retain independent frozen sources. No signing credentials, product installation or acceptance claimed.
+- `S05` Original full-build `runtime_deadline_exceeded` remains unexplained; isolated passes establish clean observed timing/cleanup, not remediation or installer acceptance. Exact frozen source and authority hashes unchanged.
