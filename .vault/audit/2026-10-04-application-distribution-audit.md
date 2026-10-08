@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a7d0b5cd65a7eb3fe82be59dac0935e5cc36c4c0771941d5e0a0107beee227f'
+body_hash: 'sha256:0279e53875a78167d9aa464e4568bec05c24c24f4fcd055e63c6259969f793a8'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -258,6 +258,16 @@ S15 actual ELF confirmation: PASS. Using the isolated source snapshot and curren
 2026-10-08 Windows frozen retry 99182: strict documentation compile PASS in 4578 seconds; search index 1316 pages/four languages/15360 shared records. Overall build FAIL after 4975.83 seconds at user_docs_stage reconstruction. All 1316 HTML mismatches are exclusively CRLF versus LF, confirmed by complete byte comparison. Source cac1d8a03fae22056b54b5e3ecf589cfd996369396c2978abc5a2825a56e0985 and authority 9db202fd630f35654c984a5b656ddd4be59dffd03927d6f520316af6e9222a92 unchanged. Evidence: build/windows-docs-frozen-20261008/evidence/full-docs-forensics. All thirteen bank sequences observed cleanly; passing full compile confirms validation succeeded, without explaining the previous intermittent failure.
 
 Existing independent commit 454f97bf3f fixes pagefind stamping to preserve line endings. Both actual LF/CRLF regression cases PASS. Only dev/docs/pagefind_index.py and its owning test were overlaid into the isolated snapshot, preserving original bytes/hashes in evidence/pagefind-line-endings/overlay.json. New source digest 3c1a610dd82b641aae56ae31076c7a7cdc04acfb23a79cc206884590f94877ac. Original CMake native-installer retry 18081 runs in evidence/full-docs-pagefind-retry, with unchanged byte-equality gate, strict live sequence checks, deadlines, goldens, authority and parallelism. No ready/cache marker manufactured. MSI product build and installation acceptance remain unproven.
+
+### S16 exact Windows same-version no-op | low | source review PASS; installed-product acceptance remains pending
+
+Implemented a bounded immutable CadrumoRegistration description derived from the actual WiX registration resources and native marker bytes. Compiled/decompiled MSI verification rejects missing, changed or unexpected descriptions. The read-only verifier checks shared file hashes, exact native MSI component state, scoped 64-bit registry values, non-resolving ShellLink target/arguments/working directory/AUMID, and runtime-only absence of owned desktop resources. Malformed paths, unknown fields, oversized descriptions, truncated native strings, legacy missing metadata and incoming/cached disagreement refuse verification.
+
+The runner's already_published_verified success is reached only after existing Ready anchors, exact version/registration owners, manifest and complete version inventory pass. Existing-only exclusive maintenance locking creates nothing. Version leases, namespace/cache custody and every checked version/shared/shortcut file remain held through repeated native resource/owner and final publication checks. Failed checks return existing_registration_not_verified without native repair or publication mutation. The CMake Python maintenance consumer already propagates runner JSON and exit status; MaintenanceResult::succeeded explicitly recognizes the new distinct success. Literal MSI gates still precede this path.
+
+Root reviewed the complete authoring-to-database-to-runner flow and the new real Store/inventory/custody fixtures. Review corrections added absent-resource address validation, bounded typed AUMID conversion, final repeated owner checks, meaningful no-op refusal coverage and actual compiled property preservation. Verification: 26 native installer tests and pinned Rust 1.96 all-target Clippy PASS; 21 shared application installation tests PASS; 28 MSI owner tests including real WiX four-product compilation/decompilation with the fresh native DLL PASS; owning Python Ruff/format/ty PASS. Real isolated ShellLink tests reject semantic corruption and prove retained-file deletion exclusion. Native registry/component/installed-product observations are substituted only in orchestration fixtures, so those tests establish control flow and real filesystem/publication behavior, not positive installed-product acceptance.
+
+Unsigned Release build PASS in 33.08 seconds. build/s16-installer-review/release/cadrumo_installer.dll SHA256 977f915a86da249a7d344c25447120e12b782b5a536627b02187147af35e8466; cadrumo-msi-maintenance.exe SHA256 e6ec22c196191919d8a184b177089d64c07e8dfadafa808132f5b03d1688015d. No product installation, registry writes, login registration, frozen full-build overlay or interactive session test occurred. S09/S04 installation and two-distinct-release acceptance remain pending, including native positive observations and interrupted maintenance; this source review does not authorize removing the gates.
 
 ## Recommendations
 

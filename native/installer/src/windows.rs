@@ -375,6 +375,7 @@ pub struct ProductDefinition {
     pub admission: Request,
     pub ownership: PackageOwnership,
     pub owner: Option<OwnerMetadata>,
+    pub registration: Option<crate::registration::Description>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
@@ -408,6 +409,9 @@ pub fn product_definition(path: &Path) -> Result<ProductDefinition, Refusal> {
             .map_err(|_| Refusal::InvalidRequest)?,
         owner: property(&database, "CadrumoOwner")?
             .map(|value| serde_json::from_str(&value).map_err(|_| Refusal::InvalidRequest))
+            .transpose()?,
+        registration: property(&database, "CadrumoRegistration")?
+            .map(|value| crate::registration::Description::parse(&value))
             .transpose()?,
     })
 }

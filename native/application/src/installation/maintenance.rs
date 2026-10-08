@@ -492,6 +492,11 @@ impl Store {
         lock(&self.root.join("maintenance.lock"), false, true)
     }
 
+    /// Read-only verification must not create even a missing maintenance lock.
+    pub fn existing_exclusive_maintenance(&self) -> Result<Lease, Error> {
+        lock(&self.root.join("maintenance.lock"), false, false)
+    }
+
     fn read(&self) -> Result<State, Error> {
         let state: State = filesystem::json_file(&self.root.join("state.json"))?;
         if state.schema != 2

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -67,7 +68,7 @@ def _files(
     value: DistributionIdentity,
     stage: Path,
     members: dict[str, str],
-    native_marker: tuple[str, Path],
+    native_marker: tuple[str, Path, str],
 ) -> Element:
     standard = SubElement(package, "StandardDirectory", Id=product.root_directory)
     root = SubElement(standard, "Directory", Id="INSTALL_ROOT", Name=_literal(value.name))
@@ -187,7 +188,7 @@ def _source(
     role: ProductRole,
     manager: str,
     desktop: str | None,
-    native_marker: tuple[str, Path],
+    native_marker: tuple[str, Path, str],
     manifest_sha256: str,
     adapter: Path | None = None,
     runner: Path | None = None,
@@ -250,10 +251,69 @@ def _source(
     root = _files(package, feature, product, value, stage, files, native_marker)
     if role == "registration":
         _registration(package, feature, root, product, value, manager, desktop)
+        description = _registration_description(package, product, value, files, stage, native_marker)
+        # Preserve the literal template inside JSON without WiX treating it as a
+        # Property-table reference. The native JSON decoder restores the token.
+        encoded = json.dumps(description, separators=(",", ":")).replace("[INSTALL_ROOT]", "\\u005bINSTALL_ROOT\\u005d")
+        SubElement(package, "Property", Id="CadrumoRegistration", Value=encoded)
     content = tostring(wix, encoding="utf-8", xml_declaration=True)
     if not isinstance(content, bytes):
         raise TypeError("WiX source serialization did not produce UTF-8 bytes")
     return content
+
+
+def _registration_description(
+    package: Element,
+    product: MsiIdentity,
+    value: DistributionIdentity,
+    files: dict[str, str],
+    stage: Path,
+    native_marker: tuple[str, Path, str],
+) -> dict[str, Any]:
+    """Describe the actual authored resources, including the native marker overlay."""
+    components = list(package.iter("Component"))
+    registry = [
+        {
+            "component": component.attrib["Guid"],
+            **{key.lower(): entry.attrib[key] for key in ("Key", "Name", "Type", "Value")},
+        }
+        for component in components
+        for entry in component.findall("RegistryValue")
+    ]
+    shortcuts = []
+    for component in components:
+        for shortcut in component.findall("Shortcut"):
+            properties = {item.attrib["Key"]: item.attrib["Value"] for item in shortcut.findall("ShortcutProperty")}
+            shortcuts.append(
+                {
+                    "component": component.attrib["Guid"],
+                    "path": f"{value.name}/{shortcut.attrib['Name']}.lnk",
+                    "target": shortcut.attrib["Target"],
+                    "arguments": shortcut.attrib.get("Arguments", ""),
+                    "working_directory": "[INSTALL_ROOT]",
+                    "app_id": properties["System.AppUserModel.ID"],
+                }
+            )
+    return {
+        "schema": 1,
+        "application_id": value.application_id,
+        "version": value.version,
+        "scope": product.scope,
+        "files": {
+            name: native_marker[2] if name == native_marker[0] else digest(member(stage, name))
+            for name in sorted(files)
+        },
+        "components": [component.attrib["Guid"] for component in components],
+        "registry": registry,
+        "shortcuts": shortcuts,
+        "absent_registry": []
+        if shortcuts
+        else [
+            {"key": "Software\\" + value.application_id, "name": name}
+            for name in ("DesktopAnchorVersion", "DesktopRegistered")
+        ],
+        "absent_shortcuts": [] if shortcuts else [f"{value.name}/{value.name}.lnk"],
+    }
 
 
 def _admission(package: Element, value: DistributionIdentity, scope: InstallationScope, adapter: Path) -> None:
@@ -385,7 +445,7 @@ def author(
                 role,
                 manager,
                 desktop,
-                (definition["marker"], native_marker),
+                (definition["marker"], native_marker, hashlib.sha256(marker_content).hexdigest()),
                 digest(manifest_file),
                 adapter,
                 runner,

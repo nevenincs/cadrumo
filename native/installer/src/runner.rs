@@ -22,6 +22,7 @@ use std::{
 const PLAN_LIMIT: u64 = 64 * 1024;
 const ARTIFACT_LIMIT: u64 = 16 * 1024 * 1024 * 1024;
 
+mod already_installed;
 mod recovery;
 mod removal;
 pub use removal::{remove_version, unregister};
@@ -52,6 +53,7 @@ struct Plan {
 #[serde(rename_all = "snake_case")]
 pub enum Outcome {
     Published,
+    AlreadyPublishedVerified,
     Removed,
     Unregistered,
     Refused,
@@ -71,7 +73,10 @@ impl MaintenanceResult {
     pub fn succeeded(&self) -> bool {
         matches!(
             self.outcome,
-            Outcome::Published | Outcome::Removed | Outcome::Unregistered
+            Outcome::Published
+                | Outcome::AlreadyPublishedVerified
+                | Outcome::Removed
+                | Outcome::Unregistered
         )
     }
 }
@@ -436,6 +441,16 @@ pub fn install(path: &Path) -> MaintenanceResult {
         || windows::standalone_gate_present(&plan.registration_product.path).unwrap_or(true)
     {
         return report(Outcome::Refused, "native_owner_protocol_not_admitted");
+    }
+    match already_installed::verify(&plan, &admission, &owner, &registration_owner, &store) {
+        Ok(Some(_verified)) => {
+            return report(
+                Outcome::AlreadyPublishedVerified,
+                "already_published_verified",
+            );
+        }
+        Ok(None) => {}
+        Err(_) => return report(Outcome::Refused, "existing_registration_not_verified"),
     }
     let transaction = match Transaction::begin(&plan.contract.installation_identity.application_id)
     {

@@ -49,6 +49,13 @@ def verify_database(source: Path, database: Path) -> None:
         or ownership.attrib.get("Value") != observed_ownership.attrib.get("Value")
     ):
         raise ValueError("MSI database immutable package ownership differs from its source")
+    registration = original.find("w:Property[@Id='CadrumoRegistration']", _NS)
+    observed_registration = package.find("w:Property[@Id='CadrumoRegistration']", _NS)
+    if registration is None:
+        if observed_registration is not None:
+            raise ValueError("Version MSI acquired unexpected registration resources")
+    elif observed_registration is None or registration.attrib.get("Value") != observed_registration.attrib.get("Value"):
+        raise ValueError("MSI database immutable registration resources differ from its source")
     conditions = tree.findall(".//w:Launch", _NS)
     if not any(item.attrib == {"Condition": "0", "Message": MAINTENANCE_GATE} for item in conditions):
         raise ValueError("MSI database lost its unconditional installation gate")

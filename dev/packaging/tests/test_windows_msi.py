@@ -26,6 +26,42 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 NS = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
 
 
+@pytest.mark.parametrize("desktop", [True, False])
+def test_registration_description_matches_authored_resources(tmp_path: Path, desktop: bool) -> None:
+    build, identity = _prepared(tmp_path, desktop=desktop)
+    outputs = author(build, identity, "cadrumo" if desktop else None)
+    for scope in ("user", "machine"):
+        tree = ElementTree.parse(outputs[f"{scope}-registration.wxs"])
+        property_node = tree.find(".//w:Property[@Id='CadrumoRegistration']", NS)
+        assert property_node is not None
+        description = json.loads(property_node.attrib["Value"])
+        assert description["scope"] == scope
+        components = tree.findall(".//w:Component", NS)
+        assert description["components"] == [item.attrib["Guid"] for item in components]
+        actual_registry = [
+            {
+                "component": component.attrib["Guid"],
+                **{key.lower(): entry.attrib[key] for key in ("Key", "Name", "Type", "Value")},
+            }
+            for component in components
+            for entry in component.findall("w:RegistryValue", NS)
+        ]
+        assert description["registry"] == actual_registry
+        assert len(description["files"]) == 4
+        for file in tree.findall(".//w:File", NS):
+            expected = digest(Path(file.attrib["Source"]))
+            assert expected in description["files"].values()
+        marker = next(path for path in description["files"] if path.endswith("installation.json"))
+        assert description["files"][marker] == digest(build / "installation/metadata/wix/native-installation.json")
+        assert bool(description["shortcuts"]) == desktop
+        assert bool(description["absent_shortcuts"]) != desktop
+        assert {entry["name"] for entry in description["absent_registry"]} == (
+            set() if desktop else {"DesktopRegistered", "DesktopAnchorVersion"}
+        )
+        version = ElementTree.parse(outputs[f"{scope}-version.wxs"])
+        assert version.find(".//w:Property[@Id='CadrumoRegistration']", NS) is None
+
+
 def _prepared(tmp_path: Path, *, manager: bool = True, desktop: bool = True) -> tuple[Path, Path]:
     temporary = tmp_path / "relocated ü space"
     temporary.mkdir()
@@ -345,11 +381,22 @@ def test_stage_receipt_and_package_identity_must_agree(tmp_path: Path) -> None:
     assert not (build / "installation/metadata/wix").exists()
 
 
-@pytest.mark.parametrize("defect", ["identity", "gate", "version-removal", "registration-upgrade"])
+@pytest.mark.parametrize(
+    "defect",
+    [
+        "identity",
+        "gate",
+        "version-removal",
+        "registration-upgrade",
+        "registration-missing",
+        "registration-changed",
+        "version-registration",
+    ],
+)
 def test_database_verifier_rejects_ownership_regressions(tmp_path: Path, defect: str) -> None:
     build, identity = _prepared(tmp_path)
     sources = author(build, identity, "cadrumo")
-    role = "registration" if defect == "registration-upgrade" else "version"
+    role = "registration" if defect.startswith("registration-") else "version"
     source = sources[f"user-{role}.wxs"]
     database = tmp_path / "database.wxs"
     content = source.read_text(encoding="utf-8")
@@ -367,8 +414,14 @@ def test_database_verifier_rejects_ownership_regressions(tmp_path: Path, defect:
             "<InstallExecuteSequence><RemoveExistingProducts "
             'After="InstallExecute" /></InstallExecuteSequence></Package>',
         )
-    else:
+    elif defect == "registration-upgrade":
         content = content.replace("MajorUpgrade", "MissingUpgrade")
+    elif defect == "registration-missing":
+        content = content.replace('Id="CadrumoRegistration"', 'Id="MissingRegistration"')
+    elif defect == "registration-changed":
+        content = content.replace('Id="CadrumoRegistration" Value="', 'Id="CadrumoRegistration" Value="changed')
+    else:
+        content = content.replace("</Package>", '<Property Id="CadrumoRegistration" Value="{}" /></Package>')
     database.write_text(content, encoding="utf-8")
     with pytest.raises(ValueError):
         verify_database(source, database)

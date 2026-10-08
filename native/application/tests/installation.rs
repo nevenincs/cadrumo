@@ -17,6 +17,24 @@ struct Fixture {
     contract: DiscoveryContract,
     source: PathBuf,
 }
+
+#[test]
+fn existing_maintenance_verification_never_creates_a_lock() {
+    let mut fixture = Fixture::new();
+    let prefix = fixture.prefix("existing-maintenance");
+    fixture.version(&prefix, "1.0.0");
+    let store = fixture.native(&prefix);
+    store.initialize().unwrap();
+    let path = prefix.join("data/installation-state/maintenance.lock");
+    assert!(store.existing_exclusive_maintenance().is_err());
+    assert!(!path.exists());
+    let owner = store.exclusive_maintenance().unwrap();
+    assert!(store.existing_exclusive_maintenance().is_err());
+    drop(owner);
+    let verified = store.existing_exclusive_maintenance().unwrap();
+    assert!(store.exclusive_maintenance().is_err());
+    drop(verified);
+}
 impl Fixture {
     fn new() -> Self {
         #[cfg(windows)]

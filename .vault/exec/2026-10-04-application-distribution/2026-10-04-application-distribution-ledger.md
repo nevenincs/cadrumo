@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:05c0b2ca3064f312dd7cbe48e0d6a3dfedcb2147a034d095523a42a9a0642271'
+body_hash: 'sha256:ac40178ef02c084ef380844ee0de65a8801a371f098d167c7bb0762bc83ffe33'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -385,6 +385,24 @@ related:
 - `S05` `verify:` `Frozen Windows native-installer docs reconstruction` -> `fail`
 - `S05` `verify:` `All1316 mismatches exclusively CRLF-LF` -> `pass`
 - `S05` `verify:` `Actual pagefind indexing line ending regression2tests` -> `pass`
+- `S16` `M` `dev/packaging/native/windows_msi.py`
+- `S16` `M` `dev/packaging/native/windows_msi_build.py`
+- `S16` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S16` `M` `native/application/src/installation/maintenance.rs`
+- `S16` `M` `native/application/tests/installation.rs`
+- `S16` `M` `native/installer/Cargo.toml`
+- `S16` `M` `native/installer/Cargo.lock`
+- `S16` `M` `native/installer/src/lib.rs`
+- `S16` `M` `native/installer/src/windows.rs`
+- `S16` `M` `native/installer/src/runner.rs`
+- `S16` `A` `native/installer/src/registration.rs`
+- `S16` `A` `native/installer/src/runner/already_installed.rs`
+- `S16` `A` `native/installer/src/runner/already_installed/observation_tests.rs`
+- `S16` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S16` `verify:` `Rust1.96 installer26tests all-targetClippy unsignedRelease` -> `pass`
+- `S16` `verify:` `Shared application installation21tests` -> `pass`
+- `S16` `verify:` `MSI28tests with actual WiX compile-decompile` -> `pass`
+- `S16` `verify:` `Owning Python Ruff format ty` -> `pass`
 
 ## Notes
 
@@ -429,3 +447,4 @@ related:
 - `S15` Reference now states archive/this-user prerequisites and artifact versus host glibc boundary. Full frozen Linux build lane delegated after source/native fixture and ELF checks.
 - `S16` Existing recovery/rollback/owner-loss implementations retain native acceptance gaps. S16 adds actual resource verification before a no-op success; missing legacy/resource evidence and damaged anchored repair stay refused.
 - `S05` Original outcome preserved. Existing committed pagefind fix narrowly overlaid into isolated source with hashes. CMake retry18081 pending, gates unchanged.
+- `S16` Root integrated source review PASS; installed native product registry and interactive acceptance unproven, gates unchanged. Evidence in audit and worker verification handoff.
