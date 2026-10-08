@@ -39,7 +39,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
-valid_from = 2026-01-01
+valid_from = 2026-02-01
 orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
 source_refs = [
@@ -56,6 +56,9 @@ year_from = 2026
 # Quarterly periods for standard autoliquidacion; monthly periods for
 # monthly IVA-liquidation taxpayers (REDEME or large-company status).
 periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+# The amended annex first applies to February and Q2 in 2026.
+# Later covered years retain the complete monthly/quarterly vocabulary.
+period_overrides = [{ year = 2026, periods = ["02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "2T", "3T", "4T"] }]
 
 [revisions."2026-y-siguientes".family_dispositions.applicability]
 reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."
@@ -1760,7 +1763,7 @@ sequence_order = {casillas = [0, 127, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 [[revisions.2026-y-siguientes.family_overrides]]
 family = "constructs"
 selector = {revision = "2025", id = "modelo-303-iva-autoliquidacion"}
-sequence_additions = {deadline_windows = ["modelo-303-2026-01-mensual", "modelo-303-2026-02-mensual", "modelo-303-2026-03-mensual", "modelo-303-2026-04-mensual", "modelo-303-2026-05-mensual", "modelo-303-2026-06-mensual", "modelo-303-2026-07-mensual", "modelo-303-2026-08-mensual", "modelo-303-2026-09-mensual", "modelo-303-2026-10-mensual", "modelo-303-2026-11-mensual", "modelo-303-2026-12-mensual", "modelo-303-2026-1t", "modelo-303-2026-2t", "modelo-303-2026-3t", "modelo-303-2026-4t"], legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-303-2026", "aeat-calendario-contribuyente-2026-hasta-2-marzo", "aeat-calendario-contribuyente-2026-domiciliacion", "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027", "boe-orden-hac-1425-2025-iva-authority"]}
+sequence_additions = {deadline_windows = ["modelo-303-2026-02-mensual", "modelo-303-2026-03-mensual", "modelo-303-2026-04-mensual", "modelo-303-2026-05-mensual", "modelo-303-2026-06-mensual", "modelo-303-2026-07-mensual", "modelo-303-2026-08-mensual", "modelo-303-2026-09-mensual", "modelo-303-2026-10-mensual", "modelo-303-2026-11-mensual", "modelo-303-2026-12-mensual", "modelo-303-2026-2t", "modelo-303-2026-3t", "modelo-303-2026-4t"], legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-303-2026", "aeat-calendario-contribuyente-2026-hasta-2-marzo", "aeat-calendario-contribuyente-2026-domiciliacion", "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027", "boe-orden-hac-1425-2025-iva-authority"]}
 sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], source_refs = [3, 5, 6, 8]}
 sequence_order = {source_refs = [0, 1, 2, 5, 3, 4, 6, 7, 8, 9]}
 [[revisions.2026-y-siguientes.family_overrides]]
@@ -1779,3 +1782,8 @@ selector = {revision = "2025", id = "modelo-303-m349-reconciliation"}
 family = "formulas"
 selector = { revision = "2025", id = "modelo-303-volumen-operaciones-anual" }
 fields = { source_refs = ["boe-modelo-303-2026-form-pdf", "aeat-dr-303-2026"], source_citations = [{ source_ref = "boe-modelo-303-2026-form-pdf", required_text = ["Total volumen de operaciones", "121 Ley IVA", "97 + 98 - 79 - 99"] }] }
+
+# Replace the inherited disclosure owner with this edition's own source-scoped owner.
+[[revisions."2026-y-siguientes".family_removals]]
+family = "constructs"
+selector = {revision = "2025", id = "modelo-303-printed-disclosure-arithmetic-2025"}

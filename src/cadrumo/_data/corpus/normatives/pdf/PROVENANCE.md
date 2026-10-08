@@ -16,6 +16,28 @@ The bundled bytes are what the address served.
 
 | File | Bytes | Retrieved | Served from |
 | ---- | ----- | --------- | ----------- |
+| `aeat-modelo-390-2024-form.pdf` | 877464 | 2026-10-07 | `https://sede.agenciatributaria.gob.es/static_files/Sede/Tema/Estadisticas/Estadisticas_impuesto/Iva/Ivapartidas/Documentacion/Metodologia_pdf/Modelos/mod390_2024.pdf` |
+| `aeat-modelo-390-2025-instructions.pdf` | 355432 | 2026-10-07 | `https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G412/Instrucciones_modelo_390-2025.pdf` |
+| `boe-a-2000-22794-modelo-341.pdf` | 2092750 | 2026-10-06 | `https://www.boe.es/boe/dias/2000/12/18/pdfs/A44299-44309.pdf` |
+| `boe-a-2003-23509.pdf` | 1295300 | 2026-10-06 | `https://www.boe.es/boe/dias/2003/12/23/pdfs/A45645-45665.pdf` |
+| `boe-a-2008-16973-modelo-347.pdf` | 462906 | 2026-10-06 | `https://www.boe.es/boe/dias/2008/10/23/pdfs/A42154-42190.pdf` |
+| `boe-a-2008-20953-modelos-303-308.pdf` | 789016 | 2026-10-06 | `https://www.boe.es/boe/dias/2008/12/30/pdfs/A52354-52369.pdf` |
+| `boe-a-2010-5098-modelo-349.pdf` | 994098 | 2026-10-06 | `https://www.boe.es/boe/dias/2010/03/29/pdfs/BOE-A-2010-5098.pdf` |
+| `boe-a-2010-5210-modelos-360-361.pdf` | 345624 | 2026-10-06 | `https://www.boe.es/boe/dias/2010/03/30/pdfs/BOE-A-2010-5210.pdf` |
+| `boe-a-2011-19396-modelo-193.pdf` | 1062003 | 2026-10-06 | `https://www.boe.es/boe/dias/2011/12/12/pdfs/BOE-A-2011-19396.pdf` |
+| `boe-a-2011-19397-modelo-347.pdf` | 1022556 | 2026-10-06 | `https://www.boe.es/boe/dias/2011/12/12/pdfs/BOE-A-2011-19397.pdf` |
+| `boe-a-2011-7479-modelo-308.pdf` | 254771 | 2026-10-06 | `https://www.boe.es/boe/dias/2011/04/27/pdfs/BOE-A-2011-7479.pdf` |
+| `boe-a-2020-17269-modelos-322-353-303.pdf` | 890084 | 2026-10-06 | `https://www.boe.es/boe/dias/2020/12/30/pdfs/BOE-A-2020-17269.pdf` |
+| `boe-a-2021-10509-modelos-322-303-390.pdf` | 1266413 | 2026-10-06 | `https://www.boe.es/boe/dias/2021/06/24/pdfs/BOE-A-2021-10509.pdf` |
+| `boe-a-2022-19290-modelos-322-390.pdf` | 1200305 | 2026-10-06 | `https://www.boe.es/boe/dias/2022/11/22/pdfs/BOE-A-2022-19290.pdf` |
+| `boe-a-2022-21458-modelo-309.pdf` | 396280 | 2026-10-06 | `https://www.boe.es/boe/dias/2022/12/19/pdfs/BOE-A-2022-21458.pdf` |
+| `boe-a-2023-26632-modelos-036-030-390.pdf` | 2079432 | 2026-10-07 | `https://www.boe.es/boe/dias/2023/12/29/pdfs/BOE-A-2023-26632.pdf` |
+| `boe-a-2024-16129-modelo-303-form.pdf` | 557667 | 2026-10-07 | `https://www.boe.es/boe/dias/2024/08/05/pdfs/BOE-A-2024-16129.pdf` |
+| `boe-a-2024-21961-modelos-322-390.pdf` | 1935745 | 2026-10-06 | `https://www.boe.es/boe/dias/2024/10/25/pdfs/BOE-A-2024-21961.pdf` |
+| `boe-modelo-309-2003.pdf` | 767317 | 2026-10-06 | `https://www.boe.es/boe/dias/2003/12/30/pdfs/A46405-46414.pdf` |
+| `boe-modelo-309-2017.pdf` | 471193 | 2026-10-06 | `https://www.boe.es/boe/dias/2017/12/21/pdfs/BOE-A-2017-15190.pdf` |
+| `ec-iva-services-withdrawal-20201209.pdf` | 384643 | 2026-10-06 | `https://commission.europa.eu/document/download/053fe5a6-e232-4f59-97d0-6aaf9d66b05e_en` |
+| `boe-a-2021-10161-modelo-369.pdf` | 1109062 | 2026-10-06 | `boe.es/boe/dias/2021/06/18/pdfs/BOE-A-2021-10161.pdf` |
 | `boe-a-2009-18567-modelo-190.pdf` | 1094631 | 2026-10-06 | `boe.es/boe/dias/2009/11/23/pdfs/BOE-A-2009-18567.pdf` |
 | `boe-a-2000-21430-modelos-115-180.pdf` | 5994105 | 2026-10-05 | `boe.es/buscar/pdf/2000/BOE-A-2000-21430-consolidado.pdf` |
 | `boe-a-2007-20485-modelos-117-123-124-126-128.pdf` | 1350673 | 2026-10-05 | `boe.es/eli/es/o/2007/11/23/eha3435/dof/spa/pdf` |

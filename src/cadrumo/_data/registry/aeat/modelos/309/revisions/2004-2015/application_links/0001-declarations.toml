@@ -1,4 +1,4 @@
-[[revisions."2004-2015".application_links]]
+[[revisions.2004-2015.application_links]]
 id = "modelo-309-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -6,7 +6,7 @@ requires_snapshot = true
 legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-modelo-309-procedure"]
 
-[[revisions."2004-2015".application_links]]
+[[revisions.2004-2015.application_links]]
 id = "modelo-309-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
@@ -14,10 +14,42 @@ requires_snapshot = true
 legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 
-[[revisions."2004-2015".application_links]]
+[[revisions.2004-2015.application_links]]
 id = "modelo-309-historical-calculation"
 surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-instructions"]
+
+[[revisions.2004-2015.application_links]]
+id = "modelo-309-snapshot-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-instructions"]
+
+[[revisions.2004-2015.application_links]]
+id = "modelo-309-snapshot-approval"
+surface = "approval"
+consumer = "cadrumo.application.filing.approval"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-instructions"]
+
+[[revisions.2004-2015.application_links]]
+id = "modelo-309-snapshot-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-instructions"]
+
+[[revisions.2004-2015.application_links]]
+id = "modelo-309-snapshot-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-instructions"]

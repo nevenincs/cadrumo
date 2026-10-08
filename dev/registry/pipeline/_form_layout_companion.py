@@ -70,7 +70,8 @@ def _selected_candidate_revision(
     if tuple(modelo.revisions) != expected:
         raise RegistryValidationError("generated form companion candidate has an unpinned or missing revision")
     if context.inheritance is not None and (
-        modelo.revisions[expected[-2]].export_layouts != (context.inheritance.baseline_layout,)
+        modelo.revisions[str(context.inheritance.attestation.baseline_revision_id)].export_layouts
+        != (context.inheritance.baseline_layout,)
     ):
         raise RegistryValidationError("generated form companion baseline layout differs from its attestation")
     revision = modelo.revisions[str(context.target.revision_id)]

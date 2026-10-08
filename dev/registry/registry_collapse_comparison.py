@@ -9,10 +9,17 @@ from pydantic_core import to_jsonable_python
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry.schema import (
     ModeloDefinition,
+    ModeloRevision,
+    RegistrySnapshot,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .registry_collapse_models import _REPRESENTATION_ONLY, CheckStatus, ComparisonResult
+from .registry_collapse_models import (
+    _REPRESENTATION_ONLY,
+    _REVISION_SOURCE_DEFAULT_FIELDS,
+    CheckStatus,
+    ComparisonResult,
+)
 
 
 def _typed_projection(value: object) -> object:
@@ -25,7 +32,18 @@ def _typed_projection(value: object) -> object:
     """
     dump = getattr(value, "model_dump", None)
     if callable(dump):
-        return _typed_projection(dump(mode="python"))
+        dumped = dump(mode="python")
+        if isinstance(value, ModeloRevision):
+            # Defaults are already bound onto each resolved member. Only the
+            # actual revision declaration owns their representation-only role.
+            dumped = {key: child for key, child in dumped.items() if key not in _REVISION_SOURCE_DEFAULT_FIELDS}
+        elif isinstance(value, ModeloDefinition):
+            # Keep typed revision identity through the enclosing model dump.
+            dumped["revisions"] = value.revisions
+        elif isinstance(value, RegistrySnapshot):
+            dumped["modelo"] = value.modelo
+            dumped["revision"] = value.revision
+        return _typed_projection(dumped)
     if isinstance(value, Mapping):
         projected = {
             str(key): _typed_projection(child) for key, child in value.items() if str(key) not in _REPRESENTATION_ONLY

@@ -63,14 +63,24 @@ class AuthoredFormBridge:
 
     def require_dependencies(self, *, transaction_backup: Path | None = None, finalized: bool = False) -> None:
         """Reject source or interpreter changes since complete prevalidation."""
-        if (
-            generated_form_interpreting_input_digest(self.modelo) != self.interpreting_digest
-            or registry_evidence_content_digest(self.source_root) != self.evidence_digest
-            or fingerprint_tree(self.source_root / "registry" / "cadrumo") != self.profile_fingerprint
-            or _other_files(self.registry_root, self.modelo, str(self.before.id), transaction_backup=transaction_backup)
-            != self.expected_other_files(finalized=finalized)
-        ):
-            raise RegistryValidationError("authored first-export source changed after prevalidation")
+        changed = []
+        if generated_form_interpreting_input_digest(self.modelo) != self.interpreting_digest:
+            changed.append("registry interpreter inputs")
+        if registry_evidence_content_digest(self.source_root) != self.evidence_digest:
+            changed.append("official evidence bytes")
+        if fingerprint_tree(self.source_root / "registry" / "cadrumo") != self.profile_fingerprint:
+            changed.append("profile registry")
+        actual = _other_files(
+            self.registry_root, self.modelo, str(self.before.id), transaction_backup=transaction_backup
+        )
+        expected = self.expected_other_files(finalized=finalized)
+        if actual != expected:
+            paths = sorted(path for path in actual.keys() | expected.keys() if actual.get(path) != expected.get(path))
+            changed.append(f"registry members {paths!r}")
+        if changed:
+            raise RegistryValidationError(
+                f"authored first-export source changed after prevalidation: {'; '.join(changed)}"
+            )
 
     def expected_other_files(self, *, finalized: bool) -> dict[str, str]:
         """Name the exact source receipts before or after manifest retirement."""
@@ -168,14 +178,15 @@ def prepare_authored_form_bridge(
         # The reviewed semantic mapping has already rendered these endpoints.
         # Capture exact old/new identities for the independent form-owner finish.
         replacements = {
-            str(field.id): (str(old.binding), str(field.casilla_id))
+            str(field.id): (str(old.binding if old.kind.value == "binding" else old.casilla_id), str(field.casilla_id))
             for layout in after.export_layouts
             for record in layout.records
             for field in record.fields
             if (old := old_fields.get(str(field.id))) is not None
-            and old.kind.value == "binding"
+            and old.kind.value in {"binding", "casilla"}
             and field.kind.value == "casilla"
             and field.casilla_id is not None
+            and (old.kind.value == "binding" or old.casilla_id != field.casilla_id)
         }
     reconciled = (
         reconcile_scalar_export_sources(before, after, replacements=replacements)

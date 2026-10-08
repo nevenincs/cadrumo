@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..conformance.manager import reset_conformance_cache
+from ._tree_clearance_publication import _has_export_clearance, _publish_export_clearance_bundle
 from ._tree_validation import (
     ValidatedGeneratedExportTree,
     ValidatedHistoricalStaticGeneratedExportTree,
@@ -17,6 +18,7 @@ from ._tree_validation import (
 )
 from .export_fragment_provenance import ExportFragmentProvenanceManifest
 from .export_tree_models import RenderedExportTree
+from .generated_export_inheritance import generated_export_source_chain_fingerprint
 from .joined_record_design import JoinedRecordDesign
 from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile
@@ -79,6 +81,8 @@ def publish_validated_generated_export_tree(
     transaction_paths = GeneratedExportTransactionPaths.for_context(context)
     journal_path = transaction_paths.journal
     with exclusive_file_lock(transaction_paths.lock_identity):
+        _require_retained_publication_mode(context)
+        _require_retained_source_after_cutover(context)
         target_export_root, recovered = _recover_or_admit_publication_target(
             context=context,
             transaction_paths=transaction_paths,
@@ -89,6 +93,7 @@ def publish_validated_generated_export_tree(
             render_profile=render_profile,
             render_profile_source_evidence=render_profile_source_evidence,
         )
+        _require_retained_source_after_cutover(context)
         if recovered:
             return _already_published(target_export_root)
         validated, candidate_manifest, candidate_manifest_sha256, staged_candidate_export_root = (
@@ -102,6 +107,8 @@ def publish_validated_generated_export_tree(
                 render_profile_source_evidence=render_profile_source_evidence,
             )
         )
+        _require_retained_publication_mode(context)
+        _require_retained_source_after_cutover(context)
         if context.supersession is not None:
             return _publish_superseding_revision_bundle(
                 context=context,
@@ -119,7 +126,15 @@ def publish_validated_generated_export_tree(
                 transaction_paths=transaction_paths,
                 journal_path=journal_path,
             )
-        published = _publish_ordinary_candidate(
+        publisher = (
+            _publish_export_clearance_bundle
+            if (
+                not (context.validation.inheritance is not None and context.validation.source_chain_revisions)
+                and _has_export_clearance(target_export_root.parent, str(context.validation.target.revision_id))
+            )
+            else _publish_ordinary_candidate
+        )
+        published = publisher(
             context=context,
             target_export_root=target_export_root,
             transaction_paths=transaction_paths,
@@ -147,7 +162,15 @@ def _recover_or_admit_publication_target(
     _require_no_legacy_transaction(transaction_paths)
     if journal_path.exists():
         interrupted_journal = load_generated_export_publication_journal(journal_path)
-        if interrupted_journal.is_supersession and _recover_interrupted_supersession_bundle_locked(
+        if (
+            interrupted_journal.is_revision_bundle
+            and context.validation.inheritance is not None
+            and context.validation.source_chain_revisions
+        ):
+            raise RegistryValidationError(
+                "compact retained source publication cannot recover a revision-bundle transaction",
+            )
+        if interrupted_journal.is_revision_bundle and _recover_interrupted_supersession_bundle_locked(
             journal=interrupted_journal,
             journal_path=journal_path,
             transaction_paths=transaction_paths,
@@ -318,6 +341,7 @@ def _verify_live_ordinary_candidate(
     candidate_manifest_sha256: str,
 ) -> None:
     try:
+        _require_retained_source_after_cutover(context)
         _verify_post_cutover_target(
             target_export_root,
             expected_manifest_sha256=candidate_manifest_sha256,
@@ -325,6 +349,7 @@ def _verify_live_ordinary_candidate(
         )
         if context.final_live_validator is not None:
             context.final_live_validator()
+        _require_retained_source_after_cutover(context)
     except BaseException as error:
         try:
             _restore_failed_export_cutover(
@@ -343,3 +368,39 @@ def _verify_live_ordinary_candidate(
         raise RegistryValidationError(
             f"generated export publication failed; the previous target was restored: {error}",
         ) from error
+
+
+def _require_retained_source_after_cutover(context: GeneratedExportTreePublicationContext) -> None:
+    """Keep compact target cutover from changing any captured non-export source byte."""
+    expected = context.validation.source_chain_non_export_sha256
+    if expected is None:
+        return
+    if context.validation.source_chain_registry_root != context.target_root.resolve():
+        raise RegistryValidationError("generated source-chain origin differs from the publication root")
+    current = generated_export_source_chain_fingerprint(
+        context.target_root,
+        modelo=str(context.validation.target.modelo),
+        revision=str(context.validation.target.revision_id),
+        omit_target_export=True,
+    )
+    if current != expected:
+        raise RegistryValidationError("generated source-chain facts changed during export cutover")
+
+
+def _require_retained_publication_mode(context: GeneratedExportTreePublicationContext) -> None:
+    """Keep compact retained source publication inside its export-only transaction."""
+    if context.validation.inheritance is None or not context.validation.source_chain_revisions:
+        return
+    revision_root = (
+        context.target_root.resolve()
+        / "modelos"
+        / str(context.validation.target.modelo)
+        / "revisions"
+        / str(context.validation.target.revision_id)
+    )
+    if context.supersession is not None or _has_export_clearance(
+        revision_root, str(context.validation.target.revision_id)
+    ):
+        raise RegistryValidationError(
+            "compact retained source publication does not support supersession or export clearance",
+        )

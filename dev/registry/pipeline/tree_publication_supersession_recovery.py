@@ -72,7 +72,7 @@ def recover_interrupted_supersession_bundle(*, target_root: Path, modelo: str, r
             raise RegistryValidationError(
                 f"generated publication journal does not belong to this target: {paths.journal}",
             )
-        if not journal.is_supersession:
+        if not journal.is_revision_bundle:
             return False
         return _recover_interrupted_supersession_bundle_locked(
             journal=journal,
@@ -88,7 +88,7 @@ def _recover_interrupted_supersession_bundle_locked(
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> bool:
     """Finalize committed cleanup or safely restore the pinned pre-cutover revision."""
-    if not journal.is_supersession:
+    if not journal.is_revision_bundle:
         raise RegistryValidationError("supersession recovery requires a supersession journal")
     source_sha256 = journal.supersession_source_sha256
     candidate_sha256 = journal.candidate_revision_sha256

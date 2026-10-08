@@ -86,7 +86,9 @@ def test_late_hydrated_delta_rekeys_only_four_source_changed_binding_slots() -> 
     assert late_rate.values[0].valid_to == date(2026, 12, 31)
     assert not any(str(item.id) == str(late_rate.id) for item in early.parameters)
     assert len(late.form_layouts) == 1
-    assert {str(source.source_ref) for source in late.form_layouts[0].design_sources} == {"aeat-dr-131-2026-late"}
+    design_sources = {str(source.source_ref) for source in late.form_layouts[0].design_sources}
+    assert {ref for ref in design_sources if ref.startswith("aeat-dr-")} == {"aeat-dr-131-2026-late"}
+    assert design_sources - {"aeat-dr-131-2026-late"} == {"boe-2015-1656-modelos-130-131-form"}
     assert "aeat-dr-131-2026-late" in late.constructs[0].source_refs
     assert "aeat-modelo-131-instructions-2026-late" in late.constructs[0].source_refs
 

@@ -101,6 +101,6 @@ def test_real_123_bootstrap_candidate_uses_validated_shared_role_scope(scope_aut
     invocation = GeneratedTreeInvocation("123", "2019-2023", "aeat-dr-123-2019-2023-v13", 2022, "1T")
     prepared = prepare_generated_tree_invocation(invocation, tmp_path, authority=scope_authority)
     state, rendered, _receipt = check_prepared_invocation(prepared)
-    assert state == "publishable_absence"
+    assert state == "matched"
     assert prepared.validation.scope_authority is scope_authority
     assert rendered.layout.filing_envelope is not None

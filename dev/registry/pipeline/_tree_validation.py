@@ -42,7 +42,10 @@ from .export_fragment_provenance import (
     verify_export_fragment_provenance_manifest,
 )
 from .export_tree_models import RenderedExportTree
-from .generated_export_inheritance import require_generated_export_inheritance
+from .generated_export_inheritance import (
+    generated_export_source_chain_fingerprint,
+    require_generated_export_inheritance,
+)
 from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .joined_record_design import JoinedRecordDesign
 from .render_check import _select_record_design_source
@@ -107,10 +110,31 @@ class GeneratedExportTreeValidationContext:
     #: runtime snapshot at required_grade and refuses that historical year.
     historical_static_source_ref: SourceRefId | None = None
     source_chain_revisions: tuple[str, ...] = ()
+    #: Ephemeral source byte receipts for compact storage inside a complete legal chain.
+    #: They never enter generated provenance or the publication journal.
+    source_chain_registry_root: Path | None = None
+    source_chain_sha256: str | None = None
+    source_chain_non_export_sha256: str | None = None
 
     def __post_init__(self) -> None:
-        if self.source_chain_revisions and (self.scope_authority is None or self.inheritance is not None):
-            raise RegistryValidationError("source-chain validation requires source authority and no export inheritance")
+        if self.source_chain_revisions:
+            if self.scope_authority is None:
+                raise RegistryValidationError("source-chain validation requires source authority")
+            source = self.scope_authority.modelo(str(self.target.modelo))
+            if tuple(source.revisions) != self.source_chain_revisions:
+                raise RegistryValidationError("source-chain validation must retain the complete validated modelo")
+            if self.inheritance is not None:
+                ancestors = tuple(item[0] for item in self.inheritance.pinned_ancestors)
+                if len(set((*ancestors, str(self.target.revision_id)))) != len(ancestors) + 1 or not set(
+                    (*ancestors, str(self.target.revision_id))
+                ).issubset(self.source_chain_revisions):
+                    raise RegistryValidationError("source-chain validation lost an attested ancestor or target")
+                if (
+                    self.source_chain_registry_root is None
+                    or self.source_chain_sha256 is None
+                    or self.source_chain_non_export_sha256 is None
+                ):
+                    raise RegistryValidationError("compact source-chain validation requires exact origin byte pins")
         if not self.period.strip():
             raise RegistryValidationError("generated-tree validation requires a non-empty filing period")
         if str(self.target.modelo) in self.supporting_modelos:
@@ -151,8 +175,9 @@ def validate_generated_export_tree(
     """Prove an isolated generated tree at its requested admission boundary.
 
     An ordinary candidate contains only its target edition. An attested
-    inherited candidate contains exactly its pinned ancestor chain and thin
-    child; every staged edition must preserve its canonical effective meaning,
+    inherited candidate contains its pinned storage chain and thin child. When
+    continuity requires the complete source chain, every original revision and
+    evolution is retained; each edition must preserve its effective meaning,
     and the child must hydrate to the freshly rendered layout. Extra revisions,
     modelos, or export files remain refusals. A pinned pre-floor target yields
     only a static revision inspection; ordinary callers still select a runtime
@@ -177,15 +202,24 @@ def validate_generated_export_tree(
         ),
         source_chain_revisions=context.source_chain_revisions,
     )
+    source_registry_root = context.source_chain_registry_root or source_root / "registry" / "aeat"
+    if context.source_chain_sha256 is not None:
+        current_source = generated_export_source_chain_fingerprint(
+            source_registry_root, modelo=modelo_id, revision=revision_id
+        )
+        if current_source != context.source_chain_sha256:
+            raise RegistryValidationError("generated source-chain bytes changed before export publication")
     if context.inheritance is not None:
         if context.scope_authority is None:
             raise RegistryValidationError("generated export inheritance requires the complete validated source")
         require_generated_export_inheritance(
             context.inheritance,
             context.scope_authority,
-            source_root / "registry" / "aeat",
+            source_registry_root,
             modelo=modelo_id,
             revision=revision_id,
+            retain_source_chain=bool(context.source_chain_revisions),
+            source_root=source_root,
         )
     _require_exact_generated_outputs(export_root, rendered.output_files)
 
@@ -209,11 +243,12 @@ def validate_generated_export_tree(
             raise RegistryValidationError("source-chain validation has no source authority")
         require_source_chain_unchanged(context.scope_authority.modelo(modelo_id), definition, revision=revision_id)
     if context.inheritance is not None and (
-        definition.revisions[expected_revisions[-2]].export_layouts != (context.inheritance.baseline_layout,)
+        definition.revisions[str(context.inheritance.attestation.baseline_revision_id)].export_layouts
+        != (context.inheritance.baseline_layout,)
     ):
         raise RegistryValidationError("generated export inheritance staged baseline layout changed")
     if context.inheritance is not None:
-        source_modelo_root = source_root / "registry" / "aeat" / "modelos" / modelo_id
+        source_modelo_root = source_registry_root / "modelos" / modelo_id
         for selected_id in expected_revisions:
             original = read_staged_edition(source_modelo_root, selected_id, side="source")
             staged = read_staged_edition(modelo_root, selected_id, side="staged")

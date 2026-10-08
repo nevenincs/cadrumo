@@ -2227,8 +2227,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-1"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-1", offset = 873, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-1", offset = 873, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2275,8 +2275,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-2"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-2", offset = 1008, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-2", offset = 1008, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2323,8 +2323,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-3"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-3", offset = 1143, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-3", offset = 1143, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2371,8 +2371,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-4"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-4", offset = 1278, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-4", offset = 1278, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2419,8 +2419,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-5"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-5", offset = 1413, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-5", offset = 1413, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2467,8 +2467,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-6"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-6", offset = 1548, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-6", offset = 1548, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2515,8 +2515,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-7"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-7", offset = 1683, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-7", offset = 1683, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2563,8 +2563,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-8"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-8", offset = 1818, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-8", offset = 1818, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2611,8 +2611,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-9"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-9", offset = 1953, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-9", offset = 1953, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2659,8 +2659,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-10"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-10", offset = 2088, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-10", offset = 2088, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2707,8 +2707,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-1"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2236", offset = 2236, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2236", offset = 2236, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2749,8 +2749,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-2"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2351", offset = 2351, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2351", offset = 2351, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2791,8 +2791,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-3"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2466", offset = 2466, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2466", offset = 2466, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2833,8 +2833,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-4"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2581", offset = 2581, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2581", offset = 2581, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2875,8 +2875,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-5"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2696", offset = 2696, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2696", offset = 2696, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2917,8 +2917,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-6"
-provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2811", offset = 2811, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2811", offset = 2811, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -2965,8 +2965,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-1"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-20", offset = 20, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-20", offset = 20, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3013,8 +3013,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-2"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-155", offset = 155, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-155", offset = 155, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3061,8 +3061,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-3"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290", offset = 290, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290", offset = 290, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3109,8 +3109,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-4"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-425", offset = 425, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-425", offset = 425, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3157,8 +3157,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-5"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-560", offset = 560, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-560", offset = 560, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3205,8 +3205,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-6"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-695", offset = 695, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-695", offset = 695, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3253,8 +3253,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-7"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-830", offset = 830, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-830", offset = 830, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3301,8 +3301,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-8"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-965", offset = 965, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-965", offset = 965, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3349,8 +3349,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-1"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1113", offset = 1113, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1113", offset = 1113, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3397,8 +3397,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-2"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1248", offset = 1248, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1248", offset = 1248, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3445,8 +3445,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-3"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1383", offset = 1383, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1383", offset = 1383, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3493,8 +3493,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-4"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1518", offset = 1518, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1518", offset = 1518, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3541,8 +3541,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-5"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1653", offset = 1653, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1653", offset = 1653, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3589,8 +3589,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-6"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1788", offset = 1788, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1788", offset = 1788, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3637,8 +3637,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-7"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1923", offset = 1923, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1923", offset = 1923, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3685,8 +3685,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-8"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-2058", offset = 2058, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-2058", offset = 2058, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3733,8 +3733,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-1"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2206", offset = 2206, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2206", offset = 2206, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3775,8 +3775,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-2"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2321", offset = 2321, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2321", offset = 2321, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3817,8 +3817,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-3"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2436", offset = 2436, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2436", offset = 2436, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3859,8 +3859,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-4"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2551", offset = 2551, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2551", offset = 2551, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3901,8 +3901,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-1"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2679", offset = 2679, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2679", offset = 2679, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3943,8 +3943,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-2"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2794", offset = 2794, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2794", offset = 2794, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -3985,8 +3985,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-3"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2909", offset = 2909, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2909", offset = 2909, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -4027,8 +4027,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-4"
-provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3024", offset = 3024, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3024", offset = 3024, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -4069,8 +4069,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-no-valores-1"
-provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-16", offset = 16, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-16", offset = 16, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -4123,8 +4123,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-no-valores-2"
-provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-157", offset = 157, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-157", offset = 157, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -4177,8 +4177,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-no-valores-3"
-provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-298", offset = 298, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-298", offset = 298, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -4231,8 +4231,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-no-valores-1"
-provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-452", offset = 452, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-452", offset = 452, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -4279,8 +4279,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-no-valores-2"
-provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-573", offset = 573, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-573", offset = 573, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -4327,8 +4327,8 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-no-valores-3"
-provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-694", offset = 694, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-694", offset = 694, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -5377,8 +5377,9 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1"
-provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1", offset = 588, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+# AEAT DR714_2021, 714-08 Patrimonio A35: unidades, 9 enteros y 4 decimales.
+provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1", offset = 588, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -5407,8 +5408,9 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2"
-provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2", offset = 682, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+# AEAT DR714_2021, 714-08 Patrimonio A40: unidades, 9 enteros y 4 decimales.
+provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2", offset = 682, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
@@ -5437,8 +5439,9 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3"
-provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3", offset = 776, length = 13, data_type = "money", signed = false }
-value = { data_type = "money", channel = "decimal" }
+# AEAT DR714_2021, 714-08 Patrimonio A45: unidades, 9 enteros y 4 decimales.
+provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3", offset = 776, length = 13, data_type = "decimal", decimals = 4, signed = false }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".bindings]]

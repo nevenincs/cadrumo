@@ -164,6 +164,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
+    LorcaActivityEligibility,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -239,7 +240,8 @@ M303_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2024-hasta-08-y-2t": Period.from_year_and_code(2024, "1T"),
     "2024-desde-09-y-3t": Period.from_year_and_code(2024, "3T"),
     "2025": Period.from_year_and_code(2025, "1T"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "1T"),
+    "2026-hasta-01-y-1t": Period.from_year_and_code(2026, "1T"),
+    "2026-y-siguientes": Period.from_year_and_code(2026, "2T"),
 }
 #: The annual period each Modelo 189 edition is rendered for.
 M189_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
@@ -729,6 +731,11 @@ def _m303_regimen_simplificado_evidence(
                 activity_id=activity.orden_id,
                 iae_epigrafe=epigrafe,
                 auxiliary_activity_indicator=activity.auxiliary_activity_indicator,
+                lorca_eligibility=(
+                    LorcaActivityEligibility(eligible=False, evidence_reference=_EVIDENCE)
+                    if regimen_snapshot.orden.lorca_reduction is not None
+                    else None
+                ),
                 modulos=tuple(
                     EntradaModuloSimplificado(
                         module_identity=module.identity, declared_quantity=Decimal("1"), evidence_reference=_EVIDENCE
@@ -836,6 +843,7 @@ def m390_export_scenario(period: Period) -> EditionExportScenario:
         period=period,
         inputs={},
         producer_snapshot=_m390_producer_snapshot,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=_m390_product_software_identity,
     )
 

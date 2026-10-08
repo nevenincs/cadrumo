@@ -39,6 +39,11 @@ def _below_filing_target() -> tuple[str, str, RegistryAuthorityGrade]:
             grade = revision.effective_authority_grade
             if grade is RegistryAuthorityGrade.FILING:
                 continue
+            if (
+                revision.valid_to is not None
+                and revision.valid_to.year < authority.catalogues.require_supported_filing_years().floor
+            ):
+                continue
             if (modelo_dir / "revisions" / str(revision_id) / "export" / "_generation.provenance.json").is_file():
                 return modelo_dir.name, str(revision_id), grade
     pytest.fail("no edition below filing grade carries a committed generated tree to prove currentness against")
@@ -65,13 +70,13 @@ def test_the_same_tree_proven_at_filing_grade_is_refused() -> None:
         and source.record_design_epoch is not None
     ]
     (source_ref,) = design_refs
-    year = selected.valid_from.year
+    year = max(selected.valid_from.year, authority.catalogues.require_supported_filing_years().floor)
     invocation = GeneratedTreeInvocation(
         modelo, revision, source_ref, year, str(selected.period_selector.periods_for_year(year)[0])
     )
     with tempfile.TemporaryDirectory(prefix="cadrumo-currentness-grade-") as temporary:
         prepared = prepare_generated_tree_invocation(invocation, Path(temporary), authority=authority)
-        assert prepared.validation.required_grade is RegistryAuthorityGrade.FILING
+        assert prepared.validation.required_grade is grade
         assert at_edition_grade(prepared, grade).validation.required_grade is grade
         with pytest.raises((RegistryError, ValueError)):
-            check_prepared_invocation(prepared)
+            check_prepared_invocation(at_edition_grade(prepared, RegistryAuthorityGrade.FILING))

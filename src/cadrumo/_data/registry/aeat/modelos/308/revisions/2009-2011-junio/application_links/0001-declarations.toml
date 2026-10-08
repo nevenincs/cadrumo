@@ -27,3 +27,35 @@ consumer = "cadrumo.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["orden-eha-3786-2008:art-2"]
 source_refs = ["aeat-modelo-308-procedure", "boe-modelo-308-2008-form-pdf"]
+
+[[revisions.2009-2011-junio.application_links]]
+id = "modelo-308-snapshot-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-modelo-308-procedure"]
+
+[[revisions.2009-2011-junio.application_links]]
+id = "modelo-308-snapshot-approval"
+surface = "approval"
+consumer = "cadrumo.application.filing.approval"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-modelo-308-procedure"]
+
+[[revisions.2009-2011-junio.application_links]]
+id = "modelo-308-snapshot-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-modelo-308-procedure"]
+
+[[revisions.2009-2011-junio.application_links]]
+id = "modelo-308-snapshot-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-modelo-308-procedure"]

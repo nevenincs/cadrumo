@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import shutil
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from cadrumo.application.calculations.m303_regimen_simplificado import (
+    M303RegimenSimplificadoCalculationError,
+    calculate_m303_regimen_simplificado_result,
+)
 from cadrumo.application.filing.producer_snapshot import (
     Modelo222ProfileFacts,
     Modelo296ProfileFacts,
@@ -14,8 +19,10 @@ from cadrumo.application.filing.producer_snapshot import (
 from cadrumo.application.filing.producer_snapshot_m200 import Modelo200ProfileFacts
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado
 
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues, modelo_fact_scope
 from ..conformance.loader_directory_mode_support import write_standard_manifest
@@ -194,3 +201,49 @@ def test_every_declared_scenario_renders_inside_the_support_envelope() -> None:
                 modelo, filing_year=period.filing_year, period=period.registry_token, support=support
             )
             assert selected.id == revision_id, (modelo_id, revision_id, period)
+
+
+@pytest.mark.parametrize(("revision_id", "period_code"), (("2026-hasta-01-y-1t", "1T"), ("2026-y-siguientes", "2T")))
+def test_m303_scenarios_select_both_2026_form_editions(revision_id: str, period_code: str) -> None:
+    """Each 2026 paper edition's scenario selects its actual applicable quarter."""
+    scenario = edition_export_scenarios("303")[revision_id]
+    assert scenario.period == Period.from_year_and_code(2026, period_code)
+    modelo, catalogues = committed_modelo("303")
+    selected = select_revision(
+        modelo,
+        filing_year=scenario.period.filing_year,
+        period=scenario.period.registry_token,
+        support=catalogues.supported_filing_years,
+    )
+    assert selected.id == revision_id
+
+
+@pytest.mark.parametrize("revision_id", ("2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t"))
+def test_m303_scenario_evidences_no_lorca_relief_and_missing_evidence_still_refuses(revision_id: str) -> None:
+    """Synthetic non-Lorca activities render, while missing required evidence still fails."""
+    scenario = edition_export_scenarios("303")[revision_id]
+    with bundled_indexed_authority().operation() as operation:
+        facts = scenario.producer_snapshot().m303_filing_facts
+        assert facts is not None
+        evidence = facts.regimen_simplificado
+        assert evidence.regimen_snapshot.orden.lorca_reduction is not None
+        row = evidence.rows.activities[0]
+        assert isinstance(row, ActividadNoAgricolaSimplificado)
+        eligibility = row.lorca_eligibility
+        assert eligibility is not None
+        assert not eligibility.eligible
+        assert eligibility.evidence_reference == row.evidence_reference
+        assert evidence.calculation_result.activities[0].lorca_reduction_amount == Decimal("0")
+        assert eligibility.evidence_reference in evidence.calculation_result.activities[0].evidence_references
+        missing_row = row.model_copy(update={"lorca_eligibility": None})
+        missing_rows = evidence.rows.model_copy(update={"activities": (missing_row,)})
+
+        with pytest.raises(M303RegimenSimplificadoCalculationError, match="requires Lorca eligibility evidence"):
+            calculate_m303_regimen_simplificado_result(
+                period=scenario.period,
+                scope_decision=evidence.scope_decision,
+                rows=missing_rows,
+                regimen_snapshot=evidence.regimen_snapshot,
+                dana_eligibility=evidence.dana_eligibility,
+                operation=operation,
+            )

@@ -40,6 +40,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.m390_formula_support import liquidation_operands
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -292,7 +293,7 @@ def test_every_declared_base_casilla_is_bound_to_a_base_fact() -> None:
         )
 
 
-def test_no_base_casilla_enters_an_annual_total_formula() -> None:
+def test_no_base_casilla_enters_annual_liquidation() -> None:
     """The annual totals sum cuotas; a base casilla entering one under-declares.
 
     This pins the safety property of the base-imponible addition. The tier cuota
@@ -305,9 +306,5 @@ def test_no_base_casilla_enters_an_annual_total_formula() -> None:
     revision = _m390_revision()
     base_casilla_ids = {casilla.id for casilla in revision.casillas if casilla.id.endswith(".base")}
     assert base_casilla_ids, "the annual revision declares no base imponible casilla"
-    for formula in revision.formulas:
-        if formula.target_casilla_id in base_casilla_ids:
-            continue
-        referenced = {arg.casilla_id for arg in formula.expression.args if arg.casilla_id is not None}
-        leaked = referenced & base_casilla_ids
-        assert not leaked, f"formula {formula.id} sums base imponible casillas {sorted(leaked)}"
+    leaked = liquidation_operands(revision) & base_casilla_ids
+    assert not leaked, f"annual liquidation consumes base imponible casillas {sorted(leaked)}"

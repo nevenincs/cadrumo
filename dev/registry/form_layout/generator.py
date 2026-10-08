@@ -238,6 +238,10 @@ def generate_revision_layout(
         pages=tuple(pages),
         placements=_placements(build, section_of, shown, {} if continued is None else continued.aliases),
     )
+    # Context and row projections depend on the blocks being published, which
+    # may differ from the previous layout carried by the input revision.
+    generated_revision = revision.model_copy(update={"form_layouts": (layout,)})
+    layout = layout.model_copy(update={"source_state_digest": form_layout_source_digest(generated_revision)})
     return LayoutGeneration(modelo_id, revision.id, layout, notes=tuple(build.notes))
 
 

@@ -14,8 +14,12 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutSeedSource
 
 from ...compiler.authority import compiled_bundled_authority
+from ...compiler.loader import load_registry_tree
+from ...form_layout.generator import generate_revision_layout
+from ...form_layout.serialization import render_form_layout_toml
 from .. import cli, generated_form_bridge
 from ..generated_form_bridge import GeneratedFormBridge, prepare_generated_form_bridge, registry_evidence_content_digest
 from ..historical_static_repair import validated_historical_repair_source
@@ -56,7 +60,7 @@ def test_bridge_refuses_unreviewed_old_manifest_before_any_file_access(tmp_path:
 
 
 def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_name(tmp_path: Path) -> None:
-    """The inherited 2018 candidate stores its generated form in a complete-edition fragment."""
+    """An isolated generated companion reproduces under the detached edition's filename."""
     revision_id = "2018-y-siguientes"
     source_root = bundled_path()
     old_manifest = (
@@ -77,14 +81,38 @@ def test_detached_candidate_form_reproduces_generator_without_the_live_fragment_
         tmp_path,
         authority=compiled_bundled_authority(),
     )
-    cli._render_candidate(prepared)
     form_root = prepared.candidate_root / "modelos" / "232" / "revisions" / revision_id / "form_layouts"
     fragment = next(form_root.glob("*.toml"))
+    authored_bytes = fragment.read_bytes()
+    cli._render_candidate(prepared)
+    assert fragment.read_bytes() == authored_bytes
+    modelos, catalogues = load_registry_tree(prepared.candidate_root)
+    revision = next(modelo for modelo in modelos if str(modelo.id) == "232").revisions[revision_id]
+    assert revision.form_layouts[0].seed_source is FormLayoutSeedSource.AUTHORED
+    with pytest.raises(RegistryValidationError, match="candidate form differs from its fresh canonical generation"):
+        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
+
+    # The live authored form is preserved above. This detached harness supplies
+    # its own generator-owned companion to exercise generated-byte verification.
+    layout = generate_revision_layout("232", revision, sources=catalogues.sources, data_root=source_root).layout
+    assert layout is not None
+    fragment.write_text(render_form_layout_toml(revision_id, layout), encoding="utf-8", newline="\n")
+    canonical_bytes = fragment.read_bytes()
+    detached_fragment = fragment.with_name("0001-complete-edition.toml")
+    if fragment != detached_fragment:
+        assert not detached_fragment.exists()
+        fragment.rename(detached_fragment)
+    fragment = detached_fragment
     assert fragment.name == "0001-complete-edition.toml"
     generated = generated_form_bridge._candidate_generated_form_bytes(
         prepared.candidate_root, "232", revision_id, source_root
     )
-    assert sha256(generated).hexdigest() == "a4e2d574372a6539b15d0467d566e6b1a03f75bb1ae3f75978ff352e09863405"
+    assert generated == canonical_bytes
+    absent_fragment = tmp_path / "absent-form.toml"
+    fragment.rename(absent_fragment)
+    with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
+        generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)
+    absent_fragment.rename(fragment)
     fragment.rename(form_root / "unreviewed-form.toml")
     with pytest.raises(RegistryValidationError, match="no unique generated form fragment"):
         generated_form_bridge._candidate_generated_form_bytes(prepared.candidate_root, "232", revision_id, source_root)

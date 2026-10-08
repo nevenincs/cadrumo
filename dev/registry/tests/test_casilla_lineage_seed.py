@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.schema_references import PeriodSelecto
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.tests.lineage_totality import is_total
 
+from ..analysis import casilla_lineage_seed
 from ..analysis.casilla_lineage_ledger import load_ledger_refusals
 from ..analysis.casilla_lineage_seed_corpus import load_corpus
 from ..analysis.casilla_lineage_seed_design import DesignOracle, parse_design_inventory
@@ -690,6 +691,13 @@ def _planted_modelo(*revisions: ModeloRevision) -> ModeloDefinition:
             "revisions": {revision.id: revision for revision in revisions},
         },
     )
+
+
+def test_lineage_command_rejects_unknown_arguments_before_loading_or_writing(capsys) -> None:
+    with pytest.raises(SystemExit) as failure:
+        casilla_lineage_seed.main(["--unrecognized-option"])
+    assert failure.value.code == 2
+    assert "unrecognized arguments" in capsys.readouterr().err
 
 
 def test_editions_whose_selectors_overlap_but_whose_validity_succeeds_are_paired() -> None:

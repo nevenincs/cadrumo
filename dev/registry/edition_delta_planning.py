@@ -13,6 +13,7 @@ from . import edition_delta_planning_authored as _edition_delta_planning_authore
 from . import edition_delta_planning_counts as _edition_delta_planning_counts
 from . import edition_delta_planning_full_copy as _edition_delta_planning_full_copy
 from . import edition_delta_planning_mode as _edition_delta_planning_mode
+from . import edition_delta_planning_predecessor as _edition_delta_planning_predecessor
 from . import edition_delta_planning_state as _edition_delta_planning_state
 from . import edition_delta_source as _edition_delta_source
 from . import edition_delta_types as _edition_delta_types
@@ -45,13 +46,15 @@ def _plan(
             _edition_delta_planning_mode.storage_authored(source.manifest) for source in sources.values()
         ),
     )
-    for position, revision in enumerate(ordered):
+    planned: dict[str, _edition_delta_source._EditionWork] = {}
+    for position, revision in _dependency_order(run):
         source = run.sources[str(revision.id)]
         if _edition_delta_planning_mode.storage_authored(source.manifest):
             item = _edition_delta_planning_authored.plan_authored_edition(run, revision)
         else:
             item = _edition_delta_planning_full_copy.plan_full_copy_edition(run, position, revision)
-        run.work.append(item)
+        planned[str(revision.id)] = item
+    run.work.extend(planned[str(revision.id)] for revision in ordered)
     return (
         _edition_delta_types.MigrationPlan(
             modelo_id=str(definition.id),
@@ -60,6 +63,60 @@ def _plan(
         ),
         tuple(run.work),
     )
+
+
+def _planning_dependency(
+    run: _edition_delta_planning_state.PlanningRun,
+    position: int,
+) -> str | None:
+    """Return only the baseline the existing edition planner will actually read."""
+    source = run.sources[str(run.ordered[position].id)]
+    if _edition_delta_planning_mode.storage_authored(source.manifest):
+        declared = source.manifest.get("predecessor")
+        baseline = declared if isinstance(declared, str) else source.manifest.get("casilla_storage_baseline")
+        return baseline if isinstance(baseline, str) else None
+    predecessor, _basis, causes = _edition_delta_planning_predecessor.choose_predecessor(
+        position, run.ordered, source, reconsider_technical_roots=True
+    )
+    return None if causes else predecessor
+
+
+def _dependency_order(
+    run: _edition_delta_planning_state.PlanningRun,
+) -> tuple[tuple[int, ModeloRevision], ...]:
+    """Evaluate storage dependencies first without changing chronological selection or reporting.
+
+    Storage ancestry can point to a later edition. Keep each original position
+    for predecessor selection, and reject a planning cycle rather than invent
+    a different baseline. The walk is iterative and visits each edition once.
+    """
+    positions = {str(revision.id): position for position, revision in enumerate(run.ordered)}
+    settled: set[int] = set()
+    ordered: list[tuple[int, ModeloRevision]] = []
+    for start in range(len(run.ordered)):
+        path: list[int] = []
+        visiting: set[int] = set()
+        current = start
+        while current not in settled:
+            if current in visiting:
+                cycle = [*path[path.index(current) :], current]
+                chain = " -> ".join(repr(str(run.ordered[position].id)) for position in cycle)
+                raise _edition_delta_errors.MigrationRefusedError(f"cyclic edition planning dependency: {chain}")
+            path.append(current)
+            visiting.add(current)
+            dependency = _planning_dependency(run, current)
+            if dependency is None:
+                break
+            if dependency not in positions:
+                revision_id = str(run.ordered[current].id)
+                raise _edition_delta_errors.MigrationRefusedError(
+                    f"edition {revision_id!r} declares unavailable storage baseline {dependency!r}"
+                )
+            current = positions[dependency]
+        for position in reversed(path):
+            settled.add(position)
+            ordered.append((position, run.ordered[position]))
+    return tuple(ordered)
 
 
 def _lift_authored_edition(

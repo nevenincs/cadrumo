@@ -651,3 +651,8 @@ selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplific
 [[revisions."2025".family_removals]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total"}
+
+# Replace the earlier source-scoped disclosure owner.
+[[revisions."2025".family_removals]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-390-printed-disclosure-arithmetic-2024"}

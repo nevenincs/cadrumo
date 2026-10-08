@@ -7,7 +7,8 @@ revision_id = "2022"
 seed_source = "authored"
 review = { state = "generated", notes = "All32 semantic fields placed for 2022; original summary geometry BOE1999 PDF31 and source-pinned AEAT record design. Only01-05 are printed box numbers. Historical2017 design incorporates HFP/1308/2017 art3 and remains the2022 baseline; current2023 has changed identification instructions and province53. Manual applicability grade. Multiple recipients, automatic profile binding, cross-field controls, workbook regex validation and signatures remain pending." }
 generator_version = 1
-source_state_digest = "c594673837c6744182e38b52e27d0113dcc8c3d45ff30cb4fdf964f22ce34ea8"
+# Three renta_vitalicia section tokens now use the schema vocabulary; placement and wire owners are unchanged.
+source_state_digest = "261fc0aa0db8ee6ad0fefb6f2ba890e9bb445400d2abeb8dee1b023c6963c535"
 design_sources = [
     { source_ref = "boe-1999-22372-modelo-188-form-pdf", sha256 = "d5f5b00be87a49ddd0a84198ff1c18f7a073cf5520035ff41c65eae4a07d88c2" },
     { source_ref = "aeat-dr-188-2017", sha256 = "f86024198b4a94a747067658f5511e1b9e91cc553aaefe6241d8d3035404366f" },

@@ -16,28 +16,39 @@ from pathlib import Path
 import pytest
 
 from ...conformance.stamp import bundled_registry_root
+from ...pipeline.export_tree_serialization import render_toml_bytes
 from ..loader import load_modelo_directory, load_shared_catalogues
 from ..validate_export_layout_coverage import validate_export_layout_record_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _LAYOUT = Path("revisions") / "2010-y-siguientes" / "export_layouts" / "0001-declarations.toml"
-_SHIPPED_CONSTANT = (
-    'id = "modelo-360-page-01-constante-1897"\noffset = 1897\nlength = 5\nkind = "literal"\nliteral = "00000"\n'
-)
 
 
 def _modelo_360_with_constant(tmp_path: Path, *, literal: str) -> Path:
     """Copy the shipped Modelo 360 tree, re-declaring the @1897 constant's value."""
     modelo_dir = tmp_path / "360"
     shutil.copytree(bundled_registry_root() / "modelos" / "360", modelo_dir)
+    revision = load_modelo_directory(modelo_dir).revisions["2010-y-siguientes"]
+    generated = modelo_dir / "revisions" / "2010-y-siguientes" / "export"
+    assert generated.resolve().is_relative_to(tmp_path.resolve())
+    if generated.exists():
+        shutil.rmtree(generated)
     layout = modelo_dir / _LAYOUT
-    text = layout.read_text(encoding="utf-8")
-    assert _SHIPPED_CONSTANT in text
-    layout.write_text(
-        text.replace(_SHIPPED_CONSTANT, _SHIPPED_CONSTANT.replace('literal = "00000"', f'literal = "{literal}"')),
-        encoding="utf-8",
-    )
+    layout.parent.mkdir(exist_ok=True)
+    layouts = [item.model_dump(mode="json", exclude_none=True) for item in revision.export_layouts]
+    candidates = [
+        field
+        for item in layouts
+        for record in item["records"]
+        for field in record["fields"]
+        if field.get("offset") == 1897 and field.get("length") == 5
+    ]
+    assert len(candidates) == 1
+    assert candidates[0]["kind"] == "literal" and candidates[0]["literal"] == "00000"
+    candidates[0]["literal"] = literal
+    payload = {"revisions": {"2010-y-siguientes": {"export_layouts": layouts}}}
+    layout.write_bytes(render_toml_bytes(layout.name, payload))
     return modelo_dir
 
 
@@ -72,4 +83,4 @@ def test_any_other_value_in_the_reserved_bytes_is_refused(tmp_path: Path) -> Non
     lines = _reserved_write_lines(_modelo_360_with_constant(tmp_path, literal="00001"))
 
     assert len(lines) == 1
-    assert "'modelo-360-page-01-constante-1897' (@1897+5) writes data into @1897..1901" in lines[0]
+    assert "'m360-2010.pagina01.f109' (@1897+5) writes data into @1897..1901" in lines[0]

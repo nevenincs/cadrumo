@@ -1698,3 +1698,8 @@ selector = {revision = "2024-desde-09-y-3t", id = "m303-regimen-simplificado-fac
 [[revisions."2025".family_removals]]
 family = "workbook_parity_refs"
 selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-dr-late"}
+
+# Replace the inherited disclosure owner with this edition's own source-scoped owner.
+[[revisions."2025".family_removals]]
+family = "constructs"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-printed-disclosure-arithmetic-2024-desde-09-y-3t"}

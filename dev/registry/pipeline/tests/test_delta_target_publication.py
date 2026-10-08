@@ -23,12 +23,14 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ...compiler.loader import load_modelo_directory
+from .. import cli as tree_cli
 from .._tree_validation import GeneratedExportTreeValidationContext
 from ..candidate_staging import ignore_export_authority_directories, stage_generated_export_candidate
 from ..cli import (
@@ -291,10 +293,54 @@ def test_an_absent_tree_on_a_delta_target_publishes_and_derives_the_full_copys_r
     assert publication.target_export_root.is_dir()
     after = _tree_bytes(modelo_root)
     export_prefix = f"revisions/{_REVISION}/export/"
-    assert {path: data for path, data in after.items() if not path.startswith(export_prefix)} == declarations_before
+    metadata_path = f"revisions/{_REVISION}/revision.toml"
+    assert {
+        path: data for path, data in after.items() if not path.startswith(export_prefix) and path != metadata_path
+    } == {path: data for path, data in declarations_before.items() if path != metadata_path}
+    before_metadata = parse_toml(declarations_before[metadata_path].decode("utf-8"))
+    after_metadata = parse_toml(after[metadata_path].decode("utf-8"))
+    assert before_metadata["revisions"][_REVISION].pop("cleared_families")[0]["family"] == "export_layouts"
+    assert after_metadata == before_metadata
     published = load_modelo_directory(modelo_root).revisions[_REVISION]
     full_copy = compiled_bundled_authority().modelo(_MODELO).revisions[_REVISION]
     assert {str(c.id): c.export_refs for c in published.casillas} == {
         str(c.id): c.export_refs for c in full_copy.casillas
     }
     assert any(casilla.export_refs for casilla in published.casillas if str(casilla.id) in inherited)
+
+
+def test_absent_delta_export_clearance_and_tree_roll_back_together(tmp_path: Path, monkeypatch) -> None:
+    """A post-cutover refusal restores the exact metadata and absent export."""
+    target_root = _registry_copy(tmp_path / "target")
+    modelo_root = target_root / "modelos" / _MODELO
+    _withdraw_export_layouts(modelo_root, revision=_REVISION)
+    before = _tree_bytes(modelo_root)
+    prepared = _prepared(tmp_path / "publish", target_root)
+    _outcome, rendered, target_state = check_prepared_invocation(prepared)
+
+    def refuse_live(_prepared) -> None:
+        assert prepared.target_export_root.is_dir()
+        metadata = parse_toml((prepared.target_export_root.parent / "revision.toml").read_text(encoding="utf-8"))
+        assert "cleared_families" not in metadata["revisions"][_REVISION]
+        raise RegistryValidationError("planted post-cutover refusal")
+
+    monkeypatch.setattr(tree_cli, "_validate_final_live_target", refuse_live)
+    with pytest.raises(RegistryValidationError, match="previous revision was restored"):
+        publish_prepared_invocation(prepared, rendered, target_state)
+    assert _tree_bytes(modelo_root) == before
+
+
+def test_export_clearance_receipt_refuses_a_revision_edit_after_check(tmp_path: Path) -> None:
+    """The read-only receipt pins metadata as well as the absent output tree."""
+    target_root = _registry_copy(tmp_path / "target")
+    modelo_root = target_root / "modelos" / _MODELO
+    _withdraw_export_layouts(modelo_root, revision=_REVISION)
+    prepared = _prepared(tmp_path / "publish", target_root)
+    _outcome, rendered, target_state = check_prepared_invocation(prepared)
+    assert target_state.clearance_source_sha256 is not None
+    metadata = modelo_root / "revisions" / _REVISION / "revision.toml"
+    metadata.write_bytes(metadata.read_bytes() + b"\n# concurrent source edit\n")
+    before = _tree_bytes(modelo_root)
+    with pytest.raises(RegistryValidationError, match="clearance source changed after check"):
+        publish_prepared_invocation(prepared, rendered, target_state)
+    assert _tree_bytes(modelo_root) == before

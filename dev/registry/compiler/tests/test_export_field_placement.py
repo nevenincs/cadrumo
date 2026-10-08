@@ -194,15 +194,20 @@ def test_a_binding_derived_record_is_judged_on_its_binding_spans_too() -> None:
         for candidate in layout.records
         if candidate.id == "modelo-720-type-1"
     )
+    # Generated publication now expands the body. Reconstruct the unresolved
+    # inline-plus-binding declaration whose merge behavior this test proves.
+    assert all(field.offset is not None for field in record.fields)
+    inline = tuple(
+        field for field in record.fields if field.offset is not None and (field.offset < 58 or field.offset == 181)
+    )
+    record = record.model_copy(update={"fields": inline, "binding_record": "type_1"})
     prefix = f"modelo {modelo.id} revision {revision_id}"
     spans = binding_export_spans(revision)
 
     inline_only = record_placed_spans(record)
-    assert len(inline_only) == 1
-    assert inline_only[0].offset == 181
-    assert export_record_placement_advisories(prefix=prefix, record=record)[0].startswith(
-        f"{prefix}: export record 'modelo-720-type-1' RECORD_STARTS_LATE",
-    )
+    assert inline_only[0].offset == 1
+    assert inline_only[-1].offset == 181
+    assert any("GAP" in advisory for advisory in export_record_placement_advisories(prefix=prefix, record=record))
 
     with_bindings = record_placed_spans(record, spans)
     assert len(with_bindings) > len(inline_only)

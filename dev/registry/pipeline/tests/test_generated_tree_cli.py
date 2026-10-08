@@ -661,7 +661,6 @@ def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_pa
 
 # A full candidate compile of modelo 390 and its supporting modelos runs about
 # 245s serially, so the lane's 300s ceiling leaves no margin under parallel load.
-@pytest.mark.timeout(900)
 def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_path: Path) -> None:
     """The operator path validates M390 without consulting either prior export tree."""
     prepared = prepare_generated_tree_invocation(

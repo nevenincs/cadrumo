@@ -57,7 +57,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUNDLED = bundled_path("registry", "aeat")
 _PILOT = "303"
-_NO_EXPORT_SURFACE = "194"
+#: M136's two enrolled form-only editions have no export surface and can be
+#: detached losslessly. M194 now publishes exports and its distinct lineage
+#: attestation references must remain on their original predecessor edges.
+_NO_EXPORT_SURFACE = "136"
 _ROW_HEADER = re.compile(r'^\[\[revisions\.(?:"[^"\n]+"|[^".\]\n]+)\.casillas\]\]$', re.MULTILINE)
 _ROW_SOURCE_LINE = re.compile(r"^source_refs = \[[^\]]*\]\n", re.MULTILINE)
 #: Findings the pilot is expected to carry: bytes no scenario covers, and labels
@@ -197,9 +200,7 @@ def registry_copy(tmp_path_factory: pytest.TempPathFactory) -> Callable[[Path, s
 
     ``_build_registry`` re-materialises every edition of a modelo out of the
     bundled corpus, and its output is a pure function of the modelo id, so the
-    module was paying for the same tree repeatedly: nine builds covering three
-    distinct modelos. Measured here, a build costs 16.6 s for the pilot and 9.1 s
-    for 194 against 0.5 s and 0.3 s to copy the finished tree.
+    module would otherwise pay for the same materialized tree repeatedly.
 
     Every consumer still receives its own directory, because these tests plant
     defects in the tree they are given.
@@ -798,6 +799,11 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(
     registry = registry_copy(tmp_path / "target", _NO_EXPORT_SURFACE)
     before = _load(registry, _NO_EXPORT_SURFACE)
     assert not any(revision.export_layouts for revision in before.revisions.values())
+    assert len(before.revisions) > 1, "the clean publication fixture must exercise inheritance"
+    modelo_dir = registry / "modelos" / _NO_EXPORT_SURFACE
+    before_files = {
+        path.relative_to(modelo_dir).as_posix(): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()
+    }
     pristine = shutil.copytree(registry, tmp_path / "pristine" / "registry" / "aeat")
 
     outcome = migrate_modelo(
@@ -806,6 +812,10 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(
 
     assert outcome.report is not None and outcome.report.findings == ()
     assert outcome.applied
+    assert outcome.changed
+    assert before_files != {
+        path.relative_to(modelo_dir).as_posix(): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()
+    }, "the clean proof must publish an actual source transformation"
     published = _load(registry, _NO_EXPORT_SURFACE)
     assert {str(r.id): r.predecessor for r in published.revisions.values()} == {
         str(edition.revision_id): None for edition in outcome.plan.editions

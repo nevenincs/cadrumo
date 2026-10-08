@@ -59,7 +59,7 @@ _PAGE_2_DELTA_OWNERS = (
         "A86",
         "modelo-390-page-02-casilla-repercutido-recargo-super-reducido",
         "casilla",
-        "iva.anual.repercutido.recargo.super-reducido",
+        "iva.anual.repercutido.recargo.tipo-0-5.cuota",
     ),
     (
         "A87",
@@ -83,7 +83,7 @@ _PAGE_2_DELTA_OWNERS = (
         "A90",
         "modelo-390-page-02-casilla-repercutido-recargo-reducido",
         "casilla",
-        "iva.anual.repercutido.recargo.reducido",
+        "iva.anual.repercutido.recargo.tipo-1-4.cuota",
     ),
     (
         "A91",
@@ -95,7 +95,7 @@ _PAGE_2_DELTA_OWNERS = (
         "A92",
         "modelo-390-page-02-casilla-repercutido-recargo-general",
         "casilla",
-        "iva.anual.repercutido.recargo.general",
+        "iva.anual.repercutido.recargo.tipo-5-2.cuota",
     ),
     (
         "A93",
@@ -200,7 +200,7 @@ def test_m390_recargo_relayout_reuses_522_predecessor_anchors_and_pins_the_exact
     assert len(predecessor_fields) == 537
     assert len(fields) == 541
     assert len(set(predecessor_fields) & set(fields) - measured_delta) == 522
-    assert sum(len(header.fields) for header in design.auxiliary_envelope_headers) == 13
+    assert sum(len(envelope.prefix_fields) for envelope in design.variable_envelopes) == 13
 
     predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_PREDECESSOR_EXERCISE}"))
     semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_DESIGN_EXERCISE}"))

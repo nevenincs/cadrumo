@@ -18,6 +18,46 @@ _M714_PINS: Final[dict[str, tuple[str, str]]] = {
 }
 
 
+def m714_checkbox_for(joined_field: JoinedRecordDesignField, identity: RenderProfileDesignIdentity) -> bool:
+    """Recognize the six source-pinned checkboxes, not arbitrary zero/one codes."""
+    if not _reviewed_m714_source(identity):
+        return False
+    field = joined_field.parser_field
+    anchors = {
+        ("714-01 Patrimonio", 49, "A49", "44", 663, "identificacion-1"),
+        ("714-01 Patrimonio", 50, "A50", "45", 664, "identificacion-2"),
+        ("714-01 Patrimonio", 52, "A52", "47", 667, "identificacion-4"),
+        ("714-01 Patrimonio", 57, "A57", "52", 704, "identificacion-10"),
+        ("714-01 Patrimonio", 66, "A66", "61", 816, "identificacion-12"),
+        ("714-Ingreso o Devolución", 20, "A20", "15", 139, "declaracion-negativa"),
+    }
+    return (
+        field.aeat_type == "Num"
+        and field.length == 1
+        and field.content == '"1" o "0"'
+        and field.sheet == field.record_identity
+        and (
+            field.record_identity,
+            field.source_row,
+            field.source_cell,
+            field.ordinal,
+            field.offset,
+            str(joined_field.semantic_entry.casilla_id),
+        )
+        in anchors
+    )
+
+
+def _reviewed_m714_source(identity: RenderProfileDesignIdentity) -> bool:
+    pin = _M714_PINS.get(str(identity.source_ref))
+    if pin is None:
+        return False
+    epoch, digest = pin
+    if str(identity.modelo) != "714" or identity.design_epoch != epoch or identity.source_sha256 != digest:
+        raise RegistryValidationError("M714 numeric source reading is unreviewed or stale")
+    return True
+
+
 def m714_numeric_values_for(
     joined_field: JoinedRecordDesignField, identity: RenderProfileDesignIdentity
 ) -> tuple[str, ...] | None:
@@ -33,12 +73,8 @@ def m714_numeric_values_for(
     still precisely 0 through 5: no missing value is inferred and no arbitrary
     duplicate enumeration is admitted. The raw duplicate survives in provenance.
     """
-    pin = _M714_PINS.get(str(identity.source_ref))
-    if pin is None:
+    if not _reviewed_m714_source(identity):
         return None
-    epoch, digest = pin
-    if str(identity.modelo) != "714" or identity.design_epoch != epoch or identity.source_sha256 != digest:
-        raise RegistryValidationError("M714 numeric source reading is unreviewed or stale")
     field = joined_field.parser_field
     if field.aeat_type != "Num":
         return None

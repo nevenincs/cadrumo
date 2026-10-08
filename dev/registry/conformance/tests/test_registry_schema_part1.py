@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     CandidateFactAuthority,
     validating_governed_facts,
 )
-from cadrumo.domain.calculations.registry.invoice_bindings import CollectibleInvoiceProvider
+from cadrumo.domain.calculations.registry.invoice_bindings import M349IntracommunityOperationProvider
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.schema import (
     BindingDefinition,
@@ -605,26 +605,26 @@ def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
     revision = modelo.revisions["2020-y-siguientes"]
     binding = next(item for item in revision.bindings if item.id == "iva-349-declarante-numero-operadores")
     committed = binding.provider
-    assert isinstance(committed, CollectibleInvoiceProvider)
+    assert isinstance(committed, M349IntracommunityOperationProvider)
 
-    def with_provider(provider: CollectibleInvoiceProvider, op: BindingAggregationOp) -> ModeloRevision:
+    def with_provider(provider: M349IntracommunityOperationProvider, op: BindingAggregationOp) -> ModeloRevision:
         return _with_binding(
             revision,
             binding.model_copy(update={"provider": provider, "aggregation": BindingAggregation(op=op)}),
         )
 
-    rebuilt = CollectibleInvoiceProvider(
+    rebuilt = M349IntracommunityOperationProvider(
         fact="operator_count",
         claves=committed.claves,
         rectification_scope=committed.rectification_scope,
     )
     _validate_revision(modelo, catalogues, with_provider(rebuilt, BindingAggregationOp.COUNT_DISTINCT))
 
-    CollectibleInvoiceProvider.model_validate_json(
+    M349IntracommunityOperationProvider.model_validate_json(
         json.dumps({"fact": "operator_count", "claves": list(committed.claves)})
     )
     with pytest.raises(ValidationError, match="fact"):
-        CollectibleInvoiceProvider.model_validate_json(json.dumps({"claves": list(committed.claves)}))
+        M349IntracommunityOperationProvider.model_validate_json(json.dumps({"claves": list(committed.claves)}))
 
     cases = (
         (
@@ -635,7 +635,7 @@ def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
         ),
         (
             "rectification-delta-without-scope",
-            CollectibleInvoiceProvider(
+            M349IntracommunityOperationProvider(
                 fact="rectified_base_delta_sum",
                 claves=committed.claves,
                 rectification_scope=committed.rectification_scope,
@@ -645,7 +645,7 @@ def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
         ),
         (
             "period-rows-without-scope",
-            CollectibleInvoiceProvider(
+            M349IntracommunityOperationProvider(
                 fact="row_field",
                 row_field="base_imponible",
                 grouping="operator_clave_period",

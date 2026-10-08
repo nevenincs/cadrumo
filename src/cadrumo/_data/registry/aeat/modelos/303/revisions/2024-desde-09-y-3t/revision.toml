@@ -1845,3 +1845,8 @@ required_text = ["Total volumen de operaciones", "121 Ley IVA", "97 + 98 - 79 - 
 [[revisions.2024-desde-09-y-3t.family_removals]]
 family = "workbook_parity_refs"
 selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-dr-early"}
+
+# Replace the inherited disclosure owner with this edition's own source-scoped owner.
+[[revisions."2024-desde-09-y-3t".family_removals]]
+family = "constructs"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-printed-disclosure-arithmetic-2024-hasta-08-y-2t"}

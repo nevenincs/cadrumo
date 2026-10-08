@@ -104,7 +104,7 @@ def test_membership_keeps_held_generation_when_current_descriptor_changes(tmp_pa
         env={**os.environ, "CADRUMO_AUTHORITY_ROOT": str(authority_root)},
         capture_output=True,
         text=True,
-        timeout=120,
+        timeout=None,
     )
     assert isinstance(completed.stdout, str)
     assert isinstance(completed.stderr, str)

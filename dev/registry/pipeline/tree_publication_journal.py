@@ -167,6 +167,19 @@ def load_generated_export_publication_journal(path: Path) -> GeneratedExportPubl
 
 def _require_journal_supersession_shape(journal: GeneratedExportPublicationJournal) -> None:
     """Keep normal export journals distinct from complete supersession bundles."""
+    if journal.retires_export_clearance is not None:
+        if (
+            journal.retires_export_clearance is not True
+            or journal.is_supersession
+            or journal.generated_layout_id is not None
+            or journal.superseded_construct_references is not None
+            or journal.supersession_source_sha256 is None
+            or journal.candidate_revision_sha256 is None
+        ):
+            raise RegistryValidationError("generated publication journal has an incomplete clearance retirement pin")
+        if journal.cleanup_started is not None and journal.state != "committed":
+            raise RegistryValidationError("generated clearance cleanup cannot begin before commit")
+        return
     supersession_values = (
         journal.generated_layout_id,
         journal.superseded_construct_references,

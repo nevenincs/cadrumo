@@ -61,7 +61,10 @@ from .edition_candidate_staging import (
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .export_tree_models import RenderedExportTree
-from .generated_export_inheritance import select_generated_export_inheritance
+from .generated_export_inheritance import (
+    generated_export_source_chain_fingerprint,
+    select_generated_export_inheritance,
+)
 from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .generated_form_bridge import (
     GeneratedFormBridge,
@@ -274,10 +277,17 @@ def prepare_generated_tree_invocation(
         (item for ref, item in authority.catalogues.sources.items() if str(ref) == invocation.source_ref),
         None,
     )
+    inheritance = select_generated_export_inheritance(
+        authority,
+        target_root,
+        modelo=invocation.modelo,
+        revision=invocation.revision,
+        retain_source_chain=True,
+    )
     bootstrap = None
     bootstrap_target: GeneratedExportBootstrapTarget | None = None
     supersession: GeneratedExportSupersession | None = None
-    if not target_export_root.exists():
+    if not target_export_root.exists() and inheritance is None:
         if source is None:
             raise ValueError(f"no source {invocation.source_ref!r} exists for bootstrap target selection")
         bootstrap_target = reviewed_bootstrap_target(invocation, source_sha256=source.sha256)
@@ -330,14 +340,24 @@ def prepare_generated_tree_invocation(
         raise ValueError(str(error)) from error
 
     candidate_root = root / "candidate" / "registry" / "aeat"
-    inheritance = select_generated_export_inheritance(
-        authority,
-        target_root,
-        modelo=invocation.modelo,
-        revision=invocation.revision,
-    )
     source_modelo = authority.modelo(invocation.modelo)
-    retain_source_chain = inheritance is None and requires_source_chain(source_modelo.revisions[invocation.revision])
+    inherited_revisions = () if inheritance is None else tuple(item[0] for item in inheritance.pinned_ancestors)
+    retain_source_chain = requires_source_chain(source_modelo.revisions[invocation.revision]) or (
+        inheritance is not None
+        and any(
+            source_modelo.revisions[revision_id].casilla_continuidad_evolutions
+            for revision_id in (*inherited_revisions, invocation.revision)
+        )
+    )
+    source_chain_sha256 = None
+    source_chain_non_export_sha256 = None
+    if retain_source_chain and inheritance is not None:
+        source_chain_sha256 = generated_export_source_chain_fingerprint(
+            target_root, modelo=invocation.modelo, revision=invocation.revision
+        )
+        source_chain_non_export_sha256 = generated_export_source_chain_fingerprint(
+            target_root, modelo=invocation.modelo, revision=invocation.revision, omit_target_export=True
+        )
     stage_generated_export_candidate(
         target_root,
         candidate_root,
@@ -361,6 +381,9 @@ def prepare_generated_tree_invocation(
         required_grade=authority.modelo(invocation.modelo).revisions[invocation.revision].effective_authority_grade,
         scope_authority=authority,
         source_chain_revisions=tuple(source_modelo.revisions) if retain_source_chain else (),
+        source_chain_registry_root=(target_root.resolve() if retain_source_chain and inheritance is not None else None),
+        source_chain_sha256=source_chain_sha256,
+        source_chain_non_export_sha256=source_chain_non_export_sha256,
         supporting_modelos=supporting_modelos(invocation.modelo),
         # The complete validated source above already supplies continuity scope.
         # A second, detached sibling witness is unused by that validation path
@@ -650,6 +673,7 @@ def publish_prepared_invocation(
 
 def _validate_final_live_target(prepared: PreparedGeneratedTreeInvocation) -> None:
     """Compile the complete live registry and prove the named export is current before commit."""
+    _require_retained_source_after_cutover(prepared)
     authority = compile_validated_authority(
         prepared.target_root,
         bundled_path(),
@@ -669,6 +693,25 @@ def _validate_final_live_target(prepared: PreparedGeneratedTreeInvocation) -> No
             "generated target failed live-root currentness after cutover: "
             f"state={fact.state.value}; detail={fact.detail}",
         )
+
+    _require_retained_source_after_cutover(prepared)
+
+
+def _require_retained_source_after_cutover(prepared: PreparedGeneratedTreeInvocation) -> None:
+    """Keep every captured source byte except the separately validated target export."""
+    expected = prepared.validation.source_chain_non_export_sha256
+    if expected is None:
+        return
+    if prepared.validation.source_chain_registry_root != prepared.target_root.resolve():
+        raise RegistryValidationError("generated source-chain origin differs from the publication root")
+    current = generated_export_source_chain_fingerprint(
+        prepared.target_root,
+        modelo=prepared.invocation.modelo,
+        revision=prepared.invocation.revision,
+        omit_target_export=True,
+    )
+    if current != expected:
+        raise RegistryValidationError("generated source-chain facts changed during export cutover")
 
 
 def require_republication_eligibility(
@@ -1302,7 +1345,7 @@ def republish_target_command(
         bool,
         typer.Option(
             "--reconcile-scalar-sources",
-            help="Preserve an authored draft while reviewed manual export fields use existing canonical casillas.",
+            help="Preserve an authored draft through reviewed manual-input or rate-box scalar source corrections.",
         ),
     ] = False,
 ) -> None:

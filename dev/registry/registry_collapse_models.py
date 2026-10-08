@@ -17,7 +17,10 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     OverrideFactQuery,
     ScalarFactQuery,
 )
-from cadrumo.domain.calculations.registry.keyed_families import CANONICAL_FAMILY_SPECS
+from cadrumo.domain.calculations.registry.keyed_families import (
+    CANONICAL_FAMILY_SPECS,
+    family_source_default_fields,
+)
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_SCHEMA_FAMILY_FIELDS,
 )
@@ -41,6 +44,12 @@ _REPRESENTATION_ONLY: Final = frozenset(
         "cleared_families",
         "scoped_families",
     }
+)
+
+
+# Only typed revision declarations carry these storage source defaults.
+_REVISION_SOURCE_DEFAULT_FIELDS: Final = frozenset(
+    field for _section, field in family_source_default_fields(include_casillas=True)
 )
 
 

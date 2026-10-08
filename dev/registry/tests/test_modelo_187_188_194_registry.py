@@ -81,28 +81,26 @@ def test_modelo_187_188_194_validators_accept_committed_definitions(modelo_id: s
 
 @pytest.mark.parametrize("modelo_id", _MODELOS)
 def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
-    """These hoja-resumen forms compute nothing, so no formula may be declared.
+    """No box may copy another printed concept as a fabricated total.
 
-    **Correcting what this module asserted.** It required a
-    ``modelo-NNN-total`` owned by a construct, and a companion test asserted
-    "casilla 05 equals casilla 04 per each AEAT form's own printed total row".
-    Reading the printed annexes disproved that appeal:
-
-    * Orden HAP/1608/2014 ANEXO I numbers modelo 187 boxes 01 to 04 and prints
-      NO box 05 at all; box 03 is "importe total de las enajenaciones", not a
-      base.
-    * The 1999 ordenes' ANEXO IV (188) and ANEXO VIII (194) number 01 to 05 in
-      two rows split by sign of the base, where 03 is the retenciones and 05 is
-      the NEGATIVE-base figure -- an input, not a total of anything.
-
-    So the "total" was an identity ``add`` over one casilla, writing to a box
-    that either did not exist or held a different declared figure. Every box on
-    these three sheets is operator input; the formulas were deleted and the
-    absence is the contract now.
+    M194 now routes positive bases, withheld amounts and negative-base magnitudes
+    from their own signed-operation summaries. M187/M188 remain manual.
     """
     modelo, _ = _committed_modelo(modelo_id)
     revision = modelo.revisions[_REVISION_BY_MODELO[modelo_id]]
 
+    if modelo_id == "194":
+        assert {
+            str(formula.target_casilla_id): (formula.expression.op, str(formula.expression.args[0].binding))
+            for formula in revision.formulas
+        } == {
+            "02": ("copy", "modelo-194-resumen-base-positiva"),
+            "03": ("copy", "modelo-194-resumen-retenciones-total"),
+            "05": ("negate", "modelo-194-resumen-base-negativa"),
+        }
+        owned = set().union(*(set(construct.formulas) for construct in revision.constructs))
+        assert {formula.id for formula in revision.formulas} <= owned
+        return
     assert revision.formulas == (), (
         f"modelo {modelo_id} declares {len(revision.formulas)} formula(s); its printed "
         "hoja-resumen computes none of its boxes"
@@ -187,7 +185,13 @@ def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:
         assert revision.period_selector.year_to == last_year
         assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-194-")} == {source_ref}
         assert {amendment_ref, commencement_ref} <= set(revision.legal_refs)
-        assert revision.export_layouts == ()
+        assert revision.export_layouts
+        assert all(
+            source_ref in field.source_refs
+            for layout in revision.export_layouts
+            for record in layout.records
+            for field in record.fields
+        )
 
         assert source.record_design_epoch == str(filing_year)
         assert source.applies_from == date(filing_year, 1, 1)
@@ -288,8 +292,19 @@ def test_modelo_187_188_194_summary_is_the_printed_box_set(modelo_id: str, expec
     modelo, _ = _committed_modelo(modelo_id)
     revision = modelo.revisions[_REVISION_BY_MODELO[modelo_id]]
 
-    summary = tuple(casilla for casilla in revision.casillas if modelo_id != "188" or casilla.section == ("resumen",))
+    summary = tuple(
+        casilla for casilla in revision.casillas if modelo_id not in {"188", "194"} or casilla.section == ("resumen",)
+    )
     assert tuple(str(casilla.id) for casilla in summary) == expected
+    if modelo_id == "194":
+        assert {str(c.id): c.input_kind.value for c in summary} == {
+            "01": "bound",
+            "02": "computed",
+            "03": "computed",
+            "04": "bound",
+            "05": "computed",
+        }
+        return
     assert all(casilla.input_kind.value == "manual" for casilla in summary), (
         "every box on these hoja-resumen forms is declarante input"
     )

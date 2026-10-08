@@ -230,11 +230,7 @@ padding = 'left_zero'
 justification = 'right'
 signed = false
 design_type = 'Num'
-value_policy = 'enumerated-digits'
-allowed_values = [
-    '0',
-    '1',
-]
+value_policy = 'selected-1-unselected-0'
 legal_refs = ['orden-hac-277-2026:art-4']
 source_refs = ['aeat-dr-714-2025']
 

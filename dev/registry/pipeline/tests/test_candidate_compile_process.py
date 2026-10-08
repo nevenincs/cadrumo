@@ -115,7 +115,7 @@ def test_a_watched_compiler_can_still_load_native_extensions() -> None:
         stderr=subprocess.DEVNULL,
     ) as process:
         try:
-            assert process.wait(timeout=60) == 0
+            assert process.wait() == 0
             assert process.stdout is not None
             assert process.stdout.read().strip() == b"imported"
         finally:

@@ -1,5 +1,0 @@
-[[revisions."2004-2015".constructs]]
-id = "modelo-309-papel-identificacion-complementaria"
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
-source_refs = ["boe-modelo-309-2003-form-pdf", "aeat-modelo-309-instructions"]
-casilla_ids = ["papel-nombre-completo", "papel-complementaria"]

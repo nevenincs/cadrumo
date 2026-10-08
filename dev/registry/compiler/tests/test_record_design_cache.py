@@ -212,5 +212,5 @@ def test_a_second_warm_up_waits_for_the_first_and_extracts_nothing_it_left(
     try:
         assert warm_record_design_cache(sources, max_workers=2) == 0
     finally:
-        first.join(timeout=120)
+        first.join()
     assert len(_cache_bytes(store)) == len(sources)

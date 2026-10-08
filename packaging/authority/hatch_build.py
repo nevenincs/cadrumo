@@ -274,12 +274,22 @@ class CustomBuildHook(_CustomBuildHookBase):
             from dev.packaging.google_oauth import build_client_json, stage_build_client
 
             client = build_client_json(build_root)
-            self._oauth_stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-")
+            staging_root = build_root / "build"
+            staging_root.mkdir(parents=True, exist_ok=True)
+            self._oauth_stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-", dir=staging_root)
             staged = stage_build_client(Path(self._oauth_stage.name), client)
         finally:
             sys.path[:] = original_path
         prefix = "src/" if self.target_name == "sdist" else ""
-        force_include[str(staged)] = f"{prefix}cadrumo/_data/google/oauth_client.json"
+        resource_destination = f"{prefix}cadrumo/_data/google/oauth_client.json"
+        # Internal staging reserves its source path in Hatch, whereas an sdist
+        # rebuild also naturally selects the embedded resource at this target.
+        # Reserve that one target explicitly so the validated staged copy is
+        # admitted exactly once, including when build settings override it.
+        self.build_config.build_reserved_paths.add(
+            self.build_config.get_distribution_path(str(Path(resource_destination)))
+        )
+        force_include[str(staged)] = resource_destination
         if self.target_name == "sdist":
             # Only these build modules cross the existing dev/** exclusion;
             # the wheel contains neither development tooling nor dotenv files.

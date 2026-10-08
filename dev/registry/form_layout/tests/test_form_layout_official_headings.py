@@ -135,10 +135,21 @@ def test_every_quote_stands_on_its_cited_line_of_a_source_its_revision_cites() -
     assert ungrounded == []
 
 
+@cache
+def _generated_layout(modelo: str, revision: str) -> FormLayoutDefinition:
+    """Read the quote consumer output; authored forms own their separately grounded headings."""
+    layout = _generate(modelo, revision, *read_official_headings().for_revision(modelo, revision))
+    assert layout is not None
+    return layout
+
+
 def test_every_quote_heads_its_part_in_the_committed_layout() -> None:
     missing = []
     for quote in read_official_headings().quotes:
-        found = {(page, section): heading for page, section, heading in _parts(_layout(quote.modelo, quote.revision))}
+        found = {
+            (page, section): heading
+            for page, section, heading in _parts(_generated_layout(quote.modelo, quote.revision))
+        }
         if quote.column is None and found.get((quote.page, quote.section)) != quote.text:
             missing.append(quote.describe())
     assert missing == []
@@ -223,7 +234,8 @@ def test_an_ungrounded_or_misplaced_quote_is_refused(changes: dict[str, object],
 
 
 def test_a_quote_for_a_part_the_design_already_names_is_refused() -> None:
-    layout = _layout("130", "2019-y-siguientes")
+    layout = _generate("130", "2019-y-siguientes")
+    assert layout is not None
     page = layout.pages[0]
     section = page.sections[0]
     assert section.official_heading is not None

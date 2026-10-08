@@ -47,6 +47,7 @@ _ARITHMETIC_CAPTION: Final = re.compile(r"\(\s*\d+(?:\s*[-+x×*/]\s*\d+)+\s*\)")
 #: An apartado ordinal opening a heading: ``5. Operaciones``, never ``9.1`` or ``80.Tres``.
 _APARTADO: Final = re.compile(r"(?<!\S)(\d{1,3})\.\s+(?=[^\W\d_])")
 _DIGITS: Final = re.compile(r"\d+")
+_CITED_PAGE: Final = re.compile(r"\bpage\s+(\d+(?:\s+bis)?)\s*,\s*printed\s+\d+", re.IGNORECASE)
 #: A line is the publisher's running head or foot when it recurs, digits aside,
 #: on more than this share of the document's pages.
 _RUNNING_SHARE: Final[float] = 0.5
@@ -59,6 +60,16 @@ class OfficialFormUnavailableError(Exception):
 
 def _folded(text: str) -> str:
     return " ".join(text.split()).casefold()
+
+
+def _printed_label(reference: str) -> str:
+    """Read the explicit form page label from an authored citation, retaining literal labels.
+
+    A citation's annex page and its BOE printed page are distinct: only the
+    explicitly named annex page identifies the label printed on the form.
+    """
+    match = _CITED_PAGE.search(reference)
+    return reference if match is None else f"Pág. {match.group(1)}"
 
 
 def apartado_ordinal(heading: str | None) -> str | None:
@@ -86,7 +97,8 @@ class PrintedPage:
         and ``Pág. 1`` is not printed by a running head reading ``Pág. 12135``.
         """
         ordered = sorted(
-            {_folded(label): label for label in candidates if label.strip()}.items(), key=lambda item: -len(item[0])
+            {_folded(_printed_label(label)): label for label in candidates if label.strip()}.items(),
+            key=lambda item: -len(item[0]),
         )
         if not ordered:
             return frozenset[str]()

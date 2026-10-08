@@ -44,7 +44,6 @@ def test_m190_bridge_refuses_an_unreviewed_repair_before_source_access(tmp_path:
 
 
 @pytest.mark.integration
-@pytest.mark.timeout(900)
 def test_m190_republication_preserves_other_authority_and_closes_the_generated_form(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

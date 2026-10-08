@@ -8,11 +8,13 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 
 from ...compiler.authority import compiled_bundled_authority
 from .._export_tree import render_complete_export_tree
 from ..export_field_numeric_derivation import _numeric_derivation
-from ..export_field_numeric_source_pins import m714_numeric_values_for
+from ..export_field_numeric_source_pins import m714_checkbox_for, m714_numeric_values_for
 from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
 from ..render_profile import validate_render_profile
 
@@ -70,6 +72,28 @@ def test_complete_official_design_renders_with_its_exact_numeric_profile(authori
     assert anchored["714-10 Patrimonio", 23].decimals == 2
     source_rows = {(field.parser_field.sheet, field.parser_field.source_row): field for field in inputs.joined.fields}
     identity = inputs.render_profile.design_identity
+    checkbox_anchors = [("714-01 Patrimonio", row) for row in (49, 50, 52, 57, 66)] + [("714-Ingreso o Devolución", 20)]
+    for anchor in checkbox_anchors:
+        checkbox = anchored[anchor]
+        assert checkbox.value_policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0
+        assert [render_fixed_width_export_field(checkbox, value) for value in (True, False, None)] == ["1", "0", "0"]
+        joined_checkbox = source_rows[anchor]
+        assert checkbox.offset is not None
+        with pytest.raises(RegistryValidationError, match="unreviewed or stale"):
+            m714_checkbox_for(joined_checkbox, identity.model_copy(update={"source_sha256": "0" * 64}))
+        for changed in ({"offset": checkbox.offset + 1}, {"content": '"0" o "1"'}, {"length": 2}):
+            assert not m714_checkbox_for(
+                joined_checkbox.model_copy(
+                    update={"parser_field": joined_checkbox.parser_field.model_copy(update=changed)}
+                ),
+                identity,
+            )
+        assert not m714_checkbox_for(
+            joined_checkbox.model_copy(
+                update={"semantic_entry": joined_checkbox.semantic_entry.model_copy(update={"casilla_id": "other"})}
+            ),
+            identity,
+        )
     for anchor in (("714-01 Patrimonio", 37), ("714-01 Patrimonio", 51), ("714-03 Patrimonio", 27)):
         joined_field = source_rows[anchor]
         with pytest.raises(RegistryValidationError, match="unreviewed or stale"):

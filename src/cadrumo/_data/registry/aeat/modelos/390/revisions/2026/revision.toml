@@ -223,7 +223,6 @@ source_ref = "boe-modelo-390-2026-printed-calculations"
 required_text = ["92 + 659 - 93 - 112"]
 
 [revisions."2026".family_overrides.fields.expression]
-op = "subtract"
 
 [[revisions."2026".family_overrides.fields.expression.args]]
 op = "add"
@@ -276,6 +275,9 @@ selector = {revision = "2025", id = "modelo-390-export"}
 family = "application_links"
 selector = {revision = "2025", id = "modelo-390-extractor"}
 
+[[revisions."2026".family_removals]]
+family = "constructs"
+selector = {revision = "2025", id = "modelo-390-printed-disclosure-arithmetic-2025"}
 [[revisions."2026".lineage_attestations]]
 family = "casillas"
 continuidad_id = "iva-anual-repercutido-recargo-tipo-0-26-base"
@@ -325,3 +327,5 @@ origin = "grounded"
 evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [693] at the 1 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["boe-modelo-390-2026-form"]
+
+# Replace the earlier source-scoped disclosure owner.

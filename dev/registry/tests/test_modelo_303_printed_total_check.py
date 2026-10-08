@@ -46,6 +46,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 
 from ..compiler.loader import load_registry_tree
+from ..pipeline.export_tree_serialization import render_toml_bytes
 from ._gate_support import mutate_declaration, scratch_registry_tree
 from ._modelo_303_registry_support import load_modelo_303
 
@@ -373,27 +374,27 @@ def test_the_check_is_general_and_refuses_an_untranscribed_2022_box() -> None:
 
 
 def _remove_declaration(modelo_directory: Path, edition: str, predicate: VerificationPredicateDefinition) -> None:
-    refs = ", ".join(f'"{ref}"' for ref in predicate.legal_refs)
-    fragment = mutate_declaration(
-        modelo_directory,
-        revision_id=edition,
-        section="verification_predicates",
-        find=(
-            f"[[revisions.{edition}.verification_predicates]]\n"
-            f'id = "{predicate.id}"\n'
-            f'predicate_id = "{predicate.predicate_id}"\n'
-            f"expression = '{predicate.expression}'\n"
-            f"legal_refs = [{refs}]\n"
-        ),
-        replace="",
-    )
-    # An edition whose only declaration this was had no section before it; the
-    # loader refuses both a fragment declaring no revision table and an empty
-    # section directory.
-    if not tomllib.loads(fragment.path.read_text(encoding="utf-8")):
-        fragment.path.unlink()
-        if not any(fragment.path.parent.iterdir()):
-            fragment.path.parent.rmdir()
+    """Remove a typed member regardless of TOML quoting and extra metadata."""
+    removed = 0
+    for path in (modelo_directory / "revisions" / edition).rglob("*.toml"):
+        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        table = payload["revisions"][edition]
+        rows = table.get("verification_predicates", [])
+        kept = [row for row in rows if row["id"] != str(predicate.id)]
+        removed += len(rows) - len(kept)
+        if "verification_predicates" in table:
+            table["verification_predicates"] = kept
+        overrides = table.get("family_overrides", [])
+        retained = [
+            row
+            for row in overrides
+            if not (row["family"] == "verification_predicates" and row["selector"].get("id") == str(predicate.id))
+        ]
+        removed += len(overrides) - len(retained)
+        if "family_overrides" in table:
+            table["family_overrides"] = retained
+        path.write_bytes(render_toml_bytes(path.name, payload))
+    assert removed == 1, (edition, predicate.id, removed)
 
 
 def test_mutation_removing_the_predicate_lets_the_unprinted_total_through(tmp_path: Path) -> None:
@@ -426,14 +427,29 @@ def test_mutation_removing_the_predicate_lets_the_unprinted_total_through(tmp_pa
 
 def test_mutation_dropping_a_design_addend_breaks_design_parity(tmp_path: Path) -> None:
     scratch_root = scratch_registry_tree(tmp_path, "303")
-    mutate_declaration(
-        scratch_root / "modelos" / "303",
-        revision_id="2024-desde-09-y-3t",
-        section="verification_predicates",
-        member='id = "equals-sum:dr303-27-equals-printed-summands"',
-        find='"24", "26"])',
-        replace='"24"])',
-    )
+    directory = scratch_root / "modelos" / "303" / "revisions" / "2024-desde-09-y-3t"
+    mutated = 0
+    for path in directory.rglob("*.toml"):
+        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        table = payload["revisions"]["2024-desde-09-y-3t"]
+        rows = [
+            *table.get("verification_predicates", []),
+            *[
+                dict(row["fields"], id=row["selector"]["id"])
+                for row in table.get("family_overrides", [])
+                if row["family"] == "verification_predicates"
+            ],
+        ]
+        for row in rows:
+            if row["id"] == "equals-sum:dr303-27-equals-printed-summands":
+                assert '"24", "26"])' in row["expression"]
+                row["expression"] = row["expression"].replace('"24", "26"])', '"24"])')
+                for override in table.get("family_overrides", []):
+                    if override["family"] == "verification_predicates" and override["selector"]["id"] == row["id"]:
+                        override["fields"]["expression"] = row["expression"]
+                mutated += 1
+        path.write_bytes(render_toml_bytes(path.name, payload))
+    assert mutated == 1
 
     modelos, catalogues = load_registry_tree(scratch_root)
     mutant = next(modelo for modelo in modelos if modelo.id == "303")

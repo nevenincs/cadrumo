@@ -2925,7 +2925,7 @@ record_identity = 'Pág. 2'
 [[entries]]
 export_field_id = 'modelo-390-page-02-casilla-repercutido-recargo-super-reducido'
 kind = 'casilla'
-casilla_id = 'iva.anual.repercutido.recargo.super-reducido'
+casilla_id = 'iva.anual.repercutido.recargo.tipo-0-5.cuota'
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -3002,7 +3002,7 @@ record_identity = 'Pág. 2'
 [[entries]]
 export_field_id = 'modelo-390-page-02-casilla-repercutido-recargo-reducido'
 kind = 'casilla'
-casilla_id = 'iva.anual.repercutido.recargo.reducido'
+casilla_id = 'iva.anual.repercutido.recargo.tipo-1-4.cuota'
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -3041,7 +3041,7 @@ record_identity = 'Pág. 2'
 [[entries]]
 export_field_id = 'modelo-390-page-02-casilla-repercutido-recargo-general'
 kind = 'casilla'
-casilla_id = 'iva.anual.repercutido.recargo.general'
+casilla_id = 'iva.anual.repercutido.recargo.tipo-5-2.cuota'
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',

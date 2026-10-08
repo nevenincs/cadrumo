@@ -32,7 +32,7 @@ _DETAIL_RECORD_MODELOS: tuple[tuple[str, str, str, int], ...] = (
     ("193", "2025-y-siguientes", "withholding", 2),
     ("720", "2013-y-siguientes", "foreign_asset", 1),
     ("184", "2025-y-siguientes", "atribucion_member", 1),
-    ("349", "2020-y-siguientes", "collectible_invoice", 2),
+    ("349", "2020-y-siguientes", "m349_intracommunity_operation", 2),
 )
 
 

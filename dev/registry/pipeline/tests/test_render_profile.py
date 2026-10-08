@@ -1272,10 +1272,13 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
     }
     # ``compiler.record_design_pdf_rows`` supplies only the record design's own
     # "No consta" type token, read from the same pinned source.
+    # ``source_stated_composites`` reads source-pinned sign and magnitude
+    # components; it does not consume a generated layout or export tree.
     assert eligibility_imports == {
         "compiler.record_design_pdf_rows",
         "record_design_intermediate",
         "source_defects",
+        "source_stated_composites",
         "year_constraints",
     }
     source_reader = ast.parse(inspect.getsource(render_profile_source_reader))

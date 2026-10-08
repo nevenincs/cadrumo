@@ -132,3 +132,10 @@ deadline_windows = [
 # operands), keyed by canonical casilla_id plus reviewed segment/number
 # metadata. Derived off-load-path from the registry calculation
 # surface; the drift re-verification test re-derives it.
+
+[[revisions."2021-hasta-2026-01".constructs]]
+id = "modelo-353-importes-papel"
+casilla_ids = ["06", "07", "papel.importe-ingreso"]
+legal_refs = ["orden-eha-3434-2007:art-2"]
+# The procedure identifies the obligation; Annex II owns the printed amount fields.
+source_refs = ["boe-modelo-353-2021-form-pdf", "aeat-modelo-353-procedure"]

@@ -76,3 +76,9 @@ deadline_windows = [
 # operands), keyed by canonical casilla_id plus reviewed segment/number
 # metadata. Derived off-load-path from the registry calculation
 # surface; the drift re-verification test re-derives it.
+
+[[revisions.2008-2022.constructs]]
+id = "modelo-322-papel-actividades"
+casilla_ids = ["actividad.principal.descripcion", "actividad.otras-1.descripcion", "actividad.otras-2.descripcion", "actividad.otras-3.descripcion", "actividad.otras-4.descripcion", "actividad.otras-5.descripcion"]
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-modelo-322-instructions-20261006"]

@@ -17,7 +17,11 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.facts.payloads import EntitySetFactPayload
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
-from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    RegistrySnapshot,
+    SupportedFilingYearsCatalogue,
+)
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormPlacementDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from dev._paths import REPO_ROOT
@@ -931,3 +935,244 @@ def test_root_eligibility_still_refuses_a_schedule_left_without_any_source(tmp_p
         )
 
     assert _unresolved_rows(modelo_dir)
+
+
+def _source_default_lift_pair(tmp_path: Path, family: str, default_key: str) -> tuple[Path, Path]:
+    """Two real directory-loader inputs: explicit row sources versus an edition default."""
+    source = _build_modelo(tmp_path / "source")
+    parameters = source / "revisions" / "2025" / "parameters"
+    parameters.mkdir()
+    (parameters / "0001-money.toml").write_text(
+        '[[revisions."2025".parameters]]\n'
+        'id = "comparison-money"\n'
+        'data_type = "money"\n'
+        'unit = "EUR"\n'
+        'values = [{value = "0", date_axis = "filing_period", valid_from = 2025-01-01}]\n'
+        'legal_refs = ["ley-58-2003:art-29"]\n'
+        'source_refs = ["aeat-manual"]\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    candidate = tmp_path / "candidate"
+    shutil.copytree(source, candidate)
+    for revision_id in ("2024", "2025"):
+        revision_dir = candidate / "revisions" / revision_id
+        manifest = revision_dir / "revision.toml"
+        header = f'[revisions."{revision_id}"]\n'
+        text = manifest.read_text(encoding="utf-8")
+        assert text.count(header) == 1
+        manifest.write_text(
+            text.replace(header, header + f'{default_key} = ["aeat-manual"]\n', 1),
+            encoding="utf-8",
+            newline="\n",
+        )
+        for fragment in sorted((revision_dir / family).glob("*.toml")):
+            text = fragment.read_text(encoding="utf-8")
+            assert 'source_refs = ["aeat-manual"]\n' in text
+            fragment.write_text(text.replace('source_refs = ["aeat-manual"]\n', ""), encoding="utf-8", newline="\n")
+    return source, candidate
+
+
+@pytest.mark.parametrize(
+    "family,default_key", [("formulas", "formula_source_refs"), ("casillas", "casilla_source_refs")]
+)
+def test_typed_comparison_accepts_real_source_default_lift(tmp_path: Path, family: str, default_key: str) -> None:
+    source, candidate = _source_default_lift_pair(tmp_path, family, default_key)
+    before, after = load_modelo_directory(source), load_modelo_directory(candidate)
+    for revision_id in before.revisions:
+        original, lifted = before.revisions[revision_id], after.revisions[revision_id]
+        assert getattr(original, default_key) is None
+        assert getattr(lifted, default_key) == ("aeat-manual",)
+        assert [row.model_dump(mode="python") for row in getattr(original, family)] == [
+            row.model_dump(mode="python") for row in getattr(lifted, family)
+        ]
+    assert _collapse_comparison.compare_modelos(before, after).status is _collapse_models.CheckStatus.PASSED
+    temporal = _collapse_requests.compare_temporal(before, after, support=_support(), floor=2024, ceiling=2025)
+    assert temporal.checked > 0
+    assert temporal.status is _collapse_models.CheckStatus.PASSED
+    assert temporal.differences == ()
+
+
+@pytest.mark.parametrize(
+    "changed_field,expected_location",
+    [
+        ("default_source", ".source_refs[0]"),
+        ("source_refs", ".source_refs[0]"),
+        ("legal_refs", ".legal_refs[0]"),
+        ("expression", ".expression.literal"),
+        ("financial_value", ".parameters[0].values[0].value"),
+    ],
+)
+def test_source_default_lift_still_detects_resolved_meaning_changes(
+    tmp_path: Path, changed_field: str, expected_location: str
+) -> None:
+    source, candidate = _source_default_lift_pair(tmp_path, "formulas", "formula_source_refs")
+    before = load_modelo_directory(source)
+    if changed_field == "default_source":
+        owner = candidate / "revisions" / "2025" / "revision.toml"
+        old, new = 'formula_source_refs = ["aeat-manual"]', 'formula_source_refs = ["other-source"]'
+    elif changed_field == "financial_value":
+        owner = candidate / "revisions" / "2025" / "parameters" / "0001-money.toml"
+        old, new = 'value = "0"', 'value = "7"'
+    else:
+        owner = candidate / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+        if changed_field == "source_refs":
+            old = '[[revisions."2025".formulas]]\n'
+            new = old + 'source_refs = ["other-source"]\n'
+        elif changed_field == "legal_refs":
+            old, new = 'legal_refs = ["ley-58-2003:art-29"]', 'legal_refs = ["ley-58-2003:art-30"]'
+        else:
+            old, new = 'expression = { literal = "0" }', 'expression = { literal = "7" }'
+    text = owner.read_text(encoding="utf-8")
+    assert old in text
+    owner.write_text(text.replace(old, new, 1), encoding="utf-8", newline="\n")
+    after = load_modelo_directory(candidate)
+    result = _collapse_comparison.compare_modelos(before, after)
+    assert result.status is _collapse_models.CheckStatus.FAILED
+    assert result.differences[0]["reason"] == "value_changed"
+    assert str(result.differences[0]["location"]).endswith(expected_location)
+    assert (
+        _collapse_requests.compare_temporal(before, after, support=_support(), floor=2024, ceiling=2025).status
+        is _collapse_models.CheckStatus.FAILED
+    )
+
+
+def test_source_default_lift_does_not_ignore_review_metadata(tmp_path: Path) -> None:
+    source, candidate = _source_default_lift_pair(tmp_path, "formulas", "formula_source_refs")
+    before, lifted = load_modelo_directory(source), load_modelo_directory(candidate)
+    assert _collapse_comparison.compare_modelos(before, lifted).status is _collapse_models.CheckStatus.PASSED
+    revision = lifted.revisions["2025"].model_copy(update={"reviewed_by": "different-reviewer"})
+    changed = lifted.model_copy(update={"revisions": {**lifted.revisions, revision.id: revision}})
+    result = _collapse_comparison.compare_modelos(before, changed)
+    assert result.status is _collapse_models.CheckStatus.FAILED
+    assert str(result.differences[0]["location"]).endswith(".reviewed_by")
+
+
+@pytest.mark.parametrize("dispatch_key", ["formula_source_refs", "casilla_source_refs"])
+def test_source_default_names_remain_meaningful_dispatch_keys(tmp_path: Path, dispatch_key: str) -> None:
+    """A real typed formula dispatch key is not an edition source-default field."""
+    source, candidate = _source_default_lift_pair(tmp_path, "formulas", "formula_source_refs")
+    original_expression = 'expression = { literal = "0" }'
+    dispatched_expression = (
+        'expression = { dispatch_table_entries = [{ key = "' + dispatch_key + '", parameter = "comparison-money" }] }'
+    )
+    for directory in (source, candidate):
+        parameters = directory / "revisions" / "2025" / "parameters" / "0001-money.toml"
+        text = parameters.read_text(encoding="utf-8")
+        parameters.write_text(
+            text
+            + text.replace('id = "comparison-money"', 'id = "comparison-money-other"').replace(
+                'value = "0"', 'value = "7"'
+            ),
+            encoding="utf-8",
+            newline="\n",
+        )
+        formulas = directory / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+        text = formulas.read_text(encoding="utf-8")
+        assert original_expression in text
+        formulas.write_text(text.replace(original_expression, dispatched_expression, 1), encoding="utf-8", newline="\n")
+
+    before, lifted = load_modelo_directory(source), load_modelo_directory(candidate)
+    assert _collapse_comparison.compare_modelos(before, lifted).status is _collapse_models.CheckStatus.PASSED
+    assert (
+        _collapse_requests.compare_temporal(before, lifted, support=_support(), floor=2024, ceiling=2025).status
+        is _collapse_models.CheckStatus.PASSED
+    )
+    expression = next(
+        formula.expression
+        for formula in lifted.revisions["2025"].formulas
+        if formula.expression.dispatch_table is not None
+    )
+    assert expression.dispatch_table == {dispatch_key: "comparison-money"}
+
+    owner = candidate / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    text = owner.read_text(encoding="utf-8")
+    assert text.count('parameter = "comparison-money"') == 1
+    owner.write_text(
+        text.replace('parameter = "comparison-money"', 'parameter = "comparison-money-other"', 1),
+        encoding="utf-8",
+        newline="\n",
+    )
+    changed = load_modelo_directory(candidate)
+    changed_expression = next(
+        formula.expression
+        for formula in changed.revisions["2025"].formulas
+        if formula.expression.dispatch_table is not None
+    )
+    assert changed_expression.dispatch_table == {dispatch_key: "comparison-money-other"}
+    result = _collapse_comparison.compare_modelos(before, changed)
+    assert result.status is _collapse_models.CheckStatus.FAILED
+    assert result.differences[0]["reason"] == "value_changed"
+    assert str(result.differences[0]["location"]).endswith(".expression.dispatch_table." + dispatch_key)
+    assert (
+        _collapse_requests.compare_temporal(before, changed, support=_support(), floor=2024, ceiling=2025).status
+        is _collapse_models.CheckStatus.FAILED
+    )
+    revision_difference = _collapse_comparison._first_difference(
+        _collapse_comparison._typed_projection(before.revisions["2025"]),
+        _collapse_comparison._typed_projection(changed.revisions["2025"]),
+    )
+    assert revision_difference is not None
+    assert str(revision_difference["location"]).endswith(".expression.dispatch_table." + dispatch_key)
+    snapshot_difference = _collapse_comparison._first_difference(
+        _collapse_comparison._typed_projection(_comparison_snapshot(before)),
+        _collapse_comparison._typed_projection(_comparison_snapshot(changed)),
+    )
+    assert snapshot_difference is not None
+    assert str(snapshot_difference["location"]).endswith(".expression.dispatch_table." + dispatch_key)
+
+
+def _comparison_snapshot(modelo: ModeloDefinition) -> RegistrySnapshot:
+    """Wrap real loader output in a validated typed snapshot for projection tests."""
+    return RegistrySnapshot(
+        modelo=modelo,
+        revision=modelo.revisions["2025"],
+        filing_year=2025,
+        period="0A",
+        legal={},
+        sources={},
+        extraction_profiles={},
+        live_cross_references={},
+        workbook_parity_refs={},
+        verification_expectations={},
+        application_links={},
+        deadline_windows={},
+        filing_schedules={},
+        constructs={},
+        dependency_classifications={},
+    )
+
+
+def test_source_default_lift_keeps_typed_snapshot_context(tmp_path: Path) -> None:
+    """Both declared and effective snapshot revisions retain the same contextual rule."""
+    source, candidate = _source_default_lift_pair(tmp_path, "formulas", "formula_source_refs")
+    before, lifted = load_modelo_directory(source), load_modelo_directory(candidate)
+    original = _collapse_comparison._typed_projection(_comparison_snapshot(before))
+    equivalent = _collapse_comparison._typed_projection(_comparison_snapshot(lifted))
+    assert _collapse_comparison._first_difference(original, equivalent) is None
+
+    owner = candidate / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    text = owner.read_text(encoding="utf-8")
+    assert 'expression = { literal = "0" }' in text
+    owner.write_text(
+        text.replace('expression = { literal = "0" }', 'expression = { literal = "7" }', 1),
+        encoding="utf-8",
+        newline="\n",
+    )
+    changed = load_modelo_directory(candidate)
+    projected = _collapse_comparison._typed_projection(_comparison_snapshot(changed))
+    difference = _collapse_comparison._first_difference(original, projected)
+    assert difference is not None
+    assert str(difference["location"]).endswith(".expression.literal")
+
+
+def test_source_default_names_in_untyped_mappings_are_compared() -> None:
+    """The same spelling outside a typed revision cannot acquire storage-only meaning."""
+    before = {"formula_source_refs": ["source-a"]}
+    after = {"formula_source_refs": ["source-b"]}
+    result = _collapse_comparison._first_difference(
+        _collapse_comparison._typed_projection(before), _collapse_comparison._typed_projection(after)
+    )
+    assert result is not None
+    assert result["location"] == "$.formula_source_refs[0]"
+    assert result["reason"] == "value_changed"

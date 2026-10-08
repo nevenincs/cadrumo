@@ -7,38 +7,65 @@ import json
 import shutil
 from collections.abc import Mapping
 from dataclasses import replace
+from functools import partial
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
+from ...edition_delta_assessment import assess_migration_state
 from ...edition_delta_chain_materialisation import chain_materialisation, member_identities
+from ...edition_delta_migration import migrate_modelo
 from ...edition_delta_proof_source import read_staged_edition
+from .. import _tree_publication as tree_publication
+from .. import cli as pipeline_cli
 from .._export_tree import render_complete_export_tree
+from .._tree_publication import publish_validated_generated_export_tree
 from .._tree_validation import _require_isolated_target_context, validate_generated_export_tree
+from ..bootstrap_supersession import bootstrap_layout_supersession_fingerprint
+from ..candidate_source_chain import require_source_chain_unchanged
 from ..candidate_staging import stage_attested_inherited_modelo
 from ..cli import (
     GeneratedTreeInvocation,
     _render_candidate,
     _require_storage_equivalent_republication,
+    check_prepared_invocation,
     prepare_generated_tree_invocation,
+    publish_prepared_invocation,
 )
-from ..export_fragment_provenance import verify_export_fragment_provenance_manifest
+from ..export_fragment_provenance import (
+    ExportFragmentProvenanceManifest,
+    ExportFragmentTarget,
+    verify_export_fragment_provenance_manifest,
+)
+from ..export_tree_serialization import render_toml_bytes
 from ..generated_export_inheritance import (
+    generated_export_source_chain_fingerprint,
     require_generated_export_inheritance,
     select_generated_export_inheritance,
     verify_generated_export_inheritance_storage,
 )
-from ..render_check import compare_export_tree_roots, revision_render_inputs
+from ..render_check import compare_export_tree_roots, compare_revision_against_committed, revision_render_inputs
 from ..source_defects import source_defects_for
-from ..tree_publication_contracts import GeneratedExportTreeTargetStateReceipt
+from ..tree_publication_artifacts import stage_verified_candidate_package, verify_generated_export_package
+from ..tree_publication_contracts import (
+    GeneratedExportPublicationJournal,
+    GeneratedExportSupersession,
+    GeneratedExportTransactionPaths,
+    GeneratedExportTreePublicationContext,
+    GeneratedExportTreeTargetStateReceipt,
+    PublishedGeneratedExportTree,
+    export_provenance_file_sha256,
+)
+from ..tree_publication_journal import write_generated_export_publication_journal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -105,6 +132,86 @@ def test_ordinary_full_revision_with_continuity_evolutions_does_not_select_compa
     assert revision.export_layouts != baseline.export_layouts
     assert (modelo_root / "revisions/2023/casilla_continuidad_evolutions").exists()
     assert select_generated_export_inheritance(authority, registry_root, modelo="390", revision="2023") is None
+
+
+@pytest.mark.parametrize("evolution_revision", ["2024", "2025"])
+def test_equal_layout_with_continuity_evolutions_declines_optional_compaction(
+    tmp_path: Path, evolution_revision: str
+) -> None:
+    """Either side is ineligible, while an already required attestation still refuses."""
+    authority = compiled_bundled_authority()
+    registry_root = tmp_path / "registry"
+    shutil.copytree(bundled_path("registry", "aeat", "modelos", "189"), registry_root / "modelos/189")
+    expected = select_generated_export_inheritance(authority, registry_root, modelo="189", revision="2025")
+    assert expected is not None
+    definition = authority.modelo("189")
+    assert definition.revisions["2025"].export_layouts == definition.revisions["2024"].export_layouts
+    evolution_root = registry_root / "modelos/189/revisions" / evolution_revision / "casilla_continuidad_evolutions"
+    assert not evolution_root.exists()
+    evolution_root.mkdir()
+
+    assert select_generated_export_inheritance(authority, registry_root, modelo="189", revision="2025") is None
+    with pytest.raises(
+        RegistryValidationError, match=f"cannot detach a revision with continuity evolutions: 189/{evolution_revision}"
+    ):
+        require_generated_export_inheritance(expected, authority, registry_root, modelo="189", revision="2025")
+
+
+def test_early_2026_m303_renders_a_complete_tree_without_detaching_baseline_evolutions(tmp_path: Path) -> None:
+    """The real January/Q1 edition keeps its 2026 record and the baseline's legal history."""
+    authority = compiled_bundled_authority()
+    registry_root = tmp_path / "registry"
+
+    def omit_target_export(directory: str, names: list[str]) -> set[str]:
+        """Recreate only the child's first-publication state in a separate scratch copy."""
+        return {"export"}.intersection(names) if Path(directory).name == "2026-hasta-01-y-1t" else set()
+
+    shutil.copytree(
+        bundled_path("registry", "aeat", "modelos", "303"),
+        registry_root / "modelos/303",
+        ignore=omit_target_export,
+    )
+    definition = authority.modelo("303")
+    selected = definition.revisions["2026-hasta-01-y-1t"]
+    baseline = definition.revisions[str(selected.family_storage_baseline)]
+    evolutions = baseline.casilla_continuidad_evolutions
+    assert evolutions
+    assert selected.export_layouts == baseline.export_layouts
+    assert (registry_root / "modelos/303/revisions" / str(baseline.id) / "casilla_continuidad_evolutions").is_dir()
+    assert (
+        select_generated_export_inheritance(authority, registry_root, modelo="303", revision=str(selected.id)) is None
+    )
+
+    inputs = revision_render_inputs(
+        authority, modelo="303", revision=str(selected.id), source_ref="aeat-dr-303-2026", filing_year=2026, period="1T"
+    )
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id=inputs.revision_id,
+        joined=inputs.joined,
+        semantic_map=inputs.semantic_map,
+        transport_profile=inputs.transport_profile,
+        render_profile=inputs.render_profile,
+        render_profile_source_evidence=inputs.render_profile_source_evidence,
+        source_defects=source_defects_for("aeat-dr-303-2026"),
+    )
+    assert rendered.layout == selected.export_layouts[0]
+    assert len(rendered.output_files) > 1
+    assert rendered.provenance_manifest.generated_export_inheritance is None
+    assert authority.modelo("303").revisions[str(baseline.id)].casilla_continuidad_evolutions == evolutions
+
+    comparison = compare_revision_against_committed(
+        authority,
+        modelo="303",
+        revision=str(selected.id),
+        source_ref="aeat-dr-303-2026",
+        filing_year=2026,
+        period="1T",
+        registry_root=registry_root,
+    )
+    assert comparison.layout_id == str(rendered.layout.id)
+    assert comparison.only_rendered
+    assert not comparison.reproduced
 
 
 def test_real_2024_child_candidate_can_replace_its_full_tree(tmp_path: Path) -> None:
@@ -491,3 +598,592 @@ def test_extra_revision_and_same_size_old_field_mutation_refuse(tmp_path: Path) 
     )
     with pytest.raises(ValueError, match="does not reproduce the current full source render"):
         _require_storage_equivalent_republication(bound, rendered, state, comparison)
+
+
+def _m303_source_copy(root: Path, *, complete_registry: bool = False) -> Path:
+    """Keep real declarations while recreating the child's first-publication state."""
+    registry_root = root / "registry" / "aeat"
+
+    def omit_child_export(directory: str, names: list[str]) -> set[str]:
+        return {"export"}.intersection(names) if Path(directory).name == "2026-hasta-01-y-1t" else set()
+
+    if complete_registry:
+        shutil.copytree(bundled_path("registry", "aeat"), registry_root, ignore=omit_child_export)
+    else:
+        for catalogue in bundled_path("registry", "aeat").iterdir():
+            if catalogue.is_dir() and catalogue.name != "modelos":
+                shutil.copytree(catalogue, registry_root / catalogue.name)
+        shutil.copytree(
+            bundled_path("registry", "aeat", "modelos", "303"),
+            registry_root / "modelos/303",
+            ignore=omit_child_export,
+        )
+    return registry_root
+
+
+def _prepare_retained_m303(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Bind the canonical developer owner to one explicitly authorized scratch target."""
+    registry_root = _m303_source_copy(tmp_path / "live", complete_registry=True)
+    authority = compiled_bundled_authority()
+
+    def scratch_bundled_path(*parts: str) -> Path:
+        if parts[:2] == ("registry", "aeat"):
+            return registry_root.joinpath(*parts[2:])
+        return bundled_path(*parts)
+
+    monkeypatch.setattr(pipeline_cli, "bundled_path", scratch_bundled_path)
+    prepared = prepare_generated_tree_invocation(
+        GeneratedTreeInvocation("303", "2026-hasta-01-y-1t", "aeat-dr-303-2026", 2026, "1T"),
+        tmp_path / "generation",
+        authority=authority,
+    )
+    return prepared, authority, registry_root
+
+
+def test_real_early_m303_compact_publication_retains_the_complete_legal_chain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Publish real source-derived empty storage without duplicating or detaching facts."""
+    prepared, authority, registry_root = _prepare_retained_m303(tmp_path, monkeypatch)
+    modelo_root = registry_root / "modelos/303"
+    original = authority.modelo("303")
+    original_non_export = generated_export_source_chain_fingerprint(
+        registry_root, modelo="303", revision="2026-hasta-01-y-1t", omit_target_export=True
+    )
+    assert prepared.inheritance is not None
+    assert prepared.validation.source_chain_revisions == tuple(original.revisions)
+    assert str(prepared.inheritance.attestation.baseline_revision_id) == "2026-y-siguientes"
+    assert original.revisions["2026-y-siguientes"].casilla_continuidad_evolutions
+    status, rendered, state = check_prepared_invocation(prepared)
+    assert status == "publishable_absence" and state.manifest_sha256 is None
+    assert rendered.output_files == ("0000-export-layout.toml",)
+    assert rendered.layout == original.revisions["2026-hasta-01-y-1t"].export_layouts[0]
+    assert rendered.provenance_manifest.generated_export_inheritance == prepared.inheritance.attestation
+    publish_prepared_invocation(prepared, rendered, state)
+    assert prepared.target_export_root.is_dir()
+    assert (
+        generated_export_source_chain_fingerprint(
+            registry_root, modelo="303", revision="2026-hasta-01-y-1t", omit_target_export=True
+        )
+        == original_non_export
+    )
+    loaded = load_modelo_directory(modelo_root)
+    require_source_chain_unchanged(original, loaded, revision="2026-hasta-01-y-1t")
+    assert loaded.revisions["2026-hasta-01-y-1t"].form_layouts == original.revisions["2026-hasta-01-y-1t"].form_layouts
+    assert loaded.revisions["2026-y-siguientes"].casilla_continuidad_evolutions == (
+        original.revisions["2026-y-siguientes"].casilla_continuidad_evolutions
+    )
+    payload = parse_toml((prepared.target_export_root / "0000-export-layout.toml").read_text("utf-8"))
+    assert payload["revisions"]["2026-hasta-01-y-1t"]["export_layouts"] == []
+    assert compare_revision_against_committed(
+        authority,
+        modelo="303",
+        revision="2026-hasta-01-y-1t",
+        source_ref="aeat-dr-303-2026",
+        filing_year=2026,
+        period="1T",
+        registry_root=registry_root,
+    ).reproduced
+    assessment = assess_migration_state(modelo_root)
+    assert assessment.minimal and assessment.inputs_stable
+    outcome = migrate_modelo(
+        registry_root=registry_root, modelo_id="303", work_dir=tmp_path / "non-applying-noop", apply=False
+    )
+    assert not outcome.changed and not outcome.applied and outcome.staged_registry is None
+    assert outcome.after_assessment is not None and outcome.after_assessment.minimal
+    manifest = modelo_root / "manifest.toml"
+    before = manifest.read_bytes()
+    try:
+        manifest.write_bytes(before + b"\n# unrelated post-cutover source mutation\n")
+        with pytest.raises(RegistryValidationError, match="source-chain facts changed during export cutover"):
+            pipeline_cli._validate_final_live_target(prepared)
+    finally:
+        manifest.write_bytes(before)
+
+
+@pytest.mark.parametrize("evolution_revision", ["2024", "2025"])
+def test_explicit_retained_mode_still_refuses_unvalidated_empty_evolution_directories(
+    tmp_path: Path, evolution_revision: str
+) -> None:
+    """A staging obligation cannot authorize new declarations absent from validated facts."""
+    authority = compiled_bundled_authority()
+    registry_root = tmp_path / "registry"
+    shutil.copytree(bundled_path("registry", "aeat", "modelos", "189"), registry_root / "modelos/189")
+    expected = select_generated_export_inheritance(authority, registry_root, modelo="189", revision="2025")
+    assert expected is not None
+    (registry_root / "modelos/189/revisions" / evolution_revision / "casilla_continuidad_evolutions").mkdir()
+    assert (
+        select_generated_export_inheritance(
+            authority, registry_root, modelo="189", revision="2025", retain_source_chain=True
+        )
+        is None
+    )
+    with pytest.raises(
+        RegistryValidationError, match=f"cannot detach a revision with continuity evolutions: 189/{evolution_revision}"
+    ):
+        require_generated_export_inheritance(
+            expected, authority, registry_root, modelo="189", revision="2025", retain_source_chain=True
+        )
+
+
+@pytest.mark.parametrize(
+    "mutation", ["evolution", "endpoint", "source", "manifest", "manual", "missing_origin", "layout"]
+)
+def test_retained_mode_refuses_changed_real_continuity_or_generated_origin(tmp_path: Path, mutation: str) -> None:
+    """Real continuity never converts missing or stale generated authority into a fallback."""
+    authority = compiled_bundled_authority()
+    registry_root = _m303_source_copy(tmp_path)
+    definition = authority.modelo("303")
+    expected = select_generated_export_inheritance(
+        authority, registry_root, modelo="303", revision="2026-hasta-01-y-1t", retain_source_chain=True
+    )
+    assert expected is not None
+    baseline_root = registry_root / "modelos/303/revisions/2026-y-siguientes"
+    if mutation == "evolution":
+        fragment = baseline_root / "casilla_continuidad_evolutions/0001-declarations.toml"
+        original = fragment.read_bytes()
+        changed = original.replace(b'from_revision = "2025"', b'from_revision = "absent-endpoint"', 1)
+        assert changed != original
+        fragment.write_bytes(changed)
+    elif mutation == "endpoint":
+        (registry_root / "modelos/303/revisions/2025").rename(tmp_path / "removed-endpoint")
+    elif mutation == "source":
+        manifest_path = baseline_root / "export/_generation.provenance.json"
+        payload = json.loads(manifest_path.read_bytes())
+        payload["source_sha256"] = "0" * 64
+        manifest_path.write_bytes(canonical_json_bytes(payload))
+    elif mutation == "manifest":
+        fragment = baseline_root / "export/_generation.provenance.json"
+        payload = json.loads(fragment.read_bytes())
+        payload["semantic_map_sha256"] = "0" * 64
+        fragment.write_bytes(canonical_json_bytes(payload))
+    elif mutation == "missing_origin":
+        (baseline_root / "export").rename(tmp_path / "missing-generated-origin")
+    elif mutation == "manual":
+        (baseline_root / "export").rename(tmp_path / "removed-generated-origin")
+        manual = baseline_root / "export_layouts"
+        manual.mkdir()
+        layout = definition.revisions["2026-y-siguientes"].export_layouts[0]
+        (manual / "0001-layout.toml").write_bytes(
+            render_toml_bytes(
+                "0001-layout.toml",
+                {
+                    "revisions": {
+                        "2026-y-siguientes": {"export_layouts": [layout.model_dump(mode="json", exclude_none=True)]}
+                    }
+                },
+            )
+        )
+    else:
+        expected = replace(expected, baseline_layout=expected.baseline_layout.model_copy(update={"id": "other-layout"}))
+    with pytest.raises(RegistryValidationError):
+        require_generated_export_inheritance(
+            expected,
+            authority,
+            registry_root,
+            modelo="303",
+            revision="2026-hasta-01-y-1t",
+            retain_source_chain=True,
+        )
+    assert not (registry_root / "modelos/303/revisions/2026-hasta-01-y-1t/export").exists()
+
+
+def test_retained_source_bytes_and_publication_root_are_checked_before_any_cutover(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A held proof refuses ancestor and unrelated fact mutations, including byte-only changes."""
+    prepared, _, registry_root = _prepare_retained_m303(tmp_path, monkeypatch)
+    status, rendered, state = check_prepared_invocation(prepared)
+    assert status == "publishable_absence"
+    modelo_root = registry_root / "modelos/303"
+    guarded = (
+        modelo_root / "manifest.toml",
+        modelo_root / "revisions/2025/revision.toml",
+        modelo_root / "revisions/2026-hasta-01-y-1t/revision.toml",
+        modelo_root / "revisions/2026-y-siguientes/casilla_continuidad_evolutions/0001-declarations.toml",
+        modelo_root / "revisions/2026-y-siguientes/export/_generation.provenance.json",
+    )
+    for path in guarded:
+        before = path.read_bytes()
+        try:
+            path.write_bytes(before + b"\n")
+            with pytest.raises(RegistryValidationError, match="source-chain facts changed during export cutover"):
+                publish_prepared_invocation(prepared, rendered, state)
+            assert not prepared.target_export_root.exists()
+        finally:
+            path.write_bytes(before)
+
+    candidate_endpoint = prepared.candidate_root / "modelos/303/revisions/2025"
+    displaced_endpoint = tmp_path / "dropped-candidate-endpoint"
+    candidate_endpoint.rename(displaced_endpoint)
+    try:
+        with pytest.raises(RegistryValidationError, match="generated modelo revisions directory"):
+            publish_prepared_invocation(prepared, rendered, state)
+        assert not prepared.target_export_root.exists()
+    finally:
+        displaced_endpoint.rename(candidate_endpoint)
+
+    other_root = tmp_path / "other-registry"
+    other_target = other_root / "modelos/303/revisions/2026-hasta-01-y-1t/export"
+    other_target.parent.mkdir(parents=True)
+    context = GeneratedExportTreePublicationContext(
+        validation=prepared.validation,
+        temporary_root=prepared.candidate_root.parents[2],
+        target_root=other_root,
+        target_export_root=other_target,
+        expected_target_state=state,
+    )
+    with pytest.raises(RegistryValidationError, match="origin differs from the publication root"):
+        publish_validated_generated_export_tree(
+            context=context,
+            joined=prepared.inputs.joined,
+            semantic_map=prepared.inputs.semantic_map,
+            rendered=rendered,
+            render_profile=prepared.inputs.render_profile,
+            render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+        )
+    assert not other_target.exists() and not prepared.target_export_root.exists()
+    with pytest.raises(RegistryValidationError, match=r"complete validated modelo|lost an attested ancestor"):
+        replace(prepared.validation, source_chain_revisions=prepared.validation.source_chain_revisions[1:])
+    with pytest.raises(RegistryValidationError, match="complete validated modelo"):
+        replace(
+            prepared.validation,
+            target=ExportFragmentTarget(modelo="189", revision_id="2026-hasta-01-y-1t", design_epoch="2026"),
+        )
+    assert (
+        generated_export_source_chain_fingerprint(registry_root, modelo="303", revision="2026-hasta-01-y-1t")
+        == prepared.validation.source_chain_sha256
+    )
+
+
+def test_direct_retained_publisher_settles_swap_and_callback_mutations_by_rollback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The canonical publisher owns post-cutover integrity even without a CLI callback."""
+    prepared, _, registry_root = _prepare_retained_m303(tmp_path, monkeypatch)
+    status, rendered, state = check_prepared_invocation(prepared)
+    assert status == "publishable_absence"
+    manifest = registry_root / "modelos/303/manifest.toml"
+    source_before = manifest.read_bytes()
+
+    def replace_export_directory(source: Path, destination: Path, *, mutation: str) -> None:
+        source.replace(destination)
+        if mutation != "callback" and destination == prepared.target_export_root:
+            manifest.write_bytes(source_before + b"\n# source changed during cutover\n")
+
+    def final_validator(*, mutation: str, callbacks: list[str]) -> None:
+        callbacks.append("called")
+        if mutation == "callback":
+            manifest.write_bytes(source_before + b"\n# source changed during final validation\n")
+
+    for mutation in ("swap_without_callback", "swap_with_callback", "callback"):
+        callbacks: list[str] = []
+
+        context = GeneratedExportTreePublicationContext(
+            validation=prepared.validation,
+            temporary_root=prepared.candidate_root.parents[2],
+            target_root=registry_root,
+            target_export_root=prepared.target_export_root,
+            expected_target_state=state,
+            final_live_validator=(
+                None
+                if mutation == "swap_without_callback"
+                else partial(final_validator, mutation=mutation, callbacks=callbacks)
+            ),
+            replace_export_directory=partial(replace_export_directory, mutation=mutation),
+        )
+        try:
+            with pytest.raises(RegistryValidationError, match="source-chain facts changed during export cutover"):
+                publish_validated_generated_export_tree(
+                    context=context,
+                    joined=prepared.inputs.joined,
+                    semantic_map=prepared.inputs.semantic_map,
+                    rendered=rendered,
+                    render_profile=prepared.inputs.render_profile,
+                    render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+                )
+            assert not prepared.target_export_root.exists()
+            assert callbacks == (["called"] if mutation == "callback" else [])
+            assert manifest.read_bytes() != source_before
+        finally:
+            # The publisher rolls back only its own export; it never rewrites peer source facts.
+            manifest.write_bytes(source_before)
+        assert (
+            generated_export_source_chain_fingerprint(registry_root, modelo="303", revision="2026-hasta-01-y-1t")
+            == prepared.validation.source_chain_sha256
+        )
+
+
+def test_retained_compact_recovery_checks_source_before_and_after_real_journal_recovery(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Real staged/live recovery preserves stale journals and never returns false integrity success."""
+    prepared, authority, registry_root = _prepare_retained_m303(tmp_path, monkeypatch)
+    status, rendered, _ = check_prepared_invocation(prepared)
+    assert status == "publishable_absence"
+    context = GeneratedExportTreePublicationContext(
+        validation=prepared.validation,
+        temporary_root=prepared.candidate_root.parents[2],
+        target_root=registry_root,
+        target_export_root=prepared.target_export_root,
+    )
+    paths = GeneratedExportTransactionPaths.for_context(context)
+    candidate = prepared.candidate_root / "modelos/303/revisions/2026-hasta-01-y-1t/export"
+    candidate_manifest = verify_generated_export_package(candidate)
+    manifest_sha = export_provenance_file_sha256(candidate / "_generation.provenance.json")
+    staged = stage_verified_candidate_package(
+        candidate_export_root=candidate,
+        target_root=registry_root,
+        modelo="303",
+        revision_id="2026-hasta-01-y-1t",
+        expected_manifest_sha256=manifest_sha,
+        expected_manifest=candidate_manifest,
+    )
+    journal = GeneratedExportPublicationJournal(
+        schema_version=1,
+        state="intent",
+        modelo="303",
+        revision_id="2026-hasta-01-y-1t",
+        candidate_export=str(staged),
+        backup_export=str(paths.new_backup_sibling()),
+        candidate_manifest_sha256=manifest_sha,
+    )
+    write_generated_export_publication_journal(paths.journal, journal)
+    journal_before = paths.journal.read_bytes()
+    package_before = {path.name: path.read_bytes() for path in staged.iterdir()}
+    source_manifest = registry_root / "modelos/303/manifest.toml"
+    source_before = source_manifest.read_bytes()
+
+    def publish(bound: GeneratedExportTreePublicationContext) -> PublishedGeneratedExportTree:
+        return publish_validated_generated_export_tree(
+            context=bound,
+            joined=prepared.inputs.joined,
+            semantic_map=prepared.inputs.semantic_map,
+            rendered=rendered,
+            render_profile=prepared.inputs.render_profile,
+            render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+        )
+
+    try:
+        source_manifest.write_bytes(source_before + b"\n# stale retained source before recovery\n")
+        with pytest.raises(RegistryValidationError, match="source-chain facts changed during export cutover"):
+            publish(context)
+        assert paths.journal.read_bytes() == journal_before
+        assert {path.name: path.read_bytes() for path in staged.iterdir()} == package_before
+        assert not prepared.target_export_root.exists()
+    finally:
+        source_manifest.write_bytes(source_before)
+
+    recovered = publish(context)
+    assert recovered.validated is None and recovered.export_root == prepared.target_export_root
+    assert verify_generated_export_package(recovered.export_root) == candidate_manifest
+    assert not paths.journal.exists() and not staged.exists()
+    require_source_chain_unchanged(
+        authority.modelo("303"),
+        load_modelo_directory(registry_root / "modelos/303"),
+        revision="2026-hasta-01-y-1t",
+    )
+
+    # Recreate the actual pre-install interruption using the verified package and owning journal.
+    prepared.target_export_root.replace(staged)
+    write_generated_export_publication_journal(paths.journal, journal)
+
+    def install_with_source_mutation(source: Path, destination: Path) -> None:
+        source.replace(destination)
+        if destination == prepared.target_export_root:
+            source_manifest.write_bytes(source_before + b"\n# source changed during real recovery\n")
+
+    try:
+        with pytest.raises(RegistryValidationError, match="source-chain facts changed during export cutover"):
+            publish(replace(context, replace_export_directory=install_with_source_mutation))
+        assert verify_generated_export_package(prepared.target_export_root) == candidate_manifest
+        assert not paths.journal.exists() and not staged.exists()
+        assert source_manifest.read_bytes() != source_before
+        # The outer completion refusal does not claim rollback after recovery finalized its journal.
+    finally:
+        source_manifest.write_bytes(source_before)
+
+    # The live-candidate branch must remain recoverable with the same restored source context.
+    write_generated_export_publication_journal(paths.journal, journal.model_copy(update={"state": "candidate_live"}))
+    recovered_live = publish(context)
+    assert recovered_live.validated is None
+    assert {path.name: path.read_bytes() for path in recovered_live.export_root.iterdir()} == package_before
+    assert not paths.journal.exists()
+    assert (
+        generated_export_source_chain_fingerprint(
+            registry_root, modelo="303", revision="2026-hasta-01-y-1t", omit_target_export=True
+        )
+        == prepared.validation.source_chain_non_export_sha256
+    )
+
+
+def test_retained_compact_refuses_incompatible_modes_before_transaction_changes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Actual clearance and canonical bundle journals cannot bypass export-only retained admission."""
+    prepared, _, registry_root = _prepare_retained_m303(tmp_path, monkeypatch)
+    status, rendered, state = check_prepared_invocation(prepared)
+    assert status == "publishable_absence"
+    context = GeneratedExportTreePublicationContext(
+        validation=prepared.validation,
+        temporary_root=prepared.candidate_root.parents[2],
+        target_root=registry_root,
+        target_export_root=prepared.target_export_root,
+        expected_target_state=state,
+    )
+    paths = GeneratedExportTransactionPaths.for_context(context)
+
+    def publish(bound: GeneratedExportTreePublicationContext) -> PublishedGeneratedExportTree:
+        return publish_validated_generated_export_tree(
+            context=bound,
+            joined=prepared.inputs.joined,
+            semantic_map=prepared.inputs.semantic_map,
+            rendered=rendered,
+            render_profile=prepared.inputs.render_profile,
+            render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+        )
+
+    revision_root = prepared.target_export_root.parent
+    source_sha = bootstrap_layout_supersession_fingerprint(revision_root)
+    # This is an intentionally incompatible typed context, not an invented manual-source authorization.
+    supersession = GeneratedExportSupersession(
+        superseded_layout_id="injected-manual-layout",
+        generated_layout_id=prepared.inputs.layout_id,
+        expected_construct_references=0,
+        source_state_sha256=source_sha,
+    )
+    with pytest.raises(RegistryValidationError, match="does not support supersession or export clearance"):
+        publish(replace(context, supersession=supersession))
+    assert not paths.journal.exists() and not prepared.target_export_root.exists()
+
+    metadata = revision_root / "revision.toml"
+    before = metadata.read_bytes()
+    header = b'[revisions."2026-hasta-01-y-1t"]'
+    assert before.count(header) == 1
+    clearance = (
+        b'\ncleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", '
+        b'reason = "Injected incompatible publication mode for admission proof." }]'
+    )
+    try:
+        metadata.write_bytes(before.replace(header, header + clearance, 1))
+        with pytest.raises(RegistryValidationError, match="does not support supersession or export clearance"):
+            publish(context)
+        assert not paths.journal.exists() and not prepared.target_export_root.exists()
+    finally:
+        metadata.write_bytes(before)
+
+    bundle = paths.new_bundle_staging_sibling()
+    shutil.copytree(prepared.candidate_root / "modelos/303/revisions/2026-hasta-01-y-1t", bundle)
+    bundle_before = {path.relative_to(bundle): path.read_bytes() for path in bundle.rglob("*") if path.is_file()}
+    candidate_sha = bootstrap_layout_supersession_fingerprint(bundle)
+    manifest_sha = export_provenance_file_sha256(bundle / "export/_generation.provenance.json")
+    supersession_journal = GeneratedExportPublicationJournal(
+        schema_version=1,
+        state="intent",
+        modelo="303",
+        revision_id="2026-hasta-01-y-1t",
+        candidate_export=str(bundle),
+        backup_export=str(paths.new_bundle_backup_sibling()),
+        candidate_manifest_sha256=manifest_sha,
+        candidate_revision_sha256=candidate_sha,
+        superseded_layout_id="injected-manual-layout",
+        generated_layout_id=prepared.inputs.layout_id,
+        superseded_construct_references=0,
+        supersession_source_sha256=source_sha,
+    )
+    clearance_journal = GeneratedExportPublicationJournal(
+        schema_version=1,
+        state="intent",
+        modelo="303",
+        revision_id="2026-hasta-01-y-1t",
+        candidate_export=str(bundle),
+        backup_export=str(paths.new_bundle_backup_sibling()),
+        candidate_manifest_sha256=manifest_sha,
+        candidate_revision_sha256=candidate_sha,
+        supersession_source_sha256=source_sha,
+        retires_export_clearance=True,
+    )
+    for journal in (supersession_journal, clearance_journal):
+        write_generated_export_publication_journal(paths.journal, journal)
+        journal_before = paths.journal.read_bytes()
+        with pytest.raises(RegistryValidationError, match="cannot recover a revision-bundle transaction"):
+            publish(context)
+        assert paths.journal.read_bytes() == journal_before
+        assert {
+            path.relative_to(bundle): path.read_bytes() for path in bundle.rglob("*") if path.is_file()
+        } == bundle_before
+        assert metadata.read_bytes() == before and not prepared.target_export_root.exists()
+        assert not Path(journal.backup_export).exists()
+        paths.journal.unlink()
+    assert (
+        generated_export_source_chain_fingerprint(registry_root, modelo="303", revision="2026-hasta-01-y-1t")
+        == prepared.validation.source_chain_sha256
+    )
+
+
+def test_retained_compact_refuses_clearance_added_during_actual_candidate_staging(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A fresh mode fence prevents post-validation staging from redirecting the transaction."""
+    prepared, _, registry_root = _prepare_retained_m303(tmp_path, monkeypatch)
+    status, rendered, state = check_prepared_invocation(prepared)
+    assert status == "publishable_absence"
+    context = GeneratedExportTreePublicationContext(
+        validation=prepared.validation,
+        temporary_root=prepared.candidate_root.parents[2],
+        target_root=registry_root,
+        target_export_root=prepared.target_export_root,
+        expected_target_state=state,
+    )
+    paths = GeneratedExportTransactionPaths.for_context(context)
+    metadata = prepared.target_export_root.parent / "revision.toml"
+    before = metadata.read_bytes()
+    header = b'[revisions."2026-hasta-01-y-1t"]'
+    assert before.count(header) == 1
+    clearance = (
+        b'\ncleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", '
+        b'reason = "Injected post-validation transaction mode for admission proof." }]'
+    )
+    staged_packages: list[Path] = []
+    original_stage = tree_publication.stage_verified_candidate_package
+
+    def stage_then_change_mode(
+        *,
+        candidate_export_root: Path,
+        target_root: Path,
+        modelo: str,
+        revision_id: str,
+        expected_manifest_sha256: str,
+        expected_manifest: ExportFragmentProvenanceManifest,
+    ) -> Path:
+        staged = original_stage(
+            candidate_export_root=candidate_export_root,
+            target_root=target_root,
+            modelo=modelo,
+            revision_id=revision_id,
+            expected_manifest_sha256=expected_manifest_sha256,
+            expected_manifest=expected_manifest,
+        )
+        staged_packages.append(staged)
+        metadata.write_bytes(before.replace(header, header + clearance, 1))
+        return staged
+
+    monkeypatch.setattr(tree_publication, "stage_verified_candidate_package", stage_then_change_mode)
+    try:
+        with pytest.raises(RegistryValidationError, match="does not support supersession or export clearance"):
+            publish_validated_generated_export_tree(
+                context=context,
+                joined=prepared.inputs.joined,
+                semantic_map=prepared.inputs.semantic_map,
+                rendered=rendered,
+                render_profile=prepared.inputs.render_profile,
+                render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+            )
+        assert len(staged_packages) == 1
+        assert verify_generated_export_package(staged_packages[0]) == rendered.provenance_manifest
+        assert not paths.journal.exists() and not prepared.target_export_root.exists()
+        assert metadata.read_bytes() == before.replace(header, header + clearance, 1)
+        assert not tuple(registry_root.glob(paths.backup_prefix + "*"))
+        # This pre-transaction refusal leaves only the already verified staged package for its owner.
+    finally:
+        metadata.write_bytes(before)

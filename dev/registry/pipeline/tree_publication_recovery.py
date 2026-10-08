@@ -55,7 +55,7 @@ def recover_interrupted_publication(
     journal = load_generated_export_publication_journal(journal_path)
     _require_recovery_journal_target(journal, context, journal_path)
     publication_target_root = context.target_root.resolve()
-    if journal.is_supersession:
+    if journal.is_revision_bundle:
         return _recover_interrupted_supersession_bundle_locked(
             journal=journal,
             journal_path=journal_path,

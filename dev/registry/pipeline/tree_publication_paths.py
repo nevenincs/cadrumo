@@ -27,6 +27,9 @@ def _prepare_candidate_publication_path(context: GeneratedExportTreePublicationC
     temporary_root = _require_narrow_root(context.temporary_root, subject="generated temporary root")
     target_root = _require_narrow_root(context.target_root, subject="generated publication target root")
     _require_disjoint_roots(temporary_root, target_root)
+    origin_root = context.validation.source_chain_registry_root
+    if origin_root is not None and origin_root.resolve() != target_root:
+        raise RegistryValidationError("generated source-chain origin differs from the publication root")
     candidate_registry_root = _require_descendant_directory(
         context.validation.registry_root,
         root=temporary_root,

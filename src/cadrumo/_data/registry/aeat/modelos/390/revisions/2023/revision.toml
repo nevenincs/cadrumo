@@ -879,7 +879,7 @@ family = "formulas"
 selector = { revision = "2022", id = "modelo-390-iva-anual-cuota-devengada-total" }
 [revisions."2023".family_overrides.fields]
 source_refs = ["boe-modelo-390-2023-printed-calculations"]
-expression = { op = "add", args = [
+expression = {  args = [
     { casilla_id = "iva.anual.total-bases-cuotas-iva" },
     { casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota" },
     { casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota" },
@@ -891,3 +891,8 @@ expression = { op = "add", args = [
     { casilla_id = "iva.anual.modificacion.recargo-concurso.cuota" },
 ] }
 source_citations = [{ source_ref = "boe-modelo-390-2023-printed-calculations", required_text = ["34 + 664 + 36 +666 + 600 + 602 + 42 + 44 + 46"] }]
+
+# Replace the earlier source-scoped disclosure owner.
+[[revisions."2023".family_removals]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-390-printed-disclosure-arithmetic-2022"}

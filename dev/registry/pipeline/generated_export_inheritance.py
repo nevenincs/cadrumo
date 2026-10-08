@@ -7,13 +7,18 @@ from collections.abc import Mapping
 from hashlib import sha256
 from pathlib import Path
 
+from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
+from ..compiler.loader import load_modelo_directory
+from ..compiler.validate_cross_revision import strict_cross_revision_casilla_continuity_failures
 from .bootstrap_supersession import bootstrap_layout_supersession_fingerprint
 from .export_fragment_provenance_projection import loader_semantic_digest
 from .generated_export_inheritance_model import GeneratedExportInheritance, GeneratedExportInheritanceContext
@@ -75,12 +80,17 @@ def select_generated_export_inheritance(
     revision: str,
     source_root: Path | None = None,
     _visited: frozenset[str] = frozenset(),
+    _require_eligible: bool = False,
+    retain_source_chain: bool = False,
 ) -> GeneratedExportInheritanceContext | None:
     """Return a baseline only when the child's entire effective layout is equal.
 
     This selects storage identity, never legal or review authority. The child
     still renders from its own source, semantic map and profile before equality
-    with this baseline can be established by the renderer.
+    with this baseline can be established by the renderer. A detached candidate
+    cannot retain evolution endpoints. Explicit source-chain staging may use
+    the same compact storage only after its live complete continuity agrees
+    with the validated authority; injected or stale evolution data still refuses.
     """
     if revision in _visited:
         raise RegistryValidationError(f"generated export inheritance ancestor cycle at {modelo}/{revision}")
@@ -103,7 +113,12 @@ def select_generated_export_inheritance(
         evolution_root = (
             registry_root / "modelos" / modelo / "revisions" / selected_id / "casilla_continuidad_evolutions"
         )
-        if evolution_root.exists():
+        if evolution_root.exists() and (
+            not retain_source_chain
+            or not _validated_continuity_source_chain(authority, registry_root, modelo=modelo, revision=selected_id)
+        ):
+            if not _require_eligible:
+                return None
             raise RegistryValidationError(
                 "generated export inheritance cannot detach a revision with continuity evolutions: "
                 f"{modelo}/{selected_id}",
@@ -134,6 +149,8 @@ def select_generated_export_inheritance(
             revision=str(baseline_id),
             source_root=source_root,
             _visited=visited,
+            _require_eligible=True,
+            retain_source_chain=retain_source_chain,
         )
         if baseline_context is None or baseline_context.attestation != manifest.generated_export_inheritance:
             raise RegistryValidationError("generated export inheritance baseline chain attestation changed")
@@ -193,8 +210,61 @@ def require_generated_export_inheritance(
     *,
     modelo: str,
     revision: str,
+    retain_source_chain: bool = False,
+    source_root: Path | None = None,
 ) -> None:
-    """Refuse a removed, changed, or newly ambiguous storage baseline."""
-    current = select_generated_export_inheritance(authority, registry_root, modelo=modelo, revision=revision)
+    """Refuse changed storage pins or an unvalidated retained continuity chain."""
+    current = select_generated_export_inheritance(
+        authority,
+        registry_root,
+        modelo=modelo,
+        revision=revision,
+        source_root=source_root,
+        _require_eligible=True,
+        retain_source_chain=retain_source_chain,
+    )
     if current != expected:
         raise RegistryValidationError("generated export inheritance baseline or effective layout changed")
+
+
+def _validated_continuity_source_chain(
+    authority: ValidatedRegistryAuthority, registry_root: Path, *, modelo: str, revision: str
+) -> bool:
+    """Admit only real, nonempty evolution declarations in the unchanged full source."""
+    expected = authority.modelo(modelo)
+    if not expected.revisions[revision].casilla_continuidad_evolutions:
+        return False
+    try:
+        current = load_modelo_directory(registry_root / "modelos" / modelo)
+    except RegistryLoadError:
+        return False
+    return current == expected and not strict_cross_revision_casilla_continuity_failures((current,))
+
+
+def generated_export_source_chain_fingerprint(
+    registry_root: Path, *, modelo: str, revision: str, omit_target_export: bool = False
+) -> str:
+    """Pin every source member, omitting only the named export after approved cutover."""
+    modelo_root = registry_root / "modelos" / modelo
+    if is_link_like(modelo_root) or not modelo_root.is_dir():
+        raise RegistryValidationError("generated source-chain origin is not a regular modelo directory")
+    omitted = modelo_root / "revisions" / revision / "export"
+    members: list[tuple[str, str, str]] = []
+
+    def visit(directory: Path) -> None:
+        for child in sorted(iter_directory(directory, require_root=True)):
+            if is_link_like(child):
+                raise RegistryValidationError("generated source-chain origin contains a linked member")
+            if omit_target_export and child == omitted:
+                continue
+            relative = child.relative_to(modelo_root).as_posix()
+            if child.is_dir():
+                members.append((relative, "directory", ""))
+                visit(child)
+            elif child.is_file():
+                members.append((relative, "file", sha256(child.read_bytes()).hexdigest()))
+            else:
+                raise RegistryValidationError("generated source-chain origin contains a non-regular member")
+
+    visit(modelo_root)
+    return sha256(canonical_json_bytes(members)).hexdigest()

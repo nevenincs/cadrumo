@@ -117,9 +117,18 @@ def test_money_rendered_by_an_unscaled_wire_type_is_reported(authority: Validate
 
 def test_the_unusual_decimal_count_is_reported_as_an_exception(authority: ValidatedRegistryAuthority) -> None:
     """A money field rendered at four decimals is surfaced, not accepted silently."""
-    revision = authority.modelo("189").revisions["2025"]
-    kinds = {item.kind for item in scale_findings(revision, modelo_id="189")}
-    assert "money_unexpected_scale" in kinds
+    revision = authority.modelo("303").revisions["2025"]
+    layout = revision.export_layouts[0]
+    declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
+    record, victim = next(
+        (record, field)
+        for record in layout.records
+        for field in record.fields
+        if declared.get(field.casilla_id) == "money" and field.data_type == "decimal" and field.decimals == 2
+    )
+    unusual = victim.model_copy(update={"decimals": 4})
+    findings = scale_findings(_revision_with(revision, layout, record, victim, unusual), modelo_id="303")
+    assert [(item.kind, item.field_id) for item in findings] == [("money_unexpected_scale", str(victim.id))]
 
 
 def test_the_unscaled_fields_are_concentrated_and_bounded(authority: ValidatedRegistryAuthority) -> None:
@@ -437,3 +446,160 @@ def test_a_casilla_less_non_amount_is_not_admitted_to_an_amount_run(
     assert not amount_shaped_without_casilla(admitted.model_copy(update={"data_type": "text"}))
 
     assert sibling_findings(revision, modelo_id="353") == ()
+
+
+def test_amount_components_are_not_compared_with_whole_amounts(authority: ValidatedRegistryAuthority) -> None:
+    """Equal-width integer projections do not change the scale of complete amounts."""
+    from ..analysis.monetary_scale import sibling_findings
+    from ..maintenance_support import resolved_export_fields
+
+    revision = authority.modelo("181").revisions["2022-y-siguientes"]
+    fields = [item.field for item in resolved_export_fields(revision) if item.field.length == 10]
+    assert any(field.value_policy == "integer-part" for field in fields)
+    assert any(field.value_policy == "implied-decimal" and field.decimals == 2 for field in fields)
+    assert sibling_findings(revision, modelo_id="181") == ()
+
+
+def test_m714_quantity_selectors_preserve_the_official_four_decimals(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Units and euros sharing Num/13 slots retain their distinct typed meanings."""
+    from decimal import Decimal
+    from pathlib import Path
+
+    from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+    from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
+
+    from ..analysis.monetary_scale import sibling_findings
+    from ..compiler.loader import load_shared_catalogues
+    from ..maintenance_support import resolved_export_fields
+    from ..pipeline.record_design_intermediate import load_record_design_intermediate
+
+    data_root = Path("src/cadrumo/_data")
+    source = load_record_design_intermediate(
+        data_root,
+        load_shared_catalogues(data_root / "registry/aeat").sources,
+        source_ref="aeat-dr-714-2021",
+        filing_year=2021,
+        design_epoch="2021",
+    )
+    official = {
+        field.offset: field
+        for sheet in source.sheets
+        for field in sheet.fields
+        if field.sheet == "714-08 Patrimonio" and field.source_row in (35, 40, 45)
+    }
+    assert set(official) == {588, 682, 776}
+    revision = authority.modelo("714").revisions["2021"]
+    providers = {binding.id: binding.provider for binding in revision.bindings}
+    fields = [
+        item.field
+        for item in resolved_export_fields(revision)
+        if item.record_id == "modelo-714-page-08" and item.field.offset in official
+    ]
+    assert len(fields) == 3
+    for field in fields:
+        assert field.offset is not None and field.binding is not None
+        row = official[field.offset]
+        assert row.aeat_type == "Num" and row.content == "9 enteros, 4 decimales"
+        provider = providers[field.binding]
+        assert isinstance(provider, ManualInputProvider)
+        assert str(provider.data_type) == "decimal" and provider.decimals == 4
+        assert field.design_type == "Num" and field.decimals == 4
+        assert render_fixed_width_export_field(field, Decimal("1.2345")) == "0000000012345"
+    assert sibling_findings(revision, modelo_id="714") == ()
+
+
+def test_a_manual_monetary_amount_still_reports_a_changed_wire_scale(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Typed quantities are excluded while a damaged money producer remains visible."""
+    from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
+
+    from ..analysis.monetary_scale import sibling_findings
+
+    revision = authority.modelo("714").revisions["2021"]
+    layout = revision.export_layouts[0]
+    record = next(item for item in layout.records if str(item.id) == "modelo-714-page-08")
+    victim = next(field for field in record.fields if field.offset == 601)
+    provider = next(binding.provider for binding in revision.bindings if binding.id == victim.binding)
+    assert isinstance(provider, ManualInputProvider) and str(provider.data_type) == "money"
+    assert victim.casilla_id is None and victim.design_type == "Num" and victim.decimals == 2
+    unscaled = victim.model_copy(update={"data_type": "integer", "decimals": None})
+
+    findings = sibling_findings(_revision_with(revision, layout, record, victim, unscaled), modelo_id="714")
+
+    assert [(item.field_id, item.kind) for item in findings] == [(str(victim.id), "sibling_scale_disagrees")]
+    assert "unscaled" in findings[0].detail and "cents" in findings[0].detail
+
+
+@pytest.mark.parametrize("year", range(2021, 2026))
+def test_every_m714_quantity_accepts_and_roundtrips_four_decimal_entry(
+    authority: ValidatedRegistryAuthority, year: int
+) -> None:
+    """Every source-named security/unit quantity admits its published precision."""
+    from decimal import Decimal
+    from pathlib import Path
+
+    from cadrumo.application.modelo.edit_number_parsing import read_edit_number_lexeme, validate_edit_number
+    from cadrumo.application.modelo.edit_parse_errors import ModeloEditParseRefusedError
+    from cadrumo.application.modelo.edit_value_grammar import binding_value_grammar
+    from cadrumo.core.external_constants import OutputLanguage
+    from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+    from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
+    from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
+
+    from ..compiler.loader import load_shared_catalogues
+    from ..maintenance_support import resolved_export_fields
+    from ..pipeline.record_design_intermediate import load_record_design_intermediate
+
+    data_root = Path("src/cadrumo/_data")
+    source = load_record_design_intermediate(
+        data_root,
+        load_shared_catalogues(data_root / "registry/aeat").sources,
+        source_ref=f"aeat-dr-714-{year}",
+        filing_year=year,
+        design_epoch=str(year),
+    )
+    official = {
+        (row.record_identity.split()[0], row.offset, row.length): row
+        for sheet in source.sheets
+        for row in sheet.fields
+        if row.length == 13
+        and any(label in row.normalized_description.casefold() for label in ("nº valores", "nº de unidades"))
+    }
+    assert len(official) >= 40, "the source quantity population must not disappear"
+    revision = authority.modelo("714").revisions[str(year)]
+    bindings = {binding.id: binding for binding in revision.bindings}
+    observed = set()
+    for resolved in resolved_export_fields(revision):
+        field = resolved.field
+        if field.binding is None:
+            continue
+        binding = bindings[field.binding]
+        provider = binding.provider
+        if not isinstance(provider, ManualInputProvider):
+            continue
+        assert provider.record is not None and field.offset is not None and field.length is not None
+        coordinate = (provider.record, field.offset, field.length)
+        if coordinate not in official:
+            continue
+        observed.add(coordinate)
+        row = official[coordinate]
+        assert row.aeat_type == "Num"
+        assert str(provider.data_type) == str(binding.value.data_type) == "decimal"
+        assert provider.decimals == field.decimals == 4
+        grammar = binding_value_grammar(binding, revision=revision)
+        assert not grammar.money_operand_bound and grammar.max_fraction_digits is None
+        for locale, lexeme in ((OutputLanguage.EN, "1.2345"), (OutputLanguage.ES, "1,2345")):
+            entered = read_edit_number_lexeme(lexeme, locale, [])
+            validated = validate_edit_number(entered, grammar)
+            assert validated == Decimal("1.2345")
+            wire = render_fixed_width_export_field(field, validated)
+            assert wire == "0000000012345"
+            assert parse_fixed_width_export_field(field, wire) == Decimal("1.2345")
+    assert observed == set(official)
+
+    monetary = next(binding for binding in revision.bindings if str(binding.value.data_type) == "money")
+    with pytest.raises(ModeloEditParseRefusedError):
+        validate_edit_number(Decimal("1.2345"), binding_value_grammar(monetary, revision=revision))

@@ -134,9 +134,9 @@ Where it stops:
 - Label text is not rewritten. Locale keys are edition-scoped and the loader
   gives an inherited row its origin edition's key as a fallback.
 - Export scenarios come from ``dev.registry.edition_export_scenarios``. An
-  edition whose export surface has no scenario there is reported unchecked by
-  the gate, which blocks ``--apply``; the typed, order and locale proofs still
-  run.
+  edition whose export surface has no scenario there is reported unchecked as
+  a publication-readiness finding. It does not block a proven source-only
+  ``--apply``; the typed, order and locale proofs still run.
 
 For an authored change, ``--accepted-modelo-dir`` adds an independent retained
 casilla order comparison against an accepted source snapshot before staging or

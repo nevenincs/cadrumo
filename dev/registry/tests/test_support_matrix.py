@@ -95,15 +95,17 @@ def test_modelo_100_uses_xml_dictionary_export_not_fixed_width() -> None:
 def test_dormant_modelos_are_not_calc_grade() -> None:
     """Ground truth: informative/no-calculation modelos report calc_grade False, never a fabricated positive.
 
-    The enumeration is the registry's own set of informative-only modelos, read
-    off the tree rather than inherited from any other test module.
+    These named informative-only modelos have no calculation surface. Modelo
+    308 now has source-grounded reimbursement arithmetic and is checked below.
     """
     entries = _entries()
 
-    for modelo_id in ("189", "280", "308", "345", "360"):
+    for modelo_id in ("189", "280", "345", "360"):
         entry = entries[modelo_id]
         assert not entry.calc_grade, f"modelo {modelo_id} should not be calc-grade"
         assert not entry.has_completeness_manifest, f"dormant modelo {modelo_id} should carry no completeness manifest"
+    assert entries["308"].calc_grade
+    assert entries["308"].has_completeness_manifest
 
 
 def test_row_reports_latest_revision_by_valid_from() -> None:

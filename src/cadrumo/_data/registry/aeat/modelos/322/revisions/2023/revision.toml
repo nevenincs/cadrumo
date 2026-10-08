@@ -1715,3 +1715,8 @@ source_refs = [0]
 
 [revisions."2023".family_overrides.sequence_order]
 source_refs = [1, 0]
+
+# Replace the earlier source-scoped disclosure owner.
+[[revisions."2023".family_removals]]
+family = "constructs"
+selector = {revision = "2008-2022", id = "modelo-322-printed-disclosure-arithmetic-2008-2022"}

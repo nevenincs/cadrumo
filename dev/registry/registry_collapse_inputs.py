@@ -9,6 +9,7 @@ from importlib.util import resolve_name
 from pathlib import Path
 from tokenize import open as open_python
 
+from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_PACKAGE
 from dev.registry.compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 
 _TOOL_PACKAGE_ROOTS = (
@@ -24,9 +25,9 @@ def _local_module_path(repo_root: Path, module: str) -> Path | None:
     """Resolve an import to a local Python source, without importing it."""
     parts = module.split(".")
     if parts[0] == "dev":
-        base = repo_root / "dev"
+        base = repo_root / DEVELOPMENT_TOOLING
     elif parts[0] == "cadrumo":
-        base = repo_root / "src" / "cadrumo"
+        base = repo_root / PRODUCT_PACKAGE
     else:
         return None
     module_path = base.joinpath(*parts[1:])

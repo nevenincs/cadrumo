@@ -2128,3 +2128,8 @@ source_refs = [0, 2, 1]
 [[revisions."2026-y-siguientes".family_removals]]
 family = "export_layouts"
 selector = {revision = "2024-2025", id = "generated-modelo-322-2024-2025-fichero"}
+
+# Replace the earlier source-scoped disclosure owner.
+[[revisions."2026-y-siguientes".family_removals]]
+family = "constructs"
+selector = {revision = "2024-2025", id = "modelo-322-printed-disclosure-arithmetic-2024-2025"}

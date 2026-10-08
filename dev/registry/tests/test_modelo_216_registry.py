@@ -37,6 +37,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
@@ -54,6 +55,13 @@ _RET_ESPECIE: CasillaId = validated_casilla_id("12", surface="_RET_ESPECIE")
 _RET_TOTAL: CasillaId = validated_casilla_id("13", surface="_RET_TOTAL")
 _ANTERIORES: CasillaId = validated_casilla_id("20", surface="_ANTERIORES")
 _RESULTADO: CasillaId = validated_casilla_id("21", surface="_RESULTADO")
+
+_CURRENT_LIFECYCLE_LINK_IDS = (
+    "modelo-216-snapshot-review",
+    "modelo-216-snapshot-approval",
+    "modelo-216-snapshot-reconciliation",
+    "modelo-216-snapshot-workflow",
+)
 
 _EXPECTED_DEADLINES = {
     (2022, "1T"): (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
@@ -233,3 +241,62 @@ def test_modelo_216_pre_redesign_edition_declares_only_the_partidas_its_design_p
     (layout,) = revision.export_layouts
     assert layout.source_refs == (design_ref,)
     assert revision.effective_authority_grade is RegistryAuthorityGrade.CALCULATION
+
+
+@pytest.mark.parametrize("filing_year", (2024, 2025, 2026))
+def test_modelo_216_current_lifecycle_links_use_current_guidance(filing_year: int) -> None:
+    """Current filing snapshots retain link semantics with applicable current instructions."""
+    modelo, catalogues = _load_modelo_216()
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
+    historical_links = {link.id: link for link in modelo.revisions["2020-2023"].application_links}
+    current_links = {link.id: link for link in snapshot.revision.application_links}
+
+    assert snapshot.revision.id == "2024-y-siguientes"
+    for link_id in _CURRENT_LIFECYCLE_LINK_IDS:
+        current = current_links[link_id]
+        historical = historical_links[link_id]
+        assert current.source_refs == ("aeat-modelo-216-procedure",)
+        assert current.model_dump(exclude={"source_refs"}) == historical.model_dump(exclude={"source_refs"})
+    source = snapshot.sources["aeat-modelo-216-procedure"]
+    assert source.applies_from == date(2024, 1, 1)
+    assert source.applies_across(snapshot.revision.valid_from, snapshot.revision.valid_to)
+
+
+@pytest.mark.parametrize("filing_year", (2022, 2023))
+def test_modelo_216_historical_lifecycle_links_retain_historical_guidance(filing_year: int) -> None:
+    """The pre-redesign calculation snapshot still owns its historical source and bounds."""
+    modelo, catalogues = _load_modelo_216()
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period="1T",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
+    historical_source = "boe-2008-18497-modelo-216-calculation-guidance"
+    links = {link.id: link for link in snapshot.revision.application_links}
+
+    assert snapshot.revision.id == "2020-2023"
+    for link_id in _CURRENT_LIFECYCLE_LINK_IDS:
+        assert links[link_id].source_refs == (historical_source,)
+    source = snapshot.sources[historical_source]
+    assert source.applies_to == date(2023, 12, 31)
+    assert source.applies_across(snapshot.revision.valid_from, snapshot.revision.valid_to)
+
+
+@pytest.mark.parametrize("link_id", _CURRENT_LIFECYCLE_LINK_IDS)
+def test_modelo_216_current_snapshot_refuses_historical_lifecycle_guidance(link_id: str) -> None:
+    """Restoring each expired citation still fails at the real snapshot source-window guard."""
+    modelo, catalogues = _load_modelo_216()
+    revision = modelo.revisions["2024-y-siguientes"]
+    historical_source = "boe-2008-18497-modelo-216-calculation-guidance"
+    changed_links = tuple(
+        link.model_copy(update={"source_refs": (historical_source,)}) if link.id == link_id else link
+        for link in revision.application_links
+    )
+    changed_revision = revision.model_copy(update={"application_links": changed_links})
+    changed_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: changed_revision}})
+
+    with pytest.raises(RegistryValidationError, match=historical_source):
+        build_snapshot(changed_modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")

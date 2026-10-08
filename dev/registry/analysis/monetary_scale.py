@@ -41,7 +41,8 @@ wire type that performs no scaling. Four conditions are reported:
   split. Reported so the shape is visible and countable, not because it is
   wrong.
 - ``sibling_scale_disagrees`` - a monetary field emitting a different magnitude
-  from the amounts of the same width beside it in the same record. Official
+  from complete amounts of the same width and official numeric type beside it
+  in the same record. Component projections and typed quantities are excluded. Official
   designs declare runs of amount fields distinguished only by meaning, so a
   field scaling differently from its run has no reason in the design and one of
   them is wrong. This is the only condition here that no per-field rule can
@@ -65,6 +66,8 @@ from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
@@ -105,6 +108,23 @@ _NON_VALUE_FIELD_KINDS = frozenset({"literal", "filler"})
 #: ``boolean`` are not amounts under any reading, so a field declaring one is
 #: never admitted to a sibling comparison on the strength of its width alone.
 _AMOUNT_WIRE_TYPES = frozenset({"money", "decimal", "integer"})
+
+#: A component writes only part of its monetary casilla, so its digits cannot
+#: be compared with complete amounts. The projection, rather than its scale or
+#: field name, states that distinction.
+_COMPONENT_VALUE_POLICIES = frozenset(
+    {
+        ExportValuePolicy.INTEGER_PART,
+        ExportValuePolicy.FRACTIONAL_DIGITS,
+        ExportValuePolicy.SIGNED_COMPONENT_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE,
+        ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
+        ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+    }
+)
+
+type _SiblingGroup = tuple[str, int, str | None]
 
 
 @dataclass(frozen=True, slots=True)
@@ -257,7 +277,7 @@ def amount_shaped_without_casilla(field: ExportFieldDefinition) -> bool:
 
 
 def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[MonetaryScaleFinding, ...]:
-    """Report monetary fields of one record and width whose siblings scale differently.
+    """Report complete monetary fields whose source-compatible siblings scale differently.
 
     The official designs declare runs of amount fields that are the same kind of
     field at the same width, distinguished only by what they mean. When one of
@@ -286,17 +306,22 @@ def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Monet
     monetary. A casilla-less field joins a proven run on
     :func:`amount_shaped_without_casilla`; it can never form a run of its own,
     so a record of counts, codes or years is never compared with itself.
+
+    Width alone does not establish that two numeric fields are siblings. The
+    official type column separates N and Num families; a component projection
+    writes only part of an amount; and a typed manual quantity positively
+    states a nonmonetary meaning. None of these distinctions is inferred from
+    the renderer's scale, which is the value this comparison must still check.
     """
     declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
     groups, monetary_runs = _collect_sibling_groups(revision, declared=declared)
     findings: list[MonetaryScaleFinding] = []
-    for (record_id, length), members in sorted(groups.items()):
+    for group, members in groups.items():
         findings.extend(
             _sibling_group_findings(
                 revision,
                 modelo_id=modelo_id,
-                record_id=record_id,
-                length=length,
+                group=group,
                 members=members,
                 monetary_runs=monetary_runs,
             )
@@ -308,25 +333,40 @@ def _collect_sibling_groups(
     revision: ModeloRevision,
     *,
     declared: dict[CasillaId, str],
-) -> tuple[dict[tuple[str, int], list[tuple[str, str, CasillaId | None]]], set[tuple[str, int]]]:
-    groups: dict[tuple[str, int], list[tuple[str, str, CasillaId | None]]] = collections.defaultdict(list)
+) -> tuple[dict[_SiblingGroup, list[tuple[str, str, CasillaId | None]]], set[_SiblingGroup]]:
+    groups: dict[_SiblingGroup, list[tuple[str, str, CasillaId | None]]] = collections.defaultdict(list)
     #: Groups a casilla declared monetary has vouched for. Nothing else is compared.
-    monetary_runs: set[tuple[str, int]] = set()
+    monetary_runs: set[_SiblingGroup] = set()
+    providers = {binding.id: binding.provider for binding in revision.bindings}
     for resolved in resolved_export_fields(revision):
         field = resolved.field
         if field.length is None:
             # A field with no declared width cannot be compared against
             # siblings by width; the per-field checks report it instead.
             continue
+        if field.value_policy in _COMPONENT_VALUE_POLICIES:
+            continue
+        # The official type column distinguishes signed N slots from unsigned
+        # Num slots. Equal widths alone do not join those source families:
+        # M714's unsigned security counts sit beside signed monetary amounts.
+        # Neither the renderer's type nor its decimals enter this key, so an
+        # amount accidentally rendered unscaled still contradicts its peers.
+        group = (resolved.record_id, field.length, field.design_type)
         casilla_id = resolved.casilla_id
         if casilla_id is not None:
             if declared.get(casilla_id) != _MONETARY:
                 continue
-            monetary_runs.add((resolved.record_id, field.length))
-        elif not amount_shaped_without_casilla(field):
-            continue
+            monetary_runs.add(group)
+        else:
+            provider = providers.get(field.binding)
+            if isinstance(provider, ManualInputProvider) and str(provider.data_type) != _MONETARY:
+                # An explicitly typed quantity, count or code is stronger
+                # evidence than an amount-shaped slot of the same width.
+                continue
+            if not amount_shaped_without_casilla(field):
+                continue
         outcome = scale_outcome(str(field.data_type), getattr(field, "decimals", None))
-        groups[(resolved.record_id, field.length)].append((outcome, str(field.id), casilla_id))
+        groups[group].append((outcome, str(field.id), casilla_id))
     return groups, monetary_runs
 
 
@@ -334,13 +374,13 @@ def _sibling_group_findings(
     revision: ModeloRevision,
     *,
     modelo_id: str,
-    record_id: str,
-    length: int,
+    group: _SiblingGroup,
     members: list[tuple[str, str, CasillaId | None]],
-    monetary_runs: set[tuple[str, int]],
+    monetary_runs: set[_SiblingGroup],
 ) -> tuple[MonetaryScaleFinding, ...]:
-    if (record_id, length) not in monetary_runs or len(members) < 2:
+    if group not in monetary_runs or len(members) < 2:
         return ()
+    record_id, length, _design_type = group
     outcomes = {outcome for outcome, _, _ in members}
     if len(outcomes) < 2:
         return ()

@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial historical authoring: identity, representatives, four-rate deduction tables, settlement, statistical information and differentiated sectors follow BOE-A-2022-19290 Annex III. The 2023 page 2 follows BOE-A-2023-26632 Annex IV. Existing field owners are preserved; three printed settlement aliases are restored. Page 5 activity geometry and duplicate summary producers still require reconciliation; printed arithmetic, full visual review and populated native verification remain outstanding. Surcharge boxes 36, 600 and 602 now use their exact rate owners; legacy aggregate calculation inputs remain auxiliary. The old annual arithmetic still requires separate repair." }
 generator_version = 1
-source_state_digest = "9a4d3d2559bdb784193b0935b2880eec0fca6ec4a77bdcdabf447652d7a67a3e"
+source_state_digest = "e4aa11aaca0310bc9519871ee5f15be4579a42fc0d369504cf35210512d13808"
 design_sources = [
     { source_ref = "aeat-dr-390-2022", sha256 = "f8764cfcb195ab685c8038524daeba55c33b89cc6434b29375d8e8b1a52bdc0e" },
     { source_ref = "boe-modelo-390-2022-form-pdf", sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590" },

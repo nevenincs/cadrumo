@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.filing.record_field_renderer import COMPUTED_VALUE_PRODUCERS, DRAFT_VALUE_PRODUCERS
+from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
@@ -24,6 +25,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _values(field: ExportFieldDefinition) -> tuple[object, ...]:
     policy = field.value_policy
+    if field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA and "aeat-dr-369-2021" in field.source_refs:
+        return ("C", " ")
     if field.kind in {CasillaFieldKind.LITERAL, CasillaFieldKind.FILLER}:
         return (field.literal,)
     if policy in {ExportValuePolicy.FOUR_DIGIT_YEAR, ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS}:

@@ -1,0 +1,27 @@
+# Existing 2026 calendar facts moved to their selected January/Q1 owner.
+[[revisions."2026-hasta-01-y-1t".deadline_windows]]
+id = "modelo-303-2026-1t"
+filing_year = 2026
+period = "2026 1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions."2026-hasta-01-y-1t".deadline_windows]]
+id = "modelo-303-2026-01-mensual"
+filing_year = 2026
+period = "2026 01"
+period_kind = "monthly"
+opens_on = 2026-02-01
+closes_on = 2026-03-02
+payment_cutoff_on = 2026-02-25
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = [
+    "boe-modelo-303-2008-form",
+    "aeat-modelo-303-procedure",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+

@@ -1,7 +1,7 @@
 """A revision without a record design follows its predecessor only where its own form proves it.
 
 Modelo 390 for ejercicio 2026 has an official form (Orden HAC/27/2026, anexo
-IV) and no AEAT diseño de registro. Its committed layout is checked against
+IV) and no AEAT diseño de registro. Its generated candidate is checked against
 that form read independently of the generator: each continued box must stand
 on the form page printing its page label. Each refusal is proven on a scratch
 copy of the form's extracted text, beside the unmodified copy reproducing the
@@ -31,7 +31,7 @@ from ...compiler.loader import load_registry_tree
 from ...record_design_labels import DATA_ROOT
 from ..cli import REGISTRY_ROOT
 from ..generator import generate_revision_layout
-from ..official_form_pages import read_official_form_pages
+from ..official_form_pages import PrintedPage, read_official_form_pages
 from ..predecessor_layout import PredecessorLayout
 from ..stability import continuity_keys
 
@@ -62,6 +62,9 @@ def _form_pages_read_plainly() -> list[str]:
 
 def _page_printing(label: str) -> str:
     """The one form page whose line ends with the page label, as the form prints it top right."""
+    if "Annex " in label:
+        annex_page = label.split(", page ", 1)[1].split(", printed ", 1)[0]
+        label = f"Pág. {annex_page}"
     pattern = re.compile(re.escape(label) + r"$", re.MULTILINE)
     pages = [page for page in _form_pages_read_plainly() if pattern.search(page)]
     assert len(pages) == 1, label
@@ -73,7 +76,7 @@ def _on_form(layout: FormLayoutDefinition) -> dict[str, tuple[str, str]]:
 
 
 def test_390_2026_keeps_each_continuing_box_where_its_own_form_prints_it() -> None:
-    layout = _layout("2026")
+    layout = _candidate_layout()
     assert layout.seed_source is FormLayoutSeedSource.PREDECESSOR_LAYOUT
     assert {_FORM, _PREDECESSOR_DESIGN} <= {source.source_ref for source in layout.design_sources}
     pages = {page.id: page.official_ref for page in layout.pages}
@@ -91,7 +94,7 @@ def test_390_2026_keeps_each_continuing_box_where_its_own_form_prints_it() -> No
 
 
 def test_390_2026_is_paginated_like_2025_for_every_box_it_declares() -> None:
-    before, after = _layout("2025"), _layout("2026")
+    before, after = _layout("2025"), _candidate_layout()
     revision = _registry()[0]["390"].revisions["2026"]
     keys_before = continuity_keys(_registry()[0]["390"].revisions["2025"])
     keys_after = continuity_keys(revision)
@@ -113,7 +116,7 @@ def test_390_2026_is_paginated_like_2025_for_every_box_it_declares() -> None:
 def test_the_form_reader_sets_aside_running_heads_and_arithmetic_captions() -> None:
     modelos, sources = _registry()
     form = read_official_form_pages(modelos["390"].revisions["2026"].source_refs, sources, DATA_ROOT)
-    labels = {page.official_ref for page in _layout("2025").pages if page.official_ref is not None}
+    labels = {"Pág. 2", "Pág. 2 bis", "Pág. 3"}
     second = form.page_labelled("Pág. 2", labels=labels)
     second_bis = form.page_labelled("Pág. 2 bis", labels=labels)
     assert second is not None and second_bis is not None and second is not second_bis
@@ -126,6 +129,14 @@ def test_the_form_reader_sets_aside_running_heads_and_arithmetic_captions() -> N
     assert second_bis.prints_box("47") and second_bis.prints_apartado("5")
 
 
+@pytest.mark.parametrize(("text", "found"), [("Pág. 2", True), ("Pág. 12136", False), ("Pág. 2 bis", False)])
+def test_authored_citation_matches_the_form_label_without_confusing_the_boe_page(text: str, found: bool) -> None:
+    citation = "BOE-A-2026-1761 Annex IV, page 2, printed 12136"
+    bis = "BOE-A-2026-1761 Annex IV, page 2 bis, printed 12137"
+    page = PrintedPage("fixture", "Pag. 19", text, frozenset(), frozenset())
+    assert (citation in page.labels((citation, bis))) is found
+
+
 def _generate_from(data_root: Path) -> tuple[FormLayoutDefinition, tuple[str, ...]]:
     modelos, sources = _registry()
     modelo = modelos["390"]
@@ -135,6 +146,13 @@ def _generate_from(data_root: Path) -> tuple[FormLayoutDefinition, tuple[str, ..
     )
     assert outcome.layout is not None
     return outcome.layout, outcome.notes
+
+
+@cache
+def _candidate_layout() -> FormLayoutDefinition:
+    """Generate a candidate without replacing the separately owned authored form."""
+    layout, _notes = _generate_from(DATA_ROOT)
+    return layout
 
 
 def _scratch_form(tmp_path: Path, edit: Callable[[str, str], str] | None) -> Path:
@@ -160,13 +178,13 @@ def _sections(layout: FormLayoutDefinition) -> dict[str, tuple[str, str]]:
 
 def test_a_scratch_copy_of_the_form_reproduces_the_committed_layout(tmp_path: Path) -> None:
     layout, _notes = _generate_from(_scratch_form(tmp_path, None))
-    assert layout == _layout("2026")
+    assert layout == _candidate_layout()
 
 
 def test_a_box_its_page_no_longer_prints_falls_to_the_numbered_page(tmp_path: Path) -> None:
     box = "47"
-    casilla = next(item.casilla_id for item in _layout("2026").placements if item.box_number == box)
-    assert _sections(_layout("2026"))[casilla][0] == "pag-2-bis"
+    casilla = next(item.casilla_id for item in _candidate_layout().placements if item.box_number == box)
+    assert _sections(_candidate_layout())[casilla][0] == "pag-2-bis"
 
     def drop_box(title: str, text: str) -> str:
         return re.sub(rf"(?<!\S){box}(?!\S)", " ", text) if "Pág. 2 bis" in text else text
@@ -174,7 +192,7 @@ def test_a_box_its_page_no_longer_prints_falls_to_the_numbered_page(tmp_path: Pa
     layout, notes = _generate_from(_scratch_form(tmp_path, drop_box))
     assert _sections(layout)[casilla][0] == "numbered-boxes"
     assert any(casilla in note for note in notes)
-    moved = {key for key, position in _sections(layout).items() if _sections(_layout("2026")).get(key) != position}
+    moved = {key for key, position in _sections(layout).items() if _sections(_candidate_layout()).get(key) != position}
     assert moved == {casilla}
 
 
@@ -183,9 +201,9 @@ def test_a_page_label_printed_on_two_pages_confirms_neither(tmp_path: Path) -> N
         return text + "\nPág. 3" if title == "Pag. 19" else text
 
     layout, _notes = _generate_from(_scratch_form(tmp_path, repeat_label))
-    assert "pag-3" in {page.id for page in _layout("2026").pages}
+    assert "pag-3" in {page.id for page in _candidate_layout().pages}
     assert "pag-3" not in {page.id for page in layout.pages}
-    shown_on_page_3 = {key for key, (page, _section) in _sections(_layout("2026")).items() if page == "pag-3"}
+    shown_on_page_3 = {key for key, (page, _section) in _sections(_candidate_layout()).items() if page == "pag-3"}
     assert shown_on_page_3
     assert {_sections(layout)[key][0] for key in shown_on_page_3} == {"numbered-boxes"}
 
@@ -196,7 +214,7 @@ def test_an_apartado_its_page_no_longer_prints_drops_its_sections(tmp_path: Path
 
     layout, _notes = _generate_from(_scratch_form(tmp_path, drop_apartado))
     assert "pag-5" not in {page.id for page in layout.pages}
-    assert {page.id for page in layout.pages} == {page.id for page in _layout("2026").pages} - {"pag-5"}
+    assert {page.id for page in layout.pages} == {page.id for page in _candidate_layout().pages} - {"pag-5"}
 
 
 def test_a_revision_with_its_own_record_design_never_follows_its_predecessor() -> None:
@@ -206,12 +224,13 @@ def test_a_revision_with_its_own_record_design_never_follows_its_predecessor() -
     followed = generate_revision_layout(
         "390", modelo.revisions["2025"], sources=sources, data_root=DATA_ROOT, predecessor=predecessor
     )
-    assert followed.layout == _layout("2025")
+    independent = generate_revision_layout("390", modelo.revisions["2025"], sources=sources, data_root=DATA_ROOT)
+    assert followed.layout == independent.layout
     assert followed.layout is not None and followed.layout.seed_source is FormLayoutSeedSource.EXPORT_RECORD_DESIGN
 
 
 def test_every_continued_placement_is_on_the_form() -> None:
-    layout = _layout("2026")
+    layout = _candidate_layout()
     shown = _on_form(layout)
     for placement in layout.placements:
         assert (placement.casilla_id in shown) == (placement.kind is FormPlacementKind.ON_FORM)

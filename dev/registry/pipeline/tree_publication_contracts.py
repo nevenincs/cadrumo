@@ -15,6 +15,7 @@ from cadrumo.core.hashing import hash_file
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.locks_errors import LockAcquisitionError
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 
@@ -59,6 +60,7 @@ class GeneratedExportPublicationJournal(_StrictModel):
     superseded_construct_references: int | None = Field(default=None, ge=0)
     supersession_source_sha256: str | None = Field(default=None, pattern=SHA256_PATTERN)
     cleanup_started: bool | None = None
+    retires_export_clearance: bool | None = None
 
     @field_validator("modelo", "revision_id")
     @classmethod
@@ -70,6 +72,11 @@ class GeneratedExportPublicationJournal(_StrictModel):
     def is_supersession(self) -> bool:
         """Whether this transaction replaces a reviewed manual layout as a bundle."""
         return self.superseded_layout_id is not None
+
+    @property
+    def is_revision_bundle(self) -> bool:
+        """Whether recovery owns a pinned revision directory rather than an export."""
+        return self.is_supersession or self.retires_export_clearance is True
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,6 +103,7 @@ class GeneratedExportTreeTargetStateReceipt:
     manifest_sha256: str | None
     output_files: tuple[ExportFragmentOutputDigest, ...]
     supersession_source_sha256: str | None = None
+    clearance_source_sha256: str | None = None
 
     @classmethod
     def observe(
@@ -106,10 +114,23 @@ class GeneratedExportTreeTargetStateReceipt:
     ) -> GeneratedExportTreeTargetStateReceipt:
         """Capture the exact manifest and output digests currently at this root."""
         if not export_root.exists():
+            clearance_sha256 = None
+            metadata = export_root.parent / "revision.toml"
+            if metadata.is_file():
+                table = (
+                    parse_toml(metadata.read_text(encoding="utf-8"))
+                    .get("revisions", {})
+                    .get(export_root.parent.name, {})
+                )
+                if any(row.get("family") == "export_layouts" for row in table.get("cleared_families", ())):
+                    from .bootstrap_supersession import bootstrap_layout_supersession_fingerprint
+
+                    clearance_sha256 = bootstrap_layout_supersession_fingerprint(export_root.parent)
             return cls(
                 manifest_sha256=None,
                 output_files=(),
                 supersession_source_sha256=supersession_source_sha256,
+                clearance_source_sha256=clearance_sha256,
             )
         return cls(
             manifest_sha256=export_provenance_file_sha256(export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME),

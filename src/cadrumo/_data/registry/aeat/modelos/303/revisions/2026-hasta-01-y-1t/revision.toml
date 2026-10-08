@@ -1,0 +1,58 @@
+# January/Q1 retains the prior printed annex, independently of the 2026 record design.
+# Storage ancestry is not a legal predecessor or completed review claim.
+[revisions."2026-hasta-01-y-1t"]
+formula_source_refs = ["aeat-dr-303-2024-early"]
+casilla_storage_baseline = "2026-y-siguientes"
+family_storage_baseline = "2026-y-siguientes"
+valid_from = 2026-01-01
+valid_to = 2026-03-31
+period_selector = { years = [2026], periods = ["01", "1T"] }
+authority_grade = "filing"
+orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-orden-hac-1425-2025-iva-authority", "boe-modelo-303-2008-form", "boe-modelo-303-2024-form-pdf"]
+casilla_source_refs = ["aeat-dr-303-2026"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+engineered_by = "codex-agent"
+review_status = "agent_reviewed"
+reviewed_by = "codex-agent-source-review-pending-operator"
+reviewed_at = 2026-10-08
+
+[revisions."2026-hasta-01-y-1t".family_dispositions.applicability]
+reason = "The prior printed annex applies to January/Q1 2026; the 2026 record design independently governs all 2026 presentations. Filing cadence remains declared by filing_schedules and orden_aplicabilidad."
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["boe-modelo-303-2024-form-pdf", "boe-modelo-303-2026-form-pdf", "aeat-dr-303-2026"]
+
+# DP30303 box112 Nota2: "Sólo para periodo 02 y siguientes".
+# BOE-A-2026-1761 final provision: first February or Q2 2026.
+# Its 2026 transport slot remains present; early-period nonzero deduction is refused.
+[[revisions."2026-hasta-01-y-1t".casilla_overrides]]
+selector = { revision = "2026-y-siguientes", id = "112" }
+fields = { constraints = { min_value = "0", max_value = "0", legal_refs = ["orden-eha-3786-2008:art-1"], source_refs = ["aeat-dr-303-2026", "boe-modelo-303-2026-form-pdf"] }, semantic_role = "m303_pago_a_cuenta_deposito_distinto_del_aduanero_no_aplicable",  semantic_role_cardinality_reason = "The 2026 record retains this slot in January/Q1, but Nota2 and BOE first-February/Q2 applicability make it zero-only and absent from the prior paper annex. It is not a substitution-compatible active deduction." }
+
+[[revisions."2026-hasta-01-y-1t".family_overrides]]
+family = "formulas"
+selector = { revision = "2026-y-siguientes", id = "modelo-303-volumen-operaciones-anual" }
+fields = { "source_refs" = ["boe-modelo-303-2024-form-pdf", "aeat-dr-303-2026"], "source_citations" = [{ "required_text" = ["Total volumen de operaciones", "121 Ley IVA", "97 + 98 - 79 - 99"], "source_ref" = "boe-modelo-303-2024-form-pdf" }] }
+
+[[revisions."2026-hasta-01-y-1t".family_overrides]]
+family = "constructs"
+selector = { revision = "2026-y-siguientes", id = "modelo-303-iva-autoliquidacion" }
+fields = { deadline_windows = ["modelo-303-2026-01-mensual", "modelo-303-2026-1t"] }
+
+[[revisions."2026-hasta-01-y-1t".family_overrides]]
+family = "constructs"
+selector = { revision = "2026-y-siguientes", id = "modelo-303-printed-disclosure-arithmetic-2026-y-siguientes" }
+replacement_id = "modelo-303-printed-disclosure-arithmetic-2026-hasta-01-y-1t"
+fields = { source_refs = ["boe-modelo-303-2024-form-pdf", "aeat-dr-303-2026", "aeat-modelo-303-procedure", "aeat-dr-303-2023", "boe-modelo-303-2008-form"] }
+
+# Only the actual early filing coordinates belong to this edition.
+[[revisions."2026-hasta-01-y-1t".family_overrides]]
+family = "filing_schedules"
+selector = { revision = "2026-y-siguientes", id = "modelo-303-trimestral" }
+fields = { periods = ["1T"] }
+
+[[revisions."2026-hasta-01-y-1t".family_overrides]]
+family = "filing_schedules"
+selector = { revision = "2026-y-siguientes", id = "modelo-303-mensual" }
+fields = { periods = ["01"] }

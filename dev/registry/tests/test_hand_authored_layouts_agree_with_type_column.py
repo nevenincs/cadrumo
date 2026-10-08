@@ -17,7 +17,6 @@ current list of unresolved rows.
 from __future__ import annotations
 
 import re
-import shutil
 from pathlib import Path
 
 import pytest
@@ -29,6 +28,7 @@ from ..analysis.hand_authored_type_column import (
     screen_authority,
 )
 from ..compiler.authority import compiled_bundled_authority
+from ..pipeline.export_tree_serialization import render_toml_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -77,7 +77,12 @@ def test_fields_the_schema_cannot_sign_are_exactly_the_declared_ones(screened) -
             continue
         count, _reason = live.get(item.subject, (0, item.blocked_reason))
         live[item.subject] = (count + 1, item.blocked_reason)
-    assert live == _BLOCKED_PER_REVISION
+    authored = {
+        f"{modelo}/{revision}" for modelo, revision, _root in hand_authored_revisions(compiled_bundled_authority())
+    }
+    assert live == {
+        subject: disposition for subject, disposition in _BLOCKED_PER_REVISION.items() if subject in authored
+    }
 
 
 def test_screen_alignments_cover_the_live_hand_authored_inventory(screened) -> None:
@@ -93,12 +98,20 @@ def test_screen_alignments_cover_the_live_hand_authored_inventory(screened) -> N
 
 
 def _planted_revision(tmp_path: Path, modelo: str, revision: str) -> Path:
-    for candidate_modelo, candidate_revision, root in hand_authored_revisions(compiled_bundled_authority()):
-        if (candidate_modelo, candidate_revision) == (modelo, revision):
-            planted = tmp_path / "revision"
-            shutil.copytree(root / "export_layouts", planted / "export_layouts")
-            return planted
-    raise AssertionError(f"{modelo}/{revision} is not a hand-authored revision")
+    """State a manual fixture even after the real source has been published."""
+    loaded = compiled_bundled_authority().modelo(modelo).revisions[revision]
+    planted = tmp_path / "revision"
+    layouts = planted / "export_layouts"
+    layouts.mkdir(parents=True)
+    payload = {
+        "revisions": {
+            revision: {
+                "export_layouts": [item.model_dump(mode="json", exclude_none=True) for item in loaded.export_layouts]
+            }
+        }
+    }
+    (layouts / "0001-declarations.toml").write_bytes(render_toml_bytes("0001-declarations.toml", payload))
+    return planted
 
 
 def _first_live_signed_field(export_layouts: Path) -> tuple[Path, int, str]:
@@ -109,7 +122,7 @@ def _first_live_signed_field(export_layouts: Path) -> tuple[Path, int, str]:
             stripped = line.strip()
             if stripped.startswith("#"):
                 continue
-            match = re.fullmatch(r'id = "([^"]+)"', stripped)
+            match = re.fullmatch(r"id = ['\"]([^'\"]+)['\"]", stripped)
             if match is not None:
                 field_id = str(match.group(1))
             elif stripped == "signed = true" and field_id is not None:
@@ -153,3 +166,26 @@ def test_a_record_that_fits_no_sheet_is_unchecked_not_passed(tmp_path: Path) -> 
     alignments, _found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
 
     assert Alignment.UNMATCHED in {item.alignment for item in alignments}
+
+
+def test_a_planted_schema_blocked_field_retains_its_reason(tmp_path: Path) -> None:
+    """Migration of the live blocked inventory cannot silence the blocked detector."""
+    authority = compiled_bundled_authority()
+    planted = _planted_revision(tmp_path, "490", "2021")
+    layout, line_number, field_id = _first_live_signed_field(planted / "export_layouts")
+    lines = layout.read_text("utf-8").splitlines(keepends=True)
+    field_start = max(index for index in range(line_number) if lines[index].startswith("[["))
+    field_end = next(
+        (index for index in range(line_number + 1, len(lines)) if lines[index].startswith("[[")), len(lines)
+    )
+    block = "".join(lines[field_start:field_end])
+    assert "data_type = 'money'" in block
+    block = block.replace("signed = true", "signed = false").replace("data_type = 'money'", "data_type = 'integer'")
+    layout.write_text("".join(lines[:field_start]) + block + "".join(lines[field_end:]), "utf-8")
+
+    alignments, found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
+
+    assert alignments and all(item.alignment is Alignment.ALIGNED for item in alignments)
+    assert [(item.field_id, item.blocked_reason) for item in found] == [
+        (field_id, "data type 'integer' cannot be signed; only money can")
+    ]

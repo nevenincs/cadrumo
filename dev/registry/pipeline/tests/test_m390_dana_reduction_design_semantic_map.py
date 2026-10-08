@@ -125,12 +125,38 @@ def _entry_index(entries: tuple[SemanticMapEntry, ...]) -> dict[tuple[str, str],
 
 _StablePayload = tuple[str, str | None, str | None, str | None, str | None, str | None, str | None, str | None]
 
+# These printed page-5 quantities moved from unrouted manual bindings to their
+# source-backed casillas. Their wire concepts remain unchanged; the target
+# edition's anchor-to-layout proof below independently checks each new owner.
+_PROMOTED_SIMPLIFICADO_OWNERS = {
+    "iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest": "cuota-resultante-no-agricola",
+    "iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest": "cuota-resultante-agricola",
+    "iva-devengado-en-adquisiciones-intracomunitarias": "aic-bienes-cuota-devengada",
+    "iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo": "inversion-sujeto-pasivo",
+    "iva-devengado-iva-devengado-en-entregas-de-activos-fijos": "entrega-activos-fijos",
+    "deducciones-iva-soportado-en-adquisicion-de-activos-fijos": "iva-soportado-activos-fijos",
+    "deducciones-regularizacion-de-bienes-de-inversion": "regularizacion-bienes-inversion",
+    "deducciones-suma-de-deducciones": "suma-deducciones",
+    "resultado-regimen-simplificado": "resultado",
+}
+
 
 def _stable_payload(entry: SemanticMapEntry, revision: str) -> _StablePayload:
     binding = None if entry.binding is None else str(entry.binding).replace(f"modelo-390-{revision}.", "modelo-390-X.")
+    kind = entry.kind.value
+    casilla_id = None if entry.casilla_id is None else str(entry.casilla_id)
+    if binding is not None:
+        prefix = "modelo-390.page_5.operaciones-reg-simplificado-"
+        if binding.startswith(prefix) and binding.removeprefix(prefix) in _PROMOTED_SIMPLIFICADO_OWNERS:
+            kind = "casilla"
+            casilla_id = f"iva.anual.regimen-simplificado.{_PROMOTED_SIMPLIFICADO_OWNERS[binding.removeprefix(prefix)]}"
+            binding = None
+        elif binding in {f"{prefix}actividad-{row}-lorca" for row in (1, 2)}:
+            row = binding.removeprefix(prefix).split("-")[1]
+            binding = _LORCA_BINDING_IDS["A27" if row == "1" else "A51"]
     return (
-        entry.kind.value,
-        None if entry.casilla_id is None else str(entry.casilla_id),
+        kind,
+        casilla_id,
         binding,
         entry.literal,
         None if entry.producer_key is None else str(entry.producer_key),
@@ -169,7 +195,7 @@ def test_m390_dana_reduction_design_bijects_every_parser_anchor_to_the_reviewed_
     assert len(fields) == 621
     assert Counter(record for record, _cell in delta) == Counter(_DELTA_COUNTS)
     assert len(set(predecessor_fields) & set(fields) - delta) == 341
-    assert sum(len(header.fields) for header in design.auxiliary_envelope_headers) == 13
+    assert sum(len(envelope.prefix_fields) for envelope in design.variable_envelopes) == 13
 
     predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_PREDECESSOR_EXERCISE}"))
     semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_DESIGN_EXERCISE}"))

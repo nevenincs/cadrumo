@@ -126,8 +126,10 @@ def test_modelo_131_registry_bindings_cover_official_structured_records() -> Non
         snapshot = _modelo_131_snapshot_for(filing_year)
         sheets = _record_design_sheets_by_name(workbook_name)
 
+        # Num is a source numeric family. Domain integer and decimal selectors
+        # both encode its digits; their scale remains separately declared.
         official_fields = {
-            (sheet_name, field.offset, field.length, "integer" if field.type_code == "Num" else "text")
+            (sheet_name, field.offset, field.length, field.type_code)
             for sheet_name in ("DPA", "DID")
             for field in sheets[sheet_name].fields
             if _is_structured_input_field(field.description)
@@ -142,7 +144,11 @@ def test_modelo_131_registry_bindings_cover_official_structured_records() -> Non
                 selector.record,
                 selector.offset,
                 selector.length,
-                selector.data_type,
+                "Num"
+                if selector.data_type in {"integer", "decimal"}
+                else "An"
+                if selector.data_type == "text"
+                else selector.data_type,
             )
             for _binding, selector in registry_bindings
         }

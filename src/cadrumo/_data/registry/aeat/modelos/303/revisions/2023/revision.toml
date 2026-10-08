@@ -1819,3 +1819,8 @@ position = 49
 family = 'bindings'
 id = 'modelo-303-casilla-120-no-sujetas-localizacion-base'
 position = 49
+
+# Replace the inherited disclosure owner with this edition's own source-scoped owner.
+[[revisions."2023".family_removals]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-303-printed-disclosure-arithmetic-2022"}

@@ -69,6 +69,8 @@ def stage_generated_export_candidate(
     An ordinary candidate contains one detached complete edition. An attested
     generated-export child instead contains exactly its pinned ancestor chain
     and thin child, retaining every storage link needed to hydrate its layout.
+    A retained continuity candidate instead keeps the complete source chain and
+    may render that same compact export without detaching any legal endpoint.
     """
     if bootstrap_target is not None and (bootstrap_target.modelo, bootstrap_target.revision) != (modelo, revision):
         raise ValueError(
@@ -88,7 +90,8 @@ def stage_generated_export_candidate(
             manual_origin_revision=bootstrap_target.manual_origin_revision,
         )
     elif (
-        not (source_revision_root / "export").is_dir()
+        inheritance is None
+        and not (source_revision_root / "export").is_dir()
         and load_modelo_directory(source_modelo_root).revisions[revision].export_layouts
     ):
         raise ValueError(
@@ -97,10 +100,8 @@ def stage_generated_export_candidate(
         )
     _stage_shared_candidate_authority(source_root, candidate_root, modelos={modelo, *supporting_modelos})
     if retain_source_chain:
-        if inheritance is not None or (
-            bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None
-        ):
-            raise ValueError("source-chain staging cannot also supersede or inherit an export")
+        if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
+            raise ValueError("source-chain staging cannot also supersede a manual export")
         staged_modelo_root = stage_source_chain(
             source_modelo_root,
             candidate_root / "modelos" / modelo,

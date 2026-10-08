@@ -4,13 +4,15 @@ from collections.abc import Mapping
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvider
 from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormLayoutReviewState,
     FormLayoutSeedSource,
 )
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.form_layout_integrity import form_layout_failures, form_layout_source_digest
 
@@ -21,7 +23,7 @@ def reconcile_scalar_export_sources(
     *,
     replacements: Mapping[str, tuple[str, str]],
 ) -> FormLayoutDefinition:
-    """Admit only named field -> (old manual binding, existing casilla) changes.
+    """Admit named manual-input or blind-to-rate-box scalar source corrections.
 
     The caller must establish official same-box semantics and pin the mapping
     with the publication inputs. This function never infers equivalence from
@@ -55,6 +57,23 @@ def reconcile_scalar_export_sources(
                 binding_id, casilla_id = replacements[field_id]
                 binding = bindings.get(binding_id)
                 casilla = casillas.get(casilla_id)
+                if field["kind"] == "casilla":
+                    if (
+                        field_id in seen
+                        or record["repeat"] is not None
+                        or record["binding_record"] is not None
+                        or record["row_field_casilla_ids"]
+                        or field["casilla_id"] != binding_id
+                        or field["offset"] is None
+                        or field["length"] is None
+                        or not _is_rate_box_source(casillas.get(binding_id), casilla, bindings)
+                        or casilla is None
+                        or field["data_type"] != casilla.data_type.value
+                    ):
+                        raise RegistryValidationError("scalar source reconciliation refuses an uncorrelated rate box")
+                    field["casilla_id"] = casilla_id
+                    seen.add(field_id)
+                    continue
                 if (
                     field_id in seen
                     or record["repeat"] is not None
@@ -99,3 +118,31 @@ def reconcile_scalar_export_sources(
     if failures:
         raise RegistryValidationError("scalar source reconciliation failed: " + "; ".join(failures))
     return result
+
+
+def _is_rate_box_source(
+    old: CasillaDefinition | None,
+    new: CasillaDefinition | None,
+    bindings: Mapping[str, BindingDefinition],
+) -> bool:
+    """Require the same observed quantity, narrowed only by a stated rate.
+
+    Official box correspondence belongs to the reviewed semantic map. This
+    structural check cannot establish that correspondence from labels or values.
+    """
+    if old is None or new is None or old.id == new.id or old.data_type != new.data_type or new.export_refs:
+        return False
+    old_binding = bindings.get(str(old.binding))
+    new_binding = bindings.get(str(new.binding))
+    if old_binding is None or new_binding is None:
+        return False
+    old_provider, new_provider = old_binding.provider, new_binding.provider
+    return bool(
+        isinstance(old_provider, LedgerIvaProvider)
+        and isinstance(new_provider, LedgerIvaProvider)
+        and not old_provider.applied_rates
+        and bool(new_provider.applied_rates)
+        and old_binding.aggregation == new_binding.aggregation
+        and old_binding.value == new_binding.value
+        and old_provider.model_dump(exclude={"applied_rates"}) == new_provider.model_dump(exclude={"applied_rates"})
+    )

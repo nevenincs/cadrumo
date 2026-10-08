@@ -4,6 +4,12 @@
 
 ### Settlement instructions captured on 2026-10-06
 
+| File | Bytes | Retrieved | Type |
+| ---- | ----- | --------- | ---- |
+| `files/resultado-exterior-20261006.html` | 9502 | 2026-10-06 | AEAT Sede HTML — Exterior scheme settlement instructions |
+| `files/resultado-union-20261006.html` | 9468 | 2026-10-06 | AEAT Sede HTML — Union scheme settlement instructions |
+| `files/resultado-importacion-20261006.html` | 9483 | 2026-10-06 | AEAT Sede HTML — Import scheme settlement instructions |
+
 The three `files/resultado-*-20261006.html` files retain separate current
 AEAT instructions for the Exterior, Union and Import schemes. Exact retrieval
 URLs, byte counts and SHA-256 receipts are enrolled in

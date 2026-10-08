@@ -738,6 +738,7 @@ def compare_revision_against_committed(
         modelo=modelo,
         revision=revision,
         source_root=source_root,
+        retain_source_chain=True,
     )
 
     committed_root = resolved_registry_root / "modelos" / modelo / "revisions" / revision / "export"

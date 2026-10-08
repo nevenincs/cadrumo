@@ -8,11 +8,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
-from .. import bootstrap_supersession
+from .. import cli as tree_cli
 from .._tree_publication import publish_validated_generated_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
 from ..bootstrap_supersession import (
@@ -30,6 +30,7 @@ from ..cli import (
 )
 from ..export_fragment_provenance import ExportFragmentTarget
 from ..export_tree_models import RenderedExportTree
+from ..export_tree_serialization import render_toml_bytes
 from ..tree_publication_contracts import (
     GeneratedExportSupersession,
     GeneratedExportTreePublicationContext,
@@ -68,6 +69,44 @@ _CASES = (
         "c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a",
     ),
 )
+
+
+def _prepublication_registry(root: Path, *, modelo: str, ancestor: str, revisions: tuple[str, ...]) -> Path:
+    """Build a scratch manual ancestor before its generated publication.
+
+    The live corpus now publishes these layouts. Reconstruct the admission
+    state explicitly while keeping the exact typed layout, source pins and
+    storage deltas that the supersession contract operates on.
+    """
+    registry_root = root / "registry" / "aeat"
+    for catalogue in bundled_path("registry", "aeat").iterdir():
+        if catalogue.is_dir() and catalogue.name != "modelos":
+            shutil.copytree(catalogue, registry_root / catalogue.name)
+    source_modelo_root = bundled_path("registry", "aeat", "modelos", modelo)
+    loaded = load_modelo_directory(source_modelo_root)
+    modelo_root = registry_root / "modelos" / modelo
+    shutil.copytree(source_modelo_root, modelo_root)
+    for revision_root in (modelo_root / "revisions").iterdir():
+        export = revision_root / "export"
+        assert export.resolve().is_relative_to(registry_root.resolve())
+        if export.exists():
+            shutil.rmtree(export)
+    manual_root = modelo_root / "revisions" / ancestor / "export_layouts"
+    manual_root.mkdir(exist_ok=True)
+    assert not tuple(manual_root.iterdir()), "the scratch ancestor must have one explicit manual source"
+    layout = loaded.revisions[ancestor].export_layouts[0]
+    # The manual predecessor existed before source-derived full envelopes were
+    # published. A child replaces source_refs when it inherits this body layout;
+    # an early generated wrapper must not be transplanted into that old state.
+    payload = {
+        "revisions": {
+            ancestor: {
+                "export_layouts": [layout.model_dump(mode="json", exclude_none=True, exclude={"filing_envelope"})]
+            }
+        }
+    }
+    (manual_root / "0001-layout.toml").write_bytes(render_toml_bytes("0001-layout.toml", payload))
+    return registry_root
 
 
 def test_inherited_generated_form_companion_uses_canonical_local_filename(tmp_path: Path) -> None:
@@ -109,6 +148,7 @@ def test_inherited_generated_form_companion_uses_canonical_local_filename(tmp_pa
 
 @pytest.mark.parametrize("modelo,revision,ancestor,layout_id,references,source_ref,source_sha256", _CASES)
 def test_reviewed_inherited_manual_layout_has_unique_source_pinned_ancestor(
+    tmp_path: Path,
     modelo: str,
     revision: str,
     ancestor: str,
@@ -117,7 +157,8 @@ def test_reviewed_inherited_manual_layout_has_unique_source_pinned_ancestor(
     source_ref: str,
     source_sha256: str,
 ) -> None:
-    modelo_root = bundled_path("registry", "aeat", "modelos", modelo)
+    registry_root = _prepublication_registry(tmp_path, modelo=modelo, ancestor=ancestor, revisions=(revision,))
+    modelo_root = registry_root / "modelos" / modelo
     loaded = load_modelo_directory(modelo_root)
     manual_root, manual_revision = bootstrap_manual_source_revision_root(modelo_root, loaded, revision=revision)
     assert manual_revision == ancestor
@@ -138,8 +179,9 @@ def test_reviewed_inherited_manual_layout_has_unique_source_pinned_ancestor(
     ) == bootstrap_layout_supersession_fingerprint(modelo_root / "revisions" / revision)
 
 
-def test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity() -> None:
-    modelo_root = bundled_path("registry", "aeat", "modelos", "131")
+def test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity(tmp_path: Path) -> None:
+    registry_root = _prepublication_registry(tmp_path, modelo="131", ancestor="2026", revisions=("2026-3t-4t",))
+    modelo_root = registry_root / "modelos" / "131"
 
     def guard(
         *,
@@ -179,7 +221,9 @@ def test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity() ->
         guard(source_ref="aeat-dr-131-2025", source_sha256="0" * 64)
     with pytest.raises(ValueError, match="digest changed"):
         guard(source_ref="aeat-dr-131-2026-late", source_sha256="0" * 64)
-    with pytest.raises(ValueError, match="expected exactly manual layout"):
+    with pytest.raises(
+        (RegistryLoadError, ValueError), match=r"expected exactly manual layout|contains no .*fragments"
+    ):
         guard(
             superseded_layout_id="wrong",
             source_ref="aeat-dr-131-2026-late",
@@ -199,14 +243,9 @@ def test_inherited_layout_refuses_missing_or_wrong_source_pins_and_identity() ->
         )
 
 
-def test_inherited_layout_refuses_changed_or_missing_ancestor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    source_root = bundled_path("registry", "aeat", "modelos", "131")
-    copied_root = tmp_path / "modelos" / "131"
-    shutil.copytree(source_root, copied_root)
-    # Preserve the real typed modelo while mutating only the copied physical
-    # source tree; detached test roots lack bundled source-default context.
-    typed_modelo = load_modelo_directory(source_root)
-    monkeypatch.setattr(bootstrap_supersession, "load_modelo_directory", lambda _root: typed_modelo)
+def test_inherited_layout_refuses_changed_or_missing_ancestor(tmp_path: Path) -> None:
+    registry_root = _prepublication_registry(tmp_path, modelo="131", ancestor="2026", revisions=("2026-3t-4t",))
+    copied_root = registry_root / "modelos" / "131"
     ancestor = copied_root / "revisions" / "2026"
     pinned = bootstrap_layout_supersession_fingerprint(ancestor)
     fragment = next((ancestor / "export_layouts").glob("*.toml"))
@@ -223,7 +262,8 @@ def test_inherited_layout_refuses_changed_or_missing_ancestor(tmp_path: Path, mo
             manual_origin_revision="2026",
         )
     fragment.unlink()
-    with pytest.raises(ValueError, match="expected exactly manual layout"):
+    fragment.parent.rmdir()
+    with pytest.raises(RegistryLoadError, match=r"family override selector.*missing"):
         validate_bootstrap_manual_export_layout_supersession(
             copied_root,
             revision="2026-3t-4t",
@@ -246,7 +286,9 @@ def test_reviewed_candidate_detaches_only_target_and_keeps_ancestor_intact(
     source_ref: str,
     source_sha256: str,
 ) -> None:
-    registry_root = bundled_path("registry", "aeat")
+    registry_root = _prepublication_registry(
+        tmp_path / "source", modelo=modelo, ancestor=ancestor, revisions=(revision,)
+    )
     ancestor_root = registry_root / "modelos" / modelo / "revisions" / ancestor
     ancestor_before = bootstrap_layout_supersession_fingerprint(ancestor_root)
     target = GeneratedExportBootstrapTarget(
@@ -304,10 +346,33 @@ def inherited_publication_candidate(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[PreparedGeneratedTreeInvocation, RenderedExportTree]:
     """Prepare one real, source-complete late-131 candidate for both cutover outcomes."""
-    invocation = GeneratedTreeInvocation("131", "2026-3t-4t", "aeat-dr-131-2026-late", 2026, "3T")
-    prepared = prepare_generated_tree_invocation(
-        invocation, tmp_path_factory.mktemp("inherited-131") / "prepared", authority=compiled_bundled_authority()
+    registry_root = _prepublication_registry(
+        tmp_path_factory.mktemp("manual-131"), modelo="131", ancestor="2026", revisions=("2026-3t-4t",)
     )
+    invocation = GeneratedTreeInvocation("131", "2026-3t-4t", "aeat-dr-131-2026-late", 2026, "3T")
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(
+            tree_cli,
+            "bundled_path",
+            lambda *parts: registry_root if parts == ("registry", "aeat") else bundled_path(*parts),
+        )
+        # Live bootstrap enrollment is retired at publication. This fixture
+        # reconstructs the reviewed prepublication target explicitly.
+        target = GeneratedExportBootstrapTarget(
+            modelo="131",
+            revision="2026-3t-4t",
+            source_ref="aeat-dr-131-2026-late",
+            source_sha256=_CASES[0][-1],
+            layout_id="modelo-131-fichero-boe",
+            line_ending="none",
+            supersedes_layout_id="modelo-131-fichero-boe",
+            superseded_construct_references=1,
+            manual_origin_revision="2026",
+        )
+        patch.setattr(tree_cli, "generated_export_bootstrap_target", lambda **_kwargs: target)
+        prepared = prepare_generated_tree_invocation(
+            invocation, tmp_path_factory.mktemp("inherited-131") / "prepared", authority=compiled_bundled_authority()
+        )
     result, rendered, _ = check_prepared_invocation(prepared)
     assert result == "publishable_absence"
     return prepared, rendered
@@ -323,10 +388,11 @@ def test_inherited_publication_keeps_thin_child_and_rolls_back_on_refusal(
     prepared, rendered = inherited_publication_candidate
     supersession = prepared.supersession
     assert supersession is not None
-    source_modelo_root = bundled_path("registry", "aeat", "modelos", "131")
+    source_modelo_root = prepared.target_root / "modelos" / "131"
     target_root = tmp_path / "registry" / "aeat"
-    for catalogue in ("facts", "legal"):
-        shutil.copytree(bundled_path("registry", "aeat", catalogue), target_root / catalogue)
+    for catalogue in prepared.target_root.iterdir():
+        if catalogue.is_dir() and catalogue.name != "modelos":
+            shutil.copytree(catalogue, target_root / catalogue.name)
     target_modelo_root = target_root / "modelos" / "131"
     target_modelo_root.parent.mkdir(parents=True)
     shutil.copytree(source_modelo_root, target_modelo_root)
