@@ -55,9 +55,20 @@ def test_posix_stdlib_zip_cannot_redistribute_sdk_extension_payloads(tmp_path: P
         ("/usr/lib/libbz2.1.0.dylib", True),
         ("/usr/local/lib/libbz2.1.0.dylib", False),
         ("/usr/lib/libbz2.9.dylib", False),
+        ("/System/Library/Frameworks/WebKit.framework/Versions/A/WebKit", True),
+        ("/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices", True),
+        ("/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon", True),
+        ("/System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo", True),
+        ("/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore", True),
+        ("/System/Library/Frameworks/ColorSync.framework/Versions/A/ColorSync", True),
+        ("/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices", True),
+        ("/usr/lib/libobjc.A.dylib", True),
+        ("/Library/Frameworks/WebKit.framework/Versions/A/WebKit", False),
+        ("/System/Library/Frameworks/WebKit.framework/Versions/B/WebKit", False),
+        ("/usr/local/lib/libobjc.A.dylib", False),
     ],
 )
-def test_macos_pillow_bzip2_admission_requires_the_measured_system_install_name(
+def test_macos_system_admission_requires_the_measured_install_name(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, dependency: str, admitted: bool
 ) -> None:
     """Exercise the live map with a Mach-O dependency and no host signing tools."""

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d034a48942792988992ca51673a6465ff90a5f4c8af4b7d182c281c57ced9a8'
+body_hash: 'sha256:1f2b8711ed7d16b7327a5d447d0424a759b777248fa40da01a7297894e65bbff'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -334,6 +334,11 @@ related:
 - `S05` `verify:` `cmake --build build/windows-installers-x64 --config Debug --target user_docs_driver_test --parallel 2 (34 tests)` -> `pass`
 - `S05` `verify:` `focused Ruff format and ty (worker evidence)` -> `pass`
 - `S05` `verify:` `review portable docs identity and CMake fixture enrollment` -> `pass`
+- `S05` `M` `native/platforms/macos-arm64.json`
+- `S05` `M` `dev/packaging/native/tests/test_platform_enrollment.py`
+- `S05` `verify:` `focused platform enrollment22 tests` -> `pass`
+- `S05` `verify:` `focused Ruff format and ty` -> `pass`
+- `S05` `verify:` `native52-image dependency inspection against Apple SDK stubs` -> `pass`
 
 ## Notes
 
@@ -367,3 +372,4 @@ related:
 - `S05` Full Mac build failed nine translated 404 cross-root links after HTML compile success. Reviewed two-file overlay is verified and full CMake build relaunched; no complete DMG or native installation acceptance yet. Concurrent Windows frozen inputs unchanged.
 - `S05` Failure logs retained before one unchanged-input full retry. Diagnostic passed 27 connection futures and complete cleanup in 198.84s; original connection failure remains unexplained. No DMG or lifecycle acceptance claimed.
 - `S05` S05 remains open. Portable documentation identity retains canonical enrollment, selected authority roles, languages, mutation fences and output inventory. Actual generated Windows inputs include all six previously excluded fixture helper modules. WSL/manylinux native producer handoff remains pending; active Windows/Mac builds retain frozen inputs.
+- `S05` Mac full attempt28180 completed strict four-language docs in3112s, then failed package relocation: eight actual Apple system install-names absent from canonical allowlist. Exact SDK-corroborated entries added; ambient paths and undeclared versions remain refused. Original failure log SHA2567af45fdc2d8fe1df6467c0af787aebf2047975d2ed966a7099234c5c858dfe68 preserved. Native relocation and full installer retry pending; no DMG acceptance claim.

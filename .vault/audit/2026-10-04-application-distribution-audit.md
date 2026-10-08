@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf2b409b926e4d58f3bb4041132d22d3e76f88cd72582bc84de71145799811cb'
+body_hash: 'sha256:05d53b2b3ba488adc501257a80dadfaf680d14776d84dde7a8faac410e5b6bd9'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -239,6 +239,13 @@ The frozen native-installer build failed during modelo-390-supply-binding seed i
 An isolated retained-sandbox diagnostic of that exact sequence, using unchanged frozen source, authority, goldens and deadlines, passed in 198.84 seconds. All 27 completed connection futures had no exception; drain returned one receipt, no missing receipts, no uncontained or unsettled work; fixture release completed. Repeated zero-time guardian wait deadline refusals represent live-process polling, not exit failures; the held kqueue API does not supply a native exit status. Bounded observer evidence is retained locally under build/macos-process-typecheck/docs-runtime-forensics/result and remotely in the task's evidence/docs-runtime-forensics. Existing fixture-owned transient launchd containment ran; no product/login registration or host session transition occurred.
 
 The original full-build failure remains unexplained. One full native-installer retry is running with the same frozen inputs. The current Darwin transport source correction is separately tested and has not been overlaid into that build. Windows full package validation is also running; neither active build constitutes installer, upgrade or graphical-session acceptance.
+
+
+2026-10-08 S05 portable documentation cache review: PASS for commit eb5d29c645. The documentation owner hashes validated checkout-relative input names and bytes plus selected authority roles, retaining language identity, before/after mutation fences and verified output inventory. Generic native-action fingerprints remain unchanged. Review found CMake excluded source test-support modules imported by documentation scenarios; removing that exclusion closes the dependency gap. Actual generated inputs include secure_sql, profile_worker_support, retained_server, cli_runner, profile_capsule_runtime and recorded_ecb_rates as well as the identity helper. The configured user_docs_driver_test passed 34 tests in 4.28 seconds; focused Ruff/format/ty passed. Native WSL producer and manylinux cache handoff remain pending. Active Windows and Mac builds retain their original frozen source sets; this source review does not establish package or installation acceptance.
+
+
+2026-10-08 Mac full attempt 28180: the strict documentation owner completed four languages in 3112 seconds, then native package relocation refused WebKit because the canonical system-library declaration omitted actual desktop dependencies. Read-only inspection parsed all 52 staged Mach-O images with no parser errors and found eight missing direct install names, all on cadrumo: WebKit, ApplicationServices, Carbon, CoreVideo, QuartzCore, ColorSync, CoreServices and libobjc.A.dylib. Each exact install name is corroborated by the selected public SDK stub; no missing non-system dependency was observed. The fix adds only those exact names and extends real-parser relocation tests to retain rejection of ambient framework paths and undeclared versions. Focused 22 tests, Ruff, format and ty passed. Evidence is retained under build/macos-process-typecheck/relocation-failure-evidence; original full log SHA256 7af45fdc2d8fe1df6467c0af787aebf2047975d2ed966a7099234c5c858dfe68. Native relocation and full build retry remain pending. No DMG or installation acceptance is claimed.
+
 
 ## Recommendations
 
