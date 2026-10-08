@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e043e70f7af23b1bed7b6b292daf419cb02aa4c050dc37a0be6b03ae5f5e2ee'
+body_hash: 'sha256:f3e04989a0f109084cd01de6db2ce1efec4ed03a30ebab66dfc517f91494a360'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -354,6 +354,8 @@ related:
 - `S15` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
 - `S15` `verify:` `Linux dependency-policy coverage and bounded crossref review` -> `pass`
 - `S15` `by:` `root`
+- `S15` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S15` `verify:` `Debian12 native desktop dpkg-shlibdeps static symbol/provider proof` -> `pass`
 
 ## Notes
 
@@ -393,3 +395,4 @@ related:
 - `S05` Full native packaging remains separate and in progress; no product installation or native lifecycle acceptance performed.
 - `S05` S05 remains open. Native failures and isolated diagnostics are distinct; preserve host state and existing installation gates. Linux desktop delivery boundary needs explicit refinement.
 - `S15` Accepted dependency refinement under existing all-code/build authorization; implementation and minimum-runtime/native package verification pending.
+- `S15` Static provider proof exposes WebKit2.42 and stronger package minima; no product execution/installation or minimum graphical-host claim. Darwin publication candidate research remains unaccepted.
