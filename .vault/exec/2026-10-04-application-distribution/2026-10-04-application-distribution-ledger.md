@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac40178ef02c084ef380844ee0de65a8801a371f098d167c7bb0762bc83ffe33'
+body_hash: 'sha256:8368ccf276e28d49597eff8833a2950f3827db4ed52671705ecb6488e4ac00de'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -403,6 +403,10 @@ related:
 - `S16` `verify:` `Shared application installation21tests` -> `pass`
 - `S16` `verify:` `MSI28tests with actual WiX compile-decompile` -> `pass`
 - `S16` `verify:` `Owning Python Ruff format ty` -> `pass`
+- `S15` `verify:` `Linux full CMake native-installer1169s` -> `pass`
+- `S15` `verify:` `Actual full desktop DEB and RPM inspection` -> `pass`
+- `S15` `verify:` `Exact rebuilt desktop strict Debian provider-symbol proof` -> `pass`
+- `S15` `verify:` `WSL strict docs producer and verified manylinux cache consumption` -> `pass`
 
 ## Notes
 
@@ -448,3 +452,4 @@ related:
 - `S16` Existing recovery/rollback/owner-loss implementations retain native acceptance gaps. S16 adds actual resource verification before a no-op success; missing legacy/resource evidence and damaged anchored repair stay refused.
 - `S05` Original outcome preserved. Existing committed pagefind fix narrowly overlaid into isolated source with hashes. CMake retry18081 pending, gates unchanged.
 - `S16` Root integrated source review PASS; installed native product registry and interactive acceptance unproven, gates unchanged. Evidence in audit and worker verification handoff.
+- `S15` Hash-verified local artifacts and full provenance in linux-s15-final-handoff. Native installation gates unchanged; graphical lifecycle and ARM64 acceptance unproven.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:0279e53875a78167d9aa464e4568bec05c24c24f4fcd055e63c6259969f793a8'
+body_hash: 'sha256:9412ae6c910f46b2edd5adcccf5ec131024a3df27c9627be8db0109eca56561c'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -268,6 +268,16 @@ The runner's already_published_verified success is reached only after existing R
 Root reviewed the complete authoring-to-database-to-runner flow and the new real Store/inventory/custody fixtures. Review corrections added absent-resource address validation, bounded typed AUMID conversion, final repeated owner checks, meaningful no-op refusal coverage and actual compiled property preservation. Verification: 26 native installer tests and pinned Rust 1.96 all-target Clippy PASS; 21 shared application installation tests PASS; 28 MSI owner tests including real WiX four-product compilation/decompilation with the fresh native DLL PASS; owning Python Ruff/format/ty PASS. Real isolated ShellLink tests reject semantic corruption and prove retained-file deletion exclusion. Native registry/component/installed-product observations are substituted only in orchestration fixtures, so those tests establish control flow and real filesystem/publication behavior, not positive installed-product acceptance.
 
 Unsigned Release build PASS in 33.08 seconds. build/s16-installer-review/release/cadrumo_installer.dll SHA256 977f915a86da249a7d344c25447120e12b782b5a536627b02187147af35e8466; cadrumo-msi-maintenance.exe SHA256 e6ec22c196191919d8a184b177089d64c07e8dfadafa808132f5b03d1688015d. No product installation, registry writes, login registration, frozen full-build overlay or interactive session test occurred. S09/S04 installation and two-distinct-release acceptance remain pending, including native positive observations and interrupted maintenance; this source review does not authorize removing the gates.
+
+### S15 Linux native package build | low | PASS for x86-64 build and package inspection; lifecycle acceptance pending
+
+The full CMake native-installer target passed in 1169.303 seconds with the reviewed S15 overlay, actual desktop payload, pinned private build SDK and unchanged native installation refusal gates. Both real DEB/RPM owning artifact inspections passed identity, complete owned inventory, desktop prerequisite clauses and refusal scripts. Local hash-verified outputs: build/linux-s15-artifacts/cadrumo-0.5.1-linux-x86-64.deb, 501026772 bytes, SHA256 eafcc40e7a9cf746ba4f85dfd8be8e6092b4bf103556923259f7067a3263b88b; corresponding .rpm, 395327184 bytes, SHA256 43cac569016a4cfe4669ebee6f9331af25e984e39b4a05d53dcec67be2f86735. Container originals are retained.
+
+Frozen overlay correction preserved the earlier source cohort: only the S15 generator/Contract.cmake hunks replaced the accidentally broad overlay, and narrowly required Cargo locks were resolved normally with Linux metadata checks. All original bytes and corrections are inventoried. Final manylinux source d0a930dff30e0eb18483adece9cab456fd0b03a5647e0dd4b401490d6511b75a; WSL 47be9e0b681452e85fa365863e72b5a5d7d5fc98fb3400196e00a5154c829ad1. Sources and selected authority remained unchanged during builds. WSL strict four-language CMake docs producer passed in 193.839 seconds; its verified 15205-input cache identity 374c30523dfda91c741e2eca4d136ce9c715f4a957003990a23b0fdbe3786360 was consumed by the real manylinux owner in 33.309 seconds. No manufactured ready/cache marker was used. Full provenance is build/windows-installers-x64/verification/linux-s15-final-handoff.json and adjacent handoff.md.
+
+The rebuilt desktop hash changed to 368f65700b7fb2e4a199db35fd249fa48c2032ffd9764cbe51ec35a1c3b91e28, so the earlier standalone symbol proof was not reused as exact artifact evidence. Fresh strict Debian dpkg-shlibdeps/readelf analysis passed against the exact new binary, without --ignore-missing-info, product execution, apt changes or product installation. Provider TSV and four symbol metadata files match the original fixed cohort byte for byte. Evidence: build/linux-desktop-debian-proof-s15/evidence. Actual ELF requirements stay at or below GLIBC 2.28; the Debian libc6>=2.34 result describes its provider metadata, not an increased artifact ABI floor. Sidecar stopped afterward.
+
+Stock CPack 4.4 supplements explicit DEB dependencies with dpkg-shlibdeps --ignore-missing-info when the tool supports it; the manylinux dpkg database cannot establish provider compatibility by that scan alone. No local bypass was added. Complete conservative explicit dependencies, actual package inspection and the separate strict Debian proof establish the scoped build evidence. This does not establish minimum graphical runtime compatibility, Linux ARM64 execution, installed login/launch/upgrade/uninstall behavior or two-release acceptance; S03/S04 and manager lifecycle work retain those obligations.
 
 ## Recommendations
 

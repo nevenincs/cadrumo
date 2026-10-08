@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:a22eace621ddda8c871a706e802dadb54239d1bceb0e725302dedccde28f0543'
+body_hash: 'sha256:005ae47d85def91e7b6ae072605030af843068cbc071af09382bddafeec76aa5'
 ---
 
 # Application distribution
@@ -52,7 +52,7 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [x] `S13` - Enable and verify CMake native Linux component builds with the pinned manylinux toolchain and explicit payload configuration; `CMakeLists.txt, native/cmake/ManylinuxToolchain.cmake and native/CONTRACT.md with native Linux compile and platform test evidence`.
 - [ ] `S05` - Centralize build output paths and generation ownership in CMake and remove unowned build clutter; `native/cmake, native/desktop, dev/packaging/native, dev/packaging/tests, dev/docs sequence build helpers and owning tests, and build`.
 - [x] `S14` - Separate registered local filing settlement from the bounded exchange timeout exposed by frozen installer documentation acceptance; `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py filing function only and new owning filing settlement tests, preserving independent verification changes`.
-- [ ] `S15` - Declare and verify Linux desktop system runtime prerequisites through canonical per-image metadata, strict ELF relocation and CMake DEB/RPM dependency projections while preserving private Python and installation gates; `native platform desktop metadata, dev/packaging/native dependency and relocation helpers/tests, native/cmake/distribution`.
+- [x] `S15` - Declare and verify Linux desktop system runtime prerequisites through canonical per-image metadata, strict ELF relocation and CMake DEB/RPM dependency projections while preserving private Python and installation gates; `native platform desktop metadata, dev/packaging/native dependency and relocation helpers/tests, native/cmake/distribution`.
 - [ ] `S16` - Verify exact installed Windows registration resources and admit an already-installed same-version no-op without native repair or publication mutation, retaining anchored damaged-repair refusal and MSI gates; `dev/packaging/native/windows_msi authoring and tests, native/installer registration verification and runner tests, and narrowly required shared maintenance observation`.
 
 ## Parallelization
