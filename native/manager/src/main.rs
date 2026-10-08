@@ -21,7 +21,11 @@ const STARTUP_FAILED: u8 = 69;
 #[cfg(windows)]
 const ADMISSION_REFUSED: u8 = 77;
 
-fn start(breakaway_attempted: bool, sign_in: bool) -> ExitCode {
+fn start(
+    breakaway_attempted: bool,
+    sign_in: bool,
+    designation: Option<cadrumo_manager::cutover::Designation>,
+) -> ExitCode {
     #[cfg(windows)]
     let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
     #[cfg(windows)]
@@ -38,7 +42,12 @@ fn start(breakaway_attempted: bool, sign_in: bool) -> ExitCode {
     #[cfg(windows)]
     diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
     #[cfg(windows)]
-    match run_windows(breakaway_attempted, sign_in, diagnostics.clone()) {
+    match run_windows(
+        breakaway_attempted,
+        sign_in,
+        designation,
+        diagnostics.clone(),
+    ) {
         Ok(()) => {
             diagnostics.host_stopped(0);
             ExitCode::SUCCESS
@@ -52,7 +61,7 @@ fn start(breakaway_attempted: bool, sign_in: bool) -> ExitCode {
     }
     #[cfg(not(windows))]
     {
-        let _ = (breakaway_attempted, sign_in);
+        let _ = (breakaway_attempted, sign_in, designation);
         let _ = writeln!(io::stderr(), "manager_platform_unavailable");
         ExitCode::from(STARTUP_FAILED)
     }
@@ -62,6 +71,7 @@ fn start(breakaway_attempted: bool, sign_in: bool) -> ExitCode {
 fn run_windows(
     breakaway_attempted: bool,
     sign_in: bool,
+    designation: Option<cadrumo_manager::cutover::Designation>,
     diagnostics: Arc<Diagnostics>,
 ) -> io::Result<()> {
     use cadrumo_application::error::application::{ErrorCode, Operation};
@@ -78,25 +88,34 @@ fn run_windows(
         HostStage::JobEscape,
         ErrorCode::ManagerUnavailable,
         Operation::Manager,
-        || windows_lifecycle::escape_job(breakaway_attempted, sign_in),
+        || windows_lifecycle::escape_job(breakaway_attempted || designation.is_some(), sign_in),
     )? {
         diagnostics.host_outcome(HostStage::JobEscape, HostOutcome::Dispatched);
         return Ok(());
     }
-    let installation = match stage(
-        &diagnostics,
-        HostStage::Package,
-        ErrorCode::PackageUnavailable,
-        Operation::Manager,
-        || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?, sign_in),
-    )? {
-        DispatchOutcome::Dispatched => {
-            diagnostics.host_outcome(HostStage::Package, HostOutcome::Dispatched);
-            return Ok(());
-        }
-        DispatchOutcome::Current(installation) => installation,
+    let (installation, successor) = if let Some(designation) = designation {
+        let admitted = cadrumo_manager::cutover_child::admit(designation)?;
+        (
+            admitted.installation,
+            Some((admitted.permit, admitted.reporter)),
+        )
+    } else {
+        let installation = match stage(
+            &diagnostics,
+            HostStage::Package,
+            ErrorCode::PackageUnavailable,
+            Operation::Manager,
+            || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?, sign_in),
+        )? {
+            DispatchOutcome::Dispatched => {
+                diagnostics.host_outcome(HostStage::Package, HostOutcome::Dispatched);
+                return Ok(());
+            }
+            DispatchOutcome::Current(installation) => installation,
+        };
+        (installation, None)
     };
-    let Some(_session_lock) = stage(
+    let Some(session_lock) = stage(
         &diagnostics,
         HostStage::Instance,
         ErrorCode::InstanceLockForeign,
@@ -105,6 +124,9 @@ fn run_windows(
     )?
     else {
         diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
+        if successor.is_some() {
+            return Err(io::ErrorKind::WouldBlock.into());
+        }
         if !sign_in {
             cadrumo_manager::ipc::windows::request(
                 &env::current_exe()?,
@@ -127,6 +149,7 @@ fn run_windows(
         installation.locations().package_root(),
     )?;
     diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
+    let selected = installation.selection().clone();
     let installed = InstalledRuntime::from_admitted(installation)
         .map_err(|error| inspection_failed(&diagnostics, error))?;
     diagnostics.host_outcome(HostStage::Package, HostOutcome::Ready);
@@ -137,7 +160,7 @@ fn run_windows(
         Operation::Manager,
         ManagerSession::current,
     )?;
-    let background = Background::new(
+    let mut background = Background::new(
         installed,
         session,
         windows_lifecycle::activity,
@@ -148,23 +171,36 @@ fn run_windows(
             cadrumo_manager::session::ownership::StartKind::Manual
         },
     );
+    if let Some((permit, reporter)) = successor {
+        background.designated(permit, reporter);
+    }
+    background.watch_installation(&selected)?;
     stage(
         &diagnostics,
         HostStage::Window,
         ErrorCode::ManagerUnavailable,
         Operation::Manager,
-        || windows_lifecycle::run(background, ipc, tray),
+        || windows_lifecycle::run(background, ipc, tray, selected, session_lock),
     )
 }
 
 fn main() -> ExitCode {
     let arguments: Vec<_> = env::args_os().skip(1).collect();
     match arguments.as_slice() {
-        [] => start(false, false),
-        [flag] if flag == "--sign-in" => start(false, true),
-        [flag] if flag == "--breakaway-attempt" => start(true, false),
+        [] => start(false, false, None),
+        [flag] if flag == "--sign-in" => start(false, true, None),
+        [flag] if flag == "--breakaway-attempt" => start(true, false, None),
         [first, second] if first == "--breakaway-attempt" && second == "--sign-in" => {
-            start(true, true)
+            start(true, true, None)
+        }
+        [flag, value] if flag == "--cutover" => {
+            match value
+                .to_str()
+                .and_then(|value| cadrumo_manager::cutover::Designation::parse(value).ok())
+            {
+                Some(designation) => start(false, false, Some(designation)),
+                None => ExitCode::from(USAGE_ERROR),
+            }
         }
         [flag] if flag == "--version" => {
             match writeln!(

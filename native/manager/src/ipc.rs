@@ -14,15 +14,27 @@ pub const MAXIMUM_FRAME_BYTES: usize = 4096;
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(tag = "request", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Request {
-    Reveal { schema: u32 },
-    Retry { schema: u32 },
-    SuccessorReady { schema: u32, runtime_pid: u32 },
+    Reveal {
+        schema: u32,
+    },
+    Retry {
+        schema: u32,
+    },
+    SuccessorReady {
+        schema: u32,
+        runtime_pid: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        report: Option<crate::cutover::Report>,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum Outcome {
     RevealQueued,
+    DesignationAccepted,
+    SuccessorObserved,
+    SuccessorReady,
     ReEvaluated,
     SurfaceUnavailable,
     DesignationRequired,
@@ -46,7 +58,9 @@ pub fn decode(bytes: &[u8]) -> io::Result<Request> {
         | Request::Retry { schema }
         | Request::SuccessorReady { schema, .. } => schema,
     };
-    if schema != 1 || matches!(request, Request::SuccessorReady { runtime_pid: 0, .. }) {
+    if schema != 1
+        || matches!(&request, Request::SuccessorReady { runtime_pid, report, .. } if report.as_ref().map_or(*runtime_pid == 0, |report| !report.valid(*runtime_pid)))
+    {
         return Err(io::ErrorKind::InvalidData.into());
     }
     Ok(request)
@@ -101,7 +115,8 @@ mod tests {
             respond(
                 Request::SuccessorReady {
                     schema: 1,
-                    runtime_pid: 42
+                    runtime_pid: 42,
+                    report: None
                 },
                 unexpected
             )

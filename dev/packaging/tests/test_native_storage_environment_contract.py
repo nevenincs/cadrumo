@@ -55,6 +55,9 @@ def test_desktop_defaults_project_canonical_declarations(tmp_path: Path) -> None
         STORAGE_TAXONOMY[StorageCategory.MANAGER_PREFERENCES].subpath
     ]
     assert _rust_strings(generated, "MANAGER_LANGUAGE_ENV") == [OUTPUT_LANGUAGE_ENV_VAR]
+    assert _rust_strings(generated, "MANAGER_FAILED_VERSIONS") == [
+        STORAGE_TAXONOMY[StorageCategory.MANAGER_FAILED_VERSIONS].subpath
+    ]
     assert _rust_strings(generated, "MANAGER_LANGUAGE_DEFAULT") == [DEFAULT_OUTPUT_LANGUAGE.value]
     strings = json.dumps(manager_chrome_strings(), ensure_ascii=False, sort_keys=True)
     assert f"pub const MANAGER_STRINGS_JSON: &str = {generator_module._rust_string(strings)};" in generated

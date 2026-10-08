@@ -168,9 +168,26 @@ struct WindowState {
     failed: bool,
     tray: Option<crate::windows_tray::Tray>,
     revealing: bool,
+    upgrades: Option<crate::cutover_coordinator::Coordinator>,
+    session: Option<crate::session::instance::SessionLock>,
+    ending: bool,
+    upgrade_error: bool,
+    exit_after_settle: bool,
+}
+impl WindowState {
+    fn cancel_upgrade(&mut self) {
+        if let Some(upgrades) = &mut self.upgrades {
+            upgrades.cancel();
+        }
+    }
+    fn unsettled(&self) -> bool {
+        self.upgrades
+            .as_ref()
+            .is_some_and(|upgrades| upgrades.unsettled())
+    }
 }
 
-trait Lifecycle {
+trait Lifecycle: crate::cutover_coordinator::Runtime {
     fn retry(&mut self) -> io::Result<()> {
         self.poll()
     }
@@ -240,8 +257,19 @@ unsafe extern "system" fn procedure(
                     let status = (*state).background.status();
                     let result = tray.reveal(status).and_then(|action| match action {
                         Some(crate::windows_tray::Action::Retry) => (*state).background.retry(),
-                        Some(crate::windows_tray::Action::Restart) => (*state).background.restart(),
-                        Some(crate::windows_tray::Action::Quit) => (*state).background.quit(),
+                        Some(crate::windows_tray::Action::Restart) => {
+                            if (*state).unsettled() {
+                                Err(io::ErrorKind::WouldBlock.into())
+                            } else {
+                                (*state).background.restart()
+                            }
+                        }
+                        Some(crate::windows_tray::Action::Quit) => {
+                            if let Some(upgrades) = &mut (*state).upgrades {
+                                upgrades.cancel();
+                            }
+                            (*state).background.quit()
+                        }
                         None => Ok(()),
                     });
                     if result.is_err() {
@@ -266,14 +294,25 @@ unsafe extern "system" fn procedure(
             }
             match message {
                 0x0011 => {
+                    state.ending = true;
+                    state.cancel_upgrade();
                     state.background.session_end();
                     return 1;
                 }
                 0x0016 => {
                     if wparam == 0 {
-                        state.background.cancel_session_end();
+                        state.ending = false;
+                        state.exit_after_settle = false;
+                        if let Some(upgrades) = &mut state.upgrades {
+                            upgrades.resume();
+                        } else {
+                            state.background.cancel_session_end();
+                        }
                     } else {
-                        PostQuitMessage(0);
+                        state.exit_after_settle = true;
+                        if !state.unsettled() {
+                            PostQuitMessage(0);
+                        }
                     }
                     return 0;
                 }
@@ -297,25 +336,58 @@ unsafe extern "system" fn procedure(
                         });
                         if result.is_err() {
                             state.failed = true;
-                            PostQuitMessage(1);
-                            return 0;
+                            state.exit_after_settle = true;
+                            state.cancel_upgrade();
                         }
                     }
                     if state.background.poll().is_err() {
                         state.failed = true;
-                        PostQuitMessage(1);
+                        state.exit_after_settle = true;
+                        state.cancel_upgrade();
                     }
                     if let Some(tray) = &mut state.tray {
                         let _ = tray.update(state.background.status());
                     }
-                    if state.background.quit_completed() {
+                    if let Some(upgrades) = &mut state.upgrades {
+                        match upgrades.poll(
+                            &mut *state.background,
+                            &mut state.session,
+                            &mut state.ipc,
+                        ) {
+                            Ok(true) => PostQuitMessage(0),
+                            Ok(false) => {}
+                            Err(_) => {
+                                // A failed cleanup retains the claim and all process
+                                // witnesses. It must not exit and launch a second owner.
+                                if !state.upgrade_error
+                                    && let Some(tray) = &mut state.tray
+                                {
+                                    let _ = tray.notice("action_failed");
+                                }
+                                state.upgrade_error = true;
+                            }
+                        }
+                        if let Some(notice) = upgrades.take_notice()
+                            && let Some(tray) = &mut state.tray
+                        {
+                            let _ = tray.notice(notice);
+                        }
+                    }
+                    if (state.background.quit_completed() || state.exit_after_settle)
+                        && !state.unsettled()
+                    {
                         PostQuitMessage(0);
                     }
                     return 0;
                 }
                 0x0010 => {
+                    state.ending = true;
+                    state.exit_after_settle = true;
+                    state.cancel_upgrade();
                     state.background.session_end();
-                    PostQuitMessage(0);
+                    if !state.unsettled() {
+                        PostQuitMessage(0);
+                    }
                     return 0;
                 }
                 0x0082 => {
@@ -332,26 +404,49 @@ pub fn run(
     background: Background,
     ipc: crate::ipc::windows::Server,
     tray: crate::windows_tray::Configuration,
+    selected: cadrumo_application::installation::Selection,
+    session: crate::session::instance::SessionLock,
 ) -> io::Result<()> {
-    run_window(Box::new(background), Some(ipc), Some(tray), |_| {})
+    run_window(
+        Box::new(background),
+        Some(ipc),
+        Some(tray),
+        Some((selected, session)),
+        |_| {},
+    )
 }
 
 fn run_window(
     background: Box<dyn Lifecycle>,
     ipc: Option<crate::ipc::windows::Server>,
     tray: Option<crate::windows_tray::Configuration>,
+    resources: Option<(
+        cadrumo_application::installation::Selection,
+        crate::session::instance::SessionLock,
+    )>,
     created: impl FnOnce(Handle),
 ) -> io::Result<()> {
     let name: Vec<u16> = format!("{}.session-window", crate::identity::MANAGER_ID)
         .encode_utf16()
         .chain([0])
         .collect();
+    let (upgrades, session) = resources.map_or((None, None), |(selected, session)| {
+        (
+            Some(crate::cutover_coordinator::Coordinator::new(selected)),
+            Some(session),
+        )
+    });
     let mut state = Box::new(WindowState {
         background,
         ipc,
         failed: false,
         tray: None,
         revealing: false,
+        upgrades,
+        session,
+        ending: false,
+        upgrade_error: false,
+        exit_after_settle: false,
     });
     // SAFETY: the class, UTF-16 name and boxed state outlive this window and its
     // message loop. It is an invisible top-level window (not HWND_MESSAGE), so
@@ -437,6 +532,7 @@ mod tests {
         fn PostMessageW(window: Handle, message: u32, wparam: usize, lparam: isize) -> i32;
     }
     struct Observed(Arc<Mutex<Vec<&'static str>>>);
+    impl crate::cutover_coordinator::Runtime for Observed {}
     impl Lifecycle for Observed {
         fn poll(&mut self) -> io::Result<()> {
             self.0.lock().unwrap().push("poll");
@@ -453,13 +549,19 @@ mod tests {
     #[test]
     fn native_window_delivers_session_end_cancellation_and_close() {
         let observed = Arc::new(Mutex::new(Vec::new()));
-        run_window(Box::new(Observed(observed.clone())), None, None, |window| {
-            for message in [0x0011, 0x0016, 0x0113, 0x0010] {
-                // SAFETY: this is our own live, hidden test window. Only its
-                // queue receives these messages; no real logoff is requested.
-                assert_ne!(unsafe { PostMessageW(window, message, 0, 0) }, 0);
-            }
-        })
+        run_window(
+            Box::new(Observed(observed.clone())),
+            None,
+            None,
+            None,
+            |window| {
+                for message in [0x0011, 0x0016, 0x0113, 0x0010] {
+                    // SAFETY: this is our own live, hidden test window. Only its
+                    // queue receives these messages; no real logoff is requested.
+                    assert_ne!(unsafe { PostMessageW(window, message, 0, 0) }, 0);
+                }
+            },
+        )
         .unwrap();
         assert_eq!(*observed.lock().unwrap(), ["end", "cancel", "poll", "end"]);
     }

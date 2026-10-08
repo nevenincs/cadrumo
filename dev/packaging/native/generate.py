@@ -359,6 +359,8 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             f"pub const MANAGER_LOG: &str = {_rust_string(contract['desktop_defaults']['manager_log_file'])};",
             "pub const MANAGER_PREFERENCES: &str = "
             f"{_rust_string(STORAGE_TAXONOMY[StorageCategory.MANAGER_PREFERENCES].subpath)};",
+            "pub const MANAGER_FAILED_VERSIONS: &str = "
+            f"{_rust_string(STORAGE_TAXONOMY[StorageCategory.MANAGER_FAILED_VERSIONS].subpath)};",
             f"pub const MANAGER_LANGUAGE_ENV: &str = {_rust_string(OUTPUT_LANGUAGE_ENV_VAR)};",
             f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {_rust_string(DEFAULT_OUTPUT_LANGUAGE.value)};",
             "pub const MANAGER_STRINGS_JSON: &str = "

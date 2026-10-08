@@ -18,9 +18,9 @@ pub mod installation;
 pub mod installed;
 pub mod ipc;
 pub mod preferences;
-pub mod strings;
 pub mod session;
 pub mod startup;
+pub mod strings;
 pub mod supervision;
 #[cfg(windows)]
 pub mod windows_lifecycle;
@@ -29,3 +29,18 @@ pub mod windows_tray;
 
 #[cfg(target_os = "linux")]
 pub mod linux;
+
+pub mod cutover;
+#[cfg(windows)]
+pub mod cutover_parent;
+#[cfg(windows)]
+pub mod cutover_windows;
+pub mod failed_versions;
+#[cfg(windows)]
+pub mod installation_watch;
+
+#[cfg(windows)]
+pub mod cutover_child;
+
+#[cfg(windows)]
+pub mod cutover_coordinator;

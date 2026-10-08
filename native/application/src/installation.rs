@@ -86,6 +86,7 @@ pub struct Selection {
     pub manager: PathBuf,
     pub version: [u32; 3],
     pub lease: Option<Arc<maintenance::Lease>>,
+    pub registration: Option<maintenance::NativeOwner>,
 }
 
 /// Scoped native registrations are hints, verified through the same package catalogue.
@@ -225,6 +226,29 @@ impl DiscoveryContract {
         prefix: &Path,
         cancellation: &Cancellation,
     ) -> Result<Selection, Error> {
+        self.read_catalogue(prefix, cancellation, false)?
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Incompatible("no complete compatible installed version".into()))
+    }
+
+    /// Complete versions ordered newest first. Every returned selection retains its
+    /// publication lease; callers must keep that lease while the version is in use.
+    /// The stable anchor is verified against this same admitted inventory.
+    pub fn catalogue_cancellable(
+        &self,
+        prefix: &Path,
+        cancellation: &Cancellation,
+    ) -> Result<Vec<Selection>, Error> {
+        self.read_catalogue(prefix, cancellation, true)
+    }
+
+    fn read_catalogue(
+        &self,
+        prefix: &Path,
+        cancellation: &Cancellation,
+        all: bool,
+    ) -> Result<Vec<Selection>, Error> {
         cancellation.check()?;
         filesystem::absolute_root(prefix)?;
         let layout = &self.layout;
@@ -260,11 +284,23 @@ impl DiscoveryContract {
             }
             None => None,
         };
+        let registration = publication
+            .as_ref()
+            .map(|store| store.snapshot())
+            .transpose()?
+            .and_then(|snapshot| {
+                snapshot
+                    .registration()
+                    .filter(|registration| {
+                        registration.phase == maintenance::RegistrationPhase::Ready
+                    })
+                    .map(|registration| registration.owner.clone())
+            });
         filesystem::absolute_root(&versions)?;
         let member = self.manager_member()?;
         let entrypoint = member.under(prefix);
         let expected = BinaryExpectation::host()?;
-        let mut newest: Option<Selection> = None;
+        let mut complete = Vec::new();
         let mut entry_verified = false;
         let mut candidates = Vec::new();
         for (count, entry) in fs::read_dir(&versions)?.enumerate() {
@@ -310,16 +346,17 @@ impl DiscoveryContract {
                 entry_verified = binary::verify(&entrypoint, &digest, expected).is_ok();
                 cancellation.check()?;
             }
-            if newest.is_none() {
-                newest = Some(Selection {
+            if all || complete.is_empty() {
+                complete.push(Selection {
                     entrypoint: entrypoint.clone(),
                     package,
                     manager,
                     version: number,
                     lease,
+                    registration: registration.clone(),
                 });
             }
-            if newest.is_some() && entry_verified {
+            if !all && entry_verified {
                 break;
             }
         }
@@ -330,7 +367,30 @@ impl DiscoveryContract {
             ));
         }
         cancellation.check()?;
-        newest.ok_or_else(|| Error::Incompatible("no complete compatible installed version".into()))
+        Ok(complete)
+    }
+
+    /// Select an exact still-complete version only for a verified rollback or
+    /// held-child designation. Ordinary launchers continue to choose the newest.
+    pub fn inspect_version_cancellable(
+        &self,
+        prefix: &Path,
+        release: &str,
+        cancellation: &Cancellation,
+    ) -> Result<Selection, Error> {
+        let requested = version(release)?;
+        self.catalogue_cancellable(prefix, cancellation)?
+            .into_iter()
+            .find(|candidate| candidate.version == requested)
+            .ok_or_else(|| Error::Incompatible("requested version is not complete".into()))
+    }
+
+    /// Verify candidate inventory before native transaction publication. This
+    /// grants neither discovery eligibility nor a process-use lease.
+    pub fn verify_candidate(&self, package: &Path, release: &str) -> Result<(), Error> {
+        version(release)?;
+        self.inspect_package(package, release, &Cancellation::default())
+            .map(|_| ())
     }
 
     pub(crate) fn manifest_digest(

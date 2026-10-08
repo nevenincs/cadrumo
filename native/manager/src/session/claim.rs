@@ -24,9 +24,13 @@ pub fn start_claim_path(storage_root: &Path) -> PathBuf {
 #[derive(Debug)]
 pub struct StartClaim {
     _lock: LocalLock,
+    storage_root: PathBuf,
 }
 
 impl StartClaim {
+    pub(crate) fn storage_root(&self) -> &Path {
+        &self.storage_root
+    }
     /// Take the claim for the absolute `storage_root`, polling until `patience` ends.
     ///
     /// The `.runtime` directory is created owner-only when absent. `Ok(None)` means
@@ -41,8 +45,10 @@ impl StartClaim {
         }
         ensure_local_directory(&storage_root.join(START_CLAIM_LOCATION[0]))?;
         Ok(
-            LocalLock::acquire(&start_claim_path(storage_root), patience)?
-                .map(|lock| Self { _lock: lock }),
+            LocalLock::acquire(&start_claim_path(storage_root), patience)?.map(|lock| Self {
+                _lock: lock,
+                storage_root: storage_root.to_path_buf(),
+            }),
         )
     }
 }

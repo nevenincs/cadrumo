@@ -516,6 +516,13 @@ common:
     starting: Iniciando el motor
     stopping: Deteniendo el motor
     unavailable: Motor no disponible
+    update_deferred: La actualización espera a que termine el trabajo en curso. No
+      se ha detenido ningún trabajo.
+    update_failed: Actualización fallida
+    update_failed_notice: La actualización ha fallado. Se está restaurando la versión
+      anterior. Elige Reintentar para volver a intentar la actualización.
+    update_pending: Hay una actualización lista. Los servicios en segundo plano cambiarán
+      cuando termine el trabajo en curso.
     waiting: Esperando el control del motor
   runtime:
     manager_unavailable_remedy: Abre {product} y comprueba su gestor de servicios

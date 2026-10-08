@@ -68,6 +68,12 @@ pub struct StartPermit {
 }
 
 impl StartPermit {
+    pub(crate) fn from_claim(claim: StartClaim) -> Self {
+        Self {
+            storage_root: claim.storage_root().to_path_buf(),
+            _claim: claim,
+        }
+    }
     pub fn storage_root(&self) -> &Path {
         &self.storage_root
     }

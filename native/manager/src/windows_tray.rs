@@ -118,6 +118,18 @@ unsafe extern "system" {
     fn MessageBoxW(window: Handle, text: *const u16, caption: *const u16, flags: u32) -> i32;
 }
 
+fn write_wide<const N: usize>(output: &mut [u16; N], text: &str) {
+    let mut offset = 0;
+    for character in text.chars() {
+        let mut encoded = [0; 2];
+        let units = character.encode_utf16(&mut encoded);
+        if offset + units.len() >= N {
+            break;
+        }
+        output[offset..offset + units.len()].copy_from_slice(units);
+        offset += units.len();
+    }
+}
 fn wide(value: &str) -> Vec<u16> {
     value.encode_utf16().chain([0]).collect()
 }
@@ -179,16 +191,7 @@ impl Tray {
             crate::identity::MANAGER_NAME,
             self.configuration.strings.get(status)
         );
-        let mut offset = 0;
-        for character in tooltip.chars() {
-            let mut encoded = [0; 2];
-            let units = character.encode_utf16(&mut encoded);
-            if offset + units.len() >= data.tip.len() {
-                break;
-            }
-            data.tip[offset..offset + units.len()].copy_from_slice(units);
-            offset += units.len();
-        }
+        write_wide(&mut data.tip, &tooltip);
         data
     }
 
@@ -220,6 +223,17 @@ impl Tray {
         matches!((message as u32) & 0xffff, 0x0205 | 0x007b | 0x0400 | 0x0401)
     }
 
+    /// A best-effort shell notification; delivery is not frontend acknowledgement.
+    pub fn notice(&mut self, key: &str) -> io::Result<()> {
+        let mut data = self.icon(&self.status);
+        data.flags = 0x10;
+        data.info_flags = 1;
+        write_wide(&mut data.info, self.configuration.strings.get(key));
+        write_wide(&mut data.info_title, crate::identity::MANAGER_NAME);
+        // SAFETY: only authored strings enter the owned icon's bounded notification.
+        checked(unsafe { Shell_NotifyIconW(1, &data) })
+    }
+
     pub fn error(&self) {
         let text = wide(self.configuration.strings.get("action_failed"));
         let title = wide(crate::identity::MANAGER_NAME);
@@ -238,8 +252,12 @@ impl Tray {
         let options = [
             (0, status),
             (
-                if status == "unavailable" { 6 } else { 1 },
-                if status == "unavailable" {
+                if matches!(status, "unavailable" | "update_failed") {
+                    6
+                } else {
+                    1
+                },
+                if matches!(status, "unavailable" | "update_failed") {
                     "retry"
                 } else {
                     "restart"

@@ -21,10 +21,7 @@ use cadrumo_application::{
 };
 use std::{
     io,
-    sync::{
-        Arc,
-        mpsc::{Receiver, TryRecvError},
-    },
+    sync::{Arc, mpsc::TryRecvError},
     time::Duration,
 };
 
@@ -42,6 +39,13 @@ pub struct Background {
     suspended: bool,
     diagnostics: Arc<Diagnostics>,
     waiting: Option<LifecycleFact>,
+    installation_watch: Option<crate::installation_watch::InstallationWatch>,
+    observation: Observation,
+    cutover_pending: bool,
+    update_failed: bool,
+    reserved: Option<crate::session::claim::StartClaim>,
+    designated: Option<crate::cutover_child::InitialPermit>,
+    reporter: Option<crate::cutover_child::Reporter>,
 }
 
 impl Background {
@@ -69,16 +73,148 @@ impl Background {
             suspended: false,
             diagnostics,
             waiting: None,
+            installation_watch: None,
+            observation: Observation::default(),
+            cutover_pending: false,
+            update_failed: false,
+            reserved: None,
+            designated: None,
+            reporter: None,
         }
     }
 
+    pub fn designated(
+        &mut self,
+        permit: crate::cutover_child::InitialPermit,
+        reporter: crate::cutover_child::Reporter,
+    ) {
+        self.designated = Some(permit);
+        self.reporter = Some(reporter);
+    }
+    pub fn storage_root(&self) -> &std::path::Path {
+        self.installed.target.storage_root()
+    }
+    pub fn stopping(&self) -> bool {
+        self.quitting || self.suspended
+    }
+    pub fn can_cutover(&self) -> bool {
+        !self.quitting
+            && !self.suspended
+            && self.reporter.is_none()
+            && ((self.running.is_some() && self.observation.ready && self.observation.confirmed)
+                || (self.running.is_none()
+                    && self.blocked
+                    && self.observation.pid.is_some_and(|pid| {
+                        matches!(
+                            crate::supervision::process::open_process(pid),
+                            Err(crate::supervision::process::InspectError::NotRunning)
+                        )
+                    })))
+    }
+    pub fn begin_cutover(&mut self) -> io::Result<Option<crate::session::claim::StartClaim>> {
+        if !self.can_cutover() {
+            return Ok(None);
+        }
+        let Some(claim) =
+            crate::session::claim::StartClaim::take(self.storage_root(), Duration::ZERO)?
+        else {
+            return Ok(None);
+        };
+        if !(self.activity)().is_active()
+            || !matches!(
+                crate::session::quit::read_quit_marker(self.storage_root()),
+                crate::session::quit::QuitState::Absent
+            )
+        {
+            return Ok(None);
+        }
+        if let Some(running) = &self.running {
+            if !running.handle.request(Request::StopIfIdle) {
+                return Err(io::ErrorKind::WouldBlock.into());
+            }
+        } else {
+            use crate::session::ownership::{Located, RuntimeLocator};
+            if !matches!(
+                BootRecordLocator::new(self.storage_root()).locate(),
+                Located::Nothing
+            ) {
+                return Ok(None);
+            }
+        }
+        self.cutover_pending = true;
+        Ok(Some(claim))
+    }
+    pub fn idle_stopped(&self) -> bool {
+        self.cutover_pending && self.running.is_none()
+    }
+    pub fn retry_idle(&self) {
+        if self.cutover_pending
+            && let Some(running) = &self.running
+        {
+            running.handle.request(Request::StopIfIdle);
+        }
+    }
+    pub fn abandon_cutover(&mut self) {
+        self.cutover_pending = false;
+    }
+    pub fn rollback(&mut self, claim: crate::session::claim::StartClaim) {
+        self.cutover_pending = false;
+        self.update_failed = true;
+        self.blocked = false;
+        self.reserved = Some(claim);
+    }
+    pub fn watch_installation(
+        &mut self,
+        selected: &cadrumo_application::installation::Selection,
+    ) -> io::Result<()> {
+        self.installation_watch =
+            Some(crate::installation_watch::InstallationWatch::new(selected)?);
+        Ok(())
+    }
+    /// Confirmed native registration removal stops only this manager's
+    /// owned runtime, without recording a user Quit preference or deleting files.
+    fn uninstall(&mut self) -> io::Result<()> {
+        if let Some(running) = &self.running
+            && !running.handle.request(Request::Stop)
+        {
+            return Err(io::ErrorKind::WouldBlock.into());
+        }
+        self.quitting = true;
+        self.suspended = true;
+        Ok(())
+    }
     pub fn poll(&mut self) -> io::Result<()> {
+        if let Some(result) = self.reporter.as_ref().and_then(|reporter| reporter.poll()) {
+            self.reporter = None;
+            if matches!(result, crate::cutover_child::ReportResult::Rejected) {
+                self.uninstall()?;
+            }
+        }
+        if !self.quitting
+            && self
+                .installation_watch
+                .as_mut()
+                .is_some_and(|watch| watch.removed())
+        {
+            self.uninstall()?;
+        }
         if let Some(running) = &mut self.running {
-            drain_events(running, &self.diagnostics, EVENTS_PER_POLL);
+            drain_events(
+                running,
+                &self.diagnostics,
+                EVENTS_PER_POLL,
+                Some(&mut self.observation),
+            );
+            self.observation.report(self.reporter.as_ref())?;
             match running.ended.try_recv() {
                 Ok(result) => {
                     let joined = running.join();
-                    drain_events(running, &self.diagnostics, EVENT_QUEUE);
+                    drain_events(
+                        running,
+                        &self.diagnostics,
+                        EVENT_QUEUE,
+                        Some(&mut self.observation),
+                    );
                     self.running = None;
                     report_failure(&self.diagnostics, joined)?;
                     let outcome = report_failure(&self.diagnostics, result)?;
@@ -101,7 +237,7 @@ impl Background {
                 Err(TryRecvError::Empty) => return Ok(()),
             }
         }
-        if self.suspended || self.blocked || self.quitting {
+        if self.suspended || self.blocked || self.quitting || self.cutover_pending {
             return Ok(());
         }
         let initial = self.initial.take();
@@ -111,13 +247,30 @@ impl Background {
             versions: Box::new(self.installed.clone()),
             stop_signal: Box::new(PlatformStopSignal::default()),
         };
-        let started = startup::start(
-            self.installed.target.clone(),
-            SupervisorConfig::default(),
-            collaborators,
-            &mut self.ownership,
-            initial,
-        );
+        self.observation = Observation::default();
+        let started = if let Some(permit) = self.designated.take() {
+            startup::start_designated(
+                self.installed.target.clone(),
+                SupervisorConfig::default(),
+                collaborators,
+                permit,
+            )
+        } else if let Some(claim) = self.reserved.take() {
+            startup::start_reserved(
+                self.installed.target.clone(),
+                SupervisorConfig::default(),
+                collaborators,
+                claim,
+            )
+        } else {
+            startup::start(
+                self.installed.target.clone(),
+                SupervisorConfig::default(),
+                collaborators,
+                &mut self.ownership,
+                initial,
+            )
+        };
         match report_failure(&self.diagnostics, started)? {
             Start::Running(running) => {
                 self.diagnostics.lifecycle(
@@ -158,7 +311,9 @@ impl Background {
         if self.quitting || self.suspended {
             return Err(io::ErrorKind::WouldBlock.into());
         }
+        crate::failed_versions::FailedVersions::retry(self.installed.target.storage_root())?;
         self.blocked = false;
+        self.update_failed = false;
         self.poll()
     }
 
@@ -198,6 +353,9 @@ impl Background {
     pub fn status(&self) -> &'static str {
         if self.quitting || self.suspended {
             return "stopping";
+        }
+        if self.update_failed {
+            return "update_failed";
         }
         if self.blocked {
             return "unavailable";
@@ -254,6 +412,45 @@ impl Background {
     }
 }
 
+#[derive(Default)]
+struct Observation {
+    pid: Option<u32>,
+    ready: bool,
+    confirmed: bool,
+    reported_launch: bool,
+    reported_ready: bool,
+}
+impl Observation {
+    fn observe(&mut self, event: &Event) {
+        match event {
+            Event::Launched { pid, .. } => {
+                *self = Self {
+                    pid: Some(*pid),
+                    ..Self::default()
+                };
+            }
+            Event::Ready { pid, .. } if self.pid == Some(*pid) => self.ready = true,
+            Event::BootRecordConfirmed { pid } if self.pid == Some(*pid) => self.confirmed = true,
+            _ => {}
+        }
+    }
+    fn report(&mut self, reporter: Option<&crate::cutover_child::Reporter>) -> io::Result<()> {
+        if let Some(reporter) = reporter
+            && let Some(pid) = self.pid
+        {
+            if !self.reported_launch {
+                reporter.launched(pid)?;
+                self.reported_launch = true;
+            }
+            if self.ready && self.confirmed && !self.reported_ready {
+                reporter.ready(pid)?;
+                self.reported_ready = true;
+            }
+        }
+        Ok(())
+    }
+}
+
 /// Publish restart suppression and settle before any diagnostic file I/O.
 /// False retains the running supervisor so cleanup ownership survives the bound.
 pub fn settle_session(running: &mut Running, diagnostics: &Diagnostics, bound: Duration) -> bool {
@@ -267,20 +464,30 @@ pub fn settle_session(running: &mut Running, diagnostics: &Diagnostics, bound: D
     );
     if let Ok(result) = ended {
         let joined = running.join();
-        drain_events(running, diagnostics, EVENT_QUEUE);
+        drain_events(running, diagnostics, EVENT_QUEUE, None);
         let _ = report_failure(diagnostics, joined);
         if let Ok(outcome) = report_failure(diagnostics, result) {
             diagnostics::supervision_outcome(diagnostics, outcome);
         }
         true
     } else {
-        drain_events(running, diagnostics, EVENTS_PER_POLL);
+        drain_events(running, diagnostics, EVENTS_PER_POLL, None);
         false
     }
 }
 
-fn drain_events(running: &Running, diagnostics: &Diagnostics, limit: usize) {
-    record_events(&running.events, diagnostics, limit);
+fn drain_events(
+    running: &Running,
+    diagnostics: &Diagnostics,
+    limit: usize,
+    mut observation: Option<&mut Observation>,
+) {
+    for event in running.events.try_iter().take(limit) {
+        if let Some(observation) = &mut observation {
+            observation.observe(&event);
+        }
+        diagnostics::supervision_event(diagnostics, &event);
+    }
     let count = running.handle.take_dropped_events();
     if count > 0 {
         diagnostics.lifecycle(
@@ -295,7 +502,12 @@ fn drain_events(running: &Running, diagnostics: &Diagnostics, limit: usize) {
     }
 }
 
-fn record_events(events: &Receiver<Event>, diagnostics: &Diagnostics, limit: usize) {
+#[cfg(test)]
+fn record_events(
+    events: &std::sync::mpsc::Receiver<Event>,
+    diagnostics: &Diagnostics,
+    limit: usize,
+) {
     for event in events.try_iter().take(limit) {
         diagnostics::supervision_event(diagnostics, &event);
     }

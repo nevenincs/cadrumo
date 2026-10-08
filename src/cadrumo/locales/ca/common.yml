@@ -508,6 +508,13 @@ common:
     starting: Iniciant el motor
     stopping: Aturant el motor
     unavailable: Motor no disponible
+    update_deferred: L’actualització espera que acabi la feina en curs. No s’ha aturat
+      cap feina.
+    update_failed: Actualització fallida
+    update_failed_notice: L’actualització ha fallat. S’està restaurant la versió anterior.
+      Tria Torna-ho a provar per tornar a intentar l’actualització.
+    update_pending: Hi ha una actualització preparada. Els serveis en segon pla canviaran
+      quan acabi la feina en curs.
     waiting: Esperant el control del motor
   runtime:
     manager_unavailable_remedy: Obre {product} i comprova el gestor de serveis en

@@ -499,6 +499,13 @@ common:
     starting: A háttérfolyamat indul
     stopping: A háttérfolyamat leáll
     unavailable: A háttérfolyamat nem érhető el
+    update_deferred: A frissítés megvárja a folyamatban lévő munka befejezését. Egyetlen
+      munka sem állt le.
+    update_failed: Sikertelen frissítés
+    update_failed_notice: A frissítés sikertelen. Az előző verzió visszaállítása folyamatban
+      van. A frissítés újabb megkísérléséhez válaszd az Újrapróbálás lehetőséget.
+    update_pending: Frissítés érhető el. A háttérszolgáltatások a folyamatban lévő
+      munka befejezése után váltanak verziót.
     waiting: Várakozás a háttérfolyamat vezérlésére
   runtime:
     manager_unavailable_remedy: Nyisd meg a {product} alkalmazást, és ellenőrizd a

@@ -593,6 +593,9 @@ list for multiple pages; CMake schedules them with the build parallelism. An emp
 list selects all enrolled sequences. Refresh executes the documented commands and checks their
 declared expectations before writing source goldens; review those changes before
 accepting them. The normal documentation build only checks goldens.
+To maintain one sequence, leave the page list empty and set
+`-DCADRUMO_DOCS_SEQUENCE_ID=modelo-390-inspect`. Page and sequence selections are
+mutually exclusive.
 
 `dev/packaging/native/docs_stage.py` stages the addresses of the published site
 layout: English at `P/docs/user/` and every other language at
@@ -1316,9 +1319,24 @@ These mutable lifecycle records are excluded from profile fingerprints. Logs
 rotate through the generated native log policy; coordination and preferences
 remain outside generic age-based reclamation.
 
+The failed-version record uses the taxonomy-projected `MANAGER_FAILED_VERSIONS`
+path, `.runtime/manager-failed-versions.json`. It is one owner-only UTF-8 JSON
+object of at most 4096 bytes with exactly `schema` (integer `1`) and `versions`
+(at most 32 objects). Each entry has exactly `version` and `previous`, canonical
+numeric release triples; `previous` must be lower than `version`. Entries are
+strictly ordered by numeric version, with no duplicates. Unknown or duplicate
+members, malformed values, links, foreign custody and oversized records refuse
+selection. Atomic writes retain the newest bounded failure history. An explicit
+Retry replaces the record with an empty list, including malformed owner-custody
+content; it never replaces a link or foreign-owned record. A failed successor
+records its verified previous version only after cleanup has confirmed the
+designated processes ended. Uncertain installation or removal observations do
+not change this record and grant no process or package deletion authority.
+
 ### Startup lifetime
 
-The Windows manager admits an unelevated interactive session, escapes a parent
+The Windows manager refuses `TokenElevationTypeFull`, permits Default tokens
+(including UAC-disabled accounts), requires an interactive session, escapes a parent
 job once when permitted, and retains its session lock while its hidden top-level
 window runs. Startup verifies the selected package and queries its installed
 interpreter for the canonical physical storage identity and application version.
@@ -1358,10 +1376,31 @@ version before taking the session lock or runtime ownership. The successor repea
 admission and resolves the canonical installed default; an override never becomes
 managed through environment clearing. Dispatch still acknowledges launch only.
 
-This startup composition supports the selected complete package. Version cutover,
-manager IPC and tray controls remain separate plan work. A failed-version marker
-blocks startup/adoption conservatively until the installation catalogue can
-interpret it. GUI-subsystem startup failure is visible after interactive admission;
+The Windows manager exposes bounded authenticated reveal/retry IPC and localized
+tray actions. Upgrade discovery retains a lease on a complete newer package and
+requests an idle stop under the old manager's start claim. Busy or adopted runtimes
+are not forced to stop for an automatic upgrade. A designated direct child proves
+its native owner, session and exact image on a private nonce-qualified endpoint.
+The closed `successor_ready` request carries an optional `report` with ordered
+`claim`, `launched`, `ready`, and `acknowledged` phases and a 32-character lowercase
+hexadecimal nonce. Claim has PID zero; later phases bind the same held runtime
+PID, creation stamp, native admission, package and verified boot record. The final
+authenticated acknowledgement proves the child consumed Ready; reconnecting or
+successfully writing a pipe response alone never commits cutover. Ordinary IPC
+does not grant a designation or claim runtime readiness.
+
+The old manager retains its start claim through readiness or confirmed designated
+child/runtime cleanup and rollback. Quit, uninstall and session-end cancel pending
+cutover; uncertain cleanup retains the claim. Cancelled shutdown resumes ordinary
+ownership only after cleanup and session endpoint reacquisition. A failed candidate
+is suppressed until a newer release or explicit Retry; startup may restore its
+recorded complete previous version. Uninstall detection requires a completed native
+registration-removal record for the admitted prefix and scope, missing registration
+hint and missing stable entry. Update gaps and unknown evidence remain observational.
+
+Connected-frontend update notification, obsolete native-product cleanup and
+interactive two-release installer acceptance remain separate completion evidence.
+GUI-subsystem startup failure is visible after interactive admission;
 session 0 remains refused without UI. Tests of the hidden window's own queue do
 not constitute real session-1 logoff or desktop package acceptance.
 

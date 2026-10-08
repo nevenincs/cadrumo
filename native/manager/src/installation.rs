@@ -12,10 +12,14 @@ use std::{
 /// Its locations are available for diagnostics without exposing a new admission path.
 pub struct CurrentInstallation {
     locations: ManagedLocations,
+    selection: Box<Selection>,
     pub(crate) lease: Option<std::sync::Arc<cadrumo_application::installation::maintenance::Lease>>,
 }
 
 impl CurrentInstallation {
+    pub fn selection(&self) -> &Selection {
+        &self.selection
+    }
     pub fn locations(&self) -> &ManagedLocations {
         &self.locations
     }
@@ -78,6 +82,7 @@ fn current_installation(
     if std::fs::canonicalize(image)? == std::fs::canonicalize(&selected.manager)? {
         Ok(Some(CurrentInstallation {
             locations,
+            selection: Box::new(selected.clone()),
             lease: selected.lease.clone(),
         }))
     } else {
@@ -85,10 +90,38 @@ fn current_installation(
     }
 }
 
+pub(crate) fn admit_selection(
+    image: &Path,
+    selected: &Selection,
+) -> io::Result<CurrentInstallation> {
+    let locations = ManagedLocations::resolve(&selected.manager)?;
+    current_installation(image, selected, locations)?
+        .ok_or_else(|| io::Error::from(io::ErrorKind::PermissionDenied))
+}
+
 /// Every successor repeats native admission, job escape and catalogue verification.
 /// Dispatch acknowledgement conveys no runtime readiness or ownership.
 pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcome> {
-    let selected = select(image)?;
+    let mut selected = select(image)?;
+    let root = ManagedLocations::resolve(&selected.manager)?;
+    let failures = crate::failed_versions::FailedVersions::read(root.storage_root())?;
+    let release = selected.version.map(|part| part.to_string()).join(".");
+    if let Some(previous) = failures.restoration(&release) {
+        let contract: DiscoveryContract =
+            serde_json::from_str(crate::contract::INSTALLATION_CONTRACT)
+                .map_err(io::Error::other)?;
+        let prefix = selected
+            .entrypoint
+            .parent()
+            .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))?;
+        selected = contract
+            .inspect_version_cancellable(
+                prefix,
+                previous,
+                &cadrumo_application::component::Cancellation::default(),
+            )
+            .map_err(io::Error::other)?;
+    }
     // Validate management eligibility before dispatch; never clear an override into eligibility.
     let locations = ManagedLocations::resolve(&selected.manager)?;
     if let Some(current) = current_installation(image, &selected, locations)? {
@@ -342,4 +375,41 @@ mod tests {
         });
         assert!(fixture.admit().is_err());
     }
+}
+
+/// Poll only declared newer version directories before expensive inventory validation.
+/// Enumeration itself never grants eligibility; the shared catalogue does that.
+pub(crate) fn newer(
+    current: &Selection,
+    cancellation: &cadrumo_application::component::Cancellation,
+) -> io::Result<Option<Selection>> {
+    let contract: DiscoveryContract =
+        serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).map_err(io::Error::other)?;
+    let prefix = current
+        .entrypoint
+        .parent()
+        .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))?;
+    let versions = contract.layout.installation.versions.under(prefix);
+    let mut possible = false;
+    for (count, entry) in std::fs::read_dir(versions)?.enumerate() {
+        if count >= contract.layout.installation.maximum_versions {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        let entry = entry?;
+        if entry
+            .file_name()
+            .to_str()
+            .and_then(|name| cadrumo_application::installation::version(name).ok())
+            .is_some_and(|version| version > current.version)
+        {
+            possible = true;
+        }
+    }
+    if !possible {
+        return Ok(None);
+    }
+    let selected = contract
+        .inspect_cancellable(prefix, cancellation)
+        .map_err(io::Error::other)?;
+    Ok((selected.version > current.version).then_some(selected))
 }

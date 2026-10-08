@@ -73,6 +73,7 @@ unsafe extern "system" {
     fn ConnectNamedPipe(pipe: Handle, overlapped: *mut Overlapped) -> i32;
     fn DisconnectNamedPipe(pipe: Handle) -> i32;
     fn GetNamedPipeClientProcessId(pipe: Handle, pid: *mut u32) -> i32;
+    fn WaitNamedPipeW(name: *const u16, timeout: u32) -> i32;
     fn GetNamedPipeServerProcessId(pipe: Handle, pid: *mut u32) -> i32;
     fn PeekNamedPipe(
         pipe: Handle,
@@ -211,7 +212,7 @@ fn image_spelling(path: &Path) -> Vec<u16> {
     }
 }
 
-fn same_image(actual: &Path, expected: &Path) -> bool {
+pub(crate) fn same_image(actual: &Path, expected: &Path) -> bool {
     let first = image_spelling(actual);
     let second = image_spelling(expected);
     if first.len() > 32_768 || second.len() > 32_768 {
@@ -303,6 +304,10 @@ fn inspect_peer(pid: u32, expected: &ManagerSession, images: &[PathBuf]) -> io::
         _process: process,
         image,
     })
+}
+
+pub(crate) fn verify_process(pid: u32, image: &Path) -> io::Result<()> {
+    inspect_peer(pid, &ManagerSession::current()?, &[image.to_path_buf()]).map(|_| ())
 }
 
 enum Kind {
@@ -477,6 +482,11 @@ impl Server {
         )
     }
 
+    pub(crate) fn bind_cutover(name: &str, successor: &Path) -> io::Result<Self> {
+        let image = fs::canonicalize(successor)?;
+        Self::bind(name, ManagerSession::current()?, vec![image.clone()], image)
+    }
+
     fn bind(
         manager_id: &str,
         session: ManagerSession,
@@ -545,6 +555,12 @@ impl Server {
 
     /// Bounded work on the owning message-loop thread; never waits for a client.
     pub fn poll(&mut self, mut handle: impl FnMut(Request) -> Response) -> io::Result<()> {
+        self.poll_authenticated(|_, request| handle(request))
+    }
+    pub(crate) fn poll_authenticated(
+        &mut self,
+        mut handle: impl FnMut(u32, Request) -> Response,
+    ) -> io::Result<()> {
         for _ in 0..4 {
             let Some(state) = self.state.take() else {
                 return Err(io::ErrorKind::BrokenPipe.into());
@@ -568,7 +584,7 @@ impl Server {
     fn advance(
         &self,
         state: State,
-        handle: &mut impl FnMut(Request) -> Response,
+        handle: &mut impl FnMut(u32, Request) -> Response,
     ) -> io::Result<(State, bool)> {
         match state {
             State::Connecting(mut operation) => {
@@ -600,7 +616,8 @@ impl Server {
                 {
                     return Err(io::ErrorKind::PermissionDenied.into());
                 }
-                let response = serde_json::to_vec(&handle(request)).map_err(io::Error::other)?;
+                let response =
+                    serde_json::to_vec(&handle(pid, request)).map_err(io::Error::other)?;
                 Ok((
                     State::Writing(
                         Operation::start(self.pipe.clone(), Kind::Write, &response)?,
@@ -649,29 +666,57 @@ pub fn request(manager: &Path, request: &Request) -> io::Result<Response> {
 }
 
 fn request_to(manager_id: &str, manager: &Path, request: &Request) -> io::Result<Response> {
+    request_expected(manager_id, manager, None, request)
+}
+
+pub(crate) fn request_expected(
+    manager_id: &str,
+    manager: &Path,
+    expected_pid: Option<u32>,
+    request: &Request,
+) -> io::Result<Response> {
     let session = ManagerSession::current()?;
     let name = wide(&endpoint(manager_id, &session)?);
     // SAFETY: open an existing pipe, overlapped/noninheritable, identification-only
     // SQOS so a server cannot impersonate this client to perform other effects.
-    let pipe = Arc::new(owned(unsafe {
-        CreateFileW(
-            name.as_ptr(),
-            0xc000_0000,
-            0,
-            ptr::null(),
-            3,
-            0x4000_0000 | 0x0010_0000 | 0x0001_0000,
-            ptr::null_mut(),
-        )
-    })?);
+    let deadline = Instant::now() + TIMEOUT;
+    let pipe = loop {
+        let opened = owned(unsafe {
+            CreateFileW(
+                name.as_ptr(),
+                0xc000_0000,
+                0,
+                ptr::null(),
+                3,
+                0x4000_0000 | 0x0010_0000 | 0x0001_0000,
+                ptr::null_mut(),
+            )
+        });
+        match opened {
+            Ok(pipe) => break Arc::new(pipe),
+            Err(error) if error.raw_os_error() == Some(231) && Instant::now() < deadline => {
+                let remaining = deadline
+                    .saturating_duration_since(Instant::now())
+                    .as_millis()
+                    .min(u128::from(u32::MAX)) as u32;
+                // SAFETY: wait only for this already-existing, terminated pipe name.
+                if unsafe { WaitNamedPipeW(name.as_ptr(), remaining.max(1)) } == 0 {
+                    return Err(io::Error::last_os_error());
+                }
+            }
+            Err(error) => return Err(error),
+        }
+    };
     let mut pid = 0;
     // SAFETY: observe the connected server before writing any request.
     checked(unsafe { GetNamedPipeServerProcessId(raw(&pipe), &mut pid) })?;
+    if expected_pid.is_some_and(|expected| expected != pid) {
+        return Err(io::ErrorKind::PermissionDenied.into());
+    }
     let _peer = inspect_peer(pid, &session, &[fs::canonicalize(manager)?])?;
     let mode = 2;
     // SAFETY: owned client pipe, message-read mode; other properties unchanged.
     checked(unsafe { SetNamedPipeHandleState(raw(&pipe), &mode, ptr::null(), ptr::null()) })?;
-    let deadline = Instant::now() + TIMEOUT;
     let bytes = serde_json::to_vec(request).map_err(io::Error::other)?;
     decode(&bytes)?;
     let mut writing = Operation::start(pipe.clone(), Kind::Write, &bytes)?;

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a4dca2133c4c20ef5dff2e7fe8ec0f8ffbfc81d0c66a7684fd1a2c1f990fe4fc'
+body_hash: 'sha256:6af47457a7d22d821709264ef74f98ed4afaa37b3a2882dc30451b56cba29194'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -416,6 +416,41 @@ related:
 - `S15` `verify:` `16 explicit CLI/TUI/MCP remedy tests` -> `pass`
 - `S15` `verify:` `Scoped Ruff and ty` -> `pass`
 - `S15` `by:` `Codex`
+- `S16` `M` `native/manager/src/cutover.rs`
+- `S16` `M` `native/manager/src/cutover_child.rs`
+- `S16` `M` `native/manager/src/cutover_coordinator.rs`
+- `S16` `M` `native/manager/src/cutover_parent.rs`
+- `S16` `M` `native/manager/src/cutover_windows.rs`
+- `S16` `M` `native/manager/src/failed_versions.rs`
+- `S16` `M` `native/manager/src/installation_watch.rs`
+- `S16` `M` `native/manager/src/background.rs`
+- `S16` `M` `native/manager/src/installation.rs`
+- `S16` `M` `native/manager/src/installed.rs`
+- `S16` `M` `native/manager/src/ipc.rs`
+- `S16` `M` `native/manager/src/ipc/windows.rs`
+- `S16` `M` `native/manager/src/lib.rs`
+- `S16` `M` `native/manager/src/main.rs`
+- `S16` `M` `native/manager/src/session/claim.rs`
+- `S16` `M` `native/manager/src/session/ownership.rs`
+- `S16` `M` `native/manager/src/startup.rs`
+- `S16` `M` `native/manager/src/windows_lifecycle.rs`
+- `S16` `M` `native/manager/src/windows_tray.rs`
+- `S16` `M` `native/application/src/installation.rs`
+- `S16` `M` `native/application/tests/installation_cutover.rs`
+- `S16` `M` `native/CONTRACT.md`
+- `S16` `M` `dev/packaging/native/generate.py`
+- `S16` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S16` `M` `dev/locales/manager_chrome.py`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `verify:` `Isolated Windows manager Release build` -> `pass`
+- `S16` `verify:` `Manager CTest 13.74 seconds` -> `pass`
+- `S16` `verify:` `Pinned manager all-target Clippy` -> `pass`
+- `S16` `verify:` `13 canonical projection/taxonomy tests` -> `pass`
+- `S16` `verify:` `Independent corrective source review` -> `pass`
+- `S16` `by:` `Codex`
 
 ## Notes
 
@@ -449,3 +484,4 @@ related:
 - `S13` Coherent shared Windows tray/IPC and Linux foundation checkpoint; S13 remains open until integration review/interactive evidence. S12 successor readiness and S18 production composition remain open. Linux test harness fixes are verified separately. No disposable-host installation acceptance.
 - `S19` Unsigned metadata/source checkpoint only. No login registration, ad-hoc substitute, Apple SDK/Mach-O build, DMG or native SMAppService acceptance. S19 stays open. Shared distribution cache input enrollment follows in S09 graph checkpoint.
 - `S15` Localized passive guidance; no manager request or business-code change. Repository-wide import gate previously blocked by unrelated concurrent module removals; S15 broader gate remains open.
+- `S16` S16/S17 coherent integration checkpoint. Attended installed two-release upgrade/rollback/cancelled-shutdown evidence, connected-frontend notices, obsolete native-product cleanup and native removal emitter remain open. No acceptance or signing claim.

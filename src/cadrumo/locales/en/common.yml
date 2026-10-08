@@ -491,6 +491,13 @@ common:
     starting: Runtime starting
     stopping: Runtime stopping
     unavailable: Runtime unavailable
+    update_deferred: The update is waiting for running work to finish. No work has
+      been stopped.
+    update_failed: Update failed
+    update_failed_notice: The update failed. The previous version is being restored.
+      Choose Retry to try the update again.
+    update_pending: An update is ready. Background services will switch when running
+      work has finished.
     waiting: Waiting for runtime ownership
   runtime:
     manager_unavailable_remedy: Open {product} and check its background-services manager.

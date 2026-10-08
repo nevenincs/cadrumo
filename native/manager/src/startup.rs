@@ -50,14 +50,34 @@ pub fn start(
         Role::OwnSession { .. } => None,
         other => return Ok(Start::Waiting(other)),
     };
+    spawn(
+        supervisor,
+        if let Some(permit) = permit {
+            Mode::Reserved(permit)
+        } else {
+            Mode::Adopting
+        },
+        receive_events,
+    )
+}
+
+enum Mode {
+    Reserved(crate::session::ownership::StartPermit),
+    Adopting,
+    #[cfg(windows)]
+    Designated,
+}
+fn spawn(supervisor: Supervisor, mode: Mode, receive_events: Receiver<Event>) -> io::Result<Start> {
     let handle = supervisor.handle();
     let (ended, receive_ended) = mpsc::channel();
     let worker = thread::Builder::new()
         .name("manager-supervisor".into())
         .spawn(move || {
-            let result = match permit {
-                Some(permit) => supervisor.run_with_permit(permit),
-                None => Ok(supervisor.run_adopting()),
+            let result = match mode {
+                Mode::Reserved(permit) => supervisor.run_with_permit(permit),
+                Mode::Adopting => Ok(supervisor.run_adopting()),
+                #[cfg(windows)]
+                Mode::Designated => Ok(supervisor.run()),
             };
             let _ = ended.send(result);
         })?;
@@ -67,6 +87,44 @@ pub fn start(
         ended: receive_ended,
         worker: Some(worker),
     }))
+}
+
+#[cfg(windows)]
+pub(crate) fn start_designated(
+    target: LaunchTarget,
+    config: SupervisorConfig,
+    collaborators: Collaborators,
+    permit: crate::cutover_child::InitialPermit,
+) -> io::Result<Start> {
+    if permit.root() != target.storage_root()
+        || !collaborators.session.is_active()
+        || !matches!(
+            crate::session::quit::read_quit_marker(target.storage_root()),
+            crate::session::quit::QuitState::Absent
+        )
+    {
+        return Err(io::ErrorKind::PermissionDenied.into());
+    }
+    let (events, receive) = mpsc::sync_channel(EVENT_QUEUE);
+    spawn(
+        Supervisor::new(config, target, collaborators, events),
+        Mode::Designated,
+        receive,
+    )
+}
+
+pub fn start_reserved(
+    target: LaunchTarget,
+    config: SupervisorConfig,
+    collaborators: Collaborators,
+    claim: crate::session::claim::StartClaim,
+) -> io::Result<Start> {
+    let (events, receive) = mpsc::sync_channel(EVENT_QUEUE);
+    spawn(
+        Supervisor::new(config, target, collaborators, events),
+        Mode::Reserved(crate::session::ownership::StartPermit::from_claim(claim)),
+        receive,
+    )
 }
 
 pub enum Start {

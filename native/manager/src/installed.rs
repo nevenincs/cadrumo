@@ -204,18 +204,15 @@ impl InstalledVersions for InstalledRuntime {
         (same(image).as_ref() == Some(&expected)).then(|| self.version.clone())
     }
 
-    fn failed(&self, _version: &str) -> bool {
-        // Until the installation catalogue owns version-specific decoding,
-        // any marker (including an unreadable or linked one) prevents adoption.
-        failed_version_marker(self.target.storage_root())
+    fn failed(&self, version: &str) -> bool {
+        crate::failed_versions::FailedVersions::read(self.target.storage_root())
+            .map_or(true, |failed| failed.contains(version))
     }
 }
 
 fn failed_version_marker(root: &Path) -> bool {
-    !matches!(
-        std::fs::symlink_metadata(root.join(".runtime/manager-failed-versions.json")),
-        Err(error) if error.kind() == io::ErrorKind::NotFound
-    )
+    crate::failed_versions::FailedVersions::read(root)
+        .map_or(true, |failed| failed.contains(crate::identity::VERSION))
 }
 
 fn same_directory(actual: &Path, expected: &Path) -> bool {
