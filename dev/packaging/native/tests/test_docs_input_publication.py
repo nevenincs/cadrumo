@@ -23,7 +23,10 @@ def test_source_and_authority_changes_refuse_completion(
     source, authority = tmp_path / "page.md", tmp_path / "authority.json"
     source.write_text("original page", encoding="utf-8")
     authority.write_text("original authority", encoding="utf-8")
-    selected = [authority]
+    database = tmp_path / "authority.sqlite3"
+    database.write_bytes(b"selected database")
+    selected = [authority, database]
+    monkeypatch.setattr(docs_build, "REPO_ROOT", tmp_path)
     configuration = build / "build-paths.json"
     configuration.write_text(
         json.dumps({"paths": {"user_docs_build": "docs", "user_docs_work": "work"}}), encoding="utf-8"
@@ -45,13 +48,13 @@ def test_source_and_authority_changes_refuse_completion(
         elif change == "selection":
             successor = tmp_path / "successor.json"
             successor.write_bytes(authority.read_bytes())
-            selected[:] = [successor]
+            selected[:] = [successor, database]
 
     monkeypatch.setattr(docs_build, "_compile_roots", produce)
     original_receipt = b""
     if change in {"none", "reuse"}:
         docs_build.build_roots(build, inputs, target="windows-x86-64")
-        assert current(destination, fingerprint(inputs, (authority,)))
+        assert current(destination, fingerprint(inputs, (authority, database)))
         assert (shared / "ready").is_file()
         if change == "none":
             return

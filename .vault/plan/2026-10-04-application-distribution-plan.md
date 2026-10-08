@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:f5a59961273b55ba1dd46955b2297e8c53dd4a29f6a2f53193a841418b7494a3'
+body_hash: 'sha256:5156009fddf39f0b9431d0fca196d615ca29ef1b7f6533e48e18345e823be092'
 ---
 
 # Application distribution
@@ -81,6 +81,8 @@ Post-S14 native diagnostic follow-up: notice_review owns an ignored one-scenario
 The same diagnostic owner may adapt the ignored retained-sandbox observer to one WSL filing-spine-chain check against its unchanged frozen inputs. Keep the private socket namespace short, preserve normal worker cleanup, and record concurrent Windows build activity. Root reviews before launch; this does not authorize another full WSL build or changes to product services.
 
 2026-10-08 Mac documentation recovery: root owns dev/docs/language_switcher.py and its new multilingual error-page regression tests after the full Mac compile exposed nine invalid translated 404 links. notice_review reviews that source slice, preserves the failed Mac logs, and may apply exactly that reviewed module and its test to the stopped frozen Mac source with before/after hashes, followed by the focused native regression. Root owns the subsequent full build launch. The Windows full build remains untouched while running; no golden, authority, runtime or containment changes are included.
+
+2026-10-08 S05 Linux documentation handoff: after proving WSL and manylinux have the same 10,267 enrolled source inputs and selected authority bytes but different absolute checkout paths, msi_maintenance may own a documentation-only portable input identity in docs_build.py and a narrowly scoped helper/tests. Keep generic native action fingerprints unchanged. Hash the complete enrolled source graph by validated repository-relative names and bytes, and selected authority by stable owner-defined roles and bytes; reject unknown external inputs, preserve language identity and before/after input validation. Existing output-inventory checks and strict compile remain mandatory. Root reviews before overlaying the stopped frozen WSL/manylinux snapshots with the committed filing-settlement and 404 fixes plus this reviewed slice. Use genuine CMake enrollment and the owning docs_build producer/cache; never synthesize a ready marker or promote unverified standalone HTML. No service/product registration, containment weakening or change to active Windows/Mac frozen inputs is included. Root owns final build launches, vault and commits.
 
 ## Verification
 

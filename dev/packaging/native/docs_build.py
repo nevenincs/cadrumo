@@ -22,6 +22,7 @@ from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
 from .build_paths import build_paths
+from .docs_input_identity import shared_docs_inputs
 from .docs_stage import DocsPackagingError, declared_languages, language_roots, package_prefix
 from .identity import identity
 from .layout import distribution_target, load_layout
@@ -111,14 +112,14 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
     with action_lock(build, "user-docs"):
         authority = selected_published_authority(REPO_ROOT)
         input_identity = fingerprint(inputs, authority)
-        shared_inputs = fingerprint(inputs, authority, outside=build)
+        shared_inputs = shared_docs_inputs(inputs, authority, source=REPO_ROOT, build=build)
 
         def validate_inputs() -> None:
             selected = selected_published_authority(REPO_ROOT)
             if (
                 selected != authority
                 or fingerprint(inputs, selected) != input_identity
-                or fingerprint(inputs, selected, outside=build) != shared_inputs
+                or shared_docs_inputs(inputs, selected, source=REPO_ROOT, build=build) != shared_inputs
             ):
                 raise DocsPackagingError("Documentation inputs changed during the build; retry from stable sources")
 
@@ -154,7 +155,8 @@ def shared_site_identity(inputs_outside_the_build: str, languages: tuple[str, ..
     The documentation reads the sources, the registry authority and the
     declared languages. It does not read the platform, the architecture or the
     directory a configuration builds in, so those are not part of what names
-    it: two configurations of one checkout with the same inputs get one site.
+    it: configurations of byte-identical checkouts with the same enrolled
+    relative input names and selected authority get one site.
     """
     return hashlib.sha256(f"{inputs_outside_the_build}\n{','.join(languages)}".encode()).hexdigest()
 

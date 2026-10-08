@@ -558,6 +558,7 @@
         "dev.packaging.native.cpp_abi_inputs",
         "dev.packaging.native.distribution_prepare",
         "dev.packaging.native.docs_build",
+        "dev.packaging.native.docs_input_identity",
         "dev.packaging.native.docs_stage",
         "dev.packaging.native.generate",
         "dev.packaging.native.hashing",

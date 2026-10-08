@@ -3,8 +3,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/Authority.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 # Bundled user documentation, shared by the source build and the desktop project.
 # The owning docs driver compiles the documentation once for every language declared in
-# native/package-layout.json, shares the built site between the build configurations of one
-# checkout, and refuses a stale published authority at its cli-sequence gate. Staging copies the shippable
+# native/package-layout.json, shares the built site between identical enrolled source graphs,
+# and refuses a stale published authority at its cli-sequence gate. Staging copies the shippable
 # subset into the published layout and writes the docs manifest that the package delegates to.
 set(docs_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
   "${CADRUMO_DEV_PYTHON}" -B -m)
@@ -21,11 +21,13 @@ file(GLOB_RECURSE user_docs_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/docs/*" "${CADRUMO_SOURCE_ROOT}/dev/docs/*" "${CADRUMO_SOURCE_ROOT}/src/*"
   "${CADRUMO_SOURCE_ROOT}/native/platforms/*.json")
 list(FILTER user_docs_inputs EXCLUDE REGEX "/(__pycache__|\\.git)/|\\.pyc$|\\.lock$|/docs/_build/|/dev/docs/(.*/)?tests/")
-list(FILTER user_docs_inputs EXCLUDE REGEX "/src/.*/tests/|/conftest\\.py$")
+# Documentation scenarios import source test-support modules and their helpers.
+# Retain that tree so fixture changes invalidate the compiled site too.
 list(FILTER user_docs_inputs EXCLUDE REGEX "/\\.aeat-generated-export-transaction-|/\\.generated-export-(backup|stage)-")
 foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/_paths.py dev/cache_root.py
     dev/packaging/__init__.py dev/packaging/command_execution.py dev/packaging/authority_staging.py
     dev/packaging/native/__init__.py dev/packaging/native/docs_build.py dev/packaging/native/docs_stage.py
+    dev/packaging/native/docs_input_identity.py
     dev/packaging/native/package_inventory.py dev/packaging/native/build_paths.py dev/packaging/native/hashing.py
     dev/packaging/native/layout.py dev/packaging/native/identity.py dev/packaging/native/action_cache.py
     dev/packaging/native/cmake_build.py dev/packaging/runtime_wheelhouse_contract.py)
@@ -48,6 +50,8 @@ add_dependencies(user_docs_build registry_authority)
 add_custom_target(user_docs_driver_test
   COMMAND ${docs_helper} pytest -q "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_shared_site.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_build_environment.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_input_identity.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_input_publication.py"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
 cadrumo_register_clean(TARGET user_docs_build PATHS "${CADRUMO_PATH_USER_DOCS_BUILD}" "${CADRUMO_PATH_USER_DOCS_WORK}")
 set(CADRUMO_DOCS_SEQUENCE_PAGES "" CACHE STRING "Documentation pages selected for explicit transcript maintenance")
