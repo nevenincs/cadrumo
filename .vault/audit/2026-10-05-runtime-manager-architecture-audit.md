@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:e97ae308ce66c64c75bae8ac50e65af5c245a7144bacdf53c24c78f7352af37a'
+body_hash: 'sha256:a41f2d3bbd0fdb3e43f1bcb3f001543863c14e6ab8f0cde13c6c223c94e7df8b'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -154,6 +154,14 @@ On 2026-10-07 the operator requested the Google validation repair and complete i
 ### P02.S24 cross-version storage contract review | low | Existing taxonomy enrollment now has conformance checks and documented grammar
 
 2026-10-08: Reviewed the six existing manager/runtime storage entries against shared session vectors and added scope, node, override, fingerprint and lifecycle-axis assertions. Documented stable session mutex, start-claim and bounded Quit-record grammar in native/CONTRACT.md. No second authored path inventory or runtime authority was introduced. Seven focused Python tests, scoped Ruff/format/ty and the configured native custody/session tests pass. IPC successor readiness, tray integration and interactive acceptance remain separate open work.
+
+### 2026-10-08 tray and native foundation checkpoint
+
+Windows Release manager, application and installer CTests passed in 57.13 seconds; pinned all-target Clippy passed for all three crates. Evidence: build/windows-x64/verification/manager-tray-catalogue-native-tests.log. The tray implements canonical localized state/actions, explicit interruption warnings, unavailable-state Retry without Stop, persistent per-user sign-in opt-out, log opening and Explorer recreation. IPC acknowledgements distinguish queued UI work from runtime readiness; undesignated successor readiness remains refused. Preferences use bounded custody records. Full UAC-elevated tokens remain refused while UAC-disabled Default tokens retain the accepted supervisor policy; a proposed blanket elevation refusal was corrected before this checkpoint.
+
+Linux Release manager and Python host compile on the pinned glibc 2.28 builder. All 65 manager unit tests pass. Linux main and placement remain gated: moving a process into a user-systemd scope can remove the native logind identity required by runtime admission. No environment-variable substitute is accepted. Native XDG desktop-file validation passes for user, machine and escaped-path fixtures. Container evidence does not prove interactive login, tray, shutdown or installation acceptance.
+
+This is a bounded implementation checkpoint. S12 successor authentication/readiness, S16/S17 upgrade/rollback/uninstall integration and S18 production Linux composition remain open. Native Linux integration tests exposed fixture executable permissions and ambient uv selecting the Windows checkout environment; corrections are under verification. No full product or disposable-host acceptance is claimed.
 
 ## Recommendations
 

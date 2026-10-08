@@ -72,7 +72,17 @@ impl StopSignal for PlatformStopSignal {
                 Ok(Some(_)) => Err(StopSignalError::NotRunning),
                 Err(_) => Err(StopSignalError::Failed),
             },
-            // An adopted process needs a pidfd or kqueue handle, which a later platform adds.
+            #[cfg(target_os = "linux")]
+            RuntimeProcess::Adopted(opened) => {
+                super::process::adopted_stop(opened).map_err(|error| {
+                    if error.raw_os_error() == Some(libc::ESRCH) {
+                        StopSignalError::NotRunning
+                    } else {
+                        StopSignalError::Failed
+                    }
+                })
+            }
+            #[cfg(not(target_os = "linux"))]
             RuntimeProcess::Adopted(_) => Err(StopSignalError::Unsupported),
         }
     }

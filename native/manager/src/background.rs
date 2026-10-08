@@ -36,7 +36,9 @@ pub struct Background {
     ownership: Ownership,
     activity: fn() -> Box<dyn SessionActivity>,
     running: Option<Running>,
-    first: bool,
+    initial: Option<StartKind>,
+    blocked: bool,
+    quitting: bool,
     suspended: bool,
     diagnostics: Arc<Diagnostics>,
     waiting: Option<LifecycleFact>,
@@ -48,6 +50,7 @@ impl Background {
         session: ManagerSession,
         activity: fn() -> Box<dyn SessionActivity>,
         diagnostics: Arc<Diagnostics>,
+        initial: StartKind,
     ) -> Self {
         let ownership = Ownership::new(
             installed.target.storage_root().to_path_buf(),
@@ -60,7 +63,9 @@ impl Background {
             ownership,
             activity,
             running: None,
-            first: true,
+            initial: Some(initial),
+            blocked: false,
+            quitting: false,
             suspended: false,
             diagnostics,
             waiting: None,
@@ -80,7 +85,8 @@ impl Background {
                     diagnostics::supervision_outcome(&self.diagnostics, outcome);
                     match outcome {
                         Outcome::Failed { .. } | Outcome::Foreign(_) | Outcome::StoodDown(_) => {
-                            return Err(io::Error::other("manager_runtime_unavailable"));
+                            self.blocked = true;
+                            return Ok(());
                         }
                         _ => {}
                     }
@@ -95,11 +101,10 @@ impl Background {
                 Err(TryRecvError::Empty) => return Ok(()),
             }
         }
-        if self.suspended {
+        if self.suspended || self.blocked || self.quitting {
             return Ok(());
         }
-        let initial = self.first.then_some(StartKind::Manual);
-        self.first = false;
+        let initial = self.initial.take();
         let collaborators = Collaborators {
             session: (self.activity)(),
             probe: Box::new(self.installed.clone()),
@@ -148,6 +153,79 @@ impl Background {
         Ok(())
     }
 
+    /// A client asks only for reassessment; no running process is interrupted.
+    pub fn retry(&mut self) -> io::Result<()> {
+        if self.quitting || self.suspended {
+            return Err(io::ErrorKind::WouldBlock.into());
+        }
+        self.blocked = false;
+        self.poll()
+    }
+
+    /// Called after the tray's explicit interruption warning. Normal supervisor
+    /// stop/drain completes before the next manual ownership assessment.
+    pub fn restart(&mut self) -> io::Result<()> {
+        if self.quitting || self.suspended {
+            return Err(io::ErrorKind::WouldBlock.into());
+        }
+        if let Some(running) = &self.running
+            && !running.handle.request(Request::Stop)
+        {
+            return Err(io::ErrorKind::WouldBlock.into());
+        }
+        self.blocked = false;
+        self.initial = Some(StartKind::Manual);
+        Ok(())
+    }
+
+    /// Suppress automatic starts before asking only our owned supervisor to stop.
+    pub fn quit(&mut self) -> io::Result<()> {
+        self.ownership.record_quit()?;
+        if let Some(running) = &self.running
+            && !running.handle.request(Request::Stop)
+        {
+            return Err(io::ErrorKind::WouldBlock.into());
+        }
+        self.quitting = true;
+        self.suspended = true;
+        Ok(())
+    }
+
+    pub fn quit_completed(&self) -> bool {
+        self.quitting && self.running.is_none()
+    }
+
+    pub fn status(&self) -> &'static str {
+        if self.quitting || self.suspended {
+            return "stopping";
+        }
+        if self.blocked {
+            return "unavailable";
+        }
+        if self.waiting.is_some() {
+            return "waiting";
+        }
+        for event in self.diagnostics.snapshot(u64::MAX).events.iter().rev() {
+            match event.lifecycle {
+                Some(LifecycleFact::Ready { .. }) => return "running",
+                Some(
+                    LifecycleFact::SupervisorStarted { .. }
+                    | LifecycleFact::Launched { .. }
+                    | LifecycleFact::RestartScheduled { .. },
+                ) => return "starting",
+                Some(LifecycleFact::StopRequested { .. }) => return "stopping",
+                Some(
+                    LifecycleFact::HangDetected { .. }
+                    | LifecycleFact::Exited { .. }
+                    | LifecycleFact::ChannelClosed { .. }
+                    | LifecycleFact::Failed { .. },
+                ) => return "unavailable",
+                _ => {}
+            }
+        }
+        "waiting"
+    }
+
     pub fn session_end(&mut self) {
         self.suspended = true;
         if let Some(running) = &mut self.running {
@@ -166,7 +244,7 @@ impl Background {
 
     pub fn cancel_session_end(&mut self) {
         // A still-settling supervisor must exit before a fresh one may start.
-        self.suspended = false;
+        self.suspended = self.quitting;
         self.diagnostics.lifecycle(
             EventKind::StageCompleted,
             HostStage::Shutdown,

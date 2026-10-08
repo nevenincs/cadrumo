@@ -1,7 +1,7 @@
 //! The Linux per-session lock: a kernel-released `flock` in the user's runtime directory.
 //!
 //! `XDG_RUNTIME_DIR` belongs to one user and is closed to every other account, and the
-//! lock file carries the login session (`XDG_SESSION_ID`) in its name, so each session of
+//! lock file carries the native logind session in its name, so each session of
 //! the user has its own lock.
 
 use crate::custody::{LocalLock, effective_uid};
@@ -10,35 +10,6 @@ use std::io;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::PathBuf;
 use std::time::Duration;
-
-/// The session name used when the login manager sets no `XDG_SESSION_ID`.
-const UNNAMED_SESSION: &str = "unnamed";
-const MAXIMUM_SESSION_BYTES: usize = 64;
-
-/// This process's login session, or [`UNNAMED_SESSION`] when none is set.
-pub(super) fn current_session() -> io::Result<String> {
-    let session = match std::env::var("XDG_SESSION_ID") {
-        Ok(session) if !session.is_empty() => session,
-        Ok(_) | Err(std::env::VarError::NotPresent) => UNNAMED_SESSION.to_owned(),
-        Err(std::env::VarError::NotUnicode(_)) => {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "XDG_SESSION_ID is not text",
-            ));
-        }
-    };
-    let plain = session.len() <= MAXIMUM_SESSION_BYTES
-        && session
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'));
-    if !plain {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "the login session is not a plain identifier",
-        ));
-    }
-    Ok(session)
-}
 
 /// The user's runtime directory, refused unless this user owns it and no one else may
 /// enter it.

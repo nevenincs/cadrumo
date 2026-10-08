@@ -82,6 +82,7 @@ unsafe extern "system" {
     ) -> usize;
     fn KillTimer(window: Handle, id: usize) -> i32;
     fn PostQuitMessage(code: i32);
+    fn PostMessageW(window: Handle, message: u32, wparam: usize, lparam: isize) -> i32;
     fn MessageBoxW(owner: Handle, text: *const u16, caption: *const u16, flags: u32) -> i32;
 }
 #[link(name = "wtsapi32")]
@@ -138,7 +139,7 @@ pub fn show_startup_failure() {
 
 /// Escape once, or refuse. The successor repeats native admission; the private
 /// argument records an attempt, never grants elevation or desktop admission.
-pub fn escape_job(already_attempted: bool) -> io::Result<bool> {
+pub fn escape_job(already_attempted: bool, sign_in: bool) -> io::Result<bool> {
     let mut in_job = 0;
     // SAFETY: current-process pseudo handle is borrowed, and output is writable.
     if unsafe { IsProcessInJob(GetCurrentProcess(), ptr::null_mut(), &mut in_job) } == 0 {
@@ -152,6 +153,7 @@ pub fn escape_job(already_attempted: bool) -> io::Result<bool> {
     }
     Command::new(std::env::current_exe()?)
         .arg("--breakaway-attempt")
+        .args(sign_in.then_some("--sign-in"))
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -162,15 +164,48 @@ pub fn escape_job(already_attempted: bool) -> io::Result<bool> {
 
 struct WindowState {
     background: Box<dyn Lifecycle>,
+    ipc: Option<crate::ipc::windows::Server>,
     failed: bool,
+    tray: Option<crate::windows_tray::Tray>,
+    revealing: bool,
 }
 
 trait Lifecycle {
+    fn retry(&mut self) -> io::Result<()> {
+        self.poll()
+    }
+    fn restart(&mut self) -> io::Result<()> {
+        Err(io::ErrorKind::Unsupported.into())
+    }
+    fn quit(&mut self) -> io::Result<()> {
+        Err(io::ErrorKind::Unsupported.into())
+    }
+    fn status(&self) -> &'static str {
+        "waiting"
+    }
+    fn quit_completed(&self) -> bool {
+        false
+    }
     fn poll(&mut self) -> io::Result<()>;
     fn session_end(&mut self);
     fn cancel_session_end(&mut self);
 }
 impl Lifecycle for Background {
+    fn retry(&mut self) -> io::Result<()> {
+        Background::retry(self)
+    }
+    fn restart(&mut self) -> io::Result<()> {
+        Background::restart(self)
+    }
+    fn quit(&mut self) -> io::Result<()> {
+        Background::quit(self)
+    }
+    fn status(&self) -> &'static str {
+        Background::status(self)
+    }
+    fn quit_completed(&self) -> bool {
+        Background::quit_completed(self)
+    }
     fn poll(&mut self) -> io::Result<()> {
         Background::poll(self)
     }
@@ -197,7 +232,38 @@ unsafe extern "system" fn procedure(
         }
         let state = GetWindowLongPtrW(window, -21) as *mut WindowState;
         if !state.is_null() {
+            // Modal shell APIs pump messages. Detach the tray before entering them:
+            // no reference into WindowState survives a reentrant callback.
+            if message == 0x8002 && !(*state).revealing {
+                if let Some(mut tray) = (*state).tray.take() {
+                    (*state).revealing = true;
+                    let status = (*state).background.status();
+                    let result = tray.reveal(status).and_then(|action| match action {
+                        Some(crate::windows_tray::Action::Retry) => (*state).background.retry(),
+                        Some(crate::windows_tray::Action::Restart) => (*state).background.restart(),
+                        Some(crate::windows_tray::Action::Quit) => (*state).background.quit(),
+                        None => Ok(()),
+                    });
+                    if result.is_err() {
+                        tray.error();
+                    }
+                    (*state).tray = Some(tray);
+                    (*state).revealing = false;
+                }
+                return 0;
+            }
             let state = &mut *state;
+            if let Some(tray) = &mut state.tray
+                && tray.taskbar_recreated(message)
+            {
+                let _ = tray.update(state.background.status());
+            }
+            if message == crate::windows_tray::CALLBACK
+                && crate::windows_tray::Tray::selected(lparam)
+            {
+                PostMessageW(window, 0x8002, 0, 0);
+                return 0;
+            }
             match message {
                 0x0011 => {
                     state.background.session_end();
@@ -212,9 +278,38 @@ unsafe extern "system" fn procedure(
                     return 0;
                 }
                 0x0113 => {
+                    if let Some(ipc) = &mut state.ipc {
+                        let result = ipc.poll(|request| {
+                            if matches!(request, crate::ipc::Request::Reveal { .. }) {
+                                let queued = (state.tray.is_some() || state.revealing)
+                                    && PostMessageW(window, 0x8002, 0, 0) != 0;
+                                crate::ipc::Response {
+                                    schema: 1,
+                                    outcome: if queued {
+                                        crate::ipc::Outcome::RevealQueued
+                                    } else {
+                                        crate::ipc::Outcome::SurfaceUnavailable
+                                    },
+                                }
+                            } else {
+                                crate::ipc::respond(request, || state.background.retry())
+                            }
+                        });
+                        if result.is_err() {
+                            state.failed = true;
+                            PostQuitMessage(1);
+                            return 0;
+                        }
+                    }
                     if state.background.poll().is_err() {
                         state.failed = true;
                         PostQuitMessage(1);
+                    }
+                    if let Some(tray) = &mut state.tray {
+                        let _ = tray.update(state.background.status());
+                    }
+                    if state.background.quit_completed() {
+                        PostQuitMessage(0);
                     }
                     return 0;
                 }
@@ -233,18 +328,30 @@ unsafe extern "system" fn procedure(
     }
 }
 
-pub fn run(background: Background) -> io::Result<()> {
-    run_window(Box::new(background), |_| {})
+pub fn run(
+    background: Background,
+    ipc: crate::ipc::windows::Server,
+    tray: crate::windows_tray::Configuration,
+) -> io::Result<()> {
+    run_window(Box::new(background), Some(ipc), Some(tray), |_| {})
 }
 
-fn run_window(background: Box<dyn Lifecycle>, created: impl FnOnce(Handle)) -> io::Result<()> {
+fn run_window(
+    background: Box<dyn Lifecycle>,
+    ipc: Option<crate::ipc::windows::Server>,
+    tray: Option<crate::windows_tray::Configuration>,
+    created: impl FnOnce(Handle),
+) -> io::Result<()> {
     let name: Vec<u16> = format!("{}.session-window", crate::identity::MANAGER_ID)
         .encode_utf16()
         .chain([0])
         .collect();
     let mut state = Box::new(WindowState {
         background,
+        ipc,
         failed: false,
+        tray: None,
+        revealing: false,
     });
     // SAFETY: the class, UTF-16 name and boxed state outlive this window and its
     // message loop. It is an invisible top-level window (not HWND_MESSAGE), so
@@ -284,9 +391,15 @@ fn run_window(background: Box<dyn Lifecycle>, created: impl FnOnce(Handle)) -> i
             UnregisterClassW(name.as_ptr(), instance);
             return Err(io::Error::last_os_error());
         }
-        let result = if SetTimer(window, 1, 250, None) == 0 {
+        let installed = tray
+            .map(|configuration| crate::windows_tray::Tray::install(window, configuration))
+            .transpose();
+        let result = if let Err(error) = installed.as_ref() {
+            Err(io::Error::other(error.to_string()))
+        } else if SetTimer(window, 1, 250, None) == 0 {
             Err(io::Error::last_os_error())
         } else {
+            state.tray = installed.unwrap();
             created(window);
             let mut message = Message::default();
             loop {
@@ -302,6 +415,7 @@ fn run_window(background: Box<dyn Lifecycle>, created: impl FnOnce(Handle)) -> i
             }
         };
         KillTimer(window, 1);
+        state.tray.take();
         DestroyWindow(window);
         UnregisterClassW(name.as_ptr(), instance);
         result?;
@@ -339,7 +453,7 @@ mod tests {
     #[test]
     fn native_window_delivers_session_end_cancellation_and_close() {
         let observed = Arc::new(Mutex::new(Vec::new()));
-        run_window(Box::new(Observed(observed.clone())), |window| {
+        run_window(Box::new(Observed(observed.clone())), None, None, |window| {
             for message in [0x0011, 0x0016, 0x0113, 0x0010] {
                 // SAFETY: this is our own live, hidden test window. Only its
                 // queue receives these messages; no real logoff is requested.

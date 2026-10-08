@@ -87,7 +87,7 @@ fn current_installation(
 
 /// Every successor repeats native admission, job escape and catalogue verification.
 /// Dispatch acknowledgement conveys no runtime readiness or ownership.
-pub fn dispatch_newest(image: &Path) -> io::Result<DispatchOutcome> {
+pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcome> {
     let selected = select(image)?;
     // Validate management eligibility before dispatch; never clear an override into eligibility.
     let locations = ManagedLocations::resolve(&selected.manager)?;
@@ -95,6 +95,7 @@ pub fn dispatch_newest(image: &Path) -> io::Result<DispatchOutcome> {
         return Ok(DispatchOutcome::Current(current));
     }
     Command::new(selected.manager)
+        .args(sign_in.then_some("--sign-in"))
         .env_clear()
         .envs(cadrumo_platform::storage::strict_host_environment(
             std::env::vars_os(),

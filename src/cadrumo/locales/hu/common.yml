@@ -482,6 +482,28 @@ categories:
       label: Utazási közlekedési költség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
+common:
+  manager:
+    action_failed: A művelet nem fejezhető be. Ellenőrizd a kezelő naplóját.
+    open_application: Cadrumo megnyitása
+    open_logs: Naplók megnyitása
+    quit: Kilépés
+    quit_warning: Kilépsz a háttérszolgáltatásokból? A folyamatban lévő munka megszakadhat.
+      A szolgáltatások leállítva maradnak, amíg kézzel el nem indítod őket, vagy újra
+      be nem jelentkezel.
+    restart: Újraindítás
+    restart_warning: Újraindítod a háttérfolyamatot? A folyamatban lévő munka megszakadhat.
+    retry: Újrapróbálás
+    running: A háttérfolyamat készen áll
+    start_at_sign_in: Indítás bejelentkezéskor
+    starting: A háttérfolyamat indul
+    stopping: A háttérfolyamat leáll
+    unavailable: A háttérfolyamat nem érhető el
+    waiting: Várakozás a háttérfolyamat vezérlésére
+  runtime:
+    manager_unavailable_remedy: Nyisd meg a {product} alkalmazást, és ellenőrizd a
+      háttérszolgáltatás-kezelőjét. Ha kikapcsoltad a bejelentkezéskori indítást,
+      indítsd el kézzel a kezelőt, majd próbáld újra.
 core:
   profile:
     errors:

@@ -490,6 +490,29 @@ categories:
     viajes_transporte:
       label: Transport de viatge
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
+common:
+  manager:
+    action_failed: No s’ha pogut completar l’acció. Comprova el registre del gestor.
+    open_application: Obrir Cadrumo
+    open_logs: Obrir registres
+    quit: Sortir
+    quit_warning: Vols sortir dels serveis en segon pla? Es pot interrompre la feina
+      en curs. Els serveis continuaran aturats fins que els iniciïs manualment o tornis
+      a iniciar la sessió.
+    restart: Reiniciar
+    restart_warning: Vols reiniciar el motor en segon pla? Es pot interrompre la feina
+      en curs.
+    retry: Torna-ho a provar
+    running: Motor preparat
+    start_at_sign_in: Iniciar en iniciar la sessió
+    starting: Iniciant el motor
+    stopping: Aturant el motor
+    unavailable: Motor no disponible
+    waiting: Esperant el control del motor
+  runtime:
+    manager_unavailable_remedy: Obre {product} i comprova el gestor de serveis en
+      segon pla. Si vas desactivar l’inici en iniciar la sessió, inicia el gestor
+      manualment i torna-ho a provar.
 core:
   profile:
     errors:

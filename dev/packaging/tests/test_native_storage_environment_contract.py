@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.config import Settings
+from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR
 from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.core.storage_environment import (
     PROCESS_ENVIRONMENT,
@@ -23,6 +24,7 @@ from cadrumo.core.storage_environment import (
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from dev._paths import REPO_ROOT
+from dev.locales.manager_chrome import manager_chrome_strings
 from dev.packaging.native import generate as generator_module
 from dev.packaging.native.generate import generate
 from dev.packaging.native.layout import load_layout
@@ -49,6 +51,13 @@ def test_desktop_defaults_project_canonical_declarations(tmp_path: Path) -> None
 
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
     assert _rust_strings(generated, "MANAGER_LOG") == [STORAGE_TAXONOMY[StorageCategory.MANAGER_LOG_FILE].subpath]
+    assert _rust_strings(generated, "MANAGER_PREFERENCES") == [
+        STORAGE_TAXONOMY[StorageCategory.MANAGER_PREFERENCES].subpath
+    ]
+    assert _rust_strings(generated, "MANAGER_LANGUAGE_ENV") == [OUTPUT_LANGUAGE_ENV_VAR]
+    assert _rust_strings(generated, "MANAGER_LANGUAGE_DEFAULT") == [DEFAULT_OUTPUT_LANGUAGE.value]
+    strings = json.dumps(manager_chrome_strings(), ensure_ascii=False, sort_keys=True)
+    assert f"pub const MANAGER_STRINGS_JSON: &str = {generator_module._rust_string(strings)};" in generated
     assert f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};" in generated
     assert f"pub const LOG_BACKUPS: u32 = {contract['desktop_defaults']['log_backups']};" in generated
 

@@ -60,7 +60,7 @@ pub enum ForeignReason {
 pub fn assess(
     record: &BootRecord,
     process: &ProcessIdentity,
-    own_session: Option<u32>,
+    own_session: Option<String>,
     versions: &dyn InstalledVersions,
 ) -> Result<InstalledVersion, ForeignReason> {
     if record.pid != process.pid || record.process_created != process.created {
@@ -157,7 +157,7 @@ mod tests {
             created: 7,
             image: root().join("bin").join("cadrumo-runtime.exe"),
             fully_elevated: Some(false),
-            session: Some(1),
+            session: Some("1".into()),
         }
     }
 
@@ -166,7 +166,7 @@ mod tests {
         process: ProcessIdentity,
         failed: bool,
     ) -> Result<(), ForeignReason> {
-        assess(&record, &process, Some(1), &catalogue(failed)).map(|_| ())
+        assess(&record, &process, Some("1".into()), &catalogue(failed)).map(|_| ())
     }
 
     #[test]
@@ -198,7 +198,7 @@ mod tests {
             (
                 record(),
                 ProcessIdentity {
-                    session: Some(2),
+                    session: Some("2".into()),
                     ..process()
                 },
                 false,

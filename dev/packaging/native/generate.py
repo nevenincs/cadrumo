@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.config import AuthorityRootSettings, Settings
+from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR
 from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import (
@@ -24,6 +25,7 @@ from cadrumo.core.storage_environment import (
 )
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
+from dev.locales.manager_chrome import manager_chrome_strings
 
 from .identity import identity
 from .layout import distribution_target, entrypoint_files, load_layout
@@ -355,6 +357,12 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     rust.extend(
         [
             f"pub const MANAGER_LOG: &str = {_rust_string(contract['desktop_defaults']['manager_log_file'])};",
+            "pub const MANAGER_PREFERENCES: &str = "
+            f"{_rust_string(STORAGE_TAXONOMY[StorageCategory.MANAGER_PREFERENCES].subpath)};",
+            f"pub const MANAGER_LANGUAGE_ENV: &str = {_rust_string(OUTPUT_LANGUAGE_ENV_VAR)};",
+            f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {_rust_string(DEFAULT_OUTPUT_LANGUAGE.value)};",
+            "pub const MANAGER_STRINGS_JSON: &str = "
+            f"{_rust_string(json.dumps(manager_chrome_strings(), ensure_ascii=False, sort_keys=True))};",
             f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};",
             f"pub const LOG_BACKUPS: u32 = {contract['desktop_defaults']['log_backups']};",
         ]

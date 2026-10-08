@@ -50,7 +50,7 @@ impl ManagedLocations {
         })
     }
 
-    #[cfg(test)]
+    #[cfg(all(windows, test))]
     pub(crate) fn fixture(package: PathBuf, storage: PathBuf) -> io::Result<Self> {
         Self::from_resolved(
             Evidence {

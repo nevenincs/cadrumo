@@ -497,6 +497,30 @@ categories:
     viajes_transporte:
       label: Transporte en viajes
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
+common:
+  manager:
+    action_failed: No se ha podido completar la acción. Comprueba el registro del
+      gestor.
+    open_application: Abrir Cadrumo
+    open_logs: Abrir registros
+    quit: Salir
+    quit_warning: ¿Quieres salir de los servicios en segundo plano? Puede interrumpirse
+      el trabajo en curso. Los servicios seguirán detenidos hasta que los inicies
+      manualmente o vuelvas a iniciar sesión.
+    restart: Reiniciar
+    restart_warning: ¿Quieres reiniciar el motor en segundo plano? Puede interrumpirse
+      el trabajo en curso.
+    retry: Reintentar
+    running: Motor listo
+    start_at_sign_in: Iniciar al iniciar sesión
+    starting: Iniciando el motor
+    stopping: Deteniendo el motor
+    unavailable: Motor no disponible
+    waiting: Esperando el control del motor
+  runtime:
+    manager_unavailable_remedy: Abre {product} y comprueba su gestor de servicios
+      en segundo plano. Si desactivaste el inicio al iniciar sesión, inicia el gestor
+      manualmente y vuelve a intentarlo.
 core:
   profile:
     errors:

@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:6316e8edf0cfc813a265eefce16c13faf4f123e797393f460b978098bdd55a0e'
+body_hash: 'sha256:37a848c34652902584b4875d25e5c46b960d69a2993902c5537281d822754e61'
 ---
 
 # `runtime-manager-architecture` plan
@@ -135,6 +135,8 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 2026-10-08 execution assignment under expanded authorization: P02.S12 manager IPC may proceed while the distribution owner implements shared publication state. IPC ownership is native/manager IPC modules and their tests plus lib.rs/main.rs/windows_lifecycle.rs integration; the distribution owner retains native/application installation state, native/manager installation.rs/installed.rs lease consumption, native/desktop manager dispatch and packaging. Keep these writes disjoint. The root agent serializes vault edits, native Cargo verification/builds and commits; IPC work reports its source ready before a shared native build.
 
 2026-10-08 continuation: the manager worker may continue P02.S13 and its P02.S24 storage prerequisite alongside root-owned distribution/native MSI and Linux build work. Worker owns manager tray/preferences/logging/IPC reveal integration, the canonical storage taxonomy entries and locale catalogue additions, plus focused tests. Root owns installer publication, native MSI adapter, packaging/CMake and vault checkpoints. Existing other-agent changes must be preserved. Coordinate native Cargo checks before running; source ownership is disjoint except root reviews.
+
+2026-10-08 Linux continuation: P05.S18 may proceed on existing POSIX platform/custody code alongside the Windows tray and MSI lanes. A Linux worker owns new Linux manager backend modules and focused tests plus Linux-only service/desktop registration sources. Coordinate main.rs/lib.rs inclusion with the Windows manager owner instead of editing their ongoing startup changes. Root owns CMake Linux toolchain, configure/build and vault records; Linux native tests use the separate Linux binary directory. Do not enroll macOS signing-dependent acceptance or claim desktop/session acceptance from container checks.
 
 ## Verification
 

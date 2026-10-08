@@ -21,7 +21,7 @@ const STARTUP_FAILED: u8 = 69;
 #[cfg(windows)]
 const ADMISSION_REFUSED: u8 = 77;
 
-fn start(breakaway_attempted: bool) -> ExitCode {
+fn start(breakaway_attempted: bool, sign_in: bool) -> ExitCode {
     #[cfg(windows)]
     let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
     #[cfg(windows)]
@@ -38,7 +38,7 @@ fn start(breakaway_attempted: bool) -> ExitCode {
     #[cfg(windows)]
     diagnostics.host_outcome(HostStage::Admission, HostOutcome::Ready);
     #[cfg(windows)]
-    match run_windows(breakaway_attempted, diagnostics.clone()) {
+    match run_windows(breakaway_attempted, sign_in, diagnostics.clone()) {
         Ok(()) => {
             diagnostics.host_stopped(0);
             ExitCode::SUCCESS
@@ -52,14 +52,18 @@ fn start(breakaway_attempted: bool) -> ExitCode {
     }
     #[cfg(not(windows))]
     {
-        let _ = breakaway_attempted;
+        let _ = (breakaway_attempted, sign_in);
         let _ = writeln!(io::stderr(), "manager_platform_unavailable");
         ExitCode::from(STARTUP_FAILED)
     }
 }
 
 #[cfg(windows)]
-fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::Result<()> {
+fn run_windows(
+    breakaway_attempted: bool,
+    sign_in: bool,
+    diagnostics: Arc<Diagnostics>,
+) -> io::Result<()> {
     use cadrumo_application::error::application::{ErrorCode, Operation};
     use cadrumo_manager::{
         background::Background,
@@ -74,7 +78,7 @@ fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::
         HostStage::JobEscape,
         ErrorCode::ManagerUnavailable,
         Operation::Manager,
-        || windows_lifecycle::escape_job(breakaway_attempted),
+        || windows_lifecycle::escape_job(breakaway_attempted, sign_in),
     )? {
         diagnostics.host_outcome(HostStage::JobEscape, HostOutcome::Dispatched);
         return Ok(());
@@ -84,7 +88,7 @@ fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::
         HostStage::Package,
         ErrorCode::PackageUnavailable,
         Operation::Manager,
-        || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?),
+        || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?, sign_in),
     )? {
         DispatchOutcome::Dispatched => {
             diagnostics.host_outcome(HostStage::Package, HostOutcome::Dispatched);
@@ -101,11 +105,27 @@ fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::
     )?
     else {
         diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
+        if !sign_in {
+            cadrumo_manager::ipc::windows::request(
+                &env::current_exe()?,
+                &cadrumo_manager::ipc::Request::Reveal { schema: 1 },
+            )?;
+        }
         return Ok(());
     };
     diagnostics.host_event(EventKind::StageStarted, HostStage::Storage);
     diagnostics.host_event(EventKind::StageCompleted, HostStage::Storage);
     configure(installation.locations(), &diagnostics);
+    let preferences =
+        cadrumo_manager::preferences::Preferences::read(installation.locations().storage_root())?;
+    if sign_in && !preferences.start_at_sign_in {
+        return Ok(());
+    }
+    let tray =
+        cadrumo_manager::windows_tray::Configuration::new(installation.locations(), preferences)?;
+    let ipc = cadrumo_manager::ipc::windows::Server::bind_installed(
+        installation.locations().package_root(),
+    )?;
     diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
     let installed = InstalledRuntime::from_admitted(installation)
         .map_err(|error| inspection_failed(&diagnostics, error))?;
@@ -122,21 +142,30 @@ fn run_windows(breakaway_attempted: bool, diagnostics: Arc<Diagnostics>) -> io::
         session,
         windows_lifecycle::activity,
         diagnostics.clone(),
+        if sign_in {
+            cadrumo_manager::session::ownership::StartKind::SignIn
+        } else {
+            cadrumo_manager::session::ownership::StartKind::Manual
+        },
     );
     stage(
         &diagnostics,
         HostStage::Window,
         ErrorCode::ManagerUnavailable,
         Operation::Manager,
-        || windows_lifecycle::run(background),
+        || windows_lifecycle::run(background, ipc, tray),
     )
 }
 
 fn main() -> ExitCode {
     let arguments: Vec<_> = env::args_os().skip(1).collect();
     match arguments.as_slice() {
-        [] => start(false),
-        [flag] if flag == "--breakaway-attempt" => start(true),
+        [] => start(false, false),
+        [flag] if flag == "--sign-in" => start(false, true),
+        [flag] if flag == "--breakaway-attempt" => start(true, false),
+        [first, second] if first == "--breakaway-attempt" && second == "--sign-in" => {
+            start(true, true)
+        }
         [flag] if flag == "--version" => {
             match writeln!(
                 io::stdout(),

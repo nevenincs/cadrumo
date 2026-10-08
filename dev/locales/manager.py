@@ -147,6 +147,7 @@ class LocaleManager:
         from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
         from .desktop_chrome import DESKTOP_CHROME_KEYS
         from .fstring_registry import get_registered_keys
+        from .manager_chrome import MANAGER_CHROME_KEYS
 
         if self._codebase_keys is not None:
             return set(self._codebase_keys)
@@ -182,6 +183,7 @@ class LocaleManager:
         keys.update(scan_modelo_schema_keys())
         keys.update(wizard_descriptor_keys())
         keys.update(DESKTOP_CHROME_KEYS)
+        keys.update(MANAGER_CHROME_KEYS)
         report_unread(
             "locale key scan",
             "any key they use is absent from this set and would look unused",

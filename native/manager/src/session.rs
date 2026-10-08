@@ -44,7 +44,8 @@ impl ManagerSession {
     pub fn current() -> io::Result<Self> {
         Ok(Self {
             user: crate::custody::effective_uid().to_string(),
-            session: linux::current_session()?,
+            session: crate::supervision::process::current_session()
+                .ok_or(io::ErrorKind::PermissionDenied)?,
         })
     }
 

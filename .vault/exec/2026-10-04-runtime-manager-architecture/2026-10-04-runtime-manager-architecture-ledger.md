@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:05e072dd2a952962cf8e395d82094cb65f2b37711068adfc61e3c4b2e5bda6b7'
+body_hash: 'sha256:477c757f7d760a7fce2cfbabac6b842dc1dc021d8b7af3c64e3a00975b9e5a52'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -355,6 +355,50 @@ related:
 - `S24` `verify:` `ty owning test` -> `pass`
 - `S24` `verify:` `configured manager.rust CTest including cross-version custody vectors` -> `pass`
 - `S24` `by:` `Codex`
+- `S13` `M` `native/manager/Cargo.toml`
+- `S13` `M` `native/manager/Cargo.lock`
+- `S13` `M` `native/manager/src/admission.rs`
+- `S13` `M` `native/manager/src/background.rs`
+- `S13` `M` `native/manager/src/installation.rs`
+- `S13` `M` `native/manager/src/lib.rs`
+- `S13` `M` `native/manager/src/main.rs`
+- `S13` `M` `native/manager/src/session.rs`
+- `S13` `M` `native/manager/src/session/linux.rs`
+- `S13` `M` `native/manager/src/session/ownership.rs`
+- `S13` `M` `native/manager/src/supervision/adoption.rs`
+- `S13` `M` `native/manager/src/supervision/process.rs`
+- `S13` `M` `native/manager/src/supervision/stop.rs`
+- `S13` `M` `native/manager/src/supervision/windows.rs`
+- `S13` `M` `native/manager/src/supervision/environment.rs`
+- `S13` `M` `native/manager/src/windows_lifecycle.rs`
+- `S13` `M` `native/manager/src/ipc.rs`
+- `S13` `M` `native/manager/src/ipc/windows.rs`
+- `S13` `M` `native/manager/src/preferences.rs`
+- `S13` `M` `native/manager/src/strings.rs`
+- `S13` `M` `native/manager/src/windows_tray.rs`
+- `S13` `M` `native/manager/src/linux.rs`
+- `S13` `M` `native/manager/src/linux/process.rs`
+- `S13` `M` `native/manager/src/linux/login.rs`
+- `S13` `M` `native/manager/src/linux/tray.rs`
+- `S13` `M` `native/manager/src/linux/lifecycle.rs`
+- `S13` `M` `native/manager/src/linux/placement.rs`
+- `S13` `M` `dev/locales/manager.py`
+- `S13` `M` `dev/locales/manager_chrome.py`
+- `S13` `M` `dev/packaging/native/generate.py`
+- `S13` `M` `native/cmake/Contract.cmake`
+- `S13` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S13` `M` `src/cadrumo/locales/en/common.yml`
+- `S13` `M` `src/cadrumo/locales/es/common.yml`
+- `S13` `M` `src/cadrumo/locales/ca/common.yml`
+- `S13` `M` `src/cadrumo/locales/hu/common.yml`
+- `S13` `M` `dev/packaging/native/linux_autostart.py`
+- `S13` `M` `dev/packaging/native/tests/test_linux_autostart.py`
+- `S13` `verify:` `Windows Release manager/application/installer CTest` -> `pass`
+- `S13` `verify:` `Pinned Windows all-target Clippy for manager/application/installer` -> `pass`
+- `S13` `verify:` `Canonical locale/storage projection six tests` -> `pass`
+- `S13` `verify:` `Linux manager Release build and 65 unit tests` -> `pass`
+- `S13` `verify:` `Native desktop-file-validate generated XDG machine/user/escaped-path fixtures` -> `pass`
+- `S13` `by:` `Codex`
 
 ## Notes
 
@@ -385,3 +429,4 @@ related:
 - `S27` Concrete discovery source fix and scoped review pass. S27 remains open because the required repository-wide vault check fails on an unrelated approved Google plan's non-accepted backup-custody ADR. Full format-specific installation/upgrade and interactive-session acceptance remain excluded disposable-host rollout gates. Concurrent source edits and registry-authority documentation hunks are preserved and excluded from this commit.
 - `S27` The 2026-10-07 Google decision-coverage repair removes the prior external schema blocker. Prior source verification at commit 7798824f68 remains evidence for S27; later concurrent startup/cancellation improvements belong to their owners. Closing discovery does not close MSI lifecycle or product acceptance.
 - `S24` Existing canonical taxonomy already enrolls all six manager/runtime records; added cross-version grammar and enrollment/axis assertions without a second path authority.
+- `S13` Coherent shared Windows tray/IPC and Linux foundation checkpoint; S13 remains open until integration review/interactive evidence. S12 successor readiness and S18 production composition remain open. Linux test harness fixes are verified separately. No disposable-host installation acceptance.

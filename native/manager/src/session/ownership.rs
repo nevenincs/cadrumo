@@ -302,12 +302,12 @@ pub enum Placement {
 pub fn place(
     record: &BootRecord,
     identity: &ProcessIdentity,
-    own_session: Option<u32>,
+    own_session: Option<String>,
 ) -> Placement {
     if record.pid != identity.pid || record.process_created != identity.created {
         return Placement::NotTheRecordedRuntime;
     }
-    match (identity.session, own_session) {
+    match (identity.session.as_ref(), own_session.as_ref()) {
         (Some(runtime), Some(own)) if runtime == own => Placement::OwnSession,
         (Some(_), Some(_)) => Placement::OtherSession,
         _ => Placement::SessionUnknown,
@@ -367,7 +367,7 @@ mod tests {
         }
     }
 
-    fn identity(session: Option<u32>) -> ProcessIdentity {
+    fn identity(session: Option<String>) -> ProcessIdentity {
         ProcessIdentity {
             pid: 40,
             created: 7,
@@ -380,27 +380,27 @@ mod tests {
     #[test]
     fn a_runtime_is_placed_by_its_recorded_identity_and_session() {
         assert_eq!(
-            place(&record(), &identity(Some(1)), Some(1)),
+            place(&record(), &identity(Some("1".into())), Some("1".into())),
             Placement::OwnSession
         );
         assert_eq!(
-            place(&record(), &identity(Some(2)), Some(1)),
+            place(&record(), &identity(Some("2".into())), Some("1".into())),
             Placement::OtherSession
         );
         assert_eq!(
-            place(&record(), &identity(None), Some(1)),
+            place(&record(), &identity(None), Some("1".into())),
             Placement::SessionUnknown
         );
         assert_eq!(
-            place(&record(), &identity(Some(1)), None),
+            place(&record(), &identity(Some("1".into())), None),
             Placement::SessionUnknown
         );
         let reused = ProcessIdentity {
             created: 8,
-            ..identity(Some(1))
+            ..identity(Some("1".into()))
         };
         assert_eq!(
-            place(&record(), &reused, Some(1)),
+            place(&record(), &reused, Some("1".into())),
             Placement::NotTheRecordedRuntime
         );
     }

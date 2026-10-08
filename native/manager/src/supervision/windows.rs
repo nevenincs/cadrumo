@@ -187,6 +187,9 @@ impl HeldProcess {
         if succeeded == 0 {
             return Err(io::Error::last_os_error());
         }
+        if returned != 4 {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
         Ok(elevation_type == TOKEN_ELEVATION_TYPE_FULL)
     }
 

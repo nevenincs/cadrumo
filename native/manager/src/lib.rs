@@ -16,8 +16,16 @@ pub mod identity;
 #[cfg(windows)]
 pub mod installation;
 pub mod installed;
+pub mod ipc;
+pub mod preferences;
+pub mod strings;
 pub mod session;
 pub mod startup;
 pub mod supervision;
 #[cfg(windows)]
 pub mod windows_lifecycle;
+#[cfg(windows)]
+pub mod windows_tray;
+
+#[cfg(target_os = "linux")]
+pub mod linux;

@@ -54,7 +54,10 @@ pub fn require_current() -> Result<(), Refusal> {
     let process = crate::supervision::process::open_process(std::process::id())
         .map_err(|_| Refusal::SessionUnavailable)?;
     require_evidence(
-        process.identity.session,
+        process
+            .identity
+            .session
+            .and_then(|value| value.parse().ok()),
         process.identity.fully_elevated,
         cadrumo_platform::desktop::available,
     )

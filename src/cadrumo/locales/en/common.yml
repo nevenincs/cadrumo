@@ -475,6 +475,26 @@ categories:
     viajes_transporte:
       label: Travel transport
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
+common:
+  manager:
+    action_failed: The action could not be completed. Check the manager log.
+    open_application: Open Cadrumo
+    open_logs: Open logs
+    quit: Quit
+    quit_warning: Quit background services? Running work may be interrupted. Services
+      stay stopped until you start them manually or sign in again.
+    restart: Restart
+    restart_warning: Restart the background runtime? Running work may be interrupted.
+    retry: Retry
+    running: Runtime ready
+    start_at_sign_in: Start at sign-in
+    starting: Runtime starting
+    stopping: Runtime stopping
+    unavailable: Runtime unavailable
+    waiting: Waiting for runtime ownership
+  runtime:
+    manager_unavailable_remedy: Open {product} and check its background-services manager.
+      If you turned off start at sign-in, start the manager manually, then retry.
 core:
   profile:
     errors:
