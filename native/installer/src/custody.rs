@@ -19,6 +19,29 @@ pub struct FileCustody {
 /// file denies both writes and replacement until the complete operation settles.
 /// No pathname verification result is reused without these live kernel handles.
 pub fn file(path: &Path) -> Result<FileCustody, Refusal> {
+    file_with_sharing(path, 1)
+}
+
+/// Native cache cleanup may unlink its MSI while our handle retains the admitted
+/// bytes. ACL/ancestor admission excludes untrusted pathname replacement; incoming
+/// installation sources never use this relaxed native-cache sharing mode.
+pub struct CachedCustody {
+    _file: FileCustody,
+    _namespace: crate::publication::PublicationCustody,
+}
+pub(crate) fn native_cache(
+    path: &Path,
+    context: &cadrumo_application::installation::maintenance::NativeContext,
+) -> Result<CachedCustody, Refusal> {
+    let file = file_with_sharing(path, 1 | 4)?;
+    let namespace = crate::publication::admit_cached_file(path, &file.file, context)?;
+    Ok(CachedCustody {
+        _file: file,
+        _namespace: namespace,
+    })
+}
+
+fn file_with_sharing(path: &Path, sharing: u32) -> Result<FileCustody, Refusal> {
     if !path.is_absolute()
         || !matches!(path.components().next(), Some(Component::Prefix(prefix)) if matches!(prefix.kind(), Prefix::Disk(_) | Prefix::VerbatimDisk(_)))
         || path
@@ -47,7 +70,7 @@ pub fn file(path: &Path) -> Result<FileCustody, Refusal> {
     }
     let file = File::options()
         .read(true)
-        .share_mode(1)
+        .share_mode(sharing)
         .custom_flags(OPEN_REPARSE_POINT)
         .open(path)
         .map_err(|_| Refusal::IncompleteInventory)?;

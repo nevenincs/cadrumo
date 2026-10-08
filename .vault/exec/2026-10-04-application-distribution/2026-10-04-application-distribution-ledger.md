@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a33307fb931990e302aed3b6bdea1829d20767f26ecc67e6ac5ec261c83e4357'
+body_hash: 'sha256:cb5ea3064f0eac65ad37a30dcf5bc0edd5969f0a5a204fffb24b000f5fcdac2f'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -240,6 +240,17 @@ related:
 - `S09` `verify:` `Windows MSI Python 23 tests 41.32s` -> `pass`
 - `S09` `verify:` `Final binary-bound four MSI compile and runner refusal regression 13.01s` -> `pass`
 - `S09` `verify:` `Scoped MSI Python Ruff and ty` -> `pass`
+- `S09` `M` `native/installer/src/custody.rs`
+- `S09` `M` `native/installer/src/runner/removal.rs`
+- `S09` `M` `native/installer/src/bin/cadrumo-msi-maintenance.rs`
+- `S09` `verify:` `Windows installer.rust latest focused CTest (9.46s)` -> `pass`
+- `S09` `verify:` `Windows application.rust integrated rollback guards (11.29s)` -> `pass`
+- `S09` `verify:` `Linux application.rust shared rollback guards (16.36s)` -> `pass`
+- `S09` `verify:` `Pinned Rust 1.96 installer all-target Clippy (20.83s)` -> `pass`
+- `S09` `verify:` `Windows CMake release DLL and maintenance runner build (35.16s)` -> `pass`
+- `S09` `verify:` `Windows MSI Python ownership tests 20 (13.67s)` -> `pass`
+- `S09` `verify:` `Windows native WiX compiler tests 3 with new removal gate checks (27.78s)` -> `pass`
+- `S09` `verify:` `Ruff and ty scoped Python helpers` -> `pass`
 
 ## Notes
 
@@ -257,3 +268,4 @@ related:
 - `S09` Partial S09 transaction/custody/owner foundation; immutable exact-role binding corrected before freeze. Owner callbacks not enrolled; literal MSI gate retained. Publication ACLs, full owner recovery/uninstall/all-session protection and native acceptance remain open. Includes verified Linux graph gates and root SDK/bridge graph repairs in shared CMake files.
 - `S09` Partial S09: protected namespace ACLs including `OWNER_RIGHTS` and Program Files ancestry, read-only lease access, actual immediate/deferred owner CA enrollment and postcommit ACL revalidation verified. Literal-false installation gate remains. Cached old MSI compatibility, protected owner-record protocol, owner-loss recovery, native removal and disposable two-release acceptance remain unfinished. Record protocol decision was refined under existing user authorization; not implemented in this checkpoint.
 - `S09` Partial S09: protected exact native owner record and cached-registration claims, independent ACL/custody/peer process creation and image verification, sticky owner-loss revocation, exact native family prefix/account and role admission. Explicit native launch policy added; portable writer and lifetime launch fencing are a concurrent workstream. Literal MSI gate remains closed. Native removal runner, rollback/recovery, inherited MSI UI policy, relocated cached-uninstall behavior and disposable interactive two-release acceptance remain open. Session 0 and fixture MSIs are not lifecycle evidence; no certificates or signing. Independent full implementation review not claimed.
+- `S09` Partial checkpoint: native-owned removal, quiet UI, cached native custody and typed publication rollback. Literal gate remains. Positive native execution, interrupted native commit recovery, relocated upgrade and disposable two-release acceptance are pending. CMake operation targets are authored in the shared distribution integration file and will checkpoint with its concurrent RPM payload-preservation fix under S05.

@@ -66,6 +66,68 @@ impl RegistrationRemoval<'_> {
         self.store
             .complete_registration_removal(&self.owner, inventory)
     }
+
+    /// Restore registration visibility only after native rollback and rechecking
+    /// both the exact native owners and every retained anchored package.
+    pub fn rollback(
+        self,
+        contract: &DiscoveryContract,
+        inventory: &impl NativeProductInventory,
+    ) -> Result<(), Error> {
+        let _writer = lock(&self.store.root.join("transaction.lock"), false, false)?;
+        let mut state = self.store.read()?;
+        if !state.registration.as_ref().is_some_and(|registration| {
+            registration.owner == self.owner && registration.phase == RegistrationPhase::Removing
+        }) || inventory.locate(&self.owner)?.as_ref() != Some(&self.owner)
+        {
+            return Err(Error::Integrity(
+                "native registration rollback ownership differs".into(),
+            ));
+        }
+        let manager = state.manager_anchor.as_ref().ok_or_else(|| {
+            Error::Integrity("registration rollback has no manager anchor".into())
+        })?;
+        for release in [&state.manager_anchor, &state.desktop_anchor]
+            .into_iter()
+            .flatten()
+        {
+            let product = state.versions.get(release).ok_or_else(|| {
+                Error::Integrity("registration rollback anchor is missing".into())
+            })?;
+            if product.phase != Phase::Ready
+                || inventory.locate(&product.owner)?.as_ref() != Some(&product.owner)
+            {
+                return Err(Error::Integrity(
+                    "native anchor rollback ownership differs".into(),
+                ));
+            }
+            let package = self.store.package(release, &product.owner, contract)?;
+            contract.inspect_package(&package, release, &Cancellation::default())?;
+            if contract.manifest_digest(&package, &Cancellation::default())?
+                != product.manifest_sha256
+            {
+                return Err(Error::Integrity(
+                    "native anchor rollback bytes differ".into(),
+                ));
+            }
+            if release == manager {
+                let member = contract.manager_member()?;
+                if filesystem::digest(&member.under(&package))?
+                    != filesystem::digest(&member.under(self.owner.prefix()))?
+                {
+                    return Err(Error::Integrity(
+                        "stable manager rollback bytes differ".into(),
+                    ));
+                }
+            }
+        }
+        state
+            .registration
+            .as_mut()
+            .expect("registration checked above")
+            .phase = RegistrationPhase::Ready;
+        self.store.write(&state)
+    }
 }
 
 /// Native product context is separate from the account running an installer action.
@@ -144,6 +206,77 @@ impl NativeOwner {
 /// an error. None means a completed native query proved that product absent.
 pub trait NativeProductInventory {
     fn locate(&self, owner: &NativeOwner) -> Result<Option<NativeOwner>, Error>;
+}
+
+/// An install reservation retains its exact pre-transaction publication state.
+/// Drop preserves Pending; native rollback evidence is required to restore it.
+#[must_use = "retain reservation through native settlement and publication"]
+pub struct Preparation<'a> {
+    store: &'a Store,
+    release: String,
+    product: Product,
+    previous: Option<Product>,
+    _lease: Lease,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RollbackPublication {
+    ReadyRestored,
+    ReservationRemoved,
+    PendingRetained,
+}
+
+impl Preparation<'_> {
+    pub fn rollback(
+        self,
+        contract: &DiscoveryContract,
+        inventory: &impl NativeProductInventory,
+    ) -> Result<RollbackPublication, Error> {
+        let _writer = lock(&self.store.root.join("transaction.lock"), false, false)?;
+        let mut state = self.store.read()?;
+        if state.versions.get(&self.release) != Some(&self.product) {
+            return Err(Error::Integrity(
+                "install reservation changed during native rollback".into(),
+            ));
+        }
+        let observed = inventory.locate(&self.product.owner)?;
+        match self.previous {
+            None if observed.is_none() => {
+                state.versions.remove(&self.release);
+                self.store.write(&state)?;
+                Ok(RollbackPublication::ReservationRemoved)
+            }
+            Some(previous)
+                if previous.phase == Phase::Ready && observed.as_ref() == Some(&previous.owner) =>
+            {
+                let package = self
+                    .store
+                    .package(&self.release, &previous.owner, contract)?;
+                contract.inspect_package(&package, &self.release, &Cancellation::default())?;
+                if contract.manifest_digest(&package, &Cancellation::default())?
+                    != previous.manifest_sha256
+                {
+                    return Err(Error::Integrity(
+                        "native rollback restored different version bytes".into(),
+                    ));
+                }
+                state.versions.insert(self.release, previous);
+                self.store.write(&state)?;
+                Ok(RollbackPublication::ReadyRestored)
+            }
+            Some(previous)
+                if previous.phase == Phase::Pending
+                    && observed
+                        .as_ref()
+                        .is_none_or(|owner| owner == &previous.owner) =>
+            {
+                Ok(RollbackPublication::PendingRetained)
+            }
+            _ => Err(Error::Integrity(
+                "native rollback did not restore prior product ownership".into(),
+            )),
+        }
+    }
 }
 
 /// A removal operation owns exclusion and the exact persisted product snapshot.
@@ -432,6 +565,37 @@ impl Store {
         owner: NativeOwner,
         manifest_sha256: Sha256Digest,
     ) -> Result<Lease, Error> {
+        self.reserve(release, owner, manifest_sha256)
+            .map(|(_, lease)| lease)
+    }
+
+    pub fn prepare_transaction(
+        &self,
+        release: &str,
+        owner: NativeOwner,
+        manifest_sha256: Sha256Digest,
+    ) -> Result<Preparation<'_>, Error> {
+        let product = Product {
+            owner: owner.clone(),
+            manifest_sha256: manifest_sha256.clone(),
+            phase: Phase::Pending,
+        };
+        let (previous, lease) = self.reserve(release, owner, manifest_sha256)?;
+        Ok(Preparation {
+            store: self,
+            release: release.to_owned(),
+            product,
+            previous,
+            _lease: lease,
+        })
+    }
+
+    fn reserve(
+        &self,
+        release: &str,
+        owner: NativeOwner,
+        manifest_sha256: Sha256Digest,
+    ) -> Result<(Option<Product>, Lease), Error> {
         version(release)?;
         let requested = Product {
             owner,
@@ -460,13 +624,14 @@ impl Store {
                 return Err(Error::Busy);
             }
             let lease = lock(&self.root.join(format!("{release}.lock")), false, false)?;
+            let previous = previous.clone();
             state
                 .versions
                 .get_mut(release)
                 .expect("existing product")
                 .phase = Phase::Pending;
             self.write(&state)?;
-            return Ok(lease);
+            return Ok((Some(previous), lease));
         }
         if state.registration.as_ref().is_some_and(|registration| {
             registration.owner.context != requested.owner.context
@@ -485,7 +650,7 @@ impl Store {
         let lease = lock(&self.root.join(format!("{release}.lock")), false, true)?;
         state.versions.insert(release.to_owned(), requested);
         self.write(&state)?;
-        Ok(lease)
+        Ok((None, lease))
     }
 
     /// Publication verifies the actual complete package through the catalogue owner.

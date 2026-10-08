@@ -186,7 +186,9 @@ def maintenance_plan(
 def main() -> None:
     """Expose build, verification and the still-closed native installation boundary."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("build", "verify", "plan", "install", "check-installation"))
+    parser.add_argument(
+        "command", choices=("build", "verify", "plan", "install", "remove-version", "unregister", "check-installation")
+    )
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--identity", type=Path, required=True)
     parser.add_argument("--desktop")
@@ -194,6 +196,7 @@ def main() -> None:
     parser.add_argument("--runner", type=Path)
     parser.add_argument("--scope", choices=("user", "machine"))
     parser.add_argument("--prefix", type=Path)
+    parser.add_argument("--version", help="Exact installed release to remove; anchors and live use refuse")
     parser.add_argument("--wix", type=Path)
     args = parser.parse_args()
     try:
@@ -205,18 +208,23 @@ def main() -> None:
                 "interactive Windows runner and two genuinely built distinct releases; Session 0 is insufficient. "
                 "Signing remains a release prerequisite."
             )
-        if args.command in {"plan", "install"}:
+        if args.command in {"plan", "install", "remove-version", "unregister"}:
             if args.scope is None or args.prefix is None:
                 raise ValueError("Set CADRUMO_MSI_SCOPE and CADRUMO_MSI_PREFIX for explicit native maintenance")
             plan = maintenance_plan(
                 args.build.resolve(), args.identity, args.scope, args.prefix, args.desktop, args.adapter, args.runner
             )
-            if args.command == "install":
+            if args.command != "plan":
                 if args.runner is None or not args.runner.is_file():
                     raise ValueError("Set CADRUMO_MSI_RUNNER to the CMake-built native maintenance runner")
-                result = run_command(
-                    [str(args.runner), "install", "--plan", str(plan)], cwd=args.build, timeout_seconds=900
-                )
+                command = [str(args.runner), args.command, "--plan", str(plan)]
+                if args.command == "remove-version":
+                    if not args.version:
+                        raise ValueError("Set CADRUMO_MSI_REMOVE_VERSION to the exact installed release")
+                    command.extend(("--version", args.version))
+                elif args.version is not None:
+                    raise ValueError("--version is valid only for remove-version")
+                result = run_command(command, cwd=args.build, timeout_seconds=900)
                 print(result.stdout, end="")
                 if result.returncode:
                     raise ValueError("Native maintenance refused or did not complete; see its typed result")

@@ -22,6 +22,9 @@ use std::{
 const PLAN_LIMIT: u64 = 64 * 1024;
 const ARTIFACT_LIMIT: u64 = 16 * 1024 * 1024 * 1024;
 
+mod removal;
+pub use removal::{remove_version, unregister};
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Artifact {
@@ -48,10 +51,13 @@ struct Plan {
 #[serde(rename_all = "snake_case")]
 pub enum Outcome {
     Published,
+    Removed,
+    Unregistered,
     Refused,
     NativeRolledBack,
     NativeUnsettled,
     CommittedPublicationPending,
+    RolledBackPublicationPending,
 }
 
 #[derive(Serialize)]
@@ -62,7 +68,10 @@ pub struct MaintenanceResult {
 }
 impl MaintenanceResult {
     pub fn succeeded(&self) -> bool {
-        matches!(self.outcome, Outcome::Published)
+        matches!(
+            self.outcome,
+            Outcome::Published | Outcome::Removed | Outcome::Unregistered
+        )
     }
 }
 
@@ -104,6 +113,20 @@ fn read_plan(path: &Path) -> Result<Plan, Error> {
 
 fn native_error(error: crate::admission::Refusal) -> Error {
     Error::Integrity(error.message().into())
+}
+
+fn runner_digest() -> Result<Sha256Digest, Error> {
+    let mut image = crate::custody::file(&std::env::current_exe()?).map_err(native_error)?;
+    let mut digest = Sha256::new();
+    let mut buffer = [0; 65536];
+    loop {
+        let size = image.file.read(&mut buffer)?;
+        if size == 0 {
+            break;
+        }
+        digest.update(&buffer[..size]);
+    }
+    Sha256Digest::new(format!("{:x}", digest.finalize()))
 }
 
 fn existing_native_registration(
@@ -153,7 +176,7 @@ fn previous_registration(
     admission: &Request,
     store: &Store,
     native: Option<NativeOwner>,
-) -> Result<Option<(crate::owner::Claim, crate::custody::FileCustody)>, Error> {
+) -> Result<Option<(crate::owner::Claim, crate::custody::CachedCustody)>, Error> {
     let snapshot = store.snapshot()?;
     let Some(registration) = snapshot.registration() else {
         if native.is_some() {
@@ -353,18 +376,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
         Err(_) => return report(Outcome::Refused, "installer_authority_unavailable"),
     };
     let prepared = (|| -> Result<_, Error> {
-        let mut own_image =
-            crate::custody::file(&std::env::current_exe()?).map_err(native_error)?;
-        let mut digest = Sha256::new();
-        let mut buffer = [0; 65536];
-        loop {
-            let read = own_image.file.read(&mut buffer)?;
-            if read == 0 {
-                break;
-            }
-            digest.update(&buffer[..read]);
-        }
-        let runner = Sha256Digest::new(format!("{:x}", digest.finalize()))?;
+        let runner = runner_digest()?;
         let (admission, version_file) = artifact(&plan.version_product, &plan, "version", &runner)?;
         let (registration, registration_file) =
             artifact(&plan.registration_product, &plan, "registration", &runner)?;
@@ -445,10 +457,14 @@ pub fn install(path: &Path) -> MaintenanceResult {
         store.initialize()?;
         let maintenance = store.exclusive_maintenance()?;
         let previous = previous_registration(&plan, &admission, &store, native_registration)?;
-        let version = store.prepare(&plan.version, owner.clone(), plan.manifest_sha256.clone())?;
+        let version = store.prepare_transaction(
+            &plan.version,
+            owner.clone(),
+            plan.manifest_sha256.clone(),
+        )?;
         Ok((maintenance, version, namespace, previous))
     })();
-    let (_maintenance, _version, _namespace, previous) = match prepared {
+    let (_maintenance, reservation, _namespace, previous) = match prepared {
         Ok(guards) => guards,
         Err(_) => return rollback(transaction, "native_preparation_refused"),
     };
@@ -469,7 +485,14 @@ pub fn install(path: &Path) -> MaintenanceResult {
             .expect("read_plan checked publication"),
     ) {
         Ok(broker) => broker,
-        Err(_) => return rollback(transaction, "native_owner_unavailable"),
+        Err(_) => {
+            return rollback_prepared(
+                transaction,
+                reservation,
+                &plan.contract,
+                "native_owner_unavailable",
+            );
+        }
     };
     let install = |artifact: &Artifact, role| {
         let mut claims = vec![crate::owner::Claim {
@@ -488,7 +511,12 @@ pub fn install(path: &Path) -> MaintenanceResult {
         transaction.install(&artifact.path, &plan.prefix, broker.endpoint())
     };
     if install(&plan.version_product, crate::owner::Role::Version).is_err() {
-        return rollback(transaction, "version_installation_failed");
+        return rollback_prepared(
+            transaction,
+            reservation,
+            &plan.contract,
+            "version_installation_failed",
+        );
     }
     let package = plan
         .contract
@@ -503,11 +531,23 @@ pub fn install(path: &Path) -> MaintenanceResult {
         .verify_candidate(&package, &plan.version)
         .is_err()
     {
-        return rollback(transaction, "version_inventory_failed");
+        return rollback_prepared(
+            transaction,
+            reservation,
+            &plan.contract,
+            "version_inventory_failed",
+        );
     }
     let stable_manager = match plan.contract.manager_member() {
         Ok(member) => member.under(&plan.prefix),
-        Err(_) => return rollback(transaction, "registration_entrypoint_invalid"),
+        Err(_) => {
+            return rollback_prepared(
+                transaction,
+                reservation,
+                &plan.contract,
+                "registration_entrypoint_invalid",
+            );
+        }
     };
     let stable_available = (|| -> Result<bool, Error> {
         if !stable_manager.try_exists()? {
@@ -518,10 +558,20 @@ pub fn install(path: &Path) -> MaintenanceResult {
             .is_empty())
     })();
     if !matches!(stable_available, Ok(true)) {
-        return rollback(transaction, "shared_registration_in_use_or_unknown");
+        return rollback_prepared(
+            transaction,
+            reservation,
+            &plan.contract,
+            "shared_registration_in_use_or_unknown",
+        );
     }
     if install(&plan.registration_product, crate::owner::Role::Registration).is_err() {
-        return rollback(transaction, "registration_installation_failed");
+        return rollback_prepared(
+            transaction,
+            reservation,
+            &plan.contract,
+            "registration_installation_failed",
+        );
     }
     if transaction.commit().is_err() {
         return report(Outcome::NativeUnsettled, "native_commit_failed");
@@ -571,4 +621,25 @@ fn rollback(transaction: Transaction, code: &'static str) -> MaintenanceResult {
     } else {
         report(Outcome::NativeUnsettled, "native_rollback_unsettled")
     }
+}
+
+fn rollback_prepared(
+    transaction: Transaction,
+    reservation: cadrumo_application::installation::maintenance::Preparation<'_>,
+    contract: &DiscoveryContract,
+    code: &'static str,
+) -> MaintenanceResult {
+    if transaction.rollback().is_err() {
+        return report(Outcome::NativeUnsettled, "native_rollback_unsettled");
+    }
+    if matches!(
+        reservation.rollback(contract, &MsiInventory),
+        Err(_) | Ok(cadrumo_application::installation::maintenance::RollbackPublication::PendingRetained)
+    ) {
+        return report(
+            Outcome::RolledBackPublicationPending,
+            "rollback_publication_fenced",
+        );
+    }
+    report(Outcome::NativeRolledBack, code)
 }

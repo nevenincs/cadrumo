@@ -307,6 +307,36 @@ fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atom
         store
             .begin_registration_removal(&registration)
             .unwrap()
+            .rollback(&fixture.contract, &Inventory(false))
+            .is_err()
+    );
+    let stable = fixture
+        .contract
+        .manager_member()
+        .unwrap()
+        .under(registration.prefix());
+    fs::write(&stable, b"damaged registration rollback").unwrap();
+    assert!(
+        store
+            .begin_registration_removal(&registration)
+            .unwrap()
+            .rollback(&fixture.contract, &Inventory(true))
+            .is_err()
+    );
+    fs::copy(&fixture.source, &stable).unwrap();
+    store
+        .begin_registration_removal(&registration)
+        .unwrap()
+        .rollback(&fixture.contract, &Inventory(true))
+        .unwrap();
+    assert_eq!(
+        store.snapshot().unwrap().registration().unwrap().phase,
+        RegistrationPhase::Ready
+    );
+    assert!(
+        store
+            .begin_registration_removal(&registration)
+            .unwrap()
             .complete(&Inventory(true))
             .is_err()
     );
@@ -449,6 +479,85 @@ fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_
     assert!(store.acquire("1.0.0", &manifest).is_err());
     // Even after native absence, the shared owner never substitutes direct deletion.
     assert!(package.join("python.zip").is_file());
+}
+
+#[test]
+fn install_rollback_restores_only_prior_verified_ready_state_and_forgets_proved_absence() {
+    use cadrumo_application::{
+        installation::maintenance::{
+            NativeContext, NativeOwner, NativeProductInventory, RollbackPublication,
+        },
+        value::Sha256Digest,
+    };
+    struct Inventory(bool);
+    impl NativeProductInventory for Inventory {
+        fn locate(&self, owner: &NativeOwner) -> Result<Option<NativeOwner>, Error> {
+            Ok(self.0.then(|| owner.clone()))
+        }
+    }
+    let mut fixture = Fixture::new();
+    let prefix = fixture.prefix("install-rollback");
+    let package = fixture.version(&prefix, "1.0.0");
+    let store = fixture.native(&prefix);
+    store.initialize().unwrap();
+    let manifest = Sha256Digest::new(format!(
+        "{:x}",
+        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
+    ))
+    .unwrap();
+    let owner = NativeOwner::new(
+        "12345678-1234-1234-1234-123456789abc".into(),
+        NativeContext::Machine,
+        prefix,
+    )
+    .unwrap();
+    let fresh = store
+        .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
+        .unwrap();
+    assert_eq!(
+        fresh
+            .rollback(&fixture.contract, &Inventory(false))
+            .unwrap(),
+        RollbackPublication::ReservationRemoved
+    );
+    assert_eq!(store.snapshot().unwrap().versions().count(), 0);
+    let fresh = store
+        .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
+        .unwrap();
+    assert!(fresh.rollback(&fixture.contract, &Inventory(true)).is_err());
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    let interrupted = store
+        .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
+        .unwrap();
+    assert_eq!(
+        interrupted
+            .rollback(&fixture.contract, &Inventory(true))
+            .unwrap(),
+        RollbackPublication::PendingRetained
+    );
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    store.publish("1.0.0", &package, &fixture.contract).unwrap();
+    let repair = store
+        .prepare_transaction("1.0.0", owner.clone(), manifest.clone())
+        .unwrap();
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    assert_eq!(
+        repair
+            .rollback(&fixture.contract, &Inventory(true))
+            .unwrap(),
+        RollbackPublication::ReadyRestored
+    );
+    assert!(store.acquire("1.0.0", &manifest).is_ok());
+    let repair = store
+        .prepare_transaction("1.0.0", owner, manifest.clone())
+        .unwrap();
+    fs::write(package.join("python.zip"), b"damaged rollback").unwrap();
+    assert!(
+        repair
+            .rollback(&fixture.contract, &Inventory(true))
+            .is_err()
+    );
+    assert!(store.acquire("1.0.0", &manifest).is_err());
 }
 
 #[test]

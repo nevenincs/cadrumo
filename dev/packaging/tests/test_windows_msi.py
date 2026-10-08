@@ -263,8 +263,8 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(tmp_path
     prefix = tmp_path / "never installed"
     plan = maintenance_plan(build, identity, "user", prefix, "cadrumo", adapter, runner)
 
-    def run_plan() -> str:
-        result = run_command([str(runner), "install", "--plan", str(plan)], cwd=build, timeout_seconds=30)
+    def run_plan(operation: str = "install", *arguments: str) -> str:
+        result = run_command([str(runner), operation, "--plan", str(plan), *arguments], cwd=build)
         assert result.returncode != 0
         assert not prefix.exists()
         code = json.loads(result.stdout)["code"]
@@ -272,6 +272,9 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(tmp_path
         return code
 
     assert run_plan() == "native_owner_protocol_not_admitted"
+    assert run_plan("unregister") == "native_owner_protocol_not_admitted"
+    assert run_plan("remove-version", "--version", "0.5.1") == "native_owner_protocol_not_admitted"
+    assert run_plan("remove-version", "--version", "../escape") == "invalid_release"
     request = json.loads(plan.read_text(encoding="utf-8"))
     request["version_product"], request["registration_product"] = (
         request["registration_product"],
@@ -279,6 +282,8 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(tmp_path
     )
     plan.write_text(json.dumps(request), encoding="utf-8")
     assert run_plan() == "artifact_or_owner_refused"
+    assert run_plan("unregister") == "artifact_or_owner_refused"
+    assert run_plan("remove-version", "--version", "0.5.1") == "artifact_or_owner_refused"
     request["version_product"], request["registration_product"] = (
         request["registration_product"],
         request["version_product"],
@@ -384,14 +389,11 @@ def test_native_wix_compiles_all_scopes_and_roles_without_warnings(tmp_path: Pat
         result = run_command(
             [wix, "build", "-arch", "x64", "-wx", "-o", str(artifact), str(source)],
             cwd=tmp_path,
-            timeout_seconds=120,
         )
         assert result.returncode == 0, result.stdout + result.stderr
         assert artifact.is_file() and artifact.stat().st_size > 0
         decompiled = artifact.with_suffix(".wxs")
-        result = run_command(
-            [wix, "msi", "decompile", "-o", str(decompiled), str(artifact)], cwd=tmp_path, timeout_seconds=120
-        )
+        result = run_command([wix, "msi", "decompile", "-o", str(decompiled), str(artifact)], cwd=tmp_path)
         assert result.returncode == 0, result.stdout + result.stderr
         database = ElementTree.parse(decompiled)
         package = database.find("w:Package", NS)

@@ -65,6 +65,13 @@ unsafe extern "system" {
     ) -> u32;
     fn MsiEndTransaction(state: u32) -> u32;
     fn MsiInstallProductW(package: *const u16, properties: *const u16) -> u32;
+    fn MsiConfigureProductExW(
+        product: *const u16,
+        level: i32,
+        state: i32,
+        properties: *const u16,
+    ) -> u32;
+    fn MsiSetInternalUI(level: u32, window: *mut *mut c_void) -> u32;
 }
 
 #[link(name = "kernel32")]
@@ -95,15 +102,49 @@ impl Drop for KernelHandle {
     }
 }
 
+static INSTALLER_UI: std::sync::Mutex<()> = std::sync::Mutex::new(());
+struct InstallerUi {
+    previous: u32,
+    _exclusive: std::sync::MutexGuard<'static, ()>,
+}
+impl InstallerUi {
+    fn quiet() -> Result<Self, Refusal> {
+        let exclusive = INSTALLER_UI
+            .try_lock()
+            .map_err(|_| Refusal::NativeFailure)?;
+        // SAFETY: process-global UI changes are serialized for this transaction's
+        // entire lifetime. INSTALLUILEVEL_NONE prevents inherited dialogs, including
+        // noninteractive service hosts; it never suppresses a native error result.
+        let previous = unsafe { MsiSetInternalUI(2, ptr::null_mut()) };
+        if previous == 0 {
+            return Err(Refusal::NativeFailure);
+        }
+        Ok(Self {
+            previous,
+            _exclusive: exclusive,
+        })
+    }
+}
+impl Drop for InstallerUi {
+    fn drop(&mut self) {
+        // SAFETY: still holding the exclusive process UI guard, restore native state.
+        unsafe {
+            MsiSetInternalUI(self.previous, ptr::null_mut());
+        }
+    }
+}
+
 /// The owner, not a deferred custom action, holds this native transaction. A
 /// successful commit return is the only operation that disables rollback on Drop.
 pub struct Transaction {
     _transaction: Handle,
     ownership: crate::ownership::Ownership,
     active: bool,
+    _ui: InstallerUi,
 }
 impl Transaction {
     pub fn begin(name: &str) -> Result<Self, Refusal> {
+        let ui = InstallerUi::quiet()?;
         let name = wide(name)?;
         let mut transaction = 0;
         let mut event = ptr::null_mut();
@@ -129,6 +170,7 @@ impl Transaction {
                 OwnedHandle::from_raw_handle(event)
             }),
             active: true,
+            _ui: ui,
         })
     }
     pub fn ownership(&self) -> crate::ownership::Ownership {
@@ -158,6 +200,24 @@ impl Transaction {
         result(unsafe { MsiEndTransaction(1) })?;
         self.active = false;
         Ok(())
+    }
+    pub fn remove(&self, owner: &NativeOwner, endpoint: &str) -> Result<(), Refusal> {
+        self.ownership.current()?;
+        let product = wide(&format!("{{{}}}", owner.product_code()))?;
+        let prefix = owner.prefix().to_str().ok_or(Refusal::InvalidRequest)?;
+        if prefix.contains(['"', '\r', '\n', '\0']) || endpoint.contains(['"', '\r', '\n', '\0']) {
+            return Err(Refusal::InvalidRequest);
+        }
+        let properties = wide(&format!(
+            "REMOVE=ALL INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable"
+        ))?;
+        // SAFETY: exact native product was admitted by the caller; this transaction
+        // owns settlement. INSTALLSTATE_ABSENT removes only Windows Installer-owned
+        // resources. Nonzero reboot, in-use and failure statuses are never success.
+        let removed =
+            result(unsafe { MsiConfigureProductExW(product.as_ptr(), 0, 2, properties.as_ptr()) });
+        self.ownership.current()?;
+        removed
     }
     pub fn rollback(mut self) -> Result<(), Refusal> {
         self.ownership.current()?;
@@ -479,7 +539,7 @@ pub struct MsiInventory;
 /// Retain the cache and its namespace while admitting nested native removal.
 pub fn cached_product(
     owner: &NativeOwner,
-) -> Result<(ProductDefinition, crate::custody::FileCustody), Error> {
+) -> Result<(ProductDefinition, crate::custody::CachedCustody), Error> {
     if MsiInventory.locate(owner)?.as_ref() != Some(owner) {
         return Err(Error::Integrity(
             "cached product has no exact native owner".into(),
@@ -503,7 +563,8 @@ pub fn cached_product(
     let path = PathBuf::from(
         cache.ok_or_else(|| Error::Integrity("missing native cached product".into()))?,
     );
-    let custody = crate::custody::file(&path).map_err(application_error)?;
+    let custody =
+        crate::custody::native_cache(&path, owner.context()).map_err(application_error)?;
     let definition = product_definition(&path).map_err(application_error)?;
     if definition.code != owner.product_code() {
         return Err(Error::Integrity("cached product identity mismatch".into()));
@@ -984,5 +1045,28 @@ mod tests {
             file_users(&[PathBuf::from("relative")]),
             Err(Refusal::InvalidRequest)
         );
+    }
+
+    #[test]
+    fn native_installer_ui_is_quiet_serialized_and_restored() {
+        // Native UI requests may normalize to NONE on a Session 0 host. Capture
+        // the observed prior level; this test does not claim interactive UI proof.
+        // SAFETY: changes this test process's UI only; no installation is invoked.
+        let initial = unsafe { MsiSetInternalUI(3, ptr::null_mut()) };
+        // SAFETY: INSTALLUILEVEL_NOCHANGE observes the actual native level.
+        let prior = unsafe { MsiSetInternalUI(0, ptr::null_mut()) };
+        let ui = InstallerUi::quiet().unwrap();
+        let previous = ui.previous;
+        assert_eq!(previous, prior);
+        // SAFETY: INSTALLUILEVEL_NOCHANGE queries this process's current UI level.
+        assert_eq!(unsafe { MsiSetInternalUI(0, ptr::null_mut()) }, 2);
+        assert!(InstallerUi::quiet().is_err());
+        drop(ui);
+        // SAFETY: Read-only query after the RAII guard restored native process state.
+        assert_eq!(unsafe { MsiSetInternalUI(0, ptr::null_mut()) }, previous);
+        // SAFETY: restore the test process's original choice after verification.
+        unsafe {
+            MsiSetInternalUI(initial, ptr::null_mut());
+        }
     }
 }

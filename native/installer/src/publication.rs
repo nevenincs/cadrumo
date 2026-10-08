@@ -118,6 +118,15 @@ impl Policy<'_> {
     }
 
     fn admit(&self, file: &File, content: bool) -> Result<(), Refusal> {
+        self.admit_access(file, content, true)
+    }
+
+    fn admit_access(
+        &self,
+        file: &File,
+        content: bool,
+        require_reader: bool,
+    ) -> Result<(), Refusal> {
         let mut owner = ptr::null_mut();
         let mut dacl = ptr::null_mut();
         let mut descriptor = ptr::null_mut();
@@ -195,7 +204,10 @@ impl Policy<'_> {
             if effective & GENERIC_EXECUTE != 0 {
                 effective |= FILE_GENERIC_EXECUTE;
             }
-            if header.AceType == ACCESS_DENIED_ACE_TYPE && effective & required_read != 0 {
+            if require_reader
+                && header.AceType == ACCESS_DENIED_ACE_TYPE
+                && effective & required_read != 0
+            {
                 return Err(Refusal::InvalidRequest);
             }
             let reader = matches!(sid.as_str(), "S-1-5-11" | "S-1-1-0" | "S-1-5-32-545")
@@ -219,7 +231,7 @@ impl Policy<'_> {
         // An untrusted owner has implicit WRITE_DAC unless OWNER_RIGHTS appears
         // as an effective ACE. File creation by an elevated user must not grant
         // the user's limited token authority to rewrite machine publication ACLs.
-        if (!self.trusted(&owner) && !owner_restricted) || !readable {
+        if (!self.trusted(&owner) && !owner_restricted) || (require_reader && !readable) {
             return Err(Refusal::InvalidRequest);
         }
         Ok(())
@@ -295,6 +307,43 @@ fn create(path: &Path, context: &NativeContext) -> Result<(), Refusal> {
 #[must_use = "hold namespace custody throughout native maintenance"]
 pub struct PublicationCustody {
     _directories: Vec<File>,
+}
+
+/// Unlike publication, native cached MSI metadata need not grant ordinary-user
+/// read access. It must still exclude every untrusted writer and implicit owner
+/// mutation, under retained local, non-reparse ancestor custody.
+pub(crate) fn admit_cached_file(
+    path: &Path,
+    file: &File,
+    context: &NativeContext,
+) -> Result<PublicationCustody, Refusal> {
+    let policy = Policy {
+        context,
+        installer: trusted_installer()?,
+    };
+    let mut ancestors = path.ancestors().skip(1).collect::<Vec<_>>();
+    ancestors.reverse();
+    let volume = wide(
+        ancestors
+            .first()
+            .ok_or(Refusal::InvalidRequest)?
+            .to_str()
+            .ok_or(Refusal::InvalidRequest)?,
+    )?;
+    // SAFETY: terminated local volume root; native cache cannot reside on a remote drive.
+    if unsafe { GetDriveTypeW(volume.as_ptr()) } != 3 {
+        return Err(Refusal::InvalidRequest);
+    }
+    let mut directories = Vec::with_capacity(ancestors.len());
+    for ancestor in ancestors {
+        let directory = open(ancestor, true)?;
+        policy.admit_access(&directory, false, false)?;
+        directories.push(directory);
+    }
+    policy.admit_access(file, true, false)?;
+    Ok(PublicationCustody {
+        _directories: directories,
+    })
 }
 
 /// Refuses unsafe existing ACLs and reparse ancestry rather than repairing them.

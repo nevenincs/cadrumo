@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:ad5bd64c89204546c89c01ea4d6764d2720053e00347a3fd1c484eacf531323e'
+body_hash: 'sha256:31304d471b1f7195235b3f23370ef8c1d27c53808fdb967e218f13c855b1e446'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -126,6 +126,15 @@ S09 remains open: protected publication-directory ACL custody, authenticated cal
 
 2026-10-08 native CA/publication checkpoint: actual Windows tests admit the standard Program Files ancestry under the available elevated installer token, reject unsafe user-writable machine ancestry and implicit user-owner WRITE_DAC, preserve ordinary-user read/shared-lease access, and hold namespace custody. The native build and 13 installer tests passed; 22 Python MSI checks compiled and inspected the four CA-enrolled products and verified early gated refusal. Root reviewed the ACL, action sequencing and stable-entry dispatch integration. The active manager runs from its version subtree; a transient stable-entry image holder causes maintenance refusal rather than forced shutdown. Postcommit native creation is re-audited before publication. No install acceptance is claimed. Old cached custom actions pinned to the original runner hash cannot support arbitrary future runner changes; the accepted owner-compatibility refinement selects a protected identity-bound owner record, still to be implemented. Native removal/recovery and two-release interactive acceptance remain open; literal-false MSI gate stays in force.
 
+### Linux RPM assembly integrity | high | Default distro build scripts can modify the inventoried payload
+
+2026-10-08 actual manylinux_2_28 CMake packaging generated a DEB, then RPM's __os_install_post invoked stripping, Python byte-compilation and brp-mangle-shebangs over the assembled package. Such rewriting violates the canonical payload inventory even when package ownership paths remain unchanged. The owned RPM build was stopped while the shebang script was running; no package was installed. The correction disables RPM OS/debug payload rewriting through CPACK_RPM_SPEC_MORE_DEFINE while preserving dependency generation and build-root checks. A rebuilt artifact and byte-level verification are still required. The existing Linux inspection receipt correctly states payload_bytes_verified:false and installable:false; it does not close this finding.
+
+### S09 native removal and rollback source checkpoint | low | Typed guarded operations pass focused checks; interrupted native settlement remains gated
+
+2026-10-08 the explicit maintenance runner now implements remove-version and unregister. Current verified source artifacts still carry the unconditional MSI gate, checked before native transactions or publication mutation for every operation. Behind that gate, version removal retains global maintenance and exact version exclusion, preserves anchors, admits exact cached product/context/manifest identity, verifies package bytes, checks Restart Manager use and issues native-owned removal only. Registration removal preserves versions and publishes Absent only after native commit plus exact absence. Failure distinguishes native rollback, unsettled settlement, and publication remaining fenced. Shared install rollback restores only prior Ready bytes/owner or removes a newly absent reservation; preexisting Pending remains explicitly pending. Native UI is serialized as NONE and restored; Session 0 normalization is observed rather than guessed by its test. Cached native MSI custody permits native cache unlink while denying writes and admitting protected ancestor/file ACLs; incoming source MSI custody remains deny-delete.
+
+Windows installer tests pass (15 tests; latest 9.46s); shared application tests passed on Windows and Linux; pinned installer all-target Clippy passed (20.83s); release DLL/runner built (35.16s). Python ownership/source tests passed 20 tests (13.67s), and all three actual native compiler tests passed (27.78s), including four owner-CA MSIs with install/unregister/remove-version gate and invalid-version/role-swap refusal, plus eight other scope/role fixtures. No product was installed or removed on this host. The positive transaction path, relocated nested upgrade removal, interrupted commit/registration recovery, and two-release interactive acceptance remain unverified. S09 and installation gates remain open; review verdict PENDING for integrated native acceptance.
 
 ## Recommendations
 
