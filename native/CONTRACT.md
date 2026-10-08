@@ -17,6 +17,17 @@ That toolchain requires glibc 2.28 and the image's GCC toolset; it refuses a new
 host libc instead of silently changing the deployment floor. Supply the pinned
 Rust root and explicit readelf, patchelf and zstd paths as described below.
 
+The `macos-arm64` preset selects `native/cmake/DarwinToolchain.cmake` on a native
+arm64 Mac. Supply `CADRUMO_DARWIN_COMPILER` as an absolute compiler path and
+`CADRUMO_DARWIN_COMPILER_IDENTITY` as its reviewed full Apple clang version
+header. Supply `CADRUMO_DARWIN_SDK_ROOT` and `CADRUMO_DARWIN_SDK_VERSION` for the
+reviewed macOS SDK; its `SDKSettings.json` must agree. Conflicting compiler or SDK
+inputs refuse configuration. The toolchain preserves the canonical architecture
+and deployment floor and does not change the host's selected developer tools.
+Supply an explicit `CADRUMO_RUST_LINKER` carrying that same compiler and SDK;
+Cargo does not inherit CMake's sysroot options. Builder receipts bind the selected
+files and complete SDK inventory to their bytes.
+
 `CADRUMO_CONFIGURE_PAYLOAD=OFF` configures native component targets and their tests
 without the full product/documentation/desktop assembly graph. It supports backend
 bring-up on a native builder. It provides no bundle, installer or package acceptance

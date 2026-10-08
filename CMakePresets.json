@@ -67,6 +67,7 @@
       "name": "macos-arm64",
       "displayName": "macos-arm64 (requires native SDK/toolchain)",
       "generator": "Ninja Multi-Config",
+      "toolchainFile": "${sourceDir}/native/cmake/DarwinToolchain.cmake",
       "binaryDir": "${sourceDir}/build/macos-arm64",
       "condition": {
         "type": "equals",

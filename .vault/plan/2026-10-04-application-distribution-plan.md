@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:cd18175ac11207f213f9153ed528e567ed383065dbe1d359a1cd130a18b151d6'
+body_hash: 'sha256:159e842b273a70fbd22a35c12b68fe5431d7542b3038b899d5561a0a3ba6d018'
 ---
 
 # Application distribution
@@ -55,6 +55,9 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 Execute sequentially. Preserve independent application-core and desktop edits in the shared checkout.
 
 2026-10-08: S09 native MSI maintenance may run alongside root-owned S05 Linux CMake build enrollment. The MSI worker owns a native installer adapter, its transaction/scope/removal tests, windows_msi.py authoring integration and installer-only CMake enrollment. Root owns Linux toolchain/container orchestration, distribution documentation, vault edits and commits. The separate manager worker owns manager IPC/tray/preferences; coordinate any shared native/application maintenance changes with root and serialize native Cargo verification. Preserve the installability gate until protections and acceptance pass.
+
+
+2026-10-08 native macOS builder integration: after completing native component evidence, linux_manager may own a repository Darwin toolchain file, its focused admission checks and isolated verification on the actual Mac. Translate the working explicit compiler/SDK selection into reproducible CMake inputs without hardcoding the operator's home directory, changing the canonical target/deployment floor or inventing release signing. Preserve explicit Rust linker configuration and exact builder/SDK identity. Coordinate shared CMake enrollment with root; root owns full-package build sessions, documentation source edits, vault and commits.
 
 ## Verification
 

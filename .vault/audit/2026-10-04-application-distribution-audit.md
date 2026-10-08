@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e5da9c5d2981cc7f121edb370386958a04b0dccd93ac7058351e9634b8c003b'
+body_hash: 'sha256:7e7a9c79181c45428e59a0a234aba6c515a7d2450fab09d3a69f777a411df90f'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -176,6 +176,13 @@ The native Linux package build exposed AF_UNIX pathname overflow because documen
 The identical frozen Linux snapshot (23984 members; d192edab8af12fc369669c35d61357394bff9b698e7e7ff9765ff48825be7df9) passed the real profile-setup goldens on WSL's existing user-systemd manager with pinned Python 3.13.11 and recorded authority a5cea047f10f3dec1b4f6d277afd192d505a00f36066ff44bbedc6226aad95d9. Real contained workers completed admission and KDF; none remained afterward. No services were installed or changed. Evidence is /home/hello/.local/share/cadrumo-builds/docs-20261008/evidence/result.json. Its strict desktop documentation compile is now running separately; no CMake cache receipt or package acceptance has been invented from the focused page.
 
 On Darwin even the explicit short private temp directory produced 110-byte single-sequence and 115-byte cumulative-page socket paths with the old verbose sandbox prefixes, above the native 104-byte limit. Only the unique scratch prefixes now shorten to seq- and page-, yielding 101 and 102 bytes in that configuration. Namespace ownership, canonical paths, random uniqueness and endpoint identity remain unchanged. Scoped Ruff/format/ty and independent review pass; the real Mac profile-setup goldens now pass with native transport and workers. Its full build was retried after the focused success. No whole DMG or installer acceptance is claimed.
+
+
+### 2026-10-08 explicit native Darwin toolchain | low | Native admission and compiler proof pass
+
+The macos-arm64 preset now selects a reusable Darwin toolchain with explicit reviewed compiler path/full Apple version header and SDK root/version. SDKSettings.json must identify that macOS SDK. Native arm64 and non-cross compilation are required; root CMake retains the canonical deployment floor and architecture. Rust linker selection remains explicit. Compiler/sysroot conflicts refuse before admitted cache bindings are set. Independent review found a medium empty-cache defect; forcing the admitted values after conflict checks fixes it, and the native regression starts from empty compiler/sysroot cache entries and verifies exact selected bindings.
+
+Portable admission tests pass (4 passed, 1 native-only skipped; 8.55s), with Ruff/format/ty and preset parsing passing. The actual Mac independently configured, compiled and ran an arm64/macOS 14.0 C probe and refused changed SDK identity, conflicting compiler and conflicting sysroot; final evidence is toolchain-proof/proof-v4.log beneath the preserved Mac task directory. Independent final review passes all four source/enrollment files. The ongoing full package build still uses its original explicit experiment toolchain; this new reusable configuration has native component proof, not a completed whole-product build or release-signing proof.
 
 ## Recommendations
 

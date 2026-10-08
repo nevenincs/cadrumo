@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d725cc39761d8da666b12745ed13b3669eb55a855d8010985f286dbe4c1257f'
+body_hash: 'sha256:a530c7bb21eb37f7811d888f06d2aa04e8c5ef7216169890c8bfb7b0d89e81b2'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -289,6 +289,13 @@ related:
 - `S05` `verify:` `actual WSL docs profile-setup goldens and worker cleanup` -> `pass`
 - `S05` `verify:` `scoped Ruff format ty` -> `pass`
 - `S05` `verify:` `independent docs scratch-prefix review` -> `pass`
+- `S05` `A` `native/cmake/DarwinToolchain.cmake`
+- `S05` `A` `dev/packaging/native/tests/test_darwin_toolchain.py`
+- `S05` `verify:` `portable Darwin admission tests (4 passed 1 native skipped, 8.55s)` -> `pass`
+- `S05` `verify:` `actual Mac empty-cache bindings C configure build run and three native refusals` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty` -> `pass`
+- `S05` `verify:` `cmake --list-presets` -> `pass`
+- `S05` `verify:` `independent corrected Darwin toolchain integrated review` -> `pass`
 
 ## Notes
 
@@ -313,3 +320,4 @@ related:
 - `S05` S05 remains open; native full packages and lifecycle acceptance are not established by component compilation.
 - `S05` S05 remains open. The remaining Linux docs failure is real worker containment unavailable in the build container, not permission to weaken containment.
 - `S05` Full documentation/package runs remain active; native host installation and session-ending acceptance are not authorized on the existing non-disposable hosts.
+- `S05` S05 remains open; full-product build currently retains its earlier explicit experiment toolchain, and native installation acceptance remains gated.
