@@ -111,7 +111,20 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None) -> None
     with action_lock(build, "user-docs"):
         authority = selected_published_authority(REPO_ROOT)
         input_identity = fingerprint(inputs, authority)
+        shared_inputs = fingerprint(inputs, authority, outside=build)
+
+        def validate_inputs() -> None:
+            selected = selected_published_authority(REPO_ROOT)
+            if (
+                selected != authority
+                or fingerprint(inputs, selected) != input_identity
+                or fingerprint(inputs, selected, outside=build) != shared_inputs
+            ):
+                raise DocsPackagingError("Documentation inputs changed during the build; retry from stable sources")
+
+        validate_inputs()
         if current(build_root, input_identity):
+            validate_inputs()
             print("Reusing user documentation: inputs and output inventory unchanged", flush=True)
             return
         (build_root / "ready").unlink(missing_ok=True)
@@ -124,11 +137,13 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None) -> None
         built = take_shared_site(
             build_root,
             dev_cache_dir(SHARED_SITE_CACHE),
-            shared_site_identity(fingerprint(inputs, authority, outside=build), languages),
+            shared_site_identity(shared_inputs, languages),
             produce,
+            validate_inputs=validate_inputs,
         )
         if not built:
             print("Reusing the user documentation another build configuration built from the same inputs", flush=True)
+        validate_inputs()
         completed(build_root, input_identity)
 
 
@@ -143,7 +158,14 @@ def shared_site_identity(inputs_outside_the_build: str, languages: tuple[str, ..
     return hashlib.sha256(f"{inputs_outside_the_build}\n{','.join(languages)}".encode()).hexdigest()
 
 
-def take_shared_site(build_root: Path, shared: Path, identity: str, produce: Callable[[Path], None]) -> bool:
+def take_shared_site(
+    build_root: Path,
+    shared: Path,
+    identity: str,
+    produce: Callable[[Path], None],
+    *,
+    validate_inputs: Callable[[], None],
+) -> bool:
     """Fill *build_root* with the site of *identity*, producing it only if no configuration has.
 
     The site is produced into the build configuration that needs it first and
@@ -157,6 +179,7 @@ def take_shared_site(build_root: Path, shared: Path, identity: str, produce: Cal
         shared: The directory the checkout's configurations share.
         identity: What the wanted site depends on.
         produce: Builds the site into the directory it is given.
+        validate_inputs: Refuses changed source or authority before publication or reuse.
 
     Returns:
         Whether the site was produced here rather than copied.
@@ -164,10 +187,14 @@ def take_shared_site(build_root: Path, shared: Path, identity: str, produce: Cal
     shared.parent.mkdir(parents=True, exist_ok=True)
     with action_lock(shared.parent, shared.name):
         if current(shared, identity):
+            validate_inputs()
             _copy_site(shared, build_root)
+            validate_inputs()
             return False
         produce(build_root)
+        validate_inputs()
         _copy_site(build_root, shared)
+        validate_inputs()
         completed(shared, identity)
         return True
 

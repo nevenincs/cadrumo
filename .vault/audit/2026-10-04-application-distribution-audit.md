@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e7a9c79181c45428e59a0a234aba6c515a7d2450fab09d3a69f777a411df90f'
+body_hash: 'sha256:0157fa57089c6f874b085a4df5fe7bd644df341b989bebb35a6072efe6e8556e'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -183,6 +183,13 @@ On Darwin even the explicit short private temp directory produced 110-byte singl
 The macos-arm64 preset now selects a reusable Darwin toolchain with explicit reviewed compiler path/full Apple version header and SDK root/version. SDKSettings.json must identify that macOS SDK. Native arm64 and non-cross compilation are required; root CMake retains the canonical deployment floor and architecture. Rust linker selection remains explicit. Compiler/sysroot conflicts refuse before admitted cache bindings are set. Independent review found a medium empty-cache defect; forcing the admitted values after conflict checks fixes it, and the native regression starts from empty compiler/sysroot cache entries and verifies exact selected bindings.
 
 Portable admission tests pass (4 passed, 1 native-only skipped; 8.55s), with Ruff/format/ty and preset parsing passing. The actual Mac independently configured, compiled and ran an arm64/macOS 14.0 C probe and refused changed SDK identity, conflicting compiler and conflicting sysroot; final evidence is toolchain-proof/proof-v4.log beneath the preserved Mac task directory. Independent final review passes all four source/enrollment files. The ongoing full package build still uses its original explicit experiment toolchain; this new reusable configuration has native component proof, not a completed whole-product build or release-signing proof.
+
+
+### 2026-10-08 documentation cache input mutation | medium | Revalidate enrolled inputs before publishing or reusing completion
+
+Independent review confirmed that docs_build previously captured source identity before a long compilation, then published shared and local completion markers without checking whether source or selected authority had changed. A failed compile did not publish a marker, but a successful mixed-revision run could publish under stale input identity; the two initial fingerprints could also observe different revisions. The correction checks both initial identities and selected authority before reuse, after production, around shared-site copying and before local publication. All take_shared_site callers now supply the owning validation callback. Real filesystem regression tests cover unchanged success, source mutation, authority-byte mutation, authority-selection replacement and mutation during shared copying. Eleven cache/publication tests pass in 3.83s, with scoped Ruff/format/ty and independent corrective review passing. This is endpoint fingerprint validation, not an immutable source snapshot: transient edit-and-restore remains outside its guarantees, so full builds still require stable sources.
+
+The live Windows full native-installer attempt reported its docs compile failure after 4673s: runtime_deadline_exceeded in renta observations and Modelo036, still-running/connection-closed outcomes in Modelo390, and connection-closed in verification-reports. Those are executable sequence failures, not evidence to refresh goldens. Other source owners have ongoing runtime/performance edits in the shared checkout. No full MSI acceptance or new package success is claimed; focused/frozen investigation must precede another expensive full retry.
 
 ## Recommendations
 

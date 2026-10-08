@@ -49,8 +49,8 @@ def test_a_second_configuration_copies_the_site_the_first_one_built(tmp_path: Pa
     shared = tmp_path / "cache" / "user-docs"
     first, second = tmp_path / "linux-x86-64" / "docs", tmp_path / "linux-aarch64" / "docs"
 
-    assert take_shared_site(first, shared, "identity", site) is True
-    assert take_shared_site(second, shared, "identity", site) is False
+    assert take_shared_site(first, shared, "identity", site, validate_inputs=lambda: None) is True
+    assert take_shared_site(second, shared, "identity", site, validate_inputs=lambda: None) is False
 
     assert site.produced == 1
     assert _pages(second) == {"html/en/index.html": "one en", "html/es/index.html": "one es"}
@@ -61,9 +61,9 @@ def test_a_copied_site_carries_no_completion_marker_of_the_cache(tmp_path: Path)
     """A configuration completes its own directory against its own identity."""
     shared = tmp_path / "cache" / "user-docs"
     build_root = tmp_path / "build" / "docs"
-    take_shared_site(tmp_path / "first" / "docs", shared, "identity", _Site("one"))
+    take_shared_site(tmp_path / "first" / "docs", shared, "identity", _Site("one"), validate_inputs=lambda: None)
 
-    take_shared_site(build_root, shared, "identity", _Site("one"))
+    take_shared_site(build_root, shared, "identity", _Site("one"), validate_inputs=lambda: None)
 
     assert (shared / "ready").is_file()
     assert not (build_root / "ready").exists()
@@ -74,10 +74,10 @@ def test_a_copied_site_carries_no_completion_marker_of_the_cache(tmp_path: Path)
 def test_changed_inputs_replace_the_one_shared_site(tmp_path: Path) -> None:
     """The cache holds one site, so a checkout's cache does not grow with its history."""
     shared = tmp_path / "cache" / "user-docs"
-    take_shared_site(tmp_path / "a" / "docs", shared, "before", _Site("old"))
+    take_shared_site(tmp_path / "a" / "docs", shared, "before", _Site("old"), validate_inputs=lambda: None)
     changed = _Site("new")
 
-    assert take_shared_site(tmp_path / "b" / "docs", shared, "after", changed) is True
+    assert take_shared_site(tmp_path / "b" / "docs", shared, "after", changed, validate_inputs=lambda: None) is True
 
     assert changed.produced == 1
     kept = _pages(shared)
@@ -90,11 +90,11 @@ def test_changed_inputs_replace_the_one_shared_site(tmp_path: Path) -> None:
 def test_a_shared_site_altered_after_it_was_kept_is_built_again(tmp_path: Path) -> None:
     """Reuse is bound to the kept bytes, not to the marker beside them."""
     shared = tmp_path / "cache" / "user-docs"
-    take_shared_site(tmp_path / "a" / "docs", shared, "identity", _Site("one"))
+    take_shared_site(tmp_path / "a" / "docs", shared, "identity", _Site("one"), validate_inputs=lambda: None)
     (shared / "html" / "es" / "index.html").write_text("tampered", encoding="utf-8")
     again = _Site("one")
 
-    assert take_shared_site(tmp_path / "b" / "docs", shared, "identity", again) is True
+    assert take_shared_site(tmp_path / "b" / "docs", shared, "identity", again, validate_inputs=lambda: None) is True
 
     assert again.produced == 1
     assert _pages(tmp_path / "b" / "docs")["html/es/index.html"] == "one es"
@@ -107,9 +107,9 @@ def test_a_stale_site_in_the_configuration_is_replaced_by_the_copy(tmp_path: Pat
     stale = build_root / "html" / "hu" / "index.html"
     stale.parent.mkdir(parents=True)
     stale.write_text("left over", encoding="utf-8")
-    take_shared_site(tmp_path / "first" / "docs", shared, "identity", _Site("one"))
+    take_shared_site(tmp_path / "first" / "docs", shared, "identity", _Site("one"), validate_inputs=lambda: None)
 
-    take_shared_site(build_root, shared, "identity", _Site("one"))
+    take_shared_site(build_root, shared, "identity", _Site("one"), validate_inputs=lambda: None)
 
     assert not stale.exists()
 

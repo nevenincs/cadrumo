@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a530c7bb21eb37f7811d888f06d2aa04e8c5ef7216169890c8bfb7b0d89e81b2'
+body_hash: 'sha256:b7febfabde1593942dacc43cf930c9ba29525d0d73b95ff52abae82672c434dd'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -296,6 +296,13 @@ related:
 - `S05` `verify:` `scoped Ruff format ty` -> `pass`
 - `S05` `verify:` `cmake --list-presets` -> `pass`
 - `S05` `verify:` `independent corrected Darwin toolchain integrated review` -> `pass`
+- `S05` `M` `dev/packaging/native/docs_build.py`
+- `S05` `M` `dev/packaging/native/tests/test_docs_shared_site.py`
+- `S05` `A` `dev/packaging/native/tests/test_docs_input_publication.py`
+- `S05` `verify:` `pytest docs shared site and input publication (11 tests, 3.83s)` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty` -> `pass`
+- `S05` `verify:` `independent docs cache mutation corrective review` -> `pass`
+- `S05` `verify:` `Windows full native-installer documentation compile (4673s)` -> `fail`
 
 ## Notes
 
@@ -321,3 +328,4 @@ related:
 - `S05` S05 remains open. The remaining Linux docs failure is real worker containment unavailable in the build container, not permission to weaken containment.
 - `S05` Full documentation/package runs remain active; native host installation and session-ending acceptance are not authorized on the existing non-disposable hosts.
 - `S05` S05 remains open; full-product build currently retains its earlier explicit experiment toolchain, and native installation acceptance remains gated.
+- `S05` S05 remains open. Full Windows documentation execution failed; other hosts are running frozen builds. Input revalidation does not replace immutable-source discipline.
