@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:d3e440aac391e6e4c5ad7350dc323b4f53e70a529bf002b249f3b8e72ae62955'
+body_hash: 'sha256:2acde846ab1e1d321c67dd4659c37179bdb48bec1fa355da92075a4521084c5d'
 ---
 
 # Application distribution
@@ -47,11 +47,14 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [ ] `S09` - Integrate native MSI transaction publication and scope admission with catalogue startup and removal exclusion; `native/application installation catalogue, native installer maintenance adapter and native/cmake/distribution`.
 - [ ] `S03` - Implement native installation registration and ownership-aware uninstall; `native/cmake, native/desktop build identity, and dev/packaging/native installation helpers`.
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.
+- [x] `S13` - Enable and verify CMake native Linux component builds with the pinned manylinux toolchain and explicit payload configuration; `CMakeLists.txt, native/cmake/ManylinuxToolchain.cmake and native/CONTRACT.md with native Linux compile and platform test evidence`.
 - [ ] `S05` - Centralize build output paths and generation ownership in CMake and remove unowned build clutter; `native/cmake, native/desktop, dev/packaging/native, dev/packaging/tests, and build`.
 
 ## Parallelization
 
 Execute sequentially. Preserve independent application-core and desktop edits in the shared checkout.
+
+2026-10-08: S09 native MSI maintenance may run alongside root-owned S05 Linux CMake build enrollment. The MSI worker owns a native installer adapter, its transaction/scope/removal tests, windows_msi.py authoring integration and installer-only CMake enrollment. Root owns Linux toolchain/container orchestration, distribution documentation, vault edits and commits. The separate manager worker owns manager IPC/tray/preferences; coordinate any shared native/application maintenance changes with root and serialize native Cargo verification. Preserve the installability gate until protections and acceptance pass.
 
 ## Verification
 

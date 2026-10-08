@@ -10,6 +10,18 @@ The four configure presets declare target identity. Linux/macOS require an
 explicit compiler/sysroot toolchain, reviewed SDK pins and matching native
 runner; preset existence does not establish support.
 
+For native Linux compiler and library verification, use the target's digest-pinned
+manylinux image from `native/toolchain.json` with
+`-DCMAKE_TOOLCHAIN_FILE=<source>/native/cmake/ManylinuxToolchain.cmake`.
+That toolchain requires glibc 2.28 and the image's GCC toolset; it refuses a newer
+host libc instead of silently changing the deployment floor. Supply the pinned
+Rust root and explicit readelf, patchelf and zstd paths as described below.
+
+`CADRUMO_CONFIGURE_PAYLOAD=OFF` configures native component targets and their tests
+without the full product/documentation/desktop assembly graph. It supports backend
+bring-up on a native builder. It provides no bundle, installer or package acceptance
+result. The option defaults to `ON`; enable it again for full payload builds.
+
 `native/toolchain.json` keeps common tool versions and a `targets` object with
 per-target Rust triples and CPython acquisition pins. Windows uses the pinned
 official NuGet SDK. Linux x86-64/AArch64 and macOS ARM64 use the reviewed Astral
@@ -430,7 +442,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `python_product` | Build and install the CADRUMO wheel cohort into dependency staging |
 | `user_docs` | Build every declared documentation language and stage the shippable subset; a `bundle` prerequisite unless `CADRUMO_PACKAGE_USER_DOCS=OFF` |
 | `user_docs_build`, `user_docs_stage` | Compile documentation or prepare its shippable subset independently |
-| `user_docs_sequences_check`, `user_docs_sequences_refresh` | Check committed CLI transcripts or explicitly regenerate them through the documentation owner; select a page with `CADRUMO_DOCS_SEQUENCE_PAGE` |
+| `user_docs_sequences_check`, `user_docs_sequences_refresh` | Check committed CLI transcripts or explicitly regenerate them through the documentation owner; select pages with `CADRUMO_DOCS_SEQUENCE_PAGES` |
 | `desktop-frontend-install`, `desktop-frontend-chrome`, `desktop-frontend-palette`, `desktop-frontend-build`, `desktop-host-prepare` | Prepare each desktop dependency, generated input, asset bundle or host snapshot independently |
 | `verify` | Build bundle/ABI consumers, run CTest including real dependency imports |
 | `install` / `cmake --install` | Copy staged package to the chosen prefix |
@@ -575,9 +587,10 @@ refusal is printed as the `cause:` line. The previous search index is removed be
 the compile, so staging can never accept an older root after a failed build.
 
 For transcript maintenance, configure with
-`-DCADRUMO_DOCS_SEQUENCE_PAGE=how-to/filing-spine`, then build
-`user_docs_sequences_check` or `user_docs_sequences_refresh`. An empty page selects
-all enrolled sequences. Refresh executes the documented commands and checks their
+`-DCADRUMO_DOCS_SEQUENCE_PAGES=how-to/filing-spine`, then build
+`user_docs_sequences_check` or `user_docs_sequences_refresh`. Use a semicolon-separated
+list for multiple pages; CMake schedules them with the build parallelism. An empty
+list selects all enrolled sequences. Refresh executes the documented commands and checks their
 declared expectations before writing source goldens; review those changes before
 accepting them. The normal documentation build only checks goldens.
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:3212c4fb4a6061fc3142513bb92ff6db0f4a839b245de5490af6b05567db8f3b'
+body_hash: 'sha256:8c7055571c9c5a6b080cffc6fcd9e8ebe58cdca351a095edd978c725f3099046'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -174,6 +174,16 @@ related:
 - `S12` `verify:` `pytest native layout installation MSI identity (52 passed, 2 POSIX skipped)` -> `pass`
 - `S12` `verify:` `scoped git diff --check` -> `pass`
 - `S12` `by:` `Codex`
+- `S13` `M` `CMakeLists.txt`
+- `S13` `A` `native/cmake/ManylinuxToolchain.cmake`
+- `S13` `M` `native/CONTRACT.md`
+- `S13` `verify:` `native manylinux CMake configure with CADRUMO_CONFIGURE_PAYLOAD=OFF` -> `pass`
+- `S13` `verify:` `CMake Release rust_platform rust_application baseline rust_manager` -> `pass`
+- `S13` `verify:` `Linux platform.resolver CTest` -> `pass`
+- `S13` `verify:` `manylinux toolchain refuses Ubuntu glibc2.43` -> `pass`
+- `S13` `verify:` `pytest CMake configurations/package inputs (15 passed)` -> `pass`
+- `S13` `verify:` `scoped git diff --check` -> `pass`
+- `S13` `by:` `Codex`
 
 ## Notes
 
@@ -185,3 +195,4 @@ related:
 - `S08` Source/database authoring only. Every product retains the literal-false installation gate; S09 native transaction/scope admission and safe maintenance remain unimplemented. No product installed or release upgrade acceptance claimed.
 - `S10` Initial ad-hoc Clippy picked ambient cargo-clippy 1.99 despite pinned RUSTC and failed E0514; pinned 1.96 extension rerun passed without cleaning shared build outputs. Native transaction/scope admission and disposable-host acceptance remain open in other Steps.
 - `S12` Shared publication/lease foundation only. Native MSI transaction/rollback, all-session process proof and independent runtime leases remain S09. MSI is still installable:false.
+- `S13` Native component lane only. Full payload remains default ON. New desktop WebKitGTK4.1 dependency and full installer/session acceptance remain unresolved; no complete Linux artifact claimed.

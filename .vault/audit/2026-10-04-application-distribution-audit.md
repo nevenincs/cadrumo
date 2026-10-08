@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:3bc0857079a3d3a1d5dbdb0f35e631a7a31729b96e3e639fd13cae274101e5ce'
+body_hash: 'sha256:57411048e313659654617f9b63cd5480f3933730b9872b1bc057b78edf93c3d4'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -102,6 +102,12 @@ Evidence: uv run --no-sync pytest -q -n 0 -m unit dev/packaging/native/tests/tes
 2026-10-08: Reviewed installer-owned pending/ready/removing state, bounded identity and manifest admission, immutable version verification, retained registration anchors and kernel version leases. Catalogue selection carries a shared lease into manager composition and desktop dispatch. Changed same-version product/digest, incomplete payloads, missing state, anchors and held leases refuse publication or removal. Review corrected manifest pre-admission hashing to use bounded JSON reads and cancellation. Configured Windows application CTest and desktop manager tests pass; desktop backend Clippy passes. Packaging layout/installation/identity tests pass (52 passed, two POSIX-only tests skipped on Windows).
 
 This closes only the shared foundation. Native MSI transaction/rollback adapters, cross-scope admission, all-session process proof, runtime protection after manager exit and recovery/finalization remain S09 work. Native markers and compiled MSI products remain gated. No interactive host or installation acceptance is claimed.
+
+### S13 native Linux component build review | low | Pinned floor builder compiles platform, application and baseline manager
+
+2026-10-08: Added an explicit native manylinux toolchain that verifies glibc 2.28 and selects the reviewed image's GCC toolset. The script accepts the digest-pinned x86-64 container and correctly rejects the Ubuntu 2.43 host. CMake component configuration passes with CADRUMO_CONFIGURE_PAYLOAD=OFF; full payload configuration remains the default. Actual Release rust_platform static/shared, rust_application and baseline rust_manager targets pass with Rust 1.96.0. Configured platform.resolver CTest passes. Fifteen CMake configuration/input tests pass.
+
+Component configuration deliberately supplies no bundle or package acceptance target. Full payload configure on the mounted tree is slow, and the reviewed floor image currently provides WebKitGTK 4.0 rather than the Tauri dependency's 4.1 API. Full desktop and native package acceptance remain open. Actual interpreter build exposed missing Ninja SDK byproduct and interpreter-to-bridge dependencies; those corrections are being verified separately. The baseline manager compile does not establish the in-progress Linux lifecycle port's acceptance.
 
 ## Recommendations
 
