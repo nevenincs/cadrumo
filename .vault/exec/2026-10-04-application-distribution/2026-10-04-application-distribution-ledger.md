@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:8989a1efce00aa41b713774129ff1839ede5e7a034487c5755d3e3790ccb6a8d'
+body_hash: 'sha256:a24253c9b29a5bb9b43cad9a8289c8ea59058593126650731db5e431397f7989'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -277,6 +277,13 @@ related:
 - `S05` `verify:` `scoped Ruff lint format and ty` -> `pass`
 - `S05` `verify:` `independent SDK alias identity review` -> `pass`
 - `S05` `verify:` `native Apple SDK CMake configure and platform manager application Release compilation` -> `pass`
+- `S05` `M` `dev/docs/sequences/checks.py`
+- `S05` `A` `dev/docs/tests/test_sequence_environment.py`
+- `S05` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S05` `verify:` `Windows child-environment regression (1 test, 9.01s)` -> `pass`
+- `S05` `verify:` `Linux child-environment regression (1 test, 10.60s)` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty and independent review` -> `pass`
+- `S05` `verify:` `native Linux docs profile-setup without user-systemd bus` -> `fail`
 
 ## Notes
 
@@ -299,3 +306,4 @@ related:
 - `S09` Partial S09: post-removal interrupted settlement and native interactive two-release acceptance remain pending; installation gates retained.
 - `S09` Native empty-transaction settlement and interactive lifecycle acceptance remain unverified; all installation gates retained.
 - `S05` S05 remains open; native full packages and lifecycle acceptance are not established by component compilation.
+- `S05` S05 remains open. The remaining Linux docs failure is real worker containment unavailable in the build container, not permission to weaken containment.

@@ -417,6 +417,10 @@ def english_pinned_environment() -> dict[str, str]:
     differently-configured product.
     """
     environment = ambient_product_settings_removed()
+    # This is the check runner's scratch allocation, not product configuration.
+    # Preserve its resolved location across children: a build-tree default can
+    # exceed the native Unix socket path bound before a sequence starts.
+    environment["CADRUMO_TEMP_DIR"] = str(prepare_temporary_directory())
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["PYTHONIOENCODING"] = _UTF_8
     environment["PYTHONUTF8"] = "1"

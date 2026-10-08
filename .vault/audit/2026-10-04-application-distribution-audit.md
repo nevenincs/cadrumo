@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:76154dc6a93ef838770a74fea904d06e0e6b0af4b9c39719ba1abb25dc7cf90a'
+body_hash: 'sha256:61a59d6c31103890f6156f327ee1922d485c711b985461ed530cff3ad9156e7a'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -164,6 +164,11 @@ Microsoft's MsiBeginTransactionW/MsiEndTransaction contract establishes current-
 ### 2026-10-08 native Apple SDK inventory | low | Contained framework ancestor aliases retain complete identity
 
 The genuine Apple CLT macOS 26.5 SDK includes a Ruby framework header alias pointing to its ancestor. SDK inventory now explicitly permits such contained directory aliases while recording each link and hashing each canonical directory once. Unresolved or escaping links still refuse. Generic action-cache directory inventory retains its default cycle refusal. Header mutation and link retargeting invalidate builder identity. Eleven builder-identity/action-cache tests, scoped Ruff/format/ty and independent source review pass. Actual macOS configure passed in 11.3s plus 1.9s generation using the unmodified SDK; platform static/shared, manager and application Release targets subsequently compiled successfully on arm64 with the canonical 14.0 deployment floor. This does not prove DMG assembly, login lifecycle or release signing. The isolated build uses explicit local ad-hoc identity '-' without a publisher certificate.
+
+
+### 2026-10-08 documentation subprocess scratch | low | Explicit short scratch survives environment isolation
+
+The native Linux package build exposed AF_UNIX pathname overflow because documentation subprocesses removed CADRUMO_TEMP_DIR along with ambient product routing. english_pinned_environment now reintroduces only the canonical prepared scratch directory after that scrub. Runtime endpoint/storage routing and unrelated product settings remain absent. A real child-interpreter regression passes on Windows (1 test, 9.01s) and Linux (1 test, 10.60s); scoped Ruff/format/ty and independent review pass. Real Linux profile-setup sequences advance beyond pathname and socket-permission setup, then correctly refuse runtime_containment_unavailable because the manylinux container has no user-systemd bus. The existing WSL user manager is available; an isolated source/dependency build there is being prepared for sequence execution without changing services. This checkpoint does not claim the whole docs/package gate passed.
 
 ## Recommendations
 
