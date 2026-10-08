@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:9c31adc495ae50deab471a4053dea56817ceff08f75c2c2e1c311c63a3a5d825'
+body_hash: 'sha256:f3992886919066a80565f73b85e0c9131a65a68f9f6b0444c9726ff635d43dfa'
 ---
 
 # Application distribution
@@ -53,6 +53,7 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [x] `S13` - Enable and verify CMake native Linux component builds with the pinned manylinux toolchain and explicit payload configuration; `CMakeLists.txt, native/cmake/ManylinuxToolchain.cmake and native/CONTRACT.md with native Linux compile and platform test evidence`.
 - [ ] `S05` - Centralize build output paths and generation ownership in CMake and remove unowned build clutter; `native/cmake, native/desktop, dev/packaging/native, dev/packaging/tests, dev/docs sequence build helpers and owning tests, and build`.
 - [x] `S14` - Separate registered local filing settlement from the bounded exchange timeout exposed by frozen installer documentation acceptance; `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py filing function only and new owning filing settlement tests, preserving independent verification changes`.
+- [ ] `S15` - Declare and verify Linux desktop system runtime prerequisites through canonical per-image metadata, strict ELF relocation and CMake DEB/RPM dependency projections while preserving private Python and installation gates; `native platform desktop metadata, dev/packaging/native dependency and relocation helpers/tests, native/cmake/distribution`.
 
 ## Parallelization
 
@@ -85,6 +86,8 @@ The same diagnostic owner may adapt the ignored retained-sandbox observer to one
 2026-10-08 S05 Linux documentation handoff: after proving WSL and manylinux have the same 10,267 enrolled source inputs and selected authority bytes but different absolute checkout paths, msi_maintenance may own a documentation-only portable input identity in docs_build.py and a narrowly scoped helper/tests. Keep generic native action fingerprints unchanged. Hash the complete enrolled source graph by validated repository-relative names and bytes, and selected authority by stable owner-defined roles and bytes; reject unknown external inputs, preserve language identity and before/after input validation. Existing output-inventory checks and strict compile remain mandatory. Root reviews before overlaying the stopped frozen WSL/manylinux snapshots with the committed filing-settlement and 404 fixes plus this reviewed slice. Use genuine CMake enrollment and the owning docs_build producer/cache; never synthesize a ready marker or promote unverified standalone HTML. No service/product registration, containment weakening or change to active Windows/Mac frozen inputs is included. Root owns final build launches, vault and commits.
 
 2026-10-08 S05 native package recovery: linux_manager owns ignored Mac full-CMake documentation observer preparation, root-reviewed launch and evidence collection against the unchanged frozen source/authority. Preserve actual per-page arguments, concurrency, progress journals, deadlines and cleanup; collect only payload-free lifecycle/exception metadata. Root retains source remedies and final acceptance. msi_maintenance owns Linux desktop dependency-policy grounding and amendment preparation, then only explicitly assigned package dependency files/tests after root accepts the refinement. Do not edit the peer-owned Docs.cmake, Packaging.cmake, ReleaseVerification.cmake, native/CONTRACT.md or docs_build.py. Root owns vault records and commits; no product installation, login registration or session transition on either non-disposable host.
+
+S15: msi_maintenance owns the canonical Linux desktop-runtime contract, native platform enrollment, dev/packaging/native dependency/projection/relocation/package inspection helpers and their tests, and native/cmake/distribution only. Implement the accepted 2026-10-08 distribution refinement with per-image scope, metadata inspection and retained native refusal gates. Root owns governance, review and commits. linux_manager may continue the isolated Mac build observer concurrently. Peer-owned top-level CMake packaging/docs/release files and native/CONTRACT.md remain excluded; report any required enrollment handoff before touching them.
 
 ## Verification
 

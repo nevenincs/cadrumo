@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:e72d1f3624c086155a52bcd7ff112e665355539ce022eac9a124bae50e2a6001'
+body_hash: 'sha256:7e043e70f7af23b1bed7b6b292daf419cb02aa4c050dc37a0be6b03ae5f5e2ee'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -350,6 +350,10 @@ related:
 - `S05` `verify:` `Mac isolated modelo349 diagnostic` -> `pass`
 - `S05` `verify:` `manylinux native desktop release compile` -> `pass`
 - `S05` `verify:` `manylinux full package dependency closure` -> `fail`
+- `S15` `M` `.vault/adr/2026-10-04-application-distribution-adr.md`
+- `S15` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S15` `verify:` `Linux dependency-policy coverage and bounded crossref review` -> `pass`
+- `S15` `by:` `root`
 
 ## Notes
 
@@ -388,3 +392,4 @@ related:
 - `S05` Original full-build `runtime_deadline_exceeded` remains unexplained; isolated passes establish clean observed timing/cleanup, not remediation or installer acceptance. Exact frozen source and authority hashes unchanged.
 - `S05` Full native packaging remains separate and in progress; no product installation or native lifecycle acceptance performed.
 - `S05` S05 remains open. Native failures and isolated diagnostics are distinct; preserve host state and existing installation gates. Linux desktop delivery boundary needs explicit refinement.
+- `S15` Accepted dependency refinement under existing all-code/build authorization; implementation and minimum-runtime/native package verification pending.
