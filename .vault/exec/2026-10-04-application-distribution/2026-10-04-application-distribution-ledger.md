@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a6beaa60c90389739917f412c36dacf9e806af4b6c0a2c1fd17c73444628bbc'
+body_hash: 'sha256:f9085736b1c87ff9cdd406721fb822e3851f85a8bba9c63eecd42172c97dc40f'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -415,6 +415,17 @@ related:
 - `S05` `verify:` `WiX ordinary versus extended long-path reproduction` -> `pass`
 - `S05` `verify:` `Owning 39 tests plus corrected native long-source regression` -> `pass`
 - `S05` `verify:` `Ruff format check and ty` -> `pass`
+- `S03` `A` `.vault/research/2026-10-08-application-distribution-darwin-versioned-installation-research.md`
+- `S03` `A` `.vault/adr/2026-10-08-application-distribution-darwin-versioned-installation-adr.md`
+- `S03` `M` `.vault/index/application-distribution.index.md`
+- `S03` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S03` `verify:` `Native Mac read-only receipt-domain tooling and account binding` -> `pass`
+- `S03` `verify:` `Distribution feature validation` -> `pass`
+- `S03` `by:` `root`
+- `S05` `verify:` `Full Windows CMake native-package and msi-verify` -> `pass`
+- `S05` `verify:` `Full Windows before-after payload and source verification` -> `pass`
+- `S05` `verify:` `Frozen Windows strict full documentation retry` -> `fail`
+- `S05` `verify:` `Fresh censo and annual Modelo390 observed fixtures` -> `pass`
 
 ## Notes
 
@@ -463,3 +474,5 @@ related:
 - `S15` Hash-verified local artifacts and full provenance in linux-s15-final-handoff. Native installation gates unchanged; graphical lifecycle and ARM64 acceptance unproven.
 - `S05` DMG built and copied; separate Mac live qualification failed. Windows long-source cabinet defect reproduced; no native installations.
 - `S05` Full-payload retry pending; installation gates retained.
+- `S03` Proposed only; authenticated package preflight, positive receipt classification and complete scope discovery remain unresolved.
+- `S05` Four gated full MSIs published. Separate full documentation failures remain unexplained; targeted passes do not replace qualification.
