@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fe05b7a8c07a9c86c6f28ae160a05945dfe0535e27593fe335f6900e02f1c9f'
+body_hash: 'sha256:39b1855fb6e9119be8d8123bda46cc16d658f3582f608e221474967973f4e118'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -503,6 +503,11 @@ related:
 - `S16` `verify:` `Corrective lifecycle/supervisor deadline suite (25 tests)` -> `pass`
 - `S16` `verify:` `Scoped notice Ruff lint and formatting plus type checks` -> `pass`
 - `S16` `verify:` `Independent notice review and corrective deadline re-review` -> `pass`
+- `S18` `M` `native/manager/src/installed.rs`
+- `S18` `verify:` `Windows manager.rust CTest (21.81s)` -> `pass`
+- `S18` `verify:` `Windows pinned Rust 1.96 all-target Clippy -D warnings (10.46s)` -> `pass`
+- `S18` `verify:` `Linux manylinux_2_28 frozen source manager.rust CTest (9.75s)` -> `pass`
+- `S18` `verify:` `Linux pinned Rust 1.96 all-target Clippy -D warnings (18.92s)` -> `pass`
 
 ## Notes
 
@@ -539,3 +544,4 @@ related:
 - `S16` S16/S17 coherent integration checkpoint. Attended installed two-release upgrade/rollback/cancelled-shutdown evidence, connected-frontend notices, obsolete native-product cleanup and native removal emitter remain open. No acceptance or signing claim.
 - `S18` Partial S18 checkpoint only: probe is an opt-in disposable graphical-runner experiment, not runtime acceptance. Current WSL process has no authoritative graphical logind membership and correctly refuses despite display environment variables. Linux manager entrypoint remains gated pending placement/session identity and native installation ownership evidence. Full latest Linux native suite must be rerun after cutover contract regeneration.
 - `S16` Partial S16 checkpoint: localized notices use existing typed E-frame stream and sole writer with complete-frame flush witnesses, pre-login and restricted TUI plus human CLI consumers. One retained read-only observation worker enforces bounded StopIfIdle and rejects expired results. Legacy client to new server compatible; opted-in client to older strict server deliberately refuses without downgrade. Real installed interactive two-release notice acceptance remains outstanding; native reference-login integration was adapted/typechecked but not rerun.
+- `S18` Partial S18 portability checkpoint: canonical generated platform replaces Windows-only package inspection; integrity tests cover missing/changed inventories and incompatible target. Native Linux entry remains gated; no graphical session, install, upgrade or uninstall acceptance claimed.

@@ -134,16 +134,20 @@ fn require_package(package: &Path) -> Result<(), InspectionFailure> {
     let manifest_path =
         RelativePath::new(crate::contract::MODE_PACKAGE_MANIFEST).map_err(package_failure)?;
     let manifest = PackageManifest::read(package, &manifest_path).map_err(package_failure)?;
-    let platform = if cfg!(all(windows, target_arch = "x86_64")) {
-        "windows-x64"
-    } else {
-        return Err(InspectionFailure::new(
-            InspectionRefusal::UnsupportedPlatform,
-            io::ErrorKind::Unsupported.into(),
-        ));
-    };
+    let contract: cadrumo_application::installation::DiscoveryContract =
+        serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).map_err(|cause| {
+            InspectionFailure::new(
+                InspectionRefusal::PackageIncompatible,
+                io::Error::other(cause),
+            )
+        })?;
     let inspection = manifest
-        .inspect(package, &manifest_path, platform, crate::contract::ABI)
+        .inspect(
+            package,
+            &manifest_path,
+            &contract.layout.platform,
+            crate::contract::ABI,
+        )
         .map_err(package_failure)?;
     match inspection.readiness {
         Readiness::Ready => Ok(()),
@@ -296,15 +300,16 @@ mod tests {
         assert!(!log.contains("synthetic-private"));
     }
 
-    #[cfg(all(windows, target_arch = "x86_64"))]
     #[test]
     fn real_package_integrity_and_missing_file_refusals_have_different_records() {
         let scratch = Scratch::new();
         let package = scratch.0.join("package");
         let manifest = package.join(crate::contract::MODE_PACKAGE_MANIFEST);
         fs::create_dir_all(manifest.parent().unwrap()).unwrap();
-        let document = serde_json::json!({
-            "layout": {"abi": crate::contract::ABI, "platform": "windows-x64"},
+        let contract: cadrumo_application::installation::DiscoveryContract =
+            serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).unwrap();
+        let mut document = serde_json::json!({
+            "layout": {"abi": crate::contract::ABI, "platform": contract.layout.platform},
             "python": "3.14", "distributions": {},
             "files": {"fixture.bin": "a".repeat(64)},
             "user_docs": {"directory": "docs/user", "bundled": false}
@@ -320,6 +325,17 @@ mod tests {
         let failure = require_package(&package).unwrap_err();
         assert_eq!(failure.refusal, InspectionRefusal::PackageIncompatible);
         crate::diagnostics::inspection_failed(&diagnostics, failure);
+        use sha2::{Digest, Sha256};
+        document["files"]["fixture.bin"] =
+            serde_json::json!(format!("{:x}", Sha256::digest(b"synthetic-private-file")));
+        fs::write(&manifest, serde_json::to_vec(&document).unwrap()).unwrap();
+        require_package(&package).unwrap();
+        document["layout"]["platform"] = serde_json::json!("different-build-target");
+        fs::write(&manifest, serde_json::to_vec(&document).unwrap()).unwrap();
+        assert_eq!(
+            require_package(&package).unwrap_err().refusal,
+            InspectionRefusal::PackageIncompatible
+        );
         let log = fs::read_to_string(log).unwrap();
         assert!(log.contains("package_incomplete"));
         assert!(log.contains("package_incompatible"));
