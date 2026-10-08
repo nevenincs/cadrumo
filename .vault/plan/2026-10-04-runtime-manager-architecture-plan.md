@@ -12,7 +12,7 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:c715c3554dfd84753536dde4eaf3f91fe1a3530e121b3410a1d5e98c1824f0e2'
+body_hash: 'sha256:2b8529b3a7fae8e89a956d7d70226637f1801d75df033a461d1a43f80a4050bf'
 ---
 
 # `runtime-manager-architecture` plan
@@ -175,6 +175,8 @@ Darwin IPC continuation: the existing linux_manager worker also owns the narrow 
 2026-10-08 S19 activity observation: linux_manager owns macos/activity.rs and macos.rs enrollment plus owning tests. Use public caller-scoped CGSessionCopyCurrentDictionary. Retain a fully admitted current Process and native Session; bracket each query with unchanged kernel UID/ASID and require strictly typed matching UID, OnConsole and LoginDone values. Missing or inconsistent evidence remains unavailable; only corroborated on-console and logged-in state grants start/restart eligibility. No undocumented keys, console-set/ASID conflation, unlocked-state claims or session-end signals. Native checks only observe the SSH host or synthetic pure-policy fixtures. Main activation, lifecycle/registration and frozen package inputs stay unchanged. Root owns native suite snapshots, review, vault and commits.
 
 2026-10-08 S19 lifecycle prerequisite: linux_manager owns a behavior-preserving extraction of the existing pure lifecycle and cutover-runtime traits from windows_lifecycle.rs/cutover_coordinator.rs into their canonical shared owner, with atomic consumer/test imports and lib.rs enrollment. Preserve Background's concrete Windows gating and all existing method semantics, cutover cancellation, claims and settlement behavior; do not add no-op platform adapters or activate another platform. Move existing trait implementations without public re-export compatibility aliases. This prerequisite gives later native hosts the same lifecycle contract while actual platform composition remains gated. Root owns reviews, shared Windows/Mac checks, vault and commits; unrelated peer source work is excluded.
+
+2026-10-08 S19 portable Background prerequisite: linux_manager owns the sealed shared successor permit/reporting owner with nested Windows-only native admission, required-method installation-removal observation contract with the existing Windows watcher implementation, and minimal Background/startup/supervised/lifecycle/lib/main consumer changes to compile the existing state machine on supported platforms. Preserve private permit construction after native admission, exact root/session/Quit checks, bounded reporting and final Ready acknowledgement, retained claims, cancellation and settlement semantics. No no-op macOS removal watcher, new authority constructor, native activation, installation-layout decision or host mutation. Root owns shared Windows/Mac verification, integrated review, vault and commits. Keep frozen builds and unrelated peer edits unchanged.
 
 ## Verification
 

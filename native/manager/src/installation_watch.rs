@@ -51,13 +51,6 @@ impl InstallationWatch {
             next: Instant::now(),
         })
     }
-    pub fn removed(&mut self) -> bool {
-        if Instant::now() < self.next {
-            return false;
-        }
-        self.next = Instant::now() + Duration::from_secs(2);
-        self.observe().unwrap_or(false)
-    }
     fn observe(&mut self) -> io::Result<bool> {
         let Some(store) = &self.store else {
             return Ok(false);
@@ -88,6 +81,16 @@ impl InstallationWatch {
         ))
     }
 }
+impl crate::lifecycle::RemovalObservation for InstallationWatch {
+    fn removed(&mut self) -> bool {
+        if Instant::now() < self.next {
+            return false;
+        }
+        self.next = Instant::now() + Duration::from_secs(2);
+        self.observe().unwrap_or(false)
+    }
+}
+
 fn completed(
     expected: &mut Option<NativeOwner>,
     observed: Option<&NativeRegistration>,

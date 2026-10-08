@@ -64,7 +64,6 @@ pub fn start(
 enum Mode {
     Reserved(crate::session::ownership::StartPermit),
     Adopting,
-    #[cfg(windows)]
     Designated,
 }
 fn spawn(supervisor: Supervisor, mode: Mode, receive_events: Receiver<Event>) -> io::Result<Start> {
@@ -76,7 +75,6 @@ fn spawn(supervisor: Supervisor, mode: Mode, receive_events: Receiver<Event>) ->
             let result = match mode {
                 Mode::Reserved(permit) => supervisor.run_with_permit(permit),
                 Mode::Adopting => Ok(supervisor.run_adopting()),
-                #[cfg(windows)]
                 Mode::Designated => Ok(supervisor.run()),
             };
             let _ = ended.send(result);
@@ -89,12 +87,11 @@ fn spawn(supervisor: Supervisor, mode: Mode, receive_events: Receiver<Event>) ->
     }))
 }
 
-#[cfg(windows)]
 pub(crate) fn start_designated(
     target: LaunchTarget,
     config: SupervisorConfig,
     collaborators: Collaborators,
-    permit: crate::cutover_child::InitialPermit,
+    permit: crate::successor::InitialPermit,
 ) -> io::Result<Start> {
     if permit.root() != target.storage_root()
         || !collaborators.session.is_active()

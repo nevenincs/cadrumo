@@ -94,7 +94,7 @@ fn run_windows(
         return Ok(());
     }
     let (installation, successor) = if let Some(designation) = designation {
-        let admitted = cadrumo_manager::cutover_child::admit(designation)?;
+        let admitted = cadrumo_manager::successor::windows::admit(designation)?;
         (
             admitted.installation,
             Some((admitted.permit, admitted.reporter)),
@@ -174,7 +174,9 @@ fn run_windows(
     if let Some((permit, reporter)) = successor {
         background.designated(permit, reporter);
     }
-    background.watch_installation(&selected)?;
+    background.watch_installation(Box::new(
+        cadrumo_manager::installation_watch::InstallationWatch::new(&selected)?,
+    ));
     stage(
         &diagnostics,
         HostStage::Window,

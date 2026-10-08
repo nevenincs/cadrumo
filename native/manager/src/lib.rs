@@ -7,7 +7,6 @@ compile_error!("release builds refuse the fixture test mode");
 
 #[cfg(any(windows, test))]
 pub mod admission;
-#[cfg(windows)]
 pub mod background;
 pub mod contract;
 pub mod custody;
@@ -43,8 +42,7 @@ pub mod failed_versions;
 #[cfg(windows)]
 pub mod installation_watch;
 
-#[cfg(windows)]
-pub mod cutover_child;
+pub mod successor;
 
 #[cfg(windows)]
 pub mod cutover_coordinator;

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:34a2e90f3a7615cdb52f3429711fd62ff4b0fcb65a27de08e895ad584bfaf6ae'
+body_hash: 'sha256:658f0dfb85339f8fa038a439a8768fd187151079564196133bd4e4f3c45799b2'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -299,6 +299,8 @@ Native check8 passed 32 platform and 90 manager tests plus both Clippy checks; c
 Mac check9 passed 32 platform and 93 manager tests plus both Clippy checks; Windows passed 148 configured manager tests and Clippy. Native snapshot SHA256 c3b6e2a4bd66634f8ca3a9d44543b4bced0c5c1afa8d7c8a29510a6e081c6484; logs retained in native-activity-evidence. The common custody unit test's post-drop reacquisition now permits the existing one-second bounded lock wait for reproduced transient inherited descriptors; its live-owner 60ms refusal remains unchanged. Production lock semantics are unchanged. Lifecycle, installation/cutover composition, menu integration and acceptance remain open.
 
 2026-10-08 shared lifecycle prerequisite review: PASS. Existing CutoverRuntime and ManagerLifecycle contracts now have canonical definitions in lifecycle.rs, consumed directly by the Windows host and coordinator; their existing Background implementations remain Windows-gated. Method semantics/defaults, cutover cancellation, retained claims and settlement behavior are unchanged. No aliases, no-op adapters or native activation were added. Mac check11 passed 32 platform and 93 manager tests plus both Clippy checks; Windows passed 148 configured manager tests and Clippy. Snapshot SHA256 e3c711a1bafd6388909a91d9e9a74b051b43101394f2dbc696f77dfd25a140b9, logs in build/macos-process-typecheck/shared-lifecycle-evidence. Concrete portable lifetime and native AppKit host composition remain required.
+
+2026-10-08 S19 portable Background prerequisite review: PASS for this bounded refactor against c909de003b. The canonical successor owner retains private InitialPermit fields; its sole production minting producer is nested Windows-native admission after parent, child, image and pipe proof. Root/activity/Quit checks, reporting channel bounds, disconnected rejection and final Ready acknowledgement remain intact. The existing Windows installation watcher now implements required-method RemovalObservation and is installed explicitly by the Windows composition root; no absent-evidence macOS adapter was added. Background, designated startup and lifecycle implementations compile on Darwin without changing supervision, cutover claim retention or settlement. Native Mac check12 (Rust 1.96, aarch64-apple-darwin) passed 32 platform and 94 manager tests plus both all-target Clippy checks with warnings denied. Windows passed 148 manager tests and all-target Clippy. Snapshot archive SHA256 4fba8f8fd6772d0bc02b4e81fac8939716dc239ea8dc602c61da102cd5f59118; manifest and results retained in build/macos-process-typecheck/portable-background-evidence and the isolated remote native-transport-check12 directory. No compatibility re-export, general permit constructor, new native activation or product mutation was introduced. S19 remains open: macOS native lifecycle composition and versioned installation ownership are still required.
 
 ## Recommendations
 

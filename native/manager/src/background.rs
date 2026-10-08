@@ -1,4 +1,4 @@
-//! Lifetime of one admitted manager, independent of the Windows message pump.
+//! Lifetime of one admitted manager, independent of the native event loop.
 
 use crate::{
     diagnostics,
@@ -25,7 +25,7 @@ use std::{
     time::Duration,
 };
 
-// A continuously replenished diagnostics queue must yield to Windows messages.
+// A continuously replenished diagnostics queue must yield to native events.
 const EVENTS_PER_POLL: usize = 64;
 
 pub struct Background {
@@ -39,13 +39,13 @@ pub struct Background {
     suspended: bool,
     diagnostics: Arc<Diagnostics>,
     waiting: Option<LifecycleFact>,
-    installation_watch: Option<crate::installation_watch::InstallationWatch>,
+    installation_watch: Option<Box<dyn crate::lifecycle::RemovalObservation>>,
     observation: Observation,
     cutover_pending: bool,
     update_failed: bool,
     reserved: Option<crate::session::claim::StartClaim>,
-    designated: Option<crate::cutover_child::InitialPermit>,
-    reporter: Option<crate::cutover_child::Reporter>,
+    designated: Option<crate::successor::InitialPermit>,
+    reporter: Option<crate::successor::Reporter>,
 }
 
 impl Background {
@@ -85,8 +85,8 @@ impl Background {
 
     pub fn designated(
         &mut self,
-        permit: crate::cutover_child::InitialPermit,
-        reporter: crate::cutover_child::Reporter,
+        permit: crate::successor::InitialPermit,
+        reporter: crate::successor::Reporter,
     ) {
         self.designated = Some(permit);
         self.reporter = Some(reporter);
@@ -165,11 +165,9 @@ impl Background {
     }
     pub fn watch_installation(
         &mut self,
-        selected: &cadrumo_application::installation::Selection,
-    ) -> io::Result<()> {
-        self.installation_watch =
-            Some(crate::installation_watch::InstallationWatch::new(selected)?);
-        Ok(())
+        observation: Box<dyn crate::lifecycle::RemovalObservation>,
+    ) {
+        self.installation_watch = Some(observation);
     }
     /// Confirmed native registration removal stops only this manager's
     /// owned runtime, without recording a user Quit preference or deleting files.
@@ -186,7 +184,7 @@ impl Background {
     pub fn poll(&mut self) -> io::Result<()> {
         if let Some(result) = self.reporter.as_ref().and_then(|reporter| reporter.poll()) {
             self.reporter = None;
-            if matches!(result, crate::cutover_child::ReportResult::Rejected) {
+            if matches!(result, crate::successor::ReportResult::Rejected) {
                 self.uninstall()?;
             }
         }
@@ -434,7 +432,7 @@ impl Observation {
             _ => {}
         }
     }
-    fn report(&mut self, reporter: Option<&crate::cutover_child::Reporter>) -> io::Result<()> {
+    fn report(&mut self, reporter: Option<&crate::successor::Reporter>) -> io::Result<()> {
         if let Some(reporter) = reporter
             && let Some(pid) = self.pid
         {

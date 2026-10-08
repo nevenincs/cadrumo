@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:c2121e8283b6310cae97b5e2caba501c74e43880f7fce9477d297e53d1b0a0c6'
+body_hash: 'sha256:8c5c22a53a41b9ed9d38ab6d38c29e035cd4b6d2952297ffa191887afa28cc62'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -692,6 +692,16 @@ related:
 - `S19` `verify:` `Mac check11: platform32 manager93 tests and both Clippy` -> `pass`
 - `S19` `verify:` `configured Windows manager148 tests and Clippy` -> `pass`
 - `S19` `verify:` `scoped Rustfmt and integrated lifecycle extraction review` -> `pass`
+- `S19` `A` `native/manager/src/successor.rs`
+- `S19` `R` `native/manager/src/cutover_child.rs` -> `native/manager/src/successor/windows.rs`
+- `S19` `M` `native/manager/src/background.rs`
+- `S19` `M` `native/manager/src/startup.rs`
+- `S19` `M` `native/manager/src/lifecycle.rs`
+- `S19` `M` `native/manager/src/installation_watch.rs`
+- `S19` `M` `native/manager/src/main.rs`
+- `S19` `verify:` `Mac check12 platform 32 manager 94 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Windows manager 148 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
 
 ## Notes
 
@@ -748,3 +758,4 @@ related:
 - `S19` S19 remains open. Public caller-scoped Quartz activity is bracketed by retained kernel UID/ASID and full initial graphical admission; typed unavailable evidence never grants start/restart eligibility. It does not prove unlocked state or session end. GUI switch/logout acceptance and manager activation remain gated. Custody test post-drop wait now accounts for independently reproduced transient inherited descriptors; live-owner refusal unchanged. Native snapshot SHA256 c3b6e2a4bd66634f8ca3a9d44543b4bced0c5c1afa8d7c8a29510a6e081c6484.
 - `S19` Moved Activity and its implementations into the canonical activity module instead of adding a public re-export; private FFI ownership and behavior unchanged. Windows verification from check9 remains applicable to unchanged Windows paths. Native snapshot SHA256 4ceb74ad9fa2c3669d1b530149decd17cca53b986c9b7eb4444d9143c68d8b5b. S19 remains open.
 - `S19` S19 prerequisite only: existing lifecycle/cutover traits now have canonical shared definitions consumed by actual Windows host/coordinator. Existing defaults, Background Windows gating and concrete cancellation/claims/settlement behavior remain unchanged; no new native host adapter or activation. Snapshot SHA256 e3c711a1bafd6388909a91d9e9a74b051b43101394f2dbc696f77dfd25a140b9.
+- `S19` Shared lifecycle prerequisite only; native activation and versioned macOS installation remain incomplete. Non-disposable hosts received only isolated tests.

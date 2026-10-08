@@ -1,4 +1,5 @@
 //! Successor admission and bounded reports on the parent's private cutover pipe.
+use super::{InitialPermit, Phase, ReportResult, Reporter};
 use crate::{
     cutover::{Designation, Report},
     installation::CurrentInstallation,
@@ -12,53 +13,10 @@ use cadrumo_application::{component::Cancellation, installation::DiscoveryContra
 use std::{
     io,
     path::{Path, PathBuf},
-    sync::mpsc::{self, Receiver, SyncSender, TryRecvError},
+    sync::mpsc,
     thread,
     time::Duration,
 };
-
-/// Only successful native parent/child/pipe admission can construct this value.
-/// It authorizes one initial launch under the parent's still-held start claim.
-pub struct InitialPermit {
-    root: PathBuf,
-}
-impl InitialPermit {
-    pub(crate) fn root(&self) -> &Path {
-        &self.root
-    }
-}
-pub enum ReportResult {
-    Committed,
-    ParentExited,
-    Rejected,
-}
-enum Notice {
-    Launched(u32),
-    Ready(u32),
-}
-pub struct Reporter {
-    send: SyncSender<Notice>,
-    result: Receiver<ReportResult>,
-}
-impl Reporter {
-    pub fn launched(&self, pid: u32) -> io::Result<()> {
-        self.send
-            .try_send(Notice::Launched(pid))
-            .map_err(io::Error::other)
-    }
-    pub fn ready(&self, pid: u32) -> io::Result<()> {
-        self.send
-            .try_send(Notice::Ready(pid))
-            .map_err(io::Error::other)
-    }
-    pub fn poll(&self) -> Option<ReportResult> {
-        match self.result.try_recv() {
-            Ok(result) => Some(result),
-            Err(TryRecvError::Empty) => None,
-            Err(TryRecvError::Disconnected) => Some(ReportResult::Rejected),
-        }
-    }
-}
 
 pub struct Admitted {
     pub installation: CurrentInstallation,
@@ -128,8 +86,8 @@ pub fn admit(designation: Designation) -> io::Result<Admitted> {
                     Err(mpsc::RecvTimeoutError::Disconnected) => break,
                 };
                 let (pid, ready) = match notice {
-                    Notice::Launched(pid) => (pid, false),
-                    Notice::Ready(pid) => (pid, true),
+                    (pid, Phase::Launched) => (pid, false),
+                    (pid, Phase::Ready) => (pid, true),
                 };
                 let phase = if ready {
                     Report::Ready {
