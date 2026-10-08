@@ -12,7 +12,7 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:c534bb1136c85cbc929caf862f1492484cabf5ac7fc743cfdb53edfbd1737966'
+body_hash: 'sha256:35f4c375f3ea28bd1e384671ba819d58ecf34fd2531be5aad3a8e6c125eab496'
 ---
 
 # `runtime-manager-architecture` plan
@@ -167,6 +167,8 @@ Darwin IPC continuation: the existing linux_manager worker also owns the narrow 
 2026-10-08 S19 socket-path investigation: linux_manager owns bounded read-only canonical location/projection analysis and a candidate amendment draft; notice_review owns primary Apple API comparison, one isolated /dev/fd alias probe, and evidence consistency review. Root owns research, audit, decision reconciliation and any later source assignment. No namespace change, private API, global working-directory mutation or product-directory creation is authorized by these research assignments. The installed-default path defect keeps platform activation gated.
 
 2026-10-08 S19 Darwin transport implementation assignment: under the operator's all-code/build authorization, linux_manager owns the canonical Python transport declaration, lazy location resolution, taxonomy materialisation/reclaim semantics, runtime endpoint and synthetic-fixture integration, native generator projection and conformance vectors, and focused owning tests. Root owns the Rust platform transport resolver, manager compact naming and IPC consumption, native checks, integration review, vault records and commits. notice_review owns the reviewed decision and four prior-ADR reconciliations before source work. Installed Darwin mode without an explicit namespace/member override uses the native transient anchor regardless of inherited storage-root pin; root-derived leaves preserve custom-root and channel identity separation. Development and explicit synthetic namespace isolation remain. No new environment pin or channel inference is introduced. Existing frozen package inputs remain unchanged. Native checks use synthetic directories; no product installation, login registration or session-ending acceptance occurs on these non-disposable hosts.
+
+2026-10-08 S19 instance-ownership continuation: linux_manager owns the bounded Darwin session-lock/IPC capability integration in session/instance.rs, macos/ipc.rs and macos/ipc/socket.rs, with a narrowly scoped helper/test module if needed. Reuse the canonical compact socket name and its existing persistent namespace-lock inode; acquire once and retain explicit custody across server lifetime without implicit reacquisition or premature release. Verify owner/mode/inode and namespace replacement refusal, current native session binding, contention and cleanup with synthetic native tests. Preserve non-Darwin behavior and keep manager-main activation, product registration and graphical acceptance gated. Root owns final implementation review, native build snapshots, shared Cargo runs, vault records and commits. Frozen package builds remain unchanged; discovery uses bounded named-file inspection while the semantic service is unavailable.
 
 ## Verification
 

@@ -10,17 +10,72 @@ use crate::ipc::{
     Request, Response, decode,
     framing::{Frame, encode, write_some},
 };
-use socket::{Directory, Socket, configure, connect_now};
+use socket::{Directory, NamespaceClaim, Socket, configure, connect_now};
 use std::{
     fs, io,
     os::unix::net::UnixStream,
     path::{Path, PathBuf},
+    sync::Arc,
     thread,
     time::{Duration, Instant},
 };
 
 const TIMEOUT: Duration = Duration::from_secs(2);
 const POLL: Duration = Duration::from_millis(10);
+
+/// One native session's namespace capability, acquired before binding IPC.
+pub(crate) struct SessionClaim {
+    namespace: Arc<NamespaceClaim>,
+    session: Session,
+    manager_id: String,
+    owner: Peer,
+}
+
+impl SessionClaim {
+    pub(crate) fn acquire(manager_id: &str, patience: Duration) -> io::Result<Option<Self>> {
+        let process = Process::open(std::process::id())?;
+        let session = Login::open()?.current(&process)?;
+        let owner = Peer {
+            identity: process.identity()?.clone(),
+            process,
+            stream: None,
+        };
+        owner.revalidate(&session)?;
+        let name = super::naming::socket_name(
+            manager_id,
+            &session.uid().to_string(),
+            &session.id().to_string(),
+        )?;
+        let Some(namespace) =
+            NamespaceClaim::acquire(Directory::installed(true)?, &name, patience)?
+        else {
+            return Ok(None);
+        };
+        owner.revalidate(&session)?;
+        Ok(Some(Self {
+            namespace,
+            session,
+            manager_id: manager_id.to_owned(),
+            owner,
+        }))
+    }
+
+    fn bind_socket(&self, manager_id: &str, session: &Session) -> io::Result<Socket> {
+        self.owner.revalidate(&self.session)?;
+        let expected = super::naming::socket_name(
+            manager_id,
+            &session.uid().to_string(),
+            &session.id().to_string(),
+        )?;
+        if self.manager_id != manager_id
+            || self.session != *session
+            || self.namespace.name() != expected
+        {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        Socket::bind_claim(Arc::clone(&self.namespace))
+    }
+}
 
 struct Peer {
     process: Process,
@@ -87,7 +142,7 @@ impl Server {
     /// Package admission and the session lock precede this call.
     pub fn bind_installed(
         package: &Path,
-        _session_lock: &crate::session::instance::SessionLock,
+        session_lock: &crate::session::instance::SessionLock,
     ) -> io::Result<Self> {
         let contract: cadrumo_application::installation::DiscoveryContract =
             serde_json::from_str(crate::contract::INSTALLATION_CONTRACT)
@@ -128,13 +183,9 @@ impl Server {
             stream: None,
         };
         owner.revalidate(&session)?;
-        let directory = Directory::installed(true)?;
-        let name = super::naming::socket_name(
-            crate::identity::MANAGER_ID,
-            &session.uid().to_string(),
-            &session.id().to_string(),
-        )?;
-        let socket = Socket::bind_in(directory, &name)?;
+        let socket = session_lock
+            .macos()
+            .bind_socket(crate::identity::MANAGER_ID, &session)?;
         Ok(Self {
             socket,
             state: None,
@@ -196,6 +247,7 @@ impl Server {
         state: State,
         handle: &mut impl FnMut(&Process, Request) -> Response,
     ) -> io::Result<(Option<State>, bool)> {
+        self.socket.verify()?;
         match state {
             State::Reading {
                 mut stream,

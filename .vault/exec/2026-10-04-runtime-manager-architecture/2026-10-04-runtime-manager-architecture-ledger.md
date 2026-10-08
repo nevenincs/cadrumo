@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0716341dc5b2bde051d75973a7e323336da96b7582b2059ac6684ac6ffffd53'
+body_hash: 'sha256:ab86f578aa1d80968eb780b37700734314626c43ced91e2f50e21c2f72d7670d'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -669,6 +669,11 @@ related:
 - `S19` `verify:` `corrected transport Pyrefly and BasedPyright Windows Linux Darwin` -> `pass`
 - `S19` `verify:` `corrected native Mac Python 59 and Linux Python 29 tests` -> `pass`
 - `S19` `verify:` `corrective source review and unchanged generated Rust contract` -> `pass`
+- `S19` `M` `native/manager/src/session/instance.rs`
+- `S19` `verify:` `Darwin instance native Mac manager 83 and platform 32 tests` -> `pass`
+- `S19` `verify:` `Darwin instance native Mac all-target manager and platform Clippy` -> `pass`
+- `S19` `verify:` `Darwin instance Windows manager all-target Clippy` -> `pass`
+- `S19` `verify:` `Darwin instance independent source review rustfmt and diff check` -> `pass`
 
 ## Notes
 
@@ -720,3 +725,4 @@ related:
 - `S19` Accepted transport-only exception under explicit all-code/build advance authorization; source implementation and native verification pending, S19 remains open. Bounded crossref used as advisory, not complete corpus proof.
 - `S19` S19 remains open for platform activation/lifecycle/registration and acceptance. Frozen package builds unchanged; non-disposable hosts used only for isolated tests/builds and read-only native probes.
 - `S19` Transport-specific findings repaired; remaining full type diagnostic belongs to concurrently edited worker cleanup test. S19 remains open.
+- `S19` S19 remains open; isolated synthetic native evidence only, no main activation or host product/login/session transitions. Shared capability concurrent binding race corrected before native verification.

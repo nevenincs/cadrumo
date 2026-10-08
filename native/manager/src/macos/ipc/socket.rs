@@ -15,6 +15,10 @@ use std::{
         },
     },
     path::{Component, Path, PathBuf},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
     time::Duration,
 };
 pub(super) fn effective_uid() -> u32 {
@@ -96,7 +100,7 @@ impl Directory {
         self.1.join(name)
     }
 
-    fn socket_record(&self, name: &str) -> io::Result<((u64, u64), u16)> {
+    fn record(&self, name: &str) -> io::Result<libc::stat> {
         self.verify()?;
         let name = CString::new(name).map_err(|_| io::ErrorKind::InvalidInput)?;
         // SAFETY: stat is a plain output record; all bytes will be supplied by fstatat.
@@ -113,10 +117,15 @@ impl Directory {
         {
             return Err(io::Error::last_os_error());
         }
+        self.verify()?;
+        Ok(metadata)
+    }
+
+    fn socket_record(&self, name: &str) -> io::Result<((u64, u64), u16)> {
+        let metadata = self.record(name)?;
         if metadata.st_mode & libc::S_IFMT != libc::S_IFSOCK || metadata.st_uid != effective_uid() {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
-        self.verify()?;
         Ok((
             (metadata.st_dev as u64, metadata.st_ino),
             metadata.st_mode & 0o7777,
@@ -171,12 +180,89 @@ impl Directory {
     }
 }
 
-pub(super) struct Socket {
-    pub(super) listener: UnixListener,
+pub(super) struct NamespaceClaim {
+    lock: LocalLock,
     directory: Directory,
     name: String,
     identity: (u64, u64),
-    _lock: LocalLock,
+    binding: AtomicBool,
+}
+
+/// One binding attempt/listener per shared claim, including when its leaf disappears.
+struct BindingLease(Arc<NamespaceClaim>);
+
+impl Drop for BindingLease {
+    fn drop(&mut self) {
+        self.0.binding.store(false, Ordering::Release);
+    }
+}
+
+impl NamespaceClaim {
+    pub(super) fn acquire(
+        directory: Directory,
+        name: &str,
+        patience: Duration,
+    ) -> io::Result<Option<Arc<Self>>> {
+        if name.is_empty() || name.contains(['/', '\0']) || name == "." || name == ".." {
+            return Err(io::ErrorKind::InvalidInput.into());
+        }
+        let path = directory.leaf(name);
+        socket_address(&path)?;
+        directory.verify()?;
+        let Some(lock) = LocalLock::acquire(&directory.leaf(&format!("{name}.lock")), patience)?
+        else {
+            return Ok(None);
+        };
+        let metadata = lock.metadata()?;
+        let claim = Arc::new(Self {
+            lock,
+            directory,
+            name: name.to_owned(),
+            identity: (metadata.dev(), metadata.ino()),
+            binding: AtomicBool::new(false),
+        });
+        claim.verify()?;
+        Ok(Some(claim))
+    }
+
+    pub(super) fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn reserve(self: &Arc<Self>) -> io::Result<BindingLease> {
+        self.binding
+            .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
+            .map_err(|_| io::ErrorKind::AddrInUse)?;
+        Ok(BindingLease(Arc::clone(self)))
+    }
+
+    fn verify(&self) -> io::Result<()> {
+        self.directory.verify()?;
+        let held = self.lock.metadata()?;
+        let current = self.directory.record(&format!("{}.lock", self.name))?;
+        if !held.file_type().is_file()
+            || held.uid() != effective_uid()
+            || held.mode() & 0o7777 != 0o600
+            || held.nlink() != 1
+            || (held.dev(), held.ino()) != self.identity
+            || current.st_mode & libc::S_IFMT != libc::S_IFREG
+            || current.st_uid != effective_uid()
+            || current.st_mode & 0o7777 != 0o600
+            || current.st_nlink != 1
+            || (current.st_dev as u64, current.st_ino) != self.identity
+        {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        self.directory.verify()
+    }
+}
+
+pub(super) struct Socket {
+    pub(super) listener: UnixListener,
+    claim: Arc<NamespaceClaim>,
+    identity: (u64, u64),
+    // Release only after Drop's inode cleanup and the listener descriptor close.
+    _binding: BindingLease,
 }
 
 impl Socket {
@@ -187,55 +273,48 @@ impl Socket {
             .file_name()
             .and_then(|name| name.to_str())
             .ok_or(io::ErrorKind::InvalidInput)?;
-        Self::bind_in(directory, name)
+        let claim = NamespaceClaim::acquire(directory, name, Duration::ZERO)?
+            .ok_or(io::ErrorKind::AddrInUse)?;
+        Self::bind_claim(claim)
     }
 
-    pub(super) fn bind_in(directory: Directory, name: &str) -> io::Result<Self> {
-        let path = directory.leaf(name);
-        socket_address(&path)?;
-        directory.verify()?;
-        let name = name.to_owned();
-        // The canonical no-follow custody path pins its own parent. Recheck its identity
-        // against our socket anchor before using the lock to reclaim a stale leaf.
-        let lock =
-            LocalLock::acquire(&path.with_file_name(format!("{name}.lock")), Duration::ZERO)?
-                .ok_or(io::ErrorKind::AddrInUse)?;
-        if lock.metadata()?.uid() != effective_uid() {
-            return Err(io::ErrorKind::PermissionDenied.into());
-        }
-        let check = Directory::open(path.parent().ok_or(io::ErrorKind::InvalidInput)?)?;
-        if (directory.0.metadata()?.dev(), directory.0.metadata()?.ino())
-            != (check.0.metadata()?.dev(), check.0.metadata()?.ino())
-        {
-            return Err(io::ErrorKind::PermissionDenied.into());
-        }
-        let anchored = directory.leaf(&name);
-        match directory.socket(&name) {
+    pub(super) fn bind_claim(claim: Arc<NamespaceClaim>) -> io::Result<Self> {
+        let binding = claim.reserve()?;
+        claim.verify()?;
+        let anchored = claim.directory.leaf(&claim.name);
+        match claim.directory.socket(&claim.name) {
             Ok(identity) => match connect_now(&anchored) {
                 Err(error) if error.kind() == io::ErrorKind::ConnectionRefused => {
-                    directory.remove(&name, identity)?
+                    claim.verify()?;
+                    claim.directory.remove(&claim.name, identity)?
                 }
                 _ => return Err(io::ErrorKind::AddrInUse.into()),
             },
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error),
         }
+        claim.verify()?;
         let listener = UnixListener::bind(&anchored)?;
-        let identity = directory.socket(&name)?;
+        let identity = claim.directory.socket(&claim.name)?;
         let socket = Self {
             listener,
-            directory,
-            name,
+            claim,
             identity,
-            _lock: lock,
+            _binding: binding,
         };
-        socket.directory.restrict(&socket.name, socket.identity)?;
+        socket.claim.verify()?;
+        socket
+            .claim
+            .directory
+            .restrict(&socket.claim.name, socket.identity)?;
         socket.listener.set_nonblocking(true)?;
+        socket.verify()?;
         Ok(socket)
     }
 
     pub(super) fn verify(&self) -> io::Result<()> {
-        if self.directory.private_socket(&self.name)? != self.identity {
+        self.claim.verify()?;
+        if self.claim.directory.private_socket(&self.claim.name)? != self.identity {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
         Ok(())
@@ -244,7 +323,9 @@ impl Socket {
 
 impl Drop for Socket {
     fn drop(&mut self) {
-        let _ = self.directory.remove(&self.name, self.identity);
+        if self.claim.verify().is_ok() {
+            let _ = self.claim.directory.remove(&self.claim.name, self.identity);
+        }
     }
 }
 
@@ -345,6 +426,135 @@ mod tests {
         }
     }
 
+    fn claim(directory: &Path) -> Option<Arc<NamespaceClaim>> {
+        NamespaceClaim::acquire(
+            Directory::open(directory).unwrap(),
+            "fixture.sock",
+            Duration::ZERO,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn session_and_listener_share_one_lock_until_the_last_owner_releases_it() {
+        for session_first in [false, true] {
+            let scratch = Scratch::new();
+            let session = claim(&scratch.0).unwrap();
+            let original = session.lock.metadata().unwrap().ino();
+            let listener = Socket::bind_claim(Arc::clone(&session)).unwrap();
+            assert!(claim(&scratch.0).is_none());
+            assert!(
+                matches!(Socket::bind_claim(Arc::clone(&session)), Err(error) if error.kind() == io::ErrorKind::AddrInUse)
+            );
+            if session_first {
+                drop(session);
+                assert!(claim(&scratch.0).is_none());
+                listener.verify().unwrap();
+                drop(listener);
+            } else {
+                drop(listener);
+                assert!(claim(&scratch.0).is_none());
+                let rebound = Socket::bind_claim(Arc::clone(&session)).unwrap();
+                drop(rebound);
+                assert!(claim(&scratch.0).is_none());
+                drop(session);
+            }
+            let next = claim(&scratch.0).unwrap();
+            assert_eq!(next.lock.metadata().unwrap().ino(), original);
+            assert!(!scratch.0.join("fixture.sock").exists());
+        }
+    }
+
+    #[test]
+    fn failed_bind_keeps_the_session_claim_without_reacquiring_it() {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("fixture.sock");
+        let session = claim(&scratch.0).unwrap();
+        let other = UnixListener::bind(&path).unwrap();
+        assert!(
+            matches!(Socket::bind_claim(Arc::clone(&session)), Err(error) if error.kind() == io::ErrorKind::AddrInUse)
+        );
+        assert!(claim(&scratch.0).is_none());
+        drop(other);
+        fs::remove_file(&path).unwrap();
+        drop(Socket::bind_claim(Arc::clone(&session)).unwrap());
+        assert!(claim(&scratch.0).is_none());
+        drop(session);
+        assert!(claim(&scratch.0).is_some());
+    }
+
+    #[test]
+    fn removed_socket_leaf_does_not_allow_another_listener_on_the_shared_claim() {
+        let scratch = Scratch::new();
+        let session = claim(&scratch.0).unwrap();
+        let socket = Socket::bind_claim(Arc::clone(&session)).unwrap();
+        fs::remove_file(scratch.0.join("fixture.sock")).unwrap();
+        assert!(
+            matches!(Socket::bind_claim(Arc::clone(&session)), Err(error) if error.kind() == io::ErrorKind::AddrInUse)
+        );
+        drop(socket);
+        drop(Socket::bind_claim(Arc::clone(&session)).unwrap());
+    }
+
+    #[test]
+    fn lock_incarnation_links_and_mode_are_verified_before_bind_poll_and_cleanup() {
+        for change in ["mode", "replacement", "symlink", "hardlink", "removed"] {
+            let scratch = Scratch::new();
+            let session = claim(&scratch.0).unwrap();
+            let socket = Socket::bind_claim(Arc::clone(&session)).unwrap();
+            let path = scratch.0.join("fixture.sock.lock");
+            match change {
+                "mode" => fs::set_permissions(&path, fs::Permissions::from_mode(0o660)).unwrap(),
+                "replacement" => {
+                    fs::rename(&path, scratch.0.join("old.lock")).unwrap();
+                    fs::write(&path, b"replacement").unwrap();
+                    fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+                }
+                "symlink" => {
+                    fs::remove_file(&path).unwrap();
+                    symlink(scratch.0.join("target"), &path).unwrap();
+                }
+                "hardlink" => fs::hard_link(&path, scratch.0.join("alias.lock")).unwrap(),
+                "removed" => fs::remove_file(&path).unwrap(),
+                _ => unreachable!(),
+            }
+            assert!(session.verify().is_err(), "{change}");
+            assert!(socket.verify().is_err(), "{change}");
+            assert!(
+                Socket::bind_claim(Arc::clone(&session)).is_err(),
+                "{change}"
+            );
+            drop(socket);
+            assert!(
+                scratch.0.join("fixture.sock").exists(),
+                "cleanup must refuse lost custody: {change}"
+            );
+            if change == "removed" {
+                assert!(!path.exists());
+            } else if change == "mode" {
+                assert_eq!(fs::metadata(&path).unwrap().mode() & 0o7777, 0o660);
+            }
+        }
+    }
+
+    #[test]
+    fn preexisting_public_lock_is_refused_without_permission_repair() {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("fixture.sock.lock");
+        fs::write(&path, b"").unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+        assert!(
+            NamespaceClaim::acquire(
+                Directory::open(&scratch.0).unwrap(),
+                "fixture.sock",
+                Duration::ZERO
+            )
+            .is_err()
+        );
+        assert_eq!(fs::metadata(&path).unwrap().mode() & 0o7777, 0o644);
+        assert!(!scratch.0.join("fixture.sock").exists());
+    }
+
     #[test]
     fn private_socket_lifetime_reclaims_stale_and_never_displaces_a_live_owner() {
         let scratch = Scratch::new();
@@ -366,7 +576,11 @@ mod tests {
         let (server, _) = socket.listener.accept().unwrap();
         configure(&server).unwrap();
         assert_eq!(
-            socket.directory.private_socket(&socket.name).unwrap(),
+            socket
+                .claim
+                .directory
+                .private_socket(&socket.claim.name)
+                .unwrap(),
             socket.identity
         );
         drop(client);
@@ -409,8 +623,9 @@ mod tests {
         fs::set_permissions(&path, fs::Permissions::from_mode(0o660)).unwrap();
         assert_eq!(
             socket
+                .claim
                 .directory
-                .private_socket(&socket.name)
+                .private_socket(&socket.claim.name)
                 .unwrap_err()
                 .kind(),
             io::ErrorKind::PermissionDenied
@@ -420,7 +635,7 @@ mod tests {
         fs::create_dir(&directory).unwrap();
         fs::set_permissions(&directory, fs::Permissions::from_mode(0o700)).unwrap();
         fs::write(&path, b"replacement").unwrap();
-        assert!(socket.directory.verify().is_err());
+        assert!(socket.claim.directory.verify().is_err());
         drop(socket);
         assert_eq!(fs::read(&path).unwrap(), b"replacement");
         assert!(moved.join("fixture.sock").exists());

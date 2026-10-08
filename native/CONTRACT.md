@@ -192,7 +192,11 @@ operator socket overrides and development namespaces retain their isolation.
 Both Python and Rust retain private directory identities and refuse replacement.
 Generic storage materialization, inventory and reclaim exclude this shared
 namespace, whose ownership lock files survive socket cleanup. The manager uses
-compact channel/owner/session names from the generated contract. This transport
+compact channel/owner/session names from the generated contract. Its session
+owner and IPC listener share one acquired namespace lock; the final holder
+releases it. An exclusive binding permit lasts through socket cleanup and
+listener closure. Admission and polling revalidate the lock's owner, private
+mode, single link and retained inode without replacing or repairing it. This transport
 implementation does not establish installed manager lifecycle acceptance.
 
 Windows relocation passed real package-qualified extensions and transitive-DLL

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:42a02ff778eeb2b049ac41eb53a468888eda8797dff14922c7f038a9cbef4b40'
+body_hash: 'sha256:9d6a1d1b6fdb2ba26ecd43f8cb2c5d11a1019877925e54130f2232cc676c4ab2'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -280,6 +280,14 @@ The measured default pathname blocker is corrected in source. Existing frozen pa
 Configured full checks caught Windows-stub access in the lazy POSIX provider and a noncanonical Python constant alias. Positive platform guards now contain native-only attributes; provider and projection consume the defining product identity directly. Generated Rust contract bytes are unchanged. Owning metadata regeneration enrolled both new core modules and the transport projection, preserving concurrent module inventory edits. Review passes. Pyrefly and BasedPyright pass for Windows, Linux and Darwin; scoped ty, Ruff and format pass; corrected native Mac tests pass all 59 cases and focused Linux tests pass 29. Corrective Mac evidence is build/macos-process-typecheck/python-transport-corrective-evidence.
 
 Full just check-import-boundaries now passes: authoritative stable graph, 4,541 modules loaded, zero hard findings and zero architectural debt (run 20261008T170335.401661Z-check-import-boundaries-53292-611d4abd). Full just check-types now reports only the unrelated concurrent disjoint-cast diagnostic in entrypoints/runtime/tests/test_worker_exit_cleanup.py; no transport diagnostics remain. The full type gate is not claimed passing. Earlier failing checks and corrected verification are retained. S19 and platform acceptance remain open.
+
+### 2026-10-08 S19 Darwin single-instance IPC handoff
+
+The native session owner and listener now share one retained namespace-lock capability instead of reacquiring the canonical socket-name lock. Native owner/session/manager identity is checked at handoff. Lock UID, exact 0600 mode, regular type, single link and original device/inode are checked against the no-follow directory entry during binding, polling and cleanup. Namespace or lock replacement refuses without repair or lock unlink. The last owner releases the lock.
+
+Review caught a concurrent-bind race introduced by sharing the capability; an exclusive binding permit now spans stale-socket checks, binding, socket cleanup and listener closure. Tests cover both session/listener drop orders, failed-bind recovery, rebinding, persistent lock identity, lock replacement/link/mode refusals and removed-socket concurrent binding. Independent review passes.
+
+Native Mac snapshot b737750814fbc44fb0b02fcd34c547b0387a686c6b346dd958c3ec7692e18819 passed all 83 manager and 32 platform tests plus both all-target Clippy checks on pinned Rust 1.96. Windows all-target manager Clippy also passes. Rust formatting and diff checks pass. Evidence is retained in build/macos-process-typecheck/native-instance-evidence and the remote native-transport-check5 directory. Discovery used named source files while semantic search was unavailable. S19 stays open for remaining supervision, lifecycle, registration and acceptance; no manager-main activation or installed graphical-session claim is added. Frozen package inputs remain unchanged.
 
 ## Recommendations
 

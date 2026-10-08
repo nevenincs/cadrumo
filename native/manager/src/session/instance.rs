@@ -12,11 +12,14 @@
 //!   ends, and the next claim takes it.
 //! - *Linux:* `{manager id}.session.{XDG_SESSION_ID}.lock` in the user's private
 //!   `XDG_RUNTIME_DIR`, locked with the kernel-released custody lock.
+//! - *macOS:* the canonical compact IPC name plus `.lock` in the retained Darwin
+//!   transport namespace. Session ownership and IPC share one acquired capability.
 
 use std::io;
 use std::time::Duration;
 
-/// A held per-session lock. Dropping it releases the lock.
+/// A held per-session lock. On macOS the IPC listener shares its capability;
+/// the lock releases only after the final session/listener owner drops it.
 ///
 /// On Windows the mutex belongs to the thread that claimed it, so the lock is held and
 /// released on that thread.
@@ -25,6 +28,15 @@ pub struct SessionLock {
     _mutex: super::windows::SessionMutex,
     #[cfg(target_os = "linux")]
     _lock: crate::custody::LocalLock,
+    #[cfg(target_os = "macos")]
+    claim: crate::macos::ipc::SessionClaim,
+}
+
+#[cfg(target_os = "macos")]
+impl SessionLock {
+    pub(crate) fn macos(&self) -> &crate::macos::ipc::SessionClaim {
+        &self.claim
+    }
 }
 
 const MAXIMUM_IDENTIFIER_BYTES: usize = 128;
@@ -85,7 +97,15 @@ fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<Ses
     Ok(super::linux::claim(&name, patience)?.map(|lock| SessionLock { _lock: lock }))
 }
 
-#[cfg(not(any(windows, target_os = "linux")))]
+#[cfg(target_os = "macos")]
+fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<SessionLock>> {
+    Ok(
+        crate::macos::ipc::SessionClaim::acquire(validated(manager_id)?, patience)?
+            .map(|claim| SessionLock { claim }),
+    )
+}
+
+#[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
 fn claim_platform(manager_id: &str, _patience: Duration) -> io::Result<Option<SessionLock>> {
     validated(manager_id)?;
     Err(io::ErrorKind::Unsupported.into())
