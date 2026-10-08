@@ -1,7 +1,8 @@
 """Real-behavior gate for the `just doctor-browser` provisioning probe.
 
 The success path launches the real, provisioned bundled Chromium. The failure
-path points Playwright at an empty browser directory so the real launch fails.
+path points the product's managed browser directory at an empty one, so the
+real launch fails exactly where the product would.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ def test_run_doctor_fails_with_remediation_when_chromium_is_not_provisioned(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A real launch against an empty browser directory fails loudly with the exact remediation."""
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path))
+    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(tmp_path))
     exit_code = run_doctor()
     assert exit_code == 1
     captured = capsys.readouterr()

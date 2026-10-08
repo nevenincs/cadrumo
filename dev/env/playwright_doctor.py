@@ -19,8 +19,11 @@ Exit codes:
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
+from pathlib import Path
 
+from cadrumo.application.provisioning_browser import playwright_browsers_root
 from cadrumo.core.optional_extras import BROWSER_EXTRA, MissingOptionalExtraError, require_optional_extra
 
 REMEDIATION = "run 'playwright install chromium' (or 'just setup-browser') to install the browser binary"
@@ -36,8 +39,19 @@ async def _probe_bundled_chromium(*, headless: bool) -> None:
         await browser.close()
 
 
+def managed_browsers_root() -> Path:
+    """Return the browser directory the product launches from.
+
+    Playwright's own default is a per-user cache the product never reads, so a
+    probe or install against it would report a browser the product cannot use.
+    """
+    return playwright_browsers_root()
+
+
 def run_doctor(*, headless: bool = True) -> int:
     """Probe the bundled Chromium; return the process exit code."""
+    previous = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(managed_browsers_root())
     try:
         asyncio.run(_probe_bundled_chromium(headless=headless))
     except MissingOptionalExtraError as exc:
@@ -53,6 +67,11 @@ def run_doctor(*, headless: bool = True) -> int:
             file=sys.stderr,
         )
         return 1
+    finally:
+        if previous is None:
+            os.environ.pop("PLAYWRIGHT_BROWSERS_PATH", None)
+        else:
+            os.environ["PLAYWRIGHT_BROWSERS_PATH"] = previous
     print("playwright-doctor: bundled Chromium launches successfully.")
     return 0
 

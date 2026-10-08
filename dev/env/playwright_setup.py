@@ -9,13 +9,14 @@ import sys
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
-from .playwright_doctor import run_doctor
+from .playwright_doctor import managed_browsers_root, run_doctor
 
 
 def _install(*arguments: str, system: bool = False) -> int:
     """Run Playwright's installer without CI forcing an installed system channel to reinstall."""
     environment = dict(os.environ)
     environment.pop("CI", None)
+    environment["PLAYWRIGHT_BROWSERS_PATH"] = str(managed_browsers_root())
     command = [sys.executable, "-m", "playwright", *arguments]
     if system and sys.platform == "linux" and os.geteuid() != 0:
         sudo = shutil.which("sudo")
