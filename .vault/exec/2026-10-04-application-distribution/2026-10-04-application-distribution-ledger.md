@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:8368ccf276e28d49597eff8833a2950f3827db4ed52671705ecb6488e4ac00de'
+body_hash: 'sha256:c1648e30d2c69316bcfab1705959ae27ac16db8c6c17cee8028cdd59c5c54305'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -407,6 +407,9 @@ related:
 - `S15` `verify:` `Actual full desktop DEB and RPM inspection` -> `pass`
 - `S15` `verify:` `Exact rebuilt desktop strict Debian provider-symbol proof` -> `pass`
 - `S15` `verify:` `WSL strict docs producer and verified manylinux cache consumption` -> `pass`
+- `S05` `verify:` `Mac native-installer and hdiutil integrity` -> `pass`
+- `S05` `verify:` `Windows full MSI cabinet compilation` -> `fail`
+- `S05` `verify:` `Windows post-build complete input verification` -> `pass`
 
 ## Notes
 
@@ -453,3 +456,4 @@ related:
 - `S05` Original outcome preserved. Existing committed pagefind fix narrowly overlaid into isolated source with hashes. CMake retry18081 pending, gates unchanged.
 - `S16` Root integrated source review PASS; installed native product registry and interactive acceptance unproven, gates unchanged. Evidence in audit and worker verification handoff.
 - `S15` Hash-verified local artifacts and full provenance in linux-s15-final-handoff. Native installation gates unchanged; graphical lifecycle and ARM64 acceptance unproven.
+- `S05` DMG built and copied; separate Mac live qualification failed. Windows long-source cabinet defect reproduced; no native installations.
