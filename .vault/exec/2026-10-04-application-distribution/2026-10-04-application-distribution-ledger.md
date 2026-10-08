@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:b85096aad54bc9d3ae80331d098d928337f556be831b08a50874879e1ca3d9e7'
+body_hash: 'sha256:7f1d3e9e2f8a3eacca91b56873002481bca2d92c04fa3b4dd54782b1410baca7'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -265,6 +265,12 @@ related:
 - `S09` `verify:` `installer Release DLL and runner (33.02s)` -> `pass`
 - `S09` `verify:` `real four-product MSI owner gate regression (7.61s)` -> `pass`
 - `S09` `verify:` `independent combined recovery and cleanup review` -> `pass`
+- `S09` `verify:` `application.rust (38.28s)` -> `pass`
+- `S09` `verify:` `installer.rust (9.42s)` -> `pass`
+- `S09` `verify:` `installer and application pinned Clippy (10.39s 8.18s)` -> `pass`
+- `S09` `verify:` `installer Release DLL runner (25.83s)` -> `pass`
+- `S09` `verify:` `real four owner-MSI gate checks (5.91s)` -> `pass`
+- `S09` `verify:` `independent Removing recovery source review` -> `pass`
 
 ## Notes
 
@@ -285,3 +291,4 @@ related:
 - `S09` Partial checkpoint: native-owned removal, quiet UI, cached native custody and typed publication rollback. Literal gate remains. Positive native execution, interrupted native commit recovery, relocated upgrade and disposable two-release acceptance are pending. CMake operation targets are authored in the shared distribution integration file and will checkpoint with its concurrent RPM payload-preservation fix under S05.
 - `S05` Partial S05 checkpoint: runtime-only native packages; desktop/docs/full lifecycle acceptance remain pending. All installation gates retained.
 - `S09` Partial S09: post-removal interrupted settlement and native interactive two-release acceptance remain pending; installation gates retained.
+- `S09` Native empty-transaction settlement and interactive lifecycle acceptance remain unverified; all installation gates retained.

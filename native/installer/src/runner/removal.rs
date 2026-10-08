@@ -125,9 +125,39 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
     } else {
         None
     };
-    let reservation = match release {
-        Some(release) => store.begin_removal(release).map(Guard::Version),
-        None => store.snapshot().and_then(|snapshot| {
+    let snapshot = match store.snapshot() {
+        Ok(snapshot) => snapshot,
+        Err(_) => return rollback(transaction, "native_removal_publication_invalid"),
+    };
+    let target = match release {
+        Some(release) => snapshot
+            .versions()
+            .find(|(name, _)| *name == release)
+            .map(|(_, product)| &product.owner),
+        None => snapshot
+            .registration()
+            .map(|registration| &registration.owner),
+    };
+    let Some(target) = target else {
+        return rollback(transaction, "native_removal_owner_unknown");
+    };
+    if target.context() != &context || target.prefix() != plan.prefix {
+        return rollback(transaction, "native_removal_owner_differs");
+    }
+    let absent = match MsiInventory.locate(target) {
+        Ok(None) => true,
+        Ok(Some(observed)) if observed == *target => false,
+        _ => return rollback(transaction, "native_removal_owner_unavailable"),
+    };
+    // Absence can finish only an older durable reservation. A fresh Ready record
+    // must not be turned into Removing merely to manufacture recovery eligibility.
+    let reservation = match (release, absent) {
+        (Some(release), true) => store.resume_removal(release).map(Guard::Version),
+        (None, true) => store
+            .resume_registration_removal(target)
+            .map(Guard::Registration),
+        (Some(release), false) => store.begin_removal(release).map(Guard::Version),
+        (None, false) => store.snapshot().and_then(|snapshot| {
             let registration = snapshot
                 .registration()
                 .ok_or_else(|| Error::Invalid("registration owner is unknown".into()))?;
@@ -140,6 +170,9 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
         Ok(guard) => guard,
         Err(_) => return rollback(transaction, "native_removal_busy_or_unavailable"),
     };
+    if absent {
+        return recover_absence(transaction, guard, &plan, &inventory, release.is_some());
+    }
     let prepared = (|| -> Result<_, Error> {
         let owner = guard.owner();
         if owner.context() != &context || owner.prefix() != plan.prefix {
@@ -274,6 +307,75 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
     }
 }
 
+/// Publication-only reconciliation: no cached product resurrection or file deletion.
+/// A successful new native settlement is mandatory even though this transaction
+/// has no package operations. Unsupported empty transactions retain Removing.
+fn recover_absence(
+    transaction: Transaction,
+    guard: Guard<'_>,
+    plan: &Plan,
+    inventory: &[crate::admission::Product],
+    version: bool,
+) -> MaintenanceResult {
+    let ready = (|| -> Result<(), Error> {
+        prove_absence(inventory, guard.owner(), &MsiInventory)?;
+        if !version {
+            // Native absence does not authorize deleting a surviving stable image.
+            match std::fs::symlink_metadata(plan.contract.manager_member()?.under(&plan.prefix)) {
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                _ => return Err(Error::Integrity("stable registration entry remains".into())),
+            }
+        }
+        Ok(())
+    })();
+    if ready.is_err() {
+        // Do not restore Ready from a failed reconciliation attempt.
+        return if transaction.rollback().is_err() {
+            report(Outcome::NativeUnsettled, "native_rollback_unsettled")
+        } else {
+            report(
+                Outcome::RolledBackPublicationPending,
+                "native_removal_recovery_refused",
+            )
+        };
+    }
+    if transaction.commit().is_err() {
+        return report(Outcome::NativeUnsettled, "native_recovery_commit_failed");
+    }
+    let settled = windows::inventory(plan.scope)
+        .map_err(native_error)
+        .and_then(|products| prove_absence(&products, guard.owner(), &MsiInventory));
+    if settled.is_err() || guard.complete().is_err() {
+        return report(
+            Outcome::CommittedPublicationPending,
+            "native_removal_recovery_fenced",
+        );
+    }
+    if version {
+        report(Outcome::Removed, "version_removal_recovered")
+    } else {
+        report(Outcome::Unregistered, "registration_removal_recovered")
+    }
+}
+
+fn prove_absence(
+    products: &[crate::admission::Product],
+    owner: &NativeOwner,
+    inventory: &impl NativeProductInventory,
+) -> Result<(), Error> {
+    crate::admission::validate_inventory(products).map_err(native_error)?;
+    if products.iter().any(|product| {
+        crate::admission::canonical_guid(&product.code)
+            .is_ok_and(|code| code == owner.product_code())
+    }) || inventory.locate(owner)?.is_some()
+    {
+        return Err(Error::Integrity(
+            "native removal absence is not established".into(),
+        ));
+    }
+    Ok(())
+}
+
 fn rollback_removal(
     transaction: Transaction,
     guard: Guard<'_>,
@@ -290,4 +392,46 @@ fn rollback_removal(
         );
     }
     report(Outcome::NativeRolledBack, code)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cadrumo_application::installation::maintenance::NativeContext;
+
+    #[test]
+    fn recovery_absence_requires_complete_inventory_and_exact_native_query() {
+        struct Inventory(Result<Option<NativeOwner>, &'static str>);
+        impl NativeProductInventory for Inventory {
+            fn locate(&self, _: &NativeOwner) -> Result<Option<NativeOwner>, Error> {
+                self.0
+                    .clone()
+                    .map_err(|message| Error::Integrity(message.into()))
+            }
+        }
+        let root = tempfile::tempdir().unwrap();
+        let owner = NativeOwner::new(
+            "12345678-1234-1234-1234-123456789ABC".into(),
+            NativeContext::Machine,
+            root.path().to_owned(),
+        )
+        .unwrap();
+        let absent = Inventory(Ok(None));
+        assert!(prove_absence(&[], &owner, &absent).is_ok());
+        assert!(prove_absence(&[], &owner, &Inventory(Ok(Some(owner.clone())))).is_err());
+        assert!(prove_absence(&[], &owner, &Inventory(Err("native query unavailable"))).is_err());
+        let mut product = crate::admission::Product {
+            code: owner.product_code().into(),
+            family: None,
+            scope: Scope::User,
+            sid: Some("S-1-5-21-1000".into()),
+        };
+        // Exact-context absence cannot disguise the same code in another account.
+        assert!(prove_absence(&[product.clone()], &owner, &absent).is_err());
+        product.code = "22345678-1234-1234-1234-123456789ABC".into();
+        assert!(prove_absence(&[product.clone()], &owner, &absent).is_ok());
+        assert!(prove_absence(&[product.clone(), product.clone()], &owner, &absent).is_err());
+        product.code = "malformed".into();
+        assert!(prove_absence(&[product], &owner, &absent).is_err());
+    }
 }

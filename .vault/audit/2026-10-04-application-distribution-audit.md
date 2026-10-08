@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:7356b35e1aac424834150a73ec0a1902b2368ccec4005c13e7ae8d6c6ae3ec74'
+body_hash: 'sha256:696b251f39ccde1a91b251817a73d20311eeaef4844c1bd396c55af591e73ce3'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -151,6 +151,14 @@ S09 recovery now permits registration/publication disagreement only with the exa
 The source review also identified that install-conflict admission prevented explicit uninstall from resolving opposite-scope conflicts. Removal now uses complete native inventory validation and exact target account/scope/family admission, followed by the existing prefix, context, cached-role, namespace and lease checks. It does not require unrelated conflicting products to be absent. The existing MSI scope callback excludes REMOVE=ALL. Focused tests cover successful conflict cleanup admission and wrong-account, missing, duplicate and unknown-target refusal.
 
 Verification: 19 native installer tests passed (43.01s), pinned Rust 1.96 all-target Clippy with warnings denied passed (12.00s), Release adapter/runner built (33.02s), and the real four-product owner-CA MSI compile/decompile/refusal regression passed (7.61s; var/storage/development/.logs/test-runs/2026-10-08/20261008T124106.504754Z-pytest-85552-126f4706/run.log). Independent combined source review PASS, no material findings. Native installation gates remain false. Post-removal crash recovery, anchored same-version repair policy and real interactive two-release native acceptance remain unresolved; no product was installed or removed.
+
+### 2026-10-08 interrupted removal recovery | low | Durable Removing can settle only through fresh native commit and absence checks
+
+S09 adds shared resume guards for already durable Removing records under the publication lock and retained exact-version leases. Ready plus observed absence cannot initiate recovery. The native runner validates the complete inventory and exact owner absence before a new owned transaction settles, then checks them again before finalizing removal. Registration recovery also refuses a surviving stable manager entry. No cached MSI is recreated and no file is directly removed by this recovery path. Failed/unsupported settlement retains the Removing fence and reports pending or unsettled visibility rather than completed removal.
+
+Configured application.rust passed (38.28s) and installer.rust passed (9.42s); pinned Rust 1.96 all-target Clippy passed for installer (10.39s) and application (8.18s). Release DLL/runner built (25.83s); all four actual owner-CA MSIs rebuilt/decompiled and runner refusal checks passed (5.91s), log var/storage/development/.logs/test-runs/2026-10-08/20261008T125335.190766Z-pytest-50808-f4952cfc/run.log. Independent source review PASS.
+
+Microsoft's MsiBeginTransactionW/MsiEndTransaction contract establishes current-owner settlement but does not explicitly guarantee a zero-package transaction commit. Actual support for this branch remains disposable Windows acceptance work; code preserves the fence on any failure. Positive native maintenance and interactive two-release lifecycle acceptance are still unverified and all installation gates remain closed. S09 remains open.
 
 ## Recommendations
 

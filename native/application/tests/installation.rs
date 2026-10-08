@@ -295,6 +295,8 @@ fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atom
     assert_eq!(snapshot.desktop_anchor(), Some("1.0.0"));
     assert!(store.anchors(None, None).is_err());
     assert!(store.begin_removal("1.0.0").is_err());
+    assert!(store.resume_removal("1.0.0").is_err());
+    assert!(store.resume_registration_removal(&registration).is_err());
     let removal = store.begin_registration_removal(&registration).unwrap();
     assert!(store.exclusive_maintenance().is_err());
     drop(removal); // Interrupted uninstall is not positive absence evidence.
@@ -303,6 +305,18 @@ fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atom
         RegistrationPhase::Removing
     );
     assert_eq!(store.snapshot().unwrap().manager_anchor(), Some("1.0.0"));
+    let wrong_account = NativeOwner::new(
+        registration.product_code().into(),
+        NativeContext::User {
+            sid: "S-1-5-21-1000".into(),
+        },
+        registration.prefix().to_owned(),
+    )
+    .unwrap();
+    assert!(store.resume_registration_removal(&wrong_account).is_err());
+    let resumed = store.resume_registration_removal(&registration).unwrap();
+    assert!(store.exclusive_maintenance().is_err());
+    drop(resumed);
     assert!(
         store
             .begin_registration_removal(&registration)
@@ -341,7 +355,7 @@ fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atom
             .is_err()
     );
     store
-        .begin_registration_removal(&registration)
+        .resume_registration_removal(&registration)
         .unwrap()
         .complete(&Inventory(false))
         .unwrap();
@@ -354,6 +368,7 @@ fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atom
     assert!(snapshot.desktop_anchor().is_none());
     assert!(store.acquire("1.0.0", &manifest).is_ok());
     assert!(store.begin_registration_removal(&registration).is_err());
+    assert!(store.resume_registration_removal(&registration).is_err());
 }
 
 #[test]
@@ -390,8 +405,10 @@ fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_
         .prepare("1.0.0", owner.clone(), manifest.clone())
         .unwrap();
     assert!(store.begin_removal("1.0.0").is_err());
+    assert!(store.resume_removal("1.0.0").is_err());
     store.publish("1.0.0", &package, &fixture.contract).unwrap();
     drop(install);
+    assert!(store.resume_removal("1.0.0").is_err());
     let reader = store.acquire("1.0.0", &manifest).unwrap();
     assert!(matches!(
         store.prepare("1.0.0", owner.clone(), manifest.clone()),
@@ -415,6 +432,7 @@ fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_
     let present = Inventory(Ok(Some(owner.clone())));
     let absent = Inventory(Ok(None));
     let unavailable = Inventory(Err("native inventory unavailable"));
+    assert!(store.resume_removal("1.0.0").is_err());
     assert!(
         store
             .begin_removal("1.0.0")
@@ -423,9 +441,12 @@ fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_
             .is_err()
     );
     assert!(store.acquire("1.0.0", &manifest).is_err());
+    let resumed = store.resume_removal("1.0.0").unwrap();
+    assert!(store.resume_removal("1.0.0").is_err());
+    drop(resumed);
     assert!(
         store
-            .begin_removal("1.0.0")
+            .resume_removal("1.0.0")
             .unwrap()
             .complete(&unavailable)
             .is_err()
@@ -471,12 +492,15 @@ fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_
         .rollback(&fixture.contract, &present)
         .unwrap();
     assert!(store.acquire("1.0.0", &manifest).is_ok());
+    assert!(store.resume_removal("1.0.0").is_err());
+    drop(store.begin_removal("1.0.0").unwrap());
     store
-        .begin_removal("1.0.0")
+        .resume_removal("1.0.0")
         .unwrap()
         .complete(&absent)
         .unwrap();
     assert!(store.acquire("1.0.0", &manifest).is_err());
+    assert!(store.resume_removal("1.0.0").is_err());
     // Even after native absence, the shared owner never substitutes direct deletion.
     assert!(package.join("python.zip").is_file());
 }

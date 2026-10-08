@@ -709,6 +709,23 @@ impl Store {
         &self,
         owner: &NativeOwner,
     ) -> Result<RegistrationRemoval<'_>, Error> {
+        self.registration_removal(owner, false)
+    }
+
+    /// Resume only a previously persisted removal. This does not infer native
+    /// settlement; the adapter must own a fresh transaction and prove absence.
+    pub fn resume_registration_removal(
+        &self,
+        owner: &NativeOwner,
+    ) -> Result<RegistrationRemoval<'_>, Error> {
+        self.registration_removal(owner, true)
+    }
+
+    fn registration_removal(
+        &self,
+        owner: &NativeOwner,
+        resume: bool,
+    ) -> Result<RegistrationRemoval<'_>, Error> {
         let lease = self.exclusive_maintenance()?;
         let _writer = lock(&self.root.join("transaction.lock"), false, false)?;
         let mut state = self.read()?;
@@ -719,6 +736,11 @@ impl Store {
         if &registration.owner != owner || registration.phase == RegistrationPhase::Absent {
             return Err(Error::Integrity(
                 "registration removal owner differs".into(),
+            ));
+        }
+        if resume && registration.phase != RegistrationPhase::Removing {
+            return Err(Error::Integrity(
+                "registration removal was not reserved".into(),
             ));
         }
         registration.phase = RegistrationPhase::Removing;
@@ -835,6 +857,16 @@ impl Store {
     /// Fence new launches before the adapter checks all-session process use and invokes MSI.
     /// Dropping this guard leaves Removing durable; only explicit native recovery may restore it.
     pub fn begin_removal(&self, release: &str) -> Result<Removal<'_>, Error> {
+        self.removal(release, false)
+    }
+
+    /// Reacquire exclusion for an interrupted removal without creating a new
+    /// reservation from Ready. Anchors and live readers still prohibit removal.
+    pub fn resume_removal(&self, release: &str) -> Result<Removal<'_>, Error> {
+        self.removal(release, true)
+    }
+
+    fn removal(&self, release: &str, resume: bool) -> Result<Removal<'_>, Error> {
         version(release)?;
         let _writer = lock(&self.root.join("transaction.lock"), false, false)?;
         let mut state = self.read()?;
@@ -847,6 +879,9 @@ impl Store {
             .versions
             .get_mut(release)
             .ok_or_else(|| Error::Invalid("unknown native release".into()))?;
+        if resume && product.phase != Phase::Removing {
+            return Err(Error::Integrity("version removal was not reserved".into()));
+        }
         if product.phase == Phase::Pending {
             return Err(Error::Integrity(
                 "uncommitted installation needs native install recovery".into(),
