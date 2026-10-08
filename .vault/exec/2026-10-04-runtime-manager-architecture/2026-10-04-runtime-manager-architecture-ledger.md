@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:09b7af007b2f45cfed2bc07f0858787cb276ef208c751fc9b6bd61613c6c3c8e'
+body_hash: 'sha256:cd1108c1d36d01a0ec7fbfa35e0e0a1ec531ce2e01f5d59ee61942ec3af792d0'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -714,6 +714,8 @@ related:
 - `S19` `verify:` `Windows manager154 tests and all-target Clippy` -> `pass`
 - `S19` `verify:` `independent inactive AppKit host source review` -> `pass`
 - `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
+- `S19` `verify:` `isolated Linux platform25 and manager90 library tests` -> `pass`
+- `S19` `verify:` `isolated Linux platform and manager all-target release Clippy` -> `pass`
 
 ## Notes
 
@@ -773,3 +775,4 @@ related:
 - `S19` Shared lifecycle prerequisite only; native activation and versioned macOS installation remain incomplete. Non-disposable hosts received only isolated tests.
 - `S19` Errors now retain Running ownership rather than discarding it; Effects::Unknown unchanged. Native host activation and graphical acceptance remain open.
 - `S19` Check14 warning corrected by using typed safe API; no suppression. Main activation remains gated; no GUI loop, host signal policy, login or session-ending tests performed.
+- `S19` Direct native verification using configured toolchain with current canonical generated Linux contract; no CMake package acceptance or production host activation.
