@@ -244,7 +244,7 @@ def test_import_refuses_a_pdf_below_the_profile_coverage_minimum(tmp_path: Path)
         refused = _import(profile, partial_pdf)
         assert refused.exit_code != 0, refused.output
         error = require_error_document(refused.output)["error"]
-        assert error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert error["code"] == "FAIL_BORRADOR_PARSE"
         assert error["context"]["reason"] == "FAIL_BORRADOR_PARSE"
         assert error["context"]["effect"] == "none"
 
