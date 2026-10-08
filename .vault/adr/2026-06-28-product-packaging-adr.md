@@ -3,15 +3,15 @@ tags:
   - '#adr'
   - '#product-packaging'
 date: '2026-06-28'
-modified: '2026-10-03'
-body_hash: 'sha256:4ffeeb580bde36e7346e32ecfa61869d2fb9da5167f9eed6ed32c98708839bf4'
+modified: '2026-10-07'
+body_hash: 'sha256:15338ab0dee8850c212f4a767062272cc3312b5c4c7e39d9ac113021926b591b'
 related:
   - '[[2026-06-28-product-packaging-research]]'
   - '[[2026-06-28-product-packaging-reference]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-10-03-duplication-remediation-hashing-proof-boundaries-adr]]'
+  - '[[2026-10-07-broad-test-failure-repair-corpus-companion-adr]]'
 ---
-
 # `product-packaging` adr: `Exact-version Cadrumo wheel cohort and clean-install proof` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -127,3 +127,9 @@ controller to which those import requirements apply. It permits no checkout depe
 in the installed target and no self-supplied expected hashing implementation. Cohort,
 companion, resource, public command and publication commitments are unchanged. This
 ruling records authority, not completed rollout or a foreign source-write release.
+
+## Scoped amendment (2026-10-07)
+
+Explicitly approved by the user and accepted in `2026-10-07-broad-test-failure-repair-corpus-companion-adr`. This ruling controls current implementation within its stated scope; the preceding text is preserved as decision history.
+
+The mandatory exact-version Python cohort now contains four distributions: cadrumo and three data companions. cadrumo-data-manuals owns manuals binaries; cadrumo-data-official owns aeat_official and eu_official binaries; cadrumo-data-normatives owns only corpus/normatives binaries. The root requires all three companions at its exact version. All four distributions share the version. Companion ownership remains disjoint and exhaustive; all resource paths, source bytes, namespace and immutable-cohort verification constraints remain binding. Prior references to two companions and three distributions describe the earlier partition.

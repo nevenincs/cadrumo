@@ -86,7 +86,7 @@ The full structural probe enumerated 160 revisions under the current guard: 61 e
 
 Native Modelo 131 demonstration: https://docs.google.com/spreadsheets/d/1pJkK3ymi_MlIt55nOmFcNl2wui45aV2pg1gKPAolBak/edit . Saved in the existing Cadrumo folder. Refreshed from the original typed registry-derived demonstration plan. API readback verified activity text and numeric bindings and fictional/manual-result notices. Native calculation perturbation: Entradas D4 10000 gives result 580; 11000 gives 600; blank gives Sin dato; restored 10000 gives 580. Activity result 400 remains manually supplied, explicitly disclosed. No browser visual verification of this increment. Other models and official page fidelity remain outstanding; S05 and S06 are not complete.
 
-Y drive reported zero free space. Moved only this task's temporary 131 publication request directory to C:/Users/hello/AppData/Local/Temp/cadrumo-131-native-proof-20261005. Subsequent drive check showed approximately 458 MB free. No project data deleted. Temporary request files are implementation intermediates, not user deliverables.
+Y drive reported zero free space. Moved only this task's temporary 131 publication request directory to <operator-home>/AppData/Local/Temp/cadrumo-131-native-proof-20261005. Subsequent drive check showed approximately 458 MB free. No project data deleted. Temporary request files are implementation intermediates, not user deliverables.
 
 ### 2026-10-05 authored Modelo 111 calculation layout and native proof
 

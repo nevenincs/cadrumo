@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#ci-speed-redesign'
 date: '2026-07-20'
-modified: '2026-10-03'
-body_hash: 'sha256:8782ce9beaf28637b613028e9a501c3377021f59e55bd6012219dea61df372d8'
+modified: '2026-10-07'
+body_hash: 'sha256:0b2670ab63d51e3776b59aa4dc09dc8e458e8c1a2bf5a384e987669afb93e861'
 related:
   - '[[2026-07-20-release-asset-transport-audit]]'
   - '[[2026-07-20-release-asset-transport-reference]]'
@@ -44,6 +44,8 @@ The hard budgets set by the operator: the per-push pipeline wall is at most 10 m
 7. **Quick/full split with in-process lane concurrency, a dispatch-only full campaign, a two-job CI with a nightly full-conformance lane, and pytest-timeout everywhere** — accepted.
 
 ## Constraints
+
+**Operator-authorized test-completion amendment, 2026-10-07.** Ordinary correctness tests must be allowed to finish on different machines without a repository-imposed elapsed-time cutoff derived from one workstation. This supersedes only D4's shared pytest `timeout = 300`, the earlier assumption that five minutes can distinguish a genuine wedge, and generic documentation sequence child/pool ceilings. Preserve the original observations and rollout as history. The pytest-timeout dependency remains available for deliberately requested deadlines and tests of timeout behavior. Documentation subprocess checks have no elapsed deadline by default; callers may supply a finite positive deadline explicitly. Keep native process ownership, cleanup, truthful worker-crash reporting and all correctness assertions. Continue measuring and optimizing actual runtime CPU, loading and repetition costs; test completion is independent of those performance measurements. Authorization is the user's explicit 2026-10-07 request to let tests complete across machines while continuing runtime optimization. Evidence is the real M100 setup/load profiling and completed runtime repairs in `2026-10-07-modelo-runtime-performance-audit`.
 
 - The release-asset-transport ADR's invariants (single-creator drafts, terminal seal, layered Gate 2 verification, scrub-at-birth, GC namespace) are untouched; this ADR changes when and how fast workflows run, never what evidence is or how it is verified.
 - **Trusted-source predicate (operator-approved reconciliation).** Every consumer of a full-campaign run — the scoop, homebrew, and claude acquisition lanes' source-run validation and `publish-release.yml` Gate 2 — replaces its former `event == push` pin with a rule of equal or stronger integrity: the run must still be the packaging-smoke workflow path and name, conclusion success, head repository this repo, and head branch `main`; its event must be either `push` (historical campaign runs stay promotable — the live-proved refusal of run 29746043967's failed source stands unchanged) or `workflow_dispatch` with the run's `head_sha` additionally verified to lie on `main` history via the GitHub compare API (`compare/main...<sha>` status `identical` or `behind`). The push pin only ever trusted the push router; the dispatch path verifies the actual commit ancestry, so the dispatch acceptance is strictly stronger, and dispatch already requires repo write access. The head-SHA-equals-`source_commit` binding and every downstream hash check are unchanged.

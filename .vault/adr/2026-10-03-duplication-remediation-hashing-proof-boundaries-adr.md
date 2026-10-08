@@ -25,7 +25,7 @@ Removing `dev/packaging/hashing.py` needs a defined ownership boundary between o
 
 `2026-07-01-import-centralization-adr` requires one defining public owner, direct imports and atomic removal. `2026-06-28-product-packaging-adr` and `2026-07-15-distribution-installation-readiness-adr` require clean, cohort-bound installed proof. `2026-06-01-calculation-test-oracle-discipline-adr` preserves independently grounded expected numeric outcomes. These commitments do not require every controller process to be stdlib-only; they require explicit provenance and independence for the actual proof.
 
-The reviewed P08 packet is `C:/Users/hello/AppData/Local/Temp/cadrumo-p08-canonical-hashing-decision-20261003T1605Z-4fd8c1a7.md` (raw SHA256 `0F135B677F41B459DB82AEE0F43830F08E9150D0E9D841DC135EAB01FA40E5DE`); its boundary addendum is `C:/Users/hello/AppData/Local/Temp/cadrumo-p08-current-boundary-addendum-20261003T1614Z-862bc74e.md` (raw SHA256 `AB56E442A68E2B364529E21B7461483D4AD1DE1DC289FF10097A3B7528711ED6`). Their original consumer pins are not a current source-write grant.
+The reviewed P08 packet is `<operator-home>/AppData/Local/Temp/cadrumo-p08-canonical-hashing-decision-20261003T1605Z-4fd8c1a7.md` (raw SHA256 `0F135B677F41B459DB82AEE0F43830F08E9150D0E9D841DC135EAB01FA40E5DE`); its boundary addendum is `<operator-home>/AppData/Local/Temp/cadrumo-p08-current-boundary-addendum-20261003T1614Z-862bc74e.md` (raw SHA256 `AB56E442A68E2B364529E21B7461483D4AD1DE1DC289FF10097A3B7528711ED6`). Their original consumer pins are not a current source-write grant.
 
 ## Considered options
 

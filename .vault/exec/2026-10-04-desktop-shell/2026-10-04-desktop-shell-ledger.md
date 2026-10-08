@@ -570,7 +570,7 @@ related:
 - `S04` Live tests used S02's relocated build-1761 package (hard-linked copy) plus cadrumo-runtime.exe copied from build/windows-x64/runtime-entrypoint/bin/Release into its bin/; contract regenerated from current dev/packaging/native/generate.py. desktop-host-test overall reports 2 failures in S05 docs and S06 logs live tests, not S04.
 - `S04` Real WebView2 interceptor throughput unmeasured: agent runs in Session 0 (WebView2 'Invalid window handle'); host-side interceptor measured with the mock runtime; delivery measurement left to S10.
 - `S09` Terminal transport wired to the S04 contract as stated by the orchestrator; awaiting a live smoke in the desktop host before S09 closes.
-- `S07` S07 stays open: tauri-plugin-window-state 2.5.0 always runs `create_dir_all(app_config_dir)` on save, creating `C:\Users\hello\AppData\Roaming\<identifier>` outside the canonical root even with an absolute filename; not added pending a ruling
+- `S07` S07 stays open: tauri-plugin-window-state 2.5.0 always runs `create_dir_all(app_config_dir)` on save, creating `<operator-home>\AppData\Roaming\<identifier>` outside the canonical root even with an absolute filename; not added pending a ruling
 - `S07` No real WebView2 run: agent runs in Session 0 (non-interactive); settings readback, F5/Ctrl+R/F12/Ctrl+P and the probe on this machine are left to S10
 - `S07` Context menus refuse with `unsupported_platform` off Windows: the GTK popup returns before the menu closes, so the sentinel cannot await the choice
 - `S07` Busy popup refusal uses `session_unavailable/webview;` no dedicated error code exists in the application crate

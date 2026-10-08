@@ -3,15 +3,15 @@ tags:
   - '#adr'
   - '#arch-remediation-data-budget'
 date: '2026-07-02'
-modified: '2026-08-15'
-body_hash: 'sha256:9cbdf2eb9741448d6a486b40703d30208ee6d1fda364e946a6dfcd2ae205f5b6'
+modified: '2026-10-07'
+body_hash: 'sha256:f64f318931f0841b6524e58b8ab74d71c671e5e322b1293f2c487332d42bb1fc'
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-06-arch-remediation-data-budget-research]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
+  - '[[2026-10-07-broad-test-failure-repair-corpus-companion-adr]]'
 ---
-
 # `arch-remediation-data-budget` adr: `Whole-tree and split-distribution data budgets` | (**status:** `accepted`)
 
 ## Problem statement
@@ -93,3 +93,9 @@ The product's download and storage requirements remain. Promotion must coordinat
 PyPI multi-file uploads are not atomic. These checks reduce but don't eliminate the risk of partial publication.
 
 Every release and each CI run enrolled in the real-artifact packaging gates pays the build-and-measure cost. Failed gates can block campaigns or releases. Resolution may require a new packaging boundary, another companion wheel, or a reviewed ceiling increase. This friction is an intended control.
+
+## Scoped amendment (2026-10-07)
+
+Explicitly approved by the user and accepted in `2026-10-07-broad-test-failure-repair-corpus-companion-adr`. This ruling controls current implementation within its stated scope; the preceding text is preserved as decision history.
+
+The measured official wheel is 105,862,342 bytes and the manuals wheel is 96,673,670 bytes. The premise that both wheels fit and immediate repartitioning is unwarranted is historical. Three mandatory exact-version companions replace two: manuals, official (AEAT/EU), and normatives (only corpus/normatives binaries). Their ownership remains disjoint and exhaustive, with derived surfaces retained in the root. The 625/270/380 MiB source ceilings and strict per-companion 100,000,000-byte cap are unchanged. Promotion coordinates four mandatory Python distributions under the existing immutable-cohort controls.

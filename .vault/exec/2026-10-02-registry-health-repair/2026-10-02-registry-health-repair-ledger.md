@@ -360,8 +360,8 @@ related:
 - `S18` `verify:` `uv run --no-sync ty check dev/registry/pipeline/tests/test_signed_text_date_components.py src/cadrumo/domain/calculations/registry/fixed_width_codec.py src/cadrumo/domain/calculations/registry/fixed_width_parser.py` -> `pass`
 - `S18` `by:` `codex`
 - `S18` `verify:` `uv run --no-sync pytest -o addopts= -n 0 --strict-markers --strict-config --capture=sys -ra --tb=short --durations=10 --max-worker-restart=0 --basetemp Y:/code/cadrumo-worktrees/tui/var/storage/tmp/registry-s18-01b29c5946f34e78b80108835a8362b7/pytest -q dev/registry/pipeline/tests/test_signed_text_date_components.py src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py` -> `pass`
-- `S24` `verify:` `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 189 --work-dir C:/Users/hello/AppData/Local/Temp/registry-authoring-189-migration-noop-c6a742be1aaf4de395c8cf2f47071760` -> `pass`
-- `S24` `verify:` `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 189 --work-dir C:/Users/hello/AppData/Local/Temp/registry-authoring-189-migration-noop-second-6a1170e1a4304ff2a95e25499059771c` -> `pass`
+- `S24` `verify:` `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 189 --work-dir <operator-home>/AppData/Local/Temp/registry-authoring-189-migration-noop-c6a742be1aaf4de395c8cf2f47071760` -> `pass`
+- `S24` `verify:` `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 189 --work-dir <operator-home>/AppData/Local/Temp/registry-authoring-189-migration-noop-second-6a1170e1a4304ff2a95e25499059771c` -> `pass`
 - `S24` `by:` `codex`
 - `S18` `M` `src/cadrumo/domain/calculations/registry/export_value_policy.py`
 - `S18` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`

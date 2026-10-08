@@ -16,7 +16,7 @@ related:
 
 Recorded 2026-10-04. Root owns the maintenance blockers, their repair orchestration and final requested authority publication under the operator's instruction: "Design the fix orchestration order: all blockers are yours to tackle". This audit preserves the previous run's observations; execution must refresh them against settled live inputs. It does not mark any repair complete.
 
-Evidence: `C:/Users/hello/AppData/Local/Temp/cadrumo-authority-maintenance-503500c597674015888e0fdc18d1ce86/maintenance-report.json`, its `collapse/summary.json` and `collapse/input-manifest.json`, and the durable runtime receipts named below. The repair sequence is `2026-10-04-authority-health-completion-plan`. Existing technical work remains tracked in `2026-10-02-registry-health-repair-plan`.
+Evidence: `<operator-home>/AppData/Local/Temp/cadrumo-authority-maintenance-503500c597674015888e0fdc18d1ce86/maintenance-report.json`, its `collapse/summary.json` and `collapse/input-manifest.json`, and the durable runtime receipts named below. The repair sequence is `2026-10-04-authority-health-completion-plan`. Existing technical work remains tracked in `2026-10-02-registry-health-repair-plan`.
 
 ## Findings
 

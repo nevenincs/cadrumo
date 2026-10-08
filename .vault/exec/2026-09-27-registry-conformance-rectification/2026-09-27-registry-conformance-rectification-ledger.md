@@ -1381,7 +1381,7 @@ related:
 - `S52` `verify:` `Full docs sequence replay after corrected a5b486f5 publication and concurrent main merge; cli-sequence goldens clean; codex-m200-acceptance-retry-20261001-125726.log` -> `pass`
 - `S50` `verify:` `Final Modelo 200 collapse; stable inputs, no live mutation, four editions equivalent/minimal, zero redundancy/repeated values/gaps, governed facts/indexed/cache/invalidation/publication readiness passed; 159 indexed revisions and 3477 temporal/capability coordinates; acceptance-collapse/summary.json; codex-m200-acceptance-collapse-ready-20261001-131613.log` -> `pass`
 - `S50` `verify:` `Feature vault check all; structure, metadata, links, body, execution mapping and all other applicable lanes clean` -> `pass`
-- `S50` `verify:` `Fresh requested Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-repair-01-10-2026-6ad7ab369bcf4d3d883bd8e7f21ae2a0\publish_final.py; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-repair-01-10-2026-6ad7ab369bcf4d3d883bd8e7f21ae2a0\publish_final.py; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
 - `S50` `verify:` `Fresh requested uv run --no-sync python -m dev.registry.analysis.screens; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
 - `S50` `verify:` `Fresh requested just check-registry; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
 - `S50` `verify:` `Fresh requested just check-bindings; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
@@ -1413,16 +1413,16 @@ related:
 - `S50` `verify:` `just check-data-format` -> `pass`
 - `S50` `verify:` `just check-types` -> `pass`
 - `S50` `verify:` `just docs-sequences-check` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\publish_final.py` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\check_order_tool.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-00031-repair-20261001\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-00031-repair-20261001\check_order_tool.py` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_casilla_order_review.py dev/registry/tests/test_edition_delta_declared_order.py` -> `pass`
 - `S50` `verify:` `just check-registry` -> `pass`
 - `S50` `verify:` `just check-style` -> `pass`
 - `S50` `verify:` `just check-format` -> `pass`
 - `S50` `verify:` `just check-data-format` -> `pass`
 - `S50` `verify:` `just check-types` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\final-collapse` -> `pass`
-- `S50` `verify:` `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\delta-proof` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir <operator-home>\AppData\Local\Temp\modelo200-00031-repair-20261001\final-collapse` -> `pass`
+- `S50` `verify:` `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 200 --work-dir <operator-home>\AppData\Local\Temp\modelo200-00031-repair-20261001\delta-proof` -> `pass`
 - `S50` `M` `dev/locales/modelo_casilla_catalogue.py`
 - `S50` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
 - `S50` `M` `src/cadrumo/_data/registry/aeat/legal/irnr.toml`
@@ -1472,8 +1472,8 @@ related:
 - `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0135-record-m200-page-did.toml`
 - `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0136-record-m200-page-054.toml`
 - `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0137-record-m200-page-did.toml`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\publish_final.py` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\review_live.py` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
 - `S50` `verify:` `just check-registry` -> `pass`
 - `S50` `verify:` `just check-bindings` -> `pass`
@@ -1482,8 +1482,8 @@ related:
 - `S50` `verify:` `just check-format` -> `pass`
 - `S50` `verify:` `just check-data-format` -> `pass`
 - `S50` `verify:` `just check-types` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\prove_delta.py live` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\prove_delta.py live` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir <operator-home>\AppData\Local\Temp\modelo200-0301-0304-candidate-20261002\final-collapse` -> `pass`
 - `S50` `verify:` `git diff --check` -> `pass`
 - `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
 - `S50` `verify:` `complete coupled target publication before guarded source installation` -> `pass`
@@ -1495,8 +1495,8 @@ related:
 - `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html`
 - `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html.extracted.json`
 - `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-12-full.html.extracted.md`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\publish_final.py` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\review_live.py` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
 - `S50` `verify:` `just check-registry` -> `pass`
 - `S50` `verify:` `just check-bindings` -> `pass`
@@ -1505,16 +1505,16 @@ related:
 - `S50` `verify:` `just check-format` -> `pass`
 - `S50` `verify:` `just check-data-format` -> `pass`
 - `S50` `verify:` `just check-types` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\prove_delta.py live` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\prove_delta.py live` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir <operator-home>\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\final-collapse` -> `pass`
 - `S50` `verify:` `git diff --check` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_legal_anchor_verification_ratchet.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py` -> `pass`
 - `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
 - `S50` `verify:` `full isolated legal/corpus validation and guarded enrollment` -> `pass`
 - `S50` `verify:` `canonical coupled target publication and locale preflight before source adoption` -> `pass`
 - `S50` `M` `.gitattributes`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\publish_final.py` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\review_live.py` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
 - `S50` `verify:` `just check-registry` -> `pass`
 - `S50` `verify:` `just check-bindings` -> `pass`
@@ -1523,8 +1523,8 @@ related:
 - `S50` `verify:` `just check-format` -> `pass`
 - `S50` `verify:` `just check-data-format` -> `pass`
 - `S50` `verify:` `just check-types` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\prove_delta.py live` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\prove_delta.py live` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir <operator-home>\AppData\Local\Temp\modelo200-0305-0308-candidate-20261002\final-collapse` -> `pass`
 - `S50` `verify:` `git diff --check` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_legal_anchor_verification_ratchet.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py` -> `pass`
 - `S50` `verify:` `isolated delta proof apply no-op cycle` -> `pass`
@@ -1557,8 +1557,8 @@ related:
 - `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0050-record-m200-page-018b.toml`
 - `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0026-record-m200-page-013.toml`
 - `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0051-record-m200-page-018b.toml`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\publish_final.py` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\review_live.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\publish_final.py` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\review_live.py` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py dev/registry/tests/test_modelo_200_registry.py dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py dev/registry/tests/test_cross_revision_drift.py dev/registry/tests/test_registry_locales_parity.py dev/registry/tests/test_casilla_fragment_naming.py dev/registry/tests/test_continuidad_completeness_ratchet.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py dev/locales/tests/test_shipped_casilla_catalogue.py dev/locales/tests/test_modelo_casilla_catalogue.py dev/registry/tests/test_authoring_candidate_inspection.py dev/corpus/tests/test_extract_boe_article.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/registry/tests/test_legal_article_anchor_grounding.py dev/registry/tests/test_legal_required_text_reaches_the_provision.py dev/registry/tests/test_compile_path_never_reads_the_published_bundle.py src/cadrumo/domain/calculations/registry/tests/test_authority_store_admission.py dev/packaging/tests/test_authority_runtime_boundary.py` -> `fail`
 - `S50` `verify:` `just check-registry` -> `pass`
 - `S50` `verify:` `just check-bindings` -> `pass`
@@ -1567,8 +1567,8 @@ related:
 - `S50` `verify:` `just check-format` -> `pass`
 - `S50` `verify:` `just check-data-format` -> `pass`
 - `S50` `verify:` `just check-types` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\prove_delta.py live noop` -> `pass`
-- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\final-collapse` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe <operator-home>\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\prove_delta.py live noop` -> `pass`
+- `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir <operator-home>\AppData\Local\Temp\modelo200-0309-0316-candidate-20261002\final-collapse` -> `pass`
 - `S50` `verify:` `git diff --check` -> `pass`
 - `S50` `verify:` `uv run --no-sync pytest -o addopts= -n 0 -q dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py` -> `pass`
 - `S50` `verify:` `binding warning identity/severity baseline comparison` -> `pass`

@@ -5,16 +5,16 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:116d1f48ee8fddf96ac401aac16db3e786c2086109b9c06db00465667d12fcf5'
+body_hash: 'sha256:d41dc1b4e6e892a1f049f13af48b22f5e2931d4f44c5b259ac13190c8258ae3e'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
+  - '[[2026-10-07-broad-test-failure-repair-progress-audit]]'
 ---
-
 # `runtime-file-access-performance` audit: broad unit-test failure brief
 
 ## Scope
 
-The original two broad selections reported 270 distinct failed cases across 145 failing files. The latest recorded census across 615 pytest logs has 258 PASSED and 12 last recorded FAILED. These are case-level records, not a fresh clean whole-suite verdict. The 12 outstanding cases and their last reports are listed under the final current disposition below; all 270 cases appear in the inventory.
+The original two broad selections reported 270 distinct failed cases across 145 failing files. All 270 now have completed passing evidence, mapped to 295 successor checks with ten explicitly renamed, retired or expanded identities. The complete reconciled inventory and exact reports are in `2026-10-07-broad-test-failure-repair-progress-audit`. This is case-level verification, not a fresh whole-suite verdict. Earlier findings and tables below preserve their recorded historical status; the October 7 repair census is the current disposition.
 
 Requested by the user on 2026-10-07 after a report of more than one hundred failures. The earlier batch is `20261007T124327.041872Z-pytest-39812-287949c0`; the remaining-files batch is `20261007T134204.686138Z-pytest-32336-e2b05171`, under `var/storage/development/.logs/test-runs/2026-10-07/`. Their 157 and 113 failed case events come from different selections, not before/after runs. Both exclude serial, performance, external-tool, keychain, Windows-only, resident-service and private-ingest tests. A separate collection error prevented generated-export tests from running. Failure counts exclude warnings and Vault work-in-progress diagnostics.
 
