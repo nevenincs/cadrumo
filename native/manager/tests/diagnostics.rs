@@ -163,6 +163,10 @@ fn supervision_facts_survive_durable_replay_without_identifiers_or_protocol_payl
 
 #[test]
 fn termination_failures_remain_distinct_and_retain_only_safe_native_facts() {
+    #[cfg(windows)]
+    let permission_code = 5; // ERROR_ACCESS_DENIED
+    #[cfg(unix)]
+    let permission_code = libc::EACCES;
     let scratch = Scratch::new();
     let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
     let current = scratch.0.join(MANAGER_LOG);
@@ -172,7 +176,7 @@ fn termination_failures_remain_distinct_and_retain_only_safe_native_facts() {
         Event::TerminationFailed {
             pid: 7,
             kind: io::ErrorKind::PermissionDenied,
-            os_code: Some(5),
+            os_code: Some(permission_code),
         },
         Event::TerminationUnconfirmed { pid: 7 },
         Event::ProcessInspectionFailed {
@@ -192,7 +196,7 @@ fn termination_failures_remain_distinct_and_retain_only_safe_native_facts() {
     assert_eq!(records[0]["lifecycle"]["event"], "termination_requested");
     assert_eq!(records[1]["lifecycle"]["event"], "termination_failed");
     assert_eq!(records[1]["failure"]["ioKind"], "PermissionDenied");
-    assert_eq!(records[1]["failure"]["osCode"], 5);
+    assert_eq!(records[1]["failure"]["osCode"], permission_code);
     assert_eq!(records[2]["lifecycle"]["event"], "termination_unconfirmed");
     assert_eq!(records[2]["failure"]["ioKind"], "TimedOut");
     assert_eq!(

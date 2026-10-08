@@ -1,5 +1,5 @@
 use crate::conformance_tests::Scratch;
-use crate::storage::{Mode, Profile, child_environment, resolve_root, resolve_root_vector};
+use crate::storage::{Mode, Profile, child_environment, resolve_root_vector};
 use crate::*;
 use std::ffi::OsString;
 use std::os::unix::fs::{PermissionsExt, symlink};

@@ -25,6 +25,7 @@ set(CADRUMO_MANAGER_EXECUTABLE
 # The crate reads every name from these variables, and the runtime protocol from the generated
 # contract; it authors none of them itself.
 cadrumo_cargo_command(manager_cargo
+  --env "CADRUMO_TEST_PYTHON=${CADRUMO_DEV_PYTHON}"
   --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
   --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}"
   --env "CADRUMO_ID_NAME=${CADRUMO_ID_NAME}"

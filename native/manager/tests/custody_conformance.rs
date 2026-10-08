@@ -2,7 +2,7 @@
 //! processes.
 //!
 //! A Python peer runs `cadrumo.adapters.persistence.storage.custody.filesystem` through
-//! `uv run --no-sync python` from the repository root and answers one command per line, so
+//! the CMake-configured builder interpreter and answers one command per line, so
 //! each test meets the runtime's own lock and record primitives on the same files: a lock
 //! either side holds blocks the other, a crashed Python holder leaves the claim free, and
 //! records written by either side read back on the other with their exact bytes.
@@ -115,14 +115,16 @@ struct Peer {
 
 impl Peer {
     fn start() -> Self {
-        let mut child = Command::new("uv")
-            .args(["run", "--no-sync", "python", "-B", "-c", PEER])
+        let python = std::env::var_os("CADRUMO_TEST_PYTHON")
+            .expect("CMake supplies the configured Python custody peer interpreter");
+        let mut child = Command::new(python)
+            .args(["-B", "-c", PEER])
             .current_dir(repository_root())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
             .spawn()
-            .expect("start the Python custody peer through uv");
+            .expect("start the configured Python custody peer");
         let input = child.stdin.take();
         let output = BufReader::new(child.stdout.take().expect("peer stdout")).lines();
         let mut peer = Self {

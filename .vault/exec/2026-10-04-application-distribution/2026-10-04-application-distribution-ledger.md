@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c7055571c9c5a6b080cffc6fcd9e8ebe58cdca351a095edd978c725f3099046'
+body_hash: 'sha256:62e8132c956b001eae182cfd2f257539714f65cf73fdb6af7f66404a42077036'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -184,6 +184,15 @@ related:
 - `S13` `verify:` `pytest CMake configurations/package inputs (15 passed)` -> `pass`
 - `S13` `verify:` `scoped git diff --check` -> `pass`
 - `S13` `by:` `Codex`
+- `S05` `M` `native/cmake/Manager.cmake`
+- `S05` `M` `native/manager/tests/custody_conformance.rs`
+- `S05` `M` `native/manager/tests/diagnostics.rs`
+- `S05` `M` `native/platform/src/lib.rs`
+- `S05` `M` `native/platform/src/storage.rs`
+- `S05` `M` `native/platform/src/posix_tests.rs`
+- `S05` `verify:` `Pinned Linux platform/application/manager Release CTest` -> `pass`
+- `S05` `verify:` `Pinned Linux platform all-target Clippy` -> `pass`
+- `S05` `by:` `Codex`
 
 ## Notes
 
@@ -196,3 +205,4 @@ related:
 - `S10` Initial ad-hoc Clippy picked ambient cargo-clippy 1.99 despite pinned RUSTC and failed E0514; pinned 1.96 extension rerun passed without cleaning shared build outputs. Native transaction/scope admission and disposable-host acceptance remain open in other Steps.
 - `S12` Shared publication/lease foundation only. Native MSI transaction/rollback, all-session process proof and independent runtime leases remain S09. MSI is still installable:false.
 - `S13` Native component lane only. Full payload remains default ON. New desktop WebKitGTK4.1 dependency and full installer/session acceptance remain unresolved; no complete Linux artifact claimed.
+- `S05` Cross-platform validation repairs. Full Linux Clippy encountered concurrently introduced manager cutover source and awaits owner stabilization. S05 stays open; no full payload acceptance.

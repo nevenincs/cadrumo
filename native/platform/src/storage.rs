@@ -554,7 +554,7 @@ pub(crate) fn temporary_path(
 ) -> Result<PathBuf, Refusal> {
     let explicit = nonblank(lookup, TEMPORARY_ENV)?;
     let path = match &explicit {
-        Some(value) => expand_home(&value, lookup)?,
+        Some(value) => expand_home(value, lookup)?,
         None => relative_components(TEMPORARY_DEFAULT),
     };
     if !path.is_absolute()
@@ -654,16 +654,16 @@ where
     I: IntoIterator<Item = (OsString, OsString)>,
 {
     let root = crate::normalize_absolute_path(root)?;
+    let ambient = ambient.into_iter();
+    #[cfg(windows)]
+    let ambient = ambient.map(|(name, value)| {
+        let name = name
+            .to_str()
+            .map(|name| OsString::from(name.to_uppercase()))
+            .unwrap_or_else(|| name.to_ascii_uppercase());
+        (name, value)
+    });
     let mut environment: Vec<(OsString, OsString)> = ambient
-        .into_iter()
-        .map(|(name, value)| {
-            #[cfg(windows)]
-            let name = name
-                .to_str()
-                .map(|name| OsString::from(name.to_uppercase()))
-                .unwrap_or_else(|| name.to_ascii_uppercase());
-            (name, value)
-        })
         .filter(|(name, _)| !cleared(&name.to_string_lossy(), profile, &[]))
         .collect::<std::collections::BTreeMap<_, _>>()
         .into_iter()

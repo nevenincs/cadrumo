@@ -263,6 +263,9 @@ pub fn prepared_environment(
 pub extern "C" fn cadrumo_platform_abi() -> u32 {
     ABI
 }
+/// # Safety
+/// Non-null outputs must be aligned, writable and non-overlapping. Release a
+/// returned error buffer and destroy a returned context using this library.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cadrumo_platform_create(
     abi: u32,
@@ -300,6 +303,10 @@ pub unsafe extern "C" fn cadrumo_platform_create(
         }
     }
 }
+/// # Safety
+/// A non-null context must be live and created by this library. A non-null output
+/// must be aligned and writable without aliasing the context. Release returned
+/// buffers using this library before reusing their output storage.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cadrumo_platform_path(
     ctx: *mut Context,
@@ -328,6 +335,10 @@ pub unsafe extern "C" fn cadrumo_platform_path(
         None => 2,
     }
 }
+/// # Safety
+/// A non-null context must be live and created by this library. A non-null error
+/// output must be aligned, writable and not alias the context. The caller must
+/// exclude concurrent environment access while this operation changes it.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cadrumo_platform_prepare(ctx: *mut Context, error: *mut Buffer) -> u32 {
     if ctx.is_null() || error.is_null() {
@@ -349,6 +360,10 @@ pub unsafe extern "C" fn cadrumo_platform_prepare(ctx: *mut Context, error: *mut
         }
     }
 }
+/// # Safety
+/// A non-null pointer must exclusively reference an aligned, writable buffer
+/// returned by this library (or an empty buffer). Its data and length must be
+/// unchanged, and its allocation must not already have been released.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cadrumo_platform_release(b: *mut Buffer) {
     if b.is_null() {
@@ -366,6 +381,9 @@ pub unsafe extern "C" fn cadrumo_platform_release(b: *mut Buffer) {
     b.data = ptr::null_mut();
     b.len = 0;
 }
+/// # Safety
+/// A non-null pointer must be an exclusively owned live context returned by this
+/// library. No further access or destruction is permitted after this call.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cadrumo_platform_destroy(ctx: *mut Context) {
     if !ctx.is_null() {
