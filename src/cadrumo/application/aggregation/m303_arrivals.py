@@ -18,6 +18,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
     revocacion_prorrata_transition,
 )
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.schema import is_iva_cash_accounting_supplier_regime
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from .errors import AggregationValidationError
@@ -32,9 +33,10 @@ def _transition_period_applicability_from_registry(
     """Resolve transition-period applicability from selected registry declarations.
 
     The prorrata especial transition applies only to the final declared period
-    of a filing schedule. Both the schedule periods and the periodic carry
-    declarations come from the selected revision, so a revision that changes
-    its schedule changes this answer with it.
+    of a filing schedule. The periodic carry declarations come from the
+    selected revision; a schedule's final period comes from every edition that
+    serves the filing year, because an edition replaced mid-year declares only
+    the periods it governs and its last one is not the cadence's last.
 
     Raises:
         AggregationValidationError: If the selected revision declares no filing
@@ -63,12 +65,41 @@ def _transition_period_applicability_from_registry(
             },
         )
     carried_periods = {token for _, periods in carries for token in periods}
+    final_periods = _final_schedule_periods(revision, filing_year=period.filing_year, operation=operation)
     transition_periods = {
-        schedule.periods[-1]
+        final_periods[str(schedule.id)]
         for schedule in schedules
         if schedule.periods and carried_periods.intersection(schedule.periods)
     }
     return period.registry_token in transition_periods
+
+
+def _final_schedule_periods(
+    selected: ModeloRevision,
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, str]:
+    """Return each :class:`ModeloRevision` schedule's last period across the editions serving one filing year.
+
+    A year projected onto its nearest authored edition has no edition naming it,
+    so the selected edition's own schedule is then the whole cadence.
+    """
+    served: dict[str, list[str]] = {}
+    for entry in operation.modelo_directory("303").revisions:
+        if not entry.period_selector.includes_year(filing_year):
+            continue
+        admitted = set(entry.period_selector.periods_for_year(filing_year))
+        for schedule in operation.revision("303", str(entry.id)).filing_schedules:
+            served.setdefault(str(schedule.id), []).extend(token for token in schedule.periods if token in admitted)
+    for schedule in selected.filing_schedules:
+        if not served.get(str(schedule.id)):
+            served[str(schedule.id)] = list(schedule.periods)
+    return {
+        schedule_id: max(tokens, key=lambda token: Period.from_year_and_code(filing_year, token).end_date)
+        for schedule_id, tokens in served.items()
+        if tokens
+    }
 
 
 class M303SupplierRegimeArrival(BaseModel):
