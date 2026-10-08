@@ -55,7 +55,7 @@ from cadrumo.core.config import Settings, load_settings, override_settings
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import frozen_clock
-from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _certificate_indexed_authority_for_test,
 )
@@ -1012,23 +1012,27 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
         )
 
 
-def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:
-    """Repeated ``configure_operator_auth`` calls append distinct events
-    to the append-only catalogue. The bucket-event-history contract records
-        immutable ids; two emissions that share content but differ in
-        timestamp produce two distinct ``event_id`` hashes by construction
-        because ``derive_bucket_event_id`` mixes the timestamp into the
-        digest."""
+def test_configure_operator_auth_appends_one_event_per_actual_change() -> None:
+    """Repeating an unchanged configuration appends nothing; a real change appends a distinct event.
+
+    ``configure_operator_auth`` is idempotent: the bucket-event history records
+    configuration changes, so a second identical call is a no-op rather than a
+    duplicate entry, while switching provider is a new, distinctly identified event.
+    """
 
     _register_operator_profile()
 
-    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    def configured_events() -> list[BucketEvent]:
+        catalogue = BucketEventHistoryRepository().load()
+        return [
+            event for event in catalogue.events.values() if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
+        ]
 
-    catalogue = BucketEventHistoryRepository().load()
-    matching = [
-        event for event in catalogue.events.values() if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
-    ]
-    assert len(matching) >= 2
-    ids = {event.event_id for event in matching}
-    assert len(ids) == len(matching)
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    assert [event.payload["provider_id"] for event in configured_events()] == ["certificate"]
+
+    configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    events = configured_events()
+    assert sorted(event.payload["provider_id"] for event in events) == ["certificate", "clave_movil"]
+    assert len({event.event_id for event in events}) == 2

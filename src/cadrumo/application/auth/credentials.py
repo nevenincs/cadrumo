@@ -139,11 +139,11 @@ def _witnessed_auth_projection_snapshot(
 
     record = state.active_profile_record()
     preference = profile_auth_provider(record_to_path_values(record))
+    persisted = state.auth.provider
+    # A persisted selection the projection cannot honour stays unconfigured;
+    # the deployment default only stands in when nothing was ever selected.
     provider = _project_provider_kind(
-        requested_provider
-        or (preference.value if preference is not None else None)
-        or (state.auth.provider if record is None else None)
-        or fallback_provider
+        requested_provider or (preference.value if preference is not None else None) or persisted or fallback_provider
     )
     credentials = (
         _resolve_witnessed_certificate_credentials(
