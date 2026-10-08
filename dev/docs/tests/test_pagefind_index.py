@@ -89,6 +89,23 @@ def test_index_pass_indexes_built_html(tmp_path: Path) -> None:
     assert "pagefind.js" in files
 
 
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_index_stamping_preserves_built_page_line_endings(tmp_path: Path, newline: str) -> None:
+    original = _FIXTURE_PAGE.format(title="Page", body="Searchable text.").replace("\n", newline).encode("utf-8")
+    pages = [tmp_path / "index.html", tmp_path / "_generated/casillas/303.html"]
+    for page in pages:
+        page.parent.mkdir(parents=True, exist_ok=True)
+        page.write_bytes(original)
+
+    build_search_index(tmp_path)
+
+    for page in pages:
+        stamped = page.read_bytes()
+        assert b"data-pagefind-" in stamped
+        assert stamped.count(b"\r\n") == original.count(b"\r\n")
+        assert stamped.count(b"\n") == original.count(b"\n")
+
+
 def test_custom_record_injection_seam_writes_one_index_split(tmp_path: Path) -> None:
     """The injection seam runs and the pass writes ONE index split, not one per language.
 

@@ -7,3 +7,7 @@ add_custom_target(verify-release
     --application-probe-command "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}"
   DEPENDS zip ${native_verification_targets}
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" USES_TERMINAL VERBATIM)
+if(CADRUMO_PACKAGE_USER_DOCS)
+  add_dependencies(verify-release user_docs_verify)
+endif()
+add_custom_target(release DEPENDS verify-release)

@@ -253,10 +253,10 @@ def _mark_excluded_pages(html_root: Path) -> int:
         if not root.is_dir():
             continue
         for page in scan_directory(root, pattern="*.html", recursive=True):
-            html = page.read_text(encoding=_UTF_8)
+            html = page.read_text(encoding=_UTF_8, newline="")
             new_html, count = _BODY_TAG_RE.subn("<body data-pagefind-ignore", html, count=1)
             if count:
-                page.write_text(new_html, encoding=_UTF_8, newline="\n")
+                page.write_text(new_html, encoding=_UTF_8, newline="")
                 tagged += 1
     return tagged
 
@@ -338,7 +338,7 @@ def _mark_indexed_pages(html_root: Path, language: str) -> int:
     """
     tagged = 0
     for page in scan_directory(html_root, pattern="*.html", recursive=True):
-        html = page.read_text(encoding=_UTF_8)
+        html = page.read_text(encoding=_UTF_8, newline="")
         body = _BODY_OPEN_RE.search(html)
         if body is None or "data-pagefind-ignore" in body.group(0):
             continue
@@ -351,7 +351,7 @@ def _mark_indexed_pages(html_root: Path, language: str) -> int:
         )
         if stamped == body.group(0):
             continue
-        page.write_text(html[: body.start()] + stamped + html[body.end() :], encoding=_UTF_8, newline="\n")
+        page.write_text(html[: body.start()] + stamped + html[body.end() :], encoding=_UTF_8, newline="")
         tagged += 1
     return tagged
 

@@ -83,6 +83,7 @@ def compile_command(html_root: Path, build_root: Path) -> list[str]:
         "--flavor",
         "desktop",
         "--strict",
+        "--no-check-sequences",
     ]
 
 

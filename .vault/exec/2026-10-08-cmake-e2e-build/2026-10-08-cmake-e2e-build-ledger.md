@@ -5,7 +5,7 @@ tags:
 date: '2026-10-08'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:e90cbc1bbad8437171474deee829cf57ed646c02197122a1fb3f48859d6cb2a1'
+body_hash: 'sha256:907dd03648ccfecefcaf674d2216ee70403af0316bf5bfbae4e16c3f6f37670c'
 related:
   - "[[2026-10-08-cmake-e2e-build-plan]]"
 ---
@@ -52,8 +52,33 @@ related:
 - `S01` `verify:` `cmake --build --preset release --target user_docs_driver_test --parallel 2` -> `pass`
 - `S01` `verify:` `cmake --build --preset release --target desktop-host-build --parallel 4` -> `pass`
 - `S01` `verify:` `cmake --build --preset release --target desktop-run (before package assembly)` -> `fail`
+- `S01` `verify:` `cmake snapshot release desktop-headless-test with bundled documentation` -> `fail`
+- `S01` `verify:` `cmake snapshot release bundle with CADRUMO_PACKAGE_USER_DOCS=OFF` -> `pass`
+- `S01` `verify:` `ctest snapshot release -R bundle (5 tests)` -> `pass`
+- `S01` `verify:` `cmake standalone desktop-windows-x64-release desktop-headless-test` -> `pass`
+- `S01` `verify:` `cmake standalone desktop-windows-x64-release desktop-run` -> `pass`
+- `S01` `verify:` `python -m dev.quality.types (live checkout)` -> `fail`
+- `S01` `M` `dev/docs/compile_once.py`
+- `S01` `M` `dev/docs/pagefind_index.py`
+- `S01` `M` `dev/docs/tests/test_pagefind_index.py`
+- `S01` `M` `dev/packaging/native/tests/test_docs_build_environment.py`
+- `S01` `M` `native/cmake/ReleaseVerification.cmake`
+- `S01` `verify:` `cmake user_docs_driver_test (44 unit and integration tests)` -> `pass`
+- `S01` `verify:` `python -m dev.quality.types` -> `pass`
+- `S01` `verify:` `ruff check .` -> `pass`
+- `S01` `verify:` `ruff format --check changed files` -> `pass`
+- `S01` `verify:` `ruff format --check .` -> `fail`
+- `S01` `verify:` `import loadability and subordinate checker` -> `pass`
+- `S01` `verify:` `run_import_linter using CMake-managed executable (15 contracts)` -> `pass`
+- `S01` `verify:` `app-distro first separated build: documentation round-trip line endings` -> `fail`
+- `S01` `verify:` `cmake snapshot release app-distro (desktop, runtime and four-language documentation)` -> `pass`
+- `S01` `verify:` `ctest snapshot release bundle with package-root override unset (6 tests)` -> `pass`
+- `S01` `verify:` `cmake -E env packaged cadrumo.exe from Y:/ with package-root override unset: version, help, no arguments` -> `pass`
 
 ## Notes
 
 - `S01` S01 remains open. Full page check passed; desktop-headless-test is running and waiting for the shared docs cache held by windows-installers-x64. No executable acceptance yet.
 - `S01` User explicitly requested package assembly after the Session 0 launch reported a missing package. Shared-cache reuse is OFF for this preset; all validation remains enabled. The active desktop-headless-test build is executing documentation checks before bundle assembly and Session 0 acceptance.
+- `S01` Runtime-only bundle and standalone executable launch succeeded. Full desktop distribution remains blocked by documentation runtime deadline and shutdown failures. No session-number branch was added; existing desktop availability checks govern launch mode. S01 remains open for full distribution acceptance.
+- `S01` User explicitly separates app-distro, ZIP and release verification. Corrected search stamping to preserve line endings; rebuild pending. Full format check reports unrelated application/overview/calendar.py drift. Initial import graph command lacked managed tool PATH; reran that component successfully with its absolute managed executable, preserving passing loadability/checker evidence.
+- `S01` Complete non-zipped distribution exists at build/windows-x64/product/build/source/build/windows-x64/stage/Release/app. Packaged CADRUMO 0.5.1 exits 0 for version/help/no-argument launch. Session 0 permits headless execution only; no production session-selection code changed. ZIP and full live release verification remain separate and were not run for this user-requested distribution.

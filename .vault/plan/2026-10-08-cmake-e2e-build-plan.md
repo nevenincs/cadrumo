@@ -10,7 +10,7 @@ related:
   - '[[2026-10-04-application-distribution-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:1ed99b4dbfaa68742db3e957e307ec08a2d0abe4e145c2c02771b27a0ee7822f'
+body_hash: 'sha256:22b916c18e7a78a8f35dcda29d1bb2c2204ff5897b05130f08bd8a69b27ee95d'
 ---
 
 # `cmake-e2e-build` plan
@@ -18,6 +18,8 @@ body_hash: 'sha256:1ed99b4dbfaa68742db3e957e307ec08a2d0abe4e145c2c02771b27a0ee78
 ## Description
 
 Approved 2026-10-08
+
+Latest controlling instruction: build the complete uncompressed application distribution now. CMake owns independent binary compilation, `app-distro`, `zip`, and `release` stages; all archive/release paths consume the same `app-distro` producer. Strict documentation rendering belongs to the distribution; live sequence verification belongs to the explicit release stage. The user explicitly rejected further scope questions. Earlier entries below record history and do not override this instruction.
 
 The user authorized clearing build and scratch outputs and completing a CMake-driven build until cadrumo.exe executes. Cleanup and initial configuration completed. The first release build stopped at stale documentation transcripts and transient sequence execution failures; a focused filing-spine refresh now passes all 13 sequences. Preserve unrelated concurrent changes.
 
@@ -29,19 +31,29 @@ The strict release documentation gate finished at 14:42 Madrid after 5445 second
 
 ## Steps
 
+At 21:22 Madrid, both the isolated import-review-check and the complete import-bank-statements page passed unchanged. Cleared maintenance selectors and started the full documentation-enabled `bundle` build in session 14014 from the existing product source snapshot. Required handover acceptance is now the packaged `stage/Release/app/cadrumo.exe` launched with CADRUMO_DESKTOP_PACKAGE_ROOT absent, plus package smoke tests. The independently compiled host is not a handover artifact. The optional test-package scope question remains unanswered; the active build continues to require the full live gate.
+
+The user rejected the separate runtime/standalone setup as unusable and reported `package_unavailable` when launching the EXE directly. Acceptance therefore explicitly requires a complete package containing the desktop EXE, runtime and documentation together, launching without CMake or a package-root environment override. Re-enabled CADRUMO_PACKAGE_USER_DOCS in the stable source snapshot. The isolated `import-review-check` passes unchanged; session 26995 is checking its entire import-bank-statements page. An asynchronous scope question asks whether a visibly identified test package with rendered committed documentation is acceptable, or full live documentation verification must pass first. No sequence gate has been bypassed and no placeholder documentation has been produced. Full runnable packaging remains the active task.
+
+The snapshot's strict documentation compile exited 2 after 4940 seconds. It reported a ledger import runtime deadline failure (`how-to/import-bank-statements`, `import-review-check`) and a documentation runtime shutdown failure (`RuntimeRefusalError: runtime_unavailable`, surfaced as `AsyncResourceCleanupError`). The desktop host still compiled successfully. To satisfy the user's immediate Session 0 launch request, configured the existing runtime-only mode (`CADRUMO_PACKAGE_USER_DOCS=OFF`) and built `bundle` from the same snapshot. Configured its standard standalone `desktop-windows-x64` preset with the runtime package's canonical stage path. This is headless development acceptance, not full desktop distribution acceptance: the runtime-only package intentionally excludes documentation and the desktop image. The standalone CMake-owned executable will be tested against it. Full desktop packaging remains blocked and S01 must not be closed as a successful full release.
+
 The 18:19 build was stopped after five enrolled Python sources changed during compilation; the documentation input-stability guard would correctly reject it. Reconfigured the existing CMake-owned product source snapshot at `build/windows-x64/product/build/source` with its standard `windows-x64` preset and shared documentation cache disabled. This snapshot contains the staged published authority and the code used for the product wheels. Its standard preset owns all nested output paths. Configuration passed; session 64610 runs `desktop-headless-test` with the Session 0 check enabled. Publisher build credentials are inherited in memory through the existing settings owner without printing or copying them. The separate installer build remains untouched. Do not rebuild the parent `python_product` while this snapshot is the active source tree.
 
 Latest authorization: the user requested ensuring the package is built for launch testing. Resumed the package-and-Session-0 check through desktop-headless-test. Implemented CADRUMO_DOCS_SHARED_CACHE (default ON), configured this preset OFF to avoid cross-configuration cache contention, and retained strict compilation, all sequence assertions, authority/input validation and package verification. Added the CMake user_docs_driver_test target; all 13 tests pass, including local compilation without touching a busy shared cache and refusal of changed inputs. Ruff and whitespace checks pass. The restarted strict compile began at 18:19:31 and entered its live sequence gate at 18:23:25. Build session 73931 owns package assembly and the launch test with CADRUMO_TEST_HEADLESS_SESSION=1. Only the superseded owned build was stopped; the separate installer work remains untouched.
 
 Stopped at the user's explicit request on 2026-10-08: the owned desktop-headless-test CMake process 30004 and its descendants were terminated. The separate windows-installers-x64 documentation compile 18600 was left running. The proposed shared-cache option was not implemented; only its scope dry-run was performed. Existing edits remain, S01 stays open, and cadrumo.exe has not been executed or accepted. Do not resume the build without a new user request.
 
-- [ ] `S01` - Restore documentation verification through explicit CMake transcript maintenance, then build and execute the release package; `native/cmake/Docs.cmake, native/cmake/Packaging.cmake, native/desktop/CMakeLists.txt, native/CONTRACT.md, dev/packaging/native/docs_build.py, dev/packaging/native/tests/test_docs_shared_site.py, docs/_sequences, src/cadrumo/entrypoints/cli/runtime_modelo_verification.py, build/windows-x64`.
+- [x] `S01` - Separate binary compilation, on-disk app distribution, ZIP and release verification; build and launch the complete app distribution; `native/cmake/Docs.cmake, native/cmake/Packaging.cmake, native/cmake/ReleaseVerification.cmake, native/desktop/CMakeLists.txt, native/CONTRACT.md, dev/docs/compile_once.py, dev/docs/pagefind_index.py, dev/docs/tests/test_pagefind_index.py, dev/packaging/native/docs_build.py, dev/packaging/native/tests/test_docs_build_environment.py, dev/packaging/native/tests/test_docs_shared_site.py, docs/_sequences, src/cadrumo/entrypoints/cli/runtime_modelo_verification.py, build/windows-x64`.
 
 ## Parallelization
 
 One owner executes S01. A single CMake invocation may schedule independent documentation pages with parallelism two. Do not run competing builds in the same binary directory.
 
 ## Verification
+
+Final requested acceptance passed: CMake `app-distro` exited 0 with the desktop EXE, Python runtime, manager and all four documentation languages assembled under `build/windows-x64/product/build/source/build/windows-x64/stage/Release/app`. With the package-root override removed, all six bundle CTest checks passed, and the packaged `cadrumo.exe` launched from `Y:/` with `--version`, `--help`, and no arguments, each exiting 0. Version is CADRUMO 0.5.1. The actual artifact is the complete app directory; no ZIP was built. Interactive GUI acceptance remains unavailable in Session 0. Forty-four documentation-driver/search tests, repository lint, type checks and all import-check components passed. Repository-wide formatting reports unrelated `application/overview/calendar.py` drift; changed files pass formatting. Integrated review passes for this requested distribution scope.
+
+Current acceptance is `app-distro` completion, documentation-driver tests, package CTest smoke tests, and direct packaged `cadrumo.exe` execution without `CADRUMO_DESKTOP_PACKAGE_ROOT`. ZIP and live release verification are separate targets and are not required to deliver this requested on-disk distribution. Preserve previous failed verification evidence; do not claim that the full live documentation suite passed.
 
 On the user's subsequent launch-test request, confirmed the runner is in Windows Session 0 and executed `cmake --build --preset release --target desktop-run`. The actual executable started and returned exit 1 with `package_unavailable`, operation `environment`, `NotFound`, OS code 3. The CMake-derived `build/windows-x64/stage/Release/app` does not exist; its `data/package-manifest.json` and `python.exe` are therefore absent. This establishes native process execution, not successful application or headless CLI startup. No competing build was stopped and no package files were fabricated or copied manually.
 

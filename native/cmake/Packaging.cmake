@@ -140,7 +140,7 @@ foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
 endforeach()
 cadrumo_cached_command(assembly_command bundle INPUTS ${assembly_inputs}
   OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>")
-add_custom_target(bundle ALL
+add_custom_target(app-distro ALL
   COMMAND ${assembly_command} ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
     ${user_docs_args} ${application_image_args}
   DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
@@ -153,7 +153,8 @@ add_custom_target(bundle ALL
     "${package_bootstrap}"
   BYPRODUCTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_dependencies(bundle rust_application)
+add_dependencies(app-distro rust_application)
+add_custom_target(bundle DEPENDS app-distro)
 if(TARGET desktop-headless-test)
   add_dependencies(desktop-headless-test bundle)
 endif()
@@ -208,7 +209,7 @@ cadrumo_cached_command(zip_command zip
     "${PROJECT_SOURCE_DIR}/LICENSE" "${CMAKE_CPACK_COMMAND}"
   OUTPUTS "${CADRUMO_PATH_PACKAGES}/$<CONFIG>/${CADRUMO_ARTIFACT_STEM}-$<CONFIG>.zip"
     "${PROJECT_BINARY_DIR}/artifacts-$<CONFIG>.json")
-add_custom_target(zip ALL
+add_custom_target(zip
   COMMAND ${zip_command} "${CMAKE_CPACK_COMMAND}" --config "${PROJECT_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>"
   DEPENDS bundle USES_TERMINAL VERBATIM)
 add_custom_target(clean-package DEPENDS clean-zip)

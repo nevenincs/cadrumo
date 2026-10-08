@@ -4,7 +4,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 # Bundled user documentation, shared by the source build and the desktop project.
 # The owning docs driver compiles the documentation once for every language declared in
 # native/package-layout.json, shares the built site between identical enrolled source graphs,
-# and refuses a stale published authority at its cli-sequence gate. Staging copies the shippable
+# while live cli-sequence verification runs separately. Staging copies the shippable
 # subset into the published layout and writes the docs manifest that the package delegates to.
 set(docs_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
   "${CADRUMO_DEV_PYTHON}" -B -m)
@@ -47,11 +47,16 @@ add_custom_target(user_docs_build
   BYPRODUCTS "${CADRUMO_PATH_USER_DOCS_BUILD}/ready"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
 add_dependencies(user_docs_build registry_authority)
+add_custom_target(user_docs_verify
+  COMMAND ${docs_helper} dev.docs.sequences check
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+add_dependencies(user_docs_verify registry_authority)
 add_custom_target(user_docs_driver_test
-  COMMAND ${docs_helper} pytest -q "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_shared_site.py"
+  COMMAND ${docs_helper} pytest -q -m "unit or integration" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_shared_site.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_build_environment.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_input_identity.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/tests/test_docs_input_publication.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/docs/tests/test_pagefind_index.py"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
 cadrumo_register_clean(TARGET user_docs_build PATHS "${CADRUMO_PATH_USER_DOCS_BUILD}" "${CADRUMO_PATH_USER_DOCS_WORK}")
 set(CADRUMO_DOCS_SEQUENCE_PAGES "" CACHE STRING "Documentation pages selected for explicit transcript maintenance")

@@ -454,8 +454,10 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 
 | Target | Operation |
 | --- | --- |
-| default / `zip` | Build the full application and its install-based ZIP |
-| `bundle` | Build native hosts, product wheels and complete staged package |
+| default / `app-distro` | Build the complete runnable directory at `stage/<Config>/app`, including application images, runtime and documentation |
+| `bundle` | Compatibility alias for `app-distro` |
+| `zip` | Build `app-distro`, then create its install-based ZIP |
+| `release` / `verify-release` | Build the ZIP and run native, extracted-artifact and live documentation verification |
 | `setup-native-builder` | Converge the configure-owned builder or validate the selected external interpreter |
 | `registry_authority` | Reuse the existing publication; compile when its descriptor or selected database is missing |
 | `registry_authority_rebuild` | Explicitly recompile and publish authority, even when it exists |
@@ -469,6 +471,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `python_product` | Build and install the CADRUMO wheel cohort into dependency staging |
 | `user_docs` | Build every declared documentation language and stage the shippable subset; a `bundle` prerequisite unless `CADRUMO_PACKAGE_USER_DOCS=OFF` |
 | `user_docs_build`, `user_docs_stage` | Compile documentation or prepare its shippable subset independently |
+| `user_docs_verify` | Run all live documentation sequences independently of rendering and maintenance selectors; required by release verification |
 | `user_docs_sequences_check`, `user_docs_sequences_refresh` | Check committed CLI transcripts or explicitly regenerate them through the documentation owner; select pages with `CADRUMO_DOCS_SEQUENCE_PAGES` |
 | `desktop-frontend-install`, `desktop-frontend-chrome`, `desktop-frontend-palette`, `desktop-frontend-build`, `desktop-host-prepare` | Prepare each desktop dependency, generated input, asset bundle or host snapshot independently |
 | `verify` | Build bundle/ABI consumers, run CTest including real dependency imports |
@@ -593,7 +596,7 @@ address, the search address, the language set and the `media_types` table of
 files the documentation scheme serves. Each language must be one of
 the product's output languages, and English must be declared. `native/cmake/Docs.cmake`
 defines the `user_docs` target for the source build and the standalone desktop
-project; `bundle` and `desktop-host-build` depend on it.
+project; `app-distro` depends on it. `desktop-host-build` compiles independently.
 
 `dev/packaging/native/docs_build.py` compiles the documentation once for every
 declared language (`python -m dev.docs.compile_once --html-root`), as a user-scope
@@ -601,16 +604,18 @@ build from a private source copy, and each language's root is composed at
 `user-docs/build/html/<lang>/`. The pages are read once however many languages are
 declared. Ambient `CADRUMO_DOCS_*` settings are dropped and the compile gets its own
 storage root. The site's one search index is then built over every root, under the
-`full` Pagefind contract, into the English root. The cli-sequence golden check runs
-in that one compile. The step fingerprints the contents of `inputs-user-docs.txt`:
+`full` Pagefind contract, into the English root. Rendering uses committed CLI
+transcripts with strict Sphinx warnings; live sequence execution belongs to
+`user_docs_verify`, required by `release` / `verify-release`. The step fingerprints
+the contents of `inputs-user-docs.txt`:
 documentation sources, documentation tooling, `src/`, the layout and the selected
 published authority. Unchanged inputs reuse the previous roots. The documentation
 does not depend on the platform or on the build directory, so a build configuration
 whose inputs outside its own build directory match the site another configuration of
 the checkout built copies that site from the development cache (`user-docs`) instead
 of compiling again; the cache holds one site, checked against its recorded inventory
-before it is reused. A stale published authority fails the target, and the owner's
-refusal is printed as the `cause:` line. The previous search index is removed before
+before it is reused. Authority and source inputs must remain unchanged during
+rendering. Live verification checks authority freshness. The previous search index is removed before
 the compile, so staging can never accept an older root after a failed build.
 
 For transcript maintenance, configure with
@@ -1189,8 +1194,9 @@ executable against its bundled interpreter. No manual package path is needed.
 
 Configure with `-DCADRUMO_DOCS_SHARED_CACHE=OFF` to compile documentation in the
 selected build directory without waiting for another configuration's shared
-cache. Strict compilation, sequence checks, input validation and package
-validation remain enabled. Shared-cache reuse defaults to `ON`.
+cache. Strict compilation, input validation and package validation remain enabled;
+live sequence checks run separately through `user_docs_verify`. Shared-cache reuse
+defaults to `ON`.
 
 | Target | Operation |
 | --- | --- |
