@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e39647ae4907258b4fc3a8f6eb620ce7907e786413510ee0326f1b275132d28'
+body_hash: 'sha256:ac745b60bf80bcf6d6dff3d7cb16a0841770d6bdf3eaa4e10715db89eb0c3a8d'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -314,6 +314,7 @@ related:
 - `S14` `verify:` `scoped ty check` -> `pass`
 - `S14` `verify:` `independent filing-only source review` -> `pass`
 - `S14` `by:` `Codex`
+- `S14` `verify:` `retained native frozen Windows modelo-390-annual-2025 forensic check 440.89s` -> `pass`
 
 ## Notes
 
@@ -342,3 +343,4 @@ related:
 - `S05` S05 remains open. Full Windows documentation execution failed; other hosts are running frozen builds. Input revalidation does not replace immutable-source discipline.
 - `S05` Build recovery evidence only; original Renta deadline failure unresolved. Windows Modelo390 and verification reports and WSL strict docs still pending. Mac full build final status unknown while SSH unavailable. Both provided hosts are non-disposable: preserve product installations/login/session state.
 - `S14` Filing-only source checkpoint. Preserve independent dirty verification edits through partial staging. Native annual scenario rerun pending after frozen one-module overlay; S14 remains open until that confirmation. No changes to golden files or registered global/result-read deadlines.
+- `S14` Native failed filing boundary and completegoldencheck now pass with ordinary fixture cleanup. Observer sees28cleanfutures/drainreceipt1/zero missing-uncontained-unsettled and releasedtrue. Earlier intermittent runtime connection loss remains unresolved; full installer and lifecycle gates stay open.

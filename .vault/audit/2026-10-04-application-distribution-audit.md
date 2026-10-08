@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac9caafb60052e1fe4fa7d9de4ca8c225b548f5290f6f8a2d65bc5533c832ab5'
+body_hash: 'sha256:eb901d4eb2dc62ad4830457d25fc30457b9df7e820d3977faa6b8a777c705c37'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -207,6 +207,16 @@ The frozen four-page baseline finishes with unchanged source/authority identitie
 Source trace shows filing had no separate settlement allowance: its contract/admission/start/polling shared60seconds. S14 adds a bounded1800second filing settlement default/caller override, matching existing calculation and verification policy; admission/control/observation exchanges retain60seconds. Existing settled-result collection policy remains unchanged and may use the remaining settlement horizon, so this is not a60second cap on every result page. Preserve unknown effect, operation identity and no automatic replay on wait expiry. Independent verification edits in the same source module remain unowned and unchanged.
 
 Source review PASS after correcting the synthetic successful filing fixture to UPDATED. Ten focused tests pass in3.82seconds through the real filing contract, registered loop and result-page collector, covering completion after60seconds, single submit/start, bounded admission/polling, custom/default expiry without resultread/replay, and invalid waits before transport. Scoped Ruff, formatting and ty pass. Native frozen annual-scenario confirmation remains PENDING; the controlled one-module overlay and journalled rerun are delegated to msi_maintenance. The separate intermittent Renta issue remains unresolved. Evidence: build/windows-docs-frozen-20261008/evidence/final-result.json and development test run20261008T145314.573631Z-pytest-17500-d1de8ebe/run.log.
+
+
+S14 native confirmation attempt remains unresolved: the one-module frozen overlay has source digest38b44614e0fffa1934e6c46ae6639ff65a0f31bf12d2ce73fedaf0213a8769cd and unchanged authority9db202fd630f35654c984a5b656ddd4be59dffd03927d6f520316af6e9222a92. Targeted annual390 passes the first two filings but fails after334.31seconds earlier than the original failure, at seed line39 calculation with runtime_connection_closed and unknown effect (operation d27924a297251d2039cda5e090f20dcc7eec375868d458af5d0d90592f321e55). No sandbox/journal survives TemporaryDirectory cleanup; remaining log is empty and no relevant Windows crash event is found. Exit2 is the CLI status, not worker exit evidence. This neither confirms the complete filing fix nor establishes its cause as the new policy.
+
+The WSL strict full documentation compile also fails after4397.47seconds, with no language HTML roots. Filing-spine-chain workcreate reports runtime_unavailable, while runtime fixture cleanup wraps the server's synthesized unavailable exception in AsyncResourceCleanupError. The retained traceback does not recover the earlier server failure flag cause or a worker exit code. Hashed copies are under build/windows-installers-x64/verification/wsl-docs-failure-20261008/. Preserve failed inputs and add bounded forensic observation before retrying; no golden refresh, global deadline change or install gate relaxation is warranted. Full Windows/Linux native package builds and native Darwin verification remain incomplete.
+
+
+S14 native targeted confirmation: the retained-sandbox forensic annual390 check passes exit0 in440.89seconds, including seed line52 and the complete golden comparison. It observes28 clean connection futures, no logged server/future exception, one drain receipt with zero missing/uncontained/unsettled workers, and fixture cleanup released=true. The process hook records only expected zero-timeout liveness polls, not an actual exit status. Normal native cleanup runs; no product/login installation occurs. This confirms the filing policy change through the failed native scenario. It does not explain the earlier intermittent connection loss or complete the full native package build. Evidence remains under build/windows-docs-frozen-20261008/evidence/filing-retry-forensics/ and the retained synthetic sandbox outside the frozen source.
+
+Frozen Windows CMake configuration also passes in19.28seconds with pinned MSVC14.44.35207, Python3.13.11, WiX5.0.2 and docs/desktop/manager enrolled. Its exact inputs and command are under evidence/native-configure/. Root authorizes a full native-installer build only after reconfirming unchanged source/authority; no forged docs completion markers or host installation. The two source fixes and native package/lifecycle acceptance remain distinct evidence scopes.
 
 
 ## Recommendations

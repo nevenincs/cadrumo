@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:9398440b102147096522909ee063fc11db329af5d07ba7c59acec4e586d6894e'
+body_hash: 'sha256:9f336e24ceed8ee87e62b6ca9a2ab5937cbd85966d54475036f730df7d30cba2'
 ---
 
 # Application distribution
@@ -52,7 +52,7 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.
 - [x] `S13` - Enable and verify CMake native Linux component builds with the pinned manylinux toolchain and explicit payload configuration; `CMakeLists.txt, native/cmake/ManylinuxToolchain.cmake and native/CONTRACT.md with native Linux compile and platform test evidence`.
 - [ ] `S05` - Centralize build output paths and generation ownership in CMake and remove unowned build clutter; `native/cmake, native/desktop, dev/packaging/native, dev/packaging/tests, dev/docs sequence build helpers and owning tests, and build`.
-- [ ] `S14` - Separate registered local filing settlement from the bounded exchange timeout exposed by frozen installer documentation acceptance; `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py filing function only and new owning filing settlement tests, preserving independent verification changes`.
+- [x] `S14` - Separate registered local filing settlement from the bounded exchange timeout exposed by frozen installer documentation acceptance; `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py filing function only and new owning filing settlement tests, preserving independent verification changes`.
 
 ## Parallelization
 
@@ -74,6 +74,9 @@ Timing follow-up scheduling correction: because the Modelo390 page contains elev
 
 
 S14: linux_manager may own only the filing constant/signature/settlement forwarding in runtime_modelo_verification.py and a new test_runtime_modelo_filing_settlement.py under its owning CLI tests. Preserve the existing independent verification edits in that same module and the dirty existing error-detail tests; no broad refactor. Reuse the real registered protocol/clock test patterns with bounded policy tests. Root owns review, frozen source overlay after the current docs batch completes, native failed-sequence rerun, vault and scoped partial-hunk commit.
+
+
+Post-S14 native diagnostic follow-up: notice_review owns an ignored one-scenario forensic harness under the frozen Windows evidence directory, using the existing execute_sequence sandbox_root parameter to retain synthetic files while preserving normal runtime/worker cleanup. Capture only failure type, traceback locations, bounded cleanup flags and process exit metadata through existing observation points; do not log messages/locals/payloads or alter native semantics. Root reviews before one targeted launch. msi_maintenance retains Windows/WSL build inputs and copies bounded failed-build diagnostics; no new full build or overlay without coordination.
 
 
 ## Verification
