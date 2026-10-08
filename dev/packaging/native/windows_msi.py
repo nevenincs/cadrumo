@@ -237,7 +237,7 @@ def _source(
     if adapter is not None:
         _admission(package, value, scope, adapter)
         if runner is not None:
-            _owner(package, product, runner)
+            _owner(package, product, runner, value)
     if role == "registration":
         SubElement(
             package,
@@ -298,14 +298,16 @@ def _admission(package: Element, value: DistributionIdentity, scope: Installatio
     SubElement(sequence, "Custom", Action="CadrumoScopeAdmission", After="InstallInitialize", Condition=condition)
 
 
-def _owner(package: Element, product: MsiIdentity, runner: Path) -> None:
-    """The public endpoint locates a server; native image/token checks grant authority."""
+def _owner(package: Element, product: MsiIdentity, runner: Path, value: DistributionIdentity) -> None:
+    """Cached actions locate an exact live owner through protected native state."""
     metadata = {
-        "schema": 1,
+        "schema": 2,
         "scope": product.scope,
         "product_code": product.product_code.upper(),
         "role": product.role,
         "runner_sha256": digest(runner),
+        "identity": {"application_id": value.application_id, "channel": value.channel, "platform": "windows-x64"},
+        "publication": load_layout("windows-x64")["installation"]["publication"],
     }
     SubElement(package, "Property", Id="CadrumoOwner", Value=json.dumps(metadata, separators=(",", ":")))
     SubElement(package, "Property", Id="CADRUMO_MSI_OWNER", Secure="yes", Hidden="yes")
@@ -368,6 +370,7 @@ def author(
     # immutable inventory remain unchanged and do not acquire this native fence.
     marker = json.loads(member(stage, definition["marker"]).read_text(encoding="utf-8"))
     marker["publication"] = definition["publication"]
+    marker["launch_policy"] = "native"
     native_marker = member(directory, "native-installation.json")
     marker_content = (json.dumps(marker, indent=2) + "\n").encode("utf-8")
     sources = {}

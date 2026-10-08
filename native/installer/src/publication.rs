@@ -304,6 +304,25 @@ pub fn prepare(
     publication: &Path,
     context: &NativeContext,
 ) -> Result<PublicationCustody, Refusal> {
+    admit(prefix, publication, context, true)
+}
+
+/// Custom actions may inspect an owner's namespace but must never establish or
+/// repair its authority. Missing paths are refused without filesystem mutation.
+pub fn admit_existing(
+    prefix: &Path,
+    publication: &Path,
+    context: &NativeContext,
+) -> Result<PublicationCustody, Refusal> {
+    admit(prefix, publication, context, false)
+}
+
+fn admit(
+    prefix: &Path,
+    publication: &Path,
+    context: &NativeContext,
+    create_missing: bool,
+) -> Result<PublicationCustody, Refusal> {
     cadrumo_application::installation::maintenance::NativeOwner::new(
         "00000000-0000-0000-0000-000000000001".into(),
         context.clone(),
@@ -339,7 +358,7 @@ pub fn prepare(
             .try_exists()
             .map_err(|_| Refusal::IncompleteInventory)?
         {
-            if !inside {
+            if !inside || !create_missing {
                 return Err(Refusal::InvalidRequest);
             }
             create(path, context)?;
@@ -402,7 +421,11 @@ mod tests {
         let root = tempfile::tempdir_in(local).unwrap();
         let prefix = root.path().join("installed");
         let state = prefix.join("data/installation-state");
+        assert!(admit_existing(&prefix, &state, &context).is_err());
+        assert!(!prefix.exists());
         let custody = prepare(&prefix, &state, &context).unwrap();
+        let observer = admit_existing(&prefix, &state, &context).unwrap();
+        drop(observer);
         fs::write(state.join("transaction.lock"), b"").unwrap();
         let policy = Policy {
             context: &context,

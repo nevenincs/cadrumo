@@ -7,7 +7,7 @@ use cadrumo_application::{
     error::Error,
     installation::{
         DiscoveryContract,
-        maintenance::{Identity, NativeOwner, NativeProductInventory, Store},
+        maintenance::{Identity, NativeOwner, NativeProductInventory, RegistrationPhase, Store},
         version,
     },
     value::Sha256Digest,
@@ -106,6 +106,121 @@ fn native_error(error: crate::admission::Refusal) -> Error {
     Error::Integrity(error.message().into())
 }
 
+fn existing_native_registration(
+    plan: &Plan,
+    admission: &Request,
+    context: &cadrumo_application::installation::maintenance::NativeContext,
+) -> Result<Option<NativeOwner>, Error> {
+    let inventory = windows::inventory(plan.scope).map_err(native_error)?;
+    admission.admit(&inventory).map_err(native_error)?;
+    let mut registration = None;
+    for product in inventory {
+        let Some(family) = product.family else {
+            continue;
+        };
+        if !admission.permitted_families.contains(&family) {
+            continue;
+        }
+        if match context {
+            cadrumo_application::installation::maintenance::NativeContext::Machine => {
+                product.scope != Scope::Machine || product.sid.is_some()
+            }
+            cadrumo_application::installation::maintenance::NativeContext::User { sid } => {
+                product.scope != Scope::User || product.sid.as_ref() != Some(sid)
+            }
+        } {
+            return Err(Error::Integrity(
+                "native family belongs to another account".into(),
+            ));
+        }
+        let owner = NativeOwner::new(product.code, context.clone(), plan.prefix.clone())?;
+        if MsiInventory.locate(&owner)?.as_ref() != Some(&owner) {
+            return Err(Error::Integrity(
+                "native family belongs to another prefix or context".into(),
+            ));
+        }
+        if family == admission.permitted_families[1] && registration.replace(owner).is_some() {
+            return Err(Error::Integrity(
+                "multiple native registration owners".into(),
+            ));
+        }
+    }
+    Ok(registration)
+}
+
+fn previous_registration(
+    plan: &Plan,
+    admission: &Request,
+    store: &Store,
+    native: Option<NativeOwner>,
+) -> Result<Option<(crate::owner::Claim, crate::custody::FileCustody)>, Error> {
+    let snapshot = store.snapshot()?;
+    let Some(registration) = snapshot.registration() else {
+        if native.is_some() {
+            return Err(Error::Integrity(
+                "unpublished native registration owner".into(),
+            ));
+        }
+        return Ok(None);
+    };
+    if registration.phase == RegistrationPhase::Absent && native.is_none() {
+        return Ok(None);
+    }
+    if registration.phase != RegistrationPhase::Ready
+        || native.as_ref() != Some(&registration.owner)
+    {
+        return Err(Error::Integrity(
+            "registration publication differs from native owner".into(),
+        ));
+    }
+    let (definition, custody) = windows::cached_product(&registration.owner)?;
+    let metadata = definition
+        .owner
+        .as_ref()
+        .ok_or_else(|| Error::Integrity("cached registration has no owner protocol".into()))?;
+    let anchor = snapshot
+        .manager_anchor()
+        .ok_or_else(|| Error::Integrity("registration has no manager anchor".into()))?;
+    let product = snapshot
+        .versions()
+        .find(|(release, _)| *release == anchor)
+        .map(|(_, product)| product)
+        .ok_or_else(|| Error::Integrity("registration anchor has no product".into()))?;
+    if definition.family != admission.permitted_families[1]
+        || definition.version != anchor
+        || definition.ownership.version != anchor
+        || definition.ownership.role != "registration"
+        || metadata.role != crate::owner::Role::Registration
+        || definition.ownership.manifest_sha256 != product.manifest_sha256
+        || definition.ownership.application_id != plan.contract.installation_identity.application_id
+        || definition.ownership.channel != plan.contract.installation_identity.channel
+        || definition.ownership.platform != plan.contract.layout.platform
+        || metadata.schema != 2
+        || metadata.scope != plan.scope
+        || metadata.product_code != definition.code
+        || metadata.identity.application_id != definition.ownership.application_id
+        || metadata.identity.channel != definition.ownership.channel
+        || metadata.identity.platform != definition.ownership.platform
+        || Some(&metadata.publication) != plan.contract.layout.installation.publication.as_ref()
+        || definition.admission.permitted_families != admission.permitted_families
+        || definition.admission.conflicting_families != admission.conflicting_families
+    {
+        return Err(Error::Integrity(
+            "cached registration ownership mismatch".into(),
+        ));
+    }
+    Ok(Some((
+        crate::owner::Claim {
+            product_code: definition.code,
+            scope: plan.scope,
+            prefix: plan.prefix.clone(),
+            operation: crate::owner::Operation::Remove,
+            role: crate::owner::Role::Registration,
+        },
+        custody,
+    )))
+}
+
 fn admit_existing_prefix(plan: &Plan, store: &Store, owner: &NativeOwner) -> Result<(), Error> {
     if !plan.prefix.try_exists()?
         || std::fs::read_dir(&plan.prefix)?
@@ -131,6 +246,7 @@ fn admit_existing_prefix(plan: &Plan, store: &Store, owner: &NativeOwner) -> Res
             "platform": plan.contract.layout.platform,
             "abi": plan.contract.layout.abi,
             "publication": plan.contract.layout.installation.publication,
+            "launch_policy": "native",
         });
         if observed != expected {
             return Err(Error::Integrity(
@@ -179,15 +295,24 @@ fn artifact(
         return Err(Error::Integrity("native MSI artifact hash changed".into()));
     }
     let definition = windows::product_definition(&artifact.path).map_err(native_error)?;
+    let family_index = match role {
+        "version" => 0,
+        "registration" => 1,
+        _ => return Err(Error::Integrity("unknown native MSI role".into())),
+    };
     let owner = definition
         .owner
         .as_ref()
         .ok_or_else(|| Error::Integrity("MSI has no authenticated native owner".into()))?;
-    if owner.schema != 1
+    if owner.schema != 2
         || owner.scope != plan.scope
         || owner.product_code != definition.code
         || owner.role.as_str() != role
         || &owner.runner_sha256 != runner
+        || Some(&owner.publication) != plan.contract.layout.installation.publication.as_ref()
+        || owner.identity.application_id != plan.contract.installation_identity.application_id
+        || owner.identity.channel != plan.contract.installation_identity.channel
+        || owner.identity.platform != plan.contract.layout.platform
     {
         return Err(Error::Integrity(
             "MSI belongs to another native maintenance owner".into(),
@@ -207,10 +332,7 @@ fn artifact(
                 role: role.into(),
                 manifest_sha256: plan.manifest_sha256.clone(),
             })
-        || !definition
-            .admission
-            .permitted_families
-            .contains(&definition.family)
+        || definition.family != definition.admission.permitted_families[family_index]
     {
         return Err(Error::Integrity(
             "native MSI identity differs from maintenance plan".into(),
@@ -308,9 +430,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
         Err(_) => return report(Outcome::Refused, "native_transaction_unavailable"),
     };
     let prepared = (|| -> Result<_, Error> {
-        admission
-            .admit(&windows::inventory(plan.scope).map_err(native_error)?)
-            .map_err(native_error)?;
+        let native_registration = existing_native_registration(&plan, &admission, owner.context())?;
         admit_existing_prefix(&plan, &store, &owner)?;
         let publication = plan
             .contract
@@ -324,25 +444,47 @@ pub fn install(path: &Path) -> MaintenanceResult {
             .map_err(native_error)?;
         store.initialize()?;
         let maintenance = store.exclusive_maintenance()?;
+        let previous = previous_registration(&plan, &admission, &store, native_registration)?;
         let version = store.prepare(&plan.version, owner.clone(), plan.manifest_sha256.clone())?;
-        Ok((maintenance, version, namespace))
+        Ok((maintenance, version, namespace, previous))
     })();
-    let (_maintenance, _version, _namespace) = match prepared {
+    let (_maintenance, _version, _namespace, previous) = match prepared {
         Ok(guards) => guards,
         Err(_) => return rollback(transaction, "native_preparation_refused"),
     };
-    let broker = match crate::owner::Broker::bind(owner.context().clone()) {
+    let broker = match crate::owner::Broker::bind(
+        owner.context().clone(),
+        transaction.ownership(),
+        Identity {
+            application_id: plan.contract.installation_identity.application_id.clone(),
+            channel: plan.contract.installation_identity.channel.clone(),
+            platform: plan.contract.layout.platform.clone(),
+        },
+        plan.prefix.clone(),
+        plan.contract
+            .layout
+            .installation
+            .publication
+            .clone()
+            .expect("read_plan checked publication"),
+    ) {
         Ok(broker) => broker,
         Err(_) => return rollback(transaction, "native_owner_unavailable"),
     };
     let install = |artifact: &Artifact, role| {
-        let _active = broker.activate(crate::owner::Claim {
+        let mut claims = vec![crate::owner::Claim {
             product_code: artifact.product_code.to_ascii_uppercase(),
             scope: plan.scope,
             prefix: plan.prefix.clone(),
             operation: crate::owner::Operation::Install,
             role,
-        })?;
+        }];
+        if role == crate::owner::Role::Registration
+            && let Some((claim, _custody)) = &previous
+        {
+            claims.push(claim.clone());
+        }
+        let _active = broker.activate_claims(claims)?;
         transaction.install(&artifact.path, &plan.prefix, broker.endpoint())
     };
     if install(&plan.version_product, crate::owner::Role::Version).is_err() {

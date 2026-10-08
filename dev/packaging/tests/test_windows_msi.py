@@ -86,6 +86,8 @@ def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Pa
                     portable_marker = json.loads((stage / relative).read_text(encoding="utf-8"))
                     assert "publication" not in portable_marker
                     assert native_marker.pop("publication") == "data/installation-state"
+                    assert native_marker.pop("launch_policy") == "native"
+                    assert portable_marker.pop("launch_policy") == "portable"
                     assert native_marker == portable_marker
                 else:
                     relative = source.relative_to(stage).as_posix()
@@ -146,6 +148,37 @@ def test_authoring_is_incremental_and_preserves_stage(tmp_path: Path) -> None:
     assert author(build, identity, "cadrumo") == outputs
     assert {name: path.stat().st_mtime_ns for name, path in outputs.items()} == times
     assert receipt.read_bytes() == before
+
+
+def test_cached_owner_protocol_binds_native_identity_and_publication_without_opening_gate(tmp_path: Path) -> None:
+    build, identity = _prepared(tmp_path)
+    adapter = tmp_path / "installer.dll"
+    runner = tmp_path / "maintenance.exe"
+    adapter.write_bytes(b"authoring fixture")
+    runner.write_bytes(b"authoring fixture, never executed")
+    outputs = author(build, identity, "cadrumo", adapter, runner)
+    value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
+    for scope in ("user", "machine"):
+        for role in ("version", "registration"):
+            package = ElementTree.parse(outputs[f"{scope}-{role}.wxs"]).find("w:Package", NS)
+            assert package is not None
+            metadata = package.find("w:Property[@Id='CadrumoOwner']", NS)
+            assert metadata is not None
+            assert json.loads(metadata.attrib["Value"]) == {
+                "schema": 2,
+                "scope": scope,
+                "product_code": msi_identity(value, scope, role).product_code,
+                "role": role,
+                "runner_sha256": digest(runner),
+                "identity": {
+                    "application_id": value.application_id,
+                    "channel": value.channel,
+                    "platform": "windows-x64",
+                },
+                "publication": "data/installation-state",
+            }
+            launch = package.find("w:Launch", NS)
+            assert launch is not None and launch.attrib["Condition"] == "0"
 
 
 def test_optional_native_admission_is_scoped_and_hash_bound_without_opening_installation(tmp_path: Path) -> None:

@@ -4,12 +4,15 @@ use crate::{
     admission::{MAX_DATA_BYTES, Refusal, Scope},
     custody,
 };
-use cadrumo_application::{installation::maintenance::NativeContext, value::Sha256Digest};
+use cadrumo_application::{
+    installation::maintenance::{Identity, NativeContext},
+    value::{RelativePath, Sha256Digest},
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     ffi::OsString,
-    io::Read,
+    io::{Read, Write},
     os::windows::{
         ffi::OsStringExt,
         io::{AsRawHandle, FromRawHandle, OwnedHandle},
@@ -69,8 +72,8 @@ pub struct Claim {
 #[serde(deny_unknown_fields)]
 pub struct Callback {
     pub schema: u32,
-    pub endpoint: String,
-    pub runner_sha256: Sha256Digest,
+    pub identity: Identity,
+    pub publication: RelativePath,
     pub claim: Claim,
 }
 
@@ -80,13 +83,10 @@ impl Callback {
             return Err(Refusal::InvalidRequest);
         }
         let value: Self = serde_json::from_slice(bytes).map_err(|_| Refusal::InvalidRequest)?;
-        let nonce = value
-            .endpoint
-            .strip_prefix(ENDPOINT_PREFIX)
-            .ok_or(Refusal::InvalidRequest)?;
-        if value.schema != 1
-            || nonce.len() != 64
-            || !nonce.bytes().all(|byte| byte.is_ascii_hexdigit())
+        if value.schema != 2
+            || value.identity.application_id.is_empty()
+            || value.identity.channel.is_empty()
+            || value.identity.platform != "windows-x64"
             || !value.claim.prefix.is_absolute()
             || value
                 .claim
@@ -100,6 +100,100 @@ impl Callback {
         }
         Ok(value)
     }
+}
+
+/// This file is authoritative only under independently admitted native ACL and
+/// namespace custody, with a matching live NPFS peer. It never proves settlement.
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Record {
+    schema: u32,
+    identity: Identity,
+    context: NativeContext,
+    prefix: PathBuf,
+    transaction: String,
+    endpoint: String,
+    pid: u32,
+    created: u64,
+    image: PathBuf,
+    image_sha256: Sha256Digest,
+    claims: Vec<Claim>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Request {
+    schema: u32,
+    transaction: String,
+    claim: Claim,
+}
+
+fn nonce() -> Result<String, Refusal> {
+    let mut bytes = [0; 32];
+    // SAFETY: system random generator writes the exact supplied buffer.
+    if unsafe {
+        BCryptGenRandom(
+            ptr::null_mut(),
+            bytes.as_mut_ptr(),
+            bytes.len() as u32,
+            BCRYPT_USE_SYSTEM_PREFERRED_RNG,
+        )
+    } != 0
+    {
+        return Err(Refusal::NativeFailure);
+    }
+    Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
+}
+
+fn creation(process: &OwnedHandle) -> Result<u64, Refusal> {
+    let mut created = FILETIME::default();
+    let mut exited = FILETIME::default();
+    let mut kernel = FILETIME::default();
+    let mut user = FILETIME::default();
+    // SAFETY: process is query-only and owned, all four outputs are writable.
+    checked(unsafe {
+        GetProcessTimes(
+            process.as_raw_handle(),
+            &mut created,
+            &mut exited,
+            &mut kernel,
+            &mut user,
+        )
+    })?;
+    Ok((u64::from(created.dwHighDateTime) << 32) | u64::from(created.dwLowDateTime))
+}
+
+fn digest(file: &mut std::fs::File) -> Result<Sha256Digest, Refusal> {
+    if file.metadata().map_err(|_| Refusal::NativeFailure)?.len() > 128 * 1024 * 1024 {
+        return Err(Refusal::NativeFailure);
+    }
+    let mut digest = Sha256::new();
+    let mut buffer = [0; 65536];
+    loop {
+        let size = file.read(&mut buffer).map_err(|_| Refusal::NativeFailure)?;
+        if size == 0 {
+            break;
+        }
+        digest.update(&buffer[..size]);
+    }
+    Sha256Digest::new(format!("{:x}", digest.finalize())).map_err(|_| Refusal::NativeFailure)
+}
+
+fn verified_peer(
+    record: &Record,
+    pid: u32,
+    context: &NativeContext,
+) -> Result<(OwnedHandle, custody::FileCustody), Refusal> {
+    let (process, image, token) = process(pid)?;
+    if pid != record.pid || creation(&process)? != record.created || image != record.image {
+        return Err(Refusal::NativeFailure);
+    }
+    token_matches(&token, context)?;
+    let mut image = custody::file(&image)?;
+    if digest(&mut image.file)? != record.image_sha256 {
+        return Err(Refusal::NativeFailure);
+    }
+    Ok((process, image))
 }
 
 fn checked(value: i32) -> Result<(), Refusal> {
@@ -325,36 +419,47 @@ fn exchange(
 /// Keeps the process/pipe and active exact native operation under one owner.
 pub struct Broker {
     endpoint: String,
-    active: Arc<Mutex<Option<Claim>>>,
+    active: Arc<Mutex<Vec<Claim>>>,
     stop: Arc<AtomicBool>,
     worker: Option<JoinHandle<()>>,
+    ownership: crate::ownership::Ownership,
+    record: Record,
+    record_path: PathBuf,
+    _namespace: crate::publication::PublicationCustody,
 }
 impl Broker {
-    pub fn bind(context: NativeContext) -> Result<Self, Refusal> {
+    pub fn bind(
+        context: NativeContext,
+        ownership: crate::ownership::Ownership,
+        identity: Identity,
+        prefix: PathBuf,
+        publication: RelativePath,
+    ) -> Result<Self, Refusal> {
+        ownership.current()?;
+        let state = publication.under(&prefix);
+        let namespace = crate::publication::admit_existing(&prefix, &state, &context)?;
         let mut token = ptr::null_mut();
         // SAFETY: current process pseudo handle is borrowed, output is newly owned.
         checked(unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) })?;
         let sid = token_sid(&handle(token)?)?;
-        let mut nonce = [0; 32];
-        // SAFETY: system-preferred random generator fills exactly the supplied buffer.
-        if unsafe {
-            BCryptGenRandom(
-                ptr::null_mut(),
-                nonce.as_mut_ptr(),
-                nonce.len() as u32,
-                BCRYPT_USE_SYSTEM_PREFERRED_RNG,
-            )
-        } != 0
-        {
-            return Err(Refusal::NativeFailure);
-        }
-        let endpoint = format!(
-            "{ENDPOINT_PREFIX}{}",
-            nonce
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect::<String>()
-        );
+        let endpoint = format!("{ENDPOINT_PREFIX}{}", nonce()?);
+        // SAFETY: current process ID is read-only, never a bearer credential.
+        let pid = unsafe { GetCurrentProcessId() };
+        let (process, image, _) = process(pid)?;
+        let mut source = custody::file(&image)?;
+        let record = Record {
+            schema: 1,
+            identity,
+            context: context.clone(),
+            prefix,
+            transaction: nonce()?,
+            endpoint: endpoint.clone(),
+            pid,
+            created: creation(&process)?,
+            image,
+            image_sha256: digest(&mut source.file)?,
+            claims: Vec::new(),
+        };
         let name = wide(&endpoint)?;
         let sddl = wide(&format!("O:{sid}D:P(A;;GA;;;{sid})(A;;GA;;;SY)"))?;
         let mut descriptor = ptr::null_mut();
@@ -386,27 +491,73 @@ impl Broker {
                 &attributes,
             )
         })?;
-        let active = Arc::new(Mutex::new(None));
+        let active = Arc::new(Mutex::new(Vec::new()));
         let stop = Arc::new(AtomicBool::new(false));
         let shared = active.clone();
         let stopping = stop.clone();
-        let worker = thread::spawn(move || serve(pipe, context, shared, stopping));
+        let observer = ownership.clone();
+        let transaction = record.transaction.clone();
+        let worker =
+            thread::spawn(move || serve(pipe, context, shared, stopping, observer, transaction));
         Ok(Self {
             endpoint,
             active,
             stop,
             worker: Some(worker),
+            ownership,
+            record,
+            record_path: state.join("owner.json"),
+            _namespace: namespace,
         })
     }
     pub fn endpoint(&self) -> &str {
         &self.endpoint
     }
     pub fn activate(&self, claim: Claim) -> Result<Active<'_>, Refusal> {
+        self.activate_claims(vec![claim])
+    }
+    pub fn activate_claims(&self, claims: Vec<Claim>) -> Result<Active<'_>, Refusal> {
+        self.ownership.current()?;
         let mut active = self.active.lock().map_err(|_| Refusal::NativeFailure)?;
-        if active.is_some() {
+        if !active.is_empty() || claims.is_empty() || claims.len() > 2 {
             return Err(Refusal::NativeFailure);
         }
-        *active = Some(claim);
+        for (index, claim) in claims.iter().enumerate() {
+            if claim.prefix != self.record.prefix
+                || matches!(
+                    (&self.record.context, claim.scope),
+                    (NativeContext::Machine, Scope::User)
+                        | (NativeContext::User { .. }, Scope::Machine)
+                )
+                || crate::admission::canonical_guid(&claim.product_code)? != claim.product_code
+                || claims[..index].contains(claim)
+            {
+                return Err(Refusal::InvalidRequest);
+            }
+        }
+        let mut record = self.record.clone();
+        record.claims = claims.clone();
+        let bytes = serde_json::to_vec(&record).map_err(|_| Refusal::InvalidRequest)?;
+        if bytes.len() > MAX_DATA_BYTES {
+            return Err(Refusal::InvalidRequest);
+        }
+        let temporary = self.record_path.with_extension(format!("{}.tmp", nonce()?));
+        let result = (|| {
+            let mut file = std::fs::File::options()
+                .write(true)
+                .create_new(true)
+                .open(&temporary)?;
+            file.write_all(&bytes)?;
+            file.sync_all()?;
+            drop(file);
+            std::fs::rename(&temporary, &self.record_path)
+        })();
+        if result.is_err() {
+            let _ = std::fs::remove_file(&temporary);
+            return Err(Refusal::NativeFailure);
+        }
+        self.ownership.current()?;
+        *active = claims;
         Ok(Active(self))
     }
 }
@@ -414,8 +565,9 @@ pub struct Active<'a>(&'a Broker);
 impl Drop for Active<'_> {
     fn drop(&mut self) {
         if let Ok(mut active) = self.0.active.lock() {
-            *active = None;
+            active.clear();
         }
+        let _ = std::fs::remove_file(&self.0.record_path);
     }
 }
 impl Drop for Broker {
@@ -424,24 +576,30 @@ impl Drop for Broker {
         if let Some(worker) = self.worker.take() {
             let _ = worker.join();
         }
+        let _ = std::fs::remove_file(&self.record_path);
     }
 }
 
 fn serve(
     pipe: OwnedHandle,
     context: NativeContext,
-    active: Arc<Mutex<Option<Claim>>>,
+    active: Arc<Mutex<Vec<Claim>>>,
     stop: Arc<AtomicBool>,
+    ownership: crate::ownership::Ownership,
+    transaction: String,
 ) {
-    while !stop.load(Ordering::Acquire) {
+    while !stop.load(Ordering::Acquire) && ownership.current().is_ok() {
         if exchange(&pipe, Io::Connect, &mut [], Duration::from_millis(100)).is_err() {
             continue;
         }
         let mut bytes = [0; MAX_DATA_BYTES];
         let accepted = (|| -> Result<(), Refusal> {
             let count = exchange(&pipe, Io::Read, &mut bytes, REQUEST_TIMEOUT)?;
-            let claim: Claim =
+            let request: Request =
                 serde_json::from_slice(&bytes[..count]).map_err(|_| Refusal::InvalidRequest)?;
+            if request.schema != 1 || request.transaction != transaction {
+                return Err(Refusal::InvalidRequest);
+            }
             let mut pid = 0;
             // SAFETY: connected pipe and writable native peer PID output.
             checked(unsafe { GetNamedPipeClientProcessId(pipe.as_raw_handle(), &mut pid) })?;
@@ -466,13 +624,17 @@ fn serve(
             }
             checked(opened)?;
             token_matches(&handle(token)?, &context)?;
-            if active.lock().map_err(|_| Refusal::NativeFailure)?.as_ref() != Some(&claim) {
+            if !active
+                .lock()
+                .map_err(|_| Refusal::NativeFailure)?
+                .contains(&request.claim)
+            {
                 return Err(Refusal::InvalidRequest);
             }
             Ok(())
         })()
         .is_ok();
-        let mut response = [u8::from(accepted)];
+        let mut response = [u8::from(accepted && ownership.current().is_ok())];
         if exchange(&pipe, Io::Write, &mut response, REQUEST_TIMEOUT).is_ok() {
             // An acknowledgement ensures DisconnectNamedPipe cannot discard an
             // unread admission result. Silent clients are still bounded.
@@ -487,7 +649,39 @@ fn serve(
 
 pub fn authenticate(callback: &Callback) -> Result<(), Refusal> {
     let context = effective_context(callback.claim.scope)?;
-    let name = wide(&callback.endpoint)?;
+    let state = callback.publication.under(&callback.claim.prefix);
+    let _namespace = crate::publication::admit_existing(&callback.claim.prefix, &state, &context)?;
+    let mut source = custody::file(&state.join("owner.json"))?;
+    let mut bytes = Vec::new();
+    std::io::Read::by_ref(&mut source.file)
+        .take((MAX_DATA_BYTES + 1) as u64)
+        .read_to_end(&mut bytes)
+        .map_err(|_| Refusal::NativeFailure)?;
+    if bytes.len() > MAX_DATA_BYTES {
+        return Err(Refusal::InvalidRequest);
+    }
+    let record: Record = serde_json::from_slice(&bytes).map_err(|_| Refusal::InvalidRequest)?;
+    let endpoint_nonce = record
+        .endpoint
+        .strip_prefix(ENDPOINT_PREFIX)
+        .ok_or(Refusal::InvalidRequest)?;
+    if record.schema != 1
+        || record.identity != callback.identity
+        || record.context != context
+        || record.prefix != callback.claim.prefix
+        || !record.claims.contains(&callback.claim)
+        || record.claims.is_empty()
+        || record.claims.len() > 2
+        || record.pid == 0
+        || record.created == 0
+        || !record.image.is_absolute()
+        || ![endpoint_nonce, &record.transaction]
+            .iter()
+            .all(|value| value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
+    {
+        return Err(Refusal::InvalidRequest);
+    }
+    let name = wide(&record.endpoint)?;
     let deadline = Instant::now() + REQUEST_TIMEOUT;
     // SAFETY: existing local pipe, overlapped and identification-only SQOS, no inheritance.
     let pipe = handle(unsafe {
@@ -504,41 +698,18 @@ pub fn authenticate(callback: &Callback) -> Result<(), Refusal> {
     let mut pid = 0;
     // SAFETY: query connected server before writing any claim.
     checked(unsafe { GetNamedPipeServerProcessId(pipe.as_raw_handle(), &mut pid) })?;
-    let (_process, image, token) = process(pid)?;
-    token_matches(&token, &context)?;
-    let mut image = custody::file(&image)?;
-    if image
-        .file
-        .metadata()
-        .map_err(|_| Refusal::NativeFailure)?
-        .len()
-        > 128 * 1024 * 1024
-    {
-        return Err(Refusal::NativeFailure);
-    }
-    let mut digest = Sha256::new();
-    let mut buffer = [0; 65536];
-    loop {
-        let size = image
-            .file
-            .read(&mut buffer)
-            .map_err(|_| Refusal::NativeFailure)?;
-        if size == 0 {
-            break;
-        }
-        digest.update(&buffer[..size]);
-    }
-    if Sha256Digest::new(format!("{:x}", digest.finalize())).map_err(|_| Refusal::NativeFailure)?
-        != callback.runner_sha256
-    {
-        return Err(Refusal::NativeFailure);
-    }
+    let (_process, _image) = verified_peer(&record, pid, &context)?;
     let mode = PIPE_READMODE_MESSAGE;
     // SAFETY: client owns pipe; set only message read mode.
     checked(unsafe {
         SetNamedPipeHandleState(pipe.as_raw_handle(), &mode, ptr::null(), ptr::null())
     })?;
-    let mut claim = serde_json::to_vec(&callback.claim).map_err(|_| Refusal::InvalidRequest)?;
+    let mut claim = serde_json::to_vec(&Request {
+        schema: 1,
+        transaction: record.transaction,
+        claim: callback.claim.clone(),
+    })
+    .map_err(|_| Refusal::InvalidRequest)?;
     if claim.len() > MAX_DATA_BYTES
         || exchange(
             &pipe,
@@ -584,18 +755,26 @@ mod tests {
         }
     }
 
+    fn identity() -> Identity {
+        Identity {
+            application_id: "test.cadrumo".into(),
+            channel: "test".into(),
+            platform: "windows-x64".into(),
+        }
+    }
+
     #[test]
-    fn callback_admission_refuses_remote_names_oversize_and_unknown_fields() {
+    fn callback_admission_refuses_unsafe_state_oversize_and_unknown_fields() {
         let mut value = serde_json::json!({
-            "schema": 1,
-            "endpoint": format!("{ENDPOINT_PREFIX}{}", "a".repeat(64)),
-            "runner_sha256": "a".repeat(64),
+            "schema": 2,
+            "identity": identity(),
+            "publication": "data/installation-state",
             "claim": claim(),
         });
         assert!(Callback::parse(&serde_json::to_vec(&value).unwrap()).is_ok());
-        value["endpoint"] = serde_json::json!(r"\\remote\pipe\CADRUMO.MsiOwner.fake");
+        value["publication"] = serde_json::json!("../outside");
         assert!(Callback::parse(&serde_json::to_vec(&value).unwrap()).is_err());
-        value["endpoint"] = serde_json::json!(format!("{ENDPOINT_PREFIX}{}", "a".repeat(64)));
+        value["publication"] = serde_json::json!("data/installation-state");
         value["override"] = serde_json::json!(true);
         assert!(Callback::parse(&serde_json::to_vec(&value).unwrap()).is_err());
         assert!(Callback::parse(&vec![b' '; MAX_DATA_BYTES + 1]).is_err());
@@ -604,18 +783,47 @@ mod tests {
     #[test]
     fn real_owner_pipe_rejects_a_same_user_non_installer_process() {
         let context = effective_context(Scope::User).unwrap();
-        let broker = Broker::bind(context).unwrap();
-        let _active = broker.activate(claim()).unwrap();
-        assert!(broker.activate(claim()).is_err());
-        let image = std::fs::read(std::env::current_exe().unwrap()).unwrap();
+        let root = tempfile::tempdir_in(std::env::var_os("LOCALAPPDATA").unwrap()).unwrap();
+        let prefix = root.path().join("installed");
+        let publication = RelativePath::new("data/installation-state").unwrap();
+        let _namespace =
+            crate::publication::prepare(&prefix, &publication.under(&prefix), &context).unwrap();
+        let mut claim = claim();
+        claim.prefix = prefix.clone();
+        let broker = Broker::bind(
+            context,
+            crate::ownership::tests::unsignaled(),
+            identity(),
+            prefix,
+            publication.clone(),
+        )
+        .unwrap();
+        let _active = broker.activate(claim.clone()).unwrap();
+        assert!(broker.activate(claim.clone()).is_err());
         let callback = Callback {
-            schema: 1,
-            endpoint: broker.endpoint().into(),
-            runner_sha256: Sha256Digest::new(format!("{:x}", Sha256::digest(image))).unwrap(),
-            claim: claim(),
+            schema: 2,
+            identity: identity(),
+            publication,
+            claim,
         };
         // Server image and account are genuine and the claim matches, but the
         // caller is this test image rather than the native Windows Installer.
         assert_eq!(authenticate(&callback), Err(Refusal::NativeFailure));
+        let record: Record =
+            serde_json::from_slice(&std::fs::read(&broker.record_path).unwrap()).unwrap();
+        assert!(verified_peer(&record, record.pid, &record.context).is_ok());
+        for alteration in 0..4 {
+            let mut altered = record.clone();
+            match alteration {
+                0 => altered.pid += 1,
+                1 => altered.created += 1,
+                2 => altered.image = altered.image.with_extension("other.exe"),
+                _ => altered.image_sha256 = Sha256Digest::new("a".repeat(64)).unwrap(),
+            }
+            assert!(verified_peer(&altered, record.pid, &record.context).is_err());
+        }
+        drop(_active);
+        assert!(!broker.record_path.exists());
+        assert!(authenticate(&callback).is_err());
     }
 }

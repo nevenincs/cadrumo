@@ -9,7 +9,10 @@ use cadrumo_application::{
 };
 use std::{
     ffi::c_void,
-    os::windows::fs::MetadataExt,
+    os::windows::{
+        fs::MetadataExt,
+        io::{FromRawHandle, OwnedHandle},
+    },
     path::{Component, Path, Prefix},
 };
 use std::{path::PathBuf, ptr};
@@ -96,7 +99,7 @@ impl Drop for KernelHandle {
 /// successful commit return is the only operation that disables rollback on Drop.
 pub struct Transaction {
     _transaction: Handle,
-    _owner_event: KernelHandle,
+    ownership: crate::ownership::Ownership,
     active: bool,
 }
 impl Transaction {
@@ -121,11 +124,18 @@ impl Transaction {
         }
         Ok(Self {
             _transaction: Handle(transaction),
-            _owner_event: KernelHandle(event),
+            // SAFETY: MsiBeginTransaction returned this newly owned event handle.
+            ownership: crate::ownership::Ownership::new(unsafe {
+                OwnedHandle::from_raw_handle(event)
+            }),
             active: true,
         })
     }
+    pub fn ownership(&self) -> crate::ownership::Ownership {
+        self.ownership.clone()
+    }
     pub fn install(&self, package: &Path, prefix: &Path, endpoint: &str) -> Result<(), Refusal> {
+        self.ownership.current()?;
         local_regular_file(package)?;
         let package = wide(package.to_str().ok_or(Refusal::InvalidRequest)?)?;
         let prefix = prefix.to_str().ok_or(Refusal::InvalidRequest)?;
@@ -137,15 +147,20 @@ impl Transaction {
         ))?;
         // SAFETY: This process owns the transaction; terminated strings remain live.
         // Reboot-required and other nonzero results remain failures, never implicit success.
-        result(unsafe { MsiInstallProductW(package.as_ptr(), properties.as_ptr()) })
+        let installed =
+            result(unsafe { MsiInstallProductW(package.as_ptr(), properties.as_ptr()) });
+        self.ownership.current()?;
+        installed
     }
     pub fn commit(mut self) -> Result<(), Refusal> {
+        self.ownership.current()?;
         // SAFETY: This object owns the active native transaction in this process.
         result(unsafe { MsiEndTransaction(1) })?;
         self.active = false;
         Ok(())
     }
     pub fn rollback(mut self) -> Result<(), Refusal> {
+        self.ownership.current()?;
         // SAFETY: This object owns the active native transaction in this process.
         result(unsafe { MsiEndTransaction(0) })?;
         self.active = false;
@@ -154,7 +169,7 @@ impl Transaction {
 }
 impl Drop for Transaction {
     fn drop(&mut self) {
-        if self.active {
+        if self.active && self.ownership.current().is_ok() {
             // SAFETY: Only our still-active transaction is rolled back. Failure
             // leaves shared publication fenced; Drop never manufactures success.
             unsafe {
@@ -460,6 +475,42 @@ fn cached_family(code: &[u16], context: u32, sid: &[u16]) -> Result<Option<Strin
 /// Exact-context native ownership observation for shared removal recovery.
 pub struct MsiInventory;
 
+/// Bind cached metadata to an exact installed product, scope, account and prefix.
+/// Retain the cache and its namespace while admitting nested native removal.
+pub fn cached_product(
+    owner: &NativeOwner,
+) -> Result<(ProductDefinition, crate::custody::FileCustody), Error> {
+    if MsiInventory.locate(owner)?.as_ref() != Some(owner) {
+        return Err(Error::Integrity(
+            "cached product has no exact native owner".into(),
+        ));
+    }
+    let code = wide(&format!("{{{}}}", owner.product_code())).map_err(application_error)?;
+    let sid = match owner.context() {
+        NativeContext::Machine => None,
+        NativeContext::User { sid } => Some(wide(sid).map_err(application_error)?),
+    };
+    let contexts: &[u32] = if sid.is_none() { &[MACHINE] } else { &[1, 2] };
+    let mut cache = None;
+    for context in contexts {
+        if native_product_property(&code, sid.as_deref(), *context, "State")?.is_some() {
+            if cache.is_some() {
+                return Err(Error::Integrity("ambiguous cached product".into()));
+            }
+            cache = native_product_property(&code, sid.as_deref(), *context, "LocalPackage")?;
+        }
+    }
+    let path = PathBuf::from(
+        cache.ok_or_else(|| Error::Integrity("missing native cached product".into()))?,
+    );
+    let custody = crate::custody::file(&path).map_err(application_error)?;
+    let definition = product_definition(&path).map_err(application_error)?;
+    if definition.code != owner.product_code() {
+        return Err(Error::Integrity("cached product identity mismatch".into()));
+    }
+    Ok((definition, custody))
+}
+
 impl NativeProductInventory for MsiInventory {
     fn locate(&self, owner: &NativeOwner) -> Result<Option<NativeOwner>, Error> {
         let code = wide(&format!("{{{}}}", owner.product_code())).map_err(application_error)?;
@@ -619,6 +670,8 @@ pub struct OwnerMetadata {
     pub product_code: String,
     pub role: crate::owner::Role,
     pub runner_sha256: cadrumo_application::value::Sha256Digest,
+    pub identity: cadrumo_application::installation::maintenance::Identity,
+    pub publication: cadrumo_application::value::RelativePath,
 }
 
 fn prepare_owner(install: u32) -> Result<(), Refusal> {
@@ -628,13 +681,13 @@ fn prepare_owner(install: u32) -> Result<(), Refusal> {
     let metadata: OwnerMetadata =
         serde_json::from_str(&metadata).map_err(|_| Refusal::InvalidRequest)?;
     let product = property(&database, "ProductCode")?.ok_or(Refusal::InvalidRequest)?;
-    if metadata.schema != 1 || canonical_guid(&product)? != metadata.product_code {
+    if metadata.schema != 2 || canonical_guid(&product)? != metadata.product_code {
         return Err(Refusal::InvalidRequest);
     }
     let callback = crate::owner::Callback {
-        schema: 1,
-        endpoint: session_property(install, "CADRUMO_MSI_OWNER")?,
-        runner_sha256: metadata.runner_sha256,
+        schema: 2,
+        identity: metadata.identity,
+        publication: metadata.publication,
         claim: crate::owner::Claim {
             product_code: metadata.product_code,
             scope: metadata.scope,
