@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:bcda59e746688bf9c9d35bc92a5a09a21271bbe4f2b5a21e2512d8c6b4b0aefc'
+body_hash: 'sha256:8dd0e685115a452626305a1adfa7c9e10a52e9f3b06c243dd719413e1946948e'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -258,6 +258,12 @@ ManagerSession::current now derives macOS user and login-session coordinates thr
 The Mac became reachable again. An isolated native-session-check tree under /Users/gergely.wootsch/cadrumo-builds/unsigned-installers-20261008 received 133 hash-verified current crate files and the configured generated contract, with provenance retained. The full native manager compiled and linked with Rust 1.96 and the Apple SDK in 57.46 seconds. All 76 library tests passed in 0.09 seconds, including the previously unexecuted Darwin IPC socket tests and current-token/shared-session tests; all-target Clippy with -D warnings passed in 18.09 seconds. The first run had nine custody fixture failures because the SSH default temporary path traversed the /var symlink. A private canonical task-owned TMPDIR corrected the harness without changing custody policy; both runs are retained. Windows configured manager tests and all-target Clippy also pass. Scoped formatting and diff checks pass; final whitespace normalization is recorded separately from the tested snapshot.
 
 Evidence and commands are retained locally in build/macos-process-typecheck/native-session-evidence, with session-windows-tests.log and session-windows-clippy.log alongside it. Review verdict PASS for this source slice and native IPC component verification. The SSH session exercises refusal, not positive graphical admission. S19 remains open for instance ownership, supervision/stop, tray/lifecycle, SMAppService, installed dispatch and native graphical acceptance. Frozen package-build inputs were not modified, and neither supplied host received product installation or login/session-ending tests.
+
+### Darwin installed socket paths | high | Default managed runtime cannot bind on the supplied Mac
+
+Read-only native HOME confirmation and canonical declaration inspection establish 104-byte stable and 112-byte preview runtime socket paths under the supplied Mac's normal installed data directories. PosixRuntimeEndpoint refuses lengths at or above 104 before bind; the new manager socket name is longer still. Short synthetic native IPC tests do not cover this installed-default defect. S19 remains open and activation stays gated.
+
+The complete comparative evidence is 2026-10-08-runtime-manager-architecture-darwin-socket-paths-research. Native /dev/fd directory-alias lookup, connect and bind failed ENOENT, while the ordinary connection retained correct peer identity. The public user cache directory is a validated 0700, current-user-owned candidate independent of HOME length, but its use would require a canonical location exception and compact channel-qualified naming; no such choice has been accepted or implemented. Research consistency review found no factual corrections. Both supplied hosts remain preserved; no product directories or login registrations were created.
 
 ## Recommendations
 

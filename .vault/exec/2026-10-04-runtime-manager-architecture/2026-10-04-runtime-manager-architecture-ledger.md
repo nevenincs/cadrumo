@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:abf6ce2836fa111a475d5e1f38862cfcdd3832362eeb7127d7c2a31195c30c65'
+body_hash: 'sha256:fad53a0c5b61101a0e9d5772e8261c537bc4b4eb33066041a5af9f04a10a8d5e'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -609,6 +609,11 @@ related:
 - `S19` `verify:` `Configured Windows manager tests and all-target Clippy` -> `pass`
 - `S19` `verify:` `Scoped rustfmt and git diff --check` -> `pass`
 - `S19` `verify:` `Independent shared-session source review` -> `pass`
+- `S19` `A` `.vault/research/2026-10-08-runtime-manager-architecture-darwin-socket-paths-research.md`
+- `S19` `M` `.vault/index/runtime-manager-architecture.index.md`
+- `S19` `verify:` `Native Darwin ordinary socket peer identity and fd-alias feasibility probe` -> `pass`
+- `S19` `verify:` `Read-only Darwin user-cache ownership mode and canonical path probe` -> `pass`
+- `S19` `verify:` `Independent research factual consistency review` -> `pass`
 
 ## Notes
 
@@ -656,3 +661,4 @@ related:
 - `S18` Partial S18 checkpoint: share existing bounded framing for Darwin reuse; Linux placement and lifecycle remain unfinished. No activation or host registration.
 - `S19` Source checkpoint only. Current task audit token is corroborated against held process and Security session facts; transport retains owner-only namespace/socket, per-socket NOSIGPIPE and bounded authenticated exchanges. Independent source review finds no concrete defect. Full native compilation and execution remain pending because the real Mac is unreachable; primitive cross-typecheck is not native execution. Main activation, login registration and S19 remain gated/open.
 - `S19` S19 remains open. Native IPC component execution now verified, but SSH refusal is not graphical positive admission or installed lifecycle acceptance. Initial native fixture failures from symlinked SSH TMPDIR were retained; corrected private canonical path passed without weakening custody.
+- `S19` High installed-default socket path blocker remains unresolved. Feasibility probes establish that fd aliases fail ENOENT and the user cache is only a candidate; no namespace decision or product activation is claimed.
