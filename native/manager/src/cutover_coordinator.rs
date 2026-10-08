@@ -3,6 +3,7 @@ use crate::{
     cutover_parent::{Parent, Progress},
     failed_versions::FailedVersions,
     ipc::windows::Server,
+    lifecycle::CutoverRuntime,
     session::{
         claim::StartClaim,
         instance::{SessionLock, claim_session},
@@ -11,64 +12,12 @@ use crate::{
 use cadrumo_application::{component::Cancellation, installation::Selection};
 use std::{
     io,
-    path::Path,
     sync::{
         Arc,
         mpsc::{self, Receiver},
     },
     time::{Duration, Instant},
 };
-
-pub trait Runtime {
-    fn root(&self) -> Option<&Path> {
-        None
-    }
-    fn can_cutover(&self) -> bool {
-        false
-    }
-    fn stopping(&self) -> bool {
-        false
-    }
-    fn resume_session(&mut self) {}
-    fn begin_cutover(&mut self) -> io::Result<Option<StartClaim>> {
-        Ok(None)
-    }
-    fn idle_stopped(&self) -> bool {
-        false
-    }
-    fn retry_idle(&self) {}
-    fn abandon_cutover(&mut self) {}
-    fn rollback(&mut self, _claim: StartClaim) {}
-}
-impl Runtime for crate::background::Background {
-    fn root(&self) -> Option<&Path> {
-        Some(self.storage_root())
-    }
-    fn can_cutover(&self) -> bool {
-        self.can_cutover()
-    }
-    fn stopping(&self) -> bool {
-        self.stopping()
-    }
-    fn resume_session(&mut self) {
-        self.cancel_session_end();
-    }
-    fn begin_cutover(&mut self) -> io::Result<Option<StartClaim>> {
-        self.begin_cutover()
-    }
-    fn idle_stopped(&self) -> bool {
-        self.idle_stopped()
-    }
-    fn retry_idle(&self) {
-        self.retry_idle();
-    }
-    fn abandon_cutover(&mut self) {
-        self.abandon_cutover();
-    }
-    fn rollback(&mut self, claim: StartClaim) {
-        self.rollback(claim);
-    }
-}
 
 pub struct Coordinator {
     current: Selection,
@@ -124,7 +73,7 @@ impl Coordinator {
     }
     pub fn poll(
         &mut self,
-        runtime: &mut dyn Runtime,
+        runtime: &mut dyn CutoverRuntime,
         session: &mut Option<SessionLock>,
         ipc: &mut Option<Server>,
     ) -> io::Result<bool> {
@@ -329,11 +278,12 @@ impl Drop for Coordinator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
     struct Busy {
         root: std::path::PathBuf,
         abandoned: bool,
     }
-    impl Runtime for Busy {
+    impl CutoverRuntime for Busy {
         fn root(&self) -> Option<&Path> {
             Some(&self.root)
         }

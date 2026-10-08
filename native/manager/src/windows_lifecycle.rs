@@ -1,7 +1,9 @@
 //! Windows session admission, job breakaway and the hidden session-end window.
 #![allow(unsafe_code)]
 
-use crate::{background::Background, supervision::supervisor::SessionActivity};
+use crate::{
+    background::Background, lifecycle::ManagerLifecycle, supervision::supervisor::SessionActivity,
+};
 use std::{
     ffi::c_void,
     io, mem,
@@ -163,7 +165,7 @@ pub fn escape_job(already_attempted: bool, sign_in: bool) -> io::Result<bool> {
 }
 
 struct WindowState {
-    background: Box<dyn Lifecycle>,
+    background: Box<dyn ManagerLifecycle>,
     ipc: Option<crate::ipc::windows::Server>,
     failed: bool,
     tray: Option<crate::windows_tray::Tray>,
@@ -187,52 +189,6 @@ impl WindowState {
     }
 }
 
-trait Lifecycle: crate::cutover_coordinator::Runtime {
-    fn retry(&mut self) -> io::Result<()> {
-        self.poll()
-    }
-    fn restart(&mut self) -> io::Result<()> {
-        Err(io::ErrorKind::Unsupported.into())
-    }
-    fn quit(&mut self) -> io::Result<()> {
-        Err(io::ErrorKind::Unsupported.into())
-    }
-    fn status(&self) -> &'static str {
-        "waiting"
-    }
-    fn quit_completed(&self) -> bool {
-        false
-    }
-    fn poll(&mut self) -> io::Result<()>;
-    fn session_end(&mut self);
-    fn cancel_session_end(&mut self);
-}
-impl Lifecycle for Background {
-    fn retry(&mut self) -> io::Result<()> {
-        Background::retry(self)
-    }
-    fn restart(&mut self) -> io::Result<()> {
-        Background::restart(self)
-    }
-    fn quit(&mut self) -> io::Result<()> {
-        Background::quit(self)
-    }
-    fn status(&self) -> &'static str {
-        Background::status(self)
-    }
-    fn quit_completed(&self) -> bool {
-        Background::quit_completed(self)
-    }
-    fn poll(&mut self) -> io::Result<()> {
-        Background::poll(self)
-    }
-    fn session_end(&mut self) {
-        Background::session_end(self);
-    }
-    fn cancel_session_end(&mut self) {
-        Background::cancel_session_end(self);
-    }
-}
 unsafe extern "system" fn procedure(
     window: Handle,
     message: u32,
@@ -417,7 +373,7 @@ pub fn run(
 }
 
 fn run_window(
-    background: Box<dyn Lifecycle>,
+    background: Box<dyn ManagerLifecycle>,
     ipc: Option<crate::ipc::windows::Server>,
     tray: Option<crate::windows_tray::Configuration>,
     resources: Option<(
@@ -532,8 +488,8 @@ mod tests {
         fn PostMessageW(window: Handle, message: u32, wparam: usize, lparam: isize) -> i32;
     }
     struct Observed(Arc<Mutex<Vec<&'static str>>>);
-    impl crate::cutover_coordinator::Runtime for Observed {}
-    impl Lifecycle for Observed {
+    impl crate::lifecycle::CutoverRuntime for Observed {}
+    impl ManagerLifecycle for Observed {
         fn poll(&mut self) -> io::Result<()> {
             self.0.lock().unwrap().push("poll");
             Ok(())

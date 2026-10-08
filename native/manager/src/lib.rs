@@ -17,6 +17,7 @@ pub mod identity;
 pub mod installation;
 pub mod installed;
 pub mod ipc;
+pub mod lifecycle;
 pub mod preferences;
 pub mod session;
 pub mod startup;

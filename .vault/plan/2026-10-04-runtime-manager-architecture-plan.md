@@ -12,7 +12,7 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:679284625072c57a2d57003cf626d44d68892cf0c3b8d10ba2bb49a427a7ad04'
+body_hash: 'sha256:c715c3554dfd84753536dde4eaf3f91fe1a3530e121b3410a1d5e98c1824f0e2'
 ---
 
 # `runtime-manager-architecture` plan
@@ -173,6 +173,8 @@ Darwin IPC continuation: the existing linux_manager worker also owns the narrow 
 2026-10-08 S19 Darwin supervision continuation: following the isolated native task-name/audit-token proof, linux_manager owns Login::process in macos/login.rs, Darwin held-process inspection/adopted exit and stop integration in supervision/process.rs and supervision/stop.rs, plus narrowly needed held-process formatting and focused tests. Reuse task_name_for_pid with a retained/deallocated task-name send right, TASK_AUDIT_TOKEN, exact UID/PID/pidversion checks and existing Security session policy. Keep ambiguous Mach permission failures distinct from proven process absence; do not use task_for_pid, POSIX session IDs, environment or fabricated audit-session authority. Native signal/exit tests may target only synthetic children launched by that test and must reap them; never signal existing host processes or change host sessions. Root owns shared native builds, review, source snapshots, vault and commits. Manager-main, login registration, native graphical acceptance and existing frozen package inputs remain gated/unchanged.
 
 2026-10-08 S19 activity observation: linux_manager owns macos/activity.rs and macos.rs enrollment plus owning tests. Use public caller-scoped CGSessionCopyCurrentDictionary. Retain a fully admitted current Process and native Session; bracket each query with unchanged kernel UID/ASID and require strictly typed matching UID, OnConsole and LoginDone values. Missing or inconsistent evidence remains unavailable; only corroborated on-console and logged-in state grants start/restart eligibility. No undocumented keys, console-set/ASID conflation, unlocked-state claims or session-end signals. Native checks only observe the SSH host or synthetic pure-policy fixtures. Main activation, lifecycle/registration and frozen package inputs stay unchanged. Root owns native suite snapshots, review, vault and commits.
+
+2026-10-08 S19 lifecycle prerequisite: linux_manager owns a behavior-preserving extraction of the existing pure lifecycle and cutover-runtime traits from windows_lifecycle.rs/cutover_coordinator.rs into their canonical shared owner, with atomic consumer/test imports and lib.rs enrollment. Preserve Background's concrete Windows gating and all existing method semantics, cutover cancellation, claims and settlement behavior; do not add no-op platform adapters or activate another platform. Move existing trait implementations without public re-export compatibility aliases. This prerequisite gives later native hosts the same lifecycle contract while actual platform composition remains gated. Root owns reviews, shared Windows/Mac checks, vault and commits; unrelated peer source work is excluded.
 
 ## Verification
 

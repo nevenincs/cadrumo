@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:93fe3af5e68bfacaa020b789c1e612a56fd450d1926d0203a967e0eb1c165645'
+body_hash: 'sha256:34a2e90f3a7615cdb52f3429711fd62ff4b0fcb65a27de08e895ad584bfaf6ae'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -297,6 +297,8 @@ Native check8 passed 32 platform and 90 manager tests plus both Clippy checks; c
 2026-10-08 S19 activity observation review: PASS. The new macOS Activity retains full graphical admission and the current process/native session, then brackets the public caller-scoped CGSessionCopyCurrentDictionary query with matching kernel UID/ASID. Exact SDK keys, CoreFoundation types and lossless UID range checks are enforced; missing, malformed or inconsistent evidence is Unavailable, and only on-console plus login-complete grants SessionActivity. Copy/Create references release once; borrowed dictionary members remain inside its lifetime. Public SessionGetInfo attributes are not live console evidence (0x20 is TTY access). This interpretation uses Apple's documented caller-session semantics; positive fast-switch/logout behavior still needs interactive evidence. No unlocked-state claim, session-end signal or manager activation was added. Primary evidence: https://developer.apple.com/documentation/coregraphics/cgsessioncopycurrentdictionary() and https://developer.apple.com/documentation/coregraphics/window-server-session-properties ; SDK hashes retained in build/macos-process-typecheck/session-activity-evidence.
 
 Mac check9 passed 32 platform and 93 manager tests plus both Clippy checks; Windows passed 148 configured manager tests and Clippy. Native snapshot SHA256 c3b6e2a4bd66634f8ca3a9d44543b4bced0c5c1afa8d7c8a29510a6e081c6484; logs retained in native-activity-evidence. The common custody unit test's post-drop reacquisition now permits the existing one-second bounded lock wait for reproduced transient inherited descriptors; its live-owner 60ms refusal remains unchanged. Production lock semantics are unchanged. Lifecycle, installation/cutover composition, menu integration and acceptance remain open.
+
+2026-10-08 shared lifecycle prerequisite review: PASS. Existing CutoverRuntime and ManagerLifecycle contracts now have canonical definitions in lifecycle.rs, consumed directly by the Windows host and coordinator; their existing Background implementations remain Windows-gated. Method semantics/defaults, cutover cancellation, retained claims and settlement behavior are unchanged. No aliases, no-op adapters or native activation were added. Mac check11 passed 32 platform and 93 manager tests plus both Clippy checks; Windows passed 148 configured manager tests and Clippy. Snapshot SHA256 e3c711a1bafd6388909a91d9e9a74b051b43101394f2dbc696f77dfd25a140b9, logs in build/macos-process-typecheck/shared-lifecycle-evidence. Concrete portable lifetime and native AppKit host composition remain required.
 
 ## Recommendations
 
