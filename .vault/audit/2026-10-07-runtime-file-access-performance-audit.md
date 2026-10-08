@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-file-access-performance'
 date: '2026-10-07'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:c6427db1612a23eb0cd7d7dcf379f52421ebc297df0a285bb5005e3fc7bac50b'
+body_hash: 'sha256:26870cdf7e0b057d111b35d89d44aa51f1ed154b180c23f058e100636522d98a'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -126,6 +126,96 @@ Final retained-handle process counters record 11631–11635 logical read operati
 Integrated review passes S06/S07 against compiler pinning, equal-size/equal-timestamp freshness refusal, relocated code identity, disabled runtime writes, bootstrap path containment, inventory and actual native admission. No private-request, authority or plugin-result cache is introduced. Full documentation/desktop admission and a stable current import aggregate remain pending; the last import check loaded all 4524 modules and retained 15 contracts with no hard violations, but concurrent source changes invalidated its aggregate.
 
 Final recorded whole-repository checks: style PASS; format FAIL on one peer-owned custody startup fixture; types FAIL on two diagnostics in peer-owned `dev/ci/runtime_probe_artifacts.py`. Preserve owning edits. The broad-case brief records 258 PASSED and 12 last recorded FAILED of the original 270. Remaining repairs belong to the separately authorized broad-repair campaign; no whole-repository green verdict is claimed.
+
+### rebuild-time-postmortem | high | The 85-minute figure includes three assemblies and two archives
+
+Requested retrospective analysis on 2026-10-07. No new build, package assembly, compilation, native execution or verification run was launched. The analysis reads retained timings/logs/cache receipts and filesystem metadata only. Machine-readable detail is `build/runtime-file-access/rebuild-published/build-time-postmortem.json`; its standalone analysis helper is `build/runtime-file-access/explain_build_timing.py`. All durations below concern the final completed pipeline, excluding earlier attempts, later benchmarks, source fingerprinting and default documentation restoration outside its timer.
+
+Directly measured stage totals:
+
+| Stage | Wall seconds | Wall time | Descendant CPU seconds |
+|---|---:|---:|---:|
+| Explicit runtime-only configure | 10.922964 | 0m10.92s | 3.515625 |
+| test-native-bundle: dependencies, bundle and CTest | 1635.301570 | 27m15.30s | 879.093750 |
+| build-native-package: dependencies, another bundle and ZIP | 1127.144398 | 18m47.14s | 478.468750 |
+| test-native-package: dependencies, third bundle, second ZIP and artifact acceptance | 2357.647365 | 39m17.65s | 711.031250 |
+| Total | 5131.019406 | 85m31.02s | 2072.109375 |
+
+Stage sums differ from the outer total by 0.003108s loop overhead. Calling this figure a single incremental compile was imprecise. The owning recipes each configure and request a dependency-complete target. CMake verify depends on bundle; zip depends on bundle; verify-package depends on zip. The driver explicitly invokes all three recipes in sequence. Logs confirm Built bundle three times, Built zip twice, and installation of the three product wheels three times. The first and third passes each reinstall 77 dependencies (the install commands themselves report only 6.86s and 7.89s). The authority is reused in all three passes, so this is not authority recompilation. No documentation or desktop build occurs in this run.
+
+CTest accounts for 528.60s, leaving 1106.70s (18m26.70s) of the first verification recipe outside its tests. Logged Cargo release build summaries outside CTest total 97.76s in the first pass, 115.35s in the ZIP pass and 122.21s in the last pass: 335.32s (5m35.32s). This is not total native compilation time: C++ compilation is untimed, and test/probe compilation is included inside their own intervals. Successful nested command timing records are discarded rather than persisted.
+
+Every native test is independently enumerated by the retained log:
+
+| CTest | Seconds |
+|---|---:|
+| bundle.image.cadrumo-manager.exe | 0.06 |
+| bundle.python | 17.20 |
+| bundle.entrypoint.aeat | 1.26 |
+| bundle.entrypoint.cadrumo-mcp | 0.34 |
+| bundle.entrypoint.cadrumo-runtime | 0.36 |
+| platform.static | 0.09 |
+| platform.dll | 0.12 |
+| platform.rust | 0.10 |
+| platform.resolver | 19.86 |
+| manager.rust | 100.75 |
+| manager.supervision | 198.22 |
+| application.rust | 131.69 |
+| application.package | 58.07 |
+
+These individual test durations total 528.22s; CTest reports 528.60s including its overhead.
+
+The final pass retains filesystem checkpoints. The following intervals partition its 39m17.65s approximately; they are checkpoint observations, not newly instrumented function timings:
+
+| Final-pass interval | Seconds | Observed operation boundary |
+|---|---:|---|
+| Recipe log creation to product ready receipt | 359.323656 | Configuration, preparation, dependency admission, fresh product snapshot/wheels |
+| Product receipt to fresh app directory | 290.606856 | Native dependencies, manifest checks, assembly admission/reset |
+| Fresh app directory to assembled ready receipt | 518.654789 | Stdlib ZIP, dependency copy, relocation/adaptation, bytecode and manifest |
+| Assembly ready to bundle cache receipt | 11.715831 | Output inventory and cache receipt |
+| Bundle receipt to ZIP cache receipt | 174.091689 | ZIP input inventory, CPack and output receipt |
+| ZIP receipt to extraction directory | 104.405259 | Verifier startup, archive admission and old verification-tree reset |
+| Extraction directory to external-bin sentinel | 305.052709 | ZIP validation/extraction |
+| Post-extraction sentinel to acceptance directory | 21.291684 | Initial extracted-interpreter checks and acceptance setup |
+| Acceptance directory to hostile working directory | 316.637141 | Second full package copy |
+| Hostile working directory to Windows verification receipt | 156.831828 | Immutable before/after hashes, native imports, product and loader refusal probes |
+| Windows verification receipt to final result | 98.743944 | Rust release probe, archive/manifest recheck and final receipt |
+
+The timestamp intervals end at result publication; about 0.292s of final process/log completion remains. Fresh assembly's 518.65s includes stdlib ZIP emission observed over 7.81s, copy/relocation before dependency bytecode, and a 346.42s interval between first and last dependency PYC creation. All 6582 generated caches are 87,007,320 bytes; their source files are 76,889,263 bytes. This is an observed cache emission interval, not a measurement of compiler CPU alone.
+
+The manifest inventories 18466 files totaling 1,127,590,725 bytes (about 1.13 GB expanded). Artifact acceptance extracts that tree and then Windows verification copies it again with sequential shutil.copytree. The second copy's checkpoint interval is 5m16.64s; extraction is 5m05.05s. Both preserve distinct relocation and hostile-loader checks; this report does not authorize removing acceptance coverage.
+
+Confirmed call-stack and ownership findings:
+
+- The explicit middle packaging recipe is redundant orchestration: final test-native-package already requests ZIP and bundle. Its observed 18m47.14s cannot be presented as an exact future saving because source and freshness conditions differed.
+- The shared source changed during the pipeline. Repeated dependency-complete targets therefore rebuilt changing inputs rather than verifying one frozen artifact generation. This undermines an incremental/no-op interpretation.
+- Assembly's input inventory includes the entire product build directory, although assembly consumes product dependencies and wheel provenance. The final receipt hashes 42455 input files; 35784 are under product, including 23867 scratch snapshot files under build/source. It then hashes 18468 output files. This couples final assembly freshness to scratch content and repeats full-tree metadata/hash work.
+- Product construction snapshots the repository, rebuilds/install wheels and re-inventories product outputs. Bundle reconstruction discards and recreates the whole staged tree, then recompiles all dependency sources. No per-file reuse of already admitted bytecode is used during a changed bundle.
+- Archive acceptance performs two complete tree materializations plus full immutable inventories and multiple subprocess probes. The copies are sequential at the Python call stack.
+- Logs record Cargo rebuilding ring/rustls/application in each outer pass, but the exact invalidating input or feature transition was not retained. Do not diagnose a Cargo freshness bug from these summaries alone.
+- The successful CommandResult durations for product-wheel construction, assembly/CPack and platform acceptance are not persisted. No MSBuild binary log or per-action lock/CPU/I/O timeline was retained. The first two passes' finer boundaries were overwritten by later cache receipts, so exact function-level allocation of those periods cannot be recovered.
+
+The volume reports a local NTFS drive, not a mapped network filesystem. The 34m32.11s aggregate CPU against 85m31.02s wall suggests substantial time outside active computation, but it does not identify disk, antivirus, scheduler or lock waiting. None of those causes is claimed proven.
+
+Next changes supported by this evidence are one stable input generation, one bundle/ZIP shared by verification, narrower assembly inputs excluding build scratch, proportionate reuse of admitted bytecode, efficient isolated relocation copies, and retained per-action timings including lock waits. This turn changes no production build logic and runs no new builds.
+
+### release-single-generation | medium | Repeated graphs and scratch invalidation corrected
+
+S08 now routes complete release verification through `just test-native-release Release` and `native/cmake/ReleaseVerification.cmake`. The real CMake/Ninja fixture counts one bundle, one archive and one acceptance call. Assembly consumes installed dependencies, wheel provenance and runtime provenance, excluding product build scratch, duplicate runtime dependencies and verification-only backend siblings. Retained-receipt membership accounting narrows 42455 payload input files to 13278 before helper-enrollment adjustments; this is not a new build timing.
+
+Shared and cached producers refuse completion receipts when source bytes or selected producer configuration change during construction. Independent desktop configuration remains outside the selected action identity. Full output hashes, contained-link admission and same-size mutation recovery remain intact. New phase timings live outside payload inventories and retain total, lock waits, inventory, producer, snapshot/wheel, copy/relocation/bytecode and artifact phases, including failures. Own CPU is explicitly labeled and nested wall intervals overlap. No commands, environments, subprocess output or credentials are recorded. No new per-file/application cache was added. The ignored future driver now invokes one release graph and writes a separate report; the historical 85m31s evidence is preserved.
+
+### artifact-single-extraction | medium | Acceptance verifies one extraction in place
+
+S09 removes the second complete acceptance copy from `artifact_verify.check`. The extracted Unicode-path package now supplies both platform acceptance and application compatibility. Admission requires an existing absolute package beneath its explicit owning root and refuses root equality, outside paths and linked directory aliases. Fresh-copy standalone acceptance remains available. Windows and POSIX controlled fixtures prohibit another copy; POSIX also traverses hostile-loader and missing/damaged-runtime restoration branches. These fixtures do not claim new actual-native loader execution.
+
+Production hostile-loader, ambient-import, executable-pth, child identity, entrypoint, product-cohort, KDF readiness, native-runtime refusal/restoration and before/after file inventories remain in their existing acceptance path. Real ZIP/application-child fixtures prove the same extracted root reaches acceptance and compatibility, compatibility failures prevent result publication, and changed manifest or expectation bytes remain refused.
+
+### rebuild-fix-review | low | Scoped integrated PASS; release duration remains unmeasured
+
+Integrated S08/S09 review: PASS for the explicitly authorized fixture-based repair scope under the accepted interpreter-foundation and distribution decisions. Regression cohort: 38 passed in 114.99s, run 20261008T043423.799522Z-pytest-51748-63a644d8. Expanded package-input/timing/Cargo/assembly/bytecode/platform cohort: 38 passed in 72.17s, run 20261008T044128.291844Z-pytest-5984-65301e01. Final shared-producer stable/source/producer/independent-change cohort: four passed in 2.10s, run 20261008T044333.822922Z-pytest-71472-db344cb7. Cases overlap; these are execution counts, not a summed unique census. Scoped Ruff format/lint and ty pass; owning import-target compilation and `just --show test-native-release` pass. Evidence is under `build/runtime-file-access/rebuild-fixes-*.log` and the owning test-run directories.
+
+No full product/native release build or installed-loader campaign ran in this repair turn, as instructed. No replacement build duration or speedup is claimed. Timing records address the prior missing action detail without proving disk, antivirus, scheduling or lock causality for the historical wall/CPU gap. S03/S04/S05 remain open for their original stable aggregate and full docs/desktop verification gaps; closing S08/S09 does not close those gates.
 
 ## Recommendations
 

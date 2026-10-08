@@ -12,7 +12,7 @@ related:
   - '[[2026-10-04-application-distribution-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:cd01accaadd3afd158dbfd316bff1165fa1e7e42fe48760e4b8ed671ccbd92f8'
+body_hash: 'sha256:e38d34d30c11bcd75507441f5af9159e3685bc925be4673aa688cd2ca6c28f7f'
 ---
 
 # `runtime-file-access-performance` plan
@@ -41,7 +41,7 @@ On 2026-10-08 the user explicitly authorized fixing all rebuild-time findings: c
 - [x] `S07` - Remove duplicate packaged import directories at bootstrap and verify plugin discovery and hostile-path refusals; `native/interpreter/bootstrap.py path identity comparison, owning bootstrap contract tests and windows_verify.py packaged path uniqueness assertion, pinned-SDK metadata discovery counts, packaged import profile and final native admission`.
 - [ ] `S03` - Compare source and executable file access and review justified cache opportunities; `Fresh-process measurements, configured checks and the runtime-file-access-performance audit and ledger`.
 - [x] `S08` - Produce one stable bundle and archive per release graph with narrowly owned inputs and retained action timings; `justfile, native/cmake/Packaging.cmake, PackageInputs.cmake and ReleaseVerification.cmake, dev/packaging/native/cached_command.py, cmake_build.py, action_cache.py, build_timing.py, product.py and assemble.py, owning cached-command/package-input/incremental-generation/timing tests and CLI-generated import-load enrollment, ignored future benchmark driver corrected without execution, focused one-materialization and changed-during-build refusal proof`.
-- [ ] `S09` - Verify the one extracted artifact in place without a second full package materialization; `dev/packaging/native/artifact_verify.py and verify.py and platform verification adapters, owning relocation path admission and artifact acceptance tests, all loader refusals and immutable checks retained, integrated review and performance audit`.
+- [x] `S09` - Verify the one extracted artifact in place without a second full package materialization; `dev/packaging/native/artifact_verify.py and verify.py and platform verification adapters, owning relocation path admission and artifact acceptance tests, all loader refusals and immutable checks retained, integrated review and performance audit`.
 
 ## Parallelization
 

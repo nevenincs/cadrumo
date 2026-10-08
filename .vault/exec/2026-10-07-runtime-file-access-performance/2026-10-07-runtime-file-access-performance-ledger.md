@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:baed440b9b1a5edb99f448ae1a74f667f7758f4aa96ce3df69d05893ad3c9309'
+body_hash: 'sha256:c537a0032f2e9f62de23ace4a08ba7b8518c05b9c566376f32c10c737f2c721a'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -171,6 +171,20 @@ related:
 - `S08` `verify:` `scoped Ruff format lint and ty` -> `pass`
 - `S08` `verify:` `owning import_load_probe --compile-targets` -> `pass`
 - `S08` `verify:` `just --show test-native-release` -> `pass`
+- `S09` `M` `dev/packaging/native/artifact_verify.py`
+- `S09` `M` `dev/packaging/native/verify.py`
+- `S09` `M` `dev/packaging/native/verification_paths.py`
+- `S09` `M` `dev/packaging/native/platforms/windows.py`
+- `S09` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S09` `M` `dev/packaging/native/platforms/linux.py`
+- `S09` `M` `dev/packaging/native/platforms/macos.py`
+- `S09` `M` `dev/packaging/native/platforms/posix.py`
+- `S09` `A` `dev/packaging/native/tests/test_relocated_verification.py`
+- `S09` `M` `dev/packaging/tests/test_native_artifact_identity.py`
+- `S09` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-audit.md`
+- `S09` `verify:` `38-case regression cohort 20261008T043423.799522Z including relocation and real ZIP/application refusal fixtures` -> `pass`
+- `S09` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S09` `verify:` `integrated S08/S09 review` -> `pass`
 
 ## Notes
 
@@ -221,3 +235,4 @@ related:
 - `S03` 615-log census: 270 original cases, 258 later PASSED and 12 last recorded FAILED. This workstream repaired 41 original cases through seven roots; other passes belong to separately authorized broad repairs. Full current suite verdict unavailable.
 - `S03` S03/S05 stay open: aggregate import invalidated by concurrent source changes, final whole format one peer fixture and types two peer `runtime_probe_artifacts` diagnostics; owned scoped checks pass.
 - `S08` Full product/native builds remain prohibited. Real small isolated CMake, CPack and Cargo fixtures passed; no new release timing claim.
+- `S09` Full installed native/platform execution and release timing were not repeated, as instructed. Existing refusal/immutability paths retained and covered by focused controlled fixtures.

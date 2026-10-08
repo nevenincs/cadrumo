@@ -172,9 +172,12 @@ def install_external_probe(destination: Path) -> list[str]:
     return [name]
 
 
-def verify_package(package: Path, destination: Path, expected_platform: str) -> None:
+def verify_package(
+    package: Path, destination: Path, expected_platform: str, *, already_relocated: bool = False
+) -> None:
     """Exercise a relocated POSIX artifact and record immutable-file/child/import evidence."""
     from ..layout import load_layout
+    from ..verification_paths import relocated_verification_package
 
     if sys.platform != expected_platform:
         raise ValueError("Native package verification requires a matching operating system")
@@ -184,6 +187,8 @@ def verify_package(package: Path, destination: Path, expected_platform: str) -> 
         if item.sys_platform == sys.platform and item.platform_machine == platform.machine()
     )
     declared = load_layout(target.name)
+    if already_relocated:
+        package = relocated_verification_package(package, destination)
     source_manifest = package / declared["files"]["package_manifest"]
     manifest = json.loads(source_manifest.read_text(encoding="utf-8"))
     layout = manifest["layout"]
@@ -192,10 +197,13 @@ def verify_package(package: Path, destination: Path, expected_platform: str) -> 
     if runtime_layout != runtime_declared:
         raise ValueError("Artifact layout differs from the selected target contract")
     # The caller passes the extracted package, never a build-host Python substitute.
-    relocated = destination / "relocated ñ with spaces"
-    if relocated.exists():
-        raise ValueError("Native acceptance requires a fresh relocation directory")
-    shutil.copytree(package, relocated)
+    if already_relocated:
+        relocated = package
+    else:
+        relocated = destination / "relocated ñ with spaces"
+        if relocated.exists():
+            raise ValueError("Native acceptance requires a fresh relocation directory")
+        shutil.copytree(package, relocated)
     before = {path.relative_to(relocated).as_posix(): digest(path) for path in relocated.rglob("*") if path.is_file()}
     executable = relocated / layout["paths"]["executable"]
     modules = sorted({name for names in manifest["smoke_modules"].values() for name in names})

@@ -15,9 +15,12 @@ def verify(
     destination: Path | None = None,
     product: bool = False,
     build_root: Path | None = None,
+    already_relocated: bool = False,
 ) -> None:
     """Run the selected platform's native-loader and relocation acceptance."""
-    backend(load_layout(target)).verify(package, destination=destination, product=product, build_root=build_root)
+    backend(load_layout(target)).verify(
+        package, destination=destination, product=product, build_root=build_root, already_relocated=already_relocated
+    )
 
 
 if __name__ == "__main__":

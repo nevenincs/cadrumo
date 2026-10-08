@@ -88,10 +88,20 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
     }
     (tmp_path / "artifacts-Release.json").write_text(json.dumps(locator), encoding="utf-8")
     monkeypatch.setattr(
-        artifact_verify, "load_layout", lambda target: {"files": {"package_manifest": "data/package-manifest.json"}}
+        artifact_verify,
+        "load_layout",
+        lambda target: {"backend": "windows", "files": {"package_manifest": "data/package-manifest.json"}},
     )
     monkeypatch.setattr(artifact_verify, "backend", lambda _: SimpleNamespace(external_probe=lambda _: ["fixture"]))
-    monkeypatch.setattr(artifact_verify, "verify", lambda *args, **kwargs: None)
+    accepted_roots: list[Path] = []
+
+    def accept_existing(package: Path, **kwargs: object) -> None:
+        assert kwargs["already_relocated"] is True
+        assert "destination" not in kwargs
+        assert package.is_relative_to(tmp_path / "verification/Release")
+        accepted_roots.append(package)
+
+    monkeypatch.setattr(artifact_verify, "verify", accept_existing)
     monkeypatch.setenv("CADRUMO_TEST_PACKAGE_ROOT", str(tmp_path / "wrong-staged-package"))
 
     def dispatch(
@@ -131,3 +141,4 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
         Path(observed.read_text(encoding="utf-8"))
         == (tmp_path / "verification/Release/ZIP espacio á 漢字/app").resolve()
     )
+    assert accepted_roots == [Path(observed.read_text(encoding="utf-8"))]

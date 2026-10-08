@@ -209,8 +209,15 @@ def resources(
         raise ValueError("Mach-O build metadata does not match the selected product/target")
 
 
-def verify(package: Path, *, destination: Path | None, product: bool, build_root: Path | None) -> None:
+def verify(
+    package: Path, *, destination: Path | None, product: bool, build_root: Path | None, already_relocated: bool = False
+) -> None:
     """Run artifact-bound macOS imports, child identity, hostile-loader and immutability checks."""
+    if already_relocated:
+        if destination is not None or build_root is None:
+            raise ValueError("Already relocated verification requires its owning build root without a destination")
+        verify_package(package, build_root, "darwin", already_relocated=True)
+        return
     if destination is None:
         raise ValueError("Supply an isolated native verification destination")
     verify_package(package, destination, "darwin")

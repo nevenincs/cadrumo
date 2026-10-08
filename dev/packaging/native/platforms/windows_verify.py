@@ -17,7 +17,7 @@ from ...command_execution import CommandResult, run_command
 from ..hashing import digest
 from ..layout import application_images, entrypoint_files, staged_application_images
 from ..package_inventory import user_docs_bundled
-from ..verification_paths import verification_destination
+from ..verification_paths import relocated_verification_package, verification_destination
 
 PROBE = r"""
 import importlib, json, os, pathlib, subprocess, sys, tempfile
@@ -266,19 +266,33 @@ def verify_application_images(
 
 
 def verify(
-    package: Path, destination: Path | None = None, *, product: bool = False, build_root: Path | None = None
+    package: Path,
+    destination: Path | None = None,
+    *,
+    product: bool = False,
+    build_root: Path | None = None,
+    already_relocated: bool = False,
 ) -> None:
-    """Copy and verify an artifact in a fresh isolated staging directory."""
-    package = package.resolve(strict=True)
-    manifest = json.loads((package / "data/package-manifest.json").read_text(encoding="utf-8"))
-    layout = manifest["layout"]
+    """Verify an isolated artifact, materializing it only when not already extracted."""
+    if already_relocated and (destination is not None or build_root is None):
+        raise ValueError("Already relocated verification requires its owning build root without a destination")
     build_root = build_root or storage_directory("CADRUMO_NATIVE_BUILD_ROOT", "development/build/native")
     build_root = build_root.resolve()
     build_root.mkdir(parents=True, exist_ok=True)
-    destination = verification_destination(destination, build_root)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(package, destination)
-    cwd = destination.parent / (destination.name + " unrelated cwd")
+    package = relocated_verification_package(package, build_root) if already_relocated else package.resolve(strict=True)
+    manifest = json.loads((package / "data/package-manifest.json").read_text(encoding="utf-8"))
+    layout = manifest["layout"]
+    if already_relocated:
+        destination = package
+    else:
+        destination = verification_destination(destination, build_root)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(package, destination)
+    cwd = (
+        build_root / "acceptance unrelated cwd"
+        if already_relocated
+        else destination.parent / (destination.name + " unrelated cwd")
+    )
     cwd.mkdir()
     (cwd / "python313.dll").write_bytes(b"host DLL must not load")
     (cwd / "pikepdf.py").write_text("raise RuntimeError('ambient import')", encoding="utf-8")

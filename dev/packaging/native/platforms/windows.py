@@ -239,9 +239,13 @@ END
 '''
 
 
-def verify(package: Path, *, destination: Path | None, product: bool, build_root: Path | None) -> None:
+def verify(
+    package: Path, *, destination: Path | None, product: bool, build_root: Path | None, already_relocated: bool = False
+) -> None:
     """Run the Windows hostile-loader acceptance suite."""
-    windows_verify(package, destination=destination, product=product, build_root=build_root)
+    windows_verify(
+        package, destination=destination, product=product, build_root=build_root, already_relocated=already_relocated
+    )
 
 
 def analyze_trace(directory: Path) -> None:
