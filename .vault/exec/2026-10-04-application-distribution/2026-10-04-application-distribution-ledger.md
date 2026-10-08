@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:33539ad73914e95c7f6f4a6088ec2999b7779a6b43f10c1a216e66e99378eb1f'
+body_hash: 'sha256:e79985164e7b0565fdfc48275bb21d2a4b09796873b684fe1300cd9431b47b85'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -322,6 +322,9 @@ related:
 - `S05` `verify:` `Native Mac frozen-builder multilingual 404 regressions 8 tests` -> `pass`
 - `S05` `verify:` `Scoped Ruff formatting ty and git diff checks` -> `pass`
 - `S05` `verify:` `Independent multilingual link source review` -> `pass`
+- `S05` `verify:` `frozen Mac full native-installer docs Modelo390 runtime connection` -> `fail`
+- `S05` `verify:` `unchanged Mac retained-sandbox Modelo390 sequence and settled cleanup` -> `pass`
+- `S05` `by:` `root`
 
 ## Notes
 
@@ -353,3 +356,4 @@ related:
 - `S14` Native failed filing boundary and completegoldencheck now pass with ordinary fixture cleanup. Observer sees28cleanfutures/drainreceipt1/zero missing-uncontained-unsettled and releasedtrue. Earlier intermittent runtime connection loss remains unresolved; full installer and lifecycle gates stay open.
 - `S05` Targeted diagnostic passed with normal cleanup and retained workspace; prior full strict documentation failure remains unexplained. Frozen Windows native-installer full docs gate and Mac full build remain running. Neither machine is disposable; installation and login/session-ending acceptance remain excluded.
 - `S05` Full Mac build failed nine translated 404 cross-root links after HTML compile success. Reviewed two-file overlay is verified and full CMake build relaunched; no complete DMG or native installation acceptance yet. Concurrent Windows frozen inputs unchanged.
+- `S05` Failure logs retained before one unchanged-input full retry. Diagnostic passed 27 connection futures and complete cleanup in 198.84s; original connection failure remains unexplained. No DMG or lifecycle acceptance claimed.
