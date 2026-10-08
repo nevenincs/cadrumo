@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:2b66280289eeafdb3c67eb29a7fc784863ecc3e5985db6100cbe7de3bcc83f72'
+body_hash: 'sha256:4761ebce4fca77a0bfd6c01633d30073e7bc37379c2adbc5fe162f225917ffd3'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -557,6 +557,12 @@ related:
 - `S19` `verify:` `isolated Darwin-target libc-only Clippy (0.89s)` -> `pass`
 - `S19` `verify:` `Apple record Python ctypes ABI crosscheck` -> `pass`
 - `S19` `verify:` `independent macOS process source review` -> `pass`
+- `S19` `M` `native/manager/src/macos.rs`
+- `S19` `A` `native/manager/src/macos/login.rs`
+- `S19` `verify:` `Windows manager.rust (18.64s)` -> `pass`
+- `S19` `verify:` `manager pinned Clippy all-targets (1.75s)` -> `pass`
+- `S19` `verify:` `isolated Darwin-target Clippy (0.32s)` -> `pass`
+- `S19` `verify:` `independent macOS peer-session source review` -> `pass`
 
 ## Notes
 
@@ -597,3 +603,4 @@ related:
 - `S17` Partial S17 corrective checkpoint; independent interpreter and desktop lifetime leases, explicit native/portable launch policy, metadata commands included. Initial Linux host test correctly refused inherited SDK `LD_` settings before reaching subject; child test environment now excludes them, production refusal unchanged. Native installed removal and two-release interactive acceptance remain pending; all MSI gates retained.
 - `S18` Partial S18 transport foundation only; main activation, cross-version cutover, placement choice and native acceptance remain open.
 - `S19` Partial unsigned S19 source foundation; no native macOS linking, execution, session or service activation evidence.
+- `S19` S19 remains open; actual Apple SDK build newly available on user-supplied non-disposable Mac. Preserve both existing machines and all lifecycle gates.

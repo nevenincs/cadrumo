@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:31dc496d81daa02868bc2f594060e6060258a72e989e0c8d2e9af454d24b332c'
+body_hash: 'sha256:82566fef630d5054a8bfa25c8bebd03642466f7768013afbf1a507a21cb62dfa'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -217,6 +217,14 @@ S19 adds a gated Darwin process capability with fixed system libproc symbol load
 Configured Windows manager.rust passed (32.25s), pinned Rust 1.96 all-target manager Clippy passed (17.93s), and an isolated libc-only aarch64-apple-darwin all-target Clippy harness passed (0.89s), including the Darwin-only native module. The latter is a target type check, not an Apple SDK link or native execution. Python ctypes layout comparison confirms 136-byte BSD and 56-byte unique-identity records and consumed offsets. Independent source review PASS with no material findings; source formatting passes.
 
 No manager-main activation, login authority, macOS IPC, AppKit lifecycle/menu or signed service registration is enabled by this slice. Full native macOS linking and lifecycle behavior remain unverified without an Apple SDK/runner. Signing is explicitly excluded by the user. S19 remains open; overall platform acceptance PENDING.
+
+### 2026-10-08 macOS peer-session foundation | low | Kernel identity and session evidence remain distinct from attendance
+
+S19 adds a peer-session observer using native LOCAL_PEERTOKEN, LOCAL_PEERPID and getpeereid corroboration, retained Process incarnation/image checks before and after observation, and a full token reread. Security.framework SessionGetInfo follows the existing Python runtime policy: absent versus unavailable remain distinct, root/remote/non-graphical or unknown flags refuse, and graphical session presence never establishes unlocked or unattended eligibility. No manager self-session capture, main integration or service registration is activated.
+
+Configured Windows manager.rust passed (18.64s), pinned Rust 1.96 all-target manager Clippy passed (1.75s), and isolated Darwin-target all-target Clippy passed (0.32s). Independent source review PASS against the existing Python owner and Apple sys/un.h/AuthSession.h definitions, no material findings. Target typechecking remains distinct from native linking/execution.
+
+The user subsequently supplied an existing ARM64 Mac at gergely.wootsch@gw-laptop and emphasized that both it and the Windows host are non-disposable. Read-only SSH confirms macOS 26.5.1 and an installed CommandLineTools Apple SDK. Native unsigned build verification will use a new isolated build directory; product install/uninstall, login registration, resets and reboots are not authorized by that build work. The temporary root-owned Linux test VM has been powered down and its disk retained. Existing release/native acceptance gates remain.
 
 ## Recommendations
 
