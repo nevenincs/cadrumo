@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a24253c9b29a5bb9b43cad9a8289c8ea59058593126650731db5e431397f7989'
+body_hash: 'sha256:5d725cc39761d8da666b12745ed13b3669eb55a855d8010985f286dbe4c1257f'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -284,6 +284,11 @@ related:
 - `S05` `verify:` `Linux child-environment regression (1 test, 10.60s)` -> `pass`
 - `S05` `verify:` `scoped Ruff format ty and independent review` -> `pass`
 - `S05` `verify:` `native Linux docs profile-setup without user-systemd bus` -> `fail`
+- `S05` `M` `dev/docs/sequences/runner.py`
+- `S05` `verify:` `actual Mac docs profile-setup goldens` -> `pass`
+- `S05` `verify:` `actual WSL docs profile-setup goldens and worker cleanup` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty` -> `pass`
+- `S05` `verify:` `independent docs scratch-prefix review` -> `pass`
 
 ## Notes
 
@@ -307,3 +312,4 @@ related:
 - `S09` Native empty-transaction settlement and interactive lifecycle acceptance remain unverified; all installation gates retained.
 - `S05` S05 remains open; native full packages and lifecycle acceptance are not established by component compilation.
 - `S05` S05 remains open. The remaining Linux docs failure is real worker containment unavailable in the build container, not permission to weaken containment.
+- `S05` Full documentation/package runs remain active; native host installation and session-ending acceptance are not authorized on the existing non-disposable hosts.

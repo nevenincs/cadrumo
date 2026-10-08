@@ -657,9 +657,7 @@ def check_page_coherence_in_subprocess(
 @contextmanager
 def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Iterator[SequenceTranscript]:
     """Keep disposable artifacts alive through their owning refresh/check."""
-    with TemporaryDirectory(
-        prefix="cli-sequence-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
-    ) as tmp:
+    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
         yield execute_sequence(sequence, sandbox_root=Path(tmp))
 
 
@@ -853,9 +851,7 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
     """Check page coherence items."""
     executable = [item for item in items if item.sequence.executed_frames]
     try:
-        with TemporaryDirectory(
-            prefix="cli-sequence-page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
-        ) as tmp:
+        with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
             with _sequence_progress_scope(docname):
                 transcripts = execute_page_sequences(
                     [item.sequence for item in executable],

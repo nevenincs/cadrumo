@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:61a59d6c31103890f6156f327ee1922d485c711b985461ed530cff3ad9156e7a'
+body_hash: 'sha256:7e5da9c5d2981cc7f121edb370386958a04b0dccd93ac7058351e9634b8c003b'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -169,6 +169,13 @@ The genuine Apple CLT macOS 26.5 SDK includes a Ruby framework header alias poin
 ### 2026-10-08 documentation subprocess scratch | low | Explicit short scratch survives environment isolation
 
 The native Linux package build exposed AF_UNIX pathname overflow because documentation subprocesses removed CADRUMO_TEMP_DIR along with ambient product routing. english_pinned_environment now reintroduces only the canonical prepared scratch directory after that scrub. Runtime endpoint/storage routing and unrelated product settings remain absent. A real child-interpreter regression passes on Windows (1 test, 9.01s) and Linux (1 test, 10.60s); scoped Ruff/format/ty and independent review pass. Real Linux profile-setup sequences advance beyond pathname and socket-permission setup, then correctly refuse runtime_containment_unavailable because the manylinux container has no user-systemd bus. The existing WSL user manager is available; an isolated source/dependency build there is being prepared for sequence execution without changing services. This checkpoint does not claim the whole docs/package gate passed.
+
+
+### 2026-10-08 native documentation runtime checks | low | Linux containment and Darwin socket budget pass focused real pages
+
+The identical frozen Linux snapshot (23984 members; d192edab8af12fc369669c35d61357394bff9b698e7e7ff9765ff48825be7df9) passed the real profile-setup goldens on WSL's existing user-systemd manager with pinned Python 3.13.11 and recorded authority a5cea047f10f3dec1b4f6d277afd192d505a00f36066ff44bbedc6226aad95d9. Real contained workers completed admission and KDF; none remained afterward. No services were installed or changed. Evidence is /home/hello/.local/share/cadrumo-builds/docs-20261008/evidence/result.json. Its strict desktop documentation compile is now running separately; no CMake cache receipt or package acceptance has been invented from the focused page.
+
+On Darwin even the explicit short private temp directory produced 110-byte single-sequence and 115-byte cumulative-page socket paths with the old verbose sandbox prefixes, above the native 104-byte limit. Only the unique scratch prefixes now shorten to seq- and page-, yielding 101 and 102 bytes in that configuration. Namespace ownership, canonical paths, random uniqueness and endpoint identity remain unchanged. Scoped Ruff/format/ty and independent review pass; the real Mac profile-setup goldens now pass with native transport and workers. Its full build was retried after the focused success. No whole DMG or installer acceptance is claimed.
 
 ## Recommendations
 
