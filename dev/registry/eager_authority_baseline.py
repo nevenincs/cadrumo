@@ -24,13 +24,13 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     PublishedLegalEvidence,
     PublishedSourceEvidence,
 )
-from cadrumo.domain.calculations.registry.facts.schema import (
+from cadrumo.domain.calculations.registry.facts.atoms import (
     TAGGED_FACT_ATOM_CONTEXT,
     FactAtomField,
-    GovernedFactCatalogue,
     OptionalFactAtomField,
     tagged_fact_atom_json,
 )
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
@@ -45,6 +45,7 @@ from dev.registry.pipeline.authority_publication import require_evidence_closure
 _FORMAT = "cadrumo-development-eager-authority-v3"
 _TAGGED_CONTEXT = {TAGGED_FACT_ATOM_CONTEXT: True}
 _FACT_ATOM_VALIDATORS = frozenset((get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]))
+_UNHANDLED_JSON_VALUE = object()
 
 
 class EagerAuthorityBaselineError(ValueError):
@@ -195,22 +196,42 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
 
 
 def _json_value(value: object) -> object:
+    model_value = _json_model_value(value)
+    if model_value is not _UNHANDLED_JSON_VALUE:
+        return model_value
+    container_value = _json_container_value(value)
+    if container_value is not _UNHANDLED_JSON_VALUE:
+        return container_value
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    raise TypeError(f"eager authority baseline cannot serialize {type(value).__name__}")
+
+
+def _json_model_value(value: object) -> object:
     if isinstance(value, DeclaredPredecessor | NoPredecessor):
         return _json_value(value.model_dump(mode="json"))
     if isinstance(value, BaseModel):
         if type(value).__pydantic_decorators__.model_serializers:
             return _json_value(value.model_dump(mode="python"))
         return {
-            field_name: (
-                tagged_fact_atom_json(getattr(value, field_name))
-                if _FACT_ATOM_VALIDATORS.intersection(field.metadata)
-                else _json_value(getattr(value, field_name))
-            )
-            for field_name, field in type(value).model_fields.items()
+            field_name: _model_field_json_value(value, field_name)
+            for field_name in type(value).model_fields
             if not _field_equals_declared_default(value, field_name)
         }
     if isinstance(value, Mapping):
         return {_json_key(key): _json_value(item) for key, item in cast(Mapping[object, object], value).items()}
+    return _UNHANDLED_JSON_VALUE
+
+
+def _model_field_json_value(model: BaseModel, field_name: str) -> object:
+    field = type(model).model_fields[field_name]
+    value = getattr(model, field_name)
+    if _FACT_ATOM_VALIDATORS.intersection(field.metadata):
+        return tagged_fact_atom_json(value)
+    return _json_value(value)
+
+
+def _json_container_value(value: object) -> object:
     if isinstance(value, (frozenset, set)):
         return sorted(
             (_json_value(item) for item in cast(set[object] | frozenset[object], value)),
@@ -226,9 +247,7 @@ def _json_value(value: object) -> object:
         return value.isoformat()
     if isinstance(value, PurePath):
         return value.as_posix()
-    if value is None or isinstance(value, (str, int, float, bool)):
-        return value
-    raise TypeError(f"eager authority baseline cannot serialize {type(value).__name__}")
+    return _UNHANDLED_JSON_VALUE
 
 
 def _field_equals_declared_default(model: BaseModel, field_name: str) -> bool:

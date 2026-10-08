@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s58-ci-contract'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:991540be795d736d435fe514be7ce32ffbd5cac34b6ce830b3cd5114e8641bcb'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:35c6ec3eff819705d5a1c62db7bbd8005964004cdb165ff26fcce0316e805162'
+related: []
 ---
 
 # `cadrumo-product-rename-s58-ci-contract` audit: `Cadrumo product rename S58 CI contract audit`
@@ -38,7 +37,7 @@ full rejection asserted by the execution record.
 
 The execution record Scope names only `.github/workflows/ci.yml`, while the
 production workflow is intentionally untouched and the sole implementation
-change is `dev/packaging/tests/test_ci_workflow.py`. The Description, Outcome,
+change is the retired test. The Description, Outcome,
 and Notes accurately explain that no production edit was needed, but the formal
 scope does not identify the path that actually closes the reopened defect.
 

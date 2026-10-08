@@ -8,7 +8,6 @@ signed artifact and identifies captures by that artifact's digest.
 
 from __future__ import annotations
 
-import hashlib
 import weakref
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
@@ -17,7 +16,7 @@ from pathlib import Path
 from threading import Condition, RLock
 from typing import TYPE_CHECKING
 
-from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.hashing import content_hash_hex, sha256_file
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 
 if TYPE_CHECKING:
@@ -140,7 +139,7 @@ def source_evidence_receipt(fingerprints: tuple[tuple[str, int, int], ...]) -> s
         with _state_lock:
             digest = _evidence_digests.get(key)
         if digest is None:
-            digest = hashlib.sha256(Path(raw_path).read_bytes()).hexdigest()
+            digest = sha256_file(Path(raw_path))
             with _state_lock:
                 _evidence_digests[key] = digest
         entries.append({"path": raw_path, "size": size, "mtime_ns": mtime_ns, "sha256": digest})

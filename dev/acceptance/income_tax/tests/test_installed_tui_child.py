@@ -4,17 +4,29 @@ from __future__ import annotations
 
 import asyncio
 import json
+import secrets
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from typing import override
+from uuid import UUID, uuid4
 
 import pytest
-from textual.widgets import OptionList
+from textual.app import App, ComposeResult
+from textual.widgets import OptionList, Static
+
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.profile_access import RuntimeProfileStatus
+from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus
+from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
+from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
 
 from .. import installed_tui_child as installed_child_module
 from ..installed_tui_child import (
     InstalledTuiChildError,
-    _public_surface_diagnostic,
-    _wait_for_selector,
+    admitted_session_autopilot,
     is_installed_product_origin,
     open_profile_manager_field,
     public_surface_diagnostic,
@@ -26,6 +38,150 @@ from ..installed_tui_child import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+_ADMISSION_SECRET = secrets.token_urlsafe(32)
+
+
+class _AdmissionClient(RuntimeFrontendClient):
+    """Explicit UI transport seam; this does not prove native runtime admission."""
+
+    def __init__(self, profile_id: UUID) -> None:
+        self._profile_id = profile_id
+        self._frontend = OperationFrontendProjection.TUI
+        self._session_id = None
+        self.proof: bytearray | None = None
+        self.password_calls = 0
+        self.closed = False
+        self.refuse = False
+
+    @override
+    def login_password(
+        self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False
+    ) -> RuntimeProfileStatus:
+        assert not persist_receipt
+        assert secret == _ADMISSION_SECRET.encode()
+        self.proof = secret
+        self.password_calls += 1
+        if self.refuse:
+            raise RuntimeFrontendRefusedError("credential_rejected")
+        self._session_id = uuid4()
+        return RuntimeProfileStatus(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            status=ProfileAccessStatus(
+                connected=True,
+                credential_authenticated=True,
+                profile_id=self.profile_id,
+                session_id=self.session_id,
+                session_expires_at=datetime.now(UTC) + timedelta(minutes=5),
+                grant_state=None,
+                grant_expires_at=None,
+                grant_valid=False,
+                profile_bound=True,
+                storage=Availability.AVAILABLE,
+                automation_custody=Availability.UNSUPPORTED,
+                published_authority=Availability.AVAILABLE,
+                provider=Availability.NOT_REQUIRED,
+                effective_scope=AccessScope(
+                    operations=frozenset(),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                ),
+                denial=None,
+            ),
+        )
+
+    @override
+    def close(self) -> None:
+        self.closed = True
+
+    @override
+    def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
+        raise RuntimeFrontendRefusedError("profile_session_absent")
+
+
+class _AdmittedRoot(App[None]):
+    """A public Home marker for the separate root callback contract."""
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield Static("Home", id="home-agenda")
+
+
+@pytest.mark.asyncio
+async def test_admission_autopilot_transfers_exact_login_before_running_separate_root() -> None:
+    first, selected = uuid4(), uuid4()
+    client = _AdmissionClient(selected)
+    receipt_probe = _AdmissionClient(selected)
+    openings = 0
+    workflows: list[object] = []
+
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        nonlocal openings
+        assert profile_id == selected
+        openings += 1
+        return receipt_probe if openings == 1 else client
+
+    async def workflow(pilot) -> None:
+        assert isinstance(pilot.app, _AdmittedRoot)
+        assert client.password_calls == 1
+        assert not client.closed
+        assert client.proof is not None and not any(client.proof)
+        workflows.append(pilot.app)
+        pilot.app.exit()
+
+    autopilot = admitted_session_autopilot(passphrase=_ADMISSION_SECRET, drive_after_home=workflow)
+    async with asyncio.timeout(5):
+        async with runtime_login_session(
+            choices=(
+                ProfileLoginChoice(profile_id=str(first), label="First"),
+                ProfileLoginChoice(profile_id=str(selected), label="Selected"),
+            ),
+            preselected=str(selected),
+            open_client=open_client,
+            headless=True,
+            auto_pilot=autopilot,
+        ) as handoff:
+            assert handoff is not None and handoff.profile_id == selected
+            assert workflows == []
+            root = _AdmittedRoot()
+            await root.run_async(headless=True, auto_pilot=autopilot)
+            assert workflows == [root]
+            assert not client.closed
+    assert client.closed
+    assert receipt_probe.closed
+
+
+@pytest.mark.asyncio
+async def test_admission_autopilot_refusal_never_runs_workflow_and_closes_login_client() -> None:
+    selected = uuid4()
+    client = _AdmissionClient(selected)
+    client.refuse = True
+
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        assert profile_id == selected
+        return client
+
+    async def workflow(_pilot) -> None:
+        pytest.fail("a refused login must never run the private workflow")
+
+    async with asyncio.timeout(5):
+        with pytest.raises(InstalledTuiChildError, match="admission did not settle"):
+            async with runtime_login_session(
+                choices=(ProfileLoginChoice(profile_id=str(selected), label="Selected"),),
+                open_client=open_client,
+                headless=True,
+                auto_pilot=admitted_session_autopilot(
+                    passphrase=_ADMISSION_SECRET, drive_after_home=workflow, polls=30
+                ),
+            ):
+                pytest.fail("a refused login must never transfer ownership")
+    assert client.password_calls == 1
+    assert client.closed
+    assert client.proof is not None and not any(client.proof)
 
 
 def test_installed_origin_guard_refuses_checkout_source_and_accepts_site_packages(tmp_path: Path) -> None:
@@ -80,16 +236,14 @@ def test_child_uses_app_root_selectors_and_reports_value_free_surface_ids() -> N
     app = _App()
     pilot = _Pilot(app)
 
-    asyncio.run(_wait_for_selector(pilot, "#home-agenda", polls=1))
+    asyncio.run(wait_for_public_selector(pilot, "#home-agenda", polls=1))
 
     assert app.queries == ["#home-agenda"]
-    assert _public_surface_diagnostic(pilot) == {
+    assert public_surface_diagnostic(pilot) == {
         "current_screen_class": "_Screen",
         "current_screen_id": "root-shell",
         "mounted_widget_ids": ["field-passphrase", "home-agenda"],
     }
-    assert public_surface_diagnostic is _public_surface_diagnostic
-    assert wait_for_public_selector is _wait_for_selector
 
 
 def test_shared_failure_writer_drops_non_public_diagnostic_values(tmp_path: Path) -> None:
@@ -118,6 +272,55 @@ def test_shared_failure_writer_drops_non_public_diagnostic_values(tmp_path: Path
         "schema_version": "income-01-installed-tui-financial-v1",
         "status": "failed",
     }
+
+
+@pytest.mark.parametrize("refusal_code", (None, "workbench.home.refresh_unavailable", "private-profile-value"))
+@pytest.mark.asyncio
+async def test_public_root_diagnostic_distinguishes_pending_and_refused_home_without_values(
+    refusal_code: str | None, tmp_path: Path
+) -> None:
+    """Actual public controls retain finite codes and flags while their other content is discarded."""
+    from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
+    from cadrumo.core.i18n.render import tr
+
+    class RootApp(App[None]):
+        home_refresh_refusal_code = refusal_code
+        workbench_search_refusal_code = None
+        account_session = HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="private-profile-value",
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        )
+
+        @override
+        def compose(self) -> ComposeResult:
+            yield Static("updating", id="root-updating")
+            yield Static(tr("tui.root.account.unavailable"), id="root-account-refusal", markup=False)
+            yield Static("private-profile-value", id="root-navigation-refusal", markup=False)
+
+    async with RootApp().run_test() as pilot:
+        await pilot.pause()
+        diagnostic = public_surface_diagnostic(pilot)
+        assert diagnostic["root_updating_visible"] is True
+        assert diagnostic["root_account_refusal_shown"] is True
+        assert diagnostic["root_navigation_refusal_shown"] is False
+        assert diagnostic["account_session_posture"] == "active"
+        assert diagnostic["account_session_present"] is True
+        assert diagnostic["account_session_has_expiry"] is True
+        assert diagnostic["account_session_expired"] is False
+        if refusal_code == "private-profile-value":
+            assert "home_refresh_refusal_code" not in diagnostic
+        else:
+            assert diagnostic["home_refresh_refusal_code"] == refusal_code
+        receipt = tmp_path / "root-failure.json"
+        write_installed_tui_failure_receipt(
+            path=receipt,
+            schema_version="root-diagnostic-test",
+            error=InstalledTuiChildError("installed Home did not settle", diagnostic=diagnostic),
+        )
+        observed = json.loads(receipt.read_text())["diagnostic"]
+        assert observed == diagnostic
+        assert "private-profile-value" not in receipt.read_text()
 
 
 def test_profile_manager_field_opens_the_visible_canonical_row_without_field_selector() -> None:
@@ -169,6 +372,8 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
     executable.write_text("", encoding="utf-8")
     receipt = tmp_path / "artifacts" / "financial.json"
     credential = f"{tmp_path.name}-test-credential"
+    runtime_socket_dir = tmp_path / "private-runtime"
+    runtime_socket_dir.mkdir(mode=0o700)
     observed: dict[str, object] = {}
 
     def fake_run(argv, **kwargs):
@@ -191,6 +396,7 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
         storage_root=tmp_path / "store",
         receipt_path=receipt,
         passphrase=credential,
+        runtime_socket_dir=runtime_socket_dir,
     )
 
     environment = observed["environment"]
@@ -198,6 +404,9 @@ def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp
     assert "PYTHONPATH" not in environment
     assert "CADRUMO_UNRELATED" not in environment
     assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str((tmp_path / "store").resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str((tmp_path / "store").resolve())
+    assert environment["CADRUMO_RUNTIME_SOCKET_DIR"] == str(runtime_socket_dir.resolve())
+    assert "CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE" not in environment
     assert json.loads(str(observed["input"])) == {"profile_passphrase": credential}
     assert evidence.returncode == 0
     assert evidence.receipt_status == "proven"

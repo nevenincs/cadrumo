@@ -24,7 +24,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Final, Literal, override
 
-from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
+from pydantic import BeforeValidator, Field, SecretStr, ValidationInfo, field_validator, model_validator
 from pydantic_settings import (
     BaseSettings,
     EnvSettingsSource,
@@ -35,7 +35,10 @@ from pydantic_settings import (
 from . import _config_runtime, _config_validation
 from . import config_live_tests as _live_test_config
 from . import config_support as _config_support
+from .auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE as _DEFAULT_CLAVE_MOVIL_ROUTE
 from .auth_provider import AuthProviderKind as _AuthProviderKind
+from .auth_provider import ClaveMovilRoute as _ClaveMovilRoute
+from .config_google import GoogleOAuthClientSettings
 from .config_llm_fields import CadrumoLlmSettings
 from .config_state_root import (
     default_storage_root,
@@ -57,7 +60,14 @@ from .errors.hierarchy import pydantic_validation_boundary
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources.bundled_data import bundled_path
-from .telemetry.tier import TelemetryTier
+from .storage_environment import (
+    STORAGE_ROOT,
+    configured_root_value,
+    product_env_var_names,
+    storage_mode,
+    storage_root_override,
+)
+from .storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
 
 if TYPE_CHECKING:
     from .bucket_pointer import BucketPointer
@@ -103,6 +113,19 @@ class _CadrumoEnvSettingsSource(EnvSettingsSource):
     def __call__(self) -> dict[str, Any]:
         original_env_vars = self.env_vars
         self.env_vars = _without_severed_names(original_env_vars)
+        controls = Settings.storage_env_var_names()
+        for key, value in tuple(self.env_vars.items()):
+            if key.upper() in controls and isinstance(value, str):
+                if cleaned := value.strip():
+                    self.env_vars[key] = cleaned
+                else:
+                    self.env_vars.pop(key)
+        variables = {name.upper(): value for name, value in self.env_vars.items() if isinstance(value, str)}
+        root = configured_root_value(variables, storage_mode().mode)
+        if root is not None:
+            self.env_vars[STORAGE_ROOT.variable.lower()] = root
+        else:
+            self.env_vars.pop(STORAGE_ROOT.variable.lower(), None)
         try:
             return super().__call__()
         finally:
@@ -149,11 +172,12 @@ class AuthorityRootSettings(BaseSettings):
 
     @field_validator("cadrumo_authority_root", mode="after")
     @classmethod
-    def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
+    def _normalize_repo_relative_paths(cls, value: Path | None, info: ValidationInfo) -> Path | None:
+        del info
         return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 
-class Settings(CadrumoLlmSettings, AuthorityRootSettings):
+class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSettings):
     """Application settings populated from process environment variables.
 
     Field names map directly to env var names (uppercased). For example,
@@ -294,6 +318,20 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         default=SecretStr(DEV_TEST_DATABASE_PASSWORD),
         description="Development/test-only password used by secure-storage subprocess tests.",
     )
+    cadrumo_dev_runtime_session_override: str = Field(
+        default="",
+        description=(
+            "Development-only: exactly '1' disables native desktop/login-session admission "
+            "for the manually started runtime. Native same-account transport identity, "
+            "profile authentication, grants and connection binding remain required."
+        ),
+    )
+
+    @property
+    def dev_runtime_session_override_enabled(self) -> bool:
+        """Require an explicit literal-1 opt-in at the runtime owner."""
+        return self.cadrumo_dev_runtime_session_override == "1"
+
     cadrumo_blob_store_dir: Path = Field(
         default=Path("blobs"),
         description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
@@ -309,8 +347,8 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         description=(
             "Backend for `cadrumo.adapters.outbound.storage`. "
             "Accepted values: local_filesystem (default), google_drive, in_memory. "
-            "google_drive additionally requires cadrumo_google_drive_root_folder_id "
-            "and a per-profile registered OAuth client + token via `aeat config google`."
+            "google_drive additionally requires a Google sign-in for the profile "
+            "through `aeat config google login`."
         ),
     )
     cadrumo_local_storage_root: Path = Field(
@@ -318,22 +356,35 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         description=(
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
             "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
-            "paired with a `.meta.json` sidecar. The default is the platform user-data "
-            "directory (`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` "
-            "or `~/Library/Application Support/cadrumo/storage`) in every run mode, so the "
-            "encrypted store never lands inside a virtualenv or uv cache. A source checkout "
-            "does not redirect it: a developer who wants the tree inside their checkout "
-            "sets this variable, and that explicit override wins over the derived default."
+            "paired with a `.meta.json` sidecar. Defaults to var/storage in a source "
+            "checkout and to the per-user application-data directory when installed. "
+            "This backend refinement wins over the shared development root. Relative "
+            "roots anchor to the checkout and are refused when installed."
         ),
     )
-    cadrumo_google_drive_root_folder_id: str | None = Field(
-        default=None,
-        description=(
-            "Drive folder ID under which `cadrumo-vault/` is created and used. "
-            "Required when cadrumo_storage_provider_kind=google_drive. Operator obtains "
-            "this from the Cloud Console / Drive web UI; the app creates `cadrumo-vault/` "
-            "lazily on first probe."
-        ),
+    cadrumo_temp_dir: Path = Field(
+        default=Path("tmp"), description="Application temporary files beneath the storage root."
+    )
+    cadrumo_runtime_socket_dir: Path = Field(
+        default=Path("runtime"), description="Owner-only POSIX runtime sockets and locks beneath the storage root."
+    )
+    cadrumo_playwright_browsers_dir: Path = Field(
+        default=Path("components/playwright"),
+        description="Managed Playwright browser binaries beneath the storage root.",
+    )
+    cadrumo_ollama_home_dir: Path = Field(
+        default=Path("components/ollama/home"),
+        description="Private home for Cadrumo-owned Ollama processes, including their runtime identity.",
+    )
+    cadrumo_ollama_models_dir: Path = Field(
+        default=Path("models/ollama"), description="Model weights for Cadrumo-owned Ollama processes."
+    )
+    cadrumo_gnome_extensions_dir: Path = Field(
+        default=Path("integrations/gnome/extensions"), description="Explicit GNOME extension publication directory."
+    )
+    cadrumo_webview_dir: Path = Field(
+        default=Path("webview"),
+        description="Desktop webview profile beneath the storage root; the renderer evicts its own cache.",
     )
 
     cadrumo_profile_kdf_measure_calibration: bool = Field(
@@ -372,16 +423,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         live-read access gates consume their own policy and capability checks.
         """
         return _live_test_config.strict_live_test_opt_in(self.cadrumo_live_tests_enabled)
-
-    @property
-    def live_tests_google_enabled(self) -> bool:
-        """Whether the Google live-test opt-in is enabled.
-
-        Google OAuth / Drive tests use the same strict ``"1"`` predicate as the
-        general live-read opt-in and remain separate from production provider
-        construction.
-        """
-        return _live_test_config.strict_live_test_opt_in(self.cadrumo_live_tests_google)
 
     # ── TTY / colour ────────────────────────────────────────────────────────
     cadrumo_force_color: bool = Field(
@@ -467,10 +508,15 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     )
 
     # ── Browser Automation ──────────────────────────────────────────────────
-    cadrumo_browser_channel: str = Field(
-        default="chromium",
-        description="Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge')",
+    cadrumo_chromium_data_root: Path = Field(
+        default=Path("chromium-data"),
+        description=(
+            "Root for isolated Chromium working profiles. Defaults to chromium-data "
+            "under CADRUMO_LOCAL_STORAGE_ROOT. Relative overrides use the application-data anchor. "
+            "Saved authentication cookies and state remain in encrypted profile storage."
+        ),
     )
+
     cadrumo_browser_headless: bool = Field(
         default=True,
         description="Run browser in headless mode",
@@ -602,7 +648,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         description=(
             "Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. "
             "Used to stamp the persisted session with the operator's "
-            "identity and to pre-fill the non-QR fallback form. AEAT-regulated "
+            "identity and to fill the default app-request form. AEAT-regulated "
             "personal identifier under Spanish tax law; typed as SecretStr to "
             "prevent leakage through repr / model_dump / ValidationError."
         ),
@@ -611,7 +657,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         default=None,
         description=(
             "DNI validity / expiry date (YYYY-MM-DD) used by the "
-            "non-QR Cl@ve Móvil fallback form. Applies when the "
+            "default app-request Cl@ve Móvil form. Applies when the "
             "configured identity is a DNI."
         ),
     )
@@ -619,17 +665,20 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         default=None,
         description=(
             "NIE support number (número de soporte) used by the "
-            "non-QR Cl@ve Móvil fallback form. Applies when the "
+            "default app-request Cl@ve Móvil form. Applies when the "
             "configured identity is a NIE. AEAT-regulated personal "
             "identifier; typed as SecretStr to prevent leakage."
         ),
     )
     cadrumo_clave_prefer_non_qr: bool = Field(
-        default=False,
+        default=_DEFAULT_CLAVE_MOVIL_ROUTE is _ClaveMovilRoute.APP_REQUEST,
         description=(
-            "When true, the Cl@ve Móvil provider uses the non-QR fallback "
-            "(DNI/NIE + contraste) rather than the QR code. This still "
-            "requires operator-mediated completion in Cl@ve."
+            "Cl@ve Móvil route used when the active profile has not chosen "
+            "one. True (the default) identifies with DNI/NIE + contraste and "
+            "sends an approval request to the Cl@ve app, which works in a "
+            "terminal and keeps the CADRUMO_BROWSER_HEADLESS setting. Set "
+            "false to scan a QR code instead; the QR route always opens a "
+            "visible browser because the code must be seen."
         ),
     )
     cadrumo_clave_movil_timeout_ms: int = Field(
@@ -726,47 +775,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
             "Gestor/professional deployment flag for evidence reading. When True, an off-host evidence "
             "read is categorically refused regardless of cadrumo_evidence_cloud_upload_permitted or any "
             "per-invocation acknowledgement."
-        ),
-    )
-
-    # ── Remote telemetry: opt-in consent posture ────────────────────────────
-    # Default and only-acceptable-for-serious-use posture is fully local: every
-    # existing local telemetry primitive is
-    # written to encrypted secure storage or a local JSONL file and never
-    # contacts a network endpoint. Remote telemetry is a deliberate, narrow,
-    # opt-in exception. It shares the evidence gate's shape above -- gestor bar
-    # first and absolutely, then the deployment opt-in, then the per-invocation
-    # acknowledgement -- so the codebase's off-host consent postures stay
-    # uniform and comparable, with the tier as this posture's only extra axis.
-    cadrumo_telemetry_opt_in: bool = Field(
-        default=False,
-        description=(
-            "Whether this deployment permits transmitting remote telemetry at all. Default off: all "
-            "telemetry stays local. When True, a per-invocation operator consent acknowledgement is "
-            "still required for each emit, and cadrumo_telemetry_tier must not be 'off'."
-        ),
-    )
-    cadrumo_telemetry_tier: TelemetryTier = Field(
-        default=TelemetryTier.OFF,
-        description=(
-            "Remote telemetry tier: 'off' (no remote emission regardless of opt-in), 'crash_only' "
-            "(error/outcome counters only), or 'full' (counters plus timing percentiles). Only "
-            "remote_allowed=True metric keys are ever eligible for transmission at any tier."
-        ),
-    )
-    cadrumo_telemetry_gestor_mode: bool = Field(
-        default=False,
-        description=(
-            "Gestor/professional deployment flag. When True, remote telemetry emission is "
-            "categorically refused regardless of cadrumo_telemetry_opt_in, cadrumo_telemetry_tier, or "
-            "per-invocation consent."
-        ),
-    )
-    cadrumo_telemetry_endpoint: str | None = Field(
-        default=None,
-        description=(
-            "Remote telemetry collector URL, consumed by HttpTelemetrySink when "
-            "a call site opts into real transmission. Unset means no dial target."
         ),
     )
 
@@ -967,7 +975,19 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         been cut is still a field, but no environment variable reaches it,
         so listing it here would document a control that does nothing.
         """
-        return {name.upper() for name in cls.model_fields} - _NON_ENVIRONMENT_SELECTION_NAMES
+        names: set[str] = {name.upper() for name in cls.model_fields} | set(STORAGE_ROOT.precedence)
+        return names - _NON_ENVIRONMENT_SELECTION_NAMES
+
+    @classmethod
+    def storage_env_var_names(cls) -> frozenset[str]:
+        """Return path controls safe to carry across isolated process launch boundaries.
+
+        This is the product allowlist: the primary root variable and the settings field
+        of every operator-overridable taxonomy member. Development tool locations
+        are not product controls; ``dev/`` reads them from
+        :func:`~cadrumo.core.storage_environment.development_tool_env_var_names`.
+        """
+        return product_env_var_names()
 
     @staticmethod
     def external_constants() -> ExternalConstants:
@@ -986,6 +1006,14 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
 
     @field_validator(
         "cadrumo_token_dir",
+        "cadrumo_temp_dir",
+        "cadrumo_runtime_socket_dir",
+        "cadrumo_playwright_browsers_dir",
+        "cadrumo_ollama_models_dir",
+        "cadrumo_ollama_home_dir",
+        "cadrumo_gnome_extensions_dir",
+        "cadrumo_webview_dir",
+        "cadrumo_chromium_data_root",
         "cadrumo_usage_ratios_path",
         "cadrumo_financial_txs_dir",
         "cadrumo_invoices_dir",
@@ -1002,7 +1030,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
-        "cadrumo_llm_run_telemetry_dir",
+        "cadrumo_llm_run_record_dir",
         "cadrumo_submissions_dir",
         "cadrumo_workflow_runs_dir",
         "cadrumo_drafts_dir",
@@ -1017,7 +1045,16 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     )
     @classmethod
     @override
-    def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
+    def _normalize_repo_relative_paths(cls, value: Path | None, info: ValidationInfo) -> Path | None:
+        from .storage_taxonomy_locations import STORAGE_TAXONOMY
+
+        if info.field_name == STORAGE_ROOT_SETTINGS_FIELD and value is not None:
+            return normalize_project_relative_path(storage_root_override(value))
+        if info.field_name in {location.settings_field for location in STORAGE_TAXONOMY.values()}:
+            if value is None:
+                return None
+            candidate = value.expanduser()
+            return candidate.resolve() if candidate.is_absolute() else candidate
         return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 

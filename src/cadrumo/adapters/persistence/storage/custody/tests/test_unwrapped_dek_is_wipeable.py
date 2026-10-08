@@ -26,18 +26,22 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
+
 from ......tests.os_keychain_hook import require_os_credential_store
 from ..acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
-    resume_profile_session,
+    resume_profile_session_with_key,
 )
 from ..acceleration_receipt_crypto import (
     unwrap_profile_session_dek,
     wrap_profile_session_dek,
 )
 from ..errors import WipeTypeError
+from ..sign_in_generation import SignInGeneration
 from ..zeroise import zeroise
+from .receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -75,6 +79,8 @@ def test_session_receipt_unwrap_returns_a_buffer_that_wipes() -> None:
         session_id=_SESSION_ID,
         custody_generation=1,
         dek_epoch="epoch-1",
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=SignInGeneration(lineage=_SESSION_ID, generation=1),
         issued_at=_ISSUED_AT,
         idle_deadline=_IDLE_DEADLINE,
         absolute_deadline=_ABSOLUTE_DEADLINE,
@@ -112,7 +118,7 @@ def test_the_resume_signature_declares_the_key_it_actually_yields() -> None:
     """
     from typing import get_type_hints
 
-    returned = get_type_hints(resume_profile_session)["return"]
+    returned = get_type_hints(resume_profile_session_with_key)["return"]
     key_type = returned.__args__[1]
 
     assert bytearray in key_type.__args__, (
@@ -150,9 +156,12 @@ def test_the_resumed_key_is_a_buffer_whose_wipe_reaches_the_material(tmp_path: P
             now=_ISSUED_AT,
             idle_minutes=30,
             absolute_minutes=480,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=sign_in_custody(tmp_path, profile_id),
+            generation=sign_in_custody(tmp_path, profile_id).establish().current,
         )
 
-        outcome, resumed = resume_profile_session(
+        outcome, resumed = resume_receipt_as_runtime(
             storage_root=tmp_path,
             profile_id=profile_id,
             custody_generation=1,

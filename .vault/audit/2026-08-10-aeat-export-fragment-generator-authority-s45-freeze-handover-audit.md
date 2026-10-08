@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:953e736229d24433a51b19eaebe0cbe4f61900ad1e52df81bf546881f42574df'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+body_hash: 'sha256:84b17f4f3d86af04b3599f78c04757834dc8edf832acf35db935a44d6f71b468'
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `S45 freeze handover to the executing author`
@@ -140,7 +139,7 @@ absence produced the error.
 
 ### last-observer-standing | critical | one module survives, and quieting it disables the last alarm
 
-`src/cadrumo/domain/calculations/registry/tests/test_export_header_key_naming.py` is the sole
+The retired test was the sole
 export-verification module the change leaves untouched. It is **the last observer of this
 surface**, and it will red.
 
@@ -192,7 +191,6 @@ All eleven `support_removal_decisions` records were compared against the layout 
 withdraws, resolving `subject_id` to the layout declaration in the same revision and
 comparing `legal_refs` and `source_refs` as exact strings. Ten are byte-identical. One is
 not. The record at
-`src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/support_removal_decisions/0001-export-layout-support-removal.toml`
 carries six entries where the layout in `export/0000-manifest.toml` declares nineteen.
 
 The six are the first six of the nineteen, in source order. **Nobody selecting provisions on
@@ -214,13 +212,13 @@ load, so the author was **forced** to substitute a decision record. Modelo 303 a
 revisions, and Modelo 390, cite no `export_layouts` in any construct. Their layouts were
 uncited, so deletion was silent — no dangling reference, no refusal, no prompt.
 
-`src/cadrumo/domain/calculations/registry/_validate_constructs.py` checks only the opposite
+The retired module checks only the opposite
 direction: a decision whose subject is **still present** fails. Nothing checks a subject that
 vanished without a decision. The hole fails open exactly where a layout is unreferenced, and
 it would silently withdraw filing-grade capability from any uncited layout in future.
 
 The canonical home already exists and already solves this one scope level down.
-`src/cadrumo/domain/calculations/registry/_validate_export_exemption.py` opens by naming the
+The retired module opened by naming the
 identical defect for casillas: an exemption expressed by absence, with nothing verifying that
 an unaddressed casilla is genuinely unrepresentable rather than merely un-annotated. The
 casilla level got a declared reason and a closed vocabulary. The layout level never did. And
@@ -264,7 +262,7 @@ it relocates a single point of failure**. A future edit to M131 would silently m
 gates at once.
 
 On the fixtures the re-anchor needs, the distinction matters: the draft fixture **survives** in
-the working tree at `src/cadrumo/application/filing/tests/_export_support.py`, so using it is a
+the working tree at the retired test, so using it is a
 promotion. The headers fixture does **not** survive — it lived only inside the deleted parity
 module, so recovering it means reading the deleted file's committed blob. That is a
 **reconstruction from a file this change removes, not a promotion of live code**, and it should
@@ -302,7 +300,7 @@ should be **carried forward faithfully and flagged separately, never silently co
 a withdrawal record**.
 
 **Do not add construct citations to Modelo 303 or 390.** They never had them, the projection
-in `src/cadrumo/domain/calculations/registry/_support_matrix.py` reads the revision directly,
+in the retired module read the revision directly,
 and adding them delivers wider than the defect.
 
 **Correct the eleven evidence notes in the same change that lands them.**

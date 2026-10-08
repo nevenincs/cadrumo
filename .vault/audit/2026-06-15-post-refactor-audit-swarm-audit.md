@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#post-refactor-audit-swarm'
 date: '2026-06-15'
-modified: '2026-07-17'
-body_hash: 'sha256:19aea080c61e0dc5c0d7936e1bdf00e2d0894d18c7b02bfe89a553da7c98b64c'
+modified: '2026-10-03'
+body_hash: 'sha256:9a6741ef38e725e295422e5077279487176d6c034f2975b93a587bc3876929fc'
 related: []
 ---
 
@@ -38,15 +38,14 @@ family default (rather than an explicit TOML value) was misclassified: a
 row-producing binding could be treated as a scalar and vice versa, silently
 dropping or mis-shaping rows on the export and calc-sheets paths.
 
-Pathways and sites: `src/aeat/application/calculations/_row_set_assembly.py:176`
-and `src/aeat/application/storage/calc_sheets/_engine.py:951` (both compared the
+Pathways and sites: the retired module
+and the retired module (both compared the
 raw field; now `binding_aggregation_op(binding) != BindingAggregationOp.ROWS`),
-`src/aeat/domain/calculations/registry/_export.py:158` (dropped the
+The retired module (dropped the
 `aggregation is None or` short-circuit), and
-`src/aeat/domain/calculations/registry/_validate_exports.py:112` (dropped the
+The retired module (dropped the
 `aggregation is not None and` guard). **Disposition: FIXED** (commit `ecfa7b1c4`,
 FIX A) with new regression
-`src/aeat/application/calculations/tests/test_row_producer_default_op_detection.py`
 asserting a default-op ROWS binding is detected as a row producer.
 
 ### CLI-DEAD-CITATION-1 / -2 — operator strings cite retired CLI verbs (MEDIUM, FIXED)
@@ -59,18 +58,18 @@ longer exist after the config-surface rename: `aeat config doctor` (now
 documented-command sweep cannot catch — the exact fail-open class the
 pull-and-file CLI rule warns about for verb renames.
 
-Sites: `src/aeat/entrypoints/cli/_config/_capabilities_cli.py` no-active-profile
-default, `src/aeat/application/provisioning.py` (module docstring "the doctor" →
+Sites: the retired module no-active-profile
+default, the retired module (module docstring "the doctor" →
 "the check surface" and the `` ``aeat config doctor`` `` reference →
 `` ``aeat config check`` ``), and the `cli.config.profile.capabilities.no_active_profile`
-Catalan leaf in `src/aeat/locales/ca.yml`. **Disposition: FIXED** (commit
+Catalan leaf in the retired data file. **Disposition: FIXED** (commit
 `939f61067`, FIX B; the locale leaf updated through `python -m aeat.locales set`
 per the locales-CLI authority rule, not by hand-editing the YAML).
 
 ### RECONCILE-DUP — dead parallel reconciler + false "composes" docstrings (HIGH, FIXED)
 
 Semantic functionality-cluster overlap axis. The live modelo reconcile service
-`src/aeat/application/modelo/_reconcile.py` reimplements the metadata-level
+The retired module reimplements the metadata-level
 comparison (modelo, period, `ejercicio`, tax id) inline, but three of its
 docstrings claimed it "composes" the low-level reconciler in
 `aeat.application.filing.reconciliation._reconcile`. It imports nothing from

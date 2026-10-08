@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....application.operations.frontend_requests import OperationPublicEventPageV1
+from .....application.operations.frontend_requests import OperationPublicEventPageV1, OperationPublicNoticeEventV1
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....core.operations import OperationEventKind
 from ..logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial_log_view, fold_event_page
@@ -122,6 +122,22 @@ def test_the_initial_view_a_modal_starts_from_is_itself_valid() -> None:
     assert view.rows == ()
     assert view.resynchronized is False
     assert view.status is OperationReplayStatus.CAUGHT_UP
+
+
+@pytest.mark.parametrize("display_code", ["RH4", None])
+def test_clave_comparison_code_survives_public_event_projection(display_code: str | None) -> None:
+    """The operator needs the runtime's comparison code to approve the right phone request."""
+    notice = OperationPublicNoticeEventV1(
+        revision=1,
+        sequence=1,
+        timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+        code="auth.clave-movil.approval-pending",
+        notice_code="auth.clave-movil.approval-pending",
+        display_code=display_code,
+    )
+    page = _page(status=OperationReplayStatus.PAGE, events=(notice,), next_cursor=1, anchor_cursor=1)
+    view = fold_event_page(build_initial_log_view(_OPERATION_ID), page)
+    assert view.rows[0].display_code == display_code
 
 
 def _page(**overrides: object) -> OperationPublicEventPageV1:

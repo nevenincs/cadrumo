@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a29668b26530decf8ce4fb01ec0590c4a4941149680efb6a326868b973e167d1'
+body_hash: 'sha256:c17e2ab3d05315e78359aa877b66e2ab77cc84d2a5f4f4bcfeae522dabaa336e'
 related:
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
   - "[[2026-09-23-assets-core-amortization-method-set-adr]]"
@@ -16,7 +16,7 @@ related:
 The accepted lifecycle decision leaves vehicles outside its scope, yet the 2025
 registry admits the LIS table classes `transporte-externo` and
 `transporte-buque-aeronave` and the simplified class `transporte` with no
-affectation check (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml:12`,
+affectation check (the former source file,
 `:10`, `:102`). A passenger car also used privately can therefore be amortized
 today although the regulation says it is not an affected asset at all. The
 question is what affectation facts make a vehicle amortizable for an IRPF
@@ -95,4 +95,4 @@ VAT deduction of vehicles (LIVA art. 95.Tres), which the IVA register owns.
 - `src/cadrumo/_data/corpus/normatives/html/ley-27-2014.html.extracted.md:2393-2398` (LIS DA 18a)
 - `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:15780-15914` (manual, affectation)
 - `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:19186-19230` (manual, DA 18a)
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml:10-13`, `:102` (admitted transport classes)
+- the former source file, `:102` (admitted transport classes)

@@ -5,12 +5,10 @@ tags:
 date: '2026-08-13'
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
-  - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
-  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
 supersedes:
   - '2026-07-15-cli-authority-verb-conformance-adr'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e68a82ad674f9eeff69cfc6a964e3713faa8f167eaf8282e6109ffb208128407'
 ---

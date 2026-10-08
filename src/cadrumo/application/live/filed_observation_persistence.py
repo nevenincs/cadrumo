@@ -246,6 +246,26 @@ def enroll_filed_justificante_evidence(
     if not _is_active_filed_observation(observation):
         return FiledJustificanteEnrollmentResult()
 
+    saved_csvs, notices, receipts = _persist_matching_justificante_receipts(observation, ports=ports)
+    results = _reconcile_matching_justificante_receipts(
+        observation,
+        receipts=receipts,
+        bucket_id=bucket_id,
+        ports=ports,
+    )
+    return _filed_justificante_enrollment_result(saved_csvs=saved_csvs, notices=notices, results=results)
+
+
+def _persist_matching_justificante_receipts(
+    observation: FiledObservationProtocol,
+    *,
+    ports: FiledObservationPersistencePorts,
+) -> tuple[
+    list[str],
+    list[Notice],
+    list[tuple[Justificante, FiledObservationArtefactProtocol]],
+]:
+    """Persist readable receipts before any filing-chain entry can cite them."""
     saved_csvs: list[str] = []
     notices: list[Notice] = []
     receipts: list[tuple[Justificante, FiledObservationArtefactProtocol]] = []
@@ -263,7 +283,17 @@ def enroll_filed_justificante_evidence(
         ports.justificante_repository.save(parsed.justificante)
         saved_csvs.append(parsed.justificante.csv)
         receipts.append((parsed.justificante, artefact))
+    return saved_csvs, notices, receipts
 
+
+def _reconcile_matching_justificante_receipts(
+    observation: FiledObservationProtocol,
+    *,
+    receipts: list[tuple[Justificante, FiledObservationArtefactProtocol]],
+    bucket_id: str,
+    ports: FiledObservationPersistencePorts,
+) -> list[FilingReconciliationResult]:
+    """Create filing-chain entries only for stored receipts under matching identity."""
     results: list[FilingReconciliationResult] = []
     if receipts and _chain_identity_matches(observation, bucket_id=bucket_id, ports=ports):
         for justificante, artefact in receipts:
@@ -281,6 +311,16 @@ def enroll_filed_justificante_evidence(
                     clock=artefact.captured_at,
                 ),
             )
+    return results
+
+
+def _filed_justificante_enrollment_result(
+    *,
+    saved_csvs: list[str],
+    notices: list[Notice],
+    results: list[FilingReconciliationResult],
+) -> FiledJustificanteEnrollmentResult:
+    """Project persisted receipt identifiers and every settled chain outcome."""
     return FiledJustificanteEnrollmentResult(
         justificante_csvs=tuple(dict.fromkeys(saved_csvs)),
         filing_record_ids=tuple(

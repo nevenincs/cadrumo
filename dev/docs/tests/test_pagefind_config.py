@@ -14,7 +14,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..pagefind_index import PagefindUnavailableError
+from ..pagefind_index import PAGE_EXCLUDED_SELECTORS, PagefindUnavailableError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -23,12 +23,15 @@ _REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 
 
-def test_pagefind_yml_scopes_to_article_body() -> None:
-    """The shipped pagefind.yml indexes the article body, excluding chrome."""
-    text = (_DOCS / "pagefind.yml").read_text(encoding="utf-8")
-    assert 'root_selector: "article[role=main]"' in text
-    assert "exclude_selectors:" in text
-    assert ".sidebar-tree" in text  # navigation chrome is excluded
+def test_a_page_record_leaves_out_the_chrome_and_recorded_json() -> None:
+    """The selectors the index is built with name the page's surroundings and machine output.
+
+    That they take effect is proven on a built index in ``test_shared_search_index``;
+    this pins what is asked for, so dropping one is a visible change.
+    """
+    assert {".sidebar-drawer", ".toc-drawer", ".announcement", "footer"} <= set(PAGE_EXCLUDED_SELECTORS)
+    assert 'pre.cadrumo-frame-output[data-format="json"]' in PAGE_EXCLUDED_SELECTORS
+    assert not (_DOCS / "pagefind.yml").exists(), "the index reads no configuration file; selectors live in code"
 
 
 def test_search_template_hosts_the_shared_controller() -> None:

@@ -9,7 +9,7 @@ with the profile-persistence adapter tests.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from decimal import Decimal
 
 import pytest
@@ -20,14 +20,15 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import (
-    ProrrataActivityRow,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
 )
 
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ..ports import ProrrataPriorSettlementSourceSnapshot
 from ..service import ProrrataRegisterService
+from .provisional_override import record_aeat_autorizada, record_inicio_actividad
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -82,18 +83,32 @@ class _InMemoryProrrataRegisterRepository:
         )
         return self._register
 
-    def upsert_activity_row(self, row: ProrrataActivityRow) -> ProrrataRegister:
-        retained = tuple(
-            existing
-            for existing in self._register.activity_rows
-            if (existing.ejercicio, existing.activity_id) != (row.ejercicio, row.activity_id)
-        )
-        self._register = ProrrataRegister(
-            entries=self._register.entries,
-            sector_definitions=self._register.sector_definitions,
-            activity_rows=(*retained, row),
-        )
-        return self._register
+    def seed_sector_carried(
+        self, ejercicio: int, sector_id: str, *, validate_entry: Callable[[ProrrataRegisterEntry], None]
+    ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
+        raise AssertionError("sector carry is outside these policy tests")
+
+    def settle_sector(
+        self,
+        ejercicio: int,
+        sector_id: str,
+        *,
+        con_derecho_volume: Decimal,
+        sin_derecho_volume: Decimal,
+        producing_snapshot_ref: RegistrySnapshotRef,
+        validate_entry: Callable[[ProrrataRegisterEntry], None],
+    ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
+        raise AssertionError("sector settlement is outside these policy tests")
+
+    def commit_whole_carried_seed(
+        self,
+        register: ProrrataRegister,
+        *,
+        ejercicio: int,
+        expected_revision_id: str,
+        source_snapshot: ProrrataPriorSettlementSourceSnapshot,
+    ) -> None:
+        raise AssertionError("source-fenced carry is outside these policy tests")
 
 
 @pytest.fixture
@@ -115,7 +130,8 @@ def test_record_aeat_autorizada_preserves_sector_and_regime(
 ) -> None:
     service = _service(authority_operation)
 
-    updated = service.record_aeat_autorizada(
+    updated = record_aeat_autorizada(
+        service,
         ejercicio=2026,
         provisional_percentage=Decimal("58"),
         authorisation_reference="AEAT-AUTH-2026-SECTOR-02",
@@ -136,10 +152,8 @@ def test_record_inicio_actividad_uses_registry_provenance(
 ) -> None:
     service = _service(authority_operation)
 
-    updated = service.record_inicio_actividad(
-        ejercicio=2026,
-        provisional_percentage=Decimal("50"),
-        proposal_reference="INICIO-2026-01",
+    updated = record_inicio_actividad(
+        service, ejercicio=2026, provisional_percentage=Decimal("50"), proposal_reference="INICIO-2026-01"
     )
 
     entry = updated.entry_for(2026)

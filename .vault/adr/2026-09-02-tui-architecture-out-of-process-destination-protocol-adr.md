@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-09-02'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:03853d224dcbda7ef33caa3541ad9a09a5854c0fe0e8366582f2d6a19f559932'
+body_hash: 'sha256:457df8db3ab82c4c89aaaad646f767a1d8278eb73c355257fcc0ebb7eed14736'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -43,7 +43,7 @@ before any call site can change.
   external reference.
 - `2026-09-02-unreachable-capability-tui-navigation-join-adr` restates the same
   prohibition as a hard constraint on the very join the consolidation created.
-- The consolidation's own session bridge at `src/cadrumo/entrypoints/cli/_tui_session.py`
+- The consolidation's own session bridge
   already keeps the boundary for the root request: it names the TUI by module
   string and executes it with `python -m`. It is the pattern to extend, not a
   competing one.

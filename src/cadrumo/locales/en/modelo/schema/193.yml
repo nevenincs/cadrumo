@@ -1,10 +1,19 @@
 modelo:
   schema:
     '193':
+      binding:
+        modelo-193-123-base-anual:
+          label: Annual withholding and payments on account base · Form 123, box 06
+        modelo-193-123-retenciones-anual:
+          label: Annual withholdings and payments on account · Form 123, box 09
+        modelo-193-perceptor-rows-base-total:
+          label: Total withholding and payments on account bases for recipients
+        modelo-193-perceptor-rows-retenciones-total:
+          label: Total withholdings and payments on account for recipients
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            label: Base for withholdings and payments on account
+            label: Withholding and payment-on-account base
           declaracion-anterior-numero:
             label: Identifying number of the previous return
           declaracion-complementaria:
@@ -31,7 +40,7 @@ modelo:
           gastos-total-declarante:
             label: Deductible expenses (art. 26.1.a Law 35/2006)
           payee-base-retenciones-193:
-            label: Base for withholdings and payments on account
+            label: Withholding and payment-on-account base
           payee-ceuta-melilla-clave:
             label: CEUTA OR MELILLA / ISLA DE LA PALMA
           payee-clave-codigo:
@@ -62,8 +71,6 @@ modelo:
             label: NATURE OF THE DECLARANT
           payee-naturaleza-percepcion:
             label: NATURE
-          payee-nif:
-            label: Recipient's tax ID (NIF)
           payee-nif-pagador-anterior:
             label: NIF OF THE PREVIOUS PAYER
           payee-numero-orden-193:
@@ -102,10 +109,6 @@ modelo:
             label: CODE TYPE
           payee-tipo-percepcion:
             label: Type of payment
-          perc-nif-representante:
-            label: Tax ID of the legal representative
-          representante-legal-nif:
-            label: Tax ID of the legal representative
           retenciones-ingresadas-total:
             label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID IN
           retenciones-ingresos-a-cuenta:
@@ -121,8 +124,57 @@ modelo:
           account on certain income from movable capital and certain income. Annual
           summary.
         title: Annual summary of withholdings on income from movable capital
+      form:
+        context:
+          ejercicio:
+            heading: Tax year
+          nif:
+            heading: Declarant tax ID
+          nombre:
+            heading: Name or company name
+        page:
+          gastos:
+            heading: 'Annex: expenses'
+          perceptores-1:
+            heading: Recipient details · 1
+          perceptores-2:
+            heading: Recipient details · 2
+          perceptores-3:
+            heading: Recipient details · 3
+          resumen:
+            heading: Annual summary
+        section:
+          contacto:
+            heading: Contact person
+          declaracion:
+            heading: Return identification and type
+          declarante:
+            heading: Declarant and tax year
+          gastos:
+            heading: Administration and custody expenses
+          identificacion:
+            heading: Recipient identification
+          importes:
+            heading: Income and withholding
+          operacion:
+            heading: Transaction identification
+          prestamos:
+            heading: Securities lending and other details
+          rendimiento:
+            heading: Income and securities account
+          territorio:
+            heading: Territorial distribution
+          totales:
+            heading: Summary of reported amounts
       revision:
         '2022':
+          casilla:
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: Legal representative's NIF
+            x-e1in4opedpkmc:
+              label: Recipient's NIF
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: Legal representative's NIF
           field:
             label: Modelo 193, tax year 2022
         '2023':

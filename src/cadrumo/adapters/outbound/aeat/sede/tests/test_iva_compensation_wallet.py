@@ -6,9 +6,11 @@ import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 from urllib.parse import urlsplit
 
 import pytest
+from playwright.async_api import Page
 from pydantic import AnyUrl
 
 from ......core.config import Settings
@@ -34,6 +36,7 @@ from ..iva_compensation_wallet import (
     _assert_read_browser_action,
     _assert_read_http,
     _dump_wallet_diagnostic,
+    _raise_if_wallet_auth_gate,
     _wait_for_wallet_execute_initial_shape,
     assert_wallet_read_landing,
 )
@@ -644,6 +647,66 @@ def test_discover_iva_compensation_wallet_entrypoint_rejects_non_aeat_host() -> 
 def test_iva_wallet_auth_gate_detector_matches_aeat_4033_redirect() -> None:
     assert is_aeat_auth_gate_redirect(_AEAT_AUTH_GATE_URL)
     assert not is_aeat_auth_gate_redirect(WALLET_URL)
+
+
+@pytest.mark.parametrize(
+    ("landing_url", "is_auth_gate"),
+    (
+        (_AEAT_AUTH_GATE_URL, True),
+        (_AEAT_AUTH_GATE_URL.replace("https://", "http://", 1), False),
+        (
+            f"https://{AEAT_SUFFIX_LOOKALIKE_HOST_CANARY}{EXTERNAL.aeat.sede_paths.auth_gate_4033}",
+            False,
+        ),
+        (
+            f"https://user@{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.sede_paths.auth_gate_4033}",
+            False,
+        ),
+        (
+            f"https://{EXTERNAL.aeat.domains.sede}:443{EXTERNAL.aeat.sede_paths.auth_gate_4033}",
+            False,
+        ),
+        (f"https://[{EXTERNAL.aeat.sede_paths.auth_gate_4033}", False),
+        (f"{EXTERNAL.aeat.domains.sede}/unrelated.html", False),
+        (
+            f"https://{EXTERNAL.aeat.domains.legacy_host_suffix}{EXTERNAL.aeat.sede_paths.auth_gate_4033}",
+            False,
+        ),
+    ),
+    ids=(
+        "https-gate",
+        "http-downgrade",
+        "deceptive-suffix",
+        "userinfo",
+        "explicit-port",
+        "malformed",
+        "other-path",
+        "legacy-suffix",
+    ),
+)
+def test_wallet_auth_gate_caller_uses_the_configured_redirect_contract(
+    landing_url: str,
+    is_auth_gate: bool,
+) -> None:
+    class _Page:
+        url = landing_url
+
+    if is_auth_gate:
+        with pytest.raises(SedeNavigationError) as raised:
+            _raise_if_wallet_auth_gate(
+                cast(Page, _Page()),
+                message="wallet auth gate",
+                expected_url=WALLET_URL,
+                surface="iva_compensation_wallet",
+            )
+        assert raised.value.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED
+    else:
+        _raise_if_wallet_auth_gate(
+            cast(Page, _Page()),
+            message="wallet auth gate",
+            expected_url=WALLET_URL,
+            surface="iva_compensation_wallet",
+        )
 
 
 def test_wallet_shape_context_redacts_url_query_and_input_values() -> None:

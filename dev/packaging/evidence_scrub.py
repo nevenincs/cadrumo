@@ -169,6 +169,28 @@ def _rewrite_strings(
     return node
 
 
+def _residual_text_leaks(
+    pointer: str,
+    value: str,
+    token_patterns: list[re.Pattern[str]],
+    workspace_roots: tuple[str, ...],
+    workspace_patterns: list[re.Pattern[str]],
+) -> list[str]:
+    leaks: list[str] = []
+    for match in _HOME_USER_RE.finditer(value):
+        if match.group("user") != SCRUBBED_USER:
+            leaks.append(f"{pointer}: home-directory user segment {match.group('user')!r}")
+    if _UNC_HOST_RE.search(value):
+        leaks.append(f"{pointer}: UNC host path (refused, not rewritable)")
+    for root, pattern in zip(workspace_roots, workspace_patterns, strict=True):
+        if pattern.search(value):
+            leaks.append(f"{pointer}: workspace root {root!r}")
+    for pattern in token_patterns:
+        if pattern.search(value):
+            leaks.append(f"{pointer}: machine token {pattern.pattern!r}")
+    return leaks
+
+
 def find_residual_leaks(
     document: dict[str, object],
     tokens: Iterable[str],
@@ -185,17 +207,7 @@ def find_residual_leaks(
     workspace_patterns = [_workspace_pattern(root) for root in workspace_roots]
     leaks: list[str] = []
     for pointer, value in _walk_strings(document, ""):
-        for match in _HOME_USER_RE.finditer(value):
-            if match.group("user") != SCRUBBED_USER:
-                leaks.append(f"{pointer}: home-directory user segment {match.group('user')!r}")
-        if _UNC_HOST_RE.search(value):
-            leaks.append(f"{pointer}: UNC host path (refused, not rewritable)")
-        for root, pattern in zip(workspace_roots, workspace_patterns, strict=True):
-            if pattern.search(value):
-                leaks.append(f"{pointer}: workspace root {root!r}")
-        for pattern in token_patterns:
-            if pattern.search(value):
-                leaks.append(f"{pointer}: machine token {pattern.pattern!r}")
+        leaks.extend(_residual_text_leaks(pointer, value, token_patterns, workspace_roots, workspace_patterns))
     return leaks
 
 

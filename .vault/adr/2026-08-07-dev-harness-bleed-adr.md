@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#dev-harness-bleed'
 date: '2026-08-07'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e449d4712c9c044e8a6bc106c9ea6fd8ba22a4d135ff2238db79f0d4cb4ea121'
+body_hash: 'sha256:ba8ecc9890fe9293c8cea9ea9e203f6c85818918e99062e12a7fbc2b76b98864'
 related:
   - '[[2026-08-07-dev-harness-bleed-research]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
@@ -18,7 +18,7 @@ related:
 
 `src/cadrumo/locales/` is a mixed package. Five artefacts are genuine runtime
 data: `en.yml`, `es.yml`, `ca.yml`, `hu.yml` and `_intentional_identical.json`,
-loaded by the renderer at `src/cadrumo/core/i18n/_render.py:128` and `:491`. Seven
+loaded by the renderer and `:491`. Seven
 modules are dev/CI catalogue-maintenance tooling that ships in the wheel with no
 runtime importer: `manager.py`, `_ast_scanner.py`, `_registry_scanner.py`,
 `_fstring_registry.py`, `_status.py`, `cli.py`, `__main__.py`, plus the package
@@ -63,36 +63,35 @@ subpackages import this tooling as a general-purpose test utility.
   docstring mention; that figure reached this record unchallenged and is
   corrected here.
 - `LocaleManager.get_codebase_keys()` scans the source tree with `rglob("*.py")`
-  over src only, at `src/cadrumo/locales/manager.py:198`.
+  over src only,.
 - **Six src test modules consume the tooling, across three unrelated domains.**
   The canonical tree-wide parity gate is itself a consumer:
-  `src/cadrumo/tests/test_parity.py:8-13` imports the `locales` facade, the CLI
+  the former source file imports the `locales` facade, the CLI
   app and `locales.manager`, and pins the logger name
   `"cadrumo.locales._ast_scanner"` at `:585`. Three sit in unrelated domains and
   use `LocaleManager` as a general utility:
-  `src/cadrumo/adapters/persistence/storage/tests/test_hardening_convention_guards.py:13`,
+
   which reaches it by a five-dot relative import of the private `manager`
-  submodule; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py:73`
+  submodule; the former source file
   (the `:47` occurrence cited by an earlier draft is prose naming the
   `python -m cadrumo.locales set` command, not an import); and
-  `src/cadrumo/application/operator_surface/tests/test_contract.py:41`, which
+  the former source file, which
   constructs a manager and reads catalogues at `:438-441`. Two further gates
-  consume it: `src/cadrumo/tests/test_registry_locale_key_parity.py:26-27` and
-  `src/cadrumo/tests/test_locale_translation_honesty.py:26`.
+  consume it: the former source file and
+
 - **The cross-domain consumers use only the catalogue-reading half.** No consumer
   outside `locales/` calls `get_codebase_keys` or `get_codebase_namespaces`
   except `test_parity.py` (`:53`, `:702`, `:725`). The three unrelated-domain
   gates use `LocaleManager` purely as a strict YAML catalogue reader,
   functionally a strict-mode near-duplicate of the renderer's private
-  `_load_locale_yaml` and `_flatten_translations` at
-  `src/cadrumo/core/i18n/_render.py:544` and `:560`. That overlap is a candidate
+  `_load_locale_yaml` and `_flatten_translations`  and `:560`. That overlap is a candidate
   deduplication finding in its own right and is not resolved here.
 - **`test_parity.py` is substantially the mutation tooling's own unit suite**, not
   only a consuming gate: it exercises `set_locale_value`, `remove_locale_value`,
   scaffold, canonicalise and the CLI app directly. Where it should live is
   therefore a genuine question rather than a mechanical repoint.
 - **A src test importing the dev tree is established, ruled practice, not a
-  violation.** `dev/import_hygiene_scan.py:474-494` scopes its
+  violation.** the former source file scopes its
   `DevToolingImportViolation` family deliberately to *shipped* modules, and its
   docstring states that an excluded test tree's `dev.` import encodes the fact
   that the suite requires the repo checkout and the dev dependency group, which
@@ -152,7 +151,7 @@ subpackages import this tooling as a general-purpose test utility.
   and it re-ships an entrypoint module in the wheel, defeating the goal of the
   decision to avoid editing one rule and five literal strings. It would also
   itself be a shipped module importing `dev.`, which is precisely the one
-  direction `dev/import_hygiene_scan.py` fails, so the option is not merely
+  direction the former source file fails, so the option is not merely
   discouraged but gate-blocked.
 
 ### Sub-decision A: the tooling CLI and its own localisation
@@ -376,29 +375,28 @@ solved by this record.
   with the apidocs scaffold verb. Orphaned stubs hard-crash the nitpicky Sphinx
   build. Stage only stubs whose added lines name these modules.
 - Delete the now-moot coverage allowlist entry for
-  `src/cadrumo/locales/__main__.py` at
-  `src/cadrumo/tests/test_every_module_has_test_coverage.py:80-81`.
-- Repoint the logger-name pin at `src/cadrumo/tests/test_parity.py:585`. This one
+  the former source file at
+
+- Repoint the logger-name pin. This one
   breaks silently: the log capture stops asserting against the right logger
   rather than erroring.
 - Repoint the five-dot private-submodule import at
-  `src/cadrumo/adapters/persistence/storage/tests/test_hardening_convention_guards.py:13`
+
   at the relocated package facade.
 - Delete the dead literal-filename self-exclusion at
-  `src/cadrumo/locales/manager.py:199`.
+
 - Edit the mandate at `.vaultspec/rules/aeat-locales-cli.md` and propagate with
   the spec sync verb; never the generated `.claude/` copy.
 - Sweep the literal invocation strings at
   `dev/registry/newmodelo/manager.py:130-131` and
-  `dev/registry/newmodelo/checklist.py:40,120`, and the assertion text at
-  `src/cadrumo/tests/test_registry_locale_key_parity.py:78-79,128` and
-  `src/cadrumo/tests/test_locale_translation_honesty.py:229,250`.
+  `dev/registry/newmodelo/checklist.py:40,120`, and the assertion text  and
+
 - No `pyproject.toml` edit and no `.importlinter` edit is required; the existing
   wildcard test carve-out already covers the relocated importers.
 
 ### Out of scope
 
-`src/cadrumo/application/wizard/_translations.py` is a further dev-bleed
+the former source file is a further dev-bleed
 candidate, with zero production importers and no re-export. Its consolidation was
 separately assessed and resolved as do-not-consolidate, the scanner difference
 being three rather than zero. It is named here so no reader mistakes this record
@@ -417,7 +415,7 @@ prior approval being extended to a decision they had not seen. B2 did not ship
 under an approval given for B3.
 
 The operator reasoning recorded for B2: the crossing is permitted by an existing
-ruling, since `dev/import_hygiene_scan.py:474-494` scopes its violation family to
+ruling, since the former source file scopes its violation family to
 shipped modules, thirteen src test modules already import `dev.`, and every
 `tests/` tree is wheel-excluded at `pyproject.toml:280-283`; while B3 would
 invent a production module with no production consumer and still leave roughly
@@ -430,7 +428,7 @@ C1's safety rests on no production path being able to raise `LocaleError`, and
 that was closed at the source rather than by walking the seventeen
 `except CadrumoError` sites individually. No production module imports the
 locales tooling at all, and the runtime renderer reaches the catalogues through
-its own private `_load_locale_yaml` at `src/cadrumo/core/i18n/_render.py:544`
+its own private `_load_locale_yaml`
 rather than through `LocaleManager`. With no production caller able to construct
 a manager, no production catcher can receive the exception — which also disposes
 of the concern that `LocaleError` is raised by the reading path as well as the

@@ -16,7 +16,6 @@ surfaces whose contract genuinely requires the complete validated graph.
 from __future__ import annotations
 
 import re
-from collections import Counter, defaultdict
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
@@ -24,7 +23,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.i18n.render import output_language
 from ....core.modelo import Modelo
@@ -56,9 +54,6 @@ from .query_reports import (
     ModeloListReport,
     ModeloListRow,
     ModeloSupportMatrixReport,
-    RegistrySourceInventoryReport,
-    RegistrySourceInventoryRow,
-    RegistrySourceSite,
 )
 from .relation_prefill_bindings import RelationPrefillProvider
 from .relations import relation_prefill_bindings_for_period
@@ -75,7 +70,6 @@ from .schema_surfaces import CasillaDefinition
 from .support_matrix import build_support_matrix, build_support_matrix_from_directory_views
 from .temporal import (
     ModeloRevisionDirectory,
-    select_revision,
     select_revision_for_year,
     select_revision_metadata_for_year,
 )
@@ -223,40 +217,6 @@ class RegistryQueryService:
         """
         return tuple(row.code for row in self.list_modelos().modelos)
 
-    def revision_for_scope(
-        self,
-        modelo: str,
-        *,
-        filing_year: int,
-        period: str,
-        as_of: date | None = None,
-        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.APPLICABILITY,
-    ) -> ModeloRevision:
-        """Return exactly the revision selected for one explicit operation scope.
-
-        The report path owns canonical temporal and grade selection; callers
-        that need revision payload fields consume this selected result instead
-        of walking every revision in an authority-wide model graph.
-        """
-        normalized_modelo = modelo.strip()
-        definition = self._authority.validate_modelo(normalized_modelo)
-        if grade is not RegistryAuthorityGrade.APPLICABILITY:
-            return self.resolve_revision_for_scope(
-                normalized_modelo,
-                filing_year=filing_year,
-                period=period,
-                as_of=as_of,
-                grade=grade,
-            ).revision
-        # Metadata and snapshot consumers share the same temporal source.
-        return select_revision(
-            definition,
-            filing_year=filing_year,
-            period=period,
-            on=as_of,
-            support=self._authority.catalogues.supported_filing_years,
-        )
-
     def revision_by_id(self, modelo: str, revision_id: str) -> ModeloRevision:
         """Return one exact revision component by canonical identity."""
         normalized = Modelo(modelo).value
@@ -286,7 +246,7 @@ class RegistryQueryService:
         Bulk walks are intentionally named and deterministic.  They are for
         source inventories and other diagnostics that genuinely need every
         revision; ordinary runtime consumers should use
-        :meth:`revision_for_scope`.
+        :meth:`resolve_revision_for_scope`.
         """
         selected = self._authority.modelos
         if modelo_codes is not None:
@@ -354,51 +314,6 @@ class RegistryQueryService:
         # to ``ModeloListRow | Mapping[str, Any]``.
         ordered: tuple[ModeloListRow, ...] = tuple(sorted(rows, key=lambda row: row.code))
         return ModeloListReport(modelos=ordered)
-
-    def source_inventory(self) -> RegistrySourceInventoryReport:
-        """Report every :class:`~core.aggregation.BindingSourceKind` the committed registry declares, and where.
-
-        Walks every committed modelo revision and every binding it declares,
-        grouping by the binding's ``source`` kind. The result records, per
-        source kind, the committed revisions that declare it and the per-revision
-        binding count. This is a pure registry introspection surface — it does
-        not consult the live calculation mesh — so it stays inside the domain
-        boundary. Application-layer conformance compares this live inventory
-        directly with executable calculation-route ownership so an unrouted
-        declaration is refused rather than silently blanked.
-
-        Returns:
-            A :class:`~domain.calculations.registry.query_reports.RegistrySourceInventoryReport`
-            whose rows are sorted by the source kind's string value; each row's
-            sites are sorted by ``(modelo, revision_id)``.
-        """
-        sites_by_source: dict[BindingSourceKind, list[RegistrySourceSite]] = defaultdict(list)
-        for modelo_id, revision in self.iter_modelo_revisions():
-            counts: Counter[BindingSourceKind] = Counter(binding.source for binding in revision.bindings)
-            for source, count in counts.items():
-                sites_by_source[source].append(
-                    RegistrySourceSite(
-                        modelo=modelo_id,
-                        revision_id=str(revision.id),
-                        binding_count=count,
-                    ),
-                )
-        inventory: list[RegistrySourceInventoryRow] = []
-        for source, sites in sites_by_source.items():
-            ordered_sites: tuple[RegistrySourceSite, ...] = tuple(
-                sorted(sites, key=lambda site: (site.modelo, site.revision_id))
-            )
-            inventory.append(
-                RegistrySourceInventoryRow(
-                    source_kind=source,
-                    sites=ordered_sites,
-                    total_binding_count=sum(site.binding_count for site in ordered_sites),
-                ),
-            )
-        ordered_rows: tuple[RegistrySourceInventoryRow, ...] = tuple(
-            sorted(inventory, key=lambda row: row.source_kind.value)
-        )
-        return RegistrySourceInventoryReport(rows=ordered_rows)
 
     def support_matrix(self) -> ModeloSupportMatrixReport:
         """Return the registry-wide per-modelo support/capability matrix.
@@ -1043,8 +958,19 @@ class PinnedRegistryQueryService:
             _raise_unscoped_as_of_query(modelo)
         directory = self._operation.modelo_directory(modelo.strip())
         if period is None:
-            metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
-            return self._context(directory, self._operation.revision(directory.modelo_id, str(metadata.id)))
+            return self._latest_revision_context(directory)
+        return self._period_revision_context(directory, period)
+
+    def _latest_revision_context(self, directory: ModeloRevisionDirectory) -> ResolvedRegistryQueryContext:
+        metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
+        revision = self._operation.revision(directory.modelo_id, str(metadata.id))
+        return self._context(directory, revision)
+
+    def _period_revision_context(
+        self,
+        directory: ModeloRevisionDirectory,
+        period: str,
+    ) -> ResolvedRegistryQueryContext:
         requested = period.strip()
         declared = tuple(token for item in directory.revisions for token in item.period_selector.declared_periods)
         if not (_BARE_PERIOD_RE.fullmatch(requested.upper()) or selector_token_for_request(declared, requested)):
@@ -1134,6 +1060,7 @@ def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> Mode
         cadence=definition.cadence,
         jurisdiction=definition.jurisdiction,
         revision=str(revision.id),
+        authority_grade=revision.authority_grade,
         revision_ids=context.revision_ids,
         filing_year=filing_year,
         filing_period=_query_filing_period(filing_year, registry_period),

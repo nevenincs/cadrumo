@@ -1,0 +1,129 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 12301"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DR 12301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m123-2024-field-9-accrual-year"
+decision_statement = "The four-character Ejercicio slot under Devengo carries the accrual year as four unsigned digits."
+justification = "The official design labels this Num field Devengo(2). Ejercicio at ordinal 9; the typed page field identifies it as filing_year, so the reviewed representation preserves all four year digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 12301"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DR 12301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 12301"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DR 12301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m123-2024-field-11-rent-count-dividends"
+decision_statement = "The fifteen-position rent count for Dividendos y otras rentas [01] is an unsigned whole number."
+justification = "The official design labels the quantity Número de rentas, Dividendos y otras rentas (...) [01], and assigns fifteen Num positions; the source therefore names a count without a fractional component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 12301"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DR 12301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 12301"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 12301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m123-2024-field-12-rent-count-rest"
+decision_statement = "The fifteen-position rent count for Resto de rentas [02] is an unsigned whole number."
+justification = "The official design labels the quantity Número de rentas, Resto de rentas [02], and assigns fifteen Num positions; the source therefore names a count without a fractional component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 12301"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 12301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 12301"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DR 12301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m123-2024-field-13-rent-count-total"
+decision_statement = "The fifteen-position rent count for Totales [03] is an unsigned whole number."
+justification = "The official design labels the quantity Número de rentas, Totales [03], and assigns fifteen Num positions; the source therefore names a count without a fractional component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 12301"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DR 12301"
+
+[design_identity]
+modelo = "123"
+design_epoch = "2024"
+source_ref = "aeat-dr-123-2024-v20"
+source_sha256 = "85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4"

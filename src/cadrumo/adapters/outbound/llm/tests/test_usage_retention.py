@@ -1,7 +1,7 @@
 """Retention-window pruning for :class:`~adapters.outbound.llm.UsageRecorder`.
 
 ``prune`` bounds the usage store's growth in two stages mirroring
-:meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.prune`: an age cutoff
+:meth:`~adapters.outbound.llm.LLMRunRecorder.prune`: an age cutoff
 (``retention_days``) then a record-count cap (``max_records``). Ages are
 anchored to real wall-clock time via each record's own ``created_at`` (not a
 frozen clock, which would also freeze the storage runtime's idle-session-expiry

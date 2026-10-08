@@ -14,6 +14,7 @@ from ._repair_command_specs import CONFIG_REPAIR_COMMAND_SPECS
 from ._reset_command_specs import CONFIG_RESET_COMMAND_SPECS
 from ._storage_command_specs import CONFIG_STORAGE_COMMAND_SPECS
 from .profile_command_specs import PROFILE_COMMAND_SPECS
+from .runtime_access_management_specs import RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS
 
 CONFIG_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *AUTH_COMMAND_SPECS,
@@ -22,6 +23,7 @@ CONFIG_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *CONFIG_CUSTODY_COMMAND_SPECS,
     *GOOGLE_COMMAND_SPECS,
     *PROFILE_COMMAND_SPECS,
+    *RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS,
     *PROFILE_INVENTORY_COMMAND_SPECS,
     *CONFIG_PROVISION_COMMAND_SPECS,
     *CONFIG_REPAIR_COMMAND_SPECS,

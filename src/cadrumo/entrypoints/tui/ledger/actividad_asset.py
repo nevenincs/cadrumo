@@ -4,21 +4,21 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date
-from decimal import Decimal, InvalidOperation
-from typing import override
+from typing import Protocol, override
 
 from textual.app import ComposeResult
 from textual.widgets import Button, Input, Static
 
 from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
-from ....application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
+from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ....application.operator_actions.models import PreconditionVerdict
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.parsing.dates import require_iso8601_date
 from ....core.period import Period
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
-from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
+from ..account import AccountSessionExpiredError
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models_actividad_asset import (
     ActivityAssetClaimRequestV1,
@@ -38,59 +38,32 @@ class _ActivityAssetScreenResult:
     current_revision_id: str | None = None
 
 
-def _optional_amount(value: str) -> Decimal | None:
-    """Parse the optional free-depreciation amount; an empty field elects none."""
-    stripped = value.strip()
-    if not stripped:
-        return None
-    try:
-        return Decimal(stripped)
-    except InvalidOperation as exc:
-        raise ValueError("free-depreciation amount must be a decimal euro amount") from exc
-
-
-class ActivityAssetTuiActionsV1:
-    """TUI interaction boundary with no depreciation arithmetic of its own."""
-
-    def __init__(self, *, operations: ActivityAssetOperations) -> None:
-        """Bind actions to the shared application operations."""
-        self._operations = operations
+class ActivityAssetTuiActionsV1(Protocol):
+    """Typed action door backed by the installed session's runtime operations."""
 
     def create(self, request: ActivityAssetCreationRequestV1) -> ActivityAssetInspectionV1:
         """Create an asset and return its persisted revision chain."""
-        self._operations.create(request.revision)
-        return self.inspect(request.revision.asset_id)
+        ...
 
     def inspect(self, asset_id: str) -> ActivityAssetInspectionV1:
         """Inspect one asset's immutable revision chain."""
-        return ActivityAssetInspectionV1(asset_id=asset_id, revisions=self._operations.inspect(asset_id))
+        ...
 
     def correct(self, request: ActivityAssetCorrectionRequestV1) -> ActivityAssetInspectionV1:
         """Append a correction and return the resulting chain."""
-        self._operations.correct(request.revision)
-        return self.inspect(request.revision.asset_id)
+        ...
 
     def forecast(self, request: ActivityAssetForecastRequestV1) -> ScheduledAmortizationCharge:
         """Preview a schedule through the application boundary."""
-        return self._operations.forecast(
-            asset_id=request.asset_id,
-            covered_from=request.covered_from,
-            covered_until=request.covered_until,
-            requested_free_amount=request.requested_free_amount,
-            supersedes_claim_id=request.supersedes_claim_id,
-        )
+        ...
 
     def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
         """Record an explicit claim through the application boundary."""
-        return self._operations.record_claim(
-            request.forecast,
-            creating_operation=request.creating_operation,
-            supersedes_claim_id=request.supersedes_claim_id,
-        )
+        ...
 
     def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
         """Build non-consuming filing projections."""
-        return self._operations.filing_handoff(tax_year=request.tax_year, m130_period=request.m130_period)
+        ...
 
 
 class ActivityAssetScreen(LedgerWorkspaceScreen):
@@ -138,6 +111,10 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self.query_one("#asset-recovery", Static).update("")
         try:
             result = await asyncio.to_thread(self._dispatch, event.button.id)
+        except AccountSessionExpiredError as exc:
+            self._clear_private_view()
+            self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            return
         except (CadrumoError, ValueError) as exc:
             self.query_one("#asset-result", Static).update(f"refused\t{exc}")
             self._show_recovery(exc)
@@ -147,6 +124,25 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self.query_one("#asset-current-revision-id", Static).update(
                 f"current_revision_id\t{result.current_revision_id}"
             )
+
+    def _clear_private_view(self) -> None:
+        """Discard screen-local financial facts when the retained session is lost."""
+        self._last_forecast = None
+        self._last_forecast_supersedes = None
+        for selector in (
+            "#asset-id",
+            "#asset-revision-json",
+            "#asset-free-amount",
+            "#asset-covered-from",
+            "#asset-covered-until",
+            "#asset-supersedes-claim-id",
+            "#asset-creating-operation",
+            "#asset-filing-tax-year",
+            "#asset-filing-m130-period",
+        ):
+            self.query_one(selector, Input).value = ""
+        self.query_one("#asset-current-revision-id", Static).update("")
+        self.query_one("#asset-recovery", Static).update("")
 
     def _show_recovery(self, exc: Exception) -> None:
         """Name a refusal's recovery action and move focus to the correction it needs."""
@@ -184,9 +180,12 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self._last_forecast = self._actions.forecast(
                 ActivityAssetForecastRequestV1(
                     asset_id=asset_id,
-                    covered_from=date.fromisoformat(self.query_one("#asset-covered-from", Input).value),
-                    covered_until=date.fromisoformat(self.query_one("#asset-covered-until", Input).value),
-                    requested_free_amount=_optional_amount(self.query_one("#asset-free-amount", Input).value),
+                    covered_from=require_iso8601_date(self.query_one("#asset-covered-from", Input).value),
+                    covered_until=require_iso8601_date(self.query_one("#asset-covered-until", Input).value),
+                    # An empty field elects no amount.
+                    requested_free_amount=parse_requested_free_amount(
+                        self.query_one("#asset-free-amount", Input).value.strip() or None
+                    ),
                     supersedes_claim_id=supersedes_claim_id,
                 ),
             )

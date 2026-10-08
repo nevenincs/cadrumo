@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:596ca7a8c86991d8a975f82de432bb0a1fa6f90e929ba3311a1f37f6b8987663'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:77cbfd3ef374edf1f5fe0a692d7c1e07a96c6e46a57d29d4bf1921649ad64da1'
+related: []
 ---
 
 # `registry-hardening-next-work` audit: `generic fragmentation contract`
@@ -19,7 +18,7 @@ identify any remaining regression gap before adding more modelo data.
 
 ## Evidence
 
-- `src/aeat/domain/calculations/registry/_loader.py` exposes generic source
+- the retired module exposes generic source
   descriptors: `ModeloSource`, `ModeloRevisionSource`, `ModeloSourceLayout`,
   and `ModeloRevisionSourceLayout`.
 - `load_modelo_path`, `load_modelo_source`, `load_modelo_directory`, and

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#export-parity'
 date: '2026-09-27'
-modified: '2026-09-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6fa75a2d4b1d5379e19104bc9b382fcec3ddba7ad6a2ee9fc118ac8164a2b79d'
+body_hash: 'sha256:25947060c6989486c834e739ca75f1e4215b5a5e1c26501f5ce28c3a7fb75e2e'
 related: []
 ---
 # `export-parity` research: `renta withholding sources`
@@ -74,7 +74,7 @@ Effect by persona:
 - An employee who is also a payer and files Modelo 111 gets, without a certificate, an 0596 equal to the tax withheld from other people. That overstates the credit and understates tax. With a certificate whose total differs, the calculation is refused as a conflict between equivalent bindings. The only correct configuration, the certificate alone, cannot be reached while the 111 relation resolves.
 - In 2025 the same holds for the declarant's own Modelo 190, and from 2024 for 0597 with the declarant's own Modelo 123 and 193.
 
-The live-path test `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_retenciones_credit_fold_in_live.py:1-20` asserts that four filed Modelo 111 quarters fold into 0596, which enshrines the conflation. The registry's own advisory comments state the opposite, correct semantic: 0596 is the withholding the taxpayer suffered, which the payer declares (`.../2020/verification_predicates/0001-declarations.toml:1-27`).
+The live-path test the former source file asserts that four filed Modelo 111 quarters fold into 0596, which enshrines the conflation. The registry's own advisory comments state the opposite, correct semantic: 0596 is the withholding the taxpayer suffered, which the payer declares (`.../2020/verification_predicates/0001-declarations.toml:1-27`).
 
 ### What the ledger holds for suffered withholding
 

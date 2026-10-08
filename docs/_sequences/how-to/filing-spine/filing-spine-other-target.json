@@ -50,7 +50,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.status\nwork_unit_id\tfbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767\nshort_work_unit_id\te01a09d64767\nmodelo\t303\nfiling_year\t2026\nperiod\t2T\nrevision_id\t2026-y-siguientes\nname\t303-2026-2T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-07-20\ndays_remaining\t110\nnotice\tmodelo.work.status.next_action\tThis active work unit can be calculated.\nnext_action\taeat app modelo work calculate fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767\n"
+      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.status\nwork_unit_id\tfbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767\nshort_work_unit_id\te01a09d64767\nmodelo\t303\nfiling_year\t2026\nperiod\t2T\nrevision_id\t2026-y-siguientes\nname\t303-2026-2T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-07-20\nplazo_nominal_closes_on\t2026-07-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t110\nnotice\tmodelo.work.status.next_action\tThis active declaration can be calculated.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\nnext_action\taeat app modelo work calculate fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767\n"
     },
     {
       "argv": [
@@ -97,8 +97,15 @@
               "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767",
               "work_unit_state": "borrador"
             },
-            "message": "This active work unit can be calculated.",
+            "message": "This active declaration can be calculated.",
             "severity": "info"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
@@ -128,7 +135,7 @@
           "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

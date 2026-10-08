@@ -35,16 +35,14 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_delta_migration import (
-    PredecessorBasis,
-    _chain_materialisation,
+from ..edition_delta_chain_materialisation import chain_materialisation as _chain_materialisation
+from ..edition_delta_equivalence import _member_difference, _prove_chain
+from ..edition_delta_planning import _plan, plan_migration
+from ..edition_delta_source import _read_edition
+from ..edition_delta_types import PredecessorBasis
+from ..edition_delta_writer import (
     _edition_changes,
-    _member_difference,
-    _plan,
-    _prove_chain,
-    _read_edition,
     _write_edition,
-    plan_migration,
 )
 from ..edition_round_trip import RoundTripReport
 
@@ -442,3 +440,143 @@ def test_a_family_only_the_staged_tree_holds_is_reported_as_a_member_change() ->
         "lifting changed the bindings members, which a lift may never do: 1 before, 0 after, first difference at "
         "position 0: ['modelo-999-2025-iva'] on the reference side only"
     )
+
+
+def _build_forward_storage_modelo(root: Path, *, names_predecessor: bool = True) -> Path:
+    """Reuse the later edition's payload in an earlier, independently dated branch."""
+    modelo_dir = _build_modelo(root, names_predecessor=names_predecessor)
+    successor_manifest = modelo_dir / "revisions" / _SUCCESSOR / "revision.toml"
+    text = successor_manifest.read_text(encoding="utf-8")
+    assert text.count("valid_from = 2025-01-01") == 1
+    successor_manifest.write_text(
+        text.replace("valid_from = 2025-01-01", "valid_from = 2025-02-01"), encoding="utf-8", newline="\n"
+    )
+    branch_dir = modelo_dir / "revisions" / "2025-early"
+    branch_dir.mkdir()
+    (branch_dir / "revision.toml").write_text(
+        '[revisions."2025-early"]\n'
+        "valid_from = 2025-01-01\n"
+        "valid_to = 2025-01-31\n"
+        'period_selector = { years = [2025], periods = ["0A"] }\n'
+        f'legal_refs = ["{_LEGAL_REF}"]\n'
+        f'source_refs = ["{_SOURCE_REF}"]\n'
+        f'casilla_storage_baseline = "{_SUCCESSOR}"\n'
+        f'family_storage_baseline = "{_SUCCESSOR}"\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    return modelo_dir
+
+
+def _source_bytes(modelo_dir: Path) -> dict[Path, bytes]:
+    return {path.relative_to(modelo_dir): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()}
+
+
+def test_forward_storage_dependencies_preserve_chronological_reports_and_existing_plans(tmp_path: Path) -> None:
+    """A later storage baseline is ready before its early branch, with no legal edge inferred."""
+    control_dir = _build_modelo(tmp_path / "control", names_predecessor=True)
+    control = plan_migration(control_dir, _definition(control_dir))
+    modelo_dir = _build_forward_storage_modelo(tmp_path / "input")
+    definition = _definition(modelo_dir)
+    before = _source_bytes(modelo_dir)
+
+    plan, works = _plan(modelo_dir, definition)
+
+    assert [edition.revision_id for edition in plan.editions] == [_PREDECESSOR, "2025-early", _SUCCESSOR]
+    assert [work.plan for work in works] == list(plan.editions)
+    assert tuple(edition for edition in plan.editions if edition.revision_id != "2025-early") == control.editions
+    early = plan.editions[1]
+    assert early.predecessor == _SUCCESSOR
+    assert early.dependencies == (_SUCCESSOR,)
+    assert early.blocked == ()
+    assert early.stated_ids == ()
+    assert early.inherited_ids == _MATERIALISED_ORDER
+    assert definition.revisions["2025-early"].predecessor is None
+    assert str(definition.revisions["2025-early"].casilla_storage_baseline) == _SUCCESSOR
+    assert _source_bytes(modelo_dir) == before
+
+
+def test_forward_storage_lift_proves_all_members_and_bytes_and_is_a_fixed_point(tmp_path: Path) -> None:
+    """Dependency scheduling changes neither materialisation nor the second conversion."""
+    reference_dir = _build_forward_storage_modelo(tmp_path / "input")
+    staged_dir = _stage_lift(reference_dir, tmp_path / "staged")
+    revision_ids = (_PREDECESSOR, "2025-early", _SUCCESSOR)
+
+    assert (
+        _prove_chain(
+            reference_modelo_dir=reference_dir,
+            staged_modelo_dir=staged_dir,
+            revision_ids=revision_ids,
+            report=_CLEAN_REPORT,
+        )
+        == _CLEAN_REPORT
+    )
+    for revision_id in revision_ids:
+        assert _chain_materialisation(_read_edition(staged_dir, revision_id)) == _chain_materialisation(
+            _read_edition(reference_dir, revision_id)
+        )
+    assert _materialised_ids(staged_dir, "2025-early") == _MATERIALISED_ORDER
+    assert _materialised_formula_ids(staged_dir, "2025-early") == _materialised_formula_ids(reference_dir, _SUCCESSOR)
+    before = _source_bytes(staged_dir)
+
+    plan, works = _plan(staged_dir, _definition(staged_dir))
+
+    assert [edition.revision_id for edition in plan.editions] == list(revision_ids)
+    assert [_edition_changes(work) for work in works] == [False, False, False]
+    assert _source_bytes(staged_dir) == before
+
+
+def test_a_missing_forward_storage_baseline_is_still_refused_without_writing(tmp_path: Path) -> None:
+    """Canonical source resolution still refuses a missing authored baseline."""
+    modelo_dir = _build_forward_storage_modelo(tmp_path / "input")
+    definition = _definition(modelo_dir)
+    assert plan_migration(modelo_dir, definition).blocked_roots() == ()
+    manifest = modelo_dir / "revisions" / "2025-early" / "revision.toml"
+    text = manifest.read_text(encoding="utf-8")
+    manifest.write_text(
+        text.replace(f'casilla_storage_baseline = "{_SUCCESSOR}"', 'casilla_storage_baseline = "missing"'),
+        encoding="utf-8",
+        newline="\n",
+    )
+    before = _source_bytes(modelo_dir)
+
+    with pytest.raises(RegistryError) as refusal:
+        _plan(modelo_dir, definition)
+
+    assert str(refusal.value).endswith("revision '2025-early' has invalid casilla storage baseline 'missing'")
+    assert _source_bytes(modelo_dir) == before
+
+
+def test_an_authored_predecessor_cycle_is_still_refused_before_planning(tmp_path: Path) -> None:
+    """Dependency scheduling retains the canonical forest's existing cycle refusal."""
+    modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
+    definition = _definition(modelo_dir)
+    assert plan_migration(modelo_dir, definition).blocked_roots() == ()
+    manifest = modelo_dir / "revisions" / _PREDECESSOR / "revision.toml"
+    with manifest.open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write(f'predecessor = "{_SUCCESSOR}"\n')
+    before = _source_bytes(modelo_dir)
+
+    with pytest.raises(RegistryError) as refusal:
+        _plan(modelo_dir, definition)
+
+    assert str(refusal.value).endswith(
+        "modelo '999' predecessor declarations form a cycle '2024' -> '2025' -> '2024'; "
+        "no edition on it is reachable from a root"
+    )
+    assert _source_bytes(modelo_dir) == before
+
+
+def test_a_cyclic_inferred_planning_baseline_is_refused_without_guessing(tmp_path: Path) -> None:
+    """A valid authored DAG cannot justify changing an inferred chronological baseline."""
+    modelo_dir = _build_forward_storage_modelo(tmp_path / "input", names_predecessor=False)
+    definition = _definition(modelo_dir)
+    assert _materialised_ids(modelo_dir, "2025-early") == _MATERIALISED_ORDER
+    assert definition.revisions[_SUCCESSOR].predecessor is None
+    before = _source_bytes(modelo_dir)
+
+    with pytest.raises(RegistryError) as refusal:
+        _plan(modelo_dir, definition)
+
+    assert str(refusal.value) == "cyclic edition planning dependency: '2025-early' -> '2025' -> '2025-early'"
+    assert _source_bytes(modelo_dir) == before

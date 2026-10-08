@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
@@ -21,13 +21,9 @@ from ._subtree_move import (
     normalise_key_prefix,
 )
 from .errors import LocaleError
-from .manager import (
-    LocaleAuditResult,
-    LocaleFileAudit,
-    LocaleManager,
-    LocalePlaceholderMismatch,
-    _flatten_raw_locale_leaves,
-)
+from .locale_audit import LocaleAuditResult, LocaleFileAudit, LocalePlaceholderMismatch
+from .locale_tree import _flatten_raw_locale_leaves
+from .manager import LocaleManager
 
 _REVISION_PREFIX_TEMPLATE = "modelo.schema.{modelo}.revision.{revision}"
 
@@ -76,14 +72,7 @@ def _echo_file_audit(file_result: LocaleFileAudit) -> None:
             f"{file_result.locale_file}: missing={len(file_result.codebase_missing)} "
             f"extra={len(file_result.codebase_extra)} moves={len(file_result.revision_moves)}",
         )
-    for candidate in file_result.revision_moves:
-        typer.echo(f"  {candidate.render()}")
-    for key in file_result.codebase_missing:
-        if key not in file_result.move_accounted_missing:
-            typer.echo(f"  missing {key}")
-    for key in file_result.codebase_extra:
-        if key not in file_result.move_accounted_extra:
-            typer.echo(f"  extra {key}")
+    _echo_key_revision_findings(file_result)
     for key in file_result.inter_locale_missing:
         typer.echo(f"inter-locale missing file={file_result.locale_file} key={key}")
     for violation in file_result.scalar_violations:
@@ -158,7 +147,7 @@ def casilla_orthography(
 
 def _interface_values() -> dict[str, dict[str, str | None]]:
     """Return every shipped non-Modelo locale value, keyed per locale."""
-    from .modelo_casilla_catalogue import load_casilla_values
+    from .casilla_source_inventory import load_casilla_values
 
     manager = _default_manager()
     values: dict[str, dict[str, str | None]] = {}
@@ -182,11 +171,9 @@ def casilla_collapse(
     Null leaves, orphan keys and help derived from the label are deleted; every
     other edit leaves each resolved label and help text identical in every locale.
     """
-    from .modelo_casilla_catalogue import (
-        CollapseVerificationError,
-        ModeloCasillaCatalogue,
-        resume_install,
-    )
+    from .casilla_catalogue_install import resume_install
+    from .casilla_catalogue_models import CollapseVerificationError
+    from .modelo_casilla_catalogue import ModeloCasillaCatalogue
 
     if resume:
         try:
@@ -202,17 +189,9 @@ def casilla_collapse(
     catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
     undeclared = catalogue.findings().undeclared_revision_keys
     if any(undeclared.values()):
-        sample = {locale: keys[:3] for locale, keys in undeclared.items() if keys}
-        typer.echo(
-            "refused: casilla keys sit under revision ids the registry does not declare; move them with "
-            f"`python -m dev.locales move-revision`: {sample}",
-            err=True,
-        )
-        raise typer.Exit(code=1)
+        _refuse_undeclared_casilla_revisions(undeclared)
     result = catalogue.collapse_plan()
-    changed = sum(
-        1 for coordinate, text in catalogue.resolution(result.working).items() if result.baseline[coordinate] != text
-    )
+    changed = _count_changed_casilla_resolutions(catalogue, result)
     for reason, count in sorted(result.plan.reasons.items()):
         typer.echo(f"{reason}: {count}")
     if changed:
@@ -236,7 +215,8 @@ def casilla_author(
     ],
 ) -> None:
     """Install authored casilla values after proving they are the only source of change."""
-    from .modelo_casilla_catalogue import CollapseVerificationError, ModeloCasillaCatalogue
+    from .casilla_catalogue_models import CollapseVerificationError
+    from .modelo_casilla_catalogue import ModeloCasillaCatalogue
 
     payload = json.loads(manifest.read_text(encoding=UTF_8_ENCODING))
     if not isinstance(payload, dict) or not all(
@@ -357,14 +337,7 @@ def set_batch(
     updated: list[str] = []
     try:
         for locale, raw_values in sorted(payload.items()):
-            if not isinstance(locale, str) or not isinstance(raw_values, dict):
-                raise LocaleError("Locale batch entries must map one locale code to an object")
-            values: dict[str, str | None] = {}
-            for key, value in raw_values.items():
-                if not isinstance(key, str) or not (isinstance(value, str) or value is None):
-                    raise LocaleError("Locale batch leaves must be string keys with string or null values")
-                values[key] = value
-            updated.append(manager.set_locale_values(locale, values).name)
+            _set_locale_batch_entry(manager, locale, raw_values, updated)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc), param_hint="manifest") from exc
     typer.echo(f"updated {len(updated)} locale catalogues: {', '.join(updated)}")
@@ -578,30 +551,15 @@ def remove_batch(
     plan: dict[str, tuple[list[str], list[str]]] = {}
     try:
         for locale, raw_keys in sorted(payload.items()):
-            if not isinstance(locale, str) or not isinstance(raw_keys, list):
-                raise LocaleError("Locale batch entries must map one locale code to an array of dotted keys")
-            keys = []
-            for key in raw_keys:
-                if not isinstance(key, str) or not key.strip():
-                    raise LocaleError("Locale batch keys must be non-empty strings")
-                keys.append(key)
-            present = manager.locale_catalogue_keys(locale)
-            plan[locale] = ([k for k in keys if k in present], [k for k in keys if k not in present])
+            _plan_locale_batch_entry(manager, locale, raw_keys, plan)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc), param_hint="manifest") from exc
 
-    absent = {locale: missing for locale, (_, missing) in plan.items() if missing}
-    if absent and not ignore_missing:
-        detail = "; ".join(f"{locale}: {', '.join(sorted(keys))}" for locale, keys in sorted(absent.items()))
-        raise typer.BadParameter(f"Locale keys not found: {detail}", param_hint="manifest")
+    absent = _refuse_missing_locale_keys(plan, ignore_missing)
 
     removed = 0
     try:
-        for locale, (found, _missing) in sorted(plan.items()):
-            if not found:
-                continue
-            manager.remove_locale_values(locale, found)
-            removed += len(found)
+        removed = _apply_locale_removal_plan(manager, plan)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc), param_hint="manifest") from exc
 
@@ -610,4 +568,89 @@ def remove_batch(
         typer.echo(f"  skipped {len(keys)} already-absent key(s) in {locale}")
 
 
+if TYPE_CHECKING:
+    from .casilla_catalogue_models import CollapseResult
+    from .modelo_casilla_catalogue import ModeloCasillaCatalogue
+
+
 __all__ = ["app"]
+
+
+def _set_locale_batch_entry(manager: LocaleManager, locale: object, raw_values: object, updated: list[str]) -> None:
+    """Set locale batch entry."""
+    if not isinstance(locale, str) or not isinstance(raw_values, dict):
+        raise LocaleError("Locale batch entries must map one locale code to an object")
+    values: dict[str, str | None] = {}
+    for key, value in raw_values.items():
+        if not isinstance(key, str) or not (isinstance(value, str) or value is None):
+            raise LocaleError("Locale batch leaves must be string keys with string or null values")
+        values[key] = value
+    updated.append(manager.set_locale_values(locale, values).name)
+
+
+def _plan_locale_batch_entry(
+    manager: LocaleManager, locale: object, raw_keys: object, plan: dict[str, tuple[list[str], list[str]]]
+) -> None:
+    """Plan locale batch entry."""
+    if not isinstance(locale, str) or not isinstance(raw_keys, list):
+        raise LocaleError("Locale batch entries must map one locale code to an array of dotted keys")
+    keys = []
+    for key in raw_keys:
+        if not isinstance(key, str) or not key.strip():
+            raise LocaleError("Locale batch keys must be non-empty strings")
+        keys.append(key)
+    present = manager.locale_catalogue_keys(locale)
+    plan[locale] = ([k for k in keys if k in present], [k for k in keys if k not in present])
+
+
+def _apply_locale_removal_plan(manager: LocaleManager, plan: dict[str, tuple[list[str], list[str]]]) -> int:
+    """Apply locale removal plan."""
+    removed = 0
+    for locale, (found, _missing) in sorted(plan.items()):
+        if not found:
+            continue
+        manager.remove_locale_values(locale, found)
+        removed += len(found)
+    return removed
+
+
+def _refuse_missing_locale_keys(
+    plan: dict[str, tuple[list[str], list[str]]], ignore_missing: bool
+) -> dict[str, list[str]]:
+    """Refuse missing locale keys."""
+    absent = {locale: missing for locale, (_, missing) in plan.items() if missing}
+    if absent and not ignore_missing:
+        detail = "; ".join(f"{locale}: {', '.join(sorted(keys))}" for locale, keys in sorted(absent.items()))
+        raise typer.BadParameter(f"Locale keys not found: {detail}", param_hint="manifest")
+    return absent
+
+
+def _echo_key_revision_findings(file_result: LocaleFileAudit) -> None:
+    """Echo key revision findings."""
+    for candidate in file_result.revision_moves:
+        typer.echo(f"  {candidate.render()}")
+    for key in file_result.codebase_missing:
+        if key not in file_result.move_accounted_missing:
+            typer.echo(f"  missing {key}")
+    for key in file_result.codebase_extra:
+        if key not in file_result.move_accounted_extra:
+            typer.echo(f"  extra {key}")
+
+
+def _refuse_undeclared_casilla_revisions(undeclared: dict[str, tuple[str, ...]]) -> None:
+    """Refuse undeclared casilla revisions."""
+    sample = {locale: keys[:3] for locale, keys in undeclared.items() if keys}
+    typer.echo(
+        "refused: casilla keys sit under revision ids the registry does not declare; move them with "
+        f"`python -m dev.locales move-revision`: {sample}",
+        err=True,
+    )
+    raise typer.Exit(code=1)
+
+
+def _count_changed_casilla_resolutions(catalogue: ModeloCasillaCatalogue, result: CollapseResult) -> int:
+    """Count changed casilla resolutions."""
+    changed = sum(
+        1 for coordinate, text in catalogue.resolution(result.working).items() if result.baseline[coordinate] != text
+    )
+    return changed

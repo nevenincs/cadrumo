@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#locale-key-resolution'
 date: '2026-07-21'
-modified: '2026-08-15'
-body_hash: 'sha256:68a3a62594bb66f54664350865b46f204e0f7dcbe86b4669f6df25f7402e45e5'
+modified: '2026-10-03'
+body_hash: 'sha256:82c83aa678f4837c00c62af7777e6b7749e352de2651bf9e7cadf2f345ac349a'
 related:
   - "[[2026-07-21-locale-key-resolution-research]]"
   - "[[2026-06-11-modelo-locales-cli-adr]]"
@@ -79,7 +79,7 @@ handled without fabricating legal evidence.
   never at load time. The `_category_hint` classifier call site is pinned to
   `locale='es'` regardless of operator locale.
 - **Registry key discovery.** A new sibling module
-  `src/cadrumo/locales/_registry_scanner.py` exposing `scan_registry_keys()`, wired
+  the former source file exposing `scan_registry_keys()`, wired
   into `LocaleManager.get_codebase_keys()` as a fourth discovery source beside the
   regex, AST, and f-string sources — deliberately not folded into `_ast_scanner.py`
   (per `registry-resolver-family-extraction`). It reads through the domain package's

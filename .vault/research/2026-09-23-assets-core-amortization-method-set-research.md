@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bdd427d46da7de0ece20d21dfc871804fe98de73ecf8d00a086c301c96cd5597'
+body_hash: 'sha256:ed44776849e110bf1d20ccad7c115f20320d93a6670056aa2006422f2adb559b'
 related:
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
 ---
@@ -38,7 +38,7 @@ intangible is a definite-life asset amortized over its useful life.
 RIS art. 4.1 (`rd-634-2015.html#a4`) accepts the maximum coefficient, the
 coefficient derived from the maximum period, or any coefficient between them.
 The period tables already exist beside the coefficient tables in
-`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml`
+
 but the resolver in
 `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py:73` reads
 only the maximum coefficient. RIS art. 4.2 adds a multi-shift coefficient

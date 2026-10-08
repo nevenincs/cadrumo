@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6bcc8b353a25a06343cdf4dfbcbd974ff577e6a178698b18c9bc80d1e4bc1d58'
+body_hash: 'sha256:3c83a1821df52c5ecd6682a084bf1e10d6a452690953dfa5a91109c52c8d0a02'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
   - "[[2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr]]"
@@ -72,11 +72,7 @@ instrument*, not the shape of the expression.
 
 ### declared-census-fails-both-drift-directions | high | Existing drift gates exposed a stale declaration census
 
-`src/cadrumo/tests/test_deferred_cross_layer_imports.py:173` carried `_DECLARED`, a
-hand-maintained census of function-local cross-layer imports. Measured against the live tree
-it held **26 stale rows** whose edges no longer existed (`application/bucket_maintenance/
-service.py` alone accounted for 7) and **8 undeclared live edges**. Proven pre-existing: the
-two failures reproduced identically against the original `.importlinter`.
+Measured against the live tree it held **26 stale rows** whose edges no longer existed (`application/bucket_maintenance/ service.py` alone accounted for 7) and **8 undeclared live edges**. Proven pre-existing: the two failures reproduced identically against the original `.importlinter`.
 
 The first interpretation of this finding was wrong: the module has carried both
 `test_no_undeclared_deferred_cross_layer_import` and `test_no_stale_declaration` since

@@ -37,7 +37,6 @@ from ..commands import (
     SETUP_OPTION_INFOS,
     _canonical_from_flag_value,
     _flag_name,
-    _format_missing_flags,
     _help_key,
     _missing_required_flags,
     _required_flag_questions,
@@ -45,6 +44,7 @@ from ..commands import (
     build_wizard_command,
 )
 from ..models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
+from ..patch_edit import format_missing_flags
 from .registry_setup_flow_support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -266,7 +266,7 @@ def test_missing_required_flags_treats_empty_string_value_as_missing() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _format_missing_flags
+# format_missing_flags
 # ---------------------------------------------------------------------------
 
 
@@ -274,15 +274,15 @@ def test_format_missing_flags_renders_question_ids_as_long_options() -> None:
     """A missing-flag refusal must name the actual `--flag` an operator
     types, never a raw Python identifier tuple."""
 
-    assert _format_missing_flags(("tax-id", "activity")) == "--tax-id --activity"
+    assert format_missing_flags(("tax-id", "activity")) == "--tax-id --activity"
 
 
 def test_format_missing_flags_single_question_id() -> None:
-    assert _format_missing_flags(("activity",)) == "--activity"
+    assert format_missing_flags(("activity",)) == "--activity"
 
 
 def test_format_missing_flags_empty_tuple_renders_empty_string() -> None:
-    assert _format_missing_flags(()) == ""
+    assert format_missing_flags(()) == ""
 
 
 # ---------------------------------------------------------------------------

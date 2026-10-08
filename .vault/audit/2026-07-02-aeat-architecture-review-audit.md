@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#aeat-architecture-review'
 date: '2026-07-02'
-modified: '2026-08-15'
-body_hash: 'sha256:b8ef50531ef4ca902ff379511d329d51f4078fc0ff28f2b3e30dc65e78a6ba68'
+modified: '2026-10-03'
+body_hash: 'sha256:4c6c4633919dd622433384dba35d5ec504de14bf2a808e382f96732292bdfc7a'
 related:
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
@@ -114,7 +114,7 @@ carried by convention (comments + one rewrite site), not by a type.
 
 ### calculation-orchestrator-hub | medium | `_calculation_actions.py` is the de-facto coordination hub for mesh enrollment, precedence, overrides, and exclusions
 
-`src/aeat/application/modelo/_calculation_actions.py` (1,377 lines) owns the
+The retired module (1,377 lines) owns the
 live resolver-enrollment tuple, the caller-override rejection ladder (lock
 sources vs carry sources, ADR ruling D2 extended), the novel-source-kind gate,
 the unhandled-source diagnostics wiring, the M303 exclusion shim, and the

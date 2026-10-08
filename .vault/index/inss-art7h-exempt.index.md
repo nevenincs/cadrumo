@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#inss-art7h-exempt'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7cd10f7586a07e1b814c209563a59a5a90d4ee6b004480f94ff757f4e2fdb8c5'
+body_hash: 'sha256:c751f2941a9542dcf24ae44e72825941e985d5b8a39b70000b50bf7c84541502'
 related:
-  - '[[2026-06-04-inss-art7h-exempt-adr]]'
   - '[[2026-06-04-inss-art7h-exempt-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#inss-art7h-exempt`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-inss-art7h-exempt-adr` - `inss-art7h-exempt` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

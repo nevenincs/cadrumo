@@ -26,25 +26,29 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     StaticGeneratedArtifactInspection,
 )
 
-from .. import filing_export_proof
+from .. import filing_export_proof_authority
 from ..compiler.authority import compiled_bundled_authority
 from ..diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
     load_registry_diagnostic_classification,
 )
 from ..export_proof import FilingExportProofChannel
-from ..filing_export_proof import (
-    CanonicalTwoChannelFilingExportProofAuthority,
+from ..filing_export_conformance_enrollment import (
     FilingExportConformanceEnrollmentReport,
-    FilingExportConformanceVector,
-    FilingExportSecureReplayRequest,
     _derive_static_filing_export_conformance_enrollment,
-    canonical_filing_export_conformance_vectors,
-    canonical_two_channel_filing_export_proof_authority,
     derive_diagnostic_filing_export_conformance_enrollment,
     derive_filing_export_conformance_enrollment,
 )
+from ..filing_export_conformance_vectors import (
+    FilingExportConformanceVector,
+    canonical_filing_export_conformance_vectors,
+)
+from ..filing_export_proof_authority import (
+    CanonicalTwoChannelFilingExportProofAuthority,
+    canonical_two_channel_filing_export_proof_authority,
+)
 from ..filing_export_proof_contracts import FilingExportProofCoordinate, FilingExportSecureReplayEvidence
+from ..filing_export_secure_replay import FilingExportSecureReplayRequest
 from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -130,7 +134,7 @@ def test_canonical_authority_maps_configured_custody_storage_failure_to_typed_re
         secure_replay_source=_ConfiguredSecureReplaySource(),
         secure_replay_custody=custody,
     )
-    monkeypatch.setattr(filing_export_proof, "prove_secure_export_replay", _invoke_configured_custody)
+    monkeypatch.setattr(filing_export_proof_authority, "prove_secure_export_replay", _invoke_configured_custody)
 
     assessment = authority.assess_for(
         FilingExportProofCoordinate(
@@ -197,17 +201,8 @@ def _invoke_configured_custody(
     custody.persist_secure_replay()
 
 
-@pytest.mark.timeout(600)
 def test_diagnostic_classification_has_no_runtime_authority_or_success_path() -> None:
-    """Diagnostic classification remains static residue, never filing authority.
-
-    Budgeted at 600s because the call is MEASURED at 297.86s against the
-    repository's 300-second ceiling - about two seconds of margin. Crossing
-    it does not fail this test: pytest-timeout's thread method kills the
-    worker, and with `--dist=loadfile` every sibling in this module is then
-    reported as never having run. A run at 322.77s did exactly that before
-    this budget was set.
-    """
+    """Diagnostic classification remains static residue, never filing authority."""
     classification = load_registry_diagnostic_classification(
         bundled_path("registry", "aeat"),
         source_root=bundled_path(),
@@ -338,7 +333,6 @@ def _residue_signature(
     )
 
 
-@pytest.mark.timeout(600)
 def test_static_projection_preserves_every_strict_disposition_and_fails_closed_on_the_success_set() -> None:
     """The degraded read loses no disposition and refuses exactly where the strict read materializes.
 
@@ -447,6 +441,9 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
     )
     assessed = 0
     selected_coordinates = set()
+    enrolled_coordinates = {
+        vector.evidence.coordinate for vector in proof.conformance_enrollment.materializable_vectors
+    }
     for modelo in registry.modelos:
         for revision in modelo.revisions.values():
             if revision.authority_grade is not RegistryAuthorityGrade.FILING:
@@ -473,10 +470,10 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
             selected_coordinates.add((str(coordinate.modelo), str(coordinate.revision)))
             assessment = proof.assess_for(coordinate)
             assert assessment.proof is None
-            assert {item.channel for item in assessment.refusals} == {
-                FilingExportProofChannel.CONFORMANCE,
-                FilingExportProofChannel.SECURE_REPLAY,
-            }
+            expected_channels = {FilingExportProofChannel.SECURE_REPLAY}
+            if coordinate not in enrolled_coordinates:
+                expected_channels.add(FilingExportProofChannel.CONFORMANCE)
+            assert {item.channel for item in assessment.refusals} == expected_channels
             assessed += 1
     assert assessed > 0
 

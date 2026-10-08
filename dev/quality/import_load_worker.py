@@ -23,35 +23,63 @@ from cadrumo.tests.module_target_inventory import load_all_target_sets
 
 _SCHEMA_VERSION: Final[int] = 1
 _ENCODING: Final[str] = "utf-8"
-_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.json"
+_CORE_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo.json"
+_HARNESS_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.cadrumo_harness.json"
+_DEV_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.dev.json"
+_DOCS_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.docs.json"
 
 
 def load_declared_targets(repository: Path) -> dict[str, object]:
     """Import every declared target and return the raw loadability report."""
-    targets = load_all_target_sets(_TARGET_METADATA, repository=repository)
+    # Each whole-root census is separately bounded below the checker's finite
+    # target limit. Literal inventories keep the probe exhaustive, including
+    # private modules, without making an open or silently truncated import set.
+    core_targets = load_all_target_sets(_CORE_TARGET_METADATA, repository=repository)
+    harness_targets = load_all_target_sets(_HARNESS_TARGET_METADATA, repository=repository)
+    dev_targets = load_all_target_sets(_DEV_TARGET_METADATA, repository=repository)
+    docs_targets = load_all_target_sets(_DOCS_TARGET_METADATA, repository=repository)
     failures: list[dict[str, object]] = []
-    for target in targets:
+    for core_target in core_targets:
         try:
-            importlib.import_module(target)
+            importlib.import_module(core_target)
         except BaseException as exc:  # import-time SystemExit is also a broken load surface
-            raw_path = getattr(exc, "filename", None) or getattr(exc, "path", None)
-            line = getattr(exc, "lineno", None)
-            name = getattr(exc, "name", None)
-            failures.append(
-                {
-                    "error": type(exc).__name__,
-                    "imported_name": name if isinstance(name, str) else None,
-                    "line": line if isinstance(line, int) else None,
-                    "message": str(exc),
-                    "module": target,
-                    "path": str(raw_path) if raw_path else None,
-                }
-            )
+            failures.append(_failure(core_target, exc))
+    for harness_target in harness_targets:
+        try:
+            importlib.import_module(harness_target)
+        except BaseException as exc:
+            failures.append(_failure(harness_target, exc))
+    for dev_target in dev_targets:
+        try:
+            importlib.import_module(dev_target)
+        except BaseException as exc:
+            failures.append(_failure(dev_target, exc))
+    for docs_target in docs_targets:
+        try:
+            importlib.import_module(docs_target)
+        except BaseException as exc:
+            failures.append(_failure(docs_target, exc))
+    targets = tuple(sorted({*core_targets, *harness_targets, *dev_targets, *docs_targets}))
     return {
         "attempted": len(targets),
         "failures": failures,
         "schema_version": _SCHEMA_VERSION,
         "target_digest": hashlib.sha256("\n".join(targets).encode(_ENCODING)).hexdigest(),
+    }
+
+
+def _failure(target: str, exc: BaseException) -> dict[str, object]:
+    """Keep every import-time failure in the same public probe report shape."""
+    raw_path = getattr(exc, "filename", None) or getattr(exc, "path", None)
+    line = getattr(exc, "lineno", None)
+    name = getattr(exc, "name", None)
+    return {
+        "error": type(exc).__name__,
+        "imported_name": name if isinstance(name, str) else None,
+        "line": line if isinstance(line, int) else None,
+        "message": str(exc),
+        "module": target,
+        "path": str(raw_path) if raw_path else None,
     }
 
 

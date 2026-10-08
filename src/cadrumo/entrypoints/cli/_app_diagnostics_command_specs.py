@@ -7,30 +7,22 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from .command_spec import (
-    FLAG_VALUE,
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from .command_spec import translation_key as _key
+from .command_shared_contracts import translation_key as _key
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _READ = ExecutionPolicySpec(frozenset({"local-storage"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
-_WRITE = ExecutionPolicySpec(
-    frozenset({"local-storage"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.NONE
-)
-_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
-_TIER = ValueContract(DeferredTarget("...core.telemetry.tier", "TelemetryTier", __package__))
 _PAYLOADS = "._diagnostics_payloads"
 
 
@@ -83,9 +75,14 @@ def _leaf(
     )
 
 
-def _range(prefix: str, *, limit: bool = False) -> tuple[OptionSpec, ...]:
+def _range(
+    prefix: str,
+    *,
+    limit: bool = False,
+    since_prefix: str | None = None,
+) -> tuple[OptionSpec, ...]:
     values = (
-        _option("since", ("--since",), TEXT_VALUE, f"cli.diagnostics.{prefix}.since_help"),
+        _option("since", ("--since",), TEXT_VALUE, f"cli.diagnostics.{since_prefix or prefix}.since_help"),
         _option("until", ("--until",), TEXT_VALUE, f"cli.diagnostics.{prefix}.until_help"),
         _option("provider", ("--provider",), TEXT_VALUE, f"cli.diagnostics.{prefix}.provider_help"),
     )
@@ -93,12 +90,6 @@ def _range(prefix: str, *, limit: bool = False) -> tuple[OptionSpec, ...]:
         return values
     return (*values, _option("limit", ("--limit",), WHOLE_NUMBER_VALUE, "cli.diagnostics.runs.limit_help", minimum=1))
 
-
-_TELEMETRY_COMMON = (
-    _option("opt_in", ("--opt-in/--no-opt-in",), FLAG_VALUE, "cli.diagnostics.telemetry.opt_in_help"),
-    _option("tier", ("--tier",), _TIER, "cli.diagnostics.telemetry.tier_help"),
-    _option("endpoint", ("--endpoint",), TEXT_VALUE, "cli.diagnostics.telemetry.endpoint_help"),
-)
 
 DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -128,7 +119,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "diagnostics_run_health",
         "RunHealthResult",
         _READ,
-        _range("run_health"),
+        _range("run_health", since_prefix="run_records"),
     ),
     _leaf(
         "app_diagnostics_runs",
@@ -139,7 +130,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "diagnostics_runs",
         "RunsListResult",
         _READ,
-        _range("runs", limit=True),
+        _range("runs", limit=True, since_prefix="run_records"),
     ),
     _leaf(
         "app_diagnostics_latency",
@@ -173,57 +164,6 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "LlmUsageResult",
         _READ,
         _range("llm_usage"),
-    ),
-    CommandSpec(
-        "app_diagnostics_telemetry",
-        "app_diagnostics",
-        "telemetry",
-        CommandNodeKind.GROUP,
-        _key("cli.diagnostics.telemetry.app_help"),
-        None,
-        InvocationSpec(no_args_is_help=True),
-        (),
-        _METADATA,
-        None,
-        ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
-    ),
-    _leaf(
-        "app_diagnostics_telemetry_status",
-        "app_diagnostics_telemetry",
-        "status",
-        "cli.diagnostics.telemetry.status.help",
-        "._app_diagnostics_telemetry",
-        "diagnostics_telemetry_status",
-        "TelemetryStatusResult",
-        _READ,
-        _TELEMETRY_COMMON,
-    ),
-    _leaf(
-        "app_diagnostics_telemetry_flush",
-        "app_diagnostics_telemetry",
-        "flush",
-        "cli.diagnostics.telemetry.flush.help",
-        "._app_diagnostics_telemetry",
-        "diagnostics_telemetry_flush",
-        "TelemetryFlushResult",
-        _WRITE,
-        (
-            _option(
-                "dry_run",
-                ("--dry-run/--no-dry-run",),
-                FLAG_VALUE,
-                "cli.diagnostics.telemetry.flush.dry_run_help",
-                default=True,
-            ),
-            *_TELEMETRY_COMMON,
-            _option(
-                "acknowledge",
-                ("--acknowledge-remote-telemetry",),
-                FLAG_VALUE,
-                "cli.diagnostics.telemetry.flush.acknowledge_help",
-                default=False,
-            ),
-        ),
     ),
 )
 

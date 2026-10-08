@@ -1,0 +1,789 @@
+# Source anchors and part statements are exact AEAT PDF text; semantics come from selected revision declarations.
+# The operator's @236+265 filler is read from PDF row 436 under the exact
+# BOE Annex corroboration pinned in record_design_pdf_repairs.py.
+schema_version = 1
+fragment_id = "records"
+modelo = "349"
+design_epoch = "2020"
+source_ref = "aeat-dr-349-2020-current"
+source_sha256 = "874db49c9aff4d9c024bdee52f869123a9815c09272a0066cf81421ace1a8335"
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-349-declarante"
+record_type = "declarante"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+export_record_id = "modelo-349-operador"
+record_type = "operador"
+required = false
+repeat = "binding_rows"
+binding_record = "operador"
+
+[records.row_field_casilla_ids]
+country_code = "op.codigo-pais"
+party_tax_id = "op.nif-comunitario"
+party_legal_name = "op.apellidos-razon-social"
+clave = "op.clave-operacion"
+base_imponible = "op.base-imponible"
+
+[records.discriminator]
+offset = 147
+length = 32
+requires = "blank"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Retificaciones"
+record_identity = "Tipo 2 - Registro De Retificaciones"
+export_record_id = "modelo-349-rectificacion"
+record_type = "rectificacion"
+required = false
+repeat = "binding_rows"
+binding_record = "rectificacion"
+
+[records.row_field_casilla_ids]
+country_code = "op.codigo-pais"
+party_tax_id = "op.nif-comunitario"
+party_legal_name = "op.apellidos-razon-social"
+clave = "op.clave-operacion"
+rectified_year = "rect.ejercicio-rectificado"
+rectified_period = "rect.periodo-rectificado"
+base_imponible = "rect.base-rectificada"
+rectified_base_previous = "rect.base-anterior"
+
+[records.discriminator]
+offset = 147
+length = 32
+requires = "non_blank"
+
+[[entries]]
+export_field_id = "modelo-349-decl-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 32
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-349-decl-modelo"
+kind = "literal"
+literal = "349"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 34
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-349-decl-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 36
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-349-decl-nif"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 38
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-349-decl-apellidos-razon-social"
+kind = "header"
+producer_key = "taxpayer.full_name"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 47
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-349-decl-blank-58"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 54
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-349-decl-persona-relacion-telefono"
+kind = "header"
+producer_key = "contact_person.phone"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 58
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-349-decl-persona-relacion-nombre"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 59
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-349-decl-numero-identificativo"
+kind = "casilla"
+casilla_id = "decl.numero-identificativo"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 63
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-349-decl-complementaria-sustitutiva"
+kind = "casilla"
+casilla_id = "decl.complementaria-sustitutiva"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 69
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-349-decl-numero-identificativo-anterior"
+kind = "casilla"
+casilla_id = "decl.numero-identificativo-anterior"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 88
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-349-decl-period-code"
+kind = "draft"
+draft_attribute = "period_code"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 96
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-349-decl-numero-operadores"
+kind = "casilla"
+casilla_id = "decl.numero-operadores"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 117
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-349-decl-importe-operaciones-integer"
+kind = "casilla"
+casilla_id = "decl.importe-operaciones"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 150
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-349-decl-importe-operaciones-fractional"
+kind = "casilla"
+casilla_id = "decl.importe-operaciones"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 152
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-349-decl-numero-rectificaciones"
+kind = "casilla"
+casilla_id = "decl.numero-rectificaciones"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 155
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-349-decl-importe-rectificaciones-integer"
+kind = "casilla"
+casilla_id = "decl.importe-rectificaciones"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 189
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-349-decl-importe-rectificaciones-fractional"
+kind = "casilla"
+casilla_id = "decl.importe-rectificaciones"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 191
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-349-decl-cambio-periodicidad"
+kind = "casilla"
+casilla_id = "decl.cambio-periodicidad"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 193
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-349-decl-blancos-187"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 206
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-349-decl-nif-representante-legal"
+kind = "casilla"
+casilla_id = "decl.nif-representante-legal"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 207
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-349-decl-blancos-400"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 214
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "19"
+
+[[entries]]
+export_field_id = "modelo-349-op-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 229
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-349-op-modelo"
+kind = "literal"
+literal = "349"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 232
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-349-op-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 235
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-349-op-declarante-nif"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 239
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-349-op-blancos-18"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 243
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-349-op-codigo-pais"
+kind = "binding"
+binding = "iva-349-operador-row-codigo-pais"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 244
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "6"
+
+[entries.part]
+offset = 76
+length = 2
+aeat_type = "Alfabético"
+statement = "76-77 Código país Alfabético de 2 posiciones"
+
+[[entries]]
+export_field_id = "modelo-349-op-nif-comunitario"
+kind = "binding"
+binding = "iva-349-operador-row-nif"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 244
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "6"
+
+[entries.part]
+offset = 78
+length = 15
+aeat_type = "Alfanumérico"
+statement = "78-92 Número Alfanumérico de 15 posiciones"
+
+[[entries]]
+export_field_id = "modelo-349-op-apellidos"
+kind = "binding"
+binding = "iva-349-operador-row-apellidos"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 290
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-349-op-clave"
+kind = "binding"
+binding = "iva-349-operador-row-clave"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 295
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-349-op-base-integer"
+kind = "binding"
+binding = "iva-349-operador-row-base"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 377
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-349-op-base-fractional"
+kind = "binding"
+binding = "iva-349-operador-row-base"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 379
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-349-op-blancos-147"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 381
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-349-op-sustituto-nif"
+kind = "casilla"
+casilla_id = "sustituto.nif"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 382
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-349-op-sustituto-apellidos"
+kind = "casilla"
+casilla_id = "sustituto.apellidos-razon-social"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 433
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-349-op-blancos-236"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 436
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-349-rect-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 452
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-349-rect-modelo"
+kind = "literal"
+literal = "349"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 455
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-349-rect-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 458
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-349-rect-declarante-nif"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 462
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-349-rect-blancos-18"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 466
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-349-rect-codigo-pais"
+kind = "binding"
+binding = "iva-349-rectificacion-row-codigo-pais"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 467
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "6"
+
+[entries.part]
+offset = 76
+length = 2
+aeat_type = "Alfabético"
+statement = "76-77 Código país: Alfabético de 2 posiciones"
+
+[[entries]]
+export_field_id = "modelo-349-rect-nif-comunitario"
+kind = "binding"
+binding = "iva-349-rectificacion-row-nif"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 467
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "6"
+
+[entries.part]
+offset = 78
+length = 15
+aeat_type = "Alfanumérico"
+statement = "78-92 Número: Alfanumérico de 15 posiciones"
+
+[[entries]]
+export_field_id = "modelo-349-rect-apellidos"
+kind = "binding"
+binding = "iva-349-rectificacion-row-apellidos"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 513
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-349-rect-clave"
+kind = "binding"
+binding = "iva-349-rectificacion-row-clave"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 518
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-349-rect-blancos-134"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 557
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-349-rect-ejercicio"
+kind = "binding"
+binding = "iva-349-rectificacion-row-ejercicio"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 558
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "10"
+
+[entries.part]
+offset = 147
+length = 4
+aeat_type = "Numérico"
+statement = "147-150 Ejercicio Numérico de 4 posiciones"
+
+[[entries]]
+export_field_id = "modelo-349-rect-periodo"
+kind = "binding"
+binding = "iva-349-rectificacion-row-periodo"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 558
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "10"
+
+[entries.part]
+offset = 151
+length = 2
+aeat_type = "Alfanumérico"
+statement = "151-152 Periodo Alfanumérico de 2 posiciones"
+
+[[entries]]
+export_field_id = "modelo-349-rect-base-rectificada"
+kind = "binding"
+binding = "iva-349-rectificacion-row-base-rectificada"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 599
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-349-rect-base-anterior"
+kind = "binding"
+binding = "iva-349-rectificacion-row-base-anterior"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 637
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-349-rect-sustituto-nif"
+kind = "casilla"
+casilla_id = "sustituto.nif"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 649
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-349-rect-sustituto-apellidos"
+kind = "casilla"
+casilla_id = "sustituto.apellidos-razon-social"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 699
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-349-rect-blancos-236"
+kind = "filler"
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 706
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "15"

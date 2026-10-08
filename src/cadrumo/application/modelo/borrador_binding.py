@@ -36,7 +36,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
-from ...core.hashing import sha256_hex
+from ...core.hashing import prefixed_digest
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -223,7 +223,7 @@ def _borrador_resolution(
 ) -> CalculationSourceResolution:
     """Build the typed source resolution and both provenance projections."""
     sourced = tuple(sorted(set(decimal_values) | set(enum_values)))
-    snapshot_fingerprint = f"sha256:{sha256_hex(snapshot.snapshot_id.encode('utf-8'))}"
+    snapshot_fingerprint = prefixed_digest(snapshot.snapshot_id.encode("utf-8"))
     return CalculationSourceResolution(
         resolver_id=_BORRADOR_RESOLVER_ID,
         owned_sources=(BindingSourceKind.BORRADOR,),

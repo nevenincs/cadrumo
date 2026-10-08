@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#ci-lane-deconflation'
 date: '2026-08-10'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e0d288b8745bfd07ea6b72a71787845c4f3a564349197284682d5ae05ac3919a'
 related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
   - '[[2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit]]'
   - '[[2026-07-21-ci-discipline-adr]]'

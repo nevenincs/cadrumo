@@ -37,8 +37,8 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.classification import IvaTerritorialScope
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
-from cadrumo.domain.iva.schema import require_eu_member_state
 
+from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ._ledger_value_fixtures import repository
 
 __all__ = ["repository"]

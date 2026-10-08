@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 import pytest
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.profile.tests.profile_registration import live_clave_movil_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -35,7 +36,13 @@ from ..iva_compensation_wallet_parsing import is_aeat_wallet_read_url
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
+pytestmark = [
+    pytest.mark.aeat_live,
+    pytest.mark.hex_outbound_adapter,
+    pytest.mark.usefixtures("live_clave_movil_profile"),
+]
+
+__all__ = ["live_clave_movil_profile"]
 
 
 def _assert_source_url_is_a_wallet_read(source_url: str) -> None:

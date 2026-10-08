@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:0f52a24b3eff646eabca271358d5be190d2c96a9f8299a7aed364b0649c7966c'
+modified: '2026-10-03'
+body_hash: 'sha256:9548d3fc2fda156654fc589be5e887a06f8015ef83f985a8d6a7f738c10419b2'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S232-001 | PASS | Package API surface owns no storage behavior
 
-`src/aeat/application/modelo/__init__.py` only imports and re-exports modelo
+The retired module only imports and re-exports modelo
 application services and errors. It does not instantiate repositories, inspect
 settings, read environment variables, open files, or perform persistence.
 
@@ -25,7 +25,7 @@ classification, not a runtime repository implementation.
 
 ## S232-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/modelo/__init__.py` passed.
+- the historical check passed.
 - The package import smoke check verified the core exported modelo functions are
   available from `aeat.application.modelo`.
 

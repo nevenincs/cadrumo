@@ -29,6 +29,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.period import Period
 from .._modelo_payloads import ModeloAggregateResult
+from .aggregate_projection import from_aggregation_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -75,7 +76,7 @@ def test_projection_carries_the_canonical_result_verbatim(*, authority_operation
     """Every projected field equals the service result it was built from."""
     result = _real_result(operation=authority_operation)
 
-    payload = ModeloAggregateResult.from_aggregation_result(result)
+    payload = from_aggregation_result(result)
 
     assert payload.modelo == result.modelo
     assert payload.period == result.period
@@ -94,7 +95,7 @@ def test_projection_json_round_trips_through_its_own_rendering(
     reconstructed on re-validation, so the transport shape stays JSON-safe
     without loosening the field types.
     """
-    payload = ModeloAggregateResult.from_aggregation_result(_real_result(operation=authority_operation))
+    payload = from_aggregation_result(_real_result(operation=authority_operation))
     rendered = payload.model_dump(mode="json")
 
     assert rendered["provider"] == PerModeloAggregationContributor.COUNTERPART.value

@@ -6,8 +6,8 @@ date: '2026-06-19'
 related:
   - "[[2026-06-19-m100-dependent-modelo-applicability-research]]"
 superseded_by: '2026-09-27-export-parity-renta-withholding-sources-adr'
-modified: '2026-09-29'
-body_hash: 'sha256:577550d514b712308bef49ca9a5d3b7d787c1f3b69b30dcbdb57ab56f7374d9b'
+modified: '2026-10-03'
+body_hash: 'sha256:363236bd125eebff7697de8143b38f97bc3189ca66d20986b2aa04ad16b6b9ed'
 ---
 # `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `superseded`)
 
@@ -27,8 +27,8 @@ Adopt **Option 1 (interim)**: suppress a cross-period dependency whose source mo
 
 ## Implementation
 
-- `src/cadrumo/application/calculations/_cross_period_clean_state.py`: `partition_cross_period_requirements_by_modelo_applicability` (origin-agnostic split by an `applicable_source_modelos` set), `_suppressed_modelo_not_applicable_evidence` (clean, advisory-stamped row), the `modelo_not_applicable_advisory` facet + verdict property, and an optional `applicable_source_modelos` param on `evaluate_cross_period_clean_state` (default `None` = no suppression). Commit `944d58b28`.
-- `src/cadrumo/application/modelo/_verification_actions.py` + `_filing_actions.py`: `_applicable_source_modelos(profile, filing_year)` computes the obligation-schedule modelos (fail-safe `None`); verify and file thread it through `_require_cross_period_clean_state` / the verdict helper into the evaluation. Commit `784cc0517`.
+- the former source file: `partition_cross_period_requirements_by_modelo_applicability` (origin-agnostic split by an `applicable_source_modelos` set), `_suppressed_modelo_not_applicable_evidence` (clean, advisory-stamped row), the `modelo_not_applicable_advisory` facet + verdict property, and an optional `applicable_source_modelos` param on `evaluate_cross_period_clean_state` (default `None` = no suppression). Commit `944d58b28`.
+- the former source file + `_filing_actions.py`: `_applicable_source_modelos(profile, filing_year)` computes the obligation-schedule modelos (fail-safe `None`); verify and file thread it through `_require_cross_period_clean_state` / the verdict helper into the evaluation. Commit `784cc0517`.
 
 ## Rationale
 

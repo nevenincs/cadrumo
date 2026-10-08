@@ -15,7 +15,7 @@ ECB oracle source:
   Retrieved from
   https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A
 
-The ECB quotes EUR-base, while ``ExchangeRateProvider.get_eur_rate`` returns the
+The ECB quotes EUR-base, while ``ExchangeRateProvider.lookup_eur_rate`` answers with the
 multiplier satisfying ``original_amount * rate = eur_amount``, so the provider
 inverts the quote:
 

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-localization-cascade'
 date: '2026-08-05'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:54db6facc4f102b63df73c585699a2a4b335bac220fdcf810770d2bec778dbd6'
+body_hash: 'sha256:3997d5d1ff2873c3b6ef5384d1e79193a58bcead98866791ae31ca933d4f2c31'
 related:
   - "[[2026-08-04-modelo-localization-cascade-adr]]"
 ---
@@ -182,12 +182,12 @@ have to adjudicate.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:66` - `CasillaContinuidadEvolutionDefinition` and the closed evolution-kind `Literal`
-- `src/cadrumo/domain/calculations/registry/_validate_cross_revision.py` - retirement and evolution-reference policies, adjacent-pair scope
-- `src/cadrumo/domain/calculations/registry/_validate_cross_revision_contiguity.py` - the contiguity policy added by this work
-- `src/cadrumo/domain/calculations/registry/_cross_revision_divergence.py` - divergence fields, `revisions_overlap`, `ordered_revisions`
-- `src/cadrumo/domain/calculations/registry/_validate_registry_scope.py:63` - build-time wiring of the strict continuity gate
-- `src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py` - regression coverage for the contiguity policy
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/continuidad/1038-2024-2025-retired.toml` - worked retirement example
+- the former source file - `CasillaContinuidadEvolutionDefinition` and the closed evolution-kind `Literal`
+- the former source file - retirement and evolution-reference policies, adjacent-pair scope
+- the former source file - the contiguity policy added by this work
+- the former source file - divergence fields, `revisions_overlap`, `ordered_revisions`
+- the former source file - build-time wiring of the strict continuity gate
+- the former source file - regression coverage for the contiguity policy
+- the former source file - worked retirement example
 - commit `ea7026b1fb` - contiguity gate and tests; commit `98ba148ca2` - extraction to its own policy module
 - Census and probe were run against the compiled registry at commit `9355c545dc`. Every count above is reproducible by loading `load_registry_tree` over `src/cadrumo/_data/registry/aeat` and comparing casilla presence across validity-ordered revisions; the scripts were scratch and are not committed.

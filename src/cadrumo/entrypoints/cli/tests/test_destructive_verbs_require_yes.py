@@ -25,13 +25,19 @@ test, giving the safeguard contract two-layer enforcement.
 
 from __future__ import annotations
 
+import json
+import sys
+from pathlib import Path
+
 import pytest
 
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
+from ....tests.cli_envelope import unwrap_cli_result
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -117,35 +123,105 @@ def test_config_reset_resume_refuses_without_yes() -> None:
     assert "--yes" in combined or "confirm" in combined.lower(), combined
 
 
-def test_auth_reset_refuses_without_yes() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_auth_reset_refuses_without_yes(tmp_path: Path) -> None:
     """``config auth reset`` is destructive and refuses before backend mutation."""
-    result = invoke_cached_cli(["config", "auth", "reset", "--provider", "certificate"])
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(label="auth-reset-confirmation", facts={"identity.name": "Auth", "identity.surnames": "Reset"})
+        result = invoke_cached_cli(
+            [
+                "--profile",
+                "auth-reset-confirmation",
+                "--profile-secrets-stdin",
+                "config",
+                "auth",
+                "reset",
+                "--provider",
+                "certificate",
+            ],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
+        )
 
     assert result.exit_code != 0, result.output
     combined = (result.output or "") + (result.stderr or "")
     assert "--yes" in combined or "confirm" in combined.lower(), combined
 
 
-def test_auth_logout_does_not_require_yes() -> None:
-    """Anti-tautology: session logout executes without the destructive reset guard."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        from ....application.auth.operator import configure_operator_auth
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_auth_logout_does_not_require_yes(tmp_path: Path) -> None:
+    """Logout stays non-destructive; confirmed reset clears provider configuration."""
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(label="auth-logout-ready", facts={"identity.name": "Auth", "identity.surnames": "Logout"})
+        with _indexed_authority_for_test().operation() as operation:
+            from ....application.auth.operator import configure_operator_auth
 
-        configure_operator_auth(
-            "certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=_authority_operation_for_test
+            configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=operation)
+        result = invoke_cached_cli(
+            [
+                "--profile",
+                "auth-logout-ready",
+                "--profile-secrets-stdin",
+                "config",
+                "auth",
+                "logout",
+                "--provider",
+                "certificate",
+            ],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
         )
-        result = invoke_cached_cli(["config", "auth", "logout", "--provider", "certificate"])
+        reset = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "--profile",
+                "auth-logout-ready",
+                "--profile-secrets-stdin",
+                "config",
+                "auth",
+                "reset",
+                "--provider",
+                "certificate",
+                "--yes",
+            ],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
+        )
+        status = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "--profile",
+                "auth-logout-ready",
+                "--profile-secrets-stdin",
+                "config",
+                "auth",
+                "status",
+            ],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
+        )
 
-        assert result.exit_code == 0, result.output
+    assert result.exit_code == 0, result.output
+    assert reset.exit_code == 0, reset.output
+    assert unwrap_cli_result(reset)["cleared_provider_configuration"] is True
+    assert status.exit_code == 0, status.output
+    assert unwrap_cli_result(status)["configured"] is False
 
 
-def test_auth_status_is_non_destructive_and_needs_no_yes() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_auth_status_is_non_destructive_and_needs_no_yes(tmp_path: Path) -> None:
     """Anti-tautology: ``config auth status`` is a read verb needing no confirmation.
 
     The ``--yes`` guard is scoped to destructive ``auth reset``; the recorded-state
     report runs against an unconfigured profile and never demands confirmation.
     """
-    result = invoke_cached_cli(["config", "auth", "status"])
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(label="auth-status-reader", facts={"identity.name": "Auth", "identity.surnames": "Reader"})
+        result = invoke_cached_cli(
+            ["--profile", "auth-status-reader", "--profile-secrets-stdin", "config", "auth", "status"],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
+        )
 
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output, result.output
@@ -153,20 +229,22 @@ def test_auth_status_is_non_destructive_and_needs_no_yes() -> None:
     assert "--yes" not in combined and "confirm" not in combined.lower(), combined
 
 
-def test_auth_test_is_non_destructive_and_needs_no_yes() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_auth_test_is_non_destructive_and_needs_no_yes(tmp_path: Path) -> None:
     """Anti-tautology: ``config auth test`` is a live probe needing no confirmation.
 
     The probe may report an unavailable verdict, but it never mutates provider
     state and never demands ``--yes``; only destructive ``auth reset`` is guarded.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        from ....application.auth.operator import configure_operator_auth
-
-        configure_operator_auth(
-            "certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=_authority_operation_for_test
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(label="auth-test-reader", facts={"identity.name": "Auth", "identity.surnames": "Reader"})
+        result = invoke_cached_cli(
+            ["--profile", "auth-test-reader", "--profile-secrets-stdin", "config", "auth", "test"],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
         )
-        result = invoke_cached_cli(["config", "auth", "test"])
 
-        assert "Traceback" not in result.output, result.output
-        combined = (result.output or "") + (result.stderr or "")
-        assert "--yes" not in combined and "confirm" not in combined.lower(), combined
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" not in combined and "confirm" not in combined.lower(), combined

@@ -1,0 +1,3 @@
+@step Display the intended profile with process-scoped identifier reveal enabled.
+@static aeat --profile YOUR_PROFILE config profile view
+@blocked operator-artifact YOUR_PROFILE must identify the reader's registered profile; set CADRUMO_CLI_REVEAL_IDENTIFIERS=1 for this command's process as described above.

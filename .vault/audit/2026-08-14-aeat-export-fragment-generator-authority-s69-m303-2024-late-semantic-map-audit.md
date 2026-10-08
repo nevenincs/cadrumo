@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c39db6eed4c0581864e30593c21e99f54507254d6808f40bbc84ee54379cbcac'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+body_hash: 'sha256:737fc46a98d258b7da9694a8530dc4ade5d1f922cc3f52ff8315426096d16fdb'
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `S69 Modelo 303 2024-late semantic map review`
@@ -60,15 +59,14 @@ are asserted to stay `filler`-kind by the census's own gate
 
 Both the semantic map (`0001-records.toml`) and the render profile (`0001-blank-numeric.toml`)
 declare `source_ref = "aeat-dr-303-2024-late"` and the same `source_sha256`, matching each other.
-Re-running the epoch-scoped suite directly (`pytest dev/registry/tests/test_modelo_303_semantic_maps.py
--k "2024-late" -n 0`) reproduces 25 passed, 0 failed against the current working tree.
+Re-running the epoch-scoped suite directly (the historical check) reproduces 25 passed, 0 failed against the current working tree.
 
 ### S69 Modelo 303 2024-late semantic map review | low | the authored work is uncommitted
 
 `dev/registry/mappings/modelo_303/2024-late/`, `dev/registry/render_profiles/modelo_303/2024-late/`
 were already committed in the tracked history (the render profile via `47fc74515d`), but the mapping
-directory itself, the new consolidated `dev/registry/m303_semantic_census.py`, and
-`dev/registry/tests/test_modelo_303_semantic_maps.py` are untracked (`git status --porcelain`
+directory itself, the new consolidated the retired module, and
+The retired test were untracked (`git status --porcelain`
 reports `??`). The row's authoring and hand-review clauses are satisfied by content; the row cannot
 be treated as closed until this lands as a real commit. This audit reviews the content on disk as
 of 2026-08-14 and makes no claim about anything not yet committed.
@@ -115,7 +113,7 @@ here as a genuine, currently-unaddressed gap for escalation.
 ## Recommendations
 
 Do not close S69 until the reviewed content (`dev/registry/mappings/modelo_303/2024-late/`,
-`dev/registry/m303_semantic_census.py`, `dev/registry/tests/test_modelo_303_semantic_maps.py`, and
+The retired module, the retired test, and
 the amended 2023/2024-early DP30301 casilla-154 re-homing) lands as a real, atomic commit — the
 review found the content correct, but content sitting uncommitted on disk is not a landed row.
 

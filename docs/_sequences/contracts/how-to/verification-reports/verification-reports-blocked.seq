@@ -1,0 +1,17 @@
+:seed: autonomo-irpf-2026
+@step Record a sale with the wrong price.
+aeat --format json app ledger add --date 2026-03-20 --amount 1210 --direction INCOMING --description "Venta marzo" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key verification-blocked-sale
+@capture sale_id result.transaction_id
+@step Open the Modelo 303 draft for the first quarter.
+aeat app modelo work create --modelo 303 --year 2026 --period 1T
+@step Calculate the draft from the records as they stand.
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
+@step Correct the sale's price after calculating.
+aeat app ledger update {sale_id} --amount 968 --taxable-base 800 --iva-amount 168
+@step Check without calculating again; the report reads blocked.
+@result aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
+@expect result.completeness_status == "blocked"
+@expect result.granted_verificado_completo == false
+@expect result.findings[2].kind == "stale_calculation"
+@expect result.findings[2].severity == "blocking"
+@expect exit_code == 1

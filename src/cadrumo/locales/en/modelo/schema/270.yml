@@ -101,7 +101,7 @@ modelo:
               where the payee type is code 5 and the payee has no Spanish NIF, in
               which case the identification number in the country of residence is
               mandatory instead.
-            label: Payee tax identification number
+            label: Recipient's NIF
           payee-province:
             help: Two digits for the province or autonomous city of the payee's address.
               Digits 98 are used for personal income tax payers habitually resident
@@ -140,6 +140,11 @@ modelo:
         title: Annual summary of withholdings for the special levy on lottery prizes
       revision:
         2013-2022:
+          casilla:
+            x-e1in4opecdknap31cgmmsob3d5mmipbeehng:
+              label: City of birth
+            x-e1in4opecdnm8qb7dsmn0ob9ecmmsob3d5mmipbeehng:
+              label: Country code of birth
           field:
             label: Modelo 270 (Order HAP/2368/2013), tax years 2013 to 2022
         2023-y-siguientes:

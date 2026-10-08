@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#import-centralization'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:eeac8149003e733da1507606c5356f4bb6ae4b166cd2ffc4dbe1bd367ebf5f31'
+body_hash: 'sha256:92d0e050015c7a0a9c332bd865fa68cca80ba7ad18e41dfaf72f3c11065082a4'
 related: []
 ---
 # `import-centralization` audit: `collection deconflation`
@@ -18,11 +18,11 @@ Reviewed the collection-deconflation working-tree changes against the accepted c
 
 ### src-root-leaks | high | governed source tests still import repository-only development support
 
-The green collection result does not close the amended ADR's source boundary. A direct census finds 198 Python files below `src` importing `test_support`, and `src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py` now imports `dev.registry.compiler.record_design` directly. The collection repair in `src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py` similarly replaces an illegal package-facade import with `test_support.registry_authoring`, moving the error without satisfying the architecture. Tests inherit their nearest owner lane and have no exemption; these edges remain explicit deconflation remnants.
+The green collection result does not close the amended ADR's source boundary. A direct census finds 198 Python files below `src` importing `test_support`, and `src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py` now imports `dev.registry.compiler.record_design` directly. Tests inherit their nearest owner lane and have no exemption; these edges remain explicit deconflation remnants.
 
 ### neutral-test-support-layering | high | relocated registry helpers violate the core-only `cadrumo.tests` contract
 
-The new canonical-looking modules `src/cadrumo/tests/registry_observations.py` and `src/cadrumo/tests/registry_tree.py` import domain registry definitions, while `src/cadrumo/tests/storage_path_grammar.py` imports persistence-adapter definitions at call time. The accepted ADR classifies `cadrumo.tests` as neutral core-only test support and states that local or deferred imports do not change the edge. Moving shared helpers there makes outer and application tests collect, but creates an unauthorized inward-to-outward dependency and is not a valid canonical-home relocation.
+The accepted ADR classifies `cadrumo.tests` as neutral core-only test support and states that local or deferred imports do not change the edge. Moving shared helpers there makes outer and application tests collect, but creates an unauthorized inward-to-outward dependency and is not a valid canonical-home relocation.
 
 ### deletion-proof | high | registry test deletions are not backed by an auditable atomic relocation
 

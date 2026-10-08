@@ -65,8 +65,7 @@ through dependency classifications, cross-modelo relations and source-modelo
 bindings, transitively -- because registry-scope validation refuses a modelo
 whose declared sources are absent. Every other modelo is left out, so only the
 closure is loaded. :func:`copy_registry_tree` builds such a tree from a live
-registry; :func:`materialise_reference_registry` builds one whose judged modelo
-is read from a commit with ``git archive``. A reference is refused if any of
+registry. Callers supply an explicit pre-migration reference tree. A reference is refused if any of
 its editions names a predecessor, since it would then be judged by the
 materialiser under test.
 
@@ -90,26 +89,18 @@ Where the gate stops
   Draft construction calculates from the bundled registry whichever tree is
   selected, so the bytes judge the export surface; formulas and every other
   calculation input are judged by the typed comparison.
-- A reference whose commit is absent from the clone fails closed, naming the
-  commit, rather than reporting the modelo clean.
 - It does not judge delta minimality, grade barriers on a declared
   predecessor, or label coverage; each has its own gate.
 """
 
 from __future__ import annotations
 
-import asyncio
-import os
-import re
 import shutil
-import subprocess
-import tarfile
 from collections import Counter, deque
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from io import BytesIO
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Final, TypeIs
 
 from cadrumo.application.filing.draft_construction import build_draft
@@ -122,6 +113,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -133,6 +125,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -141,10 +134,8 @@ from .compiler.authority import compile_validated_authority
 from .compiler.loader import load_modelo_directory, modelo_fact_scope
 
 __all__ = [
-    "COMMIT_ID",
     "SYNTHETIC_TAX_ID",
     "EditionExportScenario",
-    "ReferenceUnavailableError",
     "RegistryDependencyClosureError",
     "RoundTripFinding",
     "RoundTripFindingKind",
@@ -154,12 +145,10 @@ __all__ = [
     "delta_authored_revisions",
     "edition_round_trip_report",
     "localization_differences",
-    "materialise_reference_registry",
     "merge_order",
     "merge_orders",
     "modelo_dependency_ids",
     "registry_dependency_closure",
-    "run_git",
 ]
 
 
@@ -211,17 +200,11 @@ class EditionExportScenario:
     product_software_identity_factory: Callable[[], AeatProductSoftwareIdentity] | None = None
 
 
-class ReferenceUnavailableError(RuntimeError):
-    """The reference tree cannot be read, so the round trip is unchecked."""
-
-
 class RegistryDependencyClosureError(RuntimeError):
     """A modelo, or a modelo it depends on, is absent from the registry its closure is taken from."""
 
 
-#: A commit id as git prints it, abbreviated or full.
-COMMIT_ID: Final = re.compile(r"^[0-9a-f]{7,64}$")
-#: The taxpayer every round-trip draft is built for; synthetic, never a real identity.
+#: The taxpayer for round-trip drafts; synthetic, never a real identity.
 SYNTHETIC_TAX_ID: Final = "12345678Z"
 
 _MODELOS_DIR: Final = "modelos"
@@ -251,14 +234,6 @@ _EXCLUDED_FROM_EQUALITY: Final = frozenset(
     }
     | {default_field for _section, default_field in family_source_default_fields()}
 )
-_GIT_TIMEOUT_SECONDS: Final = 120
-#: Variables that would point git at a repository other than the one named.
-_GIT_LOCATION_VARIABLES: Final = frozenset(
-    {"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_COMMON_DIR"}
-)
-
-
-# ── the dependency closure ──────────────────────────────────────────────────
 
 
 def modelo_dependency_ids(modelo: ModeloDefinition) -> frozenset[str]:
@@ -345,95 +320,6 @@ def copy_registry_tree(source: Path, destination: Path, *, modelo_id: str | None
 
     shutil.copytree(source, destination, ignore=ignore)
     return destination
-
-
-def materialise_reference_registry(
-    *,
-    repo_root: Path,
-    registry_relative: PurePosixPath,
-    modelo_id: str,
-    base_commit: str,
-    destination: Path,
-) -> Path:
-    """Build a registry tree holding ``modelo_id`` exactly as committed at ``base_commit``.
-
-    Every other registry family, and the modelo's dependency closure, is
-    copied from the live tree, so the result differs from the live copy only
-    in the one modelo's files.
-
-    Raises:
-        ReferenceUnavailableError: When the commit is not in this clone or does
-            not contain the modelo, so no reference exists to compare against.
-        RegistryDependencyClosureError: When the live tree lacks the modelo or
-            a modelo its closure needs.
-    """
-    if not COMMIT_ID.match(base_commit):
-        raise ReferenceUnavailableError(f"base commit {base_commit!r} is not a commit id")
-    probe = run_git(repo_root, "cat-file", "-e", f"{base_commit}^{{commit}}")
-    if probe.returncode != 0:
-        raise ReferenceUnavailableError(
-            f"base commit {base_commit} is not in this clone's history, so modelo {modelo_id} is unchecked; "
-            "fetch full history (for a CI checkout, fetch-depth: 0) and re-run",
-        )
-    modelo_path = registry_relative / _MODELOS_DIR / modelo_id
-    archive = run_git(repo_root, "archive", "--format=tar", base_commit, "--", modelo_path.as_posix())
-    if archive.returncode != 0:
-        raise ReferenceUnavailableError(
-            f"base commit {base_commit} holds no {modelo_path.as_posix()}: "
-            f"{archive.stderr.decode('utf-8', 'replace').strip()}",
-        )
-    copy_registry_tree(repo_root.joinpath(*registry_relative.parts), destination, modelo_id=modelo_id)
-    shutil.rmtree(destination / _MODELOS_DIR / modelo_id)
-    staging = destination.parent / f"{destination.name}.archive"
-    with tarfile.open(fileobj=BytesIO(archive.stdout)) as tar:
-        tar.extractall(staging, filter="data")
-    shutil.move(staging.joinpath(*modelo_path.parts), destination / _MODELOS_DIR / modelo_id)
-    shutil.rmtree(staging)
-    return destination
-
-
-def run_git(repo_root: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
-    """Run git in ``repo_root`` with every variable that could redirect it to another repository removed."""
-    environment = {name: value for name, value in os.environ.items() if name not in _GIT_LOCATION_VARIABLES}
-    executable = shutil.which("git")
-    if executable is None:
-        raise RuntimeError("git executable is required for edition round-trip checks")
-    command = (
-        str(Path(executable).resolve(strict=True)),
-        "--no-optional-locks",
-        "-c",
-        "core.autocrlf=false",
-        *arguments,
-    )
-    returncode, stdout, stderr = asyncio.run(
-        _run_git_process(command, repo_root=repo_root, environment=environment),
-    )
-    return subprocess.CompletedProcess(command, returncode, stdout, stderr)
-
-
-async def _run_git_process(
-    command: tuple[str, ...],
-    *,
-    repo_root: Path,
-    environment: Mapping[str, str],
-) -> tuple[int, bytes, bytes]:
-    """Run the resolved git executable while retaining archive bytes exactly."""
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        cwd=repo_root,
-        env=dict(environment),
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), _GIT_TIMEOUT_SECONDS)
-    except TimeoutError as error:
-        process.kill()
-        stdout, stderr = await process.communicate()
-        raise subprocess.TimeoutExpired(command, _GIT_TIMEOUT_SECONDS, output=stdout, stderr=stderr) from error
-    if process.returncode is None:  # pragma: no cover - communicate() waits for process exit
-        raise RuntimeError("git process completed without a return code")
-    return process.returncode, stdout, stderr
 
 
 # ── the gate ────────────────────────────────────────────────────────────────
@@ -597,18 +483,9 @@ def _edition_findings(
     findings: list[RoundTripFinding] = []
     expected_ids = [casilla_id for casilla_id, _ in expected_order]
     live_ids = [str(casilla.id) for casilla in live.casillas]
-    if expected_ids != live_ids and Counter(expected_ids) == Counter(live_ids):
-        position = next(
-            index for index, pair in enumerate(zip(expected_ids, live_ids, strict=True)) if pair[0] != pair[1]
-        )
-        findings.append(
-            RoundTripFinding(
-                RoundTripFindingKind.ROW_ORDER,
-                revision_id,
-                f"casilla rows first diverge from the reference order at position {position}: "
-                f"expected {expected_ids[position]!r}, live {live_ids[position]!r}",
-            )
-        )
+    order_finding = _row_order_finding(revision_id, expected_ids, live_ids)
+    if order_finding is not None:
+        findings.append(order_finding)
     reference_dump = reference.model_dump(exclude=set(_EXCLUDED_FROM_EQUALITY))
     live_dump = live.model_dump(exclude=set(_EXCLUDED_FROM_EQUALITY))
     _remove_projected_lineage_attestations(reference_dump)
@@ -632,6 +509,24 @@ def _edition_findings(
     return findings
 
 
+def _row_order_finding(
+    revision_id: str,
+    expected_ids: list[str],
+    live_ids: list[str],
+) -> RoundTripFinding | None:
+    if expected_ids != live_ids and Counter(expected_ids) == Counter(live_ids):
+        position = next(
+            index for index, pair in enumerate(zip(expected_ids, live_ids, strict=True)) if pair[0] != pair[1]
+        )
+        return RoundTripFinding(
+            RoundTripFindingKind.ROW_ORDER,
+            revision_id,
+            f"casilla rows first diverge from the reference order at position {position}: "
+            f"expected {expected_ids[position]!r}, live {live_ids[position]!r}",
+        )
+    return None
+
+
 def _remove_projected_lineage_attestations(revision: dict[str, object]) -> None:
     """Remove only a sidecar that is exactly projected onto its target row.
 
@@ -642,28 +537,36 @@ def _remove_projected_lineage_attestations(revision: dict[str, object]) -> None:
     claims = revision.get("lineage_attestations")
     if not _is_dump_array(rows) or not _is_dump_array(claims):
         return
+    by_lineage = _casilla_rows_by_lineage(rows)
+    revision["lineage_attestations"] = tuple(
+        claim for claim in claims if not _is_projected_lineage_attestation(claim, by_lineage)
+    )
+
+
+def _casilla_rows_by_lineage(rows: Sequence[object]) -> dict[object, dict[str, object]]:
     by_lineage: dict[object, dict[str, object]] = {}
     for row in rows:
         if _is_dump_table(row) and row.get("continuidad_id") is not None:
             by_lineage[row.get("continuidad_id")] = row
-    retained: list[object] = []
-    for claim in claims:
-        if not _is_dump_table(claim) or claim.get("family") != "casillas":
-            retained.append(claim)
-            continue
-        target = by_lineage.get(claim.get("continuidad_id"))
-        projected = target is not None and all(
-            claim.get(claim_field) == target.get(row_field)
-            for claim_field, row_field in (
-                ("origin", "continuidad_origin"),
-                ("evidence", "continuidad_evidence"),
-                ("legal_refs", "legal_refs"),
-                ("source_refs", "source_refs"),
-            )
+    return by_lineage
+
+
+def _is_projected_lineage_attestation(
+    claim: object,
+    by_lineage: dict[object, dict[str, object]],
+) -> bool:
+    if not _is_dump_table(claim) or claim.get("family") != "casillas":
+        return False
+    target = by_lineage.get(claim.get("continuidad_id"))
+    return target is not None and all(
+        claim.get(claim_field) == target.get(row_field)
+        for claim_field, row_field in (
+            ("origin", "continuidad_origin"),
+            ("evidence", "continuidad_evidence"),
+            ("legal_refs", "legal_refs"),
+            ("source_refs", "source_refs"),
         )
-        if not projected:
-            retained.append(claim)
-    revision["lineage_attestations"] = tuple(retained)
+    )
 
 
 def _is_dump_array(value: object) -> TypeIs[Sequence[object]]:
@@ -677,6 +580,16 @@ def _is_dump_table(value: object) -> TypeIs[dict[str, object]]:
 
 
 def _casilla_row_differences(reference_rows: list[dict[str, object]], live_rows: list[dict[str, object]]) -> list[str]:
+    return _casilla_row_population_differences(reference_rows, live_rows) + _changed_casilla_row_differences(
+        reference_rows,
+        live_rows,
+    )
+
+
+def _casilla_row_population_differences(
+    reference_rows: list[dict[str, object]],
+    live_rows: list[dict[str, object]],
+) -> list[str]:
     reference_counts = Counter(str(row["id"]) for row in reference_rows)
     live_counts = Counter(str(row["id"]) for row in live_rows)
     differences: list[str] = []
@@ -686,6 +599,14 @@ def _casilla_row_differences(reference_rows: list[dict[str, object]], live_rows:
         differences.append(f"casilla rows missing {missing!r}")
     if added:
         differences.append(f"casilla rows added {added!r}")
+    return differences
+
+
+def _changed_casilla_row_differences(
+    reference_rows: list[dict[str, object]],
+    live_rows: list[dict[str, object]],
+) -> list[str]:
+    differences: list[str] = []
     live_by_id = {str(row["id"]): row for row in live_rows}
     for row in reference_rows:
         row_id = str(row["id"])
@@ -717,36 +638,61 @@ def localization_differences(
         live_casilla = live_by_id.get(casilla.id)
         if live_casilla is None:
             continue
-        reference_aliases = [alias.localization_key for alias in casilla.aliases]
-        if reference_aliases != [alias.localization_key for alias in live_casilla.aliases]:
-            differences.append(f"casilla {casilla.id!r} alias keys changed")
-        chain = _key_chain_difference(
-            modelo_id=modelo_id,
-            sibling_revision_ids=sibling_revision_ids,
-            casilla_id=casilla.id,
-            reference_keys=casilla.localization_keys,
-            live_keys=live_casilla.localization_keys,
+        differences.extend(
+            _casilla_localization_differences(
+                modelo_id=modelo_id,
+                sibling_revision_ids=sibling_revision_ids,
+                casilla=casilla,
+                live_casilla=live_casilla,
+            )
         )
-        if chain is not None:
-            differences.append(f"casilla {casilla.id!r} {chain}")
-        for language in SUPPORTED_OUTPUT_LANGUAGES:
-            # The label is resolved from the keys rather than through
-            # ``get_label``, which raises where a chain resolves nowhere; that
-            # is a difference to report, not an error to raise. Help has no
-            # such accessor and is read through the row's own.
-            texts = (
-                ("label", resolve_modelo_localization(casilla.localization_keys, locale=language)),
-                ("help", casilla.get_help(language)),
-            )
-            live_texts = (
-                ("label", resolve_modelo_localization(live_casilla.localization_keys, locale=language)),
-                ("help", live_casilla.get_help(language)),
-            )
-            for (field, before), (_field, after) in zip(texts, live_texts, strict=True):
-                if before != after:
-                    differences.append(
-                        f"casilla {casilla.id!r} {field} in {language!r} changed from {before!r} to {after!r}"
-                    )
+    return differences
+
+
+def _casilla_localization_differences(
+    *,
+    modelo_id: str,
+    sibling_revision_ids: frozenset[str],
+    casilla: CasillaDefinition,
+    live_casilla: CasillaDefinition,
+) -> list[str]:
+    differences: list[str] = []
+    reference_aliases = [alias.localization_key for alias in casilla.aliases]
+    if reference_aliases != [alias.localization_key for alias in live_casilla.aliases]:
+        differences.append(f"casilla {casilla.id!r} alias keys changed")
+    chain = _key_chain_difference(
+        modelo_id=modelo_id,
+        sibling_revision_ids=sibling_revision_ids,
+        casilla_id=casilla.id,
+        reference_keys=casilla.localization_keys,
+        live_keys=live_casilla.localization_keys,
+    )
+    if chain is not None:
+        differences.append(f"casilla {casilla.id!r} {chain}")
+    differences.extend(_localized_text_differences(casilla, live_casilla))
+    return differences
+
+
+def _localized_text_differences(casilla: CasillaDefinition, live_casilla: CasillaDefinition) -> list[str]:
+    differences: list[str] = []
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        # The label is resolved from the keys rather than through
+        # ``get_label``, which raises where a chain resolves nowhere; that is
+        # a difference to report, not an error to raise. Help has no such
+        # accessor and is read through the row's own.
+        texts = (
+            ("label", resolve_modelo_localization(casilla.localization_keys, locale=language)),
+            ("help", casilla.get_help(language)),
+        )
+        live_texts = (
+            ("label", resolve_modelo_localization(live_casilla.localization_keys, locale=language)),
+            ("help", live_casilla.get_help(language)),
+        )
+        for (field, before), (_field, after) in zip(texts, live_texts, strict=True):
+            if before != after:
+                differences.append(
+                    f"casilla {casilla.id!r} {field} in {language!r} changed from {before!r} to {after!r}"
+                )
     return differences
 
 
@@ -811,6 +757,7 @@ def _export_findings(
         for revision_id in sorted(set(export_scenarios) - with_surface)
     )
     compared: list[str] = []
+    authorities = _TreeAuthorities()
     for revision_id in sorted(set(export_scenarios) & with_surface):
         finding = _export_bytes_finding(
             live_registry_root=live_registry_root,
@@ -818,6 +765,7 @@ def _export_findings(
             modelo_id=str(live.id),
             revision_id=revision_id,
             scenario=export_scenarios[revision_id],
+            authorities=authorities,
         )
         if finding is None:
             compared.append(revision_id)
@@ -838,6 +786,35 @@ class _PayloadSink:
         self.payload = payload.payload
 
 
+class _TreeAuthorities:
+    """Each compared tree's validated authority, compiled at most once per report.
+
+    The trees are read-only for the report's duration, so every scenario of a
+    modelo renders through the same two authorities. Compiling them once per
+    scenario repeated the receipt walk over the whole tree each time. A refusal
+    is kept too and raised again for every scenario, so each one still reports
+    its own export refusal with the same detail.
+    """
+
+    __slots__ = ("outcomes",)
+
+    def __init__(self) -> None:
+        self.outcomes: dict[Path, ValidatedRegistryAuthority | CadrumoError | ValueError] = {}
+
+    def require(self, root: Path) -> ValidatedRegistryAuthority:
+        """Return the tree's authority, or raise the refusal its compilation ended in."""
+        outcome = self.outcomes.get(root)
+        if outcome is None:
+            try:
+                outcome = compile_validated_authority(root, bundled_path())
+            except (CadrumoError, ValueError) as exc:
+                outcome = exc
+            self.outcomes[root] = outcome
+        if isinstance(outcome, CadrumoError | ValueError):
+            raise outcome
+        return outcome
+
+
 def _export_bytes_finding(
     *,
     live_registry_root: Path,
@@ -845,13 +822,20 @@ def _export_bytes_finding(
     modelo_id: str,
     revision_id: str,
     scenario: EditionExportScenario,
+    authorities: _TreeAuthorities,
 ) -> RoundTripFinding | None:
-    """Render one draft through both trees' canonical export path and compare the bytes."""
+    """Render one draft through both trees' canonical export path and compare the bytes.
+
+    The draft and the producer snapshot are built once, on the live side, and
+    rendered through both trees, so only the export surface differs between
+    the two payloads.
+    """
     rendered: dict[str, bytes] = {}
     draft = None
+    producer_snapshot: FilingProducerSnapshot | None = None
     for side, root in (("live", live_registry_root), ("pre-migration", reference_registry_root)):
         try:
-            authority = compile_validated_authority(root, bundled_path())
+            authority = authorities.require(root)
             with validating_governed_facts(authority):
                 provider = schema_provider_from_authority(
                     authority,
@@ -873,11 +857,13 @@ def _export_bytes_finding(
                             revision_id,
                             f"the scenario period selects edition {draft.snapshot_ref.revision_id!r}",
                         )
+                if producer_snapshot is None:
+                    producer_snapshot = scenario.producer_snapshot()
                 sink = _PayloadSink()
                 export_draft(
                     draft,
                     payload_consumer=sink,
-                    producer_snapshot=scenario.producer_snapshot(),
+                    producer_snapshot=producer_snapshot,
                     prior_domiciliation_election=scenario.prior_domiciliation_election,
                     product_software_identity=(
                         None

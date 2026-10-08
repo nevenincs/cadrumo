@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import pytest
 
-from ..render_profile import RenderProfile, RenderProfileAnchor, SingletonNumericRule, Width17MembershipRule
+from ..render_profile_model import RenderProfile
+from ..render_profile_model_base import RenderProfileAnchor
+from ..render_profile_rules import SingletonNumericRule, Width17MembershipRule
 from .test_render_profile import _anchor, _design_identity, _profile, _singleton, _width_rule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

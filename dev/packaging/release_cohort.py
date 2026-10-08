@@ -19,8 +19,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, build_client_json
 
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parents[1]
@@ -151,7 +153,9 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
         "cadrumo-data-manuals": cohort.manuals_wheel,
         "cadrumo-data-manuals-sdist": cohort.manuals_sdist,
         "cadrumo-data-official": cohort.official_wheel,
+        "cadrumo-data-normatives": cohort.normatives_wheel,
         "cadrumo-data-official-sdist": cohort.official_sdist,
+        "cadrumo-data-normatives-sdist": cohort.normatives_sdist,
     }
     declared = {
         source_manifest.relative_to(source_root).as_posix(),
@@ -190,7 +194,9 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
         manuals_wheel=copied_artifacts["cadrumo-data-manuals"],
         manuals_sdist=copied_artifacts["cadrumo-data-manuals-sdist"],
         official_wheel=copied_artifacts["cadrumo-data-official"],
+        normatives_wheel=copied_artifacts["cadrumo-data-normatives"],
         official_sdist=copied_artifacts["cadrumo-data-official-sdist"],
+        normatives_sdist=copied_artifacts["cadrumo-data-normatives-sdist"],
     )
 
 
@@ -328,6 +334,16 @@ def _build_identity(clean_root: Path) -> BuildIdentity:
     )
 
 
+def _assert_prepared_source_unchanged(root: Path, source_files: tuple[str, ...], expected_source_digest: str) -> None:
+    final_source_files = repository_files(root)
+    final_source_digest = content_digest(root, final_source_files)
+    if final_source_files != source_files or final_source_digest != expected_source_digest:
+        raise SystemExit(
+            "prepared release source drifted while assembling the cohort: "
+            f"expected {expected_source_digest}, got {final_source_digest}",
+        )
+
+
 def build_from_clean_source(
     *,
     clean_root: Path,
@@ -379,6 +395,11 @@ def build_from_clean_source(
         if use_prepared_source
         else build_python_cohort(root, python_work)
     )
+    if python_cohort.source_digest != expected_source_digest:
+        raise SystemExit(
+            "captured Python cohort source differs from the requested release source: "
+            f"expected {expected_source_digest}, got {python_cohort.source_digest}",
+        )
     cohort = _copy_python_cohort(python_cohort, output / "python")
     scoop, homebrew = _generate_channel_artifacts(
         clean_root=root,
@@ -425,9 +446,19 @@ def build_from_clean_source(
                 cohort.official_wheel,
             ),
             (
+                "cadrumo-data-normatives-wheel",
+                ArtifactKind.PYTHON_WHEEL,
+                cohort.normatives_wheel,
+            ),
+            (
                 "cadrumo-data-official-sdist",
                 ArtifactKind.PYTHON_SDIST,
                 cohort.official_sdist,
+            ),
+            (
+                "cadrumo-data-normatives-sdist",
+                ArtifactKind.PYTHON_SDIST,
+                cohort.normatives_sdist,
             ),
             (
                 "python-cohort-manifest",
@@ -449,13 +480,7 @@ def build_from_clean_source(
             f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
         )
     if use_prepared_source:
-        final_source_files = repository_files(root)
-        final_source_digest = content_digest(root, final_source_files)
-        if final_source_files != source_files or final_source_digest != expected_source_digest:
-            raise SystemExit(
-                "prepared release source drifted while assembling the cohort: "
-                f"expected {expected_source_digest}, got {final_source_digest}",
-            )
+        _assert_prepared_source_unchanged(root, source_files, expected_source_digest)
     return _complete_release_cohort(
         output=output,
         manifest_path=manifest_path,
@@ -486,7 +511,7 @@ def build_release_cohort(
     # only moment that survives a kill.
     with contextlib.suppress(OSError):
         sweep_var_scratch(var)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-release-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-release-", dir=prepare_temporary_directory()) as temporary:
         clean_root = Path(temporary) / "source"
         # An isolated copy of the enumerated tree, not the live one: the rest
         # of this build runs in a child process against `clean_root`, so a
@@ -505,6 +530,7 @@ def build_release_cohort(
         stage_published_authority(root, clean_root)
         staging = var / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}")
         env = os.environ.copy()
+        env[GOOGLE_OAUTH_ENV] = build_client_json(root).get_secret_value()
         env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
         argv = [
             sys.executable,

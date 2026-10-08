@@ -13,6 +13,11 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Protocol
 
+from pydantic import BaseModel
+
+from ...core.identity.digest import ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.participation_index import TransactionRevisionParticipationIndex
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -21,10 +26,30 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 
+class ParticipationRebuildSourceRevisions(BaseModel):
+    """Opened authority revisions that must still hold when replacing the cache."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    calculation: ContentDigest
+    work_units: ContentDigest
+    filings: ContentDigest
+
+
 class ParticipationIndexRebuildRepositoryProtocol(Protocol):
     """Required replacement operation for the derived participation index."""
 
-    def replace_all(self, indexes: Iterable[TransactionRevisionParticipationIndex]) -> int:
+    @property
+    def bucket_id(self) -> str | None:
+        """Expose the exact persisted target, refusing unbound stores at worker admission."""
+        ...
+
+    def replace_all(
+        self,
+        indexes: Iterable[TransactionRevisionParticipationIndex],
+        *,
+        source_revisions: ParticipationRebuildSourceRevisions,
+    ) -> int:
         """Replace the persisted index and return the number of stale rows removed."""
         ...
 
@@ -42,8 +67,8 @@ class ParticipationIndexRebuildPorts:
 class ParticipationIndexRebuildPortsFactory(Protocol):
     """Construct the complete participation-index rebuild bundle for a bucket."""
 
-    def __call__(self, *, bucket_id: str) -> ParticipationIndexRebuildPorts:
-        """Return all authorities required for ``bucket_id``."""
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> ParticipationIndexRebuildPorts:
+        """Return all authorities for one bucket and its held authority operation."""
         ...
 
 
@@ -51,4 +76,5 @@ __all__ = [
     "ParticipationIndexRebuildPorts",
     "ParticipationIndexRebuildPortsFactory",
     "ParticipationIndexRebuildRepositoryProtocol",
+    "ParticipationRebuildSourceRevisions",
 ]

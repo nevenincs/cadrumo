@@ -49,7 +49,7 @@ from ..analysis.continuity_integrity import screen_authority as continuity_scree
 from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import resolved_export_endpoints
-from ..pipeline.render_profile import RenderProfile
+from ..pipeline.render_profile_model import RenderProfile
 from ..pipeline.semantic_map import SemanticMap
 
 _BINDING_DERIVATION = "derive_export_layouts_from_bindings"
@@ -647,7 +647,6 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
     from cadrumo.core.resources.bundled_data import bundled_path
 
     from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-    from ..pipeline.generated_tree_dispositions import below_floor_dispositions
     from ..pipeline.generated_tree_inventory import generated_export_trees
 
     committed = {
@@ -660,11 +659,6 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
         ).is_file()
     }
     assert committed, "no export tree is committed, so this gate checked nothing"
-    # A committed tree below the supported floor has no selectable coordinate to
-    # reproduce at; its ledger row, not the reproduction test, accounts for it.
-    below_floor = {(row.modelo, row.revision) for row in below_floor_dispositions()}
-    assert below_floor <= committed, f"below-floor rows name no committed tree: {sorted(below_floor - committed)}"
-    committed -= below_floor
     enrolled = {(tree.modelo, tree.revision) for tree in generated_export_trees()}
     assert committed == enrolled, (
         "generated-tree reproduction enrollment differs from the provenance-attested registry projection: "

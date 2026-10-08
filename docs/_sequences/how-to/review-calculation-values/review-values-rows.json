@@ -45,7 +45,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicability_guard_bypassed": false,
           "bucket_id": "<bucket-id>",
@@ -72,12 +80,12 @@
           "short_work_unit_id": "815f52bcbc67",
           "state": "borrador",
           "status": "created",
-          "status_message": "New work unit created.",
+          "status_message": "New declaration created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
           "work_unit_id": "0371dd7cb747105434a07926b17dfe5fb475b9d548121b773bd1815f52bcbc67"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -116,16 +124,25 @@
               "conditional_recargo_preview_pct": "15.00",
               "conditional_recargo_preview_reference_on": "2026-04-01",
               "days_overdue": "397",
-              "legal_refs": "ley-58-2003:art-27.2"
+              "holiday_coverage": "national_only",
+              "legal_refs": "ley-58-2003:art-27.2",
+              "nominal_closes_on": "2025-02-28"
             },
             "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "85f8dda3a63b6cca4c987051fa7b5d6a9ceaf6e960811926aa94c450e07ffa53",
+          "calculation_revision_id": "ac469cd2baa6331984e7ea4af11094172b3bf34ecab4a420114dac7b0eb4b137",
           "casilla_values": {
             "decl.ejercicio": "2024",
             "decl.entidad-extranjera.porcentaje-renta-residentes": "0",
@@ -179,7 +196,9 @@
               "surcharge_pct": "15.00"
             },
             "days_overdue": 397,
-            "days_remaining": null
+            "days_remaining": null,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2025-02-28"
           },
           "detail_rows": [
             {
@@ -308,7 +327,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 85f8dda3a63b6cca4c987051fa7b5d6a9ceaf6e960811926aa94c450e07ffa53 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision ac469cd2baa6331984e7ea4af11094172b3bf34ecab4a420114dac7b0eb4b137 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [],
           "state": "borrador",
           "superseded_at": null,

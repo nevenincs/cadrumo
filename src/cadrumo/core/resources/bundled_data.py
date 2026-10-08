@@ -9,18 +9,17 @@ honours the force-include mapping for both targets.
 
 Callers MUST go through :func:`packaged_data` rather than computing the location
 from ``__file__`` or a repo-root walk. Use :func:`bundled_path` when a
-process-lifetime :class:`~pathlib.Path` is required, and :func:`as_path` for a
-scoped materialised path. The data-root anchor is reserved for ``var/``
+process-lifetime :class:`~pathlib.Path` is required. The data-root anchor is reserved for ``var/``
 operator outputs in :mod:`cadrumo.core.config` and is not a valid resolution path
 for read-only bundled data.
 
 The corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded
-from the command-bearing ``cadrumo`` wheel and shipped in two mandatory
+from the command-bearing ``cadrumo`` wheel and shipped in three mandatory
 ``cadrumo_data`` companion distributions whose joined layout mirrors
 ``cadrumo/_data``. :func:`resolve_corpus_binary` is the single
 ``importlib.resources`` seam that resolves such a binary from the ``cadrumo``
 tree first and then the companion namespace, so a full checkout and an installed
-three-wheel cohort read a corpus binary uniformly. A missing companion remains
+four-wheel cohort read a corpus binary uniformly. A missing companion remains
 a not-present signal (``None``) at this low-level resource boundary; the
 catalogue integrity boundary turns that signal into a hard failure.
 
@@ -38,8 +37,7 @@ rather than by which distribution happens to carry the file next to it.
 from __future__ import annotations
 
 import atexit
-from collections.abc import Generator
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack
 from functools import cache
 from importlib.resources import as_file, files  # nosemgrep
 from importlib.resources.abc import Traversable  # nosemgrep
@@ -76,7 +74,7 @@ def packaged_data(*parts: str) -> Traversable:
     Returns:
         A :class:`importlib.resources.abc.Traversable` that callers
         may read via ``read_text`` / ``read_bytes`` / ``open`` or
-        iterate via ``iterdir``. Use :func:`as_path` when a real
+        iterate via ``iterdir``. Use :func:`bundled_path` when a real
         on-disk :class:`pathlib.Path` is required.
     """
     node: Traversable = _PACKAGE_DATA
@@ -106,29 +104,6 @@ def bundled_path(*parts: str) -> Path:
     return _RESOURCE_STACK.enter_context(as_file(packaged_data(*parts)))
 
 
-@contextmanager
-def as_path(node: Traversable) -> Generator[Path]:
-    """Materialise ``node`` as a real on-disk path for the lifetime of the context.
-
-    ``importlib.resources.as_file`` extracts the resource to a
-    temporary location when the underlying loader does not already
-    expose a filesystem path. Under an editable install (hatchling
-    force-include against the source tree) the materialised path is
-    the in-tree location with no copy.
-
-    Args:
-        node: A Traversable returned by :func:`packaged_data` (or a
-            descendant obtained via ``joinpath``).
-
-    Yields:
-        A :class:`pathlib.Path` that is valid only inside the
-        ``with`` block. Callers MUST NOT retain the path beyond the
-        context manager's exit.
-    """
-    with as_file(node) as path:
-        yield path
-
-
 def _traversable_is_file(node: Traversable) -> bool:
     """Return whether ``node`` resolves to a readable file, swallowing loader errors."""
     try:
@@ -140,7 +115,7 @@ def _traversable_is_file(node: Traversable) -> bool:
 def _companion_root() -> Traversable | None:
     """Return the ``cadrumo_data`` companion package root, or ``None`` when it is absent.
 
-    The companion namespace is supplied by two mandatory distributions. A
+    The companion namespace is supplied by three mandatory distributions. A
     broken or deliberately dependency-pruned installation may still omit it;
     this low-level helper maps that import-family error to ``None`` so the
     catalogue integrity boundary can report the missing source precisely.
@@ -243,7 +218,7 @@ def bundled_data_roots() -> tuple[Path, ...]:
     The ``cadrumo`` tree comes first and is always present; each installed
     ``cadrumo_data`` portion follows. Together they are the roots a single
     logical ``_data``-relative path may resolve under, which is what makes the
-    suffix-partitioned corpus one tree rather than three.
+    suffix-partitioned corpus one logical tree across four distributions.
 
     Returns:
         The ordered roots, ``cadrumo`` first.

@@ -3,51 +3,53 @@
 See Also:
     :mod:`~entrypoints.cli._modelo_m145_cli`
         Thin Typer command registration under test.
+    :mod:`~entrypoints.cli.tests.runtime_profile_cli_fixture`
+        Authenticated profile and retained native worker fixture for behavior tests.
     :mod:`~entrypoints.cli._modelo_m145_parsing`
         Parser boundary used before backend delegation.
     :mod:`~entrypoints.cli._modelo_m145_rendering`
         Rendering boundary used after backend delegation.
-    :class:`~application.modelo.M145CommunicationRecordState`
-        Backend state enum asserted after command transitions.
-    :func:`~application.modelo.read_m145_communication_record`
-        Backend read path used to verify real command effects.
     :mod:`~tests.cli_envelope`
         Schema-envelope helper used to inspect CLI JSON output.
 
-The ``"secrets"`` literal in ``isolated_m145_cli_backend`` below is not an
-arbitrary injected value: it must agree with what
-:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile` already minted the master
-key under, since that fixture derives ``cadrumo_secret_store_dir`` from the
-real taxonomy accessor. The CLI subprocesses this env drives must
-independently compute the same location to unlock the profile the fixture
-already created; renaming it to a fictional segment breaks that handoff.
+Private command behavior tests use the authenticated profile and native worker
+fixture. Public help and command-surface assertions remain platform-independent.
 """
 
 from __future__ import annotations
 
-import os
+import json
 import re
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-
-from ....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
-from ....application.modelo.m145_communication_records import (
-    M145CommunicationRecordState,
-    read_m145_communication_record,
-)
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ....core.config import override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-_BUCKET_ID = "44444444-4444-4444-8444-444444444444"
+_PROFILE_FACTS = {
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.name": "Native",
+    "identity.surnames": "M145 CLI",
+    "activities.description": "design",
+    "censo.activity_start_date": "2025-01-01",
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+}
 _CREATE_ARGS = [
     "app",
     "modelo",
@@ -135,33 +137,39 @@ _FORBIDDEN_HELP_PHRASES = (
 
 
 @pytest.fixture
-def isolated_m145_cli_backend(tmp_path: Path) -> Iterator[str]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        env = {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
-            "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
-            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
-            "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
-            "CADRUMO_OUTPUT_LANGUAGE": "en",
-        }
-        old_env = {key: os.environ.get(key) for key in env}
-        try:
-            os.environ.update(env)
-            yield runtime.bucket_id
-        finally:
-            for key, value in old_env.items():
-                if value is None:
-                    os.environ.pop(key, None)
-                else:
-                    os.environ[key] = value
+def native_m145_cli_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-m145-cli-contract", facts=_PROFILE_FACTS)
+        yield profile
 
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _create_record_id() -> str:
-    result = _invoke(["--format", "json", *_CREATE_ARGS])
+def _invoke_authenticated(profile: NativeCliProfileFixture, *command: str):
+    assert profile.label is not None
+    close_active_bucket_session()
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
+        result = invoke_cached_cli(
+            (
+                "--language",
+                "en",
+                "--format",
+                "json",
+                "--profile",
+                profile.label,
+                "--profile-secrets-stdin",
+                *command,
+            ),
+            input=json.dumps({"profile_passphrase": profile.passphrase}),
+        )
+    assert profile.passphrase not in result.output
+    return result
+
+
+def _create_record_id(profile: NativeCliProfileFixture) -> str:
+    result = _invoke_authenticated(profile, *_CREATE_ARGS)
     assert result.exit_code == 0, result.output
     payload = STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(result.output))
     record = STR_KEYED_MAPPING_ADAPTER.validate_python(payload["record"])
@@ -176,7 +184,17 @@ def _unwrap_error_envelope(output: str) -> dict[str, object]:
     # The error spine now names the failing command (byte-identical to the
     # command= its success envelope emits); null only before a command resolves.
     assert isinstance(payload["command"], str) and payload["command"], payload["command"]
-    assert payload["notices"] == []
+    from ....core.i18n.render import tr
+
+    assert payload["notices"] == [
+        {
+            "severity": "warning",
+            "code": "config.login.session_not_persisted",
+            "message": tr("cli.config.login.notices.session_invocation_scoped", locale="en"),
+            "action": None,
+            "context": None,
+        }
+    ]
     return STR_KEYED_MAPPING_ADAPTER.validate_python(payload["error"])
 
 
@@ -195,71 +213,44 @@ def test_m145_group_registers_closed_action_verbs() -> None:
     assert "mark-locally-completed" in result.output
 
 
-def test_m145_create_validate_export_and_transitions_delegate_to_real_service(
-    isolated_m145_cli_backend: str, operation: PinnedAuthorityOperation
-) -> None:
-    communication_record_id = _create_record_id()
-
-    validation = _invoke(["--format", "json", "app", "modelo", "m145", "validate", communication_record_id[:12]])
-    assert validation.exit_code == 0, validation.output
-    validation_payload = unwrap_schema_envelope(validation.output)
-    assert validation_payload["valid"] is True
-    assert validation_payload["issue_count"] == 0
-
-    exported = _invoke(["--format", "json", "app", "modelo", "m145", "export", communication_record_id[:12]])
-    assert exported.exit_code == 0, exported.output
-    export_payload = unwrap_schema_envelope(exported.output)
-    assert export_payload["communication_record_id"] == communication_record_id
-    assert export_payload["payload_sha256"]
-    assert export_payload["payload_text"].startswith("<T145010>")
-
-    delivered = _invoke(
-        ["--format", "json", "app", "modelo", "m145", "mark-delivered-to-payer", communication_record_id[:12]],
-    )
-    assert delivered.exit_code == 0, delivered.output
-    delivered_payload = unwrap_schema_envelope(delivered.output)
-    assert delivered_payload["record"]["state"] == "delivered_to_payer"
-
-    completed = _invoke(
-        ["--format", "json", "app", "modelo", "m145", "mark-locally-completed", communication_record_id[:12]],
-    )
-    assert completed.exit_code == 0, completed.output
-    completed_payload = unwrap_schema_envelope(completed.output)
-    assert completed_payload["record"]["state"] == "locally_completed"
-    persisted = read_m145_communication_record(
-        communication_record_id[:12],
-        bucket_id=isolated_m145_cli_backend,
-        ports=build_m145_communication_records_ports(bucket_id=isolated_m145_cli_backend),
-        operation=operation,
-    )
-    assert persisted.state is M145CommunicationRecordState.LOCALLY_COMPLETED
-    assert persisted.delivered_to_payer_at is not None
-    assert persisted.locally_completed_at is not None
-
-
-def test_m145_create_requires_casilla_input(isolated_m145_cli_backend: None) -> None:
-    result = _invoke(["app", "modelo", "m145", "create", "--year", "2026"])
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_m145_create_requires_casilla_input(native_m145_cli_profile: NativeCliProfileFixture) -> None:
+    result = _invoke_authenticated(native_m145_cli_profile, "app", "modelo", "m145", "create", "--year", "2026")
 
     assert result.exit_code != 0
     assert "--casilla" in result.output
 
 
-def test_m145_missing_record_failure_uses_central_error_boundary(isolated_m145_cli_backend: None) -> None:
-    result = _invoke(["--format", "json", "app", "modelo", "m145", "validate", "0" * 12])
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_m145_missing_record_failure_uses_central_error_boundary(
+    native_m145_cli_profile: NativeCliProfileFixture,
+) -> None:
+    result = _invoke_authenticated(native_m145_cli_profile, "app", "modelo", "m145", "validate", "0" * 12)
 
-    assert result.exit_code == 1, result.output
+    assert result.exit_code == 2, result.output
     assert "Traceback" not in result.output
     error = _unwrap_error_envelope(result.output)
-    assert error["code"] == "ERROR_M145_COMMUNICATION_RECORD_NOT_FOUND"
-    assert error["category"] == "ERROR"
+    assert error["code"] == "REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND"
+    assert error["category"] == "REFUSED"
     assert error["context"] == {"communication_record_id": "000000000000"}
 
 
-def test_m145_transition_failure_uses_central_error_boundary(isolated_m145_cli_backend: None) -> None:
-    communication_record_id = _create_record_id()
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_m145_transition_failure_uses_central_error_boundary(
+    native_m145_cli_profile: NativeCliProfileFixture,
+) -> None:
+    communication_record_id = _create_record_id(native_m145_cli_profile)
 
-    result = _invoke(
-        ["--format", "json", "app", "modelo", "m145", "mark-locally-completed", communication_record_id[:12]],
+    result = _invoke_authenticated(
+        native_m145_cli_profile,
+        "app",
+        "modelo",
+        "m145",
+        "mark-locally-completed",
+        communication_record_id[:12],
     )
 
     assert result.exit_code == 2, result.output

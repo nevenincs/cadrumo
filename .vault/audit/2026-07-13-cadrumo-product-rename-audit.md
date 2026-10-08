@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename'
 date: '2026-07-13'
-modified: '2026-07-17'
-body_hash: 'sha256:f461c9dba58ab66a41a91a84dd14bba32a5184bceb7eb02a0acf07414699f94d'
+modified: '2026-10-03'
+body_hash: 'sha256:adc06f1105a6fb70f21d52c66e55198c876ebda528a5b2db6f1a9c0aa5b6eaf6'
 related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
 ---
 
@@ -80,11 +79,11 @@ reopened. Defect D-CI-01.
 
 ### aeat-residue-class-c-packaging-smoke | high | Packaging smoke probes invoke a nonexistent `cadrumo` executable — defects D-PKG-01/02 (S39/S40 open)
 
-`dev/packaging/smoke_docker.py:212,230,275` run `["cadrumo", "--version"]` and
+The retired module run `["cadrumo", "--version"]` and
 `["cadrumo", "--format", "json", "config", "check"]`; `dev/packaging/smoke_split_install.py:145`
 (`_venv_cadrumo`) resolves `cadrumo`/`cadrumo.exe` as the installed console script.
 Both target a command that is not installed; the correct human executable is `aeat`.
-Two tests lock the defect in: `dev/packaging/tests/test_smoke_docker_selection.py:32`
+Two tests lock the defect in: the retired test
 asserts `'run(["cadrumo", "--version"]'` and
 `dev/packaging/tests/test_smoke_split_install_sequence.py:65` asserts the
 `_venv_cadrumo` name is `cadrumo`. These belong to plan Steps `W03.P07.S39` and
@@ -104,7 +103,6 @@ follow-ups rather than reopened structural work.
 
 ### aeat-residue-class-c-stale-env-docstring | low | Stale `AEAT_ACTIVE_BUCKET` product-env reference in a docstring — defect D-ENV-01
 
-`src/cadrumo/adapters/persistence/storage/bucket/_errors.py:42`
 (`NoActiveBucketError` docstring) names `AEAT_ACTIVE_BUCKET` in the active-bucket
 precedence chain. Active-bucket selection is product-owned state, which the
 `W01.P01.S02` matrix rules moves to the `CADRUMO_*` prefix. No live reader of either

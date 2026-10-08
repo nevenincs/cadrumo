@@ -89,6 +89,8 @@ semantic_role = "situacion_tributaria"
 # Design situacion tributaria (5).
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
+[revisions."2016-2017".casillas.constraints]
+enum = ["1", "2", "3", "4", "5", "6"]
 [[revisions."2016-2017".casillas]]
 id = "decl.hecho-imponible"
 continuidad_id = "hecho-imponible"
@@ -101,6 +103,8 @@ semantic_role = "hecho_imponible"
 # Design hecho imponible (6).
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 
+[revisions."2016-2017".casillas.constraints]
+enum = ["1", "2", "3", "4", "5", "6"]
 [[revisions."2016-2017".casillas]]
 id = "decl.complementaria"
 continuidad_origin = "new_on_form"

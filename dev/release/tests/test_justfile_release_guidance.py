@@ -7,7 +7,7 @@ import ast
 import pytest
 
 from dev._paths import REPO_ROOT
-from dev.ci.lane_reachability import resolve_just_executable
+from dev.ci.lane_recipe_commands import resolve_just_executable
 from dev.packaging.command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -61,6 +61,7 @@ def _cohort_build_and_fanout_positions(source: str) -> tuple[int, int, int]:
     the driver's structure instead of its text.
     """
     module = ast.parse(source)
+    functions = {node.name: node for node in module.body if isinstance(node, ast.FunctionDef)}
     main_function = next(node for node in module.body if isinstance(node, ast.FunctionDef) and node.name == "main")
 
     def _is_cohort_build(node: ast.AST) -> bool:
@@ -71,14 +72,23 @@ def _cohort_build_and_fanout_positions(source: str) -> tuple[int, int, int]:
         }
         return {"dev.packaging.python_cohort", "build"} <= literals
 
-    def _is_fanout(statement: ast.stmt) -> bool:
-        if not isinstance(statement, ast.With):
-            return False
-        return any(
-            isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ThreadPoolExecutor"
-            for item in statement.items
-            for node in ast.walk(item.context_expr)
-        )
+    def _is_fanout(statement: ast.stmt, visited: frozenset[str] = frozenset()) -> bool:
+        for node in ast.walk(statement):
+            if isinstance(node, ast.With) and any(
+                isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == "ThreadPoolExecutor"
+                for item in node.items
+                for call in ast.walk(item.context_expr)
+            ):
+                return True
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                name = node.func.id
+                if (
+                    name in functions
+                    and name not in visited
+                    and any(_is_fanout(body, visited | {name}) for body in functions[name].body)
+                ):
+                    return True
+        return False
 
     total = sum(1 for node in ast.walk(module) if _is_cohort_build(node))
     build_index = -1

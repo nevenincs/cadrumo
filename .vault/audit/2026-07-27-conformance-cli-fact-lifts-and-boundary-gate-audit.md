@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#conformance-cli'
 date: '2026-07-27'
-modified: '2026-07-27'
-body_hash: 'sha256:2fa88d45e044abe3031f4006e39e933895419fac0a4b4fd46c7d7b695909eafd'
+modified: '2026-10-03'
+body_hash: 'sha256:a46527a85dd135da00ac609f5337bd603a3371914e43c955673ee267609a4126'
 related:
-  - "[[2026-07-27-conformance-cli-plan]]"
   - "[[2026-07-27-conformance-cli-adr]]"
 ---
 
@@ -16,11 +15,11 @@ related:
 
 Mandatory code review of the four landed conformance-cli commits: `2b93b08f0` and
 `623d925b0` (external-oracle grounding lift into
-`src/cadrumo/domain/calculations/registry/_external_grounding.py` and
-`src/cadrumo/core/_external_oracle_corpus.py`, with the re-pointed gate),
+The retired module and
+The retired module, with the re-pointed gate),
 `9c64ec0d99` (fichero-BOE required-set extraction into
-`src/cadrumo/application/filing/_export.py`), and `43d7ab1e60`
-(`src/cadrumo/tests/test_dev_path_isolation.py`). Reviewed against the accepted ADR,
+The retired module), and `43d7ab1e60`
+. Reviewed against the accepted ADR,
 the plan, and project rules. All reviewed files re-verified unchanged at HEAD
 `bbc05fcdef`; peer WIP existed on `_schema.py` and `_schema_base.py` (the P01
 governance stamp) but touched nothing under review.
@@ -39,10 +38,10 @@ Verdict: REVISION REQUIRED. Both high findings were remediated in-campaign
 ### required-set-oracle-collapse | high | The fichero-BOE extraction removed the only test that could detect a relaxation of the required-set predicate
 
 CONFIRMED, reproduced. `required_applicable_casilla_ids`
-(`src/cadrumo/application/filing/_export.py:1005`) became the callee of both the
+ became the callee of both the
 production gate `assert_export_mirrors_manifest` (`_export.py:1124`) and the two tests
-that pin it (`tests/test_export_completeness_gate.py:77`,
-`tests/test_fichero_boe_completeness_parity.py:110`). Subject and oracle collapsed into
+that pin it (the retired test,
+The retired test). Subject and oracle collapsed into
 one function, so the tests could no longer detect a change in its semantics.
 
 Failure scenario, measured against the live registry: relaxing the predicate to
@@ -70,17 +69,17 @@ from the registry. Both relaxation directions now flip real assertions (4 failur
 
 ### dev-path-literal-hole | high | The metadata-loophole check could not see the only realistic form the violation would take, and a green test pinned the hole open
 
-CONFIRMED. `_looks_like_dev_path` (`src/cadrumo/tests/test_dev_path_isolation.py:210`)
+CONFIRMED. `_looks_like_dev_path`
 fired only on string constants starting with `dev/`, `./dev/`, or `../dev/`, and
 `test_path_literal_scanner_does_not_fire_on_path_join_usage` (`:534`) asserted as a
 deliberate ruling that a `PROJECT_ROOT` join was not a violation.
 
-That join is the form a real violation takes. A bare `open("dev/baseline.json")` is
+That join is the form a real violation takes. A bare a bare file open is
 CWD-relative, would fail for any invocation outside the repo root, and would not survive
 one test run. The working form is a `PROJECT_ROOT`-anchored join, and `PROJECT_ROOT` is
 exported from `src/cadrumo/core/paths.py`, which the gate itself imports at line 44. A
 shipped module could therefore read a `dev/`-rooted baseline, break for every
-wheel-installed user, and leave both this gate and `dev/import_hygiene_scan.py` green.
+wheel-installed user, and leave both this gate and the retired module green.
 Also missed for the same reason: f-string composition, `os.path.join("dev", ...)`, and
 the Windows-separator form. The ADR's stated purpose for this check was therefore unmet
 for the realistic case, and the pinned non-firing test made it worse than an omission: a
@@ -106,10 +105,10 @@ screen-not-gate posture is ADR-sanctioned, but no screen consumes the field yet,
 
 ### dev-gate-second-authority | medium | Half the boundary gate duplicates a shipped, already-gated detector, and the copies have already diverged
 
-CONFIRMED. `src/cadrumo/tests/test_import_hygiene_gate.py:524` already carries
+CONFIRMED. the retired test already carries
 `test_no_shipped_module_imports_the_unshipped_dev_tooling`, with four anti-tautology
 proofs, delegating to `find_dev_tooling_import_violations`
-(`dev/import_hygiene_scan.py:460`); it passes today alongside the new duplicate. The new
+; it passes today alongside the new duplicate. The new
 module re-implements the shipped-module test, the dev-target test, the dynamic-target
 walk, and the static-import walk. The stated justification (the gate must not import
 `dev.*`) does not hold: the module is a test, excluded from the wheel, and the existing
@@ -121,7 +120,7 @@ a path-literal assertion only; the import half was not requested.
 
 ### oracle-corpus-token-not-hydrated | medium | The core enum is documented as hydrating a stored token that nothing reads
 
-CONFIRMED. `src/cadrumo/core/_external_oracle_corpus.py:16-21` states that the member is
+CONFIRMED. the retired module states that the member is
 byte-identical to the stored `source_kind` token so a stored token hydrates and an
 unknown token is refused at the boundary. `_read_oracle_payload`
 (`registry/_external_grounding.py:498`) never reads `source_kind`; the corpus is

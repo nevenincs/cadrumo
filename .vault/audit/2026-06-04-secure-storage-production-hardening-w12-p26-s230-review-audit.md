@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:a2e613284e73ad7b3be332c3511c2833f443360dc495794c3ed94bddcead4274'
+modified: '2026-10-03'
+body_hash: 'sha256:4f8c2632b8a4d1bb39b5e98c3aa1251938867184e45ca9263c8530d17fb61109'
 related: []
 ---
 
@@ -35,9 +35,9 @@ skips, xfails, or duplicated business logic are used.
 
 ## S230-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/live/_snapshot_base.py src/aeat/application/live/test_snapshot_base.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/live/test_snapshot_base.py` passed with 27 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "borrador or censo or expedientes or notifications or s85_runtime"` passed with 3 selected runtime-migration tests.
+- the historical check passed.
+- the historical check passed with 27 tests.
+- the historical check passed with 3 selected runtime-migration tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` returned only the existing `PLAN022` warning.
 

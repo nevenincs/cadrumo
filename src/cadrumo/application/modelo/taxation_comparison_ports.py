@@ -33,8 +33,17 @@ class TaxationComparisonPorts:
     work_unit_reader: TaxationComparisonWorkUnitReader
 
 
+class TaxationComparisonPortsFactory(Protocol):
+    """Compose the comparison reader for one authenticated profile."""
+
+    def __call__(self, *, bucket_id: str) -> TaxationComparisonPorts:
+        """Return a reader bound to the requested authenticated profile."""
+        ...
+
+
 __all__ = [
     "TaxationComparisonPersistenceError",
     "TaxationComparisonPorts",
+    "TaxationComparisonPortsFactory",
     "TaxationComparisonWorkUnitReader",
 ]

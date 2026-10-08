@@ -40,7 +40,10 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
@@ -139,6 +142,16 @@ def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaComp
         blocked=False,
         stale_wallet=False,
         reason_identity="first_period_zero_aeat_wallet",
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("0"),
+                source_locator="aeat-wallet:synthetic-fixture",
+                captured_at=_CLOCK,
+                registry_snapshot_refs=(),
+            ),
+        ),
+        wallet_captured_at=_CLOCK,
         decided_at=_CLOCK,
     )
 

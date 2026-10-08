@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:b7add4f0ef2a3db71705349b20ab82657b9bd7fe0811b1058179a7252eed7b8c'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-blocker-spine-adr]]"
   - "[[2026-08-10-casilla-schema-research]]"
 ---

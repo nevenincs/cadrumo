@@ -7,18 +7,19 @@ operation envelope or obtain concrete persistence and frontend adapters.
 
 from __future__ import annotations
 
-from contextlib import AbstractAsyncContextManager
+from collections.abc import Generator
+from contextlib import AbstractAsyncContextManager, contextmanager
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...core.async_cleanup import AsyncCloseable
+from ...core.async_cleanup import AsyncCloseable, async_cleanup_failures
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect
+from ...core.operator_progress import OperatorDisplayCode
 from .capabilities import OperationOwnedResource
 from .events import OperationEventCode, OperationLogSeverity
-from .financial_operand_submission import OperationFinancialOperandContextAccess
 from .interactions import OperationResponseIntentValue
 from .models import (
     OperationDiagnosticReference,
@@ -28,9 +29,11 @@ from .models import (
     OperationRevision,
 )
 from .secret_submission import OperationEphemeralSecretAccess
+from .typed_financial_operand_context import BoundTypedFinancialOperandAccess
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .refusal_evidence import OperationExecutorResult
 
 
 @runtime_checkable
@@ -98,8 +101,13 @@ class OperationEventEmitter(Protocol):
         """Publish the executor's current truthful effect fact."""
         ...
 
-    async def notice(self, notice_code: OperationEventCode) -> None:
-        """Publish a stable notice identity for frontend projection."""
+    async def notice(
+        self,
+        notice_code: OperationEventCode,
+        *,
+        display_code: OperatorDisplayCode | None = None,
+    ) -> None:
+        """Publish a stable notice identity, with an optional operator comparison code, for frontend projection."""
         ...
 
     async def diagnostic(self, diagnostic_ref: OperationDiagnosticReference) -> None:
@@ -120,7 +128,11 @@ class OperationSecureOperandLookup(Protocol):
         reference: ContentDigest,
         operand_type: type[OperandT],
     ) -> OperandT:
-        """Return the validated operand of the requested application model type."""
+        """Return the operand at ``reference`` as an instance of exactly ``operand_type``.
+
+        Stored content that does not validate as ``operand_type`` is refused;
+        content written from a subclass is never returned as that subclass.
+        """
         del operand_type
         raise NotImplementedError
 
@@ -154,6 +166,23 @@ class OperationInteractionAccess(Protocol):
     ) -> None:
         """Secure a typed reviewed operand before publishing its digest-bound checkpoint."""
         ...
+
+
+@contextmanager
+def retain_failed_operation_resources(
+    cleanup: OperationCleanupOwner, *, family: OperationOwnedResource
+) -> Generator[None]:
+    """Transfer failed asynchronous owners before executor errors are settled."""
+    try:
+        yield
+    except BaseException as error:
+        retained: set[int] = set()
+        for cleanup_error in async_cleanup_failures(error):
+            for resource in cleanup_error.resources:
+                if id(resource) not in retained:
+                    cleanup.own(resource, family=family)
+                    retained.add(id(resource))
+        raise
 
 
 @runtime_checkable
@@ -221,8 +250,8 @@ class OperationExecutorContext(Protocol):
         ...
 
     @property
-    def financial_operand(self) -> OperationFinancialOperandContextAccess:
-        """Runtime-only transient financial operand surface for this operation."""
+    def typed_financial_operand(self) -> BoundTypedFinancialOperandAccess:
+        """Consume the one exact in-memory batch registered for this invocation."""
         ...
 
     @property
@@ -244,8 +273,8 @@ class OperationExecutor[RequestPayloadT: BaseModel](Protocol):
         self,
         request: OperationRequest[RequestPayloadT],
         context: OperationExecutorContext,
-    ) -> OperationReference | None:
-        """Run one request and return an optional domain-owned result reference."""
+    ) -> OperationExecutorResult:
+        """Run one request and return a result, refusal evidence, or no result."""
         ...
 
 
@@ -258,7 +287,7 @@ class OperationResumableExecutor[RequestPayloadT: BaseModel](Protocol):
         request: OperationRequest[RequestPayloadT],
         checkpoint: OperationResumeCheckpoint,
         context: OperationExecutorContext,
-    ) -> OperationReference | None:
+    ) -> OperationExecutorResult:
         """Resume from the exact durable checkpoint under a new supervisor lease."""
         ...
 

@@ -240,6 +240,7 @@ class _RevisionDraftBuilder:
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
+            closed_record_row_sets=self._revision.closed_record_row_sets,
         )
         draft = attach_revision_row_source_identities(draft=draft, revision=self._revision)
         if draft.status is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:

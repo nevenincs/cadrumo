@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:35daaf6e0561ab58b614474d64bd69869d4f8790417f61251e8700c374ff70a3'
+modified: '2026-10-03'
+body_hash: 'sha256:9d1403d047ff810c2ab3c2e743b43a5634365ccc5f095b6538b1e2e90c2993c1'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S157-001 | PASS | Export header carries plaintext manifest metadata only
 
-`src/aeat/adapters/persistence/storage/bucket/_export_header.py` defines `ExportArchiveHeader`, a strict frozen pydantic record for sealed bucket-export archive frontmatter. The record carries the bucket identifier, manifest digest, recovery-wrap presence flag, archive schema version, and creation timestamp.
+The retired module defines `ExportArchiveHeader`, a strict frozen pydantic record for sealed bucket-export archive frontmatter. The record carries the bucket identifier, manifest digest, recovery-wrap presence flag, archive schema version, and creation timestamp.
 
 The scanner's `manifest-bucket` signal is expected: the header references the bucket manifest digest so an archive can identify the manifest it seals. It does not carry NIF, financial ledger rows, secret bytes, wrapped DEK material, recovery wrap bytes, or secure-object payloads.
 
@@ -36,8 +36,8 @@ The 2026-06-03 export/parity ADRs constrain modelo calculation/export evidence a
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket/test_export_header.py` passed with 16 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket/_export_header.py src/aeat/adapters/persistence/storage/bucket/test_export_header.py` passed.
+- The historical check passed with 16 tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` reported `ca.yml`, `en.yml`, `es.yml`, and `hu.yml` ok.
 - Touched-file hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, local secure-object marker construction, direct settings construction, or direct environment access.
 - Plan state was reconciled after the CLI checked S157 but left `AFR-055` pending; the repaired state is `AFR-055`/`S157` closed and `AFR-056` through `AFR-058` / `S158` through `S160` pending.

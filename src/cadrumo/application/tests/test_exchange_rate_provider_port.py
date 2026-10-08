@@ -10,6 +10,8 @@ from decimal import Decimal
 import pytest
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ...domain.currency.models import EurRateLookup
+from ...domain.currency.tests.fx_lookup import eur_rate_lookup
 from ..exchange_rate_provider import bind_exchange_rate_provider_factory, exchange_rate_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -18,7 +20,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 class _FixedProvider:
     rate_source_id = "fixed"
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(self._rate(currency, rate_date), rate_date=rate_date, source=self.rate_source_id)
+
+    def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         return Decimal("1") if currency == "EUR" else None
 
 

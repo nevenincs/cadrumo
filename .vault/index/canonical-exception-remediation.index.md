@@ -4,14 +4,13 @@ tags:
   - '#index'
   - '#canonical-exception-remediation'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:34c56710c8412f2d9b9edd1fa59e55d8c49e3f1cd662bdba71820dc1025cb491'
+body_hash: 'sha256:54befbe86250c3cefb7a9fffdca2b7a484cf947b7859d67bddffc26688c4741f'
 related:
   - '[[2026-09-14-canonical-exception-remediation-adr]]'
   - '[[2026-09-14-canonical-exception-remediation-final-review-audit]]'
   - '[[2026-09-14-canonical-exception-remediation-migration-taxonomy-research]]'
-  - '[[2026-09-14-canonical-exception-remediation-plan]]'
   - '[[2026-09-14-canonical-exception-remediation-production-inventory-reference]]'
 ---
 
@@ -28,10 +27,6 @@ Auto-generated index of all documents tagged with `#canonical-exception-remediat
 ### audit
 
 - `2026-09-14-canonical-exception-remediation-final-review-audit` - `canonical-exception-remediation` audit: `Canonical exception remediation final review`
-
-### plan
-
-- `2026-09-14-canonical-exception-remediation-plan` - `canonical-exception-remediation` plan
 
 ### reference
 

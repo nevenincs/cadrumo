@@ -23,6 +23,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.profile.tests.profile_registration import live_clave_movil_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -37,7 +38,13 @@ from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
+pytestmark = [
+    pytest.mark.aeat_live,
+    pytest.mark.hex_outbound_adapter,
+    pytest.mark.usefixtures("live_clave_movil_profile"),
+]
+
+__all__ = ["live_clave_movil_profile"]
 
 
 async def _load_active_clave_session():

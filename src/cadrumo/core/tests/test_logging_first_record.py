@@ -63,9 +63,10 @@ logging.shutdown()
 print(json.dumps({"before": before, "after_info": after_info, "configured": project_logging._configured}))
 """
 
-_STAMP = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}"
-_INFO_LINE = rf"{_STAMP} \[INFO\] cadrumo\.tests\.first_record: info record before-warning\n"
-_WARNING_LINE = rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: first record probe\n"
+_STAMP = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z"
+_CONTEXT = r' \| \{"process_id":\d+,"process_role":"python"\}'
+_INFO_LINE = rf"{_STAMP} \[INFO\] cadrumo\.tests\.first_record: info record before-warning{_CONTEXT}\n"
+_WARNING_LINE = rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: first record probe{_CONTEXT}\n"
 
 
 def _run_probe(tmp_path: Path, mode: str, *, removal: str = "native") -> tuple[dict[str, object], str, Path]:

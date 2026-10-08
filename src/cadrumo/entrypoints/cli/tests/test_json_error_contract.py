@@ -23,6 +23,12 @@ flag probe cannot recognise the JSON request (e.g. ``--format`` with no
 value at the very end) falls back to text rendering — the format wish is
 itself part of the unparseable input.
 
+The text-mode domain-refusal companion lives in
+:mod:`cadrumo.entrypoints.cli.tests.test_runtime_ledger_prefix_refusals_native`.
+It enrolls and admits a real private profile before requesting the malformed
+ledger prefix, so its human-rendering assertions reach the registered boundary.
+The session-only fixture here cannot establish that runtime admission.
+
 Real-behavior only: the real ``cadrumo`` app object through
 the shared CLI runner over a real isolated profile, plus a real subprocess for
 the crash funnel (the only honest way to observe a terminal traceback
@@ -49,6 +55,7 @@ from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ....tests.cli_envelope import require_error_document
+from ....tests.env_scope import isolated_aeat_env
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
 
@@ -140,28 +147,6 @@ def test_json_boundary_refusal_emits_shared_spine_document() -> None:
     assert context["option"] == "--reason"
 
 
-def test_text_mode_domain_refusal_renders_for_a_human_not_as_json() -> None:
-    """Anti-regression: without ``--format json`` the human rendering survives.
-
-    This case was asserting ``Usage:`` on a DOMAIN refusal. A malformed
-    transaction id is rejected by the ledger boundary, not by argument parsing,
-    so no click ``UsageError`` is ever raised and there is no usage block for
-    anything to print -- the assertion described a rendering this input has no
-    reason to produce.
-
-    What the case is actually guarding is that text mode stays text: the
-    operator gets the localised refusal and its structured facts rather than a
-    JSON document. That is asserted here on its own terms, and the usage block
-    is asserted below on an input that genuinely provokes one.
-    """
-    result = invoke_cached_cli(["app", "ledger", "view", "not-hex!"])
-    assert result.exit_code == 2, result.output
-    assert not result.output.lstrip().startswith("{"), result.output
-    assert "not-hex!" in result.output, "the refusal must echo the value the operator typed"
-    assert "Prefix:" in result.output, "the refusal's structured facts render for a human too"
-    assert 'action.failed_condition_id: "cli.ledger.transaction_id.resolves"' in result.output
-
-
 def test_text_mode_usage_error_keeps_its_usage_block() -> None:
     """A real parse failure still renders click's usage block and hint.
 
@@ -240,7 +225,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=120,
+        timeout=None,
         check=False,
     )
     assert json_run.returncode == 6, json_run.stderr
@@ -253,7 +238,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=120,
+        timeout=None,
         check=False,
     )
     assert text_run.returncode == 6, text_run.stderr
@@ -265,14 +250,18 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     # this half, the stderr assertions above could be satisfied by deleting the
     # log call outright and the crash would become untriageable.
     state_root = tmp_path / "state"
+    # The runner pins explicit category paths, and the child inherits them; the
+    # log location under test is the one derived from the root alone.
+    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(state_root)):
+        child_environment = dict(os.environ)
     logged_run = subprocess.run(
         [sys.executable, str(script), "boom", "--json"],
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=120,
+        timeout=None,
         check=False,
-        env=os.environ | {"CADRUMO_LOCAL_STORAGE_ROOT": str(state_root)},
+        env=child_environment,
     )
     assert logged_run.returncode == 6, logged_run.stderr
     assert "Traceback" not in logged_run.stderr

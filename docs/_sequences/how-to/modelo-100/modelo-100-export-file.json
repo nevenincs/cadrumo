@@ -139,22 +139,30 @@
               "modelo": "100",
               "period": "0A"
             },
-            "message": "The local export is not official filing evidence.",
+            "message": "The exported file is not an AEAT filing receipt.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
         "result": {
-          "bucket_event_id": "5f4ca9d1fe4b8d58c4cc2d057bb275c082c08a454fc2ab638a50e8f76b1ac7d8",
+          "bucket_event_id": "87d3f5278303507a429e72151cf773fc39bc2b1ea91d9ed91dd2b7ffae2bf856",
           "bucket_id": "<bucket-id>",
           "byte_size": 2207,
-          "calculation_revision_id": "6a5e470235d89993eb16b7b6f0f9e10f8cb11ba6814607e7c7f577b8fcdab90c",
+          "calculation_revision_id": "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd",
           "file_sha256": "82da6c9e049f044ef2f884c74cfc9b6493afec742c3f596bbb1cd5f79c259c11",
           "filing_year": 2025,
           "format": "xml-dictionary",
+          "iva_wallet_decision_provenance": null,
           "modelo": "100",
           "operation": "modelo.export",
-          "output_path": "modelo-100.boe",
-          "payment_election": "ingreso",
+          "output_path": "<sandbox-workdir>/modelo-100.boe",
+          "payment_election": null,
           "period": {
             "code": "0A",
             "filing_year": 2025
@@ -167,7 +175,7 @@
             "election": "keep"
           },
           "refund_election": null,
-          "resolved_result_disposition": "I",
+          "resolved_result_disposition": null,
           "software_identity_grade": null,
           "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8b6ff95a7f5fc7e74e239d3d080faaaff225e115befd0b29ec5dd1b3e1b3964e'
+body_hash: 'sha256:553a0cdd3089985196efba2a9d27c7bc2b05f4115a0346b52afac884eed809ed'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -603,7 +603,7 @@ entire consent apparatus (`cloud_evidence_read_permitted`,
 `ServiceCapability.CLOUD_EVIDENCE_UPLOAD`,
 `cadrumo_evidence_cloud_upload_permitted`, `--evidence-acknowledged`), and
 those symbols now exist in exactly one file,
-`src/cadrumo/tests/test_cloud_transport_fully_deleted.py`, a gate asserting
+the former source file, a gate asserting
 they are gone. **This record therefore partially supersedes an accepted,
 executed decision, and says so** rather than diverging quietly. What returns:
 the consent apparatus, over the in-memory HTTP providers only. What stays

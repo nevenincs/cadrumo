@@ -504,7 +504,7 @@ def test_local_filing_commits_state_pointer_and_filed_event_together(
             ports=_calculation_ports_444,
             clock=T1,
         )
-    verify_revision(
+    report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -533,10 +533,11 @@ def test_local_filing_commits_state_pointer_and_filed_event_together(
         gate = workflow_gate(revision=revision, work_unit=work_unit, clock=T3, operation=operation)
         file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id=report.verification_report_id,
             actor="operator-A",
             workflow_profile=gate.profile,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             workflow_engine=gate.engine,
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,

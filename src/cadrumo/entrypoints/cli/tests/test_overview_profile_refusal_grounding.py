@@ -14,6 +14,7 @@ no field to name and must survive verbatim.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Sequence
 
 import pytest
@@ -28,17 +29,13 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.profile_grounding import build_profile_grounding_index
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from .._overview import (
-    _ENTITY_TYPE_SELECTOR,
-    _IRPF_INCOME_CATEGORIES_SELECTOR,
-    _undeclared_taxpayer_model_refusal,
-)
-from ._overview_calendar_support import _isolated_backend
-from .cli_runner import invoke_cached_cli
-
-__all__ = ["_isolated_backend"]
+from ...overview_read_composition import _refusal_requirements
+from ._overview_native_support import invoke_native_overview
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+_ENTITY_TYPE_SELECTOR = "taxpayer.entity_type"
+_IRPF_INCOME_CATEGORIES_SELECTOR = "taxpayer.irpf_income_categories"
 
 #: A gating field held as its declared selector token, which is exactly the
 #: string the enriched rendering must NOT emit.
@@ -49,8 +46,8 @@ _GATING_PATH = "withholding.has_employees"
 _NON_PROFILE_WARNING_CODE = "censo.enrolment_unverified"
 
 
-def _invoke(args: Sequence[str]) -> Result:
-    return invoke_cached_cli(args)
+def _invoke(fixture: NativeCliProfileFixture, args: Sequence[str]) -> Result:
+    return invoke_native_overview(fixture, args)
 
 
 def _grounding_index():
@@ -125,7 +122,11 @@ def test_a_mixed_stream_enriches_only_the_profile_fields_and_preserves_order() -
     assert rendered[1] != _GATING_SELECTOR
 
 
-def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input(
+    native_overview_profile: NativeCliProfileFixture,
+) -> None:
     """A missing profile fact is workflow state, not a bad command line.
 
     Guards the channel as well as the wording: routed as a Click parameter
@@ -136,7 +137,10 @@ def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input() -> None:
     # Click's "Invalid value" header are translated, so an English token cannot
     # decide the question in a Spanish-rendered run. The category IS the
     # channel -- a parameter error never carries REFUSED.
-    result = _invoke(["--format", "json", "app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"])
+    result = _invoke(
+        native_overview_profile,
+        ["--format", "json", "app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"],
+    )
 
     assert result.exit_code != 0, result.output
     envelope = json.loads(result.output)
@@ -150,17 +154,26 @@ def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input() -> None:
     assert (error["action"] or {})["failed_condition_id"] == "cli.overview.profile.complete", result.output
 
 
-def test_calendar_refusal_carries_the_remediation_command() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_calendar_refusal_carries_the_remediation_command(native_overview_profile: NativeCliProfileFixture) -> None:
     """The operator is told what to run, not only what is missing."""
-    result = _invoke(["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"])
+    result = _invoke(
+        native_overview_profile, ["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"]
+    )
 
     assert result.exit_code != 0, result.output
     assert "aeat config profile edit" in result.output, result.output
 
 
-def test_calendar_allow_incomplete_still_renders_rather_than_refusing() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_calendar_allow_incomplete_still_renders_rather_than_refusing(
+    native_overview_profile: NativeCliProfileFixture,
+) -> None:
     """The refusal CONDITION is unchanged; only its message was rewritten."""
     result = _invoke(
+        native_overview_profile,
         [
             "app",
             "overview",
@@ -199,14 +212,12 @@ def test_the_taxpayer_model_fields_have_labels_that_differ_from_their_tokens() -
 
 def test_an_undeclared_entity_type_is_named_rather_than_summarised() -> None:
     """The refusal names the entity-type field, not only "model undeclared"."""
-    refusal = _undeclared_taxpayer_model_refusal(_profile(), schema=published_profile_schema())
-
-    context = refusal.context
-    assert context is not None
-    requirements = context.get("requirements")
-    assert isinstance(requirements, str)
-    assert _label_for(_ENTITY_TYPE_SELECTOR) in requirements
-    assert _ENTITY_TYPE_SELECTOR not in requirements
+    with bundled_indexed_authority().operation() as operation:
+        requirements = _refusal_requirements(
+            operation=operation, taxpayer=_profile(), taxpayer_model_declared=False, warning_codes=()
+        )
+    assert any(_label_for(_ENTITY_TYPE_SELECTOR) in requirement for requirement in requirements)
+    assert _ENTITY_TYPE_SELECTOR not in ", ".join(requirements)
 
 
 def test_a_natural_person_without_income_categories_is_told_about_the_categories() -> None:
@@ -218,14 +229,11 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
     from ....domain.contribuyente.entity_type import EntityType
 
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
-        refusal = _undeclared_taxpayer_model_refusal(
-            _profile(entity_type=EntityType.from_registry("natural_person")),
-            schema=published_profile_schema(),
+        requirements = _refusal_requirements(
+            operation=operation,
+            taxpayer=_profile(entity_type=EntityType.from_registry("natural_person")),
+            taxpayer_model_declared=False,
+            warning_codes=(),
         )
-
-    context = refusal.context
-    assert context is not None
-    requirements = context.get("requirements")
-    assert isinstance(requirements, str)
-    assert _label_for(_IRPF_INCOME_CATEGORIES_SELECTOR) in requirements
-    assert _label_for(_ENTITY_TYPE_SELECTOR) not in requirements
+    assert any(_label_for(_IRPF_INCOME_CATEGORIES_SELECTOR) in requirement for requirement in requirements)
+    assert _label_for(_ENTITY_TYPE_SELECTOR) not in ", ".join(requirements)

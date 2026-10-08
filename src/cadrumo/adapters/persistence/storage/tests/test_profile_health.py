@@ -22,7 +22,7 @@ from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.login_session_port import profile_login_session_port
 from .....application.user_profile.profile_pointer import active_profile_pointer_transaction
-from .....application.user_profile.profile_record_repository import bound_profile_record_session
+from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .....application.workflow.profile_health import assess_active_profile_health, repair_active_profile_pointer
 from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
@@ -137,6 +137,78 @@ def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_
             assert "active_profile_label" not in health.model_dump(mode="json")
         finally:
             session.close()
+
+
+def test_discovery_only_health_never_probes_private_record_even_when_session_is_live(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with _indexed_authority_for_test().operation() as operation:
+        session = _create_current_profile(root=tmp_path)
+        try:
+
+            def forbidden_private_read(*_args: object, **_kwargs: object) -> None:
+                raise AssertionError("discovery-only status consulted private profile custody")
+
+            with (
+                override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_PROFILE_ID),
+                bound_profile_record_session(session),
+                monkeypatch.context() as local_patch,
+            ):
+                local_patch.setattr(
+                    "cadrumo.application.workflow.profile_health._profile_record_session_is_missing",
+                    forbidden_private_read,
+                )
+                local_patch.setattr(
+                    "cadrumo.application.workflow.profile_health._load_workflow_state_for_health",
+                    forbidden_private_read,
+                )
+                local_patch.setattr(
+                    "cadrumo.application.workflow.profile_health.resolve_active_profile_record",
+                    forbidden_private_read,
+                )
+                health = assess_active_profile_health(operation=operation, include_private_record=False)
+            assert health.active_profile == _PROFILE_ID
+            assert health.active_profile_label == _PROFILE_LABEL
+            assert health.status == "profile_locked"
+            assert health.registered_bucket is True
+            assert health.profile_record_present is False
+        finally:
+            session.close()
+
+
+@pytest.mark.parametrize(
+    ("selected", "expected_status"),
+    [(False, "none"), (True, "dangling_pointer")],
+)
+def test_discovery_only_health_preserves_absent_and_dangling_discovery_without_private_reads(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, selected: bool, expected_status: str
+) -> None:
+    with _indexed_authority_for_test().operation() as operation:
+        if selected:
+            write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
+
+        def forbidden_private_read(*_args: object, **_kwargs: object) -> None:
+            raise AssertionError("discovery-only status consulted private profile custody")
+
+        with (
+            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
+            monkeypatch.context() as local_patch,
+        ):
+            local_patch.setattr(
+                "cadrumo.application.workflow.profile_health._profile_record_session_is_missing",
+                forbidden_private_read,
+            )
+            local_patch.setattr(
+                "cadrumo.application.workflow.profile_health._load_workflow_state_for_health",
+                forbidden_private_read,
+            )
+            local_patch.setattr(
+                "cadrumo.application.workflow.profile_health.resolve_active_profile_record",
+                forbidden_private_read,
+            )
+            health = assess_active_profile_health(operation=operation, include_private_record=False)
+        assert health.status == expected_status
+        assert health.profile_record_present is False
 
 
 def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -> None:

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#verification-reconcile-when-present'
 date: '2026-07-06'
-modified: '2026-07-17'
-body_hash: 'sha256:004ed341f50ea44cda4ff666d2a73a6fa223c52e84363a3dcc9c024cd0fb4c17'
+modified: '2026-10-03'
+body_hash: 'sha256:4c2958f55ac40bba361c2d9b6a0c23fc3387f7474b8a7d1820e166cf34de7672'
 related: []
 ---
 
@@ -30,43 +30,43 @@ with targeted grep/read slices before recording the bridge.
   `VerificationExpectationDefinition` has `reconcile_when_present_casilla_ids`;
   it is unique, disjoint from `computed_casilla_ids`, and participates in the
   reconciled set used by `externally_grounded_casilla_ids`. Sources:
-  `src/aeat/domain/calculations/registry/_schema.py:429` and
-  `src/aeat/domain/calculations/registry/_schema.py:454`.
+  the former source file and
+
 - The folded policy keeps the safety boundary explicit. `RegistryVerificationPolicy`
   documents `computed_casilla_ids` as coverage-gated targets and
   `reconcile_when_present_casilla_ids` as value-reconciled-when-printed targets
   excluded from coverage. `RegistrySnapshot.verification_policy()` unions both
   sets independently while preserving the max `min_coverage` fold over only the
   coverage class. Sources:
-  `src/aeat/domain/calculations/registry/_schema.py:1322` and
-  `src/aeat/domain/calculations/registry/_schema.py:1384`.
+  the former source file and
+
 - Registry validation defends the new field. Reference validation checks every
   `reconcile_when_present_casilla_ids` entry against declared casillas, and the
   surface validator reports unknown reconcile-when-present casillas beside the
   existing computed-casilla check. Sources:
-  `src/aeat/domain/calculations/registry/_validate_references.py:238` and
-  `src/aeat/domain/calculations/registry/_validate_surfaces.py:161`.
+  the former source file and
+
 - The verification loop consumes the field without changing coverage semantics.
   `verify_declaracion` reconciles extracted values against
   `policy.computed_casilla_ids | policy.reconcile_when_present_casilla_ids`, so
   a present situational casilla can still surface a filed-vs-engine divergence.
   Coverage is then computed by `_compute_coverage` using only
   `policy.computed_casilla_ids`; the reconcile-when-present set never enters the
-  denominator. Sources: `src/aeat/application/verification/_verify.py:166`,
-  `src/aeat/application/verification/_verify.py:189`, and
-  `src/aeat/application/verification/_verify.py:378`.
+  denominator. Sources: the former source file,
+  the former source file, and
+
 - The completeness invariant is live. `test_every_computed_casilla_is_enrolled_in_a_verification_contract`
   loads the committed registry and fails when any computed casilla is in neither
   `computed_casilla_ids` nor `reconcile_when_present_casilla_ids`, making the
   "every computed casilla is reconcilable" rule durable without weakening
   coverage. Source:
-  `src/aeat/domain/calculations/registry/tests/test_every_computed_casilla_enrolled.py:1`.
+
 - Behavioral regression coverage proves the class is not dormant. The M130 clean
   filing stays `VERIFIED` with `coverage == 1.0` while carrying a
   reconcile-when-present expectation, and a filed divergent value for casilla
   `15` drives `NEEDS_REVIEW`. Source:
-  `src/aeat/application/verification/tests/test_verify.py:130` and
-  `src/aeat/application/verification/tests/test_verify.py:138`.
+  the former source file and
+
 - No new ADR or implementation plan is recommended from this bridge. The live
   implementation matches the accepted ADR's boundary: situational casillas are
   reconciled when present, always-present finals keep their coverage gate, no

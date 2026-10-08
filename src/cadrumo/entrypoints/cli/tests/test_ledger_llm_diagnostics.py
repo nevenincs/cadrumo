@@ -1,15 +1,4 @@
-"""Real-behavior CLI tests for ``aeat app ledger llm-diagnostics``.
-
-Exercises the diagnostics verb end to end against the real CLI, the real
-:func:`~cadrumo.application.ledger.llm_diagnostics.build_llm_diagnostics_report` aggregator, and
-real encrypted SQLite persistence in an isolated storage root. No test doubles:
-the two existing metric stores are seeded through their production writers —
-:class:`~cadrumo.adapters.outbound.llm.UsageRecorder` for the usage/cost log and
-:func:`~cadrumo.domain.transactions.set_classification` +
-:class:`~cadrumo.domain.transactions.TransactionCatalogueRepository` for the
-classification-confidence stamped on ledger transactions — and the verb reports
-them back typed.
-"""
+"""Real encrypted-profile worker tests for ``app ledger llm-diagnostics``."""
 
 from __future__ import annotations
 
@@ -18,15 +7,14 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+import typer
 from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.outbound.llm.models import LLMResponse
 from ....adapters.persistence.llm.usage import UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
+from ....application.workflow.profile_bucket_scan import read_profile_bucket
 from ....core.config import override_settings
 from ....core.config_support import LLMProvider
 from ....core.i18n.render import clear_output_language_cache, tr
@@ -34,34 +22,39 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import set_classification
+from ....tests.cli_envelope import require_error_document, unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ....tests.cli_envelope import unwrap_envelope_notices
 from .._ledger_rule_payloads import (
     LedgerLlmDiagnosticsResult,
     LlmConfidenceProviderPayload,
     LlmUsageCostProviderPayload,
 )
-from .cli_runner import invoke_cached_cli
+from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 # Seeded rows and stored records decode against registry facts, so the test
 # body holds the same authority lease a CLI invocation holds.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
-
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id=_BUCKET_ID,
-    autouse=False,
-    settings_overrides={"cadrumo_output_language": "en"},
-)
+__all__ = ["diagnostics_native_profile"]
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(args)
+    return invoke_diagnostics_cli(args)
 
 
-def _seed_usage() -> None:
-    """Write two real usage records (one cache hit) for provider ANTHROPIC."""
+def _registered_bucket_id(profile: NativeCliProfileFixture) -> str:
+    """Resolve the fixture's published label through the public profile catalogue."""
+    if profile.label is None:
+        raise AssertionError("native diagnostics profile was not registered")
+    pointer = read_profile_bucket(profile.label)
+    if pointer is None:
+        raise AssertionError("registered diagnostics profile is missing from the public catalogue")
+    return str(pointer.bucket_id)
+
+
+def seed_ledger_llm_usage_records() -> None:
+    """Write priced, cache-hit, and unpriced records through the encrypted writer."""
     recorder = UsageRecorder()
     first = LLMResponse(
         text="ok",
@@ -85,7 +78,18 @@ def _seed_usage() -> None:
         created_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
         request_id="req-2",
     )
-    for response in (first, second):
+    unpriced = LLMResponse(
+        text="ok",
+        provider=LLMProvider.OPENAI,
+        model="gpt-4.1-mini",
+        input_tokens=20,
+        output_tokens=5,
+        cost_estimate_usd=None,
+        cache_hit=False,
+        created_at=datetime(2026, 4, 3, 9, 0, tzinfo=UTC),
+        request_id="req-3",
+    )
+    for response in (first, second, unpriced):
         recorder.record(recorder.build_record(response, prompt_id="translation_v1", caller="test-suite"))
 
 
@@ -110,7 +114,7 @@ def _raw(provider_id: str, amount: Decimal) -> RawTransaction:
     )
 
 
-def _seed_two_llm_classified() -> None:
+def seed_ledger_llm_classified_transactions(bucket_id: str) -> None:
     """Persist two LLM-classified transactions: one low, one high confidence."""
     high = Transaction.model_validate(
         {
@@ -145,13 +149,15 @@ def _seed_two_llm_classified() -> None:
         classified_by="llm:claude:test-model",
         confidence=Decimal("0.30"),
     )
-    TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(catalogue)
+    TransactionCatalogueRepository(bucket_id=bucket_id).save(catalogue)
 
 
-def test_llm_diagnostics_reports_seeded_usage_and_confidence(_isolated_backend: None) -> None:
-    """The verb reports the seeded usage/cost and confidence metrics typed."""
-    _seed_usage()
-    _seed_two_llm_classified()
+def test_llm_diagnostics_reports_seeded_usage_and_confidence(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
+    """The registered worker reports both encrypted stores, including unpriced cost."""
+    seed_ledger_llm_usage_records()
+    seed_ledger_llm_classified_transactions(_registered_bucket_id(diagnostics_native_profile))
 
     result = _invoke(["--format", "json", "app", "ledger", "llm-diagnostics"])
     assert result.exit_code == 0, result.output
@@ -162,7 +168,7 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(_isolated_backend: 
 
     # Usage/cost section: two ANTHROPIC calls, one a cache hit.
     usage = {row["provider"]: row for row in payload["usage_providers"]}
-    assert set(usage) == {LLMProvider.ANTHROPIC.value}
+    assert set(usage) == {LLMProvider.ANTHROPIC.value, LLMProvider.OPENAI.value}
     anthropic = usage[LLMProvider.ANTHROPIC.value]
     assert anthropic["calls"] == 2
     assert anthropic["cache_hits"] == 1
@@ -170,9 +176,16 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(_isolated_backend: 
     assert anthropic["output_tokens"] == 50
     assert anthropic["total_tokens"] == 210
     assert Decimal(anthropic["cost_estimate_usd"]) == Decimal("0.0015")
-    assert payload["total_calls"] == 2
-    assert payload["total_input_tokens"] == 160
-    assert Decimal(payload["total_cost_estimate_usd"]) == Decimal("0.0015")
+    assert anthropic["unpriced_calls"] == 0
+    openai = usage[LLMProvider.OPENAI.value]
+    assert openai["calls"] == 1
+    assert openai["cost_estimate_usd"] is None
+    assert openai["unpriced_calls"] == 1
+    assert payload["total_calls"] == 3
+    assert payload["total_input_tokens"] == 180
+    assert payload["total_output_tokens"] == 55
+    assert payload["total_unpriced_calls"] == 1
+    assert payload["total_cost_estimate_usd"] is None
 
     # Confidence section: two claude classifications, one below the 0.5 floor.
     confidence = {row["provider"]: row for row in payload["confidence_providers"]}
@@ -188,25 +201,77 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(_isolated_backend: 
     assert payload["total_low_confidence"] == 1
 
 
-def test_llm_diagnostics_custom_threshold_shifts_low_count(_isolated_backend: None) -> None:
-    """A higher threshold reclassifies the 0.95 decision above/within the floor."""
-    _seed_two_llm_classified()
+def test_llm_diagnostics_usage_window_and_threshold_keep_confidence_independent(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
+    """Date bounds filter usage while the caller's threshold folds all classifications."""
+    seed_ledger_llm_usage_records()
+    seed_ledger_llm_classified_transactions(_registered_bucket_id(diagnostics_native_profile))
 
     result = _invoke(
-        ["--format", "json", "app", "ledger", "llm-diagnostics", "--low-confidence-below", "0.99"],
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "llm-diagnostics",
+            "--since",
+            "2026-04-02",
+            "--until",
+            "2026-04-02",
+            "--low-confidence-below",
+            "0.99",
+        ],
     )
     assert result.exit_code == 0, result.output
     payload = _json_result(result)
 
     claude = {row["provider"]: row for row in payload["confidence_providers"]}["claude"]
-    # Both 0.30 and 0.95 now fall below 0.99.
+    assert payload["since"] == "2026-04-02"
+    assert payload["until"] == "2026-04-02"
+    assert payload["total_calls"] == 1
+    only_usage = payload["usage_providers"]
+    assert len(only_usage) == 1
+    assert only_usage[0]["provider"] == LLMProvider.ANTHROPIC.value
+    assert only_usage[0]["cache_hits"] == 1
+    # Both 0.30 and 0.95 fall below 0.99 despite the usage date window.
     assert claude["low_confidence_count"] == 2
     assert payload["total_low_confidence"] == 2
     assert payload["low_confidence_threshold"] == "0.99"
 
 
-def test_llm_diagnostics_empty_is_instructive(_isolated_backend: None) -> None:
-    """With no LLM activity the verb reports empty and surfaces a guidance notice."""
+def test_llm_diagnostics_reversed_usage_window_keeps_confidence(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
+    """Reversed dates preserve the empty usage window and unbounded confidence scan."""
+    seed_ledger_llm_usage_records()
+    seed_ledger_llm_classified_transactions(_registered_bucket_id(diagnostics_native_profile))
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "llm-diagnostics",
+            "--since",
+            "2026-04-03",
+            "--until",
+            "2026-04-01",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result)
+    assert payload["since"] == "2026-04-03"
+    assert payload["until"] == "2026-04-01"
+    assert payload["usage_providers"] == []
+    assert payload["total_calls"] == 0
+    assert payload["total_cost_estimate_usd"] == "0"
+    assert payload["total_classified"] == 2
+    assert payload["total_low_confidence"] == 1
+
+
+def test_llm_diagnostics_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
+    """JSON notices and human text explain that neither metric store has data."""
     result = _invoke(["--format", "json", "app", "ledger", "llm-diagnostics"])
     assert result.exit_code == 0, result.output
     payload = _json_result(result)
@@ -226,10 +291,27 @@ def test_llm_diagnostics_empty_is_instructive(_isolated_backend: None) -> None:
     ]
     assert notice.get("action") is None
     assert notice["context"] == {}
+    text_result = _invoke(["app", "ledger", "llm-diagnostics"])
+    assert text_result.exit_code == 0, text_result.output
+    assert tr("cli.ledger.llm_diagnostics.no_data_message", locale="en") in text_result.output
 
 
-def test_llm_diagnostics_rejects_out_of_range_threshold(_isolated_backend: None) -> None:
-    """An out-of-range threshold is refused instructively with a non-zero exit."""
+def test_llm_diagnostics_rejects_bad_date_and_out_of_range_threshold(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
+    """The command keeps its localized date refusal and inclusive unit interval."""
+    bad_date = _invoke(["--format", "json", "app", "ledger", "llm-diagnostics", "--since", "not-a-date"])
+    assert bad_date.exit_code != 0
+    assert (
+        tr(
+            "cli.ledger.llm_diagnostics.bad_date",
+            option="--since",
+            value="not-a-date",
+            locale="en",
+        )
+        in require_error_document(bad_date.output)["error"]["message"]
+    )
+
     result = _invoke(
         ["--format", "json", "app", "ledger", "llm-diagnostics", "--low-confidence-below", "1.5"],
     )
@@ -238,11 +320,10 @@ def test_llm_diagnostics_rejects_out_of_range_threshold(_isolated_backend: None)
 
 
 @pytest.mark.parametrize("locale", ("ca", "en", "es", "hu"))
-def test_llm_diagnostics_invalid_date_is_catalogue_localized(
-    _isolated_backend: None,
-    locale: str,
-) -> None:
-    """The real command refusal comes only from the selected catalogue leaf."""
+def test_llm_diagnostics_date_parser_uses_catalogue_leaf(locale: str) -> None:
+    """The command's existing date parser retains the localized message leaf."""
+    from .._ledger_read_cli import _parse_iso_date
+
     with override_settings(cadrumo_output_language=locale):
         clear_output_language_cache()
         expected = tr(
@@ -250,11 +331,11 @@ def test_llm_diagnostics_invalid_date_is_catalogue_localized(
             option="--since",
             value="not-a-date",
         )
-        result = _invoke(["app", "ledger", "llm-diagnostics", "--since", "not-a-date"])
+        with pytest.raises(typer.BadParameter) as error:
+            _parse_iso_date("not-a-date", "--since")
     clear_output_language_cache()
 
-    assert result.exit_code != 0
-    assert expected in result.output
+    assert error.value.message == expected
 
 
 def test_llm_diagnostics_payloads_mirror_their_canonical_bounds() -> None:

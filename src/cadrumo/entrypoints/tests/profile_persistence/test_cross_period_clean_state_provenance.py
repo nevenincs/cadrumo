@@ -73,7 +73,7 @@ from cadrumo.application.calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
 )
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
@@ -504,7 +504,7 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(
                     clock=_CLOCK,
                 )
 
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -520,7 +520,7 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_authority_operation_for_test,
-            )
+            ).report
             reloaded = calculation_repository.load().get(revision.calculation_revision_id)
 
         assert report.granted_verificado_completo is False

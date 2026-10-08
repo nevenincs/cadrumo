@@ -23,14 +23,15 @@ from cadrumo.domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_normal_token,
     irpf_estimation_regime_directa_simplificada_token,
     irpf_estimation_regime_objetiva_token,
-    irpf_special_regime_general_token,
     irpf_special_regime_impatriado_token,
+    require_irpf_special_regime,
 )
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.calculations.registry.renta_codes_catalogue import require_fiscal_residency
 from cadrumo.domain.contribuyente.entity_type import require_entity_type, require_legal_entity_form
 from cadrumo.domain.deadlines.models import (
     IVARegime,
+    ModeloIVAProfile,
     TaxpayerProfile,
 )
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -44,6 +45,7 @@ class _FactUpdateParams(TypedDict, total=False):
     pays_rent_with_retencion: bool
     does_intracomunitario: bool
     third_party_transactions_above_347_threshold: bool
+    declares_iva_block: bool
 
 
 _PERIODIC_IVA_MODELOS = ("303", "390")
@@ -59,7 +61,7 @@ with validating_governed_facts(compiled_bundled_authority()):
     _DIRECTA_NORMAL = irpf_estimation_regime_directa_normal_token()
     _DIRECTA_SIMPLIFICADA = irpf_estimation_regime_directa_simplificada_token()
     _OBJETIVA = irpf_estimation_regime_objetiva_token()
-    _SPECIAL_GENERAL = irpf_special_regime_general_token()
+    _SPECIAL_GENERAL = require_irpf_special_regime("general")
     _IMPATRIADO = irpf_special_regime_impatriado_token()
     _NON_RESIDENT_IRNR = require_fiscal_residency("non_resident_irnr")
     _NON_PERIODIC_IVA_REGIMES = (require_iva_regime("EXENTO"), require_iva_regime("RECARGO_EQUIVALENCIA"))
@@ -67,7 +69,8 @@ _FACT_GATED_MODELO_CASES: tuple[tuple[str, _FactUpdateParams], ...] = (
     ("115", {"pays_rent_with_retencion": True}),
     ("180", {"pays_rent_with_retencion": True}),
     ("349", {"does_intracomunitario": True}),
-    ("347", {"third_party_transactions_above_347_threshold": True}),
+    # Modelo 347 also reads the SII exclusion, which needs a declared IVA block.
+    ("347", {"third_party_transactions_above_347_threshold": True, "declares_iva_block": True}),
 )
 _NON_IMPATRIADO_SPECIAL_REGIMES = (None, _SPECIAL_GENERAL)
 
@@ -211,6 +214,7 @@ def _attribution_entity_profile(
     pays_rent_with_retencion: bool = False,
     does_intracomunitario: bool = False,
     third_party_transactions_above_347_threshold: bool | None = None,
+    declares_iva_block: bool = False,
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="E12345674",
@@ -221,6 +225,20 @@ def _attribution_entity_profile(
         pays_rent_with_retencion=pays_rent_with_retencion,
         does_intracomunitario=does_intracomunitario,
         third_party_transactions_above_347_threshold=third_party_transactions_above_347_threshold,
+        iva=_iva_block_without_sii() if declares_iva_block else None,
+    )
+
+
+def _iva_block_without_sii() -> ModeloIVAProfile:
+    return ModeloIVAProfile.model_validate(
+        {
+            "tax_territory": "common_regime",
+            "regime_composition": "general",
+            "redeme_enrolled": False,
+            "cash_accounting_regime_enrolled": False,
+            "voluntary_sii_enrolled": False,
+            "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
+        },
     )
 
 

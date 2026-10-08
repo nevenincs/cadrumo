@@ -85,6 +85,33 @@ def test_scrub_value_sensitive_key_redacts_to_marker() -> None:
         assert result == "<redacted>"
 
 
+def test_scrub_value_uses_canonical_camel_key_folding_and_preserves_diagnostics() -> None:
+    values = {
+        "taxId": "OPAQUE-TAX-ID-CANARY",
+        "certificatePassword": "OPAQUE-CERTIFICATE-CANARY",
+        "NIFValue": "OPAQUE-NIF-VALUE-CANARY",
+        "NIEValue": "OPAQUE-NIE-VALUE-CANARY",
+        "profileNIFValue": "OPAQUE-PROFILE-NIF-CANARY",
+        "manifest": "useful manifest detail",
+        "llm_api_key": "OPAQUE-LOCAL-KEY-CANARY",
+        "llm_api_key_hint": "useful key-selection detail",
+    }
+
+    scrubbed = _scrub_value(values)
+
+    assert isinstance(scrubbed, dict)
+    assert scrubbed == {
+        "taxId": "<redacted>",
+        "certificatePassword": "<redacted>",
+        "NIFValue": "<redacted>",
+        "NIEValue": "<redacted>",
+        "profileNIFValue": "<redacted>",
+        "manifest": "useful manifest detail",
+        "llm_api_key": "<redacted>",
+        "llm_api_key_hint": "useful key-selection detail",
+    }
+
+
 def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
     """Nested dicts must have their sensitive leaves redacted at every depth."""
 

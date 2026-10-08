@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#registry-declaration-hardening'
 date: '2026-09-02'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:f251c89aa36e686c08768e0adee5f6f802423b24484c38a13ab35d13f2aa65fa'
 related:
   - '[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]'
   - '[[2026-09-02-registry-declaration-hardening-declaration-kinds-adr]]'
-  - '[[2026-09-02-registry-declaration-hardening-plan]]'
   - '[[2026-09-07-registry-revision-stamp-coverage-reference]]'
 ---
 

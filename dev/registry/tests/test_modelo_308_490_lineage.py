@@ -74,11 +74,14 @@ def test_200_withdrawals_preserve_surviving_detail_total() -> None:
     assert strict_cross_revision_casilla_continuity_failures((modelo,)) == ()
 
 
-def test_308_existing_official_fields_are_declaration_gaps() -> None:
+def test_308_enrolled_historical_fields_have_grounded_continuity() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "308"))
     current = {row.id: row for row in modelo.revisions["2019-y-siguientes"].casillas}
     assert lineage_totality((modelo,), ()).uncovered == ()
-    assert current["decl.devolucion-iban"].continuidad_origin is CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT
+    historical = {row.id: row for row in modelo.revisions["2016-2018"].casillas}
+    assert current["decl.devolucion-iban"].continuidad_origin is CasillaLineageOrigin.GROUNDED
+    assert current["decl.devolucion-iban"].continuidad_id == historical["decl.devolucion-iban"].continuidad_id
+    assert historical["decl.devolucion-iban"].number == "932-965"
     assert current["decl.tipo-solicitud"].continuidad_origin is CasillaLineageOrigin.NOT_ON_FORM
     # Both official M30801 designs identify the rates after acquisition and
     # sale prices as [02] and [05], distinct from their adjacent prices.

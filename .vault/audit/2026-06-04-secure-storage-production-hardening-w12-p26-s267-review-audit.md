@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:dd9555633cc3d0daea9916e029627a508a16da07444c3fa5f22cc79c5d32357e'
+modified: '2026-10-03'
+body_hash: 'sha256:e5335165e4866bba942e33c00e316d87b9e84af028252ce36a8611e09c817988'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The lifecycle tests cover translated exception keys, sanitized rendered errors, 
 
 ## S267-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/user_profile/_lifecycle.py src/aeat/application/user_profile/test_lifecycle.py`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_lifecycle.py`
+- the historical check
+- the historical check
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
 
 Disposition: close `AFR-165`.

@@ -189,6 +189,7 @@ _EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
     "profile_session": "<root>/keystore/<bucket_id>/session.v2.json",
     "profile_session_retirement_journal": "<root>/keystore/<bucket_id>/session.v2.retirement.json",
     "login_throttle": "<root>/keystore/<bucket_id>/login-throttle.json",
+    "sign_in_generation": "<root>/keystore/<bucket_id>/sign-in-generation.json",
     "profile_legal_hold_snapshot": "<root>/profile-custody-holds/legal-case-owner/<profile_id>.json",
     "profile_filing_retention_snapshot": ("<root>/profile-custody-holds/filing-retention-owner/<profile_id>.json"),
     "profile_custody_hold_evidence": ("<root>/profile-custody-holds/derived-evidence/<owner>/<profile_id>.json"),
@@ -205,9 +206,8 @@ _EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
     "run_events": "<root>/runs/<run_id>/events.jsonl",
     "run_envelope": "<root>/runs/<run_id>/envelope.json",
     "llm_usage_record": "<root>/llm-usage/usage-<timestamp>.jsonl",
-    "llm_run_telemetry_record": "<root>/llm-run-telemetry/run-telemetry-<timestamp>.jsonl",
+    "llm_run_record_file": "<root>/llm-run-telemetry/run-record-<timestamp>.jsonl",
     "auth_acquisition_lock": "<root>/tokens/<bucket_id>-<auth_provider_kind>-auth.lock",
-    "llm_cache_entry": "<root>/cache/llm-cache/<provider>/<model>/<sha256>-<sha256>.json",
 }
 """One byte-exact expected string per :data:`STORAGE_PATH_DEFINITIONS` key.
 

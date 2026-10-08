@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#canonical-release-pipeline'
 date: '2026-07-27'
-modified: '2026-07-27'
-body_hash: 'sha256:2295e13d1b7dbad821a215cb2b72898f0d4a7d7692e61acc49758dcd7bab4f46'
+modified: '2026-10-03'
+body_hash: 'sha256:0aea5a0c12bd821c5814fa3bea1216159d698feaff63a9b212b871c71713c1c5'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-publication-lane-consolidation-adr]]'
@@ -32,7 +32,7 @@ pinning, strict-build artifact/sitemap/Pagefind validation, a `--delete` sync of
 the whole HTML tree into the `docs/` prefix, one `/docs/*` invalidation, and
 endpoint verification of 200/404/403 plus the legacy 308 redirect.
 `_require_human_publish_environment` refuses to run when `CI` or
-`GITHUB_ACTIONS` is set. `dev/deploy/frontend_static_site.py` publishes the Vite
+`GITHUB_ACTIONS` is set. the former source file publishes the Vite
 landing page to the same bucket's root, excludes `docs/*` (with a dry-run mode
 that refuses any touch of it), and asserts `/`=200, missing=404, `/docs/`=200,
 direct S3 access=403. Both have tests under `dev/deploy/tests/`. The `justfile`
@@ -80,7 +80,7 @@ bounded, not freshly measured.
 **Marketplace state.** `nevenincs/neve-marketplace` carries a stale
 `plugins/aeat` subtree from 2026-07-04 under the old product identity,
 referencing `aeat-cli 0.1.1` — a distribution the current sealed cohort
-(v0.2.1, run `30216592706`) does not publish. `dev/packaging/marketplace_publish.py`
+(v0.2.1, run `30216592706`) does not publish. the former source file
 replaces only the plugin subtrees the cohort declares and preserves every other
 path and index entry by design (sibling protection); it refuses cross-owner
 name takeovers via `published_by` and treats publisher-less entries as
@@ -149,8 +149,8 @@ broken `aeat` plugin (pinned to the unpublished `aeat-cli 0.1.1`) live beside
 
 - Live headers: `cadrumo.neve.md`, `cadrumo.neve.md/docs/`, `neve.md`
   (HTTP GET, 2026-07-27).
-- `dev/deploy/docs_static_site.py`, `dev/deploy/frontend_static_site.py`,
-  `dev/packaging/marketplace_publish.py`, `.github/workflows/publish-release.yml`,
+- `dev/deploy/docs_static_site.py`, the former source file,
+  the former source file, `.github/workflows/publish-release.yml`,
   `justfile` (direct reads at the current tree, 2026-07-27).
 - The operator's private planning vault, 2026-06-25 hosting decision (read
   verbatim, 2026-07-27; source identifiers withheld by the repository

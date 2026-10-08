@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:169fcfeb851dc1aa7ee6f29f34df27b341b3fefade9492d4f893445c0876e548'
+body_hash: 'sha256:ea9edc06d3d1105818f1400af5fb09bd6ee0a261a8c99553db3d29f7dbecdc20'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - '[[2026-08-11-tui-architecture-research]]'
 ---
 # `tui-architecture` adr: `the authenticated TUI shows the operator their own data` | (**status:** `accepted`)
@@ -66,3 +65,7 @@ Ledger, AEAT Sync and search projections widen to carry operator data, and their
 Gates that assert an absence of operator data in a rendered surface are asserting the retired policy and are rewritten or removed. Gates that assert an absence of operator data in a log, an exception, a cache or an off-host payload are unaffected and remain required.
 
 The reviewer's earlier verdict that redaction was sound is superseded: it confirmed that nothing protected escaped, which was true and did not establish that the surfaces could do their job.
+
+### Shared-runtime topology amendment, 2026-09-27
+
+The accepted 2026-09-26-mcp-purpose-authentication-adr replaces only this record's assumption that authenticated projection assembly and display must share one process. Its authenticated local workbench projection contract governs transfer from immutable profile-worker custody to an exact human CLI/TUI session. The owner's display visibility, credential masking, truthful availability and restrictions on logs, insecure persistence and off-host disclosure remain in force. This amendment implements the operator-authorized shared-runtime migration; it does not grant an API-key or MCP session full-owner visibility.

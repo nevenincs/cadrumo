@@ -1,0 +1,12 @@
+[sources."boe-1999-22372-modelo-188-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-1999-22372.pdf"
+sha256 = "d5f5b00be87a49ddd0a84198ff1c18f7a073cf5520035ff41c65eae4a07d88c2"
+bytes = 11362203
+retrieved_at = 2026-10-06
+published_at = 1999-11-20
+applies_from = 1999-11-21
+source_url = "https://www.boe.es/boe/dias/1999/11/20/pdfs/A40382-40434.pdf"
+review_status = "pending_review"

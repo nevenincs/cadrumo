@@ -1,0 +1,97 @@
+[[revisions.2025.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+
+[[revisions.2025.export_layouts.records]]
+id = 'modelo-714-page-04'
+record_type = '714-04'
+order = 3
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2874'
+offset = 2874
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-otro-pais-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2875'
+offset = 2875
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-descripcion-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-04-declared-bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-6'
+offset = 2937
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-pagares-valor-6'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-07'
+offset = 2950
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-07'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-04-reserved-2'
+offset = 2963
+length = 126
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-04-end'
+offset = 3089
+length = 12
+kind = 'literal'
+literal = '</T71404000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[revisions.2025.export_layouts.records.row_field_casilla_ids]

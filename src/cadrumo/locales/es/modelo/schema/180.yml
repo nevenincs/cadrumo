@@ -1,6 +1,12 @@
 modelo:
   schema:
     '180':
+      binding:
+        modelo-180-115-base-anual:
+          label: Base anual de retenciones e ingresos a cuenta · Modelo 115, casilla
+            02
+        modelo-180-115-retenciones-anual:
+          label: Retenciones e ingresos a cuenta del año · Modelo 115, casilla 03
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
@@ -79,6 +85,34 @@ modelo:
           a cuenta. Rendimientos procedentes del arrendamiento de inmuebles urbanos.
           Resumen anual.
         title: Resumen anual de retenciones sobre arrendamientos urbanos
+      form:
+        context:
+          contacto:
+            heading: Persona de contacto
+          ejercicio:
+            heading: Ejercicio
+          nif:
+            heading: NIF
+          nombre:
+            heading: Apellidos y nombre o razón social
+          telefono:
+            heading: Teléfono de contacto
+        page:
+          modelo-180-declarante:
+            heading: Hoja-resumen
+          modelo-180-perceptor:
+            heading: Relación de perceptores e inmuebles
+        section:
+          declaracion:
+            heading: Declaración complementaria o sustitutiva
+          declarante:
+            heading: Declarante
+          ejercicio:
+            heading: Ejercicio
+          perceptores:
+            heading: Datos de los perceptores y del inmueble arrendado
+          resumen:
+            heading: Resumen de los datos incluidos en la declaración
       revision:
         2019-2022:
           field:

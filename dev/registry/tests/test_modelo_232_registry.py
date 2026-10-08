@@ -266,7 +266,7 @@ def test_committed_modelo_232_construct_includes_deadline_and_schedule_members()
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
 
 
-_EXPECTED_AUXILIARY_PREFIX_ROLES = (
+_EXPECTED_ENVELOPE_PREFIX_ROLES = (
     "opening_tag",
     "modelo",
     "discriminant",
@@ -291,17 +291,21 @@ def test_committed_modelo_232_envelope_export_layout_declares_every_revision_wit
         assert revision.export_layouts[0].format is ExportLayoutFormat.FIXED_WIDTH, revision.id
 
 
-def test_committed_modelo_232_layout_declares_the_dr23200_auxiliary_header() -> None:
-    """The total-less DR23200 page zero is a typed auxiliary header declaration."""
+def test_committed_modelo_232_layout_declares_the_dr23200_variable_envelope() -> None:
+    """Both official epochs carry a typed variable envelope; only 2016 has CRLF."""
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
-        header = revision.export_layouts[0].auxiliary_envelope_header
-        assert header is not None, revision.id
-        assert header.record_identity == "DR23200", revision.id
-        assert header.prefix_extent == 328, revision.id
-        roles = tuple(field.role.value for field in header.prefix_fields)
-        assert roles == _EXPECTED_AUXILIARY_PREFIX_ROLES, (revision.id, roles)
-        assert sum(field.length for field in header.prefix_fields) == 328, revision.id
+        layout = revision.export_layouts[0]
+        envelope = layout.filing_envelope
+        assert layout.auxiliary_envelope_header is None, revision.id
+        assert envelope is not None, revision.id
+        assert envelope.record_identity == "DR23200", revision.id
+        assert envelope.prefix_extent == 328, revision.id
+        assert envelope.body_record_ids == tuple(record.id for record in layout.records), revision.id
+        assert envelope.record_terminator == ("crlf" if revision.id == "2016-2017" else None), revision.id
+        roles = tuple(field.role.value for field in envelope.prefix_fields)
+        assert roles == _EXPECTED_ENVELOPE_PREFIX_ROLES, (revision.id, roles)
+        assert sum(field.length for field in envelope.prefix_fields) == 328, revision.id
 
 
 def test_committed_modelo_232_record_types_and_extents_match_the_generated_layout() -> None:

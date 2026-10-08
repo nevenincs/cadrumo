@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, cast
 
@@ -26,11 +26,11 @@ from ..crypto.encrypted_columns import (
     secure_object_key_digest,
     secure_object_payload_aad,
 )
-from ..errors import RepositoryError, SecureObjectRevisionConflictError, StorageValidationError
+from ..errors import RepositoryError, SecureObjectRevisionConflictError
 from ._secure_object_schema import build_revision_ancestor_ids, parse_revision_ancestor_ids
 from .orm import SecureObjectRow
 from .secure_object_crypto import derive_revision_id
-from .secure_object_records import SecureObjectDeletion
+from .secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
 from .session import session_scope
 
 if TYPE_CHECKING:
@@ -77,6 +77,8 @@ class _PendingSecureObjectWrite(NamedTuple):
     schema_version: int
     written_at: datetime
     payload: bytes
+    payload_hash: str
+    ciphertext_hash: str
     write_provenance: str
     source_event_id: str | None
     expected_revision_id: str | None
@@ -102,6 +104,7 @@ class SecureObjectWriteOperations:
         # Declared for the checker only so the mixin never shadows the host's
         # runtime definitions.
         _engine: Engine
+        _mutation_writer: Callable[[Callable[[], None]], None] | None
 
         def _check_session_freshness(self, namespace: str | None = None) -> None: ...
 
@@ -135,7 +138,7 @@ class SecureObjectWriteOperations:
         boundary. To upsert against a pre-computed digest (e.g. when
         restoring an archive bundle whose natural key was lost in the
         original HMAC), use
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`
         instead.
 
         Args:
@@ -198,6 +201,8 @@ class SecureObjectWriteOperations:
         self,
         writes: tuple[SecureObjectWrite, ...],
         deletions: tuple[SecureObjectDeletion, ...] = (),
+        *,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Atomically upsert ``writes`` and remove ``deletions`` in one unit of work.
 
@@ -211,8 +216,11 @@ class SecureObjectWriteOperations:
         Deletions are addressed by raw HMAC digest (see
         :class:`SecureObjectDeletion`); the digest passes straight through the
         ``HashedLookup`` column comparison without re-hashing.
+        Source assertions are checked under serializable isolation before any
+        mutations and remain protected through commit. They never rewrite the
+        authoritative source or advance its revision lineage.
         """
-        if not writes and not deletions:
+        if not writes and not deletions and not assertions:
             return
         for write in writes:
             self._enforce_registered_write_policy(
@@ -223,6 +231,8 @@ class SecureObjectWriteOperations:
             )
         for removal in deletions:
             self._registered_namespace_definition(removal.namespace)
+        for assertion in assertions:
+            self._registered_namespace_definition(assertion.namespace)
         self._check_session_freshness()
         pending = tuple(
             self._pending_write(
@@ -238,88 +248,57 @@ class SecureObjectWriteOperations:
             )
             for write in writes
         )
-        with session_scope(self._engine) as session:
-            self._write_pending_in_session(session, pending)
-            for removal in deletions:
-                statement = delete(SecureObjectRow).where(
-                    SecureObjectRow.namespace == removal.namespace,
-                    SecureObjectRow.object_key == removal.hashed_object_key,
-                )
-                if removal.expected_revision_id is not None:
-                    statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
-                result = cast("CursorResult[Any]", session.execute(statement))
-                if removal.expected_revision_id is not None and result.rowcount != 1:
-                    raise self._revision_conflict(
-                        namespace=removal.namespace,
-                        expected_revision_id=removal.expected_revision_id,
-                        current_revision_id=None,
-                    )
 
-    def save_with_raw_key(
-        self,
-        *,
-        namespace: str,
-        hashed_object_key: bytes,
-        classification: SensitivityClass,
-        schema_version: int,
-        written_at: datetime,
-        payload: bytes,
-        write_provenance: str = _DEFAULT_WRITE_PROVENANCE,
-        source_event_id: str | None = None,
-        expected_revision_id: str | None = None,
-    ) -> None:
-        """Encrypt and upsert one byte payload keyed by a pre-computed digest.
+        def commit() -> None:
+            self._check_session_freshness()
+            with session_scope(self._engine, serializable=bool(assertions)) as session:
+                self._assert_batch_revisions(session, assertions)
+                self._write_pending_in_session(session, pending)
+                self._delete_batch_rows(session, deletions)
 
-        The 32-byte ``hashed_object_key`` is passed straight through
-        the :class:`~adapters.persistence.storage.crypto.encrypted_columns.HashedLookup` column
-        without re-hashing. Used by
-        the archive restore path to round-trip rows whose natural key
-        is not present in the bundle (e.g. the path-keyed setup-profile
-        and inventory namespaces).
+        if writes or deletions:
+            self._commit_prepared_mutation(commit)
+        else:
+            commit()
 
-        Args:
-            namespace: Storage namespace string.
-            hashed_object_key: 32 raw HMAC-SHA256 bytes (the digest
-                produced by ``HashedLookup.compute`` under the same master key
-                the row was originally written with).
-            classification:
-                :class:`~core.classification.policies.SensitivityClass`
-                to upsert at.
-            schema_version: Envelope schema version captured on the row.
-            written_at: UTC-aware datetime captured on the row. A naive or
-                offset-bearing instant is refused for the same reason as
-                :meth:`save`.
-            payload: Plaintext envelope bytes (the column encrypts).
-            write_provenance: Human-readable string identifying the write
-                origin (e.g. caller module or operation name). Defaults to
-                the repository's default provenance marker.
-            source_event_id: Optional opaque identifier of the domain event
-                that triggered this write; stored verbatim for audit trails.
-            expected_revision_id: Optional optimistic-concurrency guard; when
-                supplied the upsert is rejected if the row's current revision
-                does not match.
-
-        Raises:
-            StorageValidationError: When ``hashed_object_key`` is not exactly 32 bytes.
-            :exc:`RepositoryError`: On underlying SQL integrity errors.
-        """
-        self._check_session_freshness(namespace)
-        if len(hashed_object_key) != 32:
-            raise StorageValidationError(
-                context={"length": len(hashed_object_key)},
-                translated_message="errors.integrity.integrity_storage_secure_object_hashed_key_length",
+    def _assert_batch_revisions(self, session: Session, assertions: tuple[SecureObjectRevisionAssertion, ...]) -> None:
+        """Check all source assertions inside the original serializable transaction before mutations."""
+        for assertion in assertions:
+            row = session.execute(
+                select(SecureObjectRow.revision_id).where(
+                    SecureObjectRow.namespace == assertion.namespace,
+                    SecureObjectRow.object_key == secure_object_key_digest(assertion.object_key),
+                ),
+            ).one_or_none()
+            current_revision = row[0] if row is not None else None
+            matches = (
+                row is None
+                if assertion.expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
+                else row is not None and current_revision == assertion.expected_revision_id
             )
-        self._save_internal(
-            namespace=namespace,
-            key=hashed_object_key,
-            classification=classification,
-            schema_version=schema_version,
-            written_at=written_at,
-            payload=payload,
-            write_provenance=write_provenance,
-            source_event_id=source_event_id,
-            expected_revision_id=expected_revision_id,
-        )
+            if not matches:
+                raise self._revision_conflict(
+                    namespace=assertion.namespace,
+                    expected_revision_id=assertion.expected_revision_id,
+                    current_revision_id=current_revision,
+                )
+
+    def _delete_batch_rows(self, session: Session, deletions: tuple[SecureObjectDeletion, ...]) -> None:
+        """Apply every digest-addressed CAS deletion in the same pending-write transaction."""
+        for removal in deletions:
+            statement = delete(SecureObjectRow).where(
+                SecureObjectRow.namespace == removal.namespace,
+                SecureObjectRow.object_key == removal.hashed_object_key,
+            )
+            if removal.expected_revision_id is not None:
+                statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
+            result = cast(CursorResult[Any], session.execute(statement))
+            if removal.expected_revision_id is not None and result.rowcount != 1:
+                raise self._revision_conflict(
+                    namespace=removal.namespace,
+                    expected_revision_id=removal.expected_revision_id,
+                    current_revision_id=None,
+                )
 
     def _save_internal(
         self,
@@ -339,13 +318,13 @@ class SecureObjectWriteOperations:
         Backs
         :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.save`
         and
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`.
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`.
         """
         self._enforce_registered_write_policy(
             namespace=namespace,
             classification=classification,
             schema_version=schema_version,
-            # ``save`` passes the natural string key; ``save_with_raw_key``
+            # ``save`` passes the natural string key; raw-key fixtures
             # passes an already-digested ``bytes`` key with no natural form
             # left to check against the namespace's declared grammar.
             object_key=key if isinstance(key, str) else None,
@@ -361,8 +340,20 @@ class SecureObjectWriteOperations:
             source_event_id=source_event_id,
             expected_revision_id=expected_revision_id,
         )
-        with session_scope(self._engine) as session:
-            self._write_pending_in_session(session, (pending,))
+
+        def commit() -> None:
+            self._check_session_freshness(namespace)
+            with session_scope(self._engine) as session:
+                self._write_pending_in_session(session, (pending,))
+
+        self._commit_prepared_mutation(commit)
+
+    def _commit_prepared_mutation(self, write: Callable[[], None]) -> None:
+        """Admit one complete prepared transaction, including its actual commit."""
+        if self._mutation_writer is None:
+            write()
+        else:
+            self._mutation_writer(write)
 
     def _pending_write(
         self,
@@ -381,7 +372,7 @@ class SecureObjectWriteOperations:
 
         ``written_at`` is gated here rather than only on the
         ``SecureObjectWrite`` DTO because the direct ``save`` and
-        ``save_with_raw_key`` boundaries take a bare ``datetime`` and never
+        raw-key fixtures boundaries take a bare ``datetime`` and never
         construct that model. An offset-bearing instant loses its ``tzinfo``
         in the SQLite column while the revision id was derived from the UTC
         instant, so the row would commit and then fail its own read-time
@@ -393,13 +384,20 @@ class SecureObjectWriteOperations:
         read matches on, and what the AEAD associated data binds, so all
         three surfaces provably share one spelling of the row identity.
         """
+        object_key_digest = secure_object_key_digest(key)
+        instant = validate_utc_aware(written_at)
+        payload_wire = encrypt_secure_object_payload(
+            payload, associated_data=secure_object_payload_aad(namespace, object_key_digest, schema_version)
+        )
         return _PendingSecureObjectWrite(
             namespace=namespace,
-            object_key_digest=secure_object_key_digest(key),
+            object_key_digest=object_key_digest,
             classification=classification,
             schema_version=schema_version,
-            written_at=validate_utc_aware(written_at),
-            payload=payload,
+            written_at=instant,
+            payload=payload_wire,
+            payload_hash=sha256_hex(payload),
+            ciphertext_hash=sha256_hex(payload_wire),
             write_provenance=write_provenance,
             source_event_id=source_event_id,
             expected_revision_id=expected_revision_id,
@@ -410,7 +408,7 @@ class SecureObjectWriteOperations:
         session: Session,
         pending: Sequence[_PendingSecureObjectWrite],
     ) -> None:
-        """Single write funnel for save, save_many, apply_batch, and save_with_raw_key.
+        """Single write funnel for save, save_many, apply_batch, and raw-key fixtures.
 
         Writes execute in caller order with set-based SQL: one previous-
         metadata read per namespace slice, then one ``INSERT`` executemany for
@@ -450,19 +448,11 @@ class SecureObjectWriteOperations:
         for write in chunk:
             prior = previous.get((write.namespace, write.object_key_digest))
             self._assert_expected_revision(write, prior)
-            # Encrypt the payload explicitly, binding the row identity into
-            # the AEAD associated data so the ciphertext is valid only for
-            # this exact (namespace, object_key, schema_version) row.
-            payload_hash = sha256_hex(write.payload)
-            payload_wire = encrypt_secure_object_payload(
-                write.payload,
-                associated_data=secure_object_payload_aad(
-                    write.namespace,
-                    write.object_key_digest,
-                    write.schema_version,
-                ),
-            )
-            ciphertext_hash = sha256_hex(payload_wire)
+            # Payload encryption and hashes are prepared before admission;
+            # only current lineage/CAS facts are resolved under this transaction.
+            payload_hash = write.payload_hash
+            payload_wire = write.payload
+            ciphertext_hash = write.ciphertext_hash
             previous_revision_id = prior.revision_id if prior is not None else None
             previous_payload_hash = prior.payload_hash if prior is not None else None
             revision_id = derive_revision_id(
@@ -544,13 +534,13 @@ class SecureObjectWriteOperations:
                         ),
                     ),
                 ).all()
-                for row in rows:
-                    digest = row.object_key if isinstance(row.object_key, bytes) else bytes(row.object_key)
+                for row_id, object_key, revision_id, revision_ancestor_ids, payload_hash in rows:
+                    digest = bytes(object_key)
                     previous[(namespace, digest)] = _PreviousRowMetadata(
-                        row_id=int(row.id),
-                        revision_id=row.revision_id,
-                        revision_ancestor_ids=parse_revision_ancestor_ids(row.revision_ancestor_ids),
-                        payload_hash=row.payload_hash,
+                        row_id=int(row_id),
+                        revision_id=revision_id,
+                        revision_ancestor_ids=parse_revision_ancestor_ids(revision_ancestor_ids),
+                        payload_hash=payload_hash,
                     )
         return previous
 

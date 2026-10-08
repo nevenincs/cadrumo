@@ -3,10 +3,12 @@ tags:
   - '#adr'
   - '#calculation-engine-foundations'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:aff1f7efbe673e476b8920e0435ef47ad602886c99784d03c46ccb47b1530ec7'
+modified: '2026-10-03'
+body_hash: 'sha256:4b76b9927378314bde7440a1cab7321ac078ed43e8e85d40675d64ad2dd67758'
 related:
   - '[[2026-06-10-calculation-engine-foundations-research]]'
+  - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
+  - '[[2026-06-10-period-revision-resolution-adr]]'
 ---
 
 # `calculation-engine-foundations` adr: `Calculation-engine foundations: aggregation taxonomy and period-revision resolution` | (**status:** `accepted`)
@@ -18,7 +20,3 @@ The calculation engine's value channels had multiple overlapping aggregation mec
 ## Decision
 
 Establish two foundations: (1) one canonical aggregation mechanism per calculation type per a declared taxonomy; and (2) law-determined period-to-revision resolution via select_revision, with any stored revision id only asserted-equal, never injected. Detailed decisions live in the sibling aggregation-taxonomy and period-revision-resolution ADRs.
-
-## Status
-
-Accepted.

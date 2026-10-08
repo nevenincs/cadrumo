@@ -1,0 +1,189 @@
+"""Human-only registered read of one immutable workbench generation."""
+
+from __future__ import annotations
+
+import asyncio
+from collections.abc import Awaitable, Callable
+from functools import cache
+from uuid import UUID
+
+from pydantic import BaseModel
+
+from ..core.async_cleanup import await_cancellation_complete
+from ..core.external_constants import OutputLanguage
+from ..core.hashing import canonical_json_bytes
+from ..core.operations import OperationEffect, profile_operation_subject
+from ..core.time.clock import now
+from .operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+)
+from .operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from .operations.frontend_requests import OperationResultProjectionSuccessV1
+from .operations.models import CredentialFreeOperationRequest, OperationIdentity, OperationRequest
+from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from .operations.owner import OperationExecutorContext
+from .operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+)
+from .runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from .user_profile.access_contracts import AccessDenialCode, Availability, DisclosureCategory
+from .user_profile.access_errors import ProfileAccessRefusedError
+from .workbench_generation_contracts import WorkbenchGenerationV1
+from .workbench_generation_projection import WorkbenchGenerationOperationProjection, project_workbench_generation
+
+WORKBENCH_GENERATION_OPERATION_DEFINITION_ID = "workbench.generation"
+_PHASE = WORKBENCH_GENERATION_OPERATION_DEFINITION_ID + ".execute"
+
+
+class WorkbenchGenerationOperationRequest(CredentialFreeOperationRequest):
+    """Exact profile and output language; no session or custody material."""
+
+    profile_id: UUID
+    output_language: OutputLanguage
+
+
+#: The outer reader receives only the invocation identity, never the executor's
+#: supervisor-owned capabilities.
+type WorkbenchGenerationReader = Callable[
+    [OperationIdentity, WorkbenchGenerationOperationRequest], Awaitable[WorkbenchGenerationV1]
+]
+
+
+class WorkbenchGenerationExecutor:
+    """Capture one generation under the canonical operation owner."""
+
+    def __init__(self, reader: WorkbenchGenerationReader | None) -> None:
+        """Retain only the composed reader capability."""
+        self.reader = reader
+
+    async def execute(
+        self,
+        request: OperationRequest[WorkbenchGenerationOperationRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        """Own the read, encrypted result and NONE effect through cancellation."""
+        if (
+            request.definition_id != WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+            or request.subject_ref != profile_operation_subject(str(request.payload.profile_id))
+            or context.identity.subject_ref != request.subject_ref
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        reader = self.reader
+        if reader is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        await context.events.phase(_PHASE)
+
+        async def capture() -> str:
+            generation = await reader(context.identity, request.payload)
+            if type(generation) is not WorkbenchGenerationV1:
+                raise TypeError("workbench reader returned an invalid generation")
+
+            def project() -> WorkbenchGenerationOperationProjection:
+                projection = project_workbench_generation(request.payload.profile_id, generation)
+                _require_pageable_result(projection)
+                return projection
+
+            # Mirroring and validating the full workspace can be CPU-heavy.
+            # Keep the worker loop available to observations and lease renewal
+            # while the cancellation-owned capture retains this thread's work.
+            projection = await asyncio.to_thread(project)
+            result_ref = await context.operands.put(projection, written_at=now())
+            await context.events.effect(OperationEffect.NONE)
+            return result_ref
+
+        return await await_cancellation_complete(capture(), task_name="workbench-generation-capture")
+
+
+@cache
+def _result_contract() -> OperationPublicDefinitionContractV1:
+    definition = build_workbench_generation_operation_definition()
+    return build_workbench_generation_operation_registration(definition).contract
+
+
+def _require_pageable_result(projection: WorkbenchGenerationOperationProjection) -> None:
+    """Reject a result that the canonical paged release cannot return."""
+    contract = _result_contract()
+    if contract.result_schema is None:
+        raise TypeError("workbench result schema is unavailable")
+    document = OperationResultProjectionSuccessV1[WorkbenchGenerationOperationProjection](
+        result_schema=contract.result_schema,
+        definition_contract_digest=contract.definition_contract_digest,
+        projection=projection,
+    ).model_dump(mode="json", serialize_as_any=True)
+    if len(canonical_json_bytes(document)) > PROJECTION_DOCUMENT_MAX_BYTES:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
+def build_workbench_generation_operation_definition(
+    reader: WorkbenchGenerationReader | None = None,
+) -> OperationDefinition:
+    """Enroll one recorded, read-only generation with a real composed reader."""
+    return OperationDefinition(
+        definition_id=WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
+        request_type=WorkbenchGenerationOperationRequest,
+        result_type=WorkbenchGenerationOperationProjection,
+        executor_factory=OperationExecutorFactory(
+            request_type=WorkbenchGenerationOperationRequest,
+            executor_type=WorkbenchGenerationExecutor,
+            build=lambda: WorkbenchGenerationExecutor(reader),
+        ),
+        phase_codes=(_PHASE,),
+        interaction_kinds=frozenset(),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def build_workbench_generation_operation_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Expose the exact request and bound generation through canonical schemas."""
+    if definition.definition_id != WORKBENCH_GENERATION_OPERATION_DEFINITION_ID:
+        raise ValueError("wrong workbench generation definition")
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
+        definition=definition,
+        public_result_type=WorkbenchGenerationOperationProjection,
+        access_resolver=resolve_workbench_generation_access,
+    )
+
+
+def resolve_workbench_generation_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Require live human CLI/TUI authority for both profile and tax values."""
+    payload = request.payload
+    if type(payload) is not WorkbenchGenerationOperationRequest:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if (
+        request.definition_id != WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+        or payload.profile_id != context.profile_id
+        or request.subject_ref != profile_operation_subject(str(payload.profile_id))
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    disclosures = operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}),
+        result_schema_id=None,
+    )
+    return bind_operation_access(
+        context,
+        profile_id=payload.profile_id,
+        definition_id=request.definition_id,
+        actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=False,
+        requires_human=True,
+        provider=Availability.NOT_REQUIRED,
+    )

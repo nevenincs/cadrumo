@@ -40,7 +40,8 @@ from ....domain.calculations.registry.authority_artifact import (
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord, create_user_profile_record
 from ..capsule_record import ProfileRecordIntegrityError, ProfileRecordSession
-from ..profile_record_repository import bound_profile_record_session, require_profile_record_session
+from ..profile_record_repository import require_profile_record_session
+from .record_session_scope import bound_profile_record_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _SCHEMA = published_profile_schema()

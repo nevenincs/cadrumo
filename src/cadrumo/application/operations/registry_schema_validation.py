@@ -8,12 +8,20 @@ validation unit.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
+from copy import deepcopy
+from dataclasses import dataclass, field, is_dataclass
+from typing import TypeAliasType, get_args, get_origin, override
 
 from pydantic import BaseModel, PydanticInvalidForJsonSchema
+from pydantic.fields import FieldInfo
+from pydantic.json_schema import DefsRef, GenerateJsonSchema, JsonRef
 
 from ...core.hex import HEX_PATTERN_64
-from ...core.type_guards import is_object_dict, is_object_list, is_str_keyed_dict
+from ...core.type_guards import is_object_dict, is_object_list, is_object_list_or_tuple, is_str_keyed_dict
+from ._dataclass_fields import dataclass_instance_fields
 from ._model_contract import require_strict_frozen_operation_model_graph
 
 #: Field-name tokens a credential-free journal request may not carry.
@@ -74,6 +82,232 @@ FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
 )
 FORBIDDEN_OPERATION_SCHEMA_FORMATS = frozenset({"binary", "byte", "password"})
 HEX64_DIGEST_PATTERN = HEX_PATTERN_64
+
+
+@dataclass(frozen=True)
+class _CompiledModelSchema:
+    schema: dict[str, object]
+    model_graph: dict[type[BaseModel], tuple[object, ...]]
+    core_schemas: Mapping[type[BaseModel], object]
+
+
+@dataclass
+class _SchemaCompilationMemo:
+    schemas: dict[type[BaseModel], _CompiledModelSchema] = field(default_factory=dict)
+    active: bool = True
+
+
+_SCHEMA_COMPILATION_MEMO: ContextVar[_SchemaCompilationMemo | None] = ContextVar(
+    "operation_schema_compilation_memo", default=None
+)
+_SCHEMA_ATOMIC_TYPES = frozenset((str, int, float, bool, bytes, type(None)))
+
+
+class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
+    """Avoid definition deduplication only when every preferred name is unique.
+
+    Pydantic's naming fixed point hashes each definition under multiple aliases.
+    If no other definition owns any alias matching a preferred name, its first
+    choice cannot change during that fixed point. Ambiguity uses Pydantic's
+    original algorithm, including deduplication of equivalent definitions.
+    """
+
+    @override
+    def _build_definitions_remapping(self):
+        choices = self._prioritized_defsref_choices
+        owners: dict[DefsRef, DefsRef | None] = {}
+        for original in self.definitions:
+            alternatives = choices.get(original)
+            if not alternatives:
+                return super()._build_definitions_remapping()
+            for alternative in alternatives:
+                if alternative in owners and owners[alternative] != original:
+                    owners[alternative] = None
+                else:
+                    owners[alternative] = original
+        if any(owners[choices[original][0]] != original for original in self.definitions):
+            return super()._build_definitions_remapping()
+        definitions: dict[DefsRef, DefsRef] = {}
+        references: dict[JsonRef, JsonRef] = {}
+        for original in self.definitions:
+            alternatives = choices[original]
+            preferred = alternatives[0]
+            definitions[original] = preferred
+            preferred_ref = JsonRef(self.ref_template.format(model=preferred))
+            for alternative in alternatives:
+                references[JsonRef(self.ref_template.format(model=alternative))] = preferred_ref
+        # Let the base hook construct its own remapping type. An empty
+        # generator has no definitions to hash or disambiguate.
+        remapping = GenerateJsonSchema()._build_definitions_remapping()
+        remapping.defs_remapping.update(definitions)
+        remapping.json_remapping.update(references)
+        return remapping
+
+
+@contextmanager
+def operation_schema_compilation_scope() -> Generator[None]:
+    """Reuse validated schemas during one registry build, with isolated copies.
+
+    Each invocation owns a fresh memo, including nested scopes. Leaving the
+    scope restores the caller's context even when compilation raises.
+    """
+    memo = _SchemaCompilationMemo()
+    token = _SCHEMA_COMPILATION_MEMO.set(memo)
+    try:
+        yield
+    finally:
+        memo.active = False
+        memo.schemas.clear()
+        _SCHEMA_COMPILATION_MEMO.reset(token)
+
+
+def _copy_model_schema(schema: dict[str, object]) -> dict[str, object]:
+    """Copy JSON containers while preserving aliases and custom metadata types."""
+    if type(schema) is not dict:
+        return deepcopy(schema)
+    copied: dict[str, object] = {}
+    copy_memo: dict[int, object] = {id(schema): copied}
+    originals: list[object] = [schema]
+    for key, value in schema.items():
+        copied[key if type(key) is str else deepcopy(key, copy_memo)] = _copy_schema_value(value, copy_memo, originals)
+    return copied
+
+
+def _copy_schema_value(value: object, copy_memo: dict[int, object], originals: list[object]) -> object:
+    """Avoid generic copy dispatch for the built-in containers of a JSON schema."""
+    value_type = type(value)
+    if value_type in _SCHEMA_ATOMIC_TYPES:
+        return value
+    identity = id(value)
+    if identity in copy_memo:
+        return copy_memo[identity]
+    # A custom deepcopy hook can release a previously copied source node.
+    # Keep those sources alive so its identity cannot be recycled in the memo.
+    if value_type is dict and is_object_dict(value):
+        copied: dict[object, object] = {}
+        copy_memo[identity] = copied
+        originals.append(value)
+        for key, item in value.items():
+            copied[key if type(key) is str else deepcopy(key, copy_memo)] = _copy_schema_value(
+                item, copy_memo, originals
+            )
+        return copied
+    if value_type is list and is_object_list(value):
+        copied_items: list[object] = []
+        copy_memo[identity] = copied_items
+        originals.append(value)
+        copied_items.extend(_copy_schema_value(item, copy_memo, originals) for item in value)
+        return copied_items
+    return deepcopy(value, copy_memo)
+
+
+def _model_schema_graph_state(
+    model_type: type[BaseModel], *, rebuilt_models: set[type[BaseModel]] | None = None
+) -> dict[type[BaseModel], tuple[object, ...]]:
+    """Capture live schema state, including nested models and editable metadata."""
+    graph: dict[type[BaseModel], tuple[object, ...]] = {}
+    snapshots: dict[int, tuple[object, object]] = {}
+
+    def visit(annotation: object) -> None:
+        if isinstance(annotation, TypeAliasType):
+            visit(annotation.__value__)
+        elif isinstance(annotation, type) and issubclass(annotation, BaseModel):
+            if annotation in graph:
+                return
+            if not annotation.__pydantic_complete__:
+                annotation.model_rebuild()
+                if rebuilt_models is not None:
+                    rebuilt_models.add(annotation)
+            graph[annotation] = (
+                _schema_state(annotation.model_config, snapshots),
+                annotation.model_json_schema,
+                tuple((name, _field_schema_state(field, snapshots)) for name, field in annotation.model_fields.items()),
+            )
+            for field in annotation.model_fields.values():
+                visit(field.annotation)
+        else:
+            for argument in get_args(annotation):
+                visit(argument)
+
+    visit(model_type)
+    return graph
+
+
+def _field_schema_state(field: FieldInfo, snapshots: dict[int, tuple[object, object]]) -> object:
+    """Freeze field metadata without retaining temporary field dictionaries."""
+    document = field.asdict()
+    # The attribute names are fixed by FieldInfo; omitted None values still
+    # distinguish every transition to or from a populated attribute.
+    return (
+        _annotation_schema_state(field.annotation, snapshots),
+        _schema_state(document["metadata"], snapshots),
+        tuple(
+            (name, _schema_state(value, snapshots))
+            for name, value in document["attributes"].items()
+            if value is not None
+        ),
+    )
+
+
+def _schema_state(value: object, snapshots: dict[int, tuple[object, object]]) -> object:
+    """Freeze schema containers and metadata without cloning identity-based types."""
+    # Field metadata contains mostly immutable built-in leaves. They cannot
+    # carry mutable attributes, so avoid walking the container/dataclass checks
+    # for every leaf on every fingerprint revalidation. Subclasses still take
+    # the full path because they may carry editable metadata of their own.
+    value_type = type(value)
+    if value_type in _SCHEMA_ATOMIC_TYPES:
+        return value
+    if isinstance(value, type) or callable(value):
+        return value
+    if id(value) in snapshots:
+        return snapshots[id(value)][1]
+    state = _structured_schema_state(value, snapshots)
+    if state is None:
+        return value
+    snapshots[id(value)] = value, state
+    return state
+
+
+def _structured_schema_state(value: object, snapshots: dict[int, tuple[object, object]]) -> object | None:
+    """Freeze supported mutable containers and metadata as structural values."""
+    if is_object_dict(value):
+        return tuple((key, _schema_state(item, snapshots)) for key, item in value.items())
+    if is_object_list_or_tuple(value):
+        return type(value), tuple(_schema_state(item, snapshots) for item in value)
+    if isinstance(value, FieldInfo):
+        return type(value), _field_schema_state(value, snapshots)
+    if is_dataclass(value):
+        return _dataclass_schema_state(value, snapshots)
+    if hasattr(value, "__dict__"):
+        return type(value), _schema_state(vars(value), snapshots)
+    return None
+
+
+def _dataclass_schema_state(value: object, snapshots: dict[int, tuple[object, object]]) -> object:
+    """Freeze editable dataclass metadata without copying its identity."""
+    return (
+        type(value),
+        tuple(
+            (attribute.name, _schema_state(getattr(value, attribute.name), snapshots))
+            for attribute in dataclass_instance_fields(value)
+        ),
+    )
+
+
+def _annotation_schema_state(annotation: object, snapshots: dict[int, tuple[object, object]]) -> object:
+    """Capture annotation metadata structurally while preserving type identities."""
+    if isinstance(annotation, TypeAliasType):
+        return "alias", annotation, _annotation_schema_state(annotation.__value__, snapshots)
+    arguments = get_args(annotation)
+    if arguments:
+        # Tag typing nodes so tuple-valued metadata cannot alias their state.
+        return (
+            "arguments",
+            get_origin(annotation),
+            tuple(_annotation_schema_state(argument, snapshots) for argument in arguments),
+        )
+    return _schema_state(annotation, snapshots)
 
 
 def is_hex64_shaped_schema(
@@ -244,11 +478,70 @@ def validate_credential_free_schema_properties(
 def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
     """Return one exact closed schema after enforcing the public model baseline."""
     require_strict_frozen_operation_model_graph(model_type, path="public schema")
+    memo = _active_schema_compilation_memo()
+    rebuilt_models: set[type[BaseModel]] = set()
+    model_graph = _model_schema_graph_state(model_type, rebuilt_models=rebuilt_models) if memo is not None else None
+    # Deferred rebuilding can reveal nested models the first contract check could not inspect.
+    if rebuilt_models:
+        require_strict_frozen_operation_model_graph(model_type, path="public schema")
+    cached_schema = _cached_model_schema(memo, model_type, model_graph)
+    if cached_schema is not None:
+        return cached_schema
+    original_graph = model_graph
+    original_core_schemas = (
+        {nested: nested.__pydantic_core_schema__ for nested in model_graph} if model_graph is not None else {}
+    )
+    closed_schema = _generate_closed_model_schema(model_type)
+    _remember_compiled_model_schema(
+        memo,
+        model_type,
+        closed_schema,
+        original_graph,
+        original_core_schemas,
+    )
+    return closed_schema
+
+
+def _active_schema_compilation_memo() -> _SchemaCompilationMemo | None:
+    """Return the context memo only while its registry build remains active."""
+    memo = _SCHEMA_COMPILATION_MEMO.get()
+    return memo if memo is None or memo.active else None
+
+
+def _cached_model_schema(
+    memo: _SchemaCompilationMemo | None,
+    model_type: type[BaseModel],
+    model_graph: dict[type[BaseModel], tuple[object, ...]] | None,
+) -> dict[str, object] | None:
+    """Return an isolated cached schema after rechecking its live model graph."""
+    compiled = memo.schemas.get(model_type) if memo is not None else None
+    if compiled is None:
+        return None
+    if compiled.model_graph != model_graph or any(
+        nested.__pydantic_core_schema__ is not core for nested, core in compiled.core_schemas.items()
+    ):
+        raise ValueError("public operation schema model graph changed during compilation")
+    return _copy_model_schema(compiled.schema)
+
+
+def _generate_closed_model_schema(model_type: type[BaseModel]) -> dict[str, object]:
+    """Generate both public schema modes and validate their closed shape."""
     validation_schema: object
     serialization_schema: object
     try:
-        validation_schema = model_type.model_json_schema(mode="validation")
-        serialization_schema = model_type.model_json_schema(mode="serialization")
+        if getattr(model_type.model_json_schema, "__func__", None) is getattr(
+            BaseModel.model_json_schema, "__func__", None
+        ):
+            validation_schema = model_type.model_json_schema(
+                mode="validation", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+            )
+            serialization_schema = model_type.model_json_schema(
+                mode="serialization", schema_generator=_UnambiguousDefinitionsSchemaGenerator
+            )
+        else:
+            # An overridden or decorated model method remains authoritative.
+            validation_schema = model_type.model_json_schema(mode="validation")
+            serialization_schema = model_type.model_json_schema(mode="serialization")
     except PydanticInvalidForJsonSchema as error:
         raise ValueError("public operation schema model must have a closed JSON schema") from error
     if validation_schema != serialization_schema:
@@ -258,6 +551,23 @@ def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
     closed_schema = validation_schema
     validate_closed_json_schema(closed_schema, path=model_type.__name__)
     return closed_schema
+
+
+def _remember_compiled_model_schema(
+    memo: _SchemaCompilationMemo | None,
+    model_type: type[BaseModel],
+    schema: dict[str, object],
+    original_graph: dict[type[BaseModel], tuple[object, ...]] | None,
+    original_core_schemas: Mapping[type[BaseModel], object],
+) -> None:
+    """Cache only when the complete live model graph still matches its entry state."""
+    if memo is None or original_graph is None:
+        return
+    if original_graph != _model_schema_graph_state(model_type) or any(
+        nested.__pydantic_core_schema__ is not core for nested, core in original_core_schemas.items()
+    ):
+        raise ValueError("public operation schema model graph changed during compilation")
+    memo.schemas[model_type] = _CompiledModelSchema(_copy_model_schema(schema), original_graph, original_core_schemas)
 
 
 def validate_closed_json_schema(schema: Mapping[str, object], *, path: str) -> None:
@@ -381,6 +691,7 @@ __all__ = [
     "is_hex64_items_schema",
     "is_hex64_shaped_schema",
     "is_hex64_string_schema",
+    "operation_schema_compilation_scope",
     "reject_secret_capable_schema_branch",
     "strict_model_json_schema",
     "validate_closed_array_schema",

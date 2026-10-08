@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.facts.payloads import GovernedFactFamily, MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
@@ -15,7 +16,6 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ScalarFactQuery,
     resolve_governed_fact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFactFamily, MappingFactPayload
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.fact_loader import load_governed_facts

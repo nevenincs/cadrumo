@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:d9b34fc7d2eee8f34e16890df79024f781016b15eeebf1dee74368955a9c06e9'
 related:
-  - "[[2026-08-24-quality-gate-zero-closure-plan]]"
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
 ---
 # quality-gate-zero-closure audit: S115 both-locales condition implementation review

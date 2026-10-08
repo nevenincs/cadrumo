@@ -3,16 +3,15 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e1244ec6a07f71ab97564e691c42012dcd744b55a2e46a2707ae01c0ab9a0c2'
+body_hash: 'sha256:ff074e4aed3442fafa9cd2062bd069238d10bb0c0b9126f0a1fcb342d8bb79e7'
 related: []
 ---
 
 # `semantic-consolidation` audit: `Bounds a field-annotation scan cannot see`
 
-## What this records
-
+## Scope
 This campaign's most productive instrument is a scan that reads pydantic field
 ANNOTATIONS and reports where two models disagree about the same field. It has
 found real defects: a currency alias that accepted `12A`, a filing snapshot that
@@ -26,8 +25,7 @@ defect and each turned out sound. Recording them so the fourth is recognised
 faster, and so nobody "fixes" one by adding a second, weaker bound beside the
 real one.
 
-## The three shapes
-
+## Findings
 ### A bound expressed as a closed SET
 
 `application/ledger/evidence_draft.py` carries `iva_rate: Decimal | None` with no
@@ -74,6 +72,14 @@ normalising canonical annotation, which layered a second and contradictory polic
 over the shared validator its sibling `country_code` follows, and a test went red.
 Reverted and declared.
 
+## Recommendations
+The same session found genuinely unguarded fields, so the lesson is not "the scan
+cries wolf". `PurchaseInvoiceEvidence` and its patch took any Decimal at all for
+`taxable_base`, `iva_rate` and `iva_amount`, and the first two reach a renta
+deductible-expense observation. Bounded, with the reason recorded on the record.
+
+The difference between that case and the three above is only discoverable by
+tracing the consumer. There is no shortcut that reads the field alone.
 ## The rule this yields
 
 Before treating an unbounded-looking field as a defect, look for the bound in
@@ -84,13 +90,3 @@ And the direction of the mistake matters. Adding a bound to a field that already
 has an invisible one is not harmless tidying -- it can contradict the real policy,
 as the Modelo 720 case did. The annotation is not the only place a rule can live,
 and a scan that assumes it is will keep proposing to move rules into it.
-
-## What still needs a bound
-
-The same session found genuinely unguarded fields, so the lesson is not "the scan
-cries wolf". `PurchaseInvoiceEvidence` and its patch took any Decimal at all for
-`taxable_base`, `iva_rate` and `iva_amount`, and the first two reach a renta
-deductible-expense observation. Bounded, with the reason recorded on the record.
-
-The difference between that case and the three above is only discoverable by
-tracing the consumer. There is no shortcut that reads the field alone.

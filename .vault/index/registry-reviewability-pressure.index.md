@@ -4,16 +4,12 @@ tags:
   - '#index'
   - '#registry-reviewability-pressure'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5c82af1bc2c9dd64e2c101aa5d50072dec96fc742dd1c1e762c1e624df1dbf7d'
+body_hash: 'sha256:b0a3c3c79481e6e13da357739936b79af31c5511a1bbc8d68a55823c1fdcc52b'
 related:
-  - '[[2026-06-04-registry-reviewability-pressure-P03-summary]]'
-  - '[[2026-06-04-registry-reviewability-pressure-adr]]'
   - '[[2026-06-04-registry-reviewability-pressure-audit]]'
   - '[[2026-06-04-registry-reviewability-pressure-code-review-audit]]'
-  - '[[2026-06-04-registry-reviewability-pressure-ledger]]'
-  - '[[2026-06-04-registry-reviewability-pressure-plan]]'
   - '[[2026-06-04-registry-reviewability-pressure-research]]'
   - '[[2026-06-04-registry-reviewability-split-decision-audit]]'
 ---
@@ -24,24 +20,11 @@ Auto-generated index of all documents tagged with `#registry-reviewability-press
 
 ## Documents
 
-### adr
-
-- `2026-06-04-registry-reviewability-pressure-adr` - `registry-reviewability-pressure` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-
 ### audit
 
 - `2026-06-04-registry-reviewability-pressure-audit` - `registry-reviewability-pressure` audit: `pressure inventory`
 - `2026-06-04-registry-reviewability-pressure-code-review-audit` - `registry-reviewability-pressure` Code Review
 - `2026-06-04-registry-reviewability-split-decision-audit` - `registry-reviewability-pressure` audit: `split decision`
-
-### exec
-
-- `2026-06-04-registry-reviewability-pressure-P03-summary` - `registry-reviewability-pressure` `P03` summary
-- `2026-06-04-registry-reviewability-pressure-ledger` - `registry-reviewability-pressure` ledger
-
-### plan
-
-- `2026-06-04-registry-reviewability-pressure-plan` - `registry-reviewability-pressure` `implementation` plan
 
 ### research
 

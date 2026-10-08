@@ -37,7 +37,7 @@ See Also:
     :func:`~application.modelo.revision_persistence.persist_calculation_revision`:
         Stores the content-addressed ``BORRADOR`` revision and emits the bucket
         event.
-    :func:`~application.modelo.verification_actions.verify_modelo_revision`:
+    :func:`~application.modelo.verification_actions.verify_modelo_revision_with_preconditions`:
         Lifecycle gate that promotes a calculated revision after verification.
 """
 
@@ -47,7 +47,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
@@ -56,10 +56,12 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.time.clock import now as _utc_now
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id, reject_row_field_template_scalar_inputs
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -78,6 +80,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
+from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_string
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -88,6 +91,8 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
@@ -146,11 +151,14 @@ from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .action_errors import (
     CalculationRevisionNotFoundError,
     ModeloAggregationBindingError,
+    ModeloClearedCasillaSourceFedError,
 )
 from .calculation_action_ports import (
     CalculationActionPorts,
 )
 from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .calculation_notes import CALCULATION_NOTES, PRINTED_BOX_REASONS, durable_binding_source
+from .calculation_publication import CalculationRevisionPublication
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -158,11 +166,6 @@ from .calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
-from .lifecycle_clock_gate import (
-    ModeloLifecycleClockOperation,
-    require_lifecycle_clock_not_before,
-    work_unit_ordering_instants,
-)
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import (
@@ -170,8 +173,10 @@ from .m303_regimen_simplificado_scope import (
     taxpayer_profile_for_work,
 )
 from .preconditions import build_modelo_precondition_failure
+from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 from .profile_export_binding import profile_text_casilla_gap_diagnostics, resolve_profile_text_casilla_inputs
 from .revision_persistence import persist_calculation_revision
+from .work_missing_input import ModeloWorkMissingInputError
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:
@@ -204,6 +209,7 @@ class BucketAggregationCalculationResult:
 
     revision: CalculationRevision
     profile: ModeloWorkProfile
+    publication: CalculationRevisionPublication
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
 
@@ -304,6 +310,7 @@ def calculate_modelo_revision(
         backend_binding_values=backend_binding_values,
         row_binding_values=row_binding_values,
         row_source_identities=None,
+        closed_record_row_sets=(),
         backend_casilla_inputs=backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
         borrador_snapshot_id=borrador_snapshot_id,
@@ -320,7 +327,7 @@ def calculate_modelo_revision(
         source_issues=(),
         clock=clock,
         profile=None,
-    )
+    ).revision
 
 
 def _draft_ledger_anchor(
@@ -398,11 +405,13 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     casilla_inputs: Mapping[CasillaId, Decimal],
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
+    operator_layer: CalculationOperatorLayer | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
     row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
@@ -425,7 +434,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
     profile: ModeloWorkProfile | None,
-) -> CalculationRevision:
+) -> CalculationRevisionPublication:
     """Calculate with source evidence produced by the in-module source mesh only.
 
     This is deliberately private: provenance and source issues are an authority
@@ -465,7 +474,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
        ``modelo.calculation.created``.
 
     The revision starts in ``BORRADOR`` state; callers must run
-    :func:`~application.modelo.verification_actions.verify_modelo_revision` and
+    :func:`~application.modelo.verification_actions.verify_modelo_revision_with_preconditions` and
     :func:`~application.modelo.filing_actions.file_modelo_revision`
     explicitly to advance through the lifecycle.
 
@@ -480,7 +489,9 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
             emission.
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
+    now = _trusted_calculation_clock(clock)
     prepared = _prepare_calculation(
+        evaluated_at=now,
         work_unit_id=work_unit_id,
         work_unit_repository=ports.work_unit_repository,
         casilla_inputs=casilla_inputs,
@@ -539,23 +550,36 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     resolved_inputs = channel_inputs.casilla_inputs
 
     resolved_text_inputs = validated_text_input_casilla_ids(channel_inputs.text_casilla_inputs)
+    _reject_clears_of_source_fed_casillas(
+        cleared_casilla_ids,
+        resolved_casilla_ids=(*resolved_inputs, *resolved_text_inputs),
+    )
     # The row-field template outputs are dropped after the engine runs, so a
     # scalar input for one would be persisted with no observation to ground it.
     reject_row_field_template_scalar_inputs(snapshot.revision, (*resolved_inputs, *resolved_text_inputs))
 
-    engine_result = _calculate_prepared_registry_snapshot(
-        snapshot,
-        resolved_inputs=resolved_inputs,
-        resolved_text_inputs=resolved_text_inputs,
-        period_date=prepared.period_date,
-        binding_values=prepared.channels.bindings,
-        enum_binding_values=prepared.channels.enum_bindings,
-        relation_values=resolved_relations,
-        unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_binding_ids=unresolved_binding_ids,
-        date_binding_values=prepared.channels.date_bindings,
-        boolean_binding_values=prepared.channels.boolean_bindings,
-    )
+    try:
+        engine_result = _calculate_prepared_registry_snapshot(
+            snapshot,
+            resolved_inputs=resolved_inputs,
+            resolved_text_inputs=resolved_text_inputs,
+            period_date=prepared.period_date,
+            binding_values=prepared.channels.bindings,
+            enum_binding_values=prepared.channels.enum_bindings,
+            relation_values=resolved_relations,
+            unresolved_relation_ids=unresolved_relation_ids,
+            unresolved_binding_ids=unresolved_binding_ids,
+            date_binding_values=prepared.channels.date_bindings,
+            boolean_binding_values=prepared.channels.boolean_bindings,
+            closed_record_row_sets=closed_record_row_sets,
+        )
+    except RegistryValidationError as error:
+        missing = ModeloWorkMissingInputError.from_registry_error(error)
+        if missing is None:
+            raise
+        # This boundary precedes revision publication. Earlier migrations may
+        # already have written state; later advisory failures never enter it.
+        raise missing from error
 
     replay_payloads = _build_calculation_replay_payloads(
         resolved_inputs=resolved_inputs,
@@ -593,17 +617,11 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         profile=prepared.profile,
     )
 
-    now = _trusted_calculation_clock(clock)
-    # The new draft is created at ``now`` and orders itself; the parent work
-    # unit's advanced pointer is stamped with it too.
-    require_lifecycle_clock_not_before(
-        now,
-        operation=ModeloLifecycleClockOperation.CALCULATE,
-        instants=work_unit_ordering_instants(work_unit),
-    )
     return persist_calculation_revision(
+        operation=ports.operation,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
+        rendering_snapshot=_capture_calculation_rendering(snapshot, operation=ports.operation),
         work_unit=work_unit,
         work_units=work_units,
         work_units_revision_id=prepared.work_units_revision_id,
@@ -619,6 +637,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,
         row_source_identities=_optional_mapping_as_dict(row_source_identities),
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values=_optional_mapping_as_dict(row_casilla_values),
         row_casilla_provenance=_optional_mapping_as_dict(row_casilla_provenance),
         relation_overrides=replay_payloads.relation_overrides,
@@ -629,6 +648,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         borrador_snapshot_id=prepared.channels.borrador_snapshot_id,
         bindings_sourced_from_borrador=prepared.channels.bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
         observations=typed_observations,
         unresolved_outcomes=engine_result.unresolved_outcomes,
         source_provenance=source_provenance,
@@ -646,6 +666,38 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     )
 
 
+def _reject_clears_of_source_fed_casillas(
+    cleared_casilla_ids: tuple[CasillaId, ...],
+    *,
+    resolved_casilla_ids: tuple[CasillaId, ...],
+) -> None:
+    """Refuse an explicit clear that a source would immediately refill.
+
+    A caller never supplies a value for a casilla it clears, so a cleared
+    casilla that still reaches the resolved inputs was fed by a source tier.
+    Persisting the clear would record "cleared" beside the source's value for
+    the same casilla -- two contradictory facts about one box.
+    """
+    fed = sorted(set(cleared_casilla_ids).intersection(resolved_casilla_ids))
+    if fed:
+        raise ModeloClearedCasillaSourceFedError(
+            translated_message="errors.error.error_modelo_cleared_casilla_source_fed",
+            context={"casilla_ids": ",".join(fed)},
+        )
+
+
+def _capture_calculation_rendering(
+    snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation
+) -> CalculationRenderingSnapshot:
+    """Join the separately published form under the actual calculation's leased pin."""
+    layout = operation.form_layout(str(snapshot.modelo.id), str(snapshot.revision.id))
+    if layout is not None:
+        snapshot = snapshot.model_copy(
+            update={"revision": snapshot.revision.model_copy(update={"form_layouts": (layout,)})}
+        )
+    return CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
+
+
 def _calculate_prepared_registry_snapshot(
     snapshot: RegistrySnapshot,
     *,
@@ -659,6 +711,7 @@ def _calculate_prepared_registry_snapshot(
     unresolved_binding_ids: tuple[BindingId, ...],
     date_binding_values: Mapping[BindingId, date],
     boolean_binding_values: Mapping[BindingId, bool],
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
 ) -> RegistryCalculationResult:
     """Evaluate the registry after application channels have been resolved."""
     return calculate_registry_snapshot(
@@ -673,6 +726,7 @@ def _calculate_prepared_registry_snapshot(
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=date_binding_values or None,
         boolean_binding_values=boolean_binding_values or None,
+        closed_record_row_sets=closed_record_row_sets,
     )
 
 
@@ -789,6 +843,7 @@ def resolve_bucket_source_mesh(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         profile=profile,
+        operation=ports.operation,
     )
 
     def resolve_declared(
@@ -879,7 +934,11 @@ def resolve_bucket_source_mesh(
             # OSS/IOSS-tagged issued invoices into validated ledger candidates;
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
-            resolve_declared(OssIossLedgerSourceResolver(ports=ports.invoice_catalogue_read_ports)),
+            resolve_declared(
+                OssIossLedgerSourceResolver(
+                    ports=ports.invoice_catalogue_read_ports,
+                )
+            ),
             # Retenciones family source (retenciones_aggregation): M115 reads the
             # dedicated per-perceptor store for quarterly count/base, while M180/M193
             # read it for distinct perceptor-NIF counts. Empty store on a declaring
@@ -913,13 +972,14 @@ def resolve_bucket_source_mesh(
                     ports=ports.invoice_source_ports,
                 )
             ),
-            # Modelo 720 foreign assets (foreign_asset). This resolver is
-            # repository-free: callers pass typed observations explicitly when a
-            # calculation should include M720 asset rows.
+            # Modelo 720 foreign assets (foreign_asset). Callers pass the typed
+            # lots explicitly; the resolver joins them to the bucket's encrypted
+            # foreign-asset register, read once per Modelo 720 resolution.
             resolve_declared(
                 ForeignAssetsAggregationSourceResolver(
                     observations=foreign_asset_observations,
                     row_observations=foreign_asset_row_observations,
+                    register_loader=ports.foreign_asset_register_repository.load,
                 )
             ),
             # Modelo 184 attribution members are declared on the attribution-entity
@@ -1250,6 +1310,7 @@ def _prepare_bucket_aggregation_calculation(
     *,
     work_unit_id: str,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     casilla_inputs: Mapping[CasillaId, Decimal] | None,
     m210_official_tipo_renta_code: str | None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
@@ -1264,6 +1325,7 @@ def _prepare_bucket_aggregation_calculation(
         work_unit_id,
         work_unit_repository=work_unit_repository,
         profile=profile,
+        operation=operation,
     )
     assert_no_novel_source_kinds(snapshot.revision)
     validated_casilla_inputs = _validated_bucket_casilla_inputs(snapshot, casilla_inputs)
@@ -1351,6 +1413,8 @@ def _resolve_bucket_aggregation_source_resolution(
         owned_sources=frozenset(source_resolution.owned_sources) - CALLER_OVERRIDABLE_CARRY_SOURCES,
         caller_binding_values=preparation.binding_values,
         caller_casilla_inputs=preparation.casilla_inputs,
+        caller_enum_binding_values=enum_binding_values,
+        closed_record_row_sets=source_resolution.closed_record_row_sets,
     )
     return source_resolution
 
@@ -1369,7 +1433,6 @@ def _bucket_aggregation_channels(
     )
     _raise_if_m349_intracom_ledger_rows_need_operator_rows(
         work_unit=preparation.work_unit,
-        revision=preparation.snapshot.revision,
         transaction_repository=transaction_repository,
         detail_rows=all_detail_rows,
     )
@@ -1428,6 +1491,32 @@ def _source_bound_casilla_inputs(
     }
 
 
+def _caller_operator_layer(
+    *,
+    preparation: _BucketAggregationPreparation,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+) -> CalculationOperatorLayer:
+    """Project the validated caller tier of one run onto the persisted operator layer.
+
+    Only the caller channels are read: the backend, bound, profile and borrador
+    tiers merged into the revision's replay maps never reach the layer, so a
+    later replay cannot promote a source value into an operator override.
+    """
+    return CalculationOperatorLayer(
+        decimal_casilla_inputs={
+            casilla_id: _canonical_decimal_string(value) for casilla_id, value in preparation.casilla_inputs.items()
+        },
+        text_casilla_inputs=dict(text_casilla_inputs or {}),
+        binding_overrides={
+            **{
+                binding_id: _canonical_decimal_string(value) for binding_id, value in preparation.binding_values.items()
+            },
+            **dict(enum_binding_values or {}),
+        },
+    )
+
+
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     work_unit_id: str,
     *,
@@ -1436,6 +1525,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
+    record_operator_layer: bool = False,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -1472,11 +1562,21 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     ``profile`` is the work profile the calling command already loaded for
     this bucket. When omitted, the readiness gate loads it once; either way
     the profile the gate checked is the only one the calculation reads.
+
+    ``record_operator_layer`` states that the caller inputs of this run are
+    the operator's own values -- an edit or a workspace recalculation replaying
+    the operator's work -- so the revision records exactly that caller tier as
+    its :class:`~cadrumo.domain.modelos.calculation_revision_operator_layer.CalculationOperatorLayer`.
+    The layer is derived here from the validated caller channels, never passed
+    in beside them, so it cannot disagree with what the engine received. A
+    caller that does not set it records no layer, and its revision id is the
+    one it always had.
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     preparation = _prepare_bucket_aggregation_calculation(
         work_unit_id=work_unit_id,
         work_unit_repository=ports.work_unit_repository,
+        operation=ports.operation,
         casilla_inputs=casilla_inputs,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
@@ -1508,19 +1608,29 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         transaction_repository=memoized_transaction_repository,
         detail_rows=detail_rows,
     )
-    revision = _calculate_modelo_revision_with_trusted_mesh_sources(
+    publication = _calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
         ports=ports,
         actor=actor,
         casilla_inputs=preparation.casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=(
+            _caller_operator_layer(
+                preparation=preparation,
+                text_casilla_inputs=text_casilla_inputs,
+                enum_binding_values=enum_binding_values,
+            )
+            if record_operator_layer
+            else None
+        ),
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=preparation.m210_gross_income_source_mode,
         binding_values=preparation.binding_values,
         backend_binding_values=channels.backend_binding_values,
         row_binding_values=channels.source_resolution.row_binding_values,
         row_source_identities=channels.source_resolution.row_source_identities,
+        closed_record_row_sets=channels.source_resolution.closed_record_row_sets,
         row_casilla_values=channels.source_resolution.row_casilla_values,
         row_casilla_provenance=channels.source_resolution.row_casilla_provenance,
         backend_casilla_inputs=channels.backend_casilla_inputs,
@@ -1535,7 +1645,10 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unresolved_binding_ids=channels.reconciliation.unresolved_binding_ids,
         source_transaction_ids=tuple(channels.source_resolution.source_transaction_ids),
         source_provenance=_source_provenance_refs(channels.source_resolution),
-        source_issues=_unrouted_source_issues(channels.reconciliation.source_diagnostics),
+        source_issues=_unrouted_source_issues(
+            channels.reconciliation.source_diagnostics,
+            snapshot_printed_boxes(ports.operation, preparation.snapshot),
+        ),
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(
             channels.source_resolution.m303_regimen_simplificado_annual_summary_handoff
@@ -1547,6 +1660,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         profile=preparation.profile,
         transaction_repository=memoized_transaction_repository,
     )
+    revision = publication.revision
     advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         preparation.snapshot.revision,
         revision.casilla_values,
@@ -1558,6 +1672,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         observation_repository=ports.observation_repository,
         prorrata_register_repository=ports.prorrata_register_repository,
         transaction_repository=memoized_transaction_repository,
+        operation=ports.operation,
         profile=preparation.profile,
     )
     profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
@@ -1571,9 +1686,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         + advisory_diagnostics
         + profile_text_diagnostics
     )
+    # Held for the editor form until the next calculation of this declaration; only the blocking ones persist.
+    CALCULATION_NOTES.record(str(revision.work_unit_id), str(revision.calculation_revision_id), source_diagnostics)
     return BucketAggregationCalculationResult(
         revision=revision,
         profile=preparation.profile,
+        publication=publication,
         source_diagnostics=source_diagnostics,
     )
 
@@ -1585,7 +1703,33 @@ _DurableSourceIssueReason = Literal[
     "iva_selected_scope_evidence_failure",
     "iva_compensation_annual_source_evidence_failure",
     "withholding_detail_absent",
+    "unresolved_binding",
+    "terminal_origin_mismatch",
+    "unhandled_binding_source",
+    "source_domain_not_ready",
+    "invoice_reverse_charge_cuota_not_derivable",
 ]
+
+
+_BINDING_SOURCE_KEYED_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        "unrouted_observation",
+        "unrouted_declarable_quantity",
+        "iva_selected_scope_evidence_failure",
+        "iva_compensation_annual_source_evidence_failure",
+        "withholding_detail_absent",
+    }
+)
+"""Reasons whose later gates select them by binding source, so an issue without one would never be read."""
+
+
+def _durable_invoice_source_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
+    """Keep explicit literal narrowing for absent invoice-source facts."""
+    if diagnostic.reason == "source_domain_not_ready":
+        return "source_domain_not_ready"
+    if diagnostic.reason == "invoice_reverse_charge_cuota_not_derivable":
+        return "invoice_reverse_charge_cuota_not_derivable"
+    return None
 
 
 def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
@@ -1609,11 +1753,18 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
         return "iva_compensation_annual_source_evidence_failure"
     if diagnostic.reason == "withholding_detail_absent":
         return "withholding_detail_absent"
-    return None
+    if diagnostic.reason == "unresolved_binding":
+        return "unresolved_binding"
+    if diagnostic.reason == "terminal_origin_mismatch":
+        return "terminal_origin_mismatch"
+    if diagnostic.reason == "unhandled_binding_source":
+        return "unhandled_binding_source"
+    return _durable_invoice_source_reason(diagnostic)
 
 
 def _unrouted_source_issues(
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...],
+    boxes: PrintedBoxes,
 ) -> tuple[CalculationSourceIssue, ...]:
     """Project unrouted source conditions into durable revision issues.
 
@@ -1627,16 +1778,29 @@ def _unrouted_source_issues(
     later gate would see a clean persisted revision for exactly the case the
     row-keyed screens cannot report — the silence the quantity screen exists to
     break, restored one layer down.
+
+    Every other reason that withholds filing persists the same way, so a
+    reopened declaration still says what blocks it. A box whose source
+    produced no value persists only when the form prints it, as ``boxes`` reads
+    the published layout: a working figure that could not be worked out is worth
+    checking, not a filed figure missing.
     """
     issues: list[CalculationSourceIssue] = []
     for diagnostic in source_diagnostics:
         reason = _durable_source_issue_reason(diagnostic)
-        if reason is None or diagnostic.binding_source is None:
+        if reason is None:
+            continue
+        binding_source = durable_binding_source(diagnostic)
+        if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
+            continue
+        casilla_id = None if diagnostic.casilla_id is None else str(diagnostic.casilla_id)
+        if reason in PRINTED_BOX_REASONS and not boxes.prints(casilla_id):
             continue
         issues.append(
             CalculationSourceIssue(
                 reason=reason,
-                binding_source=diagnostic.binding_source,
+                binding_source=binding_source,
+                casilla_id=diagnostic.casilla_id,
                 message=(
                     "selected-scope IVA evidence failure"
                     if reason == "iva_selected_scope_evidence_failure"
@@ -1875,11 +2039,11 @@ def _require_m303_regimen_simplificado_annual_summary_arrival_values(
 def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
     """Raise if any binding source kind is unknown to the live mesh (the boundary gate).
 
-    A scalar binding whose ``source`` is not in the executable resolver union
-    would silently blank on every calculation. Row-producing bindings travel
-    through the detail-row and export channel instead, so requiring a scalar
-    resolver for them conflates two executable mechanisms. This gate converts
-    a genuinely unrouted scalar source into a loud
+    A binding whose ``source`` is not in the executable resolver union would
+    silently blank on every calculation, whether it produces a scalar or rows:
+    row shape earns no exemption, and a kind passes only on executable
+    ownership or its registered disposition. This gate converts a genuinely
+    unrouted source into a loud
     :exc:`ModeloAggregationBindingError` at calculation time so a novel TOML
     source cannot compile into a silently-zero revision.
 
@@ -1925,15 +2089,13 @@ def _source_owned_binding_ids(
     return frozenset(binding.id for binding in revision.bindings if binding.source in owned_sources)
 
 
-def _source_owned_bound_casilla_ids(
-    revision: ModeloRevision, owned_sources: frozenset[BindingSourceKind]
+def _bound_casilla_ids_for_bindings(
+    revision: ModeloRevision, binding_ids: frozenset[BindingId]
 ) -> frozenset[CasillaId]:
-    source_owned_binding_ids = _source_owned_binding_ids(revision, owned_sources)
     return frozenset(
         casilla.id
         for casilla in revision.casillas
-        if casilla.input_kind == InputKind.BOUND
-        and source_owned_binding_ids.intersection(bound_casilla_binding_ids(casilla))
+        if casilla.input_kind == InputKind.BOUND and binding_ids.intersection(bound_casilla_binding_ids(casilla))
     )
 
 
@@ -1943,6 +2105,8 @@ def _reject_caller_overrides_of_source_bindings(
     owned_sources: frozenset[BindingSourceKind],
     caller_binding_values: Mapping[BindingId, Decimal],
     caller_casilla_inputs: Mapping[CasillaId, Decimal],
+    caller_enum_binding_values: Mapping[BindingId, str] | None = None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
 ) -> None:
     """Refuse caller-supplied bindings or casilla inputs that collide with values bucket source resolvers own.
 
@@ -1953,8 +2117,15 @@ def _reject_caller_overrides_of_source_bindings(
     to aggregate. Both collisions are rejected before any value reaches
     the engine.
     """
+    # A closed table can populate positional manual-input bindings. Its actual
+    # ownership therefore cannot be inferred from the binding's provider kind.
+    # Keep all rows (including occupied ones) coupled to their source evidence
+    # before the caller's enum channel is overlaid during preparation.
+    protected_binding_ids = _source_owned_binding_ids(revision, owned_sources) | frozenset(
+        binding_id for row_set in closed_record_row_sets for binding_id in row_set.binding_ids
+    )
     rejected_bindings = sorted(
-        set(caller_binding_values).intersection(_source_owned_binding_ids(revision, owned_sources)),
+        (set(caller_binding_values) | set(caller_enum_binding_values or {})).intersection(protected_binding_ids),
     )
     if rejected_bindings:
         raise ModeloAggregationBindingError(
@@ -1972,9 +2143,8 @@ def _reject_caller_overrides_of_source_bindings(
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )
-    rejected_casillas = sorted(
-        set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources)),
-    )
+    protected_casilla_ids = _bound_casilla_ids_for_bindings(revision, protected_binding_ids)
+    rejected_casillas = sorted(set(caller_casilla_inputs).intersection(protected_casilla_ids))
     if rejected_casillas:
         raise ModeloAggregationBindingError(
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
@@ -2007,7 +2177,7 @@ def list_calculation_revisions(
     Each element is a :class:`CalculationRevision`.
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
-    catalogue = ports.calculation_repository.load()
+    catalogue = ports.calculation_repository.load(operation=ports.operation)
     revisions = tuple(
         revision for revision in catalogue if work_unit_id is None or revision.work_unit_id == work_unit_id
     )
@@ -2027,9 +2197,22 @@ def get_calculation_revision(
     ``calculation_revision_id``.
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
+    return get_recorded_calculation_revision(calculation_revision_id, ports=ports)
+
+
+def get_recorded_calculation_revision(
+    calculation_revision_id: CalculationRevisionId,
+    *,
+    ports: CalculationActionPorts,
+) -> CalculationRevision:
+    """Read current persisted coordinates without migrating or changing storage.
+
+    Read-only operations use this door so an unsupported persisted revision
+    refuses through the canonical coordinate gate before any domain write.
+    """
     revision, _ = _calculation_revision_in_repository_bucket(
         calculation_revision_id,
-        catalogue=ports.calculation_repository.load(),
+        catalogue=ports.calculation_repository.load(operation=ports.operation),
         calculation_repository=ports.calculation_repository,
         work_unit_repository=ports.work_unit_repository,
         operation=ports.operation,

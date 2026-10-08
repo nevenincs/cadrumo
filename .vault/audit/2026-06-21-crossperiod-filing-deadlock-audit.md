@@ -3,18 +3,17 @@ tags:
   - '#audit'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-07-17'
-body_hash: 'sha256:c97af3fbdd3d7a1c7bf5addc2465c8450158a0cb203818a4b6132bfd520e3bad'
+modified: '2026-10-03'
+body_hash: 'sha256:89a2be4a9d10f3c30e92a11a6763ae977ac82663f031ae3f99abac3ed32fe5b9'
 related:
   - "[[2026-06-19-crossperiod-filing-deadlock-adr]]"
-  - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
 
 # `crossperiod-filing-deadlock` audit: `Cross-period filing deadlock remediation - code review`
 
 ## Scope
 
-Code review of the cross-period filing deadlock remediation (campaign finding C0), implemented in two commits on `chore/eliminate-shims`: `6e635f566` (Decision A, late local `work file` for closed-window targets) and `84add274d` (Decision B same-year scope, within-year `app_filing` local-chain export with a disclosing advisory). Touched surfaces: `src/aeat/application/workflow/_engine.py`, `src/aeat/application/calculations/_cross_period_clean_state.py`, `src/aeat/application/modelo/_verification_actions.py`, and their tests, plus the owned size-budget ratchet. The review prioritises the safety boundary: this is a safety-adjacent gate, and Decision B relaxes the cross-period clean-state guard, so the anti-laundering partition (locally-clean advisory vs genuinely-unclean blocking) is the load-bearing concern. Method: independent dispatch via `vaultspec-code-reviewer` over the diffs and HEAD source, plus coordinator confirmation of the relaxation boundary, the cross-year canary test, the `app_filing` data invariant, and the legal-catalogue ids.
+Code review of the cross-period filing deadlock remediation (campaign finding C0), implemented in two commits on `chore/eliminate-shims`: `6e635f566` (Decision A, late local `work file` for closed-window targets) and `84add274d` (Decision B same-year scope, within-year `app_filing` local-chain export with a disclosing advisory). Touched surfaces: the retired module, the retired module, the retired module, and their tests, plus the owned size-budget ratchet. The review prioritises the safety boundary: this is a safety-adjacent gate, and Decision B relaxes the cross-period clean-state guard, so the anti-laundering partition (locally-clean advisory vs genuinely-unclean blocking) is the load-bearing concern. Method: independent dispatch via `vaultspec-code-reviewer` over the diffs and HEAD source, plus coordinator confirmation of the relaxation boundary, the cross-year canary test, the `app_filing` data invariant, and the legal-catalogue ids.
 
 ## Findings
 
@@ -24,7 +23,7 @@ Code review of the cross-period filing deadlock remediation (campaign finding C0
 
 ### Safety verdict (anti-laundering boundary) — SOUND
 
-`_relax_same_year_local_chain` (`src/aeat/application/calculations/_cross_period_clean_state.py:661-681`) is airtight. It is a conjunction of four guard clauses, each returning the evidence unchanged on failure; only the final `model_copy` clears blockers and stamps the advisory:
+`_relax_same_year_local_chain`  is airtight. It is a conjunction of four guard clauses, each returning the evidence unchanged on failure; only the final `model_copy` clears blockers and stamps the advisory:
 
 - **Cross-year guard** (`:671`): `requirement.filing_year != target_filing_year` returns unchanged. `requirement.filing_year` is the upstream (prior) period's year; `target_filing_year` is `snapshot.filing_year` at the call site. The M100/2024 folding an unevidenced M100/2023 case has `2023 != 2024`, so it stays BLOCKING. Confirmed end-to-end by the canary `test_verify_gate_blocks_chain_carrying_non_official_prior_year` (asserts `granted_verificado_completo is False` plus a BLOCKING `cross_period_dependency_unclean` finding naming "100"/"2023").
 - **Source-kind guard** (`:673`): only `observation_source_kind == "app_filing"` is relaxed. An `operator_manual` prior also carries a separate `OPERATOR_MANUAL_SOURCE` blocker, so it is double-protected (fails this guard AND the subset guard).

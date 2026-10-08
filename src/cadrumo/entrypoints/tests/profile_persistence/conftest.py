@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.tests import profile_persistence_fixtures
-from .file_flow_test_support import _file_flow_runtime, _FileFlowRuntime, _Repos, _repos
+from .file_flow_test_support import _file_flow_runtime, _FileFlowRuntime, _Repos, file_flow_repositories
 
 secure_engine = profile_persistence_fixtures.secure_engine
 published_authority_lease = profile_persistence_fixtures.published_authority_lease
@@ -20,7 +20,7 @@ secure_objects = profile_persistence_fixtures.secure_objects
 
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
-    yield from _repos(tmp_path)
+    yield from file_flow_repositories(tmp_path)
 
 
 @pytest.fixture

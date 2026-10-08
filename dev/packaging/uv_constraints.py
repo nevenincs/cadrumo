@@ -13,7 +13,7 @@ lockfile on every generation.
 One product distribution carries both console scripts, so its closure is the
 whole runtime surface the installers must pin: the MCP SDK and its transport
 stack are ``cadrumo``'s own requirements, reached by the same export as the
-CLI's. Local, bundle-local-wheel rows (``cadrumo`` and the two data companions)
+CLI's. Local, bundle-local-wheel rows (``cadrumo`` and the three data companions)
 are excluded via ``--no-emit-package``; only genuine third-party leaves are
 pinned.
 """
@@ -39,7 +39,7 @@ _CONSTRAINTS_HEADER = (
 def local_product_packages(*, repo_root: Path) -> tuple[str, ...]:
     """Return the workspace-local package names, read from ``uv.lock``.
 
-    The runtime install closure is ``cadrumo`` and its two data companions.
+    The runtime install closure is ``cadrumo`` and its three data companions.
     All three install from bundle-local or index-resolved product wheels, so
     they are excluded from the pinned third-party constraint set; only their
     transitive dependency closure needs pinning.
@@ -72,6 +72,22 @@ def local_product_packages(*, repo_root: Path) -> tuple[str, ...]:
             "product's own bundle-local wheels would be pinned as index requirements"
         )
     return names
+
+
+def _pinned_export_rows(output: str) -> tuple[str, ...]:
+    lines: list[str] = []
+    for raw in output.splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith(("./", "../", "-e ", "-r ", "file:")):
+            raise SystemExit(f"uv export emitted a non-pinned local row: {stripped!r}")
+        if "==" not in stripped:
+            raise SystemExit(f"uv export row is not version-pinned: {stripped!r}")
+        lines.append(stripped)
+    if not lines:
+        raise SystemExit("uv export produced an empty runtime constraint closure")
+    return tuple(lines)
 
 
 def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
@@ -112,19 +128,7 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
     )
     if result.returncode != 0:
         raise SystemExit(f"uv export failed: {result.stderr.strip()}")
-    lines: list[str] = []
-    for raw in result.stdout.splitlines():
-        stripped = raw.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if stripped.startswith(("./", "../", "-e ", "-r ", "file:")):
-            raise SystemExit(f"uv export emitted a non-pinned local row: {stripped!r}")
-        if "==" not in stripped:
-            raise SystemExit(f"uv export row is not version-pinned: {stripped!r}")
-        lines.append(stripped)
-    if not lines:
-        raise SystemExit("uv export produced an empty runtime constraint closure")
-    return tuple(lines)
+    return _pinned_export_rows(result.stdout)
 
 
 def render_constraints_file(lines: tuple[str, ...], *, min_uv_version: str | None = None) -> str:

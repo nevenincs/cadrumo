@@ -1,0 +1,111 @@
+[[revisions.2025.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+
+[[revisions.2025.export_layouts.records]]
+id = 'modelo-714-page-05'
+record_type = '714-05'
+order = 4
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2809'
+offset = 2809
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-nie-entidad-emisora-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2829'
+offset = 2829
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-otro-pais-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2830'
+offset = 2830
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-descripcion-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2892'
+offset = 2892
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-valor-4'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-11'
+offset = 2905
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-11'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-05-reserved-2'
+offset = 2918
+length = 171
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-05-end'
+offset = 3089
+length = 12
+kind = 'literal'
+literal = '</T71405000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[revisions.2025.export_layouts.records.row_field_casilla_ids]

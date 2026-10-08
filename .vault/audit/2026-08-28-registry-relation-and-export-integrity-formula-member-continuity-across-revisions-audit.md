@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-relation-and-export-integrity'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d539460dcc594ca7b0137ae3984b417f904710d4d3229d15cf4f296695994dd0'
+body_hash: 'sha256:43118937ec5264bcdfad7f7d603226cf06025c8512c1ebd71ec747f23871beab'
 related:
   - "[[2026-08-28-calculation-correctness-campaign-murcia-2022-accumulated-cuota-break-audit]]"
 ---
@@ -13,18 +13,37 @@ related:
 # `registry-relation-and-export-integrity` audit: `Formula member continuity across revisions is clean; the one apparent drop is a restructure`
 
 ## Scope
-
-## Findings
-
-## Recommendations
-
-## Why this axis
-
 A tier missing from a hand-enumerated total (M390 recargo tabaco) and a value
 carried over from a superseded version of a scale (Murcia 2022) are both the same
 shape: something that should have crossed a filing-year boundary and did not.
 This sweep asks the question directly of every formula in the registry.
 
+## Findings
+Per-formula-id comparison flags a restructure as a loss, so it answers the wrong
+question. The right one is whether a casilla still reaches *any* formula:
+
+> for each consecutive revision pair, a casilla consumed in the earlier revision
+> and still **declared** in the later one must still be consumed by some formula
+> there
+
+Across **70** consecutive revision pairs: **zero**. No casilla is left declared,
+exported, and computed by nothing.
+
+Numeric leaf ids are excluded from the join. Casilla ids renumber between filing
+years -- modelo 123 grew from 8 boxes to 14 -- so joining on them across a year
+boundary compares different boxes. Only stable semantic ids are matched, and the
+sweep is blind to a drop expressed purely in numeric ids; that limitation is real
+and is the reason this is recorded as a sweep rather than shipped as a gate.
+
+## Recommendations
+The two clean axes swept this campaign were gated because their check has no
+legitimate failure mode. This one does: a design may deprecate a box, keeping it
+declared for export while no longer computing it. That is lawful, so a ratchet
+here would need an allowlist from its first day, and an allowlist with no
+instances to justify it is a shape looking for a defect. Recorded as a swept axis
+instead, with the probe described precisely enough to re-run.
+
+No production code, registry data or test was changed by this audit.
 ## The naive sweep, and why its one hit is not a defect
 
 Comparing each formula id's member set between consecutive revisions of the same
@@ -52,32 +71,3 @@ is *not* the régimen general resultado. Its formula is `divide(multiply(64, 65)
 semantic names by eye would pair `66` with `iva.resultado-regimen-general` and
 conclude the 2023 expression re-states the 2022 one. It does not; it adds boxes
 77 and 68 as well.
-
-## The corrected formulation, which is the one that matters
-
-Per-formula-id comparison flags a restructure as a loss, so it answers the wrong
-question. The right one is whether a casilla still reaches *any* formula:
-
-> for each consecutive revision pair, a casilla consumed in the earlier revision
-> and still **declared** in the later one must still be consumed by some formula
-> there
-
-Across **70** consecutive revision pairs: **zero**. No casilla is left declared,
-exported, and computed by nothing.
-
-Numeric leaf ids are excluded from the join. Casilla ids renumber between filing
-years -- modelo 123 grew from 8 boxes to 14 -- so joining on them across a year
-boundary compares different boxes. Only stable semantic ids are matched, and the
-sweep is blind to a drop expressed purely in numeric ids; that limitation is real
-and is the reason this is recorded as a sweep rather than shipped as a gate.
-
-## Not gated, deliberately
-
-The two clean axes swept this campaign were gated because their check has no
-legitimate failure mode. This one does: a design may deprecate a box, keeping it
-declared for export while no longer computing it. That is lawful, so a ratchet
-here would need an allowlist from its first day, and an allowlist with no
-instances to justify it is a shape looking for a defect. Recorded as a swept axis
-instead, with the probe described precisely enough to re-run.
-
-No production code, registry data or test was changed by this audit.

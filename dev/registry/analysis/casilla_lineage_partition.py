@@ -42,7 +42,7 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.loader_cache import discover_modelo_sources
-from .casilla_lineage_seed import load_corpus
+from .casilla_lineage_seed_corpus import load_corpus
 
 __all__ = [
     "LineageTotalityState",

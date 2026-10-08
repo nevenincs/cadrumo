@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6c1eb3ce48712a729b7aa3816dfca63d0e690e4ac422ec7814f4dc401c2fa96e'
+body_hash: 'sha256:d8b95a4d47d1dddab62c72d076dc90ab6c13d5aa57ebb26e89528921d3188397'
 related:
   - "[[2026-08-05-modelo-parity-rollup-s16-0150-oracle-addendum-research]]"
 ---
@@ -19,17 +19,17 @@ This evidence addendum examines the smallest source contract needed before Model
 
 ### The current persisted records do not represent the official worked example
 
-The current rental domain exposes contract-level income and leased days through `FincaRendimientoRecord` (`src/cadrumo/domain/fincas/_models.py:225-247`), year/finca/category expense rows through `FincaGasto` (`src/cadrumo/domain/fincas/_models.py:250-273`), and a cumulative building-specific 3 percent amortization ledger through `FincaAmortizacionLedgerEntry` (`src/cadrumo/domain/fincas/_models.py:276-311`). No persisted record has a separate movable-property or furniture asset identity, in-service/disposal dates, or a contract-period allocation.
+The current rental domain exposes contract-level income and leased days through `FincaRendimientoRecord` , year/finca/category expense rows through `FincaGasto` , and a cumulative building-specific 3 percent amortization ledger through `FincaAmortizacionLedgerEntry` . No persisted record has a separate movable-property or furniture asset identity, in-service/disposal dates, or a contract-period allocation.
 
 The bundled 2025 Renta manual worked example requires furniture amortization of `388.13`, deductible expenses of `2,562.91`, and reduction of `2,958.38` (`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:12833`). Those values cannot be reconstructed from the current persisted fields without introducing facts that the source model does not carry.
 
 ### The current aggregate is not a contract-period allocation contract
 
-`compute_finca_aggregates` returns total rental income, expenses, building amortization, and reduction attribution (`src/cadrumo/domain/fincas/_aggregates.py:267-294`). Its expense and amortization allocation uses income-share proportions (`src/cadrumo/domain/fincas/_aggregates.py:294-311`), which is not an explicit intersection of a contract's active dates with an expense or asset-use interval. A future producer therefore needs an allocation contract that can reconcile each source amount exactly once while retaining source and contract identity.
+`compute_finca_aggregates` returns total rental income, expenses, building amortization, and reduction attribution . Its expense and amortization allocation uses income-share proportions , which is not an explicit intersection of a contract's active dates with an expense or asset-use interval. A future producer therefore needs an allocation contract that can reconcile each source amount exactly once while retaining source and contract identity.
 
 ### Secure-storage readiness is an explicit boundary
 
-`fincas_source_readiness()` returns `ready=False` because rendimiento and amortization aggregates do not cross the canonical secure-storage revision boundary (`src/cadrumo/domain/fincas/_source_readiness.py:34-52`). Existing domain or SQL records are calculation capability, not proof that the application can resolve a calculation source with typed provenance and pull/calculate parity.
+`fincas_source_readiness()` returns `ready=False` because rendimiento and amortization aggregates do not cross the canonical secure-storage revision boundary . Existing domain or SQL records are calculation capability, not proof that the application can resolve a calculation source with typed provenance and pull/calculate parity.
 
 ## Candidate contract questions for the ADR
 
@@ -49,9 +49,6 @@ A promotion oracle must exercise the real secure-storage-to-calculate path and i
 
 ## Sources
 
-- `src/cadrumo/domain/fincas/_models.py:225-311`
-- `src/cadrumo/domain/fincas/_aggregates.py:267-311`
-- `src/cadrumo/domain/fincas/_source_readiness.py:34-52`
 - `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:12833`
 - `.vault/research/2026-08-05-modelo-parity-rollup-s16-0150-oracle-addendum-research.md`
 - `.vault/audit/2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit.md`

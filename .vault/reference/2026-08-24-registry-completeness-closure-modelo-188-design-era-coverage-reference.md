@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e3dbb5167529f49dade5e7547c50de7986355eda12a71ae4df5230eafebb26c'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:cd2827c9bf15c141e8d5e917f6acebf7b1dc8308175a64cbdfdd2acfccd7355e'
+related: []
 ---
 
 # `registry-completeness-closure` reference: `modelo 188 design era coverage`
@@ -115,8 +114,6 @@ submission.
 - `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2019-y-siguientes/`
 - `src/cadrumo/_data/registry/aeat/legal/enrolled-forms-sources.toml`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_188/manifest.json`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_188_resumen_matches_its_design.py`
 - `2026-08-14-registry-temporal-coverage-plan`
 - `2026-08-22-source-casilla-integration-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

@@ -8,14 +8,12 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_5,
 )
-from .command_spec import (
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandSpec,
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -23,6 +21,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, InvocationSpec
 
 _PRORRATA_REGISTER_MODULE: Final[str] = "...core.prorrata_register"
 _PRORRATA_CLI_MODULE: Final[str] = "._prorrata_register_cli"

@@ -22,6 +22,9 @@ inside the file matches the filename stem.
   policy). Deliberately distinct from `width17-num`: the two populations carry
   different sign policies and are never the same topic.
 - `identifier-digits` — identifier digit-width policy (modelo 210).
+- `signed-composite` — source-stated signed monetary composites: one leading
+  blank-or-`N` sign byte and an unsigned integer/decimal magnitude, each rule
+  checked against the anchor's complete printed sign and partition clauses.
 
 A new topic stem is a change to this vocabulary: add it here in the same
 change as its first use.

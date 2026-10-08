@@ -39,7 +39,7 @@ from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle,
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.m123_count_authority_gate import Modelo123CountAuthorityUnresolvedError
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.errors.error_codes import get_registered_error_code
@@ -163,7 +163,7 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _verify(revision_id: CalculationRevisionId, *, operation: PinnedAuthorityOperation) -> VerificationReport:
-    return verify_modelo_revision(
+    return verify_modelo_revision_with_preconditions(
         revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         operator_scope_ports=build_operator_scope_ports(),
@@ -171,7 +171,7 @@ def _verify(revision_id: CalculationRevisionId, *, operation: PinnedAuthorityOpe
         workflow_profile=_workflow_profile(),
         verification_repositories=build_test_verification_repository_bundle(),
         operation=operation,
-    )
+    ).report
 
 
 def _stored_revision(bucket: _Bucket, revision_id: CalculationRevisionId) -> CalculationRevision:
@@ -302,9 +302,10 @@ def test_evidence_captured_after_verification_refuses_filing_and_export(
         with pytest.raises(Modelo123CountAuthorityUnresolvedError) as file_info:
             file_modelo_revision(
                 revision_id,
+                approved_verification_report_id=granted.verification_report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=build_operator_scope_ports(),
-                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
                 actor="test",
                 workflow_profile=_workflow_profile(),
                 operation=operation,

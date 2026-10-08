@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -58,8 +59,8 @@ class FilingActionPorts:
 class FilingActionPortsFactory(Protocol):
     """Construct the filing authorities for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str) -> FilingActionPorts:
-        """Return the complete filing bundle for ``bucket_id``."""
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> FilingActionPorts:
+        """Return the filing bundle for one bucket and held authority context."""
         ...
 
 

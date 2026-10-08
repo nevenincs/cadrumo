@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from secrets import compare_digest
-from typing import Protocol, Self, runtime_checkable
+from typing import Protocol, Self, cast, runtime_checkable
 
 from pydantic import BaseModel
 
@@ -91,6 +91,7 @@ from ._projection_read import (
 from ._projection_read import (
     review_request_or_refusal as _review_request_or_refusal,
 )
+from .error_detail import OperationErrorDetailV1, operation_error_detail_schema, resolve_operation_error_detail
 from .frontend_contracts import (
     OperationCancellationResultV1,
     OperationDetachResultV1,
@@ -117,6 +118,7 @@ from .frontend_requests import (
     OperationResponseControlVersionHeader,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
+    OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionVersionHeader,
@@ -325,6 +327,36 @@ class UnavailableOperationSecureResponseAuthority:
         """Close the empty authority idempotently."""
 
 
+@dataclass(frozen=True, slots=True)
+class InspectionOnlyOperationSecureResponseAuthority:
+    """Read current intents from process-local custody without moving the bearer."""
+
+    broker: OperationResponseAuthorityBroker
+    capability: OperationResponseCapability
+    clock: Callable[[], datetime]
+
+    async def permitted_intents(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        /,
+    ) -> frozenset[OperationResponseIntent]:
+        return self.broker.inspect(request, pending, self.capability, clock=self.clock)
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        del request, pending, intent
+        raise ValueError("inspection authority cannot consume a response")
+
+    def close(self) -> None:
+        """Inspection owns no token and cannot close the caller's capability."""
+
+
 _CAPABILITY_ISSUER = object()
 
 
@@ -467,6 +499,18 @@ class OperationResultProjectionService:
         request_or_refusal = _result_request_or_refusal(request)
         if isinstance(request_or_refusal, OperationResultProjectionRefusalV1):
             return request_or_refusal
+        if request_or_refusal.result_schema == operation_error_detail_schema():
+            if not issubclass(OperationErrorDetailV1, projection_type):
+                return OperationResultProjectionRefusalV1(
+                    code=OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH,
+                    requested_version=1,
+                    diagnostic_ref=None,
+                )
+            detail = await resolve_operation_error_detail(self.reader, self.registry, self.operands, request_or_refusal)
+            # CAST-RATIONALE-OPERATION-ERROR-DETAIL: the branch above admits only a
+            # requested type the stored detail model is a subclass of, so the
+            # detail envelope is exactly the caller's requested result shape.
+            return cast("OperationResultProjectionResultV1[ResultProjectionT]", detail)
         context_or_refusal = await _load_result_context(self.reader, request_or_refusal)
         if isinstance(context_or_refusal, OperationResultProjectionRefusalV1):
             return context_or_refusal

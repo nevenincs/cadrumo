@@ -36,7 +36,6 @@ from ...core.source_locator import SourceUrl
 from ...core.time.date_range import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.deadlines.festivos import CalendarCCAA as _CalendarCCAA
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
 from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
@@ -235,6 +234,13 @@ class OverviewCalendarRange(BaseModel):
         return self.from_date <= candidate <= self.to_date
 
 
+class OverviewAeatEvidenceConcern(StrEnum):
+    """A register observation that cannot establish current completion."""
+
+    INACTIVE_REGISTER = "inactive_register"
+    UNKNOWN_REGISTER = "unknown_register"
+
+
 class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     """Filing evidence attached to one legal calendar obligation.
 
@@ -261,10 +267,20 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     aeat_snapshot_id: SnapshotId | None = None
     aeat_evidence_kind: str | None = Field(default=None, min_length=1, max_length=64)
     aeat_evidence_conflict_reference_ids: tuple[str, ...] = Field(default_factory=tuple)
+    aeat_evidence_concerns: tuple[OverviewAeatEvidenceConcern, ...] = ()
     verified_justificante_csv: AeatCsv | None = None
     justificante_required: bool = True
     justificante_verified: bool = False
     evidence_source: str | None = Field(default=None, min_length=1, max_length=64)
+
+    @property
+    def aeat_filed(self) -> bool:
+        """An active official filing completes its obligation independently of receipt linkage."""
+        return (
+            self.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
+            and not self.aeat_evidence_conflict_reference_ids
+            and not self.aeat_evidence_concerns
+        )
 
 
 class OverviewCalendarEntry(BaseModel):
@@ -287,7 +303,9 @@ class OverviewCalendarEntry(BaseModel):
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
     jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
     holiday_coverage: _DeadlineHolidayCoverage
-    holiday_territory: _CalendarCCAA | None = None
+    # Text of the already-projected calendar territory: the CLI and TUI restore
+    # this row from its snapshot without a pinned authority to re-project it.
+    holiday_territory: str | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None

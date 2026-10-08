@@ -32,11 +32,11 @@ from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.invoices.enums import InvoiceClass, PaymentStatus
-from ...domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
+from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.iva.schema import IvaCategory
 from .catalogue_lifecycle_ports import CatalogueLifecyclePorts
-from .catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
 
 
 class CatalogueInvoiceRemoveResult(BaseModel):
@@ -58,46 +58,27 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
     resolved to the first hit.
 
     Raises:
-        InvoiceNotFoundError: when no invoice matches the id or prefix.
-        InvoiceValidationError: when a prefix matches more than one invoice.
+        InvoiceLookupRefusedError: when the selector is empty, absent or ambiguous.
 
     Returns:
         The resolved :class:`Invoice`.
     """
     trimmed = invoice_id.strip()
     if not trimmed:
-        raise InvoiceNotFoundError(
-            translated_message="application.invoices.lifecycle.errors.invoice_id_required",
-        )
+        raise InvoiceLookupRefusedError(reason=InvoiceLookupRefusalReason.REQUIRED, invoice_id=trimmed)
     exact = catalogue.get(trimmed)
     if exact is not None:
         return exact
     matches = tuple(invoice for invoice in catalogue.values() if invoice.invoice_id.startswith(trimmed))
     if not matches:
-        raise InvoiceNotFoundError(
-            translated_message="application.invoices.lifecycle.errors.invoice_not_found",
-            context={"invoice_id": trimmed},
-        )
+        raise InvoiceLookupRefusedError(reason=InvoiceLookupRefusalReason.NOT_FOUND, invoice_id=trimmed)
     if len(matches) > 1:
-        candidates = ", ".join(invoice.invoice_id for invoice in matches)
-        raise InvoiceValidationError(
-            translated_message="application.invoices.lifecycle.errors.ambiguous_invoice_prefix",
-            context={"invoice_id": trimmed, "candidates": candidates},
+        raise InvoiceLookupRefusedError(
+            reason=InvoiceLookupRefusalReason.AMBIGUOUS,
+            invoice_id=trimmed,
+            candidate_ids=tuple(invoice.invoice_id for invoice in matches),
         )
     return next(iter(matches))
-
-
-def resolve_catalogue_invoice_from_repository(
-    *,
-    invoice_id: str,
-    ports: InvoiceCatalogueReadPorts,
-) -> Invoice:
-    """Load the catalogue and resolve one invoice by id or unambiguous prefix.
-
-    Returns:
-        The resolved :class:`Invoice`.
-    """
-    return resolve_catalogue_invoice(ports.invoice_reader.load(), invoice_id)
 
 
 def remove_catalogue_invoice(
@@ -303,6 +284,5 @@ __all__ = [
     "CatalogueInvoiceUpdateResult",
     "remove_catalogue_invoice",
     "resolve_catalogue_invoice",
-    "resolve_catalogue_invoice_from_repository",
     "update_catalogue_invoice",
 ]

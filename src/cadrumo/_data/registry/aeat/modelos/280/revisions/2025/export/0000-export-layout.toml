@@ -1,0 +1,10 @@
+[[revisions.2025.export_layouts]]
+id = 'modelo-280-fichero-2022'
+format = 'fixed_width'
+source_refs = ['aeat-dr-280-2022']
+legal_refs = [
+    'orden-hap-2118-2015:art-1',
+    'orden-hfp-1192-2022:art-cuarto',
+    'orden-hfp-1822-2016:art-sexto',
+]
+dictionary_path_overrides = []

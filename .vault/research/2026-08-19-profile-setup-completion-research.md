@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#profile-setup-completion'
 date: '2026-08-19'
-modified: '2026-08-19'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:146b0cc57921f49cc27545ef9c6523f42ed77f489278bc00faabc935d454033e'
+body_hash: 'sha256:191e841eed173022a4fee423d773b0f2cb606cc8fc2449563da19e9445e536df'
 related: []
 ---
 # `profile-setup-completion` research: `no production path advances a profile to setup COMPLETE`
@@ -30,14 +30,14 @@ finish line the CLI advertises.
 For a profile created through the documented scripted invocation,
 `aeat config profile show` reports `record_validity valid issues=0` together with
 `setup_state incomplete`. Two authorities disagree: the computed field-level
-completeness in `src/cadrumo/application/user_profile/_completeness.py`
+completeness
 (`conditional_profile_missing_required`, `missing_required_field_paths`) finds
 nothing missing, while the stored enum still says incomplete.
 
 ### The transition exists, is self-guarding, and has no production caller
 
 `ProfileRecordRepository.complete_setup`
-(`src/cadrumo/application/user_profile/_profile_record_repository.py:270`) is the
+ is the
 only code that writes `ProfileSetupState.COMPLETE`. It is compare-and-swap
 guarded on `record_revision` plus `content_digest`, returns early when already
 complete, and calls `reject_invalid_profile_facts(..., require_complete=True)`
@@ -48,7 +48,7 @@ Measured call sites across `src/cadrumo/`: two docstring references
 `application/wizard/_checkpoint_store.py:33`) and otherwise tests only —
 `application/user_profile/tests/test_capsule_lifecycle.py`,
 `test_complete_setup_schema_judgement.py`, `test_cotejo_apply_schema_judgement.py`,
-and the shared helper `src/cadrumo/tests/user_profile.py`. No production caller.
+and the shared helper the former source file. No production caller.
 
 That the only exercise is from tests is what makes the capability dormant rather
 than merely unreached: the transition is proven to work and proven to be unwired.
@@ -56,7 +56,7 @@ than merely unreached: the transition is proven to work and proven to be unwired
 ### Birth-incompleteness is deliberate; completion is not documented anywhere
 
 `register_profile_from_scripted_invocation`
-(`src/cadrumo/entrypoints/cli/_config/_scripted_registration.py:109`) states it
+ states it
 directly: "a profile is born incomplete on purpose, so a rejected fact leaves a
 real profile the operator can correct instead of nothing." The wizard agrees from
 the other side — `application/wizard/_commands.py` records that a save-and-exit
@@ -97,11 +97,11 @@ an interactive route would have to reach it through code that does not exist.
 
 ## Sources
 
-- `src/cadrumo/application/user_profile/_profile_record_repository.py:270` — `complete_setup`
-- `src/cadrumo/application/user_profile/_completeness.py` — the computed completeness authority
-- `src/cadrumo/application/user_profile/_validation.py:137` — docstring reference
+- the former source file — `complete_setup`
+- the former source file — the computed completeness authority
+- the former source file — docstring reference
 - `src/cadrumo/application/wizard/_checkpoint_store.py:33` — docstring reference, and `INCOMPLETE` as the resume state
-- `src/cadrumo/application/wizard/_commands.py` — save-and-exit leaves `SETUP_INCOMPLETE`
-- `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py:109` — "born incomplete on purpose"
-- `src/cadrumo/domain/user_profile/_values.py:147` — `ProfileSetupState`; `:364` — a consumer gating on `COMPLETE`
-- `src/cadrumo/application/modelo/_m303_regimen_simplificado_scope.py:41` — another consumer gating on `COMPLETE`
+- the former source file — save-and-exit leaves `SETUP_INCOMPLETE`
+- the former source file — "born incomplete on purpose"
+- the former source file — `ProfileSetupState`; `:364` — a consumer gating on `COMPLETE`
+- the former source file — another consumer gating on `COMPLETE`

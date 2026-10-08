@@ -26,6 +26,7 @@ var/
 # spares only a run still being written. There is no retention window anywhere.
 .logs/
 logs/
+!native/desktop/src-tauri/src/logs/
 .log/
 log/
 .log-*
@@ -179,6 +180,8 @@ node_modules/
 # inside it except the tracked example template.
 env/*
 !env/.env.example
+# Publisher OAuth metadata is provisioned into build artifacts from managed settings.
+src/cadrumo/_data/google/oauth_client.json
 venv/
 env.bak/
 venv.bak/
@@ -322,8 +325,10 @@ src/cadrumo/_data/corpus/manuals/**/source.html/
 # starts resolving an undeclared path inside `dev/`.
 
 # Scratch / ad-hoc workspace / temp
-scratch/*
-.scratch-*/
+scratch/
+.scratch/
+.scratch-*
+.scratch_*
 .campaign-runs/
 .vault-scratch/
 .dedup-scan/
@@ -333,10 +338,12 @@ scratch/*
 **/[Tt][Mm][Pp]/
 **/[Tt][Ee][Mm][Pp]/
 **/.[Tt][Mm][Pp]/
+**/.[Tt][Ee][Mm][Pp]/
 **/[Tt][Mm][Pp][-_]*/
 **/[Tt][Ee][Mm][Pp][-_]*/
 **/.[Tt][Mm][Pp][-_]*/
 **/.[Tt][Mm][Pp][-_]*
+**/.[Tt][Ee][Mm][Pp][-_]*
 **/*.[Tt][Mm][Pp]
 **/*.[Tt][Ee][Mm][Pp]
 # A directory named `cache` is a cache, at any depth and under either spelling.
@@ -477,6 +484,8 @@ cache/
 /.codex/config.toml.lock
 /.gitignore.lock
 /.mcp.json.lock
+/.pre-commit-config.yaml
+/.pre-commit-config.yml
 /.vaultspec/.env
 /.vaultspec/.env.*
 # <<< vaultspec-managed <<<
@@ -507,6 +516,10 @@ cache/
 # work, and are reclaimed on the next attempt if their holder died.
 /src/cadrumo/_data/registry/aeat/.*.lock
 /src/cadrumo/_data/registry/aeat/.*.lock.lock
+# Export publication takes a 0-byte lock sidecar per modelo revision beside the
+# `aeat` root and never deletes it on release. It records only that a local
+# generation ran.
+/src/cadrumo/_data/registry/.*-generated-export-transaction-*.lock
 
 # The published registry authority: a content-addressed SQLite generation, its
 # descriptor, the publisher's retained destination lock and any staging
@@ -529,11 +542,19 @@ cache/
 # as well; named explicitly so a reader greps the directory and finds why.
 /.tmp-tui-visual-inventory/
 
+# Review notes and sign-offs left through `python -m dev.tui serve`. Unlike the
+# renders above this IS durable local state -- nothing regenerates what a
+# reviewer wrote -- so it lives outside the run tree, and its `.sqlite3` file is
+# spared by the worktree clean. Local to this checkout, never committed.
+/.tui-review/
+
 # Ad-hoc local analysis/remediation scratch output (e.g. ty static-analysis
 # runs, remediation scripts and intermediate results). Regenerated per run
 # and never durable; promote a specific snapshot into .vault/ evidence
 # deliberately instead of tracking the whole scratch tree.
 /.artifacts/
+!/CMakeLists.txt
+!/native/interpreter/windows/host.manifest
 
 # Private VaultSpec environment (never commit)
 /.vaultspec/.env

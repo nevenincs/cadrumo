@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:6858c6f1387edd2802fe547edb295b395d69187957db585fdf0652d5c604b496'
+body_hash: 'sha256:14205ebdd7b06f0648afe4026597d91ae3e42005cc4831cb1dd6e19e4f1531dd'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -15,7 +15,7 @@ related:
 ## Scope
 
 The `--scope tests` "injected-but-constrained" detector (`WriteSite.constrained`,
-`dev/write_site_census.py`) was built to catch a literal that reads as free
+The retired module) was built to catch a literal that reads as free
 (`temporary`/`pass_through`) but secretly agrees with a value a sibling fixture or
 a spawned process independently derives from the real taxonomy accessor. Before
 trusting it as a triage instrument, it was run against the full test tree and
@@ -42,7 +42,7 @@ says another):
    miss is not a vocabulary gap at all, so no signal-set tuning — including the
    two changes just funded — closes it. The code for step 2 was implemented,
    then reverted in the same session once step 3 landed; see the commit history
-   on `dev/write_site_census.py` for both.
+   on the retired module for both.
 
 ## Findings
 
@@ -52,8 +52,7 @@ Run at `64c9fe6d6e`, `--scope tests`: 4557 file-producing sites, 1% unresolved
 (34), 114 flagged `constrained`. Against the oracles: `test_bundle_export_recovery.py`
 fired correctly; `_registry_cli_fixtures.py` and `test_m145_communication_cli.py`
 — the other two known `secrets` positives — did not fire. `registry` produced 3
-hits against an expected 0; `llm-*` produced roughly 9 hits (`test_cache.py`,
-`test_run_telemetry_retention.py`) against an expected 0. Independently
+hits against an expected 0; `llm-*` produced roughly 9 hits (`test_cache.py`) against an expected 0. Independently
 reproduced at a different pin from a parallel run at `53f80f0830` (110 hits, the
 same two misses, the same over-firing shape), so the result is not an artefact of
 one revision.
@@ -71,7 +70,7 @@ independently-confirmed causes, none of them the intended signal:
    distinguish that from an independent injection agreeing with an unrelated
    consumer.
 2. **Generic local-variable names colliding with the marker vocabulary.**
-   `test_run_telemetry_retention.py` never calls any accessor. It fires because
+   A retention test never calls any accessor. It fires because
    line 157 assigns a local variable literally named `root_dir` — a wholly
    ordinary choice of scratch variable name a test author made — and `root_dir`
    is a member of `TAXONOMY_MARKERS`, reused wholesale as part of
@@ -156,7 +155,7 @@ hand-classification commits retiring real sites. **That reconciliation is
 false.** `honesty` measured both the `53f80f0830` and `dcfb8209e4` versions of
 the detector directly against the `dcfb8209e4` tree and got identical results
 from each (`183`/`519`/`702`) — the detector file is byte-identical between the
-two pins (`git diff 53f80f0830 dcfb8209e4 -- dev/write_site_census.py` is
+two pins (the historical check is
 empty), and the intervening test-tree churn (11 files, +464/−7, net additive)
 cannot retire 212 sites. A cross-check recorded as agreement is exactly the
 kind of finding this campaign has learned gets the least scrutiny, because
@@ -285,7 +284,7 @@ check, tested against both known misses) was measured to catch 3 of 3 oracles,
 but on this sample addresses only the minority mechanism — one of the two
 misses caught genuinely, the other incidentally, per a second reading — and
 was retracted rather than shipped; see the decision history above and the
-revert commit on `dev/write_site_census.py`.
+revert commit on the retired module.
 
 The one undeclared void surfaces a distinct, more dangerous failure mode: a
 rename does not break the test, it silently **voids** it — an absence

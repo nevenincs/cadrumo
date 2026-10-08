@@ -49,6 +49,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -127,6 +128,7 @@ class RecipientReplayGuardRepository:
         *,
         bucket_id: str | None = None,
         objects: SecureObjectRepository | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> None:
         """Initialise the repository.
 
@@ -139,6 +141,8 @@ class RecipientReplayGuardRepository:
                 override
                 (tests). When neither ``objects`` nor ``bucket_id`` is
                 supplied, defaults to the active-bucket secure object store.
+            mutation_writer: Optional admission fence around the actual secure
+                object compare-and-swap write.
         """
         self._storage = ProfileBareModelSecurePersistence(
             objects=resolve_profile_secure_object_repository(objects=objects, bucket_id=bucket_id),
@@ -146,6 +150,7 @@ class RecipientReplayGuardRepository:
             model_type=ConsumedNonceLedger,
             empty_document=ConsumedNonceLedger,
             write_provenance="adapters.persistence.profile.recipient_replay_guard",
+            mutation_writer=mutation_writer,
         )
 
     def load(self) -> ConsumedNonceLedger:

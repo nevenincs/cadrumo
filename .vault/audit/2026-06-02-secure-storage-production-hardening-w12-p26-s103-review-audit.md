@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:9f552a13b218883f5e51229c38ceb9bac62febe01317aca7d2cd6ddfa18dc9a5'
+modified: '2026-10-03'
+body_hash: 'sha256:43dec78ff2aebad3e0748e3ef618a09009a7978cabdb7da84638f43dc700aa48'
 related: []
 ---
 
@@ -15,8 +15,8 @@ CRITICAL findings present: no.
 
 ## Scope
 
-- `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`
-- `src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py`
+- the retired module
+- the retired test
 - `.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
 - `.vault/exec/2026-05-22-secure-storage-production-hardening/2026-06-02-secure-storage-production-hardening-W12-P26-S103.md`
 
@@ -29,8 +29,8 @@ CRITICAL findings present: no.
 
 ## Validation
 
-- `uv run pytest -q src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py` passed: 15 passed.
-- `uv run --no-sync ruff check src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py` passed.
+- the historical check passed: 15 passed.
+- the historical check passed.
 
 ## Residual Risks
 

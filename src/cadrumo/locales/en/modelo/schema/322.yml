@@ -568,6 +568,18 @@ modelo:
             label: Taxable transactions with reverse charge [122]
           m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica:
             label: Taxable transactions under the one-stop-shop special regimes [124]
+          m322-papel-actividad-otras-1-descripcion:
+            label: 'Other activity 1: description'
+          m322-papel-actividad-otras-2-descripcion:
+            label: 'Other activity 2: description'
+          m322-papel-actividad-otras-3-descripcion:
+            label: 'Other activity 3: description'
+          m322-papel-actividad-otras-4-descripcion:
+            label: 'Other activity 4: description'
+          m322-papel-actividad-otras-5-descripcion:
+            label: 'Other activity 5: description'
+          m322-papel-actividad-principal-descripcion:
+            label: Main activity description
           m322-prorratas-1-codigo-cnae:
             label: Prorrata - 1 - CNAE code [500]
           m322-prorratas-1-importe-operaciones:
@@ -625,14 +637,147 @@ modelo:
             label: Prorrata - 5 - Prorrata type [523]
           m322-regularizacion-cuotas-art-80-cinco-5-liva:
             label: Regularisation of amounts under art. 80.Cinco.5ª LIVA [76]
+          m322-sin-actividad:
+            label: No activity (X if no output or input VAT accrued during the period)
       construct:
         modelo-322-iva-grupo-individual:
           field:
             title: Modelo 322 IVA group of entities, individual return
+        modelo-322-papel-actividades:
+          field:
+            title: Activities
       field:
         official_name: Modelo 322. Value Added Tax. Group of entities. Individual
           form. Monthly self-assessment.
         title: VAT. Group of entities. Individual form. Monthly self-assessment
+      form:
+        authored:
+          actividad:
+            heading: Activity
+          actividades:
+            heading: Activities ranked by transaction volume
+          adicional:
+            heading: Additional information
+          aib:
+            heading: Intra-Community acquisitions of goods and services
+          aib-corriente:
+            heading: 'Intra-Community acquisitions: current goods and services'
+          aib-inversion:
+            heading: 'Intra-Community acquisitions: capital goods'
+          anuales:
+            heading: Transactions during the year
+          caja:
+            heading: Acquisitions under cash accounting
+          clave-actividad:
+            heading: Code
+          cnae:
+            heading: CNAE
+          codigo:
+            heading: Activity code
+          compensacion:
+            heading: Agriculture, livestock and fisheries scheme compensation
+          complementaria:
+            heading: Supplementary return
+          deducible:
+            heading: Deductible VAT
+          dependiente:
+            heading: Subsidiary entity
+          derecho:
+            heading: Transactions with deduction rights
+          descripcion:
+            heading: Activity description
+          devengado:
+            heading: Output VAT
+          devengo:
+            heading: Tax period
+          dominante:
+            heading: Parent entity
+          general:
+            heading: Other general-scheme transactions
+          grupo-1:
+            heading: 'Deductible VAT: Group 1'
+          grupo-2:
+            heading: 'Deductible VAT: Group 2'
+          iae:
+            heading: IAE heading
+          identificacion:
+            heading: Identification
+          importacion-corriente:
+            heading: 'Imports: current goods'
+          importacion-inversion:
+            heading: 'Imports: capital goods'
+          importe:
+            heading: Total transaction amount
+          interiores-corriente:
+            heading: 'Domestic transactions: current goods and services'
+          interiores-inversion:
+            heading: 'Domestic transactions: capital goods'
+          intra:
+            heading: Intragroup transactions
+          intra-corriente:
+            heading: Current intragroup transactions
+          intra-inversion:
+            heading: Intragroup capital-goods transactions
+          inversion:
+            heading: Other reverse-charge transactions
+          justificante:
+            heading: Previous return receipt number
+          marca-complementaria:
+            heading: Supplementary return
+          mod-general:
+            heading: Adjustments to general-scheme bases and VAT
+          mod-intra:
+            heading: Adjustments to intragroup bases and VAT
+          mod-recargo:
+            heading: Adjustments to equivalence-surcharge bases and amounts
+          nif:
+            heading: Taxpayer tax ID
+          ninguna:
+            heading: Neither election nor revocation
+          'no':
+            heading: 'No'
+          nombre:
+            heading: Legal name
+          opcion:
+            heading: Elect special pro rata deduction
+          otras:
+            heading: Other activities
+          page-1:
+            heading: Identification and VAT calculation
+          page-2:
+            heading: Result and additional information
+          page-3:
+            heading: 'Final period: activities and annual transactions'
+          page-4:
+            heading: Pro rata and separate deduction schemes
+          porcentaje:
+            heading: Pro rata percentage
+          principal:
+            heading: Main activity
+          prorrata:
+            heading: Pro rata deduction
+          recargo:
+            heading: Equivalence surcharge
+          rect-intra:
+            heading: Intragroup deduction corrections
+          rect-otras:
+            heading: Corrections to non-intragroup deductions
+          rectificacion:
+            heading: Deduction corrections
+          resultado:
+            heading: VAT calculation (continued)
+          revocacion:
+            heading: Revoke the election
+          si:
+            heading: 'Yes'
+          sin-actividad:
+            heading: No activity
+          sin-marca:
+            heading: Unmarked
+          territorio:
+            heading: Territorial taxation
+          tipo-prorrata:
+            heading: Pro rata method
       revision:
         2008-2022:
           casilla:

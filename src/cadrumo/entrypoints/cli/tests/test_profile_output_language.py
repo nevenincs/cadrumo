@@ -33,6 +33,8 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ._profile_cli_support import invoke_protected_profile
+from ._profile_cli_support import native_profile_runtime as native_profile_runtime
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -61,12 +63,14 @@ def _json_output(result: Result) -> str:
 
 
 def _profile_facts(profile_name: str) -> dict[str, str]:
-    show_result = _invoke(("--format", "json", "config", "profile", "view", profile_name))
+    show_result = invoke_protected_profile(profile_name, "view", json_output=True)
     assert show_result.exit_code == 0, show_result.output
     payload = json.loads(_json_output(show_result))
     return {row["path"]: row["value"] for row in payload["result"]["facts"]}
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_profile_runtime")
 def test_registration_writes_profile_output_language() -> None:
     """The output-language preference declared at registration is stored and read back.
 
@@ -103,6 +107,8 @@ def test_registration_writes_profile_output_language() -> None:
         assert fact_value(record, PROFILE_OUTPUT_LANGUAGE_PATH) == "en"
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_profile_runtime")
 def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
     """An unknown output-language token is refused, and the stored value survives.
 
@@ -120,11 +126,11 @@ def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
         **{"identity.tax_id": "00000000T", "activities.description": "Servicios"},
     )
 
-    valid_result = _invoke(("config", "profile", "edit", "default", "--quiet", "--output-language", "ca"))
+    valid_result = invoke_protected_profile("default", "edit", "--quiet", "--output-language", "ca")
     assert valid_result.exit_code == 0, valid_result.output
     assert _profile_facts("default")[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
 
-    invalid_result = _invoke(("config", "profile", "edit", "default", "--quiet", "--output-language", "zz"))
+    invalid_result = invoke_protected_profile("default", "edit", "--quiet", "--output-language", "zz")
     assert invalid_result.exit_code != 0
     assert "zz" in invalid_result.output
     assert "Traceback" not in invalid_result.output
@@ -136,6 +142,8 @@ def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
         assert fact_value(reloaded, PROFILE_OUTPUT_LANGUAGE_PATH) == "ca"
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_profile_runtime")
 def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     """`profile edit --quiet` writes only the supplied flags.
 
@@ -172,17 +180,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     )
 
     # Edit ONE unrelated field; the operator supplies nothing else.
-    edit_result = _invoke(
-        (
-            "config",
-            "profile",
-            "edit",
-            "default",
-            "--quiet",
-            "--address-postcode",
-            "28010",
-        ),
-    )
+    edit_result = invoke_protected_profile("default", "edit", "--quiet", "--address-postcode", "28010")
     assert edit_result.exit_code == 0, edit_result.output
 
     with open_test_profile_session(profile_id):
@@ -198,6 +196,8 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
         assert fact_value(record, "iva.regime") == "EXENTO"
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_profile_runtime")
 def test_global_language_flag_overrides_profile_for_invocation() -> None:
     # Seed a profile with output-language "ca" through the registration door.
     _seed_profile(

@@ -1,0 +1,401 @@
+{
+  "authentication-required": {
+    "active_profile": "Test profile",
+    "command": "config.login",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_CLI_BOUNDARY",
+      "context": {
+        "reason": "authentication_required"
+      },
+      "message": "authentication_required",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "credential-rejected": {
+    "active_profile": "Test profile",
+    "command": "config.login",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_CLI_BOUNDARY",
+      "context": {
+        "reason": "credential_rejected"
+      },
+      "message": "credential_rejected",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "direct-throttled": {
+    "active_profile": "Test profile",
+    "command": "config.login",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_PROFILE_LOGIN_THROTTLED",
+      "context": {
+        "remaining_seconds": "7",
+        "seconds": "7"
+      },
+      "message": "Sign-in pauses after a failed attempt. Wait 7 s before trying again.",
+      "retryable": true,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "login-false": {
+    "active_profile": "Test profile",
+    "command": "config.login",
+    "notices": [],
+    "result": {
+      "absolute_deadline": "2026-10-05T14:00:00Z",
+      "active_profile": "Test profile",
+      "already_authenticated": false,
+      "authenticated_at": "2026-10-05T12:00:00Z",
+      "closed_previous_profile": null,
+      "idle_deadline": "2026-10-05T13:00:00Z",
+      "profile_id": "11111111-1111-4111-8111-111111111111",
+      "session_persisted": false
+    },
+    "schema_version": "2",
+    "status": "warning"
+  },
+  "login-true": {
+    "active_profile": "Test profile",
+    "command": "config.login",
+    "notices": [],
+    "result": {
+      "absolute_deadline": "2026-10-05T14:00:00Z",
+      "active_profile": "Test profile",
+      "already_authenticated": false,
+      "authenticated_at": "2026-10-05T12:00:00Z",
+      "closed_previous_profile": null,
+      "idle_deadline": "2026-10-05T13:00:00Z",
+      "profile_id": "11111111-1111-4111-8111-111111111111",
+      "session_persisted": true
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "logout-false": {
+    "active_profile": "Test profile",
+    "command": "config.logout",
+    "notices": [],
+    "result": {
+      "already_logged_out": false,
+      "automation_enabled": false,
+      "automation_revoked": false,
+      "human_receipt_revoked": true,
+      "keychain_removed": true,
+      "logged_out_profile": "Test profile",
+      "receipt_removed": true,
+      "scope": "profile_human_access"
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "logout-none": {
+    "active_profile": "Test profile",
+    "command": "config.logout",
+    "notices": [],
+    "result": {
+      "already_logged_out": false,
+      "automation_enabled": null,
+      "automation_revoked": false,
+      "human_receipt_revoked": true,
+      "keychain_removed": true,
+      "logged_out_profile": "Test profile",
+      "receipt_removed": true,
+      "scope": "profile_human_access"
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "logout-refused": {
+    "active_profile": "Test profile",
+    "command": "config.logout",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_CLI_BOUNDARY",
+      "context": {
+        "reason": "absent"
+      },
+      "message": "The command refused the request.",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "logout-true": {
+    "active_profile": "Test profile",
+    "command": "config.logout",
+    "notices": [],
+    "result": {
+      "already_logged_out": false,
+      "automation_enabled": true,
+      "automation_revoked": false,
+      "human_receipt_revoked": true,
+      "keychain_removed": true,
+      "logged_out_profile": "Test profile",
+      "receipt_removed": true,
+      "scope": "profile_human_access"
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "profile-create": {
+    "active_profile": "Test profile",
+    "command": "config.profile.create",
+    "notices": [
+      {
+        "action": null,
+        "code": "PROFILE_LOGIN_REQUIRED",
+        "context": null,
+        "message": "Sign in to the profile.",
+        "severity": "warning"
+      }
+    ],
+    "result": {
+      "active_profile": "Test profile",
+      "profile_name": "Test profile",
+      "status": "created"
+    },
+    "schema_version": "2",
+    "status": "warning"
+  },
+  "profile-create-boundary": {
+    "active_profile": "Test profile",
+    "command": "config.profile.create",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_CLI_BOUNDARY",
+      "context": null,
+      "message": "The command refused the request.",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "profile-create-short-password": {
+    "active_profile": "Test profile",
+    "command": "config.profile.create",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_PROFILE_REGISTRATION",
+      "context": {
+        "minimum_scalars": "8",
+        "reason": "too_few_scalars",
+        "scalar_count": "5",
+        "utf8_byte_count": "5"
+      },
+      "message": "The profile password must be at least 8 characters; 5 received.",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "profile-create-taken": {
+    "active_profile": "Test profile",
+    "command": "config.profile.create",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_PROFILE_REGISTRATION",
+      "context": {
+        "profile": "Test profile"
+      },
+      "message": "Profile 'Test profile' already exists; run aeat config login NAME to activate it or aeat config profile delete NAME first.",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "profile-list": {
+    "active_profile": "Test profile",
+    "command": "config.profile.list",
+    "notices": [],
+    "result": {
+      "active_profile": "Test profile",
+      "profiles": [
+        {
+          "active": false,
+          "bucket_id": "22222222-2222-4222-8222-222222222222",
+          "name": "Another profile"
+        },
+        {
+          "active": true,
+          "bucket_id": "11111111-1111-4111-8111-111111111111",
+          "name": "Test profile"
+        }
+      ]
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "profile-list-empty": {
+    "active_profile": null,
+    "command": "config.profile.list",
+    "notices": [],
+    "result": {
+      "active_profile": null,
+      "profiles": []
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "profile-list-incoherent": {
+    "active_profile": null,
+    "command": "config.profile.list",
+    "notices": [
+      {
+        "action": null,
+        "code": "config.profile.list.incoherent_observation",
+        "context": {
+          "detail": "",
+          "outcome": "degraded"
+        },
+        "message": "The profile listing could not be trusted.",
+        "severity": "warning"
+      }
+    ],
+    "result": {
+      "active_profile": null,
+      "profiles": []
+    },
+    "schema_version": "2",
+    "status": "warning"
+  },
+  "runtime-throttled": {
+    "active_profile": "Test profile",
+    "command": "config.login",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_CLI_BOUNDARY",
+      "context": {
+        "reason": "authentication_required",
+        "seconds": "23",
+        "sign_in_reason": "throttled"
+      },
+      "message": "authentication_required",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "runtime-unavailable": {
+    "active_profile": "Test profile",
+    "command": "config.sign-in-status",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_LOCAL_RUNTIME",
+      "context": {
+        "reason": "runtime_unavailable"
+      },
+      "message": "runtime_unavailable",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "runtime-untrusted": {
+    "active_profile": "Test profile",
+    "command": "config.sign-in-status",
+    "error": {
+      "action": null,
+      "category": "REFUSED",
+      "code": "REFUSED_LOCAL_RUNTIME",
+      "context": {
+        "reason": "runtime_peer_untrusted"
+      },
+      "message": "runtime_peer_untrusted",
+      "retryable": false,
+      "runbook_id": null,
+      "trace_id": null
+    },
+    "notices": [],
+    "schema_version": "2",
+    "status": "error"
+  },
+  "status-absent": {
+    "active_profile": "Test profile",
+    "command": "config.sign-in-status",
+    "notices": [],
+    "result": {
+      "profile_id": "11111111-1111-4111-8111-111111111111",
+      "status": {
+        "absolute_deadline": null,
+        "idle_deadline": null,
+        "presence": "absent"
+      }
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "status-present": {
+    "active_profile": "Test profile",
+    "command": "config.sign-in-status",
+    "notices": [],
+    "result": {
+      "profile_id": "11111111-1111-4111-8111-111111111111",
+      "status": {
+        "absolute_deadline": "2026-10-05T13:00:00Z",
+        "idle_deadline": "2026-10-05T12:00:00Z",
+        "presence": "present"
+      }
+    },
+    "schema_version": "2",
+    "status": "success"
+  },
+  "status-unknown": {
+    "active_profile": "Test profile",
+    "command": "config.sign-in-status",
+    "notices": [],
+    "result": {
+      "profile_id": "11111111-1111-4111-8111-111111111111",
+      "status": {
+        "absolute_deadline": null,
+        "idle_deadline": null,
+        "presence": "unknown"
+      }
+    },
+    "schema_version": "2",
+    "status": "success"
+  }
+}

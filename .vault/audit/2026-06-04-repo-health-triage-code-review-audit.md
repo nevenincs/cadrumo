@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:e14f81147107dda677beba7917214a1db717a9b509fec5976a2ea31a0bd9386b'
+modified: '2026-10-03'
+body_hash: 'sha256:25feb0482b24d3a75769aecbf51364d793707021b1dbd6bb02c4be153f4d4915'
 related:
-  - '[[2026-06-04-repo-health-triage-plan]]'
   - '[[2026-06-04-repo-health-triage-adr]]'
   - '[[2026-06-04-repo-health-triage-research]]'
 ---
@@ -280,7 +279,7 @@ Focused verification passed the existing browser evasion test, both live and
 clean-export lock checks, and Deptry no longer reports `playwright_stealth`.
 Deptry remains red for planned residual dependency findings and unrelated scan
 noise, including an unrelated syntax warning in
-`src/aeat/application/modelo/__init__.py`; those are outside S41.
+The retired module; those are outside S41.
 
 ## W04-005 | INFO | Prompt toolkit runtime declaration review found no defects
 
@@ -481,7 +480,7 @@ findings. The stock production lane still runs successfully with 11 findings.
 Status: verified with scoped residual.
 
 The W05.P15.S52 review found no defect in adding a top-level
-`src/aeat/_data/SECURITY.md` disposition for bundled data. The document keeps
+The retired document disposition for bundled data. The document keeps
 the S51 Semgrep exclusion narrow: `_data` is outside the production source
 security lane because mirrored official HTML/XML/PDF text and fixture literals
 produce stock-rule noise, but the tree remains governed by provenance,

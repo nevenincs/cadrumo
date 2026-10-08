@@ -4,10 +4,10 @@ application_link_source_refs = ["enrolled-modelo-181-procedure"]
 authority_grade = "applicability"
 # Modelo 181 declaración informativa, approved by orden-eha-3514-2009 art 1
 # with its plazo grounded verbatim in orden-eha-3514-2009 art 6.
-# Scheduling/applicability-grade: declaration-header casillas only. The
-# authoritative Modelo 181 diseño de registro IS bundled (aeat-dr-181-2022)
-# but no casilla-to-position mapping has been authored from it yet, so no
-# numbered form casilla is fabricated here.
+# Scheduling/applicability-grade remains unchanged. The bundled
+# aeat-dr-181-2022 design now also grounds structured Type 2 address and IBAN
+# component casillas and a separate semantic map; that authoring does not
+# itself establish a reviewed runtime producer for every declared value.
 # Narrowed from an unbounded 2009 claim to the ejercicio its own layout covers.
 # The revision declares exactly one export layout, `modelo-181-fichero-2022`,
 # citing `aeat-dr-181-2022` (applies 2022 onward), and its deadline windows begin

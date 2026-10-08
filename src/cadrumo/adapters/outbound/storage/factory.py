@@ -8,15 +8,9 @@ active profile. :class:`core.config.Settings` drives the choice:
 - ``cadrumo_storage_provider_kind`` selects the backend.
 - ``cadrumo_local_storage_root`` chooses the root directory for the local
   backend.
-- ``cadrumo_google_drive_root_folder_id`` plus the per-profile persisted
-  :class:`~core.google_credential_source.GoogleCredentialSourceKind` selection
-  (:class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`,
-  loaded via :mod:`adapters.outbound.google.session_store`) parameterise
-  the Drive backend's credentials — either the default per-profile
-  :class:`~adapters.outbound.google.records.OAuthClient` /
-  :class:`~adapters.outbound.google.records.OAuthToken` records, or a
-  service-account impersonation grant resolved via
-  :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`.
+- The installation's :class:`~core.config_google_client.OAuthClient`,
+  the profile's :class:`~adapters.outbound.google.records.OAuthToken` and the
+  root folder created for the profile parameterise the Drive backend.
 
 Composition order:
 
@@ -26,16 +20,11 @@ Composition order:
 3. Dispatch on :class:`ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
    :class:`adapters.outbound.storage.local.LocalFileSystemProvider`
    rooted at ``cadrumo_local_storage_root / profile``; ``GOOGLE_DRIVE`` calls
-   :func:`build_google_credentials`, which reads the profile's persisted
-   :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection` (a
-   missing selection defaults to
-   :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP`, preserving the
-   existing default byte-for-byte) and dispatches to either the
-   OAuth-Desktop hydration or
-   :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`, then
-   instantiates
+   :func:`build_google_credentials`, which hydrates the profile's desktop
+   sign-in, then instantiates
    :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
-   keyed on ``cadrumo_google_drive_root_folder_id``.
+   under the profile's root folder, once that folder has been read back as
+   one this application created.
 4. Refuse unknown kinds with :class:`OutboundStorageValidationError`.
 """
 
@@ -43,13 +32,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.config_google_client import OAuthClient
+
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
+    from ..google.records import OAuthToken
+
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
+from ....application.user_profile.access_contracts import AccessDenialCode
+from ....application.user_profile.access_errors import ProfileAccessRefusedError
+from ....application.user_profile.google_configuration_operation_ports import (
+    GoogleConfigurationAcknowledgement,
+    GoogleConfigurationCommit,
+    GoogleConfigurationHandoff,
+)
 from ....core.config import Settings, load_settings
-from ....core.errors.hierarchy import InternalInvariantError
-from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .errors import OutboundStorageError, OutboundStorageValidationError
 from .protocol import StorageProvider
@@ -101,76 +99,29 @@ def _parse_kind(raw: str) -> ProviderKind:
 
 
 def build_google_credentials(*, profile: str) -> Credentials:
-    """Resolve Google ``Credentials`` for the profile's chosen credential source.
+    """Hydrate Google ``Credentials`` from the profile's desktop sign-in records.
 
-    Reads the profile's persisted
-    :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`
-    (:func:`~adapters.outbound.google.session_store.load_credential_source_selection`). A
-    missing selection defaults to
-    :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP`, so a profile that has
-    never opted into service-account impersonation gets byte-for-byte the same
-    behaviour as before this dispatch existed.
+    Pairs this installation's :class:`~core.config_google_client.OAuthClient`,
+    read by
+    :func:`adapters.outbound.google.installation_client.load_installation_client`,
+    with the profile's :class:`~adapters.outbound.google.records.OAuthToken` from
+    :func:`adapters.outbound.google.sign_in_state.load_token_minted_for`, which
+    yields a token only when this client minted it. The desktop
+    sign-in is the only credential source. Imports the upstream library lazily
+    so unit tests for the local backend do not pay the cost.
 
-    - ``OAUTH_DESKTOP`` (the default): hydrates ``Credentials`` from the
-      per-profile :class:`~adapters.outbound.google.records.OAuthClient` and
-      :class:`~adapters.outbound.google.records.OAuthToken` records via
-      :func:`_build_oauth_desktop_credentials`.
-    - ``SERVICE_ACCOUNT_IMPERSONATION``: delegates to
-      :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`
-      with the persisted
-      :class:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig`
-      (per ``aeat-architecture-boundaries``: this factory
-      never re-implements ADC discovery or impersonation wrapping).
-
-    Imports the upstream Google libraries lazily so unit tests for the
-    local backend do not pay the cost.
+    Raises:
+        :exc:`adapters.outbound.google.errors.GoogleAuthClientMetadataUnavailableError`:
+            When the installation carries no usable client metadata.
+        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+            When the stored token belongs to another client or names none.
+        OutboundStorageValidationError: When the profile has no stored token.
     """
-    from ..google.session_store import load_credential_source_selection
+    from ..google.installation_client import load_installation_client
+    from ..google.sign_in_state import load_token_minted_for
 
-    selection = load_credential_source_selection(profile)
-    kind = selection.kind if selection is not None else GoogleCredentialSourceKind.OAUTH_DESKTOP
-
-    if kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION:
-        # The selection validator (`GoogleCredentialSourceSelection`)
-        # guarantees `impersonation` is populated whenever `kind` is
-        # `SERVICE_ACCOUNT_IMPERSONATION`.
-        impersonation = selection.impersonation if selection is not None else None
-        if impersonation is None:
-            raise InternalInvariantError(
-                "the stored credential source selects service-account impersonation without its impersonation facts",
-            )
-        from ..google.impersonation import resolve_impersonated_credentials
-
-        return resolve_impersonated_credentials(impersonation)
-
-    return _build_oauth_desktop_credentials(profile=profile)
-
-
-def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
-    """Hydrate Google ``Credentials`` from the per-profile OAuth records.
-
-    Loads :class:`~adapters.outbound.google.records.OAuthClient` and
-    :class:`~adapters.outbound.google.records.OAuthToken` through
-    :func:`adapters.outbound.google.session_store.load_client` and
-    :func:`adapters.outbound.google.session_store.load_token`. Imports the
-    upstream library lazily so unit tests for the local backend do not pay the
-    cost.
-    """
-    from ..google.session_store import load_client, load_token
-
-    client = load_client(profile)
-    if client is None:
-        raise OutboundStorageValidationError(
-            "no Google OAuth client registered for this profile",
-            context={"profile": profile},
-            translated_message="adapters.outbound.storage._factory.errors.google_client_missing",
-            precondition_verdict=_configuration_validation_verdict(
-                "storage.factory.google_oauth_client.present",
-                field="google_oauth_client",
-                backend="google_drive",
-            ),
-        )
-    token = load_token(profile)
+    client = load_installation_client()
+    token = load_token_minted_for(profile, client)
     if token is None:
         raise OutboundStorageValidationError(
             "no Google OAuth token persisted for this profile",
@@ -182,6 +133,11 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
                 backend="google_drive",
             ),
         )
+    return google_credentials_for(client, token)
+
+
+def google_credentials_for(client: OAuthClient, token: OAuthToken) -> Credentials:
+    """Pair a client with a token it minted, as credentials that refresh on first use."""
     try:
         from google.oauth2.credentials import Credentials
     except ImportError as exc:
@@ -212,24 +168,15 @@ def _resolve_profile() -> str:
     return resolve_active_profile()
 
 
-def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
-    """Resolve the Drive root folder id with the canonical precedence.
+def resolve_drive_root_folder_id(*, profile: str) -> str:
+    """Return the ID of the Drive root folder created for ``profile``.
 
-    1. ``CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`` env var / ``.env`` value
-       (:class:`core.config.Settings`
-       ``cadrumo_google_drive_root_folder_id``; overrides for one-off / CI /
-       debugging without persisting state)
-    2. Per-profile persisted
-       :class:`adapters.outbound.google.records.DriveConfig` record (canonical
-       operator enrolment state)
-
-    Returns the empty string when neither source is configured.
+    The per-profile :class:`adapters.outbound.google.records.DriveConfig`
+    record written at sign-in is the only source. Returns the empty string
+    when the profile has none.
     """
     from ..google.session_store import load_drive_config
 
-    override = str(settings.cadrumo_google_drive_root_folder_id or "").strip()
-    if override:
-        return override
     config = load_drive_config(profile)
     if config is not None:
         return config.root_folder_id.strip()
@@ -239,12 +186,20 @@ def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
 def get_storage_provider(
     *,
     settings: Settings | None = None,
+    profile: str | None = None,
+    before_handoff: GoogleConfigurationHandoff | None = None,
+    acknowledged: GoogleConfigurationAcknowledgement | None = None,
+    commit: GoogleConfigurationCommit | None = None,
 ) -> StorageProvider:
     """Build a :class:`StorageProvider` for the active AEAT profile.
 
     Args:
         settings: Optional pre-built :class:`core.config.Settings`.
             Defaults to :func:`core.config.load_settings`.
+        profile: Optional expected profile, checked against the active profile.
+        before_handoff: Optional admission check before each provider handoff.
+        acknowledged: Optional acknowledgement of a completed provider handoff.
+        commit: Protected local writer for retained Google creation receipts.
 
     Returns:
         A concrete :class:`StorageProvider` already wired with credentials and
@@ -252,13 +207,17 @@ def get_storage_provider(
 
     Raises:
         :class:`OutboundStorageValidationError`: When the settings value is
-            unknown, the Drive backend is selected without
-            ``cadrumo_google_drive_root_folder_id``, or the profile lacks the
-            records the chosen backend needs.
+            unknown, or the profile lacks the records the chosen backend
+            needs.
+        :class:`OutboundStorageError`: When the profile's stored root folder
+            is not a live folder this application created.
     """
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.cadrumo_storage_provider_kind)
-    profile = _resolve_profile()
+    resolved_profile = _resolve_profile()
+    if profile is not None and profile != resolved_profile:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    profile = resolved_profile
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
         from ...persistence.storage.bucket.directory_layout import bucket_paths
@@ -268,25 +227,42 @@ def get_storage_provider(
         return LocalFileSystemProvider(root)
 
     if kind is ProviderKind.GOOGLE_DRIVE:
+        from uuid import UUID
+
+        from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ..google.artifact_receipt_store import GoogleArtifactReceiptStore
         from ._google_drive import GoogleDriveProvider
 
-        root_folder_id = resolve_drive_root_folder_id(profile=profile, settings=settings_resolved)
-        if not root_folder_id:
-            raise OutboundStorageValidationError(
-                "no Drive root folder id is configured for this profile",
-                context={"profile": profile},
-                translated_message="adapters.outbound.storage._factory.errors.drive_root_missing",
-                precondition_verdict=_configuration_validation_verdict(
-                    "storage.factory.google_drive_root_folder_id.present",
-                    field="google_drive_root_folder_id",
-                    backend="google_drive",
-                ),
+        root_folder_id = resolve_required_drive_root_folder_id(profile=profile)
+        receipts = GoogleArtifactReceiptStore(
+            secure_object_repository_for_active_bucket(), profile_id=UUID(profile), commit=commit
+        )
+        if before_handoff is None and acknowledged is None:
+            credentials = build_google_credentials(profile=profile)
+            require_application_drive_root(credentials, root_folder_id=root_folder_id, profile=profile)
+            return GoogleDriveProvider(
+                credentials=credentials,
+                root_folder_id=root_folder_id,
+                receipts=receipts,
+                vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
             )
+        if before_handoff is not None:
+            before_handoff("google.credentials-acquisition")
         credentials = build_google_credentials(profile=profile)
+        if acknowledged is not None:
+            acknowledged("google.credentials-acquisition")
+        if before_handoff is not None:
+            before_handoff("drive.root-folder.verification")
+        require_application_drive_root(credentials, root_folder_id=root_folder_id, profile=profile)
+        if acknowledged is not None:
+            acknowledged("drive.root-folder.verification")
         return GoogleDriveProvider(
             credentials=credentials,
             root_folder_id=root_folder_id,
+            receipts=receipts,
             vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
+            before_handoff=before_handoff,
+            acknowledged=acknowledged,
         )
 
     # Should never be reached — _parse_kind already refused unknown kinds.
@@ -297,4 +273,36 @@ def get_storage_provider(
     )
 
 
-__all__ = ["get_storage_provider"]
+def resolve_required_drive_root_folder_id(*, profile: str) -> str:
+    """Require the profile's stored root folder before any credential hydration."""
+    root_folder_id = resolve_drive_root_folder_id(profile=profile)
+    if not root_folder_id:
+        raise OutboundStorageValidationError(
+            "no Drive root folder has been created for this profile",
+            context={"profile": profile},
+            translated_message="adapters.outbound.storage._factory.errors.drive_root_missing",
+            precondition_verdict=_configuration_validation_verdict(
+                "storage.factory.google_drive_root_folder_id.present",
+                field="google_drive_root_folder_id",
+                backend="google_drive",
+            ),
+        )
+    return root_folder_id
+
+
+def require_application_drive_root(credentials: Credentials, *, root_folder_id: str, profile: str) -> None:
+    """Read the stored root folder back from Drive and refuse it unless this application created it.
+
+    Every composition that is about to write or read beneath the root
+    calls this first, so a stored ID is never trusted on its own.
+    """
+    from ..google.root_folder import require_owned_root_folder
+
+    require_owned_root_folder(credentials, root_folder_id=root_folder_id, profile=profile)
+
+
+__all__ = [
+    "get_storage_provider",
+    "require_application_drive_root",
+    "resolve_required_drive_root_folder_id",
+]

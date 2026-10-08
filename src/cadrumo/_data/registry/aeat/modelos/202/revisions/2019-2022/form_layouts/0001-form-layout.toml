@@ -1,0 +1,204 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2019-2022.form_layouts]]
+id = "form-layout"
+revision_id = "2019-2022"
+seed_source = "authored"
+review = { state = "generated", notes = "Part 1 authored against boe-2018-12515-modelo-202-form-pdf, printed pages 88843–88844. Two rate rows only; B.1 remains on page 1. All54casillas retained. Regime/election controls, tax-period start date, negative/payment details and Part2 disclosures remain incomplete. No complete official-form acceptance or producer-profile admission claimed. Additional-data section now renders 7 exact existing regime/turnover/rate producer fields. Historical small-enterprise wording retains article 29.1 first paragraph. The combined cooperativa_o_multiples_tipos producer cannot prove the two separate official marks; neither is inferred. Missing facts remain unknown." }
+generator_version = 1
+source_state_digest = "d803486f2b576f4d5c68242798888193995c3447b5402755987a37299a75c166"
+design_sources = [
+    { source_ref = "aeat-dr-202-2019", sha256 = "b56128055543e65b024d3fbd542fd06fd39d8a9d3c6ca70afb6e9709f6a6369a" },
+    { source_ref = "boe-2018-12515-modelo-202-form-pdf", sha256 = "8ca22ddbe8f1812e7bf175dba00dac9d83f72a8dd83d1765f598c832f4b9cd8f" },
+]
+placements = [
+    { casilla_id = "01", kind = "on_form", box_number = "01" },
+    { casilla_id = "02", kind = "on_form", box_number = "02" },
+    { casilla_id = "03", kind = "on_form", box_number = "03" },
+    { casilla_id = "04", kind = "on_form", box_number = "04" },
+    { casilla_id = "05", kind = "on_form", box_number = "05" },
+    { casilla_id = "06", kind = "on_form", box_number = "06" },
+    { casilla_id = "07", kind = "on_form", box_number = "07" },
+    { casilla_id = "08", kind = "on_form", box_number = "08" },
+    { casilla_id = "13", kind = "on_form", box_number = "13" },
+    { casilla_id = "14", kind = "on_form", box_number = "14" },
+    { casilla_id = "16", kind = "on_form", box_number = "16" },
+    { casilla_id = "17", kind = "on_form", box_number = "17" },
+    { casilla_id = "18", kind = "on_form", box_number = "18" },
+    { casilla_id = "19", kind = "on_form", box_number = "19" },
+    { casilla_id = "20", kind = "on_form", box_number = "20" },
+    { casilla_id = "21", kind = "on_form", box_number = "21" },
+    { casilla_id = "22", kind = "on_form", box_number = "22" },
+    { casilla_id = "23", kind = "on_form", box_number = "23" },
+    { casilla_id = "24", kind = "on_form", box_number = "24" },
+    { casilla_id = "25", kind = "on_form", box_number = "25" },
+    { casilla_id = "26", kind = "on_form", box_number = "26" },
+    { casilla_id = "27", kind = "on_form", box_number = "27" },
+    { casilla_id = "28", kind = "on_form", box_number = "28" },
+    { casilla_id = "29", kind = "on_form", box_number = "29" },
+    { casilla_id = "30", kind = "on_form", box_number = "30" },
+    { casilla_id = "31", kind = "on_form", box_number = "31" },
+    { casilla_id = "32", kind = "on_form", box_number = "32" },
+    { casilla_id = "33", kind = "on_form", box_number = "33" },
+    { casilla_id = "34", kind = "on_form", box_number = "34" },
+    { casilla_id = "37", kind = "on_form", box_number = "37" },
+    { casilla_id = "38", kind = "on_form", box_number = "38" },
+    { casilla_id = "39", kind = "on_form", box_number = "39" },
+    { casilla_id = "40", kind = "on_form", box_number = "40" },
+    { casilla_id = "42", kind = "on_form", box_number = "42" },
+    { casilla_id = "44", kind = "on_form", box_number = "44" },
+    { casilla_id = "45", kind = "on_form", box_number = "45" },
+    { casilla_id = "46", kind = "on_form", box_number = "46" },
+    { casilla_id = "47", kind = "on_form", box_number = "47" },
+    { casilla_id = "48", kind = "on_form", box_number = "48" },
+    { casilla_id = "49", kind = "on_form", box_number = "49" },
+    { casilla_id = "50", kind = "on_form", box_number = "50" },
+    { casilla_id = "51", kind = "on_form", box_number = "51" },
+    { casilla_id = "52", kind = "on_form", box_number = "52" },
+    { casilla_id = "informacion-adicional.bonificacion-art-34-lis", kind = "on_form" },
+    { casilla_id = "informacion-adicional.bonificacion-ley-19-1994-art-26", kind = "on_form" },
+    { casilla_id = "informacion-adicional.excluido-aumento-capital-art-17-2", kind = "on_form" },
+    { casilla_id = "informacion-adicional.importe-excluido-quita-espera", kind = "on_form" },
+    { casilla_id = "informacion-adicional.integrado-base-imponible-quita-espera", kind = "on_form" },
+    { casilla_id = "informacion-adicional.integrado-cuota-quita-espera-cooperativas", kind = "on_form" },
+    { casilla_id = "informacion-adicional.minoracion-rentas-bonificacion-art-33-lis", kind = "on_form" },
+    { casilla_id = "informacion-adicional.no-computable-regimen-zec", kind = "on_form" },
+    { casilla_id = "informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis", kind = "on_form" },
+    { casilla_id = "informacion-adicional.rentas-reversion-deterioros", kind = "on_form" },
+    { casilla_id = "informacion-adicional.reserva-inversiones-canarias", kind = "on_form" },
+]
+
+[[revisions.2019-2022.form_layouts.pages]]
+id = "pagina-1"
+official_ref = "boe-2018-12515-modelo-202-form-pdf, annex I, Part1, page 1"
+heading_key = "modelo.schema.202.form.authored2025.page.1.heading"
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.202.form.authored2025.section.identificacion.heading"
+blocks = [
+    { kind = "context_field", id = "nif", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f007", heading_key = "modelo.schema.202.form.authored2025.context.nif.heading" },
+    { kind = "context_field", id = "denominacion", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f008", heading_key = "modelo.schema.202.form.authored2025.context.denominacion.heading" },
+    { kind = "context_field", id = "nombre", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f009", heading_key = "modelo.schema.202.form.authored2025.context.nombre.heading" },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "devengo"
+heading_key = "modelo.schema.202.form.authored2025.section.devengo.heading"
+blocks = [
+    { kind = "context_field", id = "ejercicio", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f010", heading_key = "modelo.schema.202.form.authored2025.context.ejercicio.heading" },
+    { kind = "context_field", id = "periodo", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f011", heading_key = "modelo.schema.202.form.authored2025.context.periodo.heading" },
+    { kind = "context_field", id = "cnae", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f013", heading_key = "modelo.schema.202.form.authored2025.context.cnae.heading" },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "datos-adicionales"
+heading_key = "modelo.schema.202.form.authored2025.context.datos-adicionales.heading"
+blocks = [
+    { kind = "context_field", id = "sin-fines-lucrativos", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f014", heading_key = "modelo.schema.202.form.authored2025.context.sin-fines-lucrativos.heading" },
+    { kind = "context_field", id = "socimi", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f015", heading_key = "modelo.schema.202.form.authored2025.context.socimi.heading" },
+    { kind = "context_field", id = "capital-riesgo", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f048", heading_key = "modelo.schema.202.form.authored2025.context.capital-riesgo.heading" },
+    { kind = "context_field", id = "navieras", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f016", heading_key = "modelo.schema.202.form.authored2025.context.navieras.heading" },
+    { kind = "context_field", id = "reducida-dimension", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f017", heading_key = "modelo.schema.202.form.authored-historical.context.reducida-dimension.heading" },
+    { kind = "context_field", id = "negocios-seis-millones", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f018", heading_key = "modelo.schema.202.form.authored2025.context.negocios-seis-millones.heading" },
+    { kind = "context_field", id = "tipo-gravamen", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-01", export_field_id = "m202-2019.pagina01.f020", heading_key = "modelo.schema.202.form.authored2025.context.tipo-gravamen.heading" },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "modalidad-cuota"
+heading_key = "modelo.schema.202.form.authored2025.section.modalidad-cuota.heading"
+blocks = [
+    { kind = "field", id = "field-01", casilla_id = "01" },
+    { kind = "field", id = "field-02", casilla_id = "02" },
+    { kind = "field", id = "field-03", casilla_id = "03" },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "base-imponible"
+heading_key = "modelo.schema.202.form.authored2025.section.base-imponible.heading"
+blocks = [
+    { kind = "field", id = "field-04", casilla_id = "04" },
+    { kind = "grid", id = "correcciones", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "is", heading_key = "modelo.schema.202.form.authored2025.row.is.heading", cells = [{ kind = "casilla", casilla_id = "05" }, { kind = "casilla", casilla_id = "06" }] }, { key = "amortizacion", heading_key = "modelo.schema.202.form.authored2025.row.amortizacion.heading", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "37" }] }, { key = "resto", heading_key = "modelo.schema.202.form.authored2025.row.resto.heading", cells = [{ kind = "casilla", casilla_id = "07" }, { kind = "casilla", casilla_id = "08" }] }, { key = "total", heading_key = "modelo.schema.202.form.authored2025.row.total.heading", cells = [{ kind = "casilla", casilla_id = "38" }, { kind = "casilla", casilla_id = "39" }] }] },
+    { kind = "field", id = "field-13", casilla_id = "13" },
+    { kind = "field", id = "field-44", casilla_id = "44" },
+    { kind = "field", id = "field-14", casilla_id = "14" },
+    { kind = "grid", id = "reserva", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "reserva", heading_key = "modelo.schema.202.form.authored2025.row.reserva.heading", cells = [{ kind = "casilla", casilla_id = "45" }, { kind = "casilla", casilla_id = "46" }] }] },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "b1"
+heading_key = "modelo.schema.202.form.authored2025.section.b1.heading"
+blocks = [
+    { kind = "field", id = "field-16", casilla_id = "16" },
+    { kind = "field", id = "field-17", casilla_id = "17" },
+    { kind = "field", id = "field-47", casilla_id = "47" },
+    { kind = "field", id = "field-40", casilla_id = "40" },
+    { kind = "grid", id = "reserva-cuotas", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "reserva-cuotas", heading_key = "modelo.schema.202.form.authored2025.row.reserva-cuotas.heading", cells = [{ kind = "casilla", casilla_id = "48" }, { kind = "casilla", casilla_id = "49" }] }] },
+    { kind = "field", id = "field-18", casilla_id = "18" },
+]
+
+[[revisions.2019-2022.form_layouts.pages]]
+id = "pagina-2"
+official_ref = "boe-2018-12515-modelo-202-form-pdf, annex I, Part1, page 2"
+heading_key = "modelo.schema.202.form.authored2025.page.2.heading"
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "b2"
+heading_key = "modelo.schema.202.form.authored2025.section.b2.heading"
+blocks = [
+    { kind = "field", id = "field-19", casilla_id = "19" },
+    { kind = "grid", id = "tipos", columns = [{ key = "base", heading_key = "modelo.schema.202.form.authored2025.column.base.heading" }, { key = "porcentaje", heading_key = "modelo.schema.202.form.authored2025.column.porcentaje.heading" }, { key = "importe", heading_key = "modelo.schema.202.form.authored2025.column.importe.heading" }], rows = [{ key = "tipo-1", heading_key = "modelo.schema.202.form.authored2025.row.tipo-1.heading", cells = [{ kind = "casilla", casilla_id = "20" }, { kind = "casilla", casilla_id = "21" }, { kind = "casilla", casilla_id = "22" }] }, { key = "tipo-2", heading_key = "modelo.schema.202.form.authored2025.row.tipo-2.heading", cells = [{ kind = "casilla", casilla_id = "23" }, { kind = "casilla", casilla_id = "24" }, { kind = "casilla", casilla_id = "25" }] }] },
+    { kind = "field", id = "field-50", casilla_id = "50" },
+    { kind = "field", id = "field-42", casilla_id = "42" },
+    { kind = "grid", id = "reserva-cuotas", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "reserva-cuotas", heading_key = "modelo.schema.202.form.authored2025.row.reserva-cuotas.heading", cells = [{ kind = "casilla", casilla_id = "51" }, { kind = "casilla", casilla_id = "52" }] }] },
+    { kind = "field", id = "field-26", casilla_id = "26" },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "resultado"
+heading_key = "modelo.schema.202.form.authored2025.section.resultado.heading"
+blocks = [
+    { kind = "field", id = "field-27", casilla_id = "27" },
+    { kind = "field", id = "field-28", casilla_id = "28" },
+    { kind = "field", id = "field-29", casilla_id = "29" },
+    { kind = "field", id = "field-30", casilla_id = "30" },
+    { kind = "field", id = "field-31", casilla_id = "31" },
+    { kind = "field", id = "field-32", casilla_id = "32" },
+    { kind = "field", id = "field-33", casilla_id = "33" },
+    { kind = "field", id = "field-34", casilla_id = "34" },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "informacion"
+heading_key = "modelo.schema.202.form.authored2025.section.informacion.heading"
+blocks = [
+    { kind = "context_field", id = "comunicacion-adicional", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-02", export_field_id = "m202-2019.pagina02.f026", heading_key = "modelo.schema.202.form.authored2025.context.comunicacion-adicional.heading" },
+    { kind = "context_field", id = "nrs", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-02", export_field_id = "m202-2019.pagina02.f027", heading_key = "modelo.schema.202.form.authored2025.context.nrs.heading" },
+    { kind = "field", id = "field-informacion-adicional-importe-excluido-quita-espera", casilla_id = "informacion-adicional.importe-excluido-quita-espera" },
+    { kind = "field", id = "field-informacion-adicional-integrado-base-imponible-quita-espera", casilla_id = "informacion-adicional.integrado-base-imponible-quita-espera" },
+    { kind = "field", id = "field-informacion-adicional-integrado-cuota-quita-espera-cooperativas", casilla_id = "informacion-adicional.integrado-cuota-quita-espera-cooperativas" },
+    { kind = "field", id = "field-informacion-adicional-rentas-reversion-deterioros", casilla_id = "informacion-adicional.rentas-reversion-deterioros" },
+    { kind = "field", id = "field-informacion-adicional-reserva-inversiones-canarias", casilla_id = "informacion-adicional.reserva-inversiones-canarias" },
+    { kind = "field", id = "field-informacion-adicional-bonificacion-ley-19-1994-art-26", casilla_id = "informacion-adicional.bonificacion-ley-19-1994-art-26" },
+    { kind = "field", id = "field-informacion-adicional-no-computable-regimen-zec", casilla_id = "informacion-adicional.no-computable-regimen-zec" },
+    { kind = "field", id = "field-informacion-adicional-minoracion-rentas-bonificacion-art-33-lis", casilla_id = "informacion-adicional.minoracion-rentas-bonificacion-art-33-lis" },
+    { kind = "field", id = "field-informacion-adicional-excluido-aumento-capital-art-17-2", casilla_id = "informacion-adicional.excluido-aumento-capital-art-17-2" },
+    { kind = "field", id = "field-informacion-adicional-renta-exenta-cap-xiv-tit-vii-lis", casilla_id = "informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis" },
+    { kind = "field", id = "field-informacion-adicional-bonificacion-art-34-lis", casilla_id = "informacion-adicional.bonificacion-art-34-lis" },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "complementaria"
+heading_key = "modelo.schema.202.form.authored2025.section.complementaria.heading"
+blocks = [
+    { kind = "context_field", id = "complementaria", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-02", export_field_id = "m202-2019.pagina02.f039", heading_key = "modelo.schema.202.form.authored2025.context.complementaria.heading" },
+    { kind = "context_field", id = "justificante", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-02", export_field_id = "m202-2019.pagina02.f040", heading_key = "modelo.schema.202.form.authored2025.context.justificante.heading" },
+]
+
+[[revisions.2019-2022.form_layouts.pages.sections]]
+id = "ingreso"
+heading_key = "modelo.schema.202.form.authored2025.section.ingreso.heading"
+blocks = [
+    { kind = "context_field", id = "iban", export_layout_id = "generated-modelo-202-2019-2022-fichero", export_record_id = "m202-page-02", export_field_id = "m202-2019.pagina02.f041", heading_key = "modelo.schema.202.form.authored2025.context.iban.heading" },
+]

@@ -50,3 +50,19 @@ def test_malformed_cli_input_surfaces_input_time_validation_boundary(
     combined = result.output or ""
     assert "no longer matches the expected schema" not in combined
     assert "config repair" not in combined
+
+
+def test_an_unexpected_error_names_its_type_and_raising_frame_but_not_its_message() -> None:
+    from ..errors import CliUnexpectedBoundaryError
+
+    def fail() -> None:
+        raise ValueError("timeout must be at most 120 seconds for https://x/?nif=X1234567L")
+
+    with pytest.raises(ValueError) as raised:
+        fail()
+    boundary = CliUnexpectedBoundaryError(raised.value)
+
+    assert boundary.context is not None
+    assert boundary.context["exception_type"] == "ValueError"
+    assert str(boundary.context["raised_at"]).endswith(":fail:" + str(fail.__code__.co_firstlineno + 1))
+    assert "X1234567L" not in repr(boundary.context)

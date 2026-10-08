@@ -10,9 +10,9 @@ OssIossLedgerSourceResolver (M369 OSS/IOSS), InvoiceCatalogueSourceResolver
 foreign_asset), and M184 attribution members (atribucion_member) are enrolled
 in the live merge_source_resolutions tuple so they fire on their modelos.
 
-Deferred source kinds: the remaining deferred source kinds (related_party_operation,
-refund_operation) produce an 'unhandled_binding_source' advisory on source_diagnostics
-rather than a silent blank, and are NOT on the manual_sources allowlist.
+Deferred source kinds: a deferred source kind (gasto193_contributor, for example)
+produces an 'unhandled_binding_source' advisory on source_diagnostics rather than a
+silent blank; only a ``non_runtime`` kind is exempt.
 
 Boundary gate: assert_no_novel_source_kinds raises on a synthetic novel-source binding
 so a TOML source that would resolve to blank fails fast instead of compiling silently.
@@ -20,6 +20,7 @@ so a TOML source that would resolve to blank fails fast instead of compiling sil
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -36,6 +37,7 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import (
     InvoiceCatalogueReadAdapter,
     TransactionCatalogueReadAdapter,
 )
+from cadrumo.adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -59,10 +61,19 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
 from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
+from cadrumo.core.foreign_asset_obligation import M720AssetClassCode
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
+from cadrumo.domain.foreign_assets.register import (
+    ForeignAssetDeclarationEntry,
+    ForeignAssetRegisterEntry,
+    M720AssetIdentifier,
+    M720DeclarantCondition,
+    M720IdentifierScheme,
+)
+from cadrumo.domain.foreign_assets.valuation import M720ValuationEvent
 from cadrumo.domain.modelos.row_models import Modelo184MemberRow
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
@@ -72,6 +83,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
+from ....adapters.persistence.profile.tests.foreign_asset_authoring import declare_foreign_asset, register_asset
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -507,7 +519,6 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     unhandled = collect_unhandled_source_diagnostics(
         revision,
         handled_sources=handled,
-        manual_sources=frozenset({"manual_input"}),
     )
     unrouted_income = [d for d in unhandled if d.source_kind == "ledger_renta_income_aggregation"]
     assert not unrouted_income, (
@@ -582,15 +593,16 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
     unrouted_invoice = [
         d
         for d in result.source_diagnostics
-        if d.source_kind in {"collectible_invoice", "payable_invoice"} and d.reason == "unhandled_binding_source"
+        if d.source_kind in {"collectible_invoice", "payable_invoice", "m349_intracommunity_operation"}
+        and d.reason == "unhandled_binding_source"
     ]
     assert not unrouted_invoice, (
         "InvoiceCatalogueSourceResolver is enrolled but invoice source kinds "
         f"still appeared as unhandled: {unrouted_invoice}"
     )
     revision = _revision("349", "2020-y-siguientes")
-    assert any(str(b.source) == "collectible_invoice" for b in revision.bindings), (
-        "M349 revision should contain collectible_invoice bindings for this test to be non-tautological"
+    assert any(str(b.source) == "m349_intracommunity_operation" for b in revision.bindings), (
+        "M349 revision should contain intracommunity-operation invoice bindings for this test to be non-tautological"
     )
 
 
@@ -605,13 +617,46 @@ def _foreign_asset_observation(
     return ForeignAssetIngestObservation(
         source_kind=source_kind,
         source_object_id=source_object_id,
+        asset_ref="m720a_" + hashlib.sha256(country.encode()).hexdigest()[:32],
         asset_class=ForeignAssetClass.ACCOUNT,
-        asset_external_id=source_object_id.upper(),
+        asset_external_id=f"{country}-ACCOUNT",
         country=country,
         issuer_or_institution=f"Bank {country}",
-        valuation_eur=Decimal(valuation),
+        valuation_amount=Decimal(valuation),
+        currency_code="EUR",
+        valuation_event=M720ValuationEvent.YEAR_END,
         acquisition_date=acquisition_date,
     )
+
+
+def _register_sole_holder(
+    observations: tuple[ForeignAssetIngestObservation, ...], objects: SecureObjectRepository
+) -> None:
+    """Register each account once and declare the taxpayer its sole holder."""
+    register = ForeignAssetRegisterRepository(bucket_id=_BUCKET_ID, objects=objects)
+    for observation in observations:
+        register_asset(
+            register,
+            ForeignAssetRegisterEntry(
+                asset_ref=observation.asset_ref,
+                asset_class=M720AssetClassCode.CUENTA,
+                subclave=1,
+                country_code=observation.country,
+                identifier=M720AssetIdentifier(
+                    scheme=M720IdentifierScheme.ACCOUNT_CODE, value=observation.asset_external_id
+                ),
+                description=f"Account at {observation.issuer_or_institution}",
+                held_since=date(2015, 1, 1),
+            ),
+        )
+        declare_foreign_asset(
+            register,
+            ForeignAssetDeclarationEntry(
+                asset_ref=observation.asset_ref,
+                condition=M720DeclarantCondition.TITULAR,
+                participation_pct=Decimal("100.00"),
+            ),
+        )
 
 
 def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) -> None:
@@ -635,6 +680,7 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_ready_profile()
+        _register_sole_holder(observations, objects)
         wu_repo, cr_repo, tx_repo, invoice_repo = (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -703,7 +749,6 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
     unhandled = collect_unhandled_source_diagnostics(
         revision,
         handled_sources=handled,
-        manual_sources=frozenset({BindingSourceKind.MANUAL_INPUT}),
     )
     withholding_advisories = [
         d for d in unhandled if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"

@@ -48,6 +48,16 @@ class SecureObjectMetadata(BaseModel):
     byte_length: NonNegativeInt
 
 
+class SecureObjectRevisionAssertion(BaseModel):
+    """Read-only source revision required by a derived-data write transaction."""
+
+    model_config = _STRICT_FROZEN
+
+    namespace: str = Field(min_length=1)
+    object_key: str = Field(min_length=1)
+    expected_revision_id: ContentDigest
+
+
 class SecureObjectDeletion(BaseModel):
     """One secure-object row removal addressed by its raw HMAC digest.
 
@@ -58,7 +68,7 @@ class SecureObjectDeletion(BaseModel):
     recoverable only by decrypting each payload). The 32-byte digest passes
     straight through the ``HashedLookup`` column comparison without re-hashing,
     the same convention
-    :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`
+    :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`
     and
     :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.exists_by_raw_key`
     use.

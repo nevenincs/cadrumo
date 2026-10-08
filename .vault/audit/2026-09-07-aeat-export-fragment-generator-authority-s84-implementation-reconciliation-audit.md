@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:9b27aaaee22da8f9e7682aeb8f9e02750c4e3fc4989c44b99a521d81f0017685'
 related:
   - "[[2026-07-01-modelo-303-regimen-simplificado-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-14-modelo-303-regimen-simplificado-s84-immutable-annual-summary-handoff-review-audit]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S84 implementation reconciliation`

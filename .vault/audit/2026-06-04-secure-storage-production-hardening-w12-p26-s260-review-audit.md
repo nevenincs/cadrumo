@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:e9e582bf80a56e62305242af2a53b9b3fd63377f82c4630dc175d8404c1ec0fb'
+modified: '2026-10-03'
+body_hash: 'sha256:3deaf60177ba1a20c9a7f369d455c33c1cd1bad681f06f7f38715e879afc2b78'
 related: []
 ---
 
@@ -20,8 +20,8 @@ The translator remains a pure closed-form compiler from registry expressions to 
 
 ## S260-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/storage/calc_sheets/_translator.py src/aeat/application/storage/calc_sheets/test_translator_hardening.py src/aeat/application/storage/calc_sheets/test_layout_hardening.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/storage/calc_sheets/test_translator_hardening.py src/aeat/application/storage/calc_sheets/test_layout_hardening.py src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py src/aeat/application/storage/calc_sheets/test_modelo_export_formatting.py src/aeat/adapters/outbound/google/test_calc_sheets_export_integration.py` passed with 32 tests.
+- the historical check passed.
+- the historical check passed with 32 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-158` as `remote-mirror` with translator failure localization and redaction hardened.

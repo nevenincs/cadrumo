@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#session-honesty-review'
 date: '2026-06-01'
-modified: '2026-08-15'
-body_hash: 'sha256:8e649582c55541107539112e425dd2e834b8588dbae8dfc8ba005304615ca533'
+modified: '2026-10-03'
+body_hash: 'sha256:f54d23cafec389a9c5d5a2b6125242d4c44f03eeea233549683098aac7483b9e'
 related:
   - "[[2026-06-01-test-suite-performance-audit]]"
 ---
@@ -52,7 +52,7 @@ Plus session-specific concerns:
 
 Commit `perf(test): keep sequential as default addopts` was intended
 to touch `pyproject.toml` only. Per `git show 26b363bb3 --stat`, it
-also absorbed an unrelated rename of `src/aeat/domain/renta/errors.py`
+also absorbed an unrelated rename of the retired module
 to `_errors.py`. The rename was staged in the index by a peer's
 commit-bot pattern between my `git add -- pyproject.toml` and the
 `git commit` invocation. Severity LOW because the rename is itself a
@@ -64,8 +64,8 @@ discipline per memory `explicit_path_staging_in_parallel_worktree`:
 ### scope-creep — Agent C `42c7cb068` absorbed two peer deletions
 
 Earlier session commit `42c7cb068` (modelo_100 cluster, Agent C)
-absorbed peer-staged deletions of `src/aeat/adapters/outbound/google/_refresh.py`
-and `src/aeat/adapters/outbound/llm/_prompts.py`. Agent flagged the
+absorbed peer-staged deletions of the retired module
+and the retired module. Agent flagged the
 absorption in its return report. Severity LOW for the same reason;
 documented in the agent's commit message context. Going-forward
 discipline same as finding-1.
@@ -142,7 +142,7 @@ calculation oracle assertions authored without external citation.
 
 ### G1 PASS — no naked env reads
 
-`fd27f5714` adds `psutil>=5.9` to `[dependency-groups].dev` and
+`fd27f5714` adds `psutil>=5.9` to `[dependency-groups].dev`
 `26b363bb3` edits `pyproject.toml` `addopts`. Neither introduces
 `os.environ` / `os.getenv` in production code. The W30 epic
 explicitly uses `Settings()` and pytest fixtures throughout. PASS.

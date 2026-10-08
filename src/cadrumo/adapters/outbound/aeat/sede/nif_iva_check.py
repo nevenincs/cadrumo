@@ -22,15 +22,14 @@ sede entry subdomain and the www1 form-servlet subdomain.
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable, Mapping
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
 
-from pydantic import AnyUrl, Field
+from pydantic import Field
 
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
@@ -38,10 +37,8 @@ from .....core.errors.hierarchy import SiteHealthError
 from .....core.identity.nif_iva import normalise_nif_iva
 from .....core.identity_check_verdict import IdentityCheckVerdictValue
 from .....core.logging import get_logger
-from .....domain.calculations.registry.checker_oracle_flow import CheckerDriverMode, CheckerObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.remote_state_guard import (
-    RemoteOperation,
     RemoteStateGuardPolicy,
 )
 from .....domain.calculations.registry.schema_base import EvidenceTier
@@ -57,8 +54,6 @@ from ._adapter_utils import (
     extract_marker_verdict,
     is_aeat_auth_gate_redirect,
     make_locate_helper,
-    nif_check_operation_tail,
-    registry_failure_message,
     require_playwright_page,
 )
 from ._browser_constants import (
@@ -203,176 +198,6 @@ class NifIvaCheckResult(_SedeCheckerModel):
     """
 
     observations: tuple[SedeNifIvaCheckObservation, ...] = ()
-
-
-class NifIvaCheckSedeDriver:
-    """Live AEAT NIF-IVA driver backed by the central BrowserSession surface.
-
-    The driver follows the sequence the oracle's ``planned_operations``
-    enumerates: GET sede entry, GET form servlet, open the form,
-    per-NIF check, discard the session.
-
-    The driver follows the read-only public VIES proxy flow and converts the
-    rendered AEAT response text into registry parity observations.
-    """
-
-    def __init__(self, *, settings: Settings | None = None) -> None:
-        """Construct a driver bound to ``settings``.
-
-        Args:
-            settings: Optional :class:`~core.config.Settings` instance.
-                When ``None`` a default ``Settings()`` instance is created at
-                ``collect_async`` / ``collect`` call time so callers that
-                only inspect :attr:`mode` or call :meth:`planned_operations`
-                pay no settings-resolution cost.
-        """
-        self._settings = settings
-
-    @property
-    def mode(self) -> Literal[CheckerDriverMode.LIVE]:
-        """Driver execution mode — always ``"live"`` for this adapter."""
-        return CheckerDriverMode.LIVE
-
-    def planned_operations(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]:
-        """Return the ordered list of remote operations this driver will perform.
-
-        The sequence is fixed: one HTTP GET to the sede (AEAT electronic office)
-        gestiones entry page, one HTTP GET to the VIES proxy form servlet, one
-        browser action to open the form, one ``check-nif-<NIF>`` browser action
-        per NIF in ``expected`` (sorted alphabetically), and finally a
-        ``discard-session`` action. The sequence is used by the remote-state
-        guard pre-flight to validate that all planned operations are within the
-        driver's declared :class:`~domain.calculations.registry.remote_state_guard.RemoteStateGuardPolicy`.
-
-        Args:
-            payload: Raw oracle payload bytes. Not read by this driver; the
-                argument exists to satisfy the oracle driver protocol.
-            expected: Mapping keyed by NIF (Spanish or EU IVA identifier) whose
-                VIES validity is to be checked. At least one entry is required.
-
-        Returns:
-            An immutable tuple of :class:`~domain.calculations.registry.remote_state_guard.RemoteOperation`
-            records in execution order.
-
-        Raises:
-            RegistryValidationError: When ``expected`` is empty.
-        """
-        del payload
-        if not expected:
-            raise RegistryValidationError("NifIvaCheckSedeDriver.planned_operations requires at least one expected NIF")
-        _ext = Settings.external_constants()
-        operations: list[RemoteOperation] = [
-            RemoteOperation(
-                kind="http",
-                method="GET",
-                url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"),
-            ),
-            RemoteOperation(kind="http", method="GET", url=AnyUrl(_ext.aeat.oracles.nif_iva_verification)),
-            RemoteOperation(kind="browser_action", action="open-nif-iva-form"),
-        ]
-        # Normalise to match AeatNifIvaCheckerOracle._expected_values so the
-        # operation labels the guard pre-flight sees (driverless oracle path)
-        # match what the live driver emits.
-        return (*operations, *nif_check_operation_tail(expected))
-
-    def collect(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-        timeout_ms: int = DEFAULT_NIF_IVA_TIMEOUT_MS,
-    ) -> NifIvaCheckResult:
-        """Synchronous wrapper around :meth:`collect_async` for oracle callers.
-
-        Runs the full browser-drive sequence inside ``asyncio.run`` and
-        translates :class:`SedeError`, :class:`SiteHealthError`, and
-        :class:`BrowserError` into :class:`RegistryValidationError` so the
-        oracle protocol sees a single typed failure shape.
-
-        Args:
-            payload: Raw oracle payload bytes. Not read; present for protocol
-                compatibility.
-            expected: Mapping keyed by NIF whose VIES validity is to be checked.
-            timeout_ms: Per-operation Playwright timeout in milliseconds.
-                Defaults to ``DEFAULT_NIF_IVA_TIMEOUT_MS``.
-
-        Returns:
-            A :class:`NifIvaCheckResult` with one observation per NIF.
-
-        Raises:
-            RegistryValidationError: On browser navigation, sede, or health
-                failures.
-        """
-        try:
-            return asyncio.run(self.collect_async(payload, expected=expected, timeout_ms=timeout_ms))
-        except (SedeError, SiteHealthError, BrowserError) as exc:
-            raise RegistryValidationError(registry_failure_message(exc)) from exc
-
-    def collect_observation(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> CheckerObservation:
-        """Collect results and return the canonical checker observation.
-
-        Calls :meth:`collect` and projects the observations into the
-        canonical checker-observation shape the registry oracle expects: a
-        ``values`` mapping of ``NIF -> verdict`` string and a single
-        ``raw_evidence_locator`` (the first non-``None`` URL from the
-        observation set).
-
-        Args:
-            payload: Raw oracle payload bytes. Not read; present for protocol
-                compatibility.
-            expected: Mapping keyed by NIF whose VIES validity is to be checked.
-
-        Returns:
-            A :class:`~domain.calculations.registry.checker_oracle_flow.CheckerObservation`
-            with the collected verdicts and evidence locator.
-        """
-        result = self.collect(payload, expected=expected)
-        values: dict[str, str] = {observation.nif: observation.verdict for observation in result.observations}
-        evidence = next(
-            (
-                observation.raw_evidence_locator
-                for observation in result.observations
-                if observation.raw_evidence_locator
-            ),
-            None,
-        )
-        return CheckerObservation(values=values, raw_evidence_locator=evidence)
-
-    async def collect_async(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-        timeout_ms: int = DEFAULT_NIF_IVA_TIMEOUT_MS,
-    ) -> NifIvaCheckResult:
-        """Async entry point that delegates to :func:`collect_nif_iva_check_observations`.
-
-        Args:
-            payload: Raw oracle payload bytes. Not read; present for protocol
-                compatibility.
-            expected: Mapping keyed by NIF whose VIES validity is to be checked.
-            timeout_ms: Per-operation Playwright timeout in milliseconds.
-                Defaults to ``DEFAULT_NIF_IVA_TIMEOUT_MS``.
-
-        Returns:
-            A :class:`NifIvaCheckResult` with one observation per NIF.
-        """
-        return await collect_nif_iva_check_observations(
-            payload,
-            expected=expected,
-            settings=self._settings,
-            timeout_ms=timeout_ms,
-        )
 
 
 async def collect_nif_iva_check_observations(
@@ -631,7 +456,6 @@ def _split_vies_nif(nif: str) -> tuple[str, str]:
 __all__ = [
     "DEFAULT_NIF_IVA_TIMEOUT_MS",
     "NifIvaCheckResult",
-    "NifIvaCheckSedeDriver",
     "SedeNifIvaCheckObservation",
     "collect_nif_iva_check_observations",
 ]

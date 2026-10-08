@@ -30,7 +30,12 @@ from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediateRelativeSuffixMarker,
     RecordDesignIntermediateVariableEnvelope,
 )
-from ..pipeline.semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry
+from ..pipeline.semantic_map import (
+    SemanticMap,
+    SemanticMapAnchor,
+    SemanticMapEntry,
+    VariableEnvelopeSemantic,
+)
 
 __all__ = [
     "M303_SEMANTIC_CENSUS_EXPECTATIONS",
@@ -350,6 +355,28 @@ def census_m303_semantic_map(
     design_epoch: str,
 ) -> M303SemanticCensus:
     """Verify every source anchor has exactly one already-authored canonical home."""
+    expectation = _require_census_inputs(intermediate, semantic_map, design_epoch)
+    source_anchors = _require_source_and_map_anchor_bijection(intermediate, semantic_map, design_epoch)
+    _require_fixed_anchor_count(source_anchors, expectation, design_epoch)
+    class_totals, review_home_totals = _review_semantic_home_totals(semantic_map, expectation, design_epoch)
+    simplified_count = _validate_simplified_projection_index(semantic_map, expectation, design_epoch)
+    envelope_anchor_count = _validate_variable_envelope_census(intermediate, semantic_map, design_epoch)
+    return M303SemanticCensus(
+        design_epoch=design_epoch,
+        fixed_anchor_count=len(source_anchors),
+        variable_envelope_anchor_count=envelope_anchor_count,
+        total_anchor_count=len(source_anchors) + envelope_anchor_count,
+        class_totals=class_totals,
+        review_home_totals=review_home_totals,
+        simplified_projection_anchor_count=simplified_count,
+    )
+
+
+def _require_census_inputs(
+    intermediate: RecordDesignIntermediate,
+    semantic_map: SemanticMap,
+    design_epoch: str,
+) -> M303SemanticCensusExpectation:
     expectation = M303_SEMANTIC_CENSUS_EXPECTATIONS.get(design_epoch)
     if expectation is None:
         raise ValueError(
@@ -368,28 +395,53 @@ def census_m303_semantic_map(
         )
     if semantic_map.source_sha256 != intermediate.source.source_sha256:
         raise ValueError(f"M303 {design_epoch} semantic map does not match the parsed design digest")
+    return expectation
 
-    source_anchor_sequence = tuple(_field_anchor(field) for sheet in intermediate.sheets for field in sheet.fields)
-    source_anchor_counts = Counter(source_anchor_sequence)
-    duplicate_source_anchors = tuple(sorted(anchor for anchor, count in source_anchor_counts.items() if count != 1))
+
+def _require_source_and_map_anchor_bijection(
+    intermediate: RecordDesignIntermediate,
+    semantic_map: SemanticMap,
+    design_epoch: str,
+) -> set[tuple[str, int, str | None, str | None, str]]:
+    source_sequence = tuple(_field_anchor(field) for sheet in intermediate.sheets for field in sheet.fields)
+    duplicate_source_anchors = _duplicate_anchors(source_sequence)
     if duplicate_source_anchors:
         raise ValueError(f"M303 {design_epoch} parsed source repeats anchors: {duplicate_source_anchors!r}")
-    semantic_anchor_sequence = tuple(_semantic_anchor(entry.anchor) for entry in semantic_map.entries)
-    semantic_anchor_counts = Counter(semantic_anchor_sequence)
-    duplicate_semantic_anchors = tuple(sorted(anchor for anchor, count in semantic_anchor_counts.items() if count != 1))
+    semantic_sequence = tuple(_semantic_anchor(entry.anchor) for entry in semantic_map.entries)
+    duplicate_semantic_anchors = _duplicate_anchors(semantic_sequence)
     if duplicate_semantic_anchors:
         raise ValueError(
             f"M303 {design_epoch} semantic map assigns an anchor more than once: {duplicate_semantic_anchors!r}",
         )
-    source_anchors = set(source_anchor_sequence)
-    semantic_anchors = set(semantic_anchor_sequence)
+    source_anchors = set(source_sequence)
+    semantic_anchors = set(semantic_sequence)
     if source_anchors != semantic_anchors:
         missing = sorted(source_anchors - semantic_anchors)
         extra = sorted(semantic_anchors - source_anchors)
         raise ValueError(f"M303 {design_epoch} map/source anchor mismatch: missing={missing!r}, extra={extra!r}")
-    if len(source_anchor_sequence) != expectation.fixed_anchor_count:
+    return source_anchors
+
+
+def _duplicate_anchors(
+    anchors: tuple[tuple[str, int, str | None, str | None, str], ...],
+) -> tuple[tuple[str, int, str | None, str | None, str], ...]:
+    return tuple(sorted(anchor for anchor, count in Counter(anchors).items() if count != 1))
+
+
+def _require_fixed_anchor_count(
+    source_anchors: set[tuple[str, int, str | None, str | None, str]],
+    expectation: M303SemanticCensusExpectation,
+    design_epoch: str,
+) -> None:
+    if len(source_anchors) != expectation.fixed_anchor_count:
         raise ValueError(f"M303 {design_epoch} fixed source-anchor count drifted")
 
+
+def _review_semantic_home_totals(
+    semantic_map: SemanticMap,
+    expectation: M303SemanticCensusExpectation,
+    design_epoch: str,
+) -> tuple[dict[str, int], dict[str, int]]:
     class_totals = dict(sorted(Counter(entry.kind.value for entry in semantic_map.entries).items()))
     if class_totals != dict(expectation.class_totals):
         raise ValueError(f"M303 {design_epoch} semantic-home class totals drifted: {class_totals!r}")
@@ -398,7 +450,14 @@ def census_m303_semantic_map(
     )
     if review_home_totals != dict(expectation.review_home_totals):
         raise ValueError(f"M303 {design_epoch} reviewed semantic-home totals drifted: {review_home_totals!r}")
+    return class_totals, review_home_totals
 
+
+def _validate_simplified_projection_index(
+    semantic_map: SemanticMap,
+    expectation: M303SemanticCensusExpectation,
+    design_epoch: str,
+) -> int:
     simplified_entries = tuple(
         entry
         for entry in semantic_map.entries
@@ -408,10 +467,8 @@ def census_m303_semantic_map(
     simplified_anchors = {(entry.anchor.record_identity, entry.anchor.ordinal) for entry in simplified_entries}
     if simplified_anchors != set(expectation.simplified_anchors):
         raise ValueError(f"M303 {design_epoch} simplified projections must be exactly the DP30302 anchor index")
-    # An ordinal is carved out of the simplified index only because the design
-    # reserves it, so the carve-out must be justified by the map rather than
-    # merely tolerated: a reserved ordinal that acquired a payload owner would
-    # otherwise leave the index silently short by one.
+    # A reserved ordinal is excluded only because the design reserves it, so
+    # the map must keep its semantic home as a filler.
     misclassified_reserved = tuple(
         sorted(
             ordinal
@@ -423,7 +480,14 @@ def census_m303_semantic_map(
         raise ValueError(
             f"M303 {design_epoch} reserved declaration-index ordinals must stay fillers: {misclassified_reserved!r}",
         )
+    return len(simplified_entries)
 
+
+def _validate_variable_envelope_census(
+    intermediate: RecordDesignIntermediate,
+    semantic_map: SemanticMap,
+    design_epoch: str,
+) -> int:
     envelopes = semantic_map.variable_envelopes
     if len(envelopes) != 1:
         raise ValueError(f"M303 {design_epoch} requires exactly one DP30300 semantic envelope")
@@ -432,6 +496,17 @@ def census_m303_semantic_map(
     if len(parser_envelopes) != 1:
         raise ValueError(f"M303 {design_epoch} parsed source requires exactly one DP30300 envelope")
     parser_envelope = parser_envelopes[0]
+    _validate_variable_envelope_prefix(envelope, parser_envelope, design_epoch)
+    _validate_variable_envelope_endpoints(envelope, parser_envelope, design_epoch)
+    _validate_variable_envelope_total(envelope, parser_envelope, design_epoch)
+    return len(envelope.prefix_fields)
+
+
+def _validate_variable_envelope_prefix(
+    envelope: VariableEnvelopeSemantic,
+    parser_envelope: RecordDesignIntermediateVariableEnvelope,
+    design_epoch: str,
+) -> None:
     envelope_anchors = tuple(_semantic_anchor(item.anchor) for item in envelope.prefix_fields)
     parser_prefix_anchors = tuple(_field_anchor(field) for field in parser_envelope.prefix_fields)
     if envelope_anchors != parser_prefix_anchors:
@@ -441,25 +516,29 @@ def census_m303_semantic_map(
     envelope_roles = tuple(field.role.value for field in envelope.prefix_fields)
     if envelope_roles != M303_VARIABLE_ENVELOPE_ROLES:
         raise ValueError(f"M303 {design_epoch} DP30300 prefix semantic roles drifted")
+
+
+def _validate_variable_envelope_endpoints(
+    envelope: VariableEnvelopeSemantic,
+    parser_envelope: RecordDesignIntermediateVariableEnvelope,
+    design_epoch: str,
+) -> None:
     if _semantic_anchor(envelope.body_anchor) != _relative_anchor(parser_envelope, design_epoch, body=True):
         raise ValueError(f"M303 {design_epoch} DP30300 body anchor drifted")
     if _semantic_anchor(envelope.closer_anchor) != _relative_anchor(parser_envelope, design_epoch, body=False):
         raise ValueError(f"M303 {design_epoch} DP30300 closer anchor drifted")
+
+
+def _validate_variable_envelope_total(
+    envelope: VariableEnvelopeSemantic,
+    parser_envelope: RecordDesignIntermediateVariableEnvelope,
+    design_epoch: str,
+) -> None:
     if (
         envelope.total_anchor.source_row != parser_envelope.total_source_row
         or envelope.total_anchor.source_cell != parser_envelope.total_source_cell
     ):
         raise ValueError(f"M303 {design_epoch} DP30300 total anchor drifted")
-
-    return M303SemanticCensus(
-        design_epoch=design_epoch,
-        fixed_anchor_count=len(source_anchors),
-        variable_envelope_anchor_count=len(envelope_anchors),
-        total_anchor_count=len(source_anchors) + len(envelope_anchors),
-        class_totals=class_totals,
-        review_home_totals=review_home_totals,
-        simplified_projection_anchor_count=len(simplified_entries),
-    )
 
 
 def _entry_at(semantic_map: SemanticMap, record_identity: str, ordinal: int) -> SemanticMapEntry:

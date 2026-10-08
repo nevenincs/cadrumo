@@ -62,20 +62,26 @@ def derive_labelled_key(*, key_material: bytes, info: bytes) -> bytes:
     return HKDF(algorithm=SHA256(), length=DERIVED_KEY_BYTES, salt=None, info=info).derive(key_material)
 
 
-def keyed_digest_hex(*, key: bytes, message: bytes) -> str:
-    """Return the lowercase hex HMAC-SHA256 of ``message`` under ``key``.
+def keyed_digest_bytes(*, key: bytes, message: bytes) -> bytes:
+    """Return the raw HMAC-SHA256 of ``message`` under ``key``.
 
     The digest is deterministic in both inputs, which is what makes it usable as
     a stable reference: the same message under the same derived key yields the
     same value on every build, and a holder of the artefact without the key
     cannot invert it.
     """
-    return hmac.new(key, message, hashlib.sha256).hexdigest()
+    return hmac.new(key, message, hashlib.sha256).digest()
+
+
+def keyed_digest_hex(*, key: bytes, message: bytes) -> str:
+    """Return the lowercase hex HMAC-SHA256 of ``message`` under ``key``."""
+    return keyed_digest_bytes(key=key, message=message).hex()
 
 
 __all__ = [
     "DERIVED_KEY_BYTES",
     "KEYED_DIGEST_ALGORITHM",
     "derive_labelled_key",
+    "keyed_digest_bytes",
     "keyed_digest_hex",
 ]

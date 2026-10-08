@@ -14,9 +14,8 @@ from ._app_live_command_spec_support import (
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
     NO_RESULT_SCHEMA,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from .command_parameter_contracts import ArgumentSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -25,9 +24,8 @@ from .command_spec import (
     SchemaState,
     ValueContract,
 )
-from .command_spec import (
-    translation_key as _key,
-)
+from .command_shared_contracts import translation_key as _key
+from .command_spec import CommandSpec
 
 LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

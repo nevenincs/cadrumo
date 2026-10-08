@@ -13,7 +13,7 @@ the others keep working while meaning something slightly different.
 
 from __future__ import annotations
 
-from ..command_spec import DeferredTarget, ResultSchemaSpec, SchemaState
+from ..command_shared_contracts import DeferredTarget, ResultSchemaSpec, SchemaState
 
 __all__ = ["config_payload_schema"]
 

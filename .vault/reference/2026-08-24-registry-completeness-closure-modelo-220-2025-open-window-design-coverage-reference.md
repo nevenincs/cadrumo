@@ -3,12 +3,13 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:886744e9f4aee4eb291594019f2dd427ceb22e31fc19a1e7fff112c5ef34fc33'
+body_hash: 'sha256:d523f02211f9b34dcff88992538050f7be13b65ec8a8b58ba8fc903070ac9fbf'
 related:
   - "[[2026-08-24-registry-completeness-closure-adr]]"
 ---
+
 # `registry-completeness-closure` reference: `modelo 220 2025 open window design coverage`
 
 ## Summary
@@ -47,12 +48,7 @@ fixed-width positions.
 
 ## Shipped and fileable boundary
 
-The revision declares `authority_grade = "applicability"`, begins on
-2025-01-01, has an unbounded annual selector, cites the 2025 design, and
-declares no export layout. It contains only the two informational declaration
-header casillas. `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025-y-siguientes/revision.toml:1`.
-Its parity reference appropriately anchors the 2025 design but does not claim
-numeric or emitted-byte parity. `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025-y-siguientes/workbook_parity_refs/0001-workbook-parity-refs.toml:1`.
+The revision declares `authority_grade = "applicability"`, begins on 2025-01-01, has an unbounded annual selector, cites the 2025 design, and declares no export layout.
 
 The dynamic filing worklist reports the actual 2026 failure: Modelo 220
 `2025-y-siguientes` cites `aeat-dr-220-2025`, but exercise 2026 falls outside
@@ -104,8 +100,6 @@ emitted-byte proof. This Step does not authorize remote AEAT submission.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/manifest.json`
 - `src/cadrumo/_data/registry/aeat/legal/is.toml`
 - `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025-y-siguientes/`
-- `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
 - `2026-08-14-registry-temporal-coverage-plan`
 - `2026-08-22-source-casilla-integration-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

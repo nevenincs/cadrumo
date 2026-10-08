@@ -198,20 +198,26 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
             "modelo-130-actividad-economica-gastos-cumulative": "500",
             "modelo-130-actividad-economica-ingresos-cumulative": "1000",
-            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
             "modelo-130-actividad-economica-retenciones-cumulative": "0",
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec",
+          "calculation_revision_id": "212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -239,7 +245,9 @@
             "closes_on": "2026-04-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 19,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-04-20"
           },
           "detail_rows": [],
           "filed_at": null,
@@ -345,7 +353,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -389,7 +397,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -417,19 +425,25 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.revision",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
             "modelo-130-actividad-economica-gastos-cumulative": "500",
             "modelo-130-actividad-economica-ingresos-cumulative": "1000",
-            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
             "modelo-130-actividad-economica-retenciones-cumulative": "0",
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec",
+          "calculation_revision_id": "212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -599,7 +613,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -642,7 +656,7 @@
               "source_period": "0A",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+            "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -657,12 +671,19 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec",
+          "calculation_revision_id": "212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e",
           "completeness_status": "complete",
           "findings": [
             {
@@ -673,7 +694,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+              "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -689,7 +710,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -708,7 +729,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "475fedcde9467701a4a5f9a29274e4a6db03e03b6971e85112a4c911fe7f2f4f",
+          "verification_report_id": "57cd222ce3899fafafade9df6b2a1266e9a3aed2e0069a98498e586b434de5ea",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

@@ -22,7 +22,14 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PACKAGE = Path(__file__).resolve().parents[1]
-_CATALOGUE_WRITERS = (_PACKAGE / "manager.py", _PACKAGE / "write_guard.py", _PACKAGE / "modelo_casilla_catalogue.py")
+_CATALOGUE_WRITERS = (
+    _PACKAGE / "manager.py",
+    _PACKAGE / "locale_yaml.py",
+    _PACKAGE / "casilla_authoring_verification.py",
+    _PACKAGE / "casilla_catalogue_install.py",
+    _PACKAGE / "write_guard.py",
+    _PACKAGE / "modelo_casilla_catalogue.py",
+)
 """Every module that persists catalogue content. The guard performs the write;
 the manager builds it. A plain write reintroduced in either one is the defect."""
 

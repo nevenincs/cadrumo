@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#arch-remediation-gates-ratchet'
 date: '2026-07-06'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:c7c50dc8190b11cce3ba4738fdfc7f1f639749a2e3d6b6dd0a9e935241209660'
 related:
   - "[[2026-07-06-arch-remediation-gates-ratchet-research]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
-  - "[[2026-07-02-arch-remediation-gates-ratchet-plan]]"
 ---
 
 # `arch-remediation-gates-ratchet` adr: `same-feature authority alignment for Wave 0 ratchets` | (**status:** `accepted`)

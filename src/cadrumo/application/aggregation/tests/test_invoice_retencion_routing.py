@@ -34,7 +34,7 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IvaRetencionRole, category_components
 from ....domain.iva.schema import IvaCategory
-from ..invoice_retencion import InvoiceRetencionProjectionDefect, project_received_invoice_retencion
+from ..invoice_retencion import InvoiceRetencionProjectionDefect, invoice_retencion_liability_defects
 from ..retenciones import RetencionObservation, aggregate_retenciones_111
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -94,42 +94,33 @@ def _invoice(
     )
 
 
-def _projected_observations(*invoices: Invoice) -> tuple[RetencionObservation, ...]:
-    """Project each invoice and return the observations, refusing a defective fixture."""
+def _routed_observations(*invoices: Invoice) -> tuple[RetencionObservation, ...]:
+    """Return the store observation each routable invoice contributes, refusing a defective fixture."""
     observations: list[RetencionObservation] = []
     for invoice in invoices:
-        projection = project_received_invoice_retencion(invoice, scheme=_PROFESIONAL)
-        assert projection.defects == (), f"the fixture invoice {invoice.invoice_number!r} must route"
-        assert projection.observation is not None
-        observations.append(projection.observation)
+        assert invoice_retencion_liability_defects(invoice) == (), (
+            f"the fixture invoice {invoice.invoice_number!r} must route"
+        )
+        assert invoice.base_total_eur is not None
+        assert invoice.retention_amount_eur is not None
+        assert invoice.counterparty_tax_id is not None
+        observations.append(
+            RetencionObservation(
+                source_kind=BindingSourceKind.PAYABLE_INVOICE,
+                source_object_id=invoice.invoice_id,
+                perceptor_nif=invoice.counterparty_tax_id,
+                perceptor_name=invoice.counterparty_name,
+                scheme=_PROFESIONAL,
+                taxable_base=invoice.base_total_eur,
+                retencion_amount=invoice.retention_amount_eur,
+                accrued_on=invoice.issued_at.isoformat(),
+            )
+        )
     return tuple(observations)
 
 
-def test_received_invoice_routes_into_the_shared_observation_type() -> None:
-    """The projection produces the store's own type, not a parallel one."""
-    projection = project_received_invoice_retencion(_invoice(), scheme=_PROFESIONAL)
-
-    assert projection.observation is not None
-    assert projection.defects == ()
-    observation = projection.observation
-    assert isinstance(observation, RetencionObservation)
-    assert observation.source_kind is BindingSourceKind.PAYABLE_INVOICE
-    assert observation.taxable_base == Decimal("1000.00")
-    assert observation.retencion_amount == Decimal("150.00")
-    assert observation.scheme == _PROFESIONAL
-    assert observation.accrued_on == "2026-03-15"
-
-
-def test_the_retencion_base_is_the_base_imponible_not_the_grand_total() -> None:
-    """The store receives the base the withholding was computed on.
-
-    A 1000 base invoice carries a 1210 grand total; routing the latter would
-    overstate every per-perceptor rollup by the whole cuota.
-    """
-    projection = project_received_invoice_retencion(_invoice(), scheme=_PROFESIONAL)
-
-    assert projection.observation is not None
-    assert projection.observation.taxable_base == Decimal("1000.00")
+def test_a_received_invoice_with_a_declared_retencion_is_a_retenedor_liability() -> None:
+    assert invoice_retencion_liability_defects(_invoice()) == ()
 
 
 def test_an_issued_invoice_never_enters_the_retenedor_store() -> None:
@@ -139,33 +130,23 @@ def test_an_issued_invoice_never_enters_the_retenedor_store() -> None:
     150 euros means opposite things on the two kinds, and only the received
     side is a Modelo 111 liability.
     """
-    projection = project_received_invoice_retencion(
-        _invoice(kind=InvoiceKind.ISSUED),
-        scheme=_PROFESIONAL,
-    )
+    defects = invoice_retencion_liability_defects(_invoice(kind=InvoiceKind.ISSUED))
 
-    assert not (projection.observation is not None)
-    assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
+    assert defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
 
 
 def test_an_invoice_declaring_no_retencion_routes_nothing() -> None:
     """Most received invoices withhold nothing; that is not a defect in the data."""
-    projection = project_received_invoice_retencion(
-        _invoice(retention_amount=None, retention_rate=None),
-        scheme=_PROFESIONAL,
-    )
+    defects = invoice_retencion_liability_defects(_invoice(retention_amount=None, retention_rate=None))
 
-    assert projection.defects == (InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,)
+    assert defects == (InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,)
 
 
 def test_a_zero_retencion_routes_nothing_rather_than_an_empty_row() -> None:
     """A declared zero is still nothing to remit; the store stays free of noise."""
-    projection = project_received_invoice_retencion(
-        _invoice(retention_amount="0.00", retention_rate="0.00"),
-        scheme=_PROFESIONAL,
-    )
+    defects = invoice_retencion_liability_defects(_invoice(retention_amount="0.00", retention_rate="0.00"))
 
-    assert projection.defects == (InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,)
+    assert defects == (InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,)
 
 
 def test_a_non_resident_supplier_is_excluded_rather_than_filed_under_modelo_111() -> None:
@@ -174,46 +155,36 @@ def test_a_non_resident_supplier_is_excluded_rather_than_filed_under_modelo_111(
     Excluding surfaces the invoice for the operator; routing it would file a
     figure under a modelo that does not cover it.
     """
-    projection = project_received_invoice_retencion(
-        _invoice(country="PT", tax_id="PT123456789"),
-        scheme=_PROFESIONAL,
-    )
+    defects = invoice_retencion_liability_defects(_invoice(country="PT", tax_id="PT123456789"))
 
-    assert projection.defects == (InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER,)
+    assert defects == (InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER,)
 
 
 def test_an_unconverted_foreign_invoice_is_excluded_rather_than_approximated() -> None:
     """The store holds euro figures, and this invoice has none."""
-    projection = project_received_invoice_retencion(
-        _invoice(country="US", tax_id="US-TAX-1", currency="USD"),
-        scheme=_PROFESIONAL,
-    )
+    defects = invoice_retencion_liability_defects(_invoice(country="US", tax_id="US-TAX-1", currency="USD"))
 
-    assert InvoiceRetencionProjectionDefect.FX_UNRESOLVED in projection.defects
+    assert InvoiceRetencionProjectionDefect.FX_UNRESOLVED in defects
 
 
 def test_a_converted_foreign_resident_invoice_routes_in_euro() -> None:
-    """With a resolved rate the routed figures are the converted ones."""
-    projection = project_received_invoice_retencion(
-        _invoice(currency="USD", fx_rate="0.90"),
-        scheme=_PROFESIONAL,
-    )
+    """With a resolved rate the invoice routes and its euro figures are the converted ones."""
+    invoice = _invoice(currency="USD", fx_rate="0.90")
 
-    assert projection.observation is not None
-    assert projection.observation.taxable_base == Decimal("900.00")
-    assert projection.observation.retencion_amount == Decimal("135.00")
+    assert invoice_retencion_liability_defects(invoice) == ()
+    assert invoice.base_total_eur == Decimal("900.00")
+    assert invoice.retention_amount_eur == Decimal("135.00")
 
 
 def test_defects_accumulate_so_one_pass_shows_everything_wrong() -> None:
     """An issued, retención-less, non-resident invoice reports all three."""
-    projection = project_received_invoice_retencion(
+    defects = invoice_retencion_liability_defects(
         _invoice(
             kind=InvoiceKind.ISSUED, retention_amount=None, retention_rate=None, country="FR", tax_id="FR12345678901"
-        ),
-        scheme=_PROFESIONAL,
+        )
     )
 
-    assert projection.defects == (
+    assert defects == (
         InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,
         InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,
         InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER,
@@ -221,43 +192,23 @@ def test_defects_accumulate_so_one_pass_shows_everything_wrong() -> None:
 
 
 def test_routed_observations_aggregate_through_the_existing_modelo_111_path() -> None:
-    """The projection's output is consumable by the aggregator that already exists.
+    """A routable invoice's observation is consumable by the aggregator that already exists.
 
     This is what "route into the store, never fork a path" has to mean in
     practice: the observations reach the committed Modelo 111 rollups without
     any new aggregator standing between them.
     """
-    from ....core.period import Period
-
     first = _invoice(number="F-PROV-301")
     second = _invoice(number="F-PROV-302", base="2000.00", retention_amount="300.00")
 
     aggregation = aggregate_retenciones_111(
-        _projected_observations(first, second),
+        _routed_observations(first, second),
         period=Period.from_year_and_code(2026, "1T"),
     )
 
     assert aggregation.total_retencion == Decimal("450.00")
     assert aggregation.total_taxable_base == Decimal("3000.00")
     assert aggregation.total_perceptors == 1
-
-
-def test_the_scheme_is_supplied_never_inferred_from_the_invoice() -> None:
-    """Two identical invoices route under whichever scheme the caller declares.
-
-    Nothing on the record selects a clave, so the projection cannot and does
-    not choose one. Were it ever to start inferring, this case would return the
-    same scheme twice regardless of what was asked for.
-    """
-    invoice = _invoice()
-
-    profesional = project_received_invoice_retencion(invoice, scheme=RetencionScheme("actividades_profesionales"))
-    economica = project_received_invoice_retencion(invoice, scheme=RetencionScheme("actividades_economicas"))
-
-    assert profesional.observation is not None
-    assert economica.observation is not None
-    assert profesional.observation.scheme == RetencionScheme("actividades_profesionales")
-    assert economica.observation.scheme == RetencionScheme("actividades_economicas")
 
 
 def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> None:
@@ -275,18 +226,18 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
         InvoiceKind.RECEIVED,
     ).retencion_role
 
-    projection = project_received_invoice_retencion(received_no_liability, scheme=_PROFESIONAL)
+    defects = invoice_retencion_liability_defects(received_no_liability)
 
     assert role != IvaRetencionRole.from_registry("taxpayer_liability")
     assert received_no_liability.kind is InvoiceKind.RECEIVED
-    assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
+    assert defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
 
 
 # --------------------------------------------------------------------------- #
 # The received side, carried to its filed casillas
 # --------------------------------------------------------------------------- #
 #
-# Everything above proves the projection and the aggregation agree. Neither
+# Everything above proves the liability predicate and the aggregation agree. Neither
 # proves the registry then routes those figures to the casillas a taxpayer
 # files: a correct aggregation consumed by the wrong binding, or by none, is
 # still a wrong return, and only the binding layer reaches a declaration.
@@ -333,7 +284,7 @@ def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
     invoice = _invoice(base="1000.00", retention_amount="150.00")
 
     aggregation = aggregate_retenciones_111(
-        _projected_observations(invoice),
+        _routed_observations(invoice),
         period=Period.from_year_and_code(2026, "1T"),
     )
 
@@ -356,7 +307,7 @@ def test_the_filed_base_is_never_the_grand_total() -> None:
     invoice = _invoice(base="1000.00", retention_amount="150.00")
 
     aggregation = aggregate_retenciones_111(
-        _projected_observations(invoice),
+        _routed_observations(invoice),
         period=Period.from_year_and_code(2026, "1T"),
     )
 

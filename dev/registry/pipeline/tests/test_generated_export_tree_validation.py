@@ -13,7 +13,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryV
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
-from .._export_tree import RenderedExportTree
 from .._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -23,6 +22,7 @@ from ..export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
+from ..export_tree_models import RenderedExportTree
 from ..joined_record_design import JoinedRecordDesign
 from ..semantic_map import SemanticMap
 from ._generated_tree_test_support import (
@@ -43,7 +43,7 @@ def _validate(
 ) -> ValidatedGeneratedExportTree:
     """Validate with the isolated tree's real render profile and source evidence."""
     render_profile, render_evidence = isolated_render_profile()
-    return validate_generated_export_tree(
+    validated = validate_generated_export_tree(
         context=context,
         joined=joined,
         semantic_map=semantic_map,
@@ -51,6 +51,8 @@ def _validate(
         render_profile=render_profile,
         render_profile_source_evidence=render_evidence,
     )
+    assert isinstance(validated, ValidatedGeneratedExportTree), "the supported fixture must establish filing authority"
+    return validated
 
 
 def test_generated_tree_validation_requires_real_loader_and_authority_selection(tmp_path: Path) -> None:

@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.ids import LegalRefId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
@@ -163,7 +163,12 @@ def test_modelo_131_guidance_and_layout_sources_are_separated(
 
     for revision in modelo.revisions.values():
         assert _M131_LAYOUT_SOURCE in revision.source_refs
-        assert _M131_INSTRUCTIONS_SOURCE in revision.source_refs
+        instruction_refs = {ref for ref in revision.source_refs if str(ref).startswith(_M131_INSTRUCTIONS_SOURCE)}
+        if _source_window_covers(instructions, revision):
+            assert instruction_refs
+            assert all(catalogues.sources[ref].kind == "instructions" for ref in instruction_refs)
+        else:
+            assert _M131_INSTRUCTIONS_SOURCE not in revision.source_refs
         # The sede procedure ficha is required only of the revisions it actually
         # governs. The bundled page states "Ejercicio 2026" and nothing earlier,
         # so its applies_from is 2026-01-01, and a 2024 or 2025 revision citing

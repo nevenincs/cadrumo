@@ -25,7 +25,7 @@ See Also:
         Separate import boundary that creates current records with
         :class:`~ExternalEvidence`; this persistence helper
         deliberately creates local records without that payload.
-    :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~application.modelo.filed_revision_observation.prepare_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
         carry evidence.
     :class:`~domain.prorrata_register.protocols.ProrrataRegisterRepositoryProtocol`:
@@ -43,6 +43,7 @@ from decimal import Decimal
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import sha256_hex
+from ...core.identity.hex_ids import VerificationReportId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.result_disposition import (
@@ -57,6 +58,7 @@ from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.event_repository import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets.event_repository import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
@@ -88,6 +90,9 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
+from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -107,9 +112,11 @@ from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
     TransactionParticipationIndexRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.verification_report import VerificationReport, VerificationReportCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
@@ -119,9 +126,16 @@ from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     PriorDomiciliationElectionProjection,
 )
+from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..filing.retention import try_record_filing_retention_snapshot
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
-from .action_errors import M303FilingEvidenceError
+from .action_errors import (
+    CalculationRevisionStateError,
+    M303FilingEvidenceError,
+    VerificationReportNotFoundError,
+    WorkUnitMutationRefusedError,
+)
+from .calculation_publication import CalculationRevisionPublication
 from .filed_revision_observation import (
     PreparedFiledRevisionObservation,
     filed_revision_observation_writes,
@@ -280,6 +294,7 @@ def _build_calculation_revision(
     binding_overrides: dict[BindingId, str],
     row_binding_values: dict[BindingId, dict[str, str]],
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...],
     row_casilla_values: Mapping[RowCasillaKey, Decimal],
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
     relation_overrides: dict[RelationId, str],
@@ -289,6 +304,8 @@ def _build_calculation_revision(
     borrador_snapshot_id: str | None,
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     cleared_casilla_ids: tuple[CasillaId, ...],
+    operator_layer: CalculationOperatorLayer | None,
+    rendering_snapshot: CalculationRenderingSnapshot | None,
     casilla_values: dict[CasillaId, Decimal],
     observations: tuple[CasillaObservation, ...],
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
@@ -310,6 +327,7 @@ def _build_calculation_revision(
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values=row_casilla_values,
         row_casilla_provenance=row_casilla_provenance,
         relation_overrides=relation_overrides,
@@ -319,6 +337,8 @@ def _build_calculation_revision(
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
+        rendering_snapshot=rendering_snapshot,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
@@ -378,7 +398,7 @@ def _persist_duplicate_calculation_revision(
     now: datetime,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     additional_secure_object_writes_for_revision: (Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None),
-) -> CalculationRevision:
+) -> CalculationRevisionPublication:
     """Guard and co-commit duplicate-result pointer and side-effect writes."""
     duplicate_work_units = _duplicate_calculation_work_units(
         existing=existing,
@@ -392,7 +412,7 @@ def _persist_duplicate_calculation_revision(
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     if duplicate_work_units is work_units and not duplicate_writes:
-        return existing
+        return CalculationRevisionPublication(revision=existing, work_unit=work_unit, published=False)
     # Guarded, never a bare `.save`: an unguarded write here would silently
     # discard a concurrent catalogue change this branch never observed, and it
     # is the one place a co-committed receipt write could otherwise be dropped.
@@ -401,7 +421,11 @@ def _persist_duplicate_calculation_revision(
         duplicate_writes,
         expected_revision_id=work_units_revision_id,
     )
-    return existing
+    return CalculationRevisionPublication(
+        revision=existing,
+        work_unit=duplicate_work_units.work_units[work_unit.work_unit_id],
+        published=True,
+    )
 
 
 def _advance_calculation_work_unit(
@@ -520,6 +544,7 @@ def _persist_new_calculation_revision(
 
 def persist_calculation_revision(
     *,
+    operation: PinnedAuthorityOperation,
     work_unit_id: str,
     registry_snapshot_ref: RegistrySnapshotRef,
     work_unit: WorkUnit,
@@ -529,6 +554,7 @@ def persist_calculation_revision(
     binding_overrides: dict[BindingId, str],
     row_binding_values: dict[BindingId, dict[str, str]],
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal],
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
     relation_overrides: dict[RelationId, str],
@@ -538,6 +564,8 @@ def persist_calculation_revision(
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
+    operator_layer: CalculationOperatorLayer | None = None,
+    rendering_snapshot: CalculationRenderingSnapshot | None = None,
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...],
     source_issues: tuple[CalculationSourceIssue, ...] = (),
@@ -556,8 +584,8 @@ def persist_calculation_revision(
     additional_secure_object_writes_for_revision: (
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
-) -> CalculationRevision:
-    """Persist a freshly calculated draft revision and return the :class:`CalculationRevision`.
+) -> CalculationRevisionPublication:
+    """Persist a draft revision and return its exact publication and parent receipt.
 
     Returns the existing duplicate when an identical revision is already persisted.
     The content-addressed revision id includes manual casilla inputs,
@@ -616,12 +644,26 @@ def persist_calculation_revision(
         row_casilla_provenance=row_casilla_provenance,
         filing_instance_evidence=filing_instance_evidence,
     )
+    if rendering_snapshot is not None and (
+        rendering_snapshot.authority_generation != operation.pin().logical_generation
+        or rendering_snapshot.registry_snapshot.snapshot_ref != registry_snapshot_ref
+    ):
+        raise ModeloValidationError("rendering snapshot does not belong to the admitted calculation scope")
+    if any(
+        row_set.bucket_id != work_unit.bucket_id
+        or row_set.work_unit_id != work_unit_id
+        or row_set.registry_snapshot_ref != registry_snapshot_ref
+        or row_set.authority_generation != operation.pin().logical_generation
+        for row_set in closed_record_row_sets
+    ):
+        raise ModeloValidationError("closed record rows do not belong to the admitted calculation scope")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values=row_casilla_values,
         row_casilla_provenance=row_casilla_provenance,
         relation_overrides=relation_overrides,
@@ -637,6 +679,8 @@ def persist_calculation_revision(
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
+        rendering_snapshot=rendering_snapshot,
     )
     stamped_annual_summary_handoff = _stamp_annual_summary_handoff(
         m303_regimen_simplificado_annual_summary_handoff,
@@ -645,7 +689,7 @@ def persist_calculation_revision(
     # Revisioned: this catalogue is composed into a co-commit, so it cannot
     # use a self-committing mutation, and an unguarded read would write the
     # whole singleton row back over a revision another calculate run added.
-    revisions, revisions_revision_id = calculation_repository.load_revisioned()
+    revisions, revisions_revision_id = calculation_repository.load_revisioned(operation=operation)
     existing = revisions.get(revision_id)
     if existing is not None:
         return _persist_duplicate_calculation_revision(
@@ -666,6 +710,7 @@ def persist_calculation_revision(
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
         row_source_identities=row_source_identities,
+        closed_record_row_sets=closed_record_row_sets,
         row_casilla_values=row_casilla_values,
         row_casilla_provenance=row_casilla_provenance,
         relation_overrides=relation_overrides,
@@ -675,6 +720,8 @@ def persist_calculation_revision(
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
+        rendering_snapshot=rendering_snapshot,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
@@ -726,7 +773,11 @@ def persist_calculation_revision(
         calculation_repository=calculation_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
-    return revision
+    return CalculationRevisionPublication(
+        revision=revision,
+        work_unit=advanced_work_units.work_units[work_unit.work_unit_id],
+        published=True,
+    )
 
 
 def require_filing_instance_evidence_for_work_unit(
@@ -951,6 +1002,19 @@ def _new_local_filing_record(
     )
 
 
+def _require_m303_settlement_result_values(
+    target: CalculationRevision, work_unit: WorkUnit, result_ids: tuple[CasillaId, ...] | None
+) -> dict[CasillaId, Decimal]:
+    """Require the declared result casillas after admitting the credit-state operands."""
+    if result_ids is None or any(casilla_id not in target.casilla_values for casilla_id in result_ids):
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "missing", {"modelo": str(work_unit.modelo), "operation": "settlement_snapshot"}
+            )
+        )
+    return {casilla_id: target.casilla_values[casilla_id] for casilla_id in result_ids}
+
+
 def _new_local_m303_settlement_snapshot(
     *,
     target: CalculationRevision,
@@ -963,20 +1027,14 @@ def _new_local_m303_settlement_snapshot(
         return None
     state = prepared_observation.iva_compensation_state
     result_ids = result_disposition_casilla_ids(str(work_unit.modelo))
-    if (
-        state is None
-        or state.prior_pending_amount is None
-        or state.applied_amount is None
-        or result_ids is None
-        or any(casilla_id not in target.casilla_values for casilla_id in result_ids)
-    ):
+    if state is None or state.prior_pending_amount is None or state.applied_amount is None:
         raise M303FilingEvidenceError(
             precondition_failure=m303_filing_evidence_failure(
                 "missing",
                 {"modelo": str(work_unit.modelo), "operation": "settlement_snapshot"},
             ),
         )
-    result_values = {casilla_id: target.casilla_values[casilla_id] for casilla_id in result_ids}
+    result_values = _require_m303_settlement_result_values(target, work_unit, result_ids)
     result_amount = canonical_result_amount(str(work_unit.modelo), result_values)
     if result_amount is None or result_disposition is None:
         raise M303FilingEvidenceError(
@@ -1145,9 +1203,52 @@ def _rectificativa_aggregate_context(
     )
 
 
+def _approved_verification_report_differs(
+    report: VerificationReport, granting_reports: tuple[VerificationReport, ...], target: CalculationRevision
+) -> bool:
+    """Bind the exact granting report to revision, authority and stored verification facts."""
+    return (
+        report.calculation_revision_id != target.calculation_revision_id
+        or report.registry_snapshot_ref != target.registry_snapshot_ref
+        or not report.granted_verificado_completo
+        or len(granting_reports) != 1
+        or granting_reports[0] != report
+        or report.run_at != target.verified_at
+        or report.verified_by != target.verified_by
+    )
+
+
+def require_approved_verification_report(
+    *,
+    target: CalculationRevision,
+    approved_verification_report_id: VerificationReportId,
+    catalogue: VerificationReportCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> VerificationReport:
+    """Bind a filing to the current granting report for its :class:`CalculationRevision`."""
+    report = catalogue.get(approved_verification_report_id)
+    granting_reports = tuple(
+        candidate
+        for candidate in catalogue.reports.values()
+        if candidate.calculation_revision_id == target.calculation_revision_id and candidate.granted_verificado_completo
+    )
+    if report is None or _approved_verification_report_differs(report, granting_reports, target):
+        raise VerificationReportNotFoundError(
+            translated_message="application.modelo.errors.verification_report_not_found",
+            context={
+                "calculation_revision_id": target.calculation_revision_id,
+                "verification_report_id": approved_verification_report_id,
+            },
+        )
+    require_verification_report_coordinates_current(catalogue, operation=operation)
+    return report
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
+    approved_verification_report_id: VerificationReportId,
+    filing_baseline_revision_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
     notes: str | None,
@@ -1155,6 +1256,7 @@ def persist_filed_revision(
     now: datetime,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepositoryProtocol,
@@ -1206,6 +1308,31 @@ def persist_filed_revision(
     # persistence boundary, so the filing result disposition is required too.
     require_filing_result_disposition(work_unit=work_unit, result_disposition=result_disposition)
     calculation_revision_id = target.calculation_revision_id
+    revisions, revisions_revision_id = calculation_repository.load_revisioned(operation=operation)
+    if revisions.get(calculation_revision_id) != target:
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": calculation_revision_id, "reason": "filing_baseline_stale"},
+        )
+    current_work_units, work_units_revision_id = work_unit_repository.load_revisioned()
+    if current_work_units != work_units or current_work_units.get(work_unit.work_unit_id) != work_unit:
+        raise WorkUnitMutationRefusedError(
+            translated_message="application.modelo.errors.work_unit_mutation_refused",
+            context={"work_unit_id": work_unit.work_unit_id, "reason": "filing_baseline_stale"},
+        )
+    reports, reports_revision_id = verification_repository.load_revisioned(operation=operation)
+    require_approved_verification_report(
+        target=target,
+        approved_verification_report_id=approved_verification_report_id,
+        catalogue=reports,
+        operation=operation,
+    )
+    filing_catalogue, filing_revision_id = filing_repository.load_revisioned()
+    if filing_revision_id != filing_baseline_revision_id:
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": calculation_revision_id, "reason": "filing_baseline_stale"},
+        )
     new_filing_id = derive_filing_record_id(
         work_unit_id=target.work_unit_id,
         calculation_revision_id=calculation_revision_id,
@@ -1232,7 +1359,6 @@ def persist_filed_revision(
         result_disposition=result_disposition,
     )
 
-    filing_catalogue = filing_repository.load()
     prior_current = filing_catalogue.current_for(
         bucket_id=work_unit.bucket_id,
         modelo=work_unit.modelo,
@@ -1253,7 +1379,6 @@ def persist_filed_revision(
     # Revisioned: this catalogue is composed into a co-commit, so it cannot
     # use a self-committing mutation, and an unguarded read would write the
     # whole singleton row back over a revision another calculate run added.
-    revisions, revisions_revision_id = calculation_repository.load_revisioned()
     updated_filing_catalogue = filing_catalogue
     if prior_current is not None:
         updated_filing_catalogue, revisions = _supersede_prior_current_filing(
@@ -1272,7 +1397,7 @@ def persist_filed_revision(
         aggregate_context=_rectificativa_aggregate_context(
             filed_target,
             work_unit=work_unit,
-            work_units=work_units,
+            work_units=current_work_units,
             filing_catalogue=updated_filing_catalogue,
             justificante_repository=justificante_repository,
             taxpayer_nif=taxpayer_nif,
@@ -1293,7 +1418,7 @@ def persist_filed_revision(
         operation=operation,
     )
     advanced_work_units = upsert_work_unit(
-        work_units,
+        current_work_units,
         work_unit.model_copy(
             update={
                 "filed_calculation_revision_id": calculation_revision_id,
@@ -1344,13 +1469,16 @@ def persist_filed_revision(
 
     extra_writes = (
         calculation_repository.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
+        verification_repository.to_secure_object_write(
+            reports, expected_revision_id=reports_revision_id, operation=operation
+        ),
         *participation_writes,
     )
     if prorrata_write is not None:
         extra_writes = (*extra_writes, prorrata_write)
     extra_writes = (
         *extra_writes,
-        work_unit_repository.to_secure_object_write(advanced_work_units),
+        work_unit_repository.to_secure_object_write(advanced_work_units, expected_revision_id=work_units_revision_id),
         bucket_event_history_write(bucket_event_repository, tuple(filed_events)),
         *filed_revision_observation_writes(
             prepared_observation,
@@ -1373,6 +1501,7 @@ def persist_filed_revision(
     filing_repository.save_with_secure_object_writes(
         updated_filing_catalogue,
         extra_writes,
+        expected_revision_id=filing_revision_id,
     )
 
     _refresh_filing_retention_snapshot(

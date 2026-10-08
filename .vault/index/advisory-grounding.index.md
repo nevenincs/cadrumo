@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#advisory-grounding'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:261d716022f8278f8dd30373f9a5a7db69d4536c29c0a18025cdcc422ada20b9'
+body_hash: 'sha256:ed094412273b8c77f1b7b3577c32a645fdca21642169f17d7f07f28747f2c035'
 related:
   - '[[2026-08-10-advisory-grounding-adr]]'
-  - '[[2026-08-10-advisory-grounding-ledger]]'
-  - '[[2026-08-10-advisory-grounding-plan]]'
   - '[[2026-08-10-advisory-grounding-reference]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#advisory-grounding`.
 ### adr
 
 - `2026-08-10-advisory-grounding-adr` - `advisory-grounding` adr: `How a calculation advisory carries its provision` | (**status:** `proposed`)
-
-### exec
-
-- `2026-08-10-advisory-grounding-ledger` - `advisory-grounding` ledger
-
-### plan
-
-- `2026-08-10-advisory-grounding-plan` - `advisory-grounding` plan
 
 ### reference
 

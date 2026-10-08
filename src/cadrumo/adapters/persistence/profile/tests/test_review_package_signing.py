@@ -13,7 +13,10 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from sqlalchemy import select
 
-from cadrumo.adapters.persistence.profile.review_package_signing import ReviewPackageSigningKeypairAdapter
+from cadrumo.adapters.persistence.profile.review_package_signing import (
+    ReviewPackageSigningKeypairAdapter,
+    build_review_package_signing_keypair_reader,
+)
 from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_path
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
@@ -52,7 +55,7 @@ _CONCURRENT_BUCKET_ID = "2e510000-0000-4000-8000-000000000003"
 
 
 def _work_unit(*, bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
@@ -67,7 +70,7 @@ def _work_unit(*, bucket_id: str) -> WorkUnit:
         filing_year=2026,
         period=period,
         revision_id="2026-y-siguientes",
-        name="303-2026-1T",
+        name="303-2026-2T",
         created_at=_NOW,
         updated_at=_NOW,
         state=WorkUnitState.BORRADOR,
@@ -142,6 +145,60 @@ def test_ensure_keypair_mints_then_persists_and_is_idempotent(tmp_path: Path) ->
     message = b"adapter-anti-tautology-probe"
     signature = first.private_key().sign(message)
     second.public_key().verify(signature, message)
+
+
+def test_load_keypair_absence_never_creates_a_secure_object(tmp_path: Path) -> None:
+    """Reading an unused signing namespace leaves it empty."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OWNER_BUCKET_ID) as profile:
+        reader = build_review_package_signing_keypair_reader(bucket_id=profile.bucket_id)
+        assert reader.load_keypair(bucket_id=profile.bucket_id) is None
+        assert reader.load_keypair(bucket_id=profile.bucket_id) is None
+        with session_scope(profile.repository._engine) as session:
+            assert (
+                session.execute(
+                    select(SecureObjectRow).where(
+                        SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
+                    ),
+                ).first()
+                is None
+            )
+
+
+def test_load_keypair_retains_the_existing_secure_object_revision(tmp_path: Path) -> None:
+    """Read-only access returns the existing key without rewriting its object."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OWNER_BUCKET_ID) as profile:
+        capability = ReviewPackageSigningKeypairAdapter(
+            repository=profile.repository,
+            bucket_id=profile.bucket_id,
+        )
+        original = capability.ensure_keypair(bucket_id=profile.bucket_id, generated_at=_NOW)
+        object_key = MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.object_key_grammar.format(
+            bucket_id=profile.bucket_id,
+        )
+        before = profile.repository.load(
+            MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
+            object_key,
+            expected_class=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.sensitivity,
+            max_supported_version=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.schema_version,
+        )
+        loaded = capability.load_keypair(bucket_id=f" {profile.bucket_id} ")
+        after = profile.repository.load(
+            MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
+            object_key,
+            expected_class=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.sensitivity,
+            max_supported_version=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.schema_version,
+        )
+        assert loaded == original
+        assert before is not None
+        assert after == before
+
+
+def test_load_keypair_refuses_a_foreign_requested_bucket(tmp_path: Path) -> None:
+    """A reader cannot be retargeted to another profile by its call argument."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OWNER_BUCKET_ID) as profile:
+        reader = build_review_package_signing_keypair_reader(bucket_id=profile.bucket_id)
+        with pytest.raises(ReviewPackageSigningError, match="different bucket"):
+            reader.load_keypair(bucket_id=_FOREIGN_BUCKET_ID)
 
 
 def test_private_key_is_never_stored_as_plaintext(tmp_path: Path) -> None:
@@ -226,6 +283,8 @@ def test_signing_keypair_refuses_foreign_payload_bucket(tmp_path: Path, stored_b
         )
         with pytest.raises(ReviewPackageSigningError, match="does not belong"):
             capability.ensure_keypair(bucket_id=_OWNER_BUCKET_ID)
+        with pytest.raises(ReviewPackageSigningError, match="does not belong"):
+            capability.load_keypair(bucket_id=_OWNER_BUCKET_ID)
 
         unchanged = profile.repository.load(
             MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
@@ -299,7 +358,7 @@ def test_concurrent_signing_keypair_mint_reuses_one_encrypted_key_and_signs_pack
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join(timeout=60)
+            thread.join()
 
         assert not [thread for thread in threads if thread.is_alive()]
         assert errors == []

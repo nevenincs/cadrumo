@@ -9,11 +9,14 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ....core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ....core.period import Period
-from ....domain.deadlines.festivos import DeadlineHolidayCoverage
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus, RecargoBand, Recovery
 from ...overview.calendar_models import (
     OverviewAeatSubmissionState,
@@ -495,3 +498,39 @@ def test_a_directly_built_entry_refuses_a_recovery_bound_to_another_address() ->
 
     with pytest.raises(ValidationError, match="contradicts its natural address"):
         DeclarationsCalendarEntryRefV1.model_validate(payload)
+
+
+def _territory_projection(operation: PinnedAuthorityOperation, territory: str) -> DeclarationsCalendarEntryRefV1:
+    """Project one row whose territory comes from the calendar CCAA catalogue."""
+    entry = _entry().model_copy(
+        update={
+            "holiday_coverage": DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "holiday_territory": resolve_calendar_ccaa_catalogue(authority=operation).require(territory),
+        }
+    )
+    projection = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    return projection.entries[0]
+
+
+def test_a_projected_holiday_territory_round_trips_through_json(operation: PinnedAuthorityOperation) -> None:
+    """A frontend decodes the row with no pinned authority, so the territory crosses as its text."""
+    row = _territory_projection(operation, "ES-MD")
+
+    decoded = DeclarationsCalendarEntryRefV1.model_validate_json(row.model_dump_json(), strict=True)
+
+    assert decoded == row
+    assert decoded.holiday_territory == "ES-MD"
+    assert type(decoded.holiday_territory) is str
+
+
+def test_an_undeclared_holiday_territory_is_refused_before_projection(operation: PinnedAuthorityOperation) -> None:
+    """Membership is decided by the catalogue, and the token itself still refuses bare text."""
+    with pytest.raises(RegistryValidationError, match="not declared"):
+        _territory_projection(operation, "ES-ZZ")
+    with pytest.raises(ValidationError, match="registry-projected token"):
+        TypeAdapter(CalendarCCAA).validate_python("ES-MD")

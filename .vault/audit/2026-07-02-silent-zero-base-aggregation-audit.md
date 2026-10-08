@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#silent-zero-base-aggregation'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:a6e056030a9051a7ce90953598df2017d7b607a6f0dec25395460f39e1d516fc'
-related:
-  - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:2188b9cc375583a47a0d7e8700530a8dd8cb14cee3f3fadde58ea45d979549d8'
+related: []
 ---
 
 # `silent-zero-base-aggregation` audit: `Wave 1 D9 close-blocker audit`
@@ -34,7 +33,7 @@ checked at HEAD.
 The M390 reconciliation predicate work was already present in commits `4e52feba3`
 and `cac1f165f`. This pass added the S16 exec record and checked S16 through the
 plan CLI. Focused verification passed:
-`uv run --no-sync pytest -q src/aeat/domain/calculations/registry/tests/test_modelo_390_registry.py src/aeat/application/modelo/tests/test_verification_m390_reconciliation.py`
+Historical command omitted; its target was retired.
 reported 23 passed; full output is in `_scratch-wave1-d9/m390-reconciliation-tests.log`.
 
 ### prorrata-volume-steps-deferred | medium | S03 and S04 are superseded by the ADR mechanism decision
@@ -58,7 +57,7 @@ The S06 follow-up added a real `aeat app quickfile` integration path for Modelo 
 2026 1T. The fixture seeds a real active profile, persisted ledger transactions,
 linked purchase-invoice evidence, and a neutral IVA wallet decision, then invokes the
 public quickfile chain without manual prorrata input. Verification passed:
-`uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_app_quickfile.py::test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrata_input`
+Historical command omitted; its target was retired.
 reported 1 passed, and the full quickfile module reported 4 passed. The S06 exec
 record exists, and the plan checkbox is now checked at HEAD.
 

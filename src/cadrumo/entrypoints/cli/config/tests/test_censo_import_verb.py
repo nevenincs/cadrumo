@@ -68,7 +68,7 @@ def test_non_pdf_artefact_refuses_with_the_registered_parse_code(tmp_path: Path)
     document = _stderr_document(result)
     error = document.get("error")
     assert isinstance(error, dict)
-    assert error.get("code") == "FAIL_CERTIFICADO_CENSAL_PARSE"
+    assert error.get("code") == "FAIL_CERTIFICADO_CENSAL_PARSE", document
     # The refusal must say WHAT was expected. It used to be asserted through a
     # `suggestion` string, which the envelope retired: that name is reserved
     # for the typed action projection now, and the error model refuses it
@@ -87,7 +87,7 @@ def test_pdf_artefact_refuses_while_extraction_is_unpinned(tmp_path: Path) -> No
     document = _stderr_document(result)
     error = document.get("error")
     assert isinstance(error, dict)
-    assert error.get("code") == "FAIL_CERTIFICADO_CENSAL_PARSE"
+    assert error.get("code") == "FAIL_CERTIFICADO_CENSAL_PARSE", document
 
 
 def test_missing_artefact_is_refused_at_the_cli_boundary(tmp_path: Path) -> None:
@@ -97,31 +97,28 @@ def test_missing_artefact_is_refused_at_the_cli_boundary(tmp_path: Path) -> None
     assert result.exit_code != 0
 
 
-def test_apply_routes_through_the_single_cotejo_apply_authority() -> None:
-    """The ``--apply`` door persists through ``apply_cotejo`` (one CENSO_APPLIED), never a bare write.
+def test_apply_routes_through_the_registered_file_import_operation() -> None:
+    """The CLI delegates its apply to the worker and has no direct write path.
 
     The parser refuses every document while the layout extraction is
-    unpinned, so the door offers no seam to inject a synthetic certificate;
-    the adopt-all emission itself is proven directly against ``apply_cotejo``
-    in the user_profile suite. This inspection-level pin guards the door's
-    routing: it must call the single apply authority and never re-introduce a
-    parallel record-repository fact write that would skip the event.
+    unpinned, so the door offers no seam to inject a synthetic certificate.
+    The registered worker owns the canonical apply; this pins the CLI route
+    and prevents a parallel direct repository write from returning.
     """
     import inspect
 
     from .. import _censo_transport
 
     tree = ast.parse(inspect.getsource(_censo_transport.censo_import))
-    apply_calls = [
+    bridge_calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "apply_cotejo"
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "import_censal_file_facts"
     ]
-    assert len(apply_calls) == 1, "the import door must have exactly one cotejo apply call"
-    apply_call = apply_calls[0]
-    assert apply_call.args and isinstance(apply_call.args[0], ast.Name)
-    assert apply_call.args[0].id == "state"
+    assert len(bridge_calls) == 1, "the import door must submit one registered file-import operation"
     assert not any(
-        isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "apply_fact_changes"
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id in {"apply_cotejo", "workflow_state_repository"}
         for node in ast.walk(tree)
     )

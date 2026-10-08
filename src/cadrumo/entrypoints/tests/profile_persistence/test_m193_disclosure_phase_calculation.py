@@ -109,6 +109,8 @@ from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.identifiers import canonical_decimal_string
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
+from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "19319319-3193-4193-8193-000000002025"
@@ -234,7 +236,8 @@ def _persist_pending_accrual_row(objects: SecureObjectRepository, *, accrual_yea
     """
     exigible_on, paid_on = date(accrual_year, 12, 15), date(accrual_year + 1, 1, 20)
     transaction = capital_payment(provider_id=f"coupon-{exigible_on.isoformat()}", booked_date=paid_on)
-    RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
+    replace_retencion_observations(
+        RetencionObservationRepositoryAdapter(objects=objects),
         modelo="123",
         filing_year=exigible_on.year,
         period=Period.from_year_and_code(exigible_on.year, "4T"),

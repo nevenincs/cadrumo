@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#envelope-conformance-gate'
 date: '2026-06-01'
-modified: '2026-08-15'
-body_hash: 'sha256:3d9e1319ac28dd8e6227d59f2222155d3ed1b7ef8a0733f2a56b169f802f2791'
+modified: '2026-10-03'
+body_hash: 'sha256:92798592bbe36832c8f84ff3356f0cd145cc51bd27cda68e6447e8607e0b4fbf'
 related:
   - "[[2026-06-01-envelope-conformance-gate-research]]"
 ---
@@ -39,7 +39,7 @@ hand-maintained "expected leaves" file.
 
 ## Implementation
 
-`src/cadrumo/entrypoints/cli/test_json_schema_conformance.py` builds the
+The conformance test builds the
 live CLI by calling the application factory, walks the Typer command
 tree to collect every leaf command path, and compares the resulting
 `set[tuple[str, ...]]` against `set(SCHEMA_REGISTRY.keys())`. Failures

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:ec043858dfa2301bc284cbf90a3728568fe07ed0800885ddcc49047782f295c4'
 related:
   - "[[2026-09-02-object-name-declustering-adr]]"
-  - "[[2026-09-02-object-name-declustering-plan]]"
 ---
 # `object-name-declustering` audit: `S17 CLI recipe review`
 

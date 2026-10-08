@@ -1,12 +1,7 @@
 """In-memory capture sink for emitted CLI success envelopes.
 
-The deterministic-output substrate captures the verbatim emitted
-:class:`~core.json_contract.SchemaEnvelope` document so a recorded
-run output can be compared byte-identically after masking. The sink
-is a context variable holding a list; it is unset (``None``) in production,
-so :func:`record_emitted_envelope` is a no-op unless a
-:func:`capture_envelopes` scope has armed it — the emit path pays only a
-single ``ContextVar.get`` when capture is off.
+The emit path appends an envelope to an explicitly armed context-local sink.
+An unarmed sink makes :func:`record_emitted_envelope` a no-op.
 
 This module deliberately has NO dependency on
 :mod:`core.json_contract`, so the emit path
@@ -18,8 +13,7 @@ captured document against the schema registry lives in
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
-from contextlib import contextmanager
+from collections.abc import Mapping
 from contextvars import ContextVar
 
 CAPTURE_SINK: ContextVar[list[dict[str, object]] | None] = ContextVar(
@@ -27,31 +21,6 @@ CAPTURE_SINK: ContextVar[list[dict[str, object]] | None] = ContextVar(
     default=None,
 )
 """Active capture list for the current context, or ``None`` when capture is off."""
-
-
-@contextmanager
-def capture_envelopes() -> Generator[list[dict[str, object]]]:
-    """Arm envelope capture for the current context, yielding the sink list.
-
-    Nesting-aware: when a sink is already active (e.g. armed by an outer
-    capture scope), this reuses it rather than shadowing it, so a
-    re-entered command's emitted envelope lands in the outermost armed
-    sink. The reused case does not reset the outer sink on exit.
-
-    Yields:
-        The list that :func:`record_emitted_envelope` appends to; each
-        entry is a shallow copy of an emitted envelope document.
-    """
-    existing = CAPTURE_SINK.get()
-    if existing is not None:
-        yield existing
-        return
-    sink: list[dict[str, object]] = []
-    token = CAPTURE_SINK.set(sink)
-    try:
-        yield sink
-    finally:
-        CAPTURE_SINK.reset(token)
 
 
 def record_emitted_envelope(envelope: Mapping[str, object]) -> None:
@@ -66,6 +35,5 @@ def record_emitted_envelope(envelope: Mapping[str, object]) -> None:
 
 
 __all__ = [
-    "capture_envelopes",
     "record_emitted_envelope",
 ]

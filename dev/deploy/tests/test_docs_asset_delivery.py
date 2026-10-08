@@ -11,6 +11,7 @@ import pytest
 from dev.deploy import docs_asset_delivery, r2_objects
 from dev.deploy.docs_asset_delivery import verify_inventory
 from dev.deploy.docs_asset_manifest import LANGUAGES, asset_layout, build_manifest, delivery_config, verify_bytes
+from dev.deploy.docs_delivery_contracts import RELEASE_HEADER, DeliveryCredentials
 from dev.deploy.r2_objects import R2Bucket, deployment_lock
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -18,19 +19,21 @@ RELEASE = "fixture-20260927T000000Z"
 
 
 def fixture_release(root: Path) -> dict[str, Any]:
-    """Build real files with separate search runtime and generated payloads."""
-    files = {"index.html": "language entry", "404.html": '<a href="/docs/en/">Docs</a>'}
+    """Build real files with separate search runtime and generated payloads.
+
+    The site's shape: a page per language, and ONE search index at the apex that
+    every language's pages load.
+    """
+    files = {
+        "index.html": "language entry",
+        "404.html": '<a href="/docs/en/">Docs</a>',
+        "pagefind/pagefind.js": "export default {};",
+        "pagefind/pagefind-entry.json": "{}",
+        "pagefind/fragment/a.pf_fragment": "fragment",
+        "pagefind/index/a.pf_index": "index",
+    }
     for language in LANGUAGES:
-        files.update(
-            {
-                f"{language}/index.html": language,
-                f"{language}/search.html": "Search",
-                f"{language}/pagefind/pagefind.js": "export default {};",
-                f"{language}/pagefind/pagefind-entry.json": "{}",
-                f"{language}/pagefind/fragment/a.pf_fragment": "fragment",
-                f"{language}/pagefind/index/a.pf_index": "index",
-            }
-        )
+        files.update({f"{language}/index.html": language, f"{language}/search.html": "Search"})
     for key, body in files.items():
         path = root / key
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -44,11 +47,18 @@ def test_static_delivery_preserves_both_mounts_and_local_search_runtime(tmp_path
     config = delivery_config(document)
     for mount in ("/docs", "/cadrumo/docs"):
         assert f"{mount}/en/search.html" in assets
-        assert f"{mount}/en/pagefind/pagefind.js" in assets
-        assert f"{mount}/en/pagefind/fragment/a.pf_fragment" not in assets
+        assert f"{mount}/pagefind/pagefind.js" in assets
+        assert f"{mount}/pagefind/fragment/a.pf_fragment" not in assets
         assert f"{mount}/en/ {mount}/en/index.html 200" in config["_redirects"]
         assert f"{mount}/search.html {mount}/en/search.html 301" in config["_redirects"]
-        assert f"{mount}/en/pagefind/index/* https://" in config["_redirects"]
+        assert f"{mount}/pagefind/index/* https://" in config["_redirects"]
+        # The site has one index, so the search trees cost one rule per tree
+        # rather than one per tree per language.
+        assert not any(
+            row.startswith(f"{mount}/{language}/pagefind/")
+            for language in LANGUAGES
+            for row in config["_redirects"].splitlines()
+        )
     assert assets["/docs/404.html"]["hash"] != assets["/cadrumo/docs/404.html"]["hash"]
     assert sources["/cadrumo/docs/404.html"] == "@mirror:404.html"
     assert 'href="/cadrumo/docs/en/"' in document["mirror_errors"]["404.html"]
@@ -65,8 +75,8 @@ def test_manifest_detects_changed_bytes_and_missing_search(tmp_path: Path) -> No
     document = fixture_release(tmp_path)
     with pytest.raises(ValueError, match="content differs"):
         verify_bytes(b"wrong", document["objects"]["index.html"], "index.html")
-    (tmp_path / "en/pagefind/index/a.pf_index").unlink()
-    with pytest.raises(ValueError, match="Missing en search index"):
+    (tmp_path / "pagefind/index/a.pf_index").unlink()
+    with pytest.raises(ValueError, match="Missing site search index"):
         build_manifest(tmp_path, RELEASE)
 
 
@@ -135,7 +145,7 @@ def test_manifest_cannot_escape_recovery_directory(tmp_path: Path, unsafe: str) 
 def test_failed_public_verification_restores_previous_deployment(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from dev.deploy import docs_static_site as publisher
+    from dev.deploy import docs_delivery_activation as publisher
     from dev.deploy.cloudflare_api import CloudflareAccount
 
     document = fixture_release(tmp_path)
@@ -159,7 +169,7 @@ def test_failed_public_verification_restores_previous_deployment(
     monkeypatch.setattr(publisher, "_verify_public_delivery", verify)
     monkeypatch.setattr(publisher, "restore_version", lambda _account, version: calls.append("restore:" + version))
     monkeypatch.setattr(publisher, "_restore_routes", lambda *_args: calls.append("routes-restored"))
-    credentials = publisher.DeliveryCredentials(
+    credentials = DeliveryCredentials(
         CloudflareAccount("account", "token"), R2Bucket("account", "private", "key", "secret")
     )
     with pytest.raises(ValueError, match="public response failed"):
@@ -169,7 +179,7 @@ def test_failed_public_verification_restores_previous_deployment(
 
 
 def test_candidate_failure_never_activates_production(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from dev.deploy import docs_static_site as publisher
+    from dev.deploy import docs_delivery_activation as publisher
     from dev.deploy.cloudflare_api import CloudflareAccount
 
     calls: list[str] = []
@@ -179,7 +189,7 @@ def test_candidate_failure_never_activates_production(tmp_path: Path, monkeypatc
         raise ValueError("candidate failed")
 
     monkeypatch.setattr(publisher, "_verify_candidate", refuse)
-    credentials = publisher.DeliveryCredentials(
+    credentials = DeliveryCredentials(
         CloudflareAccount("account", "token"), R2Bucket("account", "private", "key", "secret")
     )
     with pytest.raises(ValueError, match="candidate failed"):
@@ -188,13 +198,13 @@ def test_candidate_failure_never_activates_production(tmp_path: Path, monkeypatc
 
 
 def test_cutover_waits_for_static_even_when_release_identity_is_unchanged(monkeypatch: pytest.MonkeyPatch) -> None:
-    from dev.deploy import docs_static_site as publisher
+    from dev.deploy import docs_delivery_probe as publisher
 
     responses = iter(
         [
-            (200, {publisher.RELEASE_HEADER: RELEASE}),
-            (200, {publisher.RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
-            (200, {publisher.RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
+            (200, {RELEASE_HEADER: RELEASE}),
+            (200, {RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
+            (200, {RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
         ]
     )
     monkeypatch.setattr(publisher, "_endpoint_response", lambda _url: next(responses))

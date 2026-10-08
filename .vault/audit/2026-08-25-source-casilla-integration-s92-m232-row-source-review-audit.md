@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:b9c3d4082fa6ed4056c5d1269ec5707fad5eac96b9ce838aaf11a998c5786606'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 # `source-casilla-integration` audit: `S92 M232 row source review`
 

@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:82a1284a5269d5115e9d2248ede7cc1c5bbd64e44cb6ba4b1d0c618aa0f0fd4d'
 related:
   - "[[2026-09-11-justfile-design-adr]]"
-  - "[[2026-09-11-justfile-design-plan]]"
   - "[[2026-09-11-justfile-design-research]]"
 ---
 

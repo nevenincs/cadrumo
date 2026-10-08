@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:9afbc1cc0519804f77c7677f67b7ea2ad20ef6b7609fa373063a367e90305e6c'
+modified: '2026-10-03'
+body_hash: 'sha256:8167006ff757770f6f2f1e32410da91c9494886187791a24a9eb2287b2071aa3'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S295-001 | PASS | Core registry is declaration-only
 
-`src/aeat/core/errors/registry/_core.py` declares `ErrorCode` rows for core,
+The retired module declared `ErrorCode` rows for core,
 resource, locale, corpus-manifest, lock, active-profile, and observability errors.
 It does not perform plain-file I/O, read environment variables, load settings, open
 secure storage, or select a runtime storage backend. Plain-file behavior remains in
@@ -38,14 +38,14 @@ message was added in this step.
 
 ## S295-004 | PASS | Duplication search found no second authority
 
-Vaultspec RAG returned `src/aeat/core/errors/registry/_core.py`, the corpus/resource
+Vaultspec RAG returned the retired module, the corpus/resource
 exception classes, the lock error type, locale YAML, and focused registry tests. No
 duplicate core error registry or alternate plaintext-exception table was found.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/errors/registry/_core.py src/aeat/core/errors/__init__.py src/aeat/core/errors/test_registry.py src/aeat/core/errors/test_registry_enforcement.py src/aeat/core/errors/test_core_error_root.py src/aeat/core/errors/test_envelope.py src/aeat/core/resources/_errors.py src/aeat/core/resources/test_registry.py src/aeat/core/corpus_manifest/_errors.py src/aeat/core/corpus_manifest/test_manifest.py src/aeat/core/locks_errors.py`
-- `uv run --no-sync pytest -q src/aeat/core/errors/test_registry.py src/aeat/core/errors/test_registry_enforcement.py src/aeat/core/errors/test_core_error_root.py src/aeat/core/errors/test_envelope.py src/aeat/core/resources/test_registry.py src/aeat/core/corpus_manifest/test_manifest.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "core error registry plain file plaintext exception resource corpus manifest lock locale ErrorCode message_key" --type code --port 8766 --max-results 8`
 - `uv run --no-sync vaultspec-rag search "CoreError ResourceLoadError CorpusManifestError LockAcquisitionError LocaleError error registry plaintext file exception" --type code --port 8766 --max-results 8`

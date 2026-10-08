@@ -73,10 +73,8 @@ def _calculate(
         date_context={"filing_period": _FILING_DATE},
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-            "renta-profile-descendientes-guarderia": Decimal("0"),
             **_m100_2024_deduccion_maternidad_bindings(),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

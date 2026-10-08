@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:e17dfa7af386eb91ec8dcbd6b7d12b1d072751fcda4fea068db611147dd70a9b'
+modified: '2026-10-03'
+body_hash: 'sha256:e19e9a2579fb1be856ea25441c9e9c17fd80739a1f0ac42d3203da9e27eb3171'
 related: []
 ---
 
@@ -58,8 +58,8 @@ clean.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/config_reset.py src/aeat/application/test_config_reset.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/application/test_config_reset.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "config_reset"` passed with 14 selected tests.
+- the historical check passed.
+- the historical check passed with 14 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: `vaultspec-code-reviewer` review returned one MEDIUM and one LOW

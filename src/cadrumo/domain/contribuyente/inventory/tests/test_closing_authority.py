@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....filing_evidence import FilingEvidenceReference
+from .._anexo_d_records import resolve_inventory_authoritative_closing
 from ..closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,
@@ -16,22 +17,19 @@ from ..closing_authority_records import (
     InventoryClosingResolution,
     PriorAuthoritativeClosingLink,
 )
-from ..records import (
+from ..closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
     InventoryClosingValuationBasis,
-    InventoryLedger,
-    InventoryLedgerDocument,
     InventoryValidationError,
     PhysicalClosingEvidence,
     PhysicalClosingEvidenceRole,
     PhysicalClosingObservation,
     PriorClosingContinuityEvidence,
-    ValuationMethod,
     fingerprint_prior_authoritative_closing,
-    resolve_inventory_authoritative_closing,
 )
+from ..records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 

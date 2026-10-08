@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#m303-refund-fichero-block'
 date: '2026-06-24'
-modified: '2026-07-17'
-body_hash: 'sha256:a5db6804a06d06c76afeea2eeaa17c9f766b5672f420ea0853898cdd5ab086e3'
+modified: '2026-10-04'
+body_hash: 'sha256:21305daf1ee2c7ea19db795287144233c15187940e70dd70e9987c67a257c214'
 related:
   - '[[2026-06-24-m303-refund-election-adr]]'
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
   - '[[2026-07-10-m303-refund-fichero-block-research]]'
+  - '[[2026-10-04-taxpayer-bank-accounts-adr]]'
 ---
-
 # `m303-refund-fichero-block` adr: `REDEME field and IBAN/SWIFT-BIC secure-storage refund block` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -129,3 +129,7 @@ golden-SHA against the published Diseño offsets keeps the byte-level change aud
   `sensitivity="financial"`, be read transiently at export, and never be logged or written
   to a plaintext side store; the fichero refund record is populated from that secure source
   only for a refund disposition.
+
+## Amendment (2026-10-04): the refund account lives in the ledger own-account register
+
+Applied under `2026-10-04-taxpayer-bank-accounts-adr`. The profile-schema carrier in the first Implementation bullet is withdrawn: the schema's account paths were retired and no profile field holds an account. The refund account, and the separate charge account, are ledger-owned own accounts in the encrypted `cadrumo.ledger.own_accounts` register, resolved at export into the existing `RefundAccount` projection; the encrypted-storage-only invariant, the REDEME byte, the derived Marca SEPA and the no-account refusal stand. The statement that the DID page is emitted only for D/X is superseded by the DID predicate of `2026-06-21-m303-carry-reconciliation-adr` (U, D, X and Nota 3), which the 2026 design confirms. A refund to a non-ES account resolves X rather than D.

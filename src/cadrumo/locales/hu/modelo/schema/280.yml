@@ -6,7 +6,7 @@ modelo:
           filing-year:
             label: A bevallás éve
           irpf-declarante-nif:
-            label: A bevalló adóazonosító száma (NIF)
+            label: A bevalló NIF-azonosítója
           m280-aportaciones-ejercicio:
             label: Az év során teljesített befizetések
           m280-base-retencion-practicada:
@@ -52,7 +52,7 @@ modelo:
           m280-rendimientos-positivos-ejercicio:
             label: Az év során elért pozitív hozamok
           m280-representante-legal-nif:
-            label: A törvényes képviselő adószáma
+            label: A törvényes képviselő NIF-azonosítója
           m280-tipo-identificador:
             label: Az azonosító típusa
           m280-tipo-plan-ahorro:

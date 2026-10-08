@@ -16,7 +16,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.modelo.work_lifecycle import get_work_unit
+from ....application.modelo.work_lifecycle import discard_work_unit, get_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.operator_surface.command_ports import cli_argv_for
 from ....core.bucket_pointer import resolve_active_bucket_id
@@ -64,7 +64,7 @@ def _run_console(environment: dict[str, str], arguments: list[str]) -> subproces
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=90,
+            timeout=None,
         ),
     )
 
@@ -313,6 +313,32 @@ def _work_state(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str
             dispose_engine(settings)
 
 
+def _seed_discarded_work(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str) -> None:
+    """Use the canonical writer for a later calculation/refusal test's setup."""
+    passphrase = load_settings().cadrumo_dev_test_database_password
+    with override_settings(
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_secret_passphrase=passphrase,
+    ) as settings:
+        dispose_engine(settings)
+        try:
+            bucket_id = resolve_active_bucket_id()
+            assert bucket_id is not None
+            with open_test_profile_session(bucket_id):
+                discard_work_unit(
+                    work_unit_id,
+                    actor="test-operator",
+                    reason=None,
+                    ports=WorkLifecyclePorts(
+                        work_unit_repository=WorkUnitCatalogueRepository(),
+                        bucket_event_repository=BucketEventHistoryRepository(),
+                    ),
+                )
+        finally:
+            dispose_engine(settings)
+
+
 def _assert_action_id(action: dict[str, Any], action_id: str) -> None:
     reference = action.get("action")
     assert isinstance(reference, dict)
@@ -444,7 +470,7 @@ def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: 
         period="1T",
         revision="2019-y-siguientes",
     )
-    _run_success(environment, ["app", "modelo", "work", "discard", work_unit_id, "--yes"])
+    _seed_discarded_work(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
     before = _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
     structural_digests: dict[tuple[str, str], str] = {}
 

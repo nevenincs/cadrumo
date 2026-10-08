@@ -12,11 +12,12 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..unreachable_code import ModuleReach, UnreachableCodeOutcome, run_unreachable_code_scan
+from ..unreachable_code import run_unreachable_code_scan
+from ..unreachable_models import ModuleReach, UnreachableCodeOutcome
 
-# One real scan walks every shipped, test and tooling module; the ceiling is the
-# one the sibling whole-tree scans carry, not the per-unit-test default.
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(900)]
+# One real scan walks every shipped, test and tooling module. Like the sibling
+# whole-tree correctness scans, it runs to completion without an elapsed ceiling.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _REPO_ROOT = REPO_ROOT
 

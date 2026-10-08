@@ -8,13 +8,12 @@ related:
   - "[[2026-07-07-prorrata-sectores-diferenciados-adr]]"
   - "[[2026-07-07-prorrata-art104-tres-exclusions-adr]]"
   - "[[2026-07-07-prorrata-art105-cinco-interrupted-adr]]"
-  - "[[2026-07-07-iva-prorrata-complexity-plan]]"
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-10-iva-prorrata-complexity-research]]"
 supersedes:
   - '2026-07-01-iva-complexity-hardening-scope-adr'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:de6c9b32526bf7e5e4b9d4b0964f1f4bba86c5f7e30c07726bfb8946ebf45c89'
 ---
 # `iva-prorrata-complexity` adr: `IVA prorrata complexity: bind the 4 deferred W06 axis decisions into one collision-clustered implementation campaign` | (**status:** `accepted`)

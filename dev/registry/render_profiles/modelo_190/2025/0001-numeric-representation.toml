@@ -1,0 +1,2391 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 67
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-record-type-row-67-offset-1"
+decision_statement = "Reviewed enumeration representation (1 digits) for modelo-190-decl-record-type."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 67, positions 1-1; source label: TIPO DE REGISTRO.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 67
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["190"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 69
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-modelo-row-69-offset-2"
+decision_statement = "Reviewed enumeration representation (3 digits) for modelo-190-decl-modelo."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 69, positions 2-4; source label: MODELO DECLARACIÓN.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 69
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 71
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-year-row-71-offset-5"
+decision_statement = "Reviewed year_yyyy representation (4 digits) for modelo-190-decl-year."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 71, positions 5-8; source label: EJERCICIO.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 71
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 105
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "7"
+semantic_part_offset = 59
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-persona-contacto-telefono-row-105-offset-59"
+decision_statement = "Reviewed identifier_digits representation (9 digits) for modelo-190-decl-persona-contacto-telefono."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 105, positions 59-67; source label: PERSONA CON QUIÉN RELACIONARSE.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 105
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "7"
+semantic_part_offset = 59
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 122
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-numero-identificativo-row-122-offset-108"
+decision_statement = "Reviewed identifier_digits representation (13 digits) for modelo-190-decl-numero-identificativo."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 122, positions 108-120; source label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 122
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 155
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-numero-identificativo-anterior-row-155-offset-123"
+decision_statement = "Reviewed identifier_digits representation (13 digits) for modelo-190-decl-numero-identificativo-anterior."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 155, positions 123-135; source label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 155
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 166
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-total-percepciones-row-166-offset-136"
+decision_statement = "Reviewed integer representation (9 digits) for modelo-190-decl-total-percepciones."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 166, positions 136-144; source label: NÚMERO TOTAL DE PERCEPCIONES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 166
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 244
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-retenciones-total-integer-part-row-244-offset-161"
+decision_statement = "Reviewed amount_integer_part representation (13 digits) for modelo-190-decl-retenciones-total-integer-part."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 244, positions 161-173; source label: Parte entera del importe total de las."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 244
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 248
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-decl-retenciones-total-fractional-digits-row-248-offset-174"
+decision_statement = "Reviewed amount_fractional_digits representation (0+2 digits) for modelo-190-decl-retenciones-total-fractional-digits."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 248, positions 174-175; source label: Parte decimal del importe total de las."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 248
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 281
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-record-type-row-281-offset-1"
+decision_statement = "Reviewed enumeration representation (1 digits) for modelo-190-perc-record-type."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 281, positions 1-1; source label: TIPO DE REGISTRO.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 281
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["190"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 283
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-modelo-row-283-offset-2"
+decision_statement = "Reviewed enumeration representation (3 digits) for modelo-190-perc-modelo."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 283, positions 2-4; source label: MODELO DECLARACIÓN.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 283
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 285
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-year-row-285-offset-5"
+decision_statement = "Reviewed year_yyyy representation (4 digits) for modelo-190-perc-year."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 285, positions 5-8; source label: EJERCICIO.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 285
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 358
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-codigo-provincia-row-358-offset-76"
+decision_statement = "Reviewed identifier_digits representation (2 digits) for modelo-190-perc-codigo-provincia."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 358, positions 76-77; source label: CÓDIGO PROVINCIA.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 358
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 796
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-subclave-row-796-offset-79"
+decision_statement = "Reviewed identifier_digits representation (2 digits) for modelo-190-perc-subclave."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 796, positions 79-80; source label: SUBCLAVE.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 796
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "signed_component_magnitude"
+value_policy = "signed-component-magnitude"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1489
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-percepcion-dineraria-row-1489-offset-82"
+decision_statement = "Reviewed signed_component_magnitude representation (11+2 digits) for modelo-190-perc-percepcion-dineraria."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1489, positions 82-94; source label: PERCEPCIÓN ÍNTEGRA (Dineraria):."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1489
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1509
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-retenciones-practicadas-row-1509-offset-95"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-retenciones-practicadas."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1509, positions 95-107; source label: RETENCIONES PRACTICADAS: Campo."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1509
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "signed_component_magnitude"
+value_policy = "signed-component-magnitude"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1556
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-percepcion-especie-row-1556-offset-109"
+decision_statement = "Reviewed signed_component_magnitude representation (11+2 digits) for modelo-190-perc-percepcion-especie."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1556, positions 109-121; source label: VALORACIÓN (De la percepción en."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1556
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1580
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ingresos-a-cuenta-row-1580-offset-122"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-ingresos-a-cuenta."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1580, positions 122-134; source label: INGRESOS A CUENTA EFECTUADOS:."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1580
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1612
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ingresos-a-cuenta-repercutidos-row-1612-offset-135"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-ingresos-a-cuenta-repercutidos."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1612, positions 135-147; source label: INGRESOS A CUENTA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1612
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1636
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "13"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ejercicio-devengo-row-1636-offset-148"
+decision_statement = "Reviewed year_yyyy representation (4 digits) for modelo-190-perc-ejercicio-devengo."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1636, positions 148-151; source label: EJERCICIO DEVENGO.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1636
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "13"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1726
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "14"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ceuta-melilla-row-1726-offset-152"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ceuta-melilla."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1726, positions 152-152; source label: CEUTA O MELILLA.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1726
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "14"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1775
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "15"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ano-nacimiento-row-1775-offset-153"
+decision_statement = "Reviewed year_yyyy representation (4 digits) for modelo-190-perc-ano-nacimiento."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1775, positions 153-156; source label: AÑO DE NACIMIENTO.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1775
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "15"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1782
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "16"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-situacion-familiar-row-1782-offset-157"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-situacion-familiar."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1782, positions 157-157; source label: SITUACIÓN FAMILIAR.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1782
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "16"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1847
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "18"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-discapacidad-row-1847-offset-167"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-discapacidad."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1847, positions 167-167; source label: DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1847
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "18"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1873
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "19"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-contrato-relacion-row-1873-offset-168"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-contrato-relacion."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1873, positions 168-168; source label: CONTRATO O RELACIÓN.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1873
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "19"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1949
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "20"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-titular-unidad-convivencia-row-1949-offset-169"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-titular-unidad-convivencia."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1949, positions 169-169; source label: TITULAR UNIDAD DE CONVIVENCIA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1949
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "20"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1964
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "21"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-movilidad-geografica-row-1964-offset-170"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-movilidad-geografica."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 1964, positions 170-170; source label: MOVILIDAD GEOGRÁFICA.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1964
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "21"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2016
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-reducciones-aplicables-integer-part-row-2016-offset-171"
+decision_statement = "Reviewed amount_integer_part representation (11 digits) for modelo-190-perc-reducciones-aplicables-integer-part."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2016, positions 171-181; source label: Parte entera del importe de las."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2016
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2020
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-reducciones-aplicables-fractional-digits-row-2020-offset-182"
+decision_statement = "Reviewed amount_fractional_digits representation (0+2 digits) for modelo-190-perc-reducciones-aplicables-fractional-digits."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2020, positions 182-183; source label: Parte decimal del importe de las."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2020
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2064
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-gastos-deducibles-integer-part-row-2064-offset-184"
+decision_statement = "Reviewed amount_integer_part representation (11 digits) for modelo-190-perc-gastos-deducibles-integer-part."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2064, positions 184-194; source label: Parte entera del importe de los gastos, si."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2064
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2067
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-gastos-deducibles-fractional-digits-row-2067-offset-195"
+decision_statement = "Reviewed amount_fractional_digits representation (0+2 digits) for modelo-190-perc-gastos-deducibles-fractional-digits."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2067, positions 195-196; source label: Parte decimal del importe de los gastos, si."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2067
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2086
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-pensiones-compensatorias-integer-part-row-2086-offset-197"
+decision_statement = "Reviewed amount_integer_part representation (11 digits) for modelo-190-perc-pensiones-compensatorias-integer-part."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2086, positions 197-207; source label: Parte entera del importe de la pensión."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2086
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2090
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-pensiones-compensatorias-fractional-digits-row-2090-offset-208"
+decision_statement = "Reviewed amount_fractional_digits representation (0+2 digits) for modelo-190-perc-pensiones-compensatorias-fractional-digits."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2090, positions 208-209; source label: Parte decimal del importe de la pensión."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2090
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2109
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-anualidades-alimentos-integer-part-row-2109-offset-210"
+decision_statement = "Reviewed amount_integer_part representation (11 digits) for modelo-190-perc-anualidades-alimentos-integer-part."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2109, positions 210-220; source label: Parte entera del importe de las."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2109
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2113
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-anualidades-alimentos-fractional-digits-row-2113-offset-221"
+decision_statement = "Reviewed amount_fractional_digits representation (0+2 digits) for modelo-190-perc-anualidades-alimentos-fractional-digits."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2113, positions 221-222; source label: Parte decimal del importe de las."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2113
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "26"
+semantic_part_offset = 224
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-menores-3-entero-row-2124-offset-224"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-descendientes-menores-3-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2124, positions 224-224; source label: HIJOS Y OTROS DESCENDIENTES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "26"
+semantic_part_offset = 224
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "26"
+semantic_part_offset = 223
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-menores-3-total-row-2124-offset-223"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-descendientes-menores-3-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2124, positions 223-223; source label: HIJOS Y OTROS DESCENDIENTES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "26"
+semantic_part_offset = 223
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "26"
+semantic_part_offset = 227
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-resto-entero-row-2124-offset-227"
+decision_statement = "Reviewed integer representation (2 digits) for modelo-190-perc-descendientes-resto-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2124, positions 227-228; source label: HIJOS Y OTROS DESCENDIENTES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "26"
+semantic_part_offset = 227
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "26"
+semantic_part_offset = 225
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-resto-total-row-2124-offset-225"
+decision_statement = "Reviewed integer representation (2 digits) for modelo-190-perc-descendientes-resto-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2124, positions 225-226; source label: HIJOS Y OTROS DESCENDIENTES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "26"
+semantic_part_offset = 225
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 231
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-disc-33-65-entero-row-2173-offset-231"
+decision_statement = "Reviewed integer representation (2 digits) for modelo-190-perc-descendientes-disc-33-65-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2173, positions 231-232; source label: HIJOS Y OTROS DESCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 231
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 229
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-disc-33-65-total-row-2173-offset-229"
+decision_statement = "Reviewed integer representation (2 digits) for modelo-190-perc-descendientes-disc-33-65-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2173, positions 229-230; source label: HIJOS Y OTROS DESCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 229
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 239
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-disc-65-entero-row-2173-offset-239"
+decision_statement = "Reviewed integer representation (2 digits) for modelo-190-perc-descendientes-disc-65-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2173, positions 239-240; source label: HIJOS Y OTROS DESCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 239
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 237
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-disc-65-total-row-2173-offset-237"
+decision_statement = "Reviewed integer representation (2 digits) for modelo-190-perc-descendientes-disc-65-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2173, positions 237-238; source label: HIJOS Y OTROS DESCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 237
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 235
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-disc-movilidad-entero-row-2173-offset-235"
+decision_statement = "Reviewed integer representation (2 digits) for modelo-190-perc-descendientes-disc-movilidad-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2173, positions 235-236; source label: HIJOS Y OTROS DESCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 235
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 233
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-descendientes-disc-movilidad-total-row-2173-offset-233"
+decision_statement = "Reviewed integer representation (2 digits) for modelo-190-perc-descendientes-disc-movilidad-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2173, positions 233-234; source label: HIJOS Y OTROS DESCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "27"
+semantic_part_offset = 233
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "28"
+semantic_part_offset = 244
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-75-mas-entero-row-2254-offset-244"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-75-mas-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2254, positions 244-244; source label: ASCENDIENTES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "28"
+semantic_part_offset = 244
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "28"
+semantic_part_offset = 243
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-75-mas-total-row-2254-offset-243"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-75-mas-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2254, positions 243-243; source label: ASCENDIENTES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "28"
+semantic_part_offset = 243
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "28"
+semantic_part_offset = 242
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-menores-75-entero-row-2254-offset-242"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-menores-75-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2254, positions 242-242; source label: ASCENDIENTES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "28"
+semantic_part_offset = 242
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "28"
+semantic_part_offset = 241
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-menores-75-total-row-2254-offset-241"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-menores-75-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2254, positions 241-241; source label: ASCENDIENTES.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "28"
+semantic_part_offset = 241
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 246
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-disc-33-65-entero-row-2293-offset-246"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-disc-33-65-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2293, positions 246-246; source label: ASCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 246
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 245
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-disc-33-65-total-row-2293-offset-245"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-disc-33-65-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2293, positions 245-245; source label: ASCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 245
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 250
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-disc-65-entero-row-2293-offset-250"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-disc-65-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2293, positions 250-250; source label: ASCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 250
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 249
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-disc-65-total-row-2293-offset-249"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-disc-65-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2293, positions 249-249; source label: ASCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 249
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 248
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-disc-movilidad-entero-row-2293-offset-248"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-disc-movilidad-entero."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2293, positions 248-248; source label: ASCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 248
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 247
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-ascendientes-disc-movilidad-total-row-2293-offset-247"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-ascendientes-disc-movilidad-total."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2293, positions 247-247; source label: ASCENDIENTES CON DISCAPACIDAD.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "29"
+semantic_part_offset = 247
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "30"
+semantic_part_offset = 251
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-computo-hijo-1-row-2351-offset-251"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-computo-hijo-1."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2351, positions 251-251; source label: CÓMPUTO DE LOS 3 PRIMEROS HIJOS.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "30"
+semantic_part_offset = 251
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "30"
+semantic_part_offset = 252
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-computo-hijo-2-row-2351-offset-252"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-computo-hijo-2."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2351, positions 252-252; source label: CÓMPUTO DE LOS 3 PRIMEROS HIJOS.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "30"
+semantic_part_offset = 252
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "30"
+semantic_part_offset = 253
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-computo-hijo-3-row-2351-offset-253"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-computo-hijo-3."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2351, positions 253-253; source label: CÓMPUTO DE LOS 3 PRIMEROS HIJOS.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "30"
+semantic_part_offset = 253
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2397
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "31"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-comunicacion-prestamos-vivienda-row-2397-offset-254"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-comunicacion-prestamos-vivienda."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2397, positions 254-254; source label: COMUNICACIÓN PRÉSTAMOS VIVIENDA HABITUAL.."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2397
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "31"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "signed_component_magnitude"
+value_policy = "signed-component-magnitude"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2428
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "32"
+semantic_part_offset = 256
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-incapacidad-dineraria-percepcion-row-2428-offset-256"
+decision_statement = "Reviewed signed_component_magnitude representation (11+2 digits) for modelo-190-perc-incapacidad-dineraria-percepcion."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2428, positions 256-268; source label: PERCEPCIONES DINERARIAS DERIVADAS DE INCAPACIDAD LABORAL."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2428
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "32"
+semantic_part_offset = 256
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2428
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "32"
+semantic_part_offset = 269
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-incapacidad-dineraria-retenciones-row-2428-offset-269"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-incapacidad-dineraria-retenciones."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2428, positions 269-281; source label: PERCEPCIONES DINERARIAS DERIVADAS DE INCAPACIDAD LABORAL."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2428
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "32"
+semantic_part_offset = 269
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "33"
+semantic_part_offset = 296
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-incapacidad-especie-ingresos-a-cuenta-row-2495-offset-296"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-incapacidad-especie-ingresos-a-cuenta."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2495, positions 296-308; source label: PERCEPCIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL:."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "33"
+semantic_part_offset = 296
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "33"
+semantic_part_offset = 309
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-incapacidad-especie-repercutidos-row-2495-offset-309"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-incapacidad-especie-repercutidos."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2495, positions 309-321; source label: PERCEPCIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL:."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "33"
+semantic_part_offset = 309
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "signed_component_magnitude"
+value_policy = "signed-component-magnitude"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "33"
+semantic_part_offset = 283
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-incapacidad-especie-valoracion-row-2495-offset-283"
+decision_statement = "Reviewed signed_component_magnitude representation (11+2 digits) for modelo-190-perc-incapacidad-especie-valoracion."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2495, positions 283-295; source label: PERCEPCIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL:."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "33"
+semantic_part_offset = 283
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2600
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "34"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-complemento-ayuda-infancia-row-2600-offset-322"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-complemento-ayuda-infancia."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2600, positions 322-322; source label: COMPLEMENTO AYUDA PARA LA INFANCIA."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2600
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "34"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 349
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-retenciones-forales-araba-row-2622-offset-349"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-retenciones-forales-araba."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2622, positions 349-361; source label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA CO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 349
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 375
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-retenciones-forales-bizkaia-row-2622-offset-375"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-retenciones-forales-bizkaia."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2622, positions 375-387; source label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA CO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 375
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 323
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-retenciones-forales-estatal-row-2622-offset-323"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-retenciones-forales-estatal."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2622, positions 323-335; source label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA CO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 323
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 362
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-retenciones-forales-gipuzkoa-row-2622-offset-362"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-retenciones-forales-gipuzkoa."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2622, positions 362-374; source label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA CO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 362
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 336
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-retenciones-forales-navarra-row-2622-offset-336"
+decision_statement = "Reviewed decimal representation (11+2 digits) for modelo-190-perc-retenciones-forales-navarra."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2622, positions 336-348; source label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA CO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "35"
+semantic_part_offset = 336
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2826
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "36"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-excesos-acciones-emergentes-row-2826-offset-388"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-excesos-acciones-emergentes."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2826, positions 388-388; source label: EXCESOS ENTREGA ACCIONES EMPRESAS EMERGENTES."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2826
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "36"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2852
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "37"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-rendimientos-fondos-emprendimiento-row-2852-offset-389"
+decision_statement = "Reviewed integer representation (1 digits) for modelo-190-perc-rendimientos-fondos-emprendimiento."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2852, positions 389-389; source label: RENDIMIENTOS DEL TRABAJO OBTENIDOS POR LA GESTIÓN DE FONDOS VINCULADOS AL EMPRENDIMIENTO, A LA INNOVACIÓN Y AL."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2852
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "37"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 392
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-prestacion-incapacidad-row-2898-offset-392"
+decision_statement = "Reviewed checkbox representation (1 digits) for modelo-190-perc-prestacion-incapacidad."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2898, positions 392-392; source label: TIPO/S DE PRESTACIÓN/ES DE LA CLAVE B.01 PERCIBIDA/S EN EL EJERCICIO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 392
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 390
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-prestacion-jubilacion-row-2898-offset-390"
+decision_statement = "Reviewed checkbox representation (1 digits) for modelo-190-perc-prestacion-jubilacion."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2898, positions 390-390; source label: TIPO/S DE PRESTACIÓN/ES DE LA CLAVE B.01 PERCIBIDA/S EN EL EJERCICIO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 390
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 393
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-prestacion-no-contributiva-row-2898-offset-393"
+decision_statement = "Reviewed checkbox representation (1 digits) for modelo-190-perc-prestacion-no-contributiva."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2898, positions 393-393; source label: TIPO/S DE PRESTACIÓN/ES DE LA CLAVE B.01 PERCIBIDA/S EN EL EJERCICIO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 393
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 394
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-prestacion-resto-row-2898-offset-394"
+decision_statement = "Reviewed checkbox representation (1 digits) for modelo-190-perc-prestacion-resto."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2898, positions 394-394; source label: TIPO/S DE PRESTACIÓN/ES DE LA CLAVE B.01 PERCIBIDA/S EN EL EJERCICIO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 394
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 391
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m190-2025-perc-prestacion-viudedad-row-2898-offset-391"
+decision_statement = "Reviewed checkbox representation (1 digits) for modelo-190-perc-prestacion-viudedad."
+justification = "Exact aeat-dr-190-2025 SHA a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d, PDF row 2898, positions 391-391; source label: TIPO/S DE PRESTACIÓN/ES DE LA CLAVE B.01 PERCIBIDA/S EN EL EJERCICIO."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = false
+ordinal = "38"
+semantic_part_offset = 391
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 180
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "Positions 145-160 contain a blank-or-N sign, thirteen integer digits and two fractional digits."
+justification = "The pinned official total-perceptions description defines sign at 145, integer magnitude at 146-158 and decimals at 159-160; negative perceptor repayments reduce the total."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 180
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[design_identity]
+modelo = "190"
+design_epoch = "2025"
+source_ref = "aeat-dr-190-2025"
+source_sha256 = "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d"

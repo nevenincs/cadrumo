@@ -6,7 +6,7 @@ modelo:
           filing-year:
             label: A bevallás éve
           irpf-declarante-nif:
-            label: A bejelentő adószáma
+            label: A bevalló NIF-azonosítója
           m189-clave-identificacion:
             label: Az azonosítás módjának kódja
           m189-clave-mercado:
@@ -46,7 +46,7 @@ modelo:
           m189-porcentaje-participacion:
             label: Tulajdoni hányad százaléka
           m189-representante-legal-nif:
-            label: A törvényes képviselő adószáma
+            label: A törvényes képviselő NIF-azonosítója
           m189-tipo-soporte:
             label: Az adathordozó típusa
           m189-valoracion:
@@ -56,7 +56,7 @@ modelo:
       construct:
         modelo-189-informative:
           field:
-            title: 189-es modell. Éves adatszolgáltatás értékpapírokról, biztosításokról
+            title: Modelo 189. Éves adatszolgáltatás értékpapírokról, biztosításokról
               és járadékokról
       field:
         official_name: Modelo 189. Éves adatszolgáltatási bevallás értékpapírokról,

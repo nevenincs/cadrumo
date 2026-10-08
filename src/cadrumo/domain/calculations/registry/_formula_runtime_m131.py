@@ -46,6 +46,7 @@ from .formula_runtime_ops import (
 from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
+from .formula_runtime_ops import text_tolerant_casilla_value
 from .ids import ParameterId
 from .schema_formula import FormulaExpression
 
@@ -53,22 +54,6 @@ if TYPE_CHECKING:
     from .formula_runtime import EvalContext
 
     _EvalContext = EvalContext
-
-
-def _read_modulos_indice(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
-    # A text-declared índice has no numeric entry; read it from the text channel
-    # even when the operator left it blank, where it means "índice not applied".
-    if casilla_id in ctx.text_values or casilla_id in ctx.text_casilla_ids:
-        ctx.operand_refs.append(casilla_id)
-        ctx.operand_casilla_refs.append(casilla_id)
-        raw_text = ctx.text_values.get(casilla_id, "").strip()
-        try:
-            value = Decimal(raw_text) if raw_text else ZERO
-        except ArithmeticError:
-            value = ZERO
-        ctx.operand_values.append(value)
-        return value
-    return _numeric_casilla_value(casilla_id, ctx)
 
 
 @dataclass(frozen=True, slots=True)
@@ -566,7 +551,7 @@ def _m131_apply_small_dimension_index(
     ctx: _EvalContext,
 ) -> tuple[Decimal, bool]:
     """Apply b.1 and report whether it excludes the remaining cascade."""
-    pequena_dimension = _read_modulos_indice(args.pequena_dimension_casilla_id, ctx)
+    pequena_dimension = text_tolerant_casilla_value(args.pequena_dimension_casilla_id, ctx)
     aplica = pequena_dimension > ZERO and epigrafe not in _M131_EPIGRAFES_INDICE_ESPECIAL
     if not aplica:
         return rendimiento, False
@@ -579,7 +564,7 @@ def _m131_apply_temporada_index(
     ctx: _EvalContext,
 ) -> tuple[Decimal, Decimal]:
     """Apply b.2 and return its declared factor for b.4 incompatibility."""
-    temporada = _read_modulos_indice(args.temporada_casilla_id, ctx)
+    temporada = text_tolerant_casilla_value(args.temporada_casilla_id, ctx)
     if temporada > ZERO:
         rendimiento = rendimiento * temporada
     return rendimiento, temporada
@@ -618,7 +603,7 @@ def _m131_apply_inicio_actividad_index(
 ) -> Decimal:
     """Apply b.4 only when b.2 did not declare a positive season factor."""
     if temporada <= ZERO:
-        inicio_actividad = _read_modulos_indice(args.inicio_actividad_casilla_id, ctx)
+        inicio_actividad = text_tolerant_casilla_value(args.inicio_actividad_casilla_id, ctx)
         if inicio_actividad > ZERO:
             return rendimiento * inicio_actividad
     return rendimiento

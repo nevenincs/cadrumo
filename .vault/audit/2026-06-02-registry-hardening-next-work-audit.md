@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:29851b62b5625093a61ebe4786a0442f42af0222bbbd23c07503937ab3e5e015'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+related: []
 ---
 
 # `registry-hardening-next-work` audit: `registry Python module size and ownership boundary audit`

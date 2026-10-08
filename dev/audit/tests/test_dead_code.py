@@ -9,13 +9,19 @@ lane -- the gate that actually runs vulture over the tree lives in
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..dead_code import (
     DeadCodeOutcome,
     DeadCodeResult,
+    SkippedModule,
     offered_module_population,
     parse_vulture_output,
+    parse_vulture_stderr,
     render_console_report,
     vulture_command,
 )
@@ -29,9 +35,21 @@ _CAPTURED_STDOUT = (
     "unused variable 'cache_discovery' (100% confidence)\n"
 )
 
+# The stderr of a real vulture 2.16 run (exit 3, one finding on stdout) over a
+# directory holding one module of each kind it skips plus one that only warns.
+# Only the absolute checkout prefix vulture printed has been shortened.
+_CAPTURED_SKIP_STDERR = (
+    'e\\broken.py:1: invalid decimal literal at "x = 1_"\r\n'
+    "e\\nul.py:None: source code string cannot contain null bytes\r\n"
+    "Error: Could not read file C:\\checkout\\e\\undecodable.py - \r\n"
+    "Try to change the encoding to UTF-8.\r\n"
+    "C:\\checkout\\e\\warn.py:2: SyntaxWarning: invalid escape sequence '\\d'\r\n"
+    '  P = re.compile("\\d+")\r\n'
+)
+
 
 def test_command_targets_the_configured_paths() -> None:
-    """The command matches today's `just audit-dead-code` invocation exactly."""
+    """The command is the one vulture invocation every dead-code consumer runs."""
     command = vulture_command()
 
     assert command == [
@@ -122,6 +140,92 @@ def test_offered_population_counts_the_modules_the_targets_actually_hold(tmp_pat
     (whitelist / "vulture_whitelist.py").write_text("", encoding="utf-8")
 
     assert offered_module_population(tmp_path) == 3
+
+
+def test_offered_population_counts_only_production_source(tmp_path: Path) -> None:
+    """Test modules, conftest files and bundled data are not part of what vulture analyses."""
+    (tmp_path / "pyproject.toml").write_bytes((REPO_ROOT / "pyproject.toml").read_bytes())
+    package = tmp_path / "src" / "cadrumo" / "domain"
+    (package / "tests").mkdir(parents=True)
+    (package / "_data").mkdir()
+    for module in ("one.py", "test_one.py", "_test_two.py", "conftest.py", "tests/helper.py", "_data/__init__.py"):
+        (package / module).write_text("", encoding="utf-8")
+
+    assert offered_module_population(tmp_path) == 1
+
+
+def test_offered_population_does_not_claim_excluded_modules_were_scanned(tmp_path: Path) -> None:
+    """An intact source tree cannot satisfy coverage after the config excludes it."""
+    package = tmp_path / "src" / "cadrumo"
+    package.mkdir(parents=True)
+    (package / "one.py").write_text("import os\n", encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text('[tool.vulture]\nexclude = ["*cadrumo*"]\n', encoding="utf-8")
+
+    assert offered_module_population(tmp_path) == 0
+
+
+def test_build_and_native_python_are_outside_the_product_population(tmp_path: Path) -> None:
+    """Embedded Python, packaging scripts and generated files cannot inflate coverage."""
+    for relative in (
+        "src/cadrumo/one.py",
+        "dev/packaging/native/build.py",
+        "packaging/hook.py",
+        "native/desktop/src-tauri/src/python/cli.py",
+        "build/runtime/copied.py",
+        "native/manager/target/generated.py",
+    ):
+        module = tmp_path / relative
+        module.parent.mkdir(parents=True, exist_ok=True)
+        module.write_text("import os\n", encoding="utf-8")
+
+    assert offered_module_population(tmp_path) == 1
+
+
+def test_parse_vulture_stderr_names_every_skipped_module() -> None:
+    """Each skip shape vulture prints becomes a named module, with its reason."""
+    diagnostics = parse_vulture_stderr(_CAPTURED_SKIP_STDERR)
+
+    assert diagnostics.skipped == (
+        SkippedModule(path="e/broken.py", reason='invalid decimal literal at "x = 1_"'),
+        SkippedModule(path="e/nul.py", reason="source code string cannot contain null bytes"),
+        SkippedModule(path="C:/checkout/e/undecodable.py", reason="could not be read"),
+    )
+    assert diagnostics.unrecognised == ()
+
+
+def test_parse_vulture_stderr_ignores_warnings_for_modules_it_still_parsed() -> None:
+    """A SyntaxWarning and its echoed source line do not mark the module as skipped."""
+    warning_only = "".join(_CAPTURED_SKIP_STDERR.splitlines(keepends=True)[-2:])
+
+    diagnostics = parse_vulture_stderr(warning_only)
+
+    assert diagnostics.skipped == ()
+    assert diagnostics.unrecognised == ()
+
+
+def test_parse_vulture_stderr_ignores_the_uv_launcher_warning() -> None:
+    """A warning ``uv run`` prints about its environment is not a vulture diagnostic."""
+    captured = (
+        "warning: `VIRTUAL_ENV=Y:\\checkout\\.venv` does not match the project environment path `.venv` "
+        "and will be ignored; use `--active` to target the active environment instead\n"
+    )
+
+    assert parse_vulture_stderr(captured) == parse_vulture_stderr("")
+
+
+def test_parse_vulture_stderr_keeps_an_unknown_line_visible() -> None:
+    """A line in no known shape is reported, not dropped, so a reworded skip cannot hide."""
+    diagnostics = parse_vulture_stderr("Skipping src/cadrumo/x.py because of reasons\n")
+
+    assert diagnostics.skipped == ()
+    assert diagnostics.unrecognised == ("Skipping src/cadrumo/x.py because of reasons",)
+
+
+def test_an_indented_line_not_following_a_warning_is_unrecognised() -> None:
+    """Only the source line beneath a warning is dropped; a free-standing indented line is not."""
+    diagnostics = parse_vulture_stderr("  something indented\n")
+
+    assert diagnostics.unrecognised == ("  something indented",)
 
 
 def test_findings_result_is_not_green() -> None:

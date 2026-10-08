@@ -25,7 +25,6 @@ PLAYWRIGHT_WAIT_NETWORKIDLE: Final[Literal["networkidle"]] = "networkidle"
 
 #: Short Playwright timeout (ms) used for non-critical ``wait_for_load_state`` probes
 #: inside retry loops where proceeding on timeout is the desired behaviour.
-PLAYWRIGHT_TIMEOUT_SHORT_MS: Final[int] = 2_000
 
 
 def default_viewport() -> ViewportSize:

@@ -1,4 +1,4 @@
-"""Durable persistence and recovery operations for the label head."""
+"""Durable read and initial publication of the trusted label head."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def _read_profile_custody_record(path: Path, *, maximum_bytes: int, subject: str
 
 
 class ProfileLabelHeadRepository:
-    """Read, verify, CAS-advance, and deterministically recover label heads."""
+    """Read, verify and publish the initial trusted label head."""
 
     def __init__(self, *, root: Path | None = None) -> None:
         """Bind the repository to the label-head storage category's canonical location.
@@ -48,22 +48,6 @@ class ProfileLabelHeadRepository:
     def head_path(self, profile_id: UUID) -> Path:
         """Return the durable head file's path, without reading or asserting it exists."""
         return self._head_root / f"{profile_id}.json"
-
-    def pending_path(self, profile_id: UUID) -> Path:
-        """Return the crash-recovery pending-advance file's path.
-
-        The leading dot matches the filesystem convention for a hidden,
-        in-progress artefact — a directory listing of head files should not
-        surface a pending advance as if it were a committed head.
-        """
-        return self._head_root / f".{profile_id}.pending.json"
-
-    def load_current(self, profile_id: UUID) -> ProfileLabelHead:
-        """Return the exact durable head for an already-verified current capsule."""
-        head = self._load_head(profile_id)
-        if head is None:
-            raise ProfileCustodyRecordError("profile label head is absent")
-        return head
 
     def verify(self, *, label: ProfileCustodyCapsuleLabel) -> ProfileLabelHead | None:
         """Read and verify the durable head without publishing or repairing it."""
@@ -85,32 +69,14 @@ class ProfileLabelHeadRepository:
         self._write_head_exclusive(head)
         return head
 
-    def begin_advance(
-        self,
-        *,
-        current_head: ProfileLabelHead,
-        current_label: ProfileCustodyCapsuleLabel,
-        replacement_label: ProfileCustodyCapsuleLabel,
-    ) -> ProfileLabelHeadPendingAdvance:
-        """Durably record intent to advance the head before writing the new head itself.
+    def pending_path(self, profile_id: UUID) -> Path:
+        """Return the crash-recovery pending-advance file's path.
 
-        This is the write-ahead half of the crash-recovery protocol
-        :meth:`recover_pending` completes on the other side: the pending
-        record lands on disk FIRST, so a crash between here and the eventual
-        head write leaves a resumable trail instead of an ambiguous
-        half-advanced state.
+        The leading dot matches the filesystem convention for a hidden,
+        in-progress artefact — a directory listing of head files should not
+        surface a pending advance as if it were a committed head.
         """
-        if not current_head.verifies(current_label):
-            raise ProfileCustodyRecordError("profile label differs from its trusted head")
-        replacement_head = ProfileLabelHead.advance(current=current_head, label=replacement_label)
-        pending = ProfileLabelHeadPendingAdvance.create(
-            expected_head=current_head,
-            expected_label=current_label,
-            replacement_label=replacement_label,
-            replacement_head=replacement_head,
-        )
-        self._write_pending_exclusive(pending)
-        return pending
+        return self._head_root / f".{profile_id}.pending.json"
 
     def recover_pending(
         self,
@@ -143,23 +109,6 @@ class ProfileLabelHeadRepository:
             return
         raise ProfileCustodyRecordError("pending label advance conflicts with durable label or head state")
 
-    def _load_head(self, profile_id: UUID) -> ProfileLabelHead | None:
-        path = self.head_path(profile_id)
-        if not os.path.lexists(path):
-            return None
-        try:
-            payload = _read_profile_custody_record(
-                path,
-                maximum_bytes=LABEL_HEAD_MAX_BYTES,
-                subject="profile label head",
-            )
-            head = ProfileLabelHead.model_validate_json(payload)
-        except (ProfileCustodyRecordError, ValidationError, ValueError) as exc:
-            raise ProfileCustodyRecordError("profile label head is invalid") from exc
-        if head.profile_id != profile_id or head.canonical_json_bytes() != payload:
-            raise ProfileCustodyRecordError("profile label head identity or canonical bytes differ")
-        return head
-
     def _load_pending(self, profile_id: UUID) -> ProfileLabelHeadPendingAdvance | None:
         path = self.pending_path(profile_id)
         if not os.path.lexists(path):
@@ -177,6 +126,38 @@ class ProfileLabelHeadRepository:
             raise ProfileCustodyRecordError("pending profile label head identity or canonical bytes differ")
         return pending
 
+    def _write_head_replace(self, head: ProfileLabelHead) -> None:
+        self._ensure_root()
+        try:
+            write_profile_custody_local_record(
+                self.head_path(head.profile_id), head.canonical_json_bytes(), publish_once=False
+            )
+        except Exception as exc:
+            raise ProfileCustodyRecordError("profile label head cannot be atomically replaced") from exc
+
+    def _clear_pending(self, profile_id: UUID) -> None:
+        try:
+            clear_profile_custody_local_record(self.pending_path(profile_id))
+        except Exception as exc:
+            raise ProfileCustodyRecordError("pending profile label head cannot be cleared") from exc
+
+    def _load_head(self, profile_id: UUID) -> ProfileLabelHead | None:
+        path = self.head_path(profile_id)
+        if not os.path.lexists(path):
+            return None
+        try:
+            payload = _read_profile_custody_record(
+                path,
+                maximum_bytes=LABEL_HEAD_MAX_BYTES,
+                subject="profile label head",
+            )
+            head = ProfileLabelHead.model_validate_json(payload)
+        except (ProfileCustodyRecordError, ValidationError, ValueError) as exc:
+            raise ProfileCustodyRecordError("profile label head is invalid") from exc
+        if head.profile_id != profile_id or head.canonical_json_bytes() != payload:
+            raise ProfileCustodyRecordError("profile label head identity or canonical bytes differ")
+        return head
+
     def _ensure_root(self) -> None:
         try:
             ensure_profile_custody_local_directory(self._head_root)
@@ -191,30 +172,6 @@ class ProfileLabelHeadRepository:
             )
         except Exception as exc:
             raise ProfileCustodyRecordError("profile label head cannot be exclusively published") from exc
-
-    def _write_head_replace(self, head: ProfileLabelHead) -> None:
-        self._ensure_root()
-        try:
-            write_profile_custody_local_record(
-                self.head_path(head.profile_id), head.canonical_json_bytes(), publish_once=False
-            )
-        except Exception as exc:
-            raise ProfileCustodyRecordError("profile label head cannot be atomically replaced") from exc
-
-    def _write_pending_exclusive(self, pending: ProfileLabelHeadPendingAdvance) -> None:
-        self._ensure_root()
-        try:
-            write_profile_custody_local_record(
-                self.pending_path(pending.profile_id), pending.canonical_json_bytes(), publish_once=True
-            )
-        except Exception as exc:
-            raise ProfileCustodyRecordError("profile label advance is already pending") from exc
-
-    def _clear_pending(self, profile_id: UUID) -> None:
-        try:
-            clear_profile_custody_local_record(self.pending_path(profile_id))
-        except Exception as exc:
-            raise ProfileCustodyRecordError("pending profile label head cannot be cleared") from exc
 
 
 __all__ = ["ProfileLabelHeadRepository"]

@@ -350,6 +350,32 @@ PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinitio
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+PROFILE_FOREIGN_ASSET_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_foreign_asset_register",
+    namespace="cadrumo.persistence.profile.foreign_assets",
+    owner="cadrumo.adapters.persistence.profile.foreign_assets",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
+# The operator-declared modelo 360 solicitudes, each with the refund account DR360 pays
+# into. FINANCIAL: the payload carries an IBAN and BIC beside the solicitante's and the
+# representante's contact and address facts, so it is ciphertext at rest and never a
+# plaintext side store. The period lives inside the encrypted payload, not in the key.
+PROFILE_MODELO_360_SOLICITUD_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_modelo_360_solicitud",
+    namespace="cadrumo.persistence.profile.modelo_360_solicitud",
+    owner="cadrumo.adapters.persistence.profile.modelo_360_solicitud",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 PROFILE_ACTIVIDAD_ASSET_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_actividad_asset_history",
     namespace="cadrumo.persistence.profile.actividad_asset",
@@ -633,6 +659,21 @@ LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# The taxpayer's own bank accounts and their modelo charge and refund designations.
+# FINANCIAL: every account carries an IBAN and possibly a BIC and bank block, so the
+# register is ciphertext at rest under a fixed key; no account material or derived
+# identifier ever reaches the object key.
+LEDGER_OWN_ACCOUNTS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_own_accounts",
+    namespace="cadrumo.ledger.own_accounts",
+    owner="cadrumo.adapters.persistence.profile.own_accounts",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_borrador_100_snapshot",
     namespace="cadrumo.application.live.borrador_100_snapshot",
@@ -813,15 +854,16 @@ CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
-GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="google_oauth_client",
-    namespace="cadrumo.google.oauth.client",
+GOOGLE_ARTIFACT_RECEIPTS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="google_artifact_receipts",
+    namespace="cadrumo.google.artifact.receipts",
     owner="cadrumo.adapters.outbound.google",
-    sensitivity=SensitivityClass.SECRET,
+    sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{profile}",
+    object_key_grammar="{profile}:{record_kind}:{identity}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA,
 )
 GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_token",
@@ -853,16 +895,6 @@ GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
-GOOGLE_CREDENTIAL_SOURCE_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="google_credential_source",
-    namespace="cadrumo.google.credential.source",
-    owner="cadrumo.adapters.outbound.google",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{profile}",
-    scope=StorageNamespaceScope.PROFILE_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
     namespace="cadrumo.adapters.outbound.llm.cache",
@@ -883,7 +915,7 @@ LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
-LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
+LLM_RUN_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_run_telemetry",
     namespace="cadrumo.adapters.outbound.llm.run_telemetry",
     owner="cadrumo.adapters.outbound.llm",

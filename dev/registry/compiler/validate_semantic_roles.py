@@ -19,7 +19,7 @@ from cadrumo.core.i18n.render import MissingTranslationError
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import judging_predecessor
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ._validate_semantic_role_required import (
@@ -167,31 +167,85 @@ def _representation_evolved(
     earlier, later = sorted((left.revision_id, right.revision_id), key=positions.__getitem__)
     if revisions_coexist(modelo.revisions[earlier], modelo.revisions[later]):
         return False
+    return _representation_path_is_attested(
+        modelo,
+        ordered,
+        positions,
+        earlier=earlier,
+        later=later,
+        continuidad_id=left.continuidad_id,
+    )
+
+
+def _representation_path_is_attested(
+    modelo: ModeloDefinition,
+    ordered: tuple[ModeloRevision, ...],
+    positions: Mapping[RevisionId, int],
+    *,
+    earlier: RevisionId,
+    later: RevisionId,
+    continuidad_id: str,
+) -> bool:
     current = modelo.revisions[later]
     while current.id != earlier:
         predecessor = judging_predecessor(modelo, ordered, positions[current.id])
-        if (
-            predecessor is None
-            or positions[predecessor.id] < positions[earlier]
-            or revisions_coexist(predecessor, current)
-        ):
-            return False
-        previous_rows = [row for row in predecessor.casillas if row.continuidad_id == left.continuidad_id]
-        current_rows = [row for row in current.casillas if row.continuidad_id == left.continuidad_id]
-        if len(previous_rows) != 1 or len(current_rows) != 1:
-            return False
-        if previous_rows[0].semantic_role != current_rows[0].semantic_role:
-            return False
-        if previous_rows[0].data_type != current_rows[0].data_type and not any(
-            evolution.continuidad_id == left.continuidad_id
-            and evolution.evolution_kind == "representation_evolved"
-            and evolution.from_revision == predecessor.id
-            and evolution.to_revision == current.id
-            for evolution in current.casilla_continuidad_evolutions
+        if predecessor is None or not _representation_edge_is_attested(
+            predecessor,
+            current,
+            positions=positions,
+            earlier=earlier,
+            continuidad_id=continuidad_id,
         ):
             return False
         current = predecessor
     return True
+
+
+def _representation_edge_is_attested(
+    predecessor: ModeloRevision,
+    current: ModeloRevision,
+    *,
+    positions: Mapping[RevisionId, int],
+    earlier: RevisionId,
+    continuidad_id: str,
+) -> bool:
+    if positions[predecessor.id] < positions[earlier] or revisions_coexist(predecessor, current):
+        return False
+    rows = _continuity_row_pair(predecessor, current, continuidad_id)
+    if rows is None:
+        return False
+    previous_row, current_row = rows
+    if previous_row.semantic_role != current_row.semantic_role:
+        return False
+    if previous_row.data_type != current_row.data_type:
+        return _has_representation_evolution(predecessor, current, continuidad_id)
+    return True
+
+
+def _continuity_row_pair(
+    predecessor: ModeloRevision,
+    current: ModeloRevision,
+    continuidad_id: str,
+) -> tuple[CasillaDefinition, CasillaDefinition] | None:
+    previous_rows = [row for row in predecessor.casillas if row.continuidad_id == continuidad_id]
+    current_rows = [row for row in current.casillas if row.continuidad_id == continuidad_id]
+    if len(previous_rows) != 1 or len(current_rows) != 1:
+        return None
+    return previous_rows[0], current_rows[0]
+
+
+def _has_representation_evolution(
+    predecessor: ModeloRevision,
+    current: ModeloRevision,
+    continuidad_id: str,
+) -> bool:
+    return any(
+        evolution.continuidad_id == continuidad_id
+        and evolution.evolution_kind == "representation_evolved"
+        and evolution.from_revision == predecessor.id
+        and evolution.to_revision == current.id
+        for evolution in current.casilla_continuidad_evolutions
+    )
 
 
 def semantic_role_consistency_failures(
@@ -210,34 +264,58 @@ def semantic_role_consistency_failures(
     by_modelo = {str(modelo.id): modelo for modelo in modelo_tuple}
     for role, observations in _collect_role_observations(modelo_tuple).items():
         for index, obs in enumerate(observations[1:], start=1):
-            canonical = next(
-                (
-                    prior
-                    for prior in observations[:index]
-                    if obs.data_type != prior.data_type and not _representation_evolved(prior, obs, by_modelo)
-                ),
-                None,
-            )
-            if canonical is not None:
-                failures.append(
-                    f"semantic_role {role!r}: casilla "
-                    f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
-                    f"data_type {obs.data_type!r} but role canonical "
-                    f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id} "
-                    f"declares data_type {canonical.data_type!r}",
-                )
-            incompatible = next(
-                (prior for prior in observations[:index] if not _compatible_constraints(prior, obs)),
-                None,
-            )
-            if incompatible is not None:
-                failures.append(
-                    f"semantic_role {role!r}: casilla "
-                    f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
-                    f"constraints incompatible with role observation "
-                    f"{incompatible.modelo_id}.{incompatible.revision_id}.{incompatible.casilla_id}",
-                )
+            failures.extend(_role_observation_consistency_failures(role, obs, observations[:index], by_modelo))
     return tuple(failures)
+
+
+def _role_observation_consistency_failures(
+    role: str,
+    observation: _RoleObservation,
+    prior_observations: Iterable[_RoleObservation],
+    modelos: Mapping[str, ModeloDefinition],
+) -> tuple[str, ...]:
+    priors = tuple(prior_observations)
+    failures: list[str] = []
+    canonical = _first_unattested_data_type_change(observation, priors, modelos)
+    if canonical is not None:
+        failures.append(
+            f"semantic_role {role!r}: casilla "
+            f"{observation.modelo_id}.{observation.revision_id}.{observation.casilla_id} declares "
+            f"data_type {observation.data_type!r} but role canonical "
+            f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id} "
+            f"declares data_type {canonical.data_type!r}",
+        )
+    incompatible = _first_incompatible_constraints(observation, priors)
+    if incompatible is not None:
+        failures.append(
+            f"semantic_role {role!r}: casilla "
+            f"{observation.modelo_id}.{observation.revision_id}.{observation.casilla_id} declares "
+            f"constraints incompatible with role observation "
+            f"{incompatible.modelo_id}.{incompatible.revision_id}.{incompatible.casilla_id}",
+        )
+    return tuple(failures)
+
+
+def _first_unattested_data_type_change(
+    observation: _RoleObservation,
+    priors: tuple[_RoleObservation, ...],
+    modelos: Mapping[str, ModeloDefinition],
+) -> _RoleObservation | None:
+    return next(
+        (
+            prior
+            for prior in priors
+            if observation.data_type != prior.data_type and not _representation_evolved(prior, observation, modelos)
+        ),
+        None,
+    )
+
+
+def _first_incompatible_constraints(
+    observation: _RoleObservation,
+    priors: tuple[_RoleObservation, ...],
+) -> _RoleObservation | None:
+    return next((prior for prior in priors if not _compatible_constraints(prior, observation)), None)
 
 
 def _co_applying_role_breadth(observations: Iterable[_RoleObservation]) -> tuple[int, int]:

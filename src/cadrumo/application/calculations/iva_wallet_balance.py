@@ -19,6 +19,7 @@ See Also:
 
 from __future__ import annotations
 
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva_compensation.balance import IvaWalletBalanceReport, build_iva_wallet_balance_report
 from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
 from .iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
@@ -28,6 +29,7 @@ def query_iva_wallet_balance(
     *,
     as_of_year: int,
     repository: IvaCompensationHistoryRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> IvaWalletBalanceReport:
     """Load all stored IVA compensation period states and return the balance report.
 
@@ -42,8 +44,12 @@ def query_iva_wallet_balance(
     summarising available compensation as of ``as_of_year``.
     """
     states = repository.list_periods()
-    carry_forward = build_iva_compensation_carry_forward_report(states, as_of_year=as_of_year)
-    return build_iva_wallet_balance_report(carry_forward)
+    carry_forward = build_iva_compensation_carry_forward_report(
+        states,
+        as_of_year=as_of_year,
+        operation=operation,
+    )
+    return build_iva_wallet_balance_report(carry_forward, operation=operation)
 
 
 __all__ = [

@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f86f12e92e61346534813c7882fcf051b9056b79d19ce69b7430a9b8a0a90caf'
+body_hash: 'sha256:23046bdbd793c7963567d1f019241f33278382deb83637f54609b3c69bbfea53'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
-  - "[[2026-08-08-profile-requirement-grounding-plan]]"
 ---
 
 # `profile-requirement-grounding` reference: `Grounded per-modelo profile-fact inventory`
@@ -54,7 +53,7 @@ For each of the 53 returned keys, the field's *current* `required` flag and `mod
 
 ### The 21 `renta_family.*` keys with no typed field are DERIVED, not missing
 
-The initial pass through this inventory (`schema.field(key)` returning `None`/`None`) was misread as a missing schema declaration. It is not. `src/cadrumo/domain/user_profile/_schema.py` declares a separate `ProfileDerivedSelectorDefinition` mechanism, and `schema.toml` (lines 22-58) registers exactly these families under `[[derived_selectors]]`:
+The initial pass through this inventory (`schema.field(key)` returning `None`/`None`) was misread as a missing schema declaration.
 
 - `renta_family.descendientes_minimos_aggregate_{filing_year}` (6 years: 2020-2025)
 - `renta_family.descendientes_minimos_aggregate_autonomico_{filing_year}` (6 years)

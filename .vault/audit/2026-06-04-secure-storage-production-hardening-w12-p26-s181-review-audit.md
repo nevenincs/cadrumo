@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:28b05369c326026dddec76014d7822663e02e61d36603f6b777d8797a6091940'
+modified: '2026-10-03'
+body_hash: 'sha256:c59110e12e61df8928f73806d432a3a73c1833ae3a17f0f298cd10db1a87bd13'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The tests exercise the public zeroise function directly. They verify in-place ov
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_zeroise.py src/aeat/adapters/persistence/storage/master_key/test_bucket_session.py src/aeat/adapters/persistence/storage/master_key/test_cluster_envelopes.py` passed with 27 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_zeroise.py src/aeat/adapters/persistence/storage/master_key/test_zeroise.py` passed.
+- the historical check passed with 27 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Review-agent note: spawning `vaultspec-code-reviewer` remains unavailable in this session due the agent thread limit, so the supervisor completed the same checklist locally.

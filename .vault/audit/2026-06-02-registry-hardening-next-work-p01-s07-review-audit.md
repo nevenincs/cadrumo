@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:72fc869fbc8967ef44253754c7a25f8df04eee61ab06b184b45cc2305d759e9f'
+modified: '2026-10-03'
+body_hash: 'sha256:0ec09eba14ddc0a78e4abc1968e1b62a7b42b745d205e10c7d9185907405f5dd'
 related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-m200-export-pressure-audit]]'
 ---
 
@@ -27,7 +26,7 @@ reassessed after that split.
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_toml_fragments_stay_reviewable -q`
+- the historical check
   - Result: 2 passed in 5.88s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_directory_mode_merges_export_record_field_fragments_by_record_id -q`
+- the historical check
   - Result: 1 passed in 0.29s.

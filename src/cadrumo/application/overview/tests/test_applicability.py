@@ -46,6 +46,9 @@ from ....domain.calculations.registry.applicability_routes import TaxRoute
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
 from ....domain.deadlines.models import (
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
     TaxpayerProfile,
 )
 from .calendar_test_support import profile as _autonomo
@@ -108,6 +111,19 @@ def _undeclared() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
     return TaxpayerProfile(tax_id="C5678901I", iva_regime=IVARegime("GENERAL"))
+
+
+def _iva_block_without_sii() -> ModeloIVAProfile:
+    """A declared IVA block outside the SII, the answer Modelo 347's exclusion reads."""
+
+    return ModeloIVAProfile(
+        tax_territory=M303TaxTerritory.from_registry("COMMON_REGIME"),
+        regime_composition=M303RegimeComposition.from_registry("GENERAL"),
+        redeme_enrolled=False,
+        cash_accounting_regime_enrolled=False,
+        voluntary_sii_enrolled=False,
+        hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+    )
 
 
 def _attribution_entity() -> TaxpayerProfile:
@@ -561,6 +577,7 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         third_party_transactions_above_347_threshold=True,
+        iva=_iva_block_without_sii(),
     )
     legal_entity_pays_professionals = TaxpayerProfile(
         tax_id="B12345674",
@@ -669,7 +686,7 @@ def test_attribution_entity_with_required_fact_owes_fact_gated_modelos() -> None
         ("180", {"pays_rent_with_retencion": True}),
         ("123", {"pays_capital_income_with_retencion": True}),
         ("349", {"does_intracomunitario": True}),
-        ("347", {"third_party_transactions_above_347_threshold": True}),
+        ("347", {"third_party_transactions_above_347_threshold": True, "iva": _iva_block_without_sii()}),
     )
 
     for modelo, payer_fact_update in cases:

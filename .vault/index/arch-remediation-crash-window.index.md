@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#arch-remediation-crash-window'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fffecabf661c59ece801ba1dcc03c6a07b2965da9e12ad1c3fa24da646f504ff'
+body_hash: 'sha256:54c499f6d6c05904ae681c9d95902b65568de6ab0fec6cb60a25f9a4a1d23352'
 related:
   - '[[2026-07-02-arch-remediation-crash-window-adr]]'
-  - '[[2026-07-02-arch-remediation-crash-window-ledger]]'
-  - '[[2026-07-02-arch-remediation-crash-window-plan]]'
   - '[[2026-07-02-arch-remediation-crash-window-reference]]'
   - '[[2026-07-06-arch-remediation-crash-window-research]]'
 ---
@@ -24,14 +22,6 @@ Auto-generated index of all documents tagged with `#arch-remediation-crash-windo
 ### adr
 
 - `2026-07-02-arch-remediation-crash-window-adr` - `arch-remediation-crash-window` adr: `multi-store crash-window guarantees` | (**status:** `accepted`)
-
-### exec
-
-- `2026-07-02-arch-remediation-crash-window-ledger` - `arch-remediation-crash-window` ledger
-
-### plan
-
-- `2026-07-02-arch-remediation-crash-window-plan` - `arch-remediation-crash-window` plan
 
 ### reference
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:ce94a7e91705ebaf3d6a1a6ae67ce40b11ee94980c4617b15e04cc487ccd88a3'
+modified: '2026-10-03'
+body_hash: 'sha256:e240c61534743a2094ab138e929aee9dda62be5096db59dee8dc5c4a9e5b6a36'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S347-001 | PASS | IVA schema is not a storage authority
 
-`src/aeat/domain/iva/_schema.py` defines strict Pydantic records, StrEnum catalogues,
+The retired module defined strict Pydantic records, StrEnum catalogues,
 and catalogue validation helpers. It does not open files, resolve buckets, construct SQL
 repositories, read environment values, or persist secure objects. Runtime enrollment is
 therefore not applicable to this module.
@@ -41,10 +41,10 @@ logic failures.
 
 ## S347-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/iva/_schema.py src/aeat/domain/iva/test_recargo_equivalencia.py src/aeat/domain/iva/test_catalogue_period_keyed.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/iva/test_recargo_equivalencia.py src/aeat/domain/iva/test_catalogue_period_keyed.py` passed with 17 tests.
+- the historical check passed.
+- the historical check passed with 17 tests.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
-- `uv run --no-sync vaultspec-rag search "IvaCategory IvaRegulation IvaCitation IvaCatalogue remote provider mirror legal citation schema no persistence" --type code --port 8766 --max-results 8` returned `src/aeat/domain/iva/_schema.py` and IVA lookup evidence.
+- `uv run --no-sync vaultspec-rag search "IvaCategory IvaRegulation IvaCitation IvaCatalogue remote provider mirror legal citation schema no persistence" --type code --port 8766 --max-results 8` returned the retired module and IVA lookup evidence.
 
 Reviewer note: no critical, high, medium, or low runtime-storage findings remain for
 the S347 slice.

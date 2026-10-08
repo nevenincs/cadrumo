@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.resources.bundled_data import resolve_companion_binary
+from dev.registry.compiler.corpus_source_location import locate_corpus_file
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -35,14 +35,7 @@ def read_source_file_text(source_root: Path, source: SourceReference) -> str | N
     as "skip this check" rather than as a failure, so the resolution order is
     part of the contract: a location dropped here silently removes coverage.
     """
-    candidates = (
-        source_root / source.corpus_path,
-        source_root / "src" / "cadrumo" / "_data" / source.corpus_path,
-    )
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate.read_text(encoding=UTF_8_ENCODING, errors="replace")
-    companion = resolve_companion_binary(*source.corpus_path.split("/"))
-    if companion is not None and companion.is_file():
-        return companion.read_text(encoding=UTF_8_ENCODING, errors="replace")
-    return None
+    located = locate_corpus_file(source_root, source.corpus_path)
+    if located is None:
+        return None
+    return located.read_text(encoding=UTF_8_ENCODING, errors="replace")

@@ -4,21 +4,18 @@ tags:
   - '#index'
   - '#cli-authority-verb-conformance'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf2ebf7deaa9a3c5a0dca120ad528be1089df7b6051cb27a66ee76e1ed78d113'
+body_hash: 'sha256:d95f8cf2b5a7bba2805dfe808fc46c8ed07a1e1605d2cc01ecbd7f384e4abc73'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
-  - '[[2026-07-15-cli-authority-verb-conformance-ledger]]'
-  - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
   - '[[2026-07-15-cli-authority-verb-conformance-research]]'
   - '[[2026-07-16-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
-  - '[[2026-07-17-cli-authority-verb-conformance-exec]]'
   - '[[2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit]]'
   - '[[2026-07-25-cli-authority-verb-conformance-period-grammar-refusal-audit]]'
   - '[[2026-07-28-cli-authority-verb-conformance-adr]]'
@@ -46,15 +43,6 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit` - `cli-authority-verb-conformance` audit: `Campaign-close honesty review`
 - `2026-07-25-cli-authority-verb-conformance-period-grammar-refusal-audit` - `cli-authority-verb-conformance` audit: `period grammar refusal`
 - `2026-07-28-cli-authority-verb-conformance-formal-close-review-audit` - `cli-authority-verb-conformance` audit: `Formal close review`
-
-### exec
-
-- `2026-07-15-cli-authority-verb-conformance-ledger` - `cli-authority-verb-conformance` ledger
-- `2026-07-17-cli-authority-verb-conformance-exec` - P07.S41 secret-store DI seam removal (auth-cert-recovery-custody plan)
-
-### plan
-
-- `2026-07-15-cli-authority-verb-conformance-plan` - `cli-authority-verb-conformance` plan
 
 ### reference
 

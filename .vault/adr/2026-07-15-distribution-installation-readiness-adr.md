@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-17'
-body_hash: 'sha256:6ad3b5191ee95af97c6b4b58ca8d6495b6c754adad821916b0dc097b5029d39d'
+modified: '2026-10-03'
+body_hash: 'sha256:1fede21aa189adf046c994c64b87400d953560d2225b6689c31c92cc9e7a00c4'
 related:
   - '[[2026-07-15-distribution-installation-readiness-research]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
   - '[[2026-07-04-release-readiness-gate-adr]]'
+  - '[[2026-10-03-duplication-remediation-hashing-proof-boundaries-adr]]'
 ---
 
 # `distribution-installation-readiness` adr: `Immutable tested-cohort promotion and executable acquisition proof` | (**status:** `accepted`)
@@ -123,8 +124,9 @@ Trusted Publishing. A single authority and evidence contract are required.
   and client versions, acquisition source, command, exit status, relevant output,
   timestamp, and destination.
 - Readiness blocks unless every required row for the current cohort passes. A newest
-  unrelated manifest, skipped client, ambient executable, checkout import, or advisory
-  failure is invalid evidence.
+  unrelated manifest, skipped client, ambient executable, checkout product import in
+  the installed target/probe, or advisory failure is invalid evidence. Separately
+  identified controller support must satisfy the pinned-origin clarification below.
 - Python proof covers wheel, sdist, companions, extras, `aeat`, and `cadrumo-mcp`.
   MCP proof launches the absolute installed executable and completes initialization,
   discovery, and a real calculation tool call.
@@ -136,9 +138,9 @@ Trusted Publishing. A single authority and evidence contract are required.
   contribution, proved again by downstream cohort calculation.
 - Functional acceptance uses one non-tautological installed-artifact oracle grounded in
   LIS Article 29 and the AEAT 2024 manual: a Modelo 200 2024 micro-enterprise taxable
-  base of EUR 100,000 must produce `DP200014:00562 == 23000.00`. The probe uses isolated
+  base of EUR 100,000 must produce `DP200014:00562 == 23000.00`. The installed-product commands/probes use isolated
   real encrypted storage and shipped registry data through public interfaces, never
-  checkout imports, internal storage seeding, or duplicated business logic. It requires
+  checkout product imports, internal storage seeding, or duplicated business logic. It requires
   a persisted revision id, one target observation with the expected formula id and
   non-empty legal/source refs, and no ungrounded observation. The sole permitted warning
   is `modelo.work.calculate.plazo_vencido_unassessed_preview`; any other warning or error
@@ -274,3 +276,34 @@ while retaining an explicit human release decision.
 - Support scope becomes narrower but defensible: only measured matrix rows are supported.
 - Scoop remains Windows-only; Homebrew, Python, and Claude surfaces carry independently
   proved platform claims.
+
+## Controller and installed-proof boundary refinement (2026-10-03)
+
+Authorized under the user's delegated architect instruction, "make the decisision",
+with `2026-10-03-duplication-remediation-hashing-proof-boundaries-adr`. The controller
+is a separately identified repository tool and may use explicitly selected, pinned
+checkout support, including canonical inward core identity/environment/bookkeeping
+contracts. Its interpreter and imported first-party origins must be retained; support
+must not silently bind from the target installation or a different live checkout.
+Controller results cannot substitute for installed product behavior.
+
+The installed-product commands and probes remain separate clean target processes:
+absolute installed interpreter/executable identity, matching immutable cohort, no
+checkout product import path, no ambient executable substitution and independent
+working/storage roots. Retain actual role-specific interpreter, executable, module
+origins, versions and cohort digests. The independent expected wheel/payload and
+executable-byte measurements are private stdlib calculations and do not call product
+hashing or target-installed code. The separate installed entrypoint-origin probe may
+import the entrypoint to bind identity. Expected tax outcomes retain external authority,
+and the public installed tax-work oracle is unchanged.
+
+Earlier constraints rejected a "checkout import" without naming a process and stated
+that the probe uses public interfaces "never checkout imports". This refinement makes
+that prohibition explicit for the installed product/probe, while identifying its pinned
+controller separately. The retained prohibition is not waived for installed execution,
+and the controller host is not described as wholly stdlib-only. Ordinary canonical
+hashing, distinct caller byte recipes, private expected verifier logic and isolated
+installed behavior have separate owners. Publication authority, immutable-cohort
+promotion, required rows, transport amendments, public protocol behavior, external tax
+expected result and platform/client support are unchanged. This acceptance proves no
+current launcher failure or successful rollout and releases no foreign source path.

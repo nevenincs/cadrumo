@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#relative-imports-gate'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b463f5b90318f4ac9382e393983b0e543b55cbc32aa9364ca4fbadeb99755f95'
+body_hash: 'sha256:c6f27e07b55c0d150d2a308afd3348222a553aff6bacb1cc50f1becc26166d86'
 related: []
 ---
 
@@ -13,8 +13,8 @@ related: []
 
 ## Scope
 
-The relative-imports mandate gate (`dev/quality/relative_imports.py`, mirrored as the
-pytest gate `src/cadrumo/tests/test_relative_imports_only.py`) exited 1 with 87
+The relative-imports mandate gate (the retired module, mirrored as the
+Historical command omitted; its target was retired.
 violations at HEAD, blocking the style lane and therefore every downstream CI
 observation for every concurrent campaign. Neither surface carries an allowlist or
 exception mechanism, so no violation could be recorded away.
@@ -29,14 +29,14 @@ one facade-ownership breach, and three isolated sites.
 ### bound-input-projection-layer | critical | 58 absolute imports encoded a domain-to-application inversion
 
 `resolve_available_bound_inputs_by_casilla_id` lived in
-`src/cadrumo/application/modelo/_binding_resolution.py`. Fifty-eight test modules
+The retired module. Fifty-eight test modules
 imported it absolutely; twenty of those sit under
 `src/cadrumo/domain/calculations/registry/tests/`, so domain reached up into
 application. The relative rewrite available to the gate was a five-dot upward import,
 which satisfies the gate and preserves the inversion in a new notation.
 
 The cause was traceable. An identical-shape twin, `resolve_bound_inputs_by_casilla_id`,
-occupied the corresponding slot in `src/cadrumo/domain/calculations/registry/_bindings.py`
+occupied the corresponding slot in the retired module
 until a deduplication commit on 2026-08-12 deleted it and retargeted every test caller
 to the application copy. That sweep is what introduced the absolute imports. The ruling
 behind it chose which duplicate died, on the grounds that the strict variant had no
@@ -58,7 +58,7 @@ retired name intact, so one bound-input projection stays provable tree-wide.
 
 ### filing-evidence-facade-reach | high | 23 imports bypassed the owning package facade
 
-`general_m303_filing_evidence` is defined in `src/cadrumo/tests/filing_evidence.py`,
+`general_m303_filing_evidence` is defined in the retired test,
 which carries its own module-level `__all__` but was not re-exported from the
 `cadrumo.tests` package facade. Twenty-three cross-package consumers reached the
 submodule directly. The relative rewrite the gate would have accepted preserves that
@@ -75,7 +75,7 @@ application facade already established for the identical reason.
 
 ### tests-support-submodules-unowned | medium | two sibling support modules remain off the facade
 
-`src/cadrumo/tests/registry_observations.py` and `src/cadrumo/tests/secure_sql.py` are
+The retired test and the retired test were
 reached cross-package as direct submodule imports throughout the tree and appear on no
 facade. The relative-imports gate accepts that shape because the modules are not
 underscore-named; the ownership rule does not. The filing-evidence builder is now the

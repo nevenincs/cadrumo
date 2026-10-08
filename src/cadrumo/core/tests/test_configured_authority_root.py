@@ -1,8 +1,7 @@
 """The registry authority root resolves without the storage root or the profile pointer.
 
-The published authority is product data. Locating it has to keep working on a
-machine whose storage refuses to resolve -- one that still carries retired
-``aeat`` state -- while every storage and profile access keeps refusing there.
+The published authority is product data. Its configured location resolves
+independently of project storage and unrelated old platform state.
 """
 
 from __future__ import annotations
@@ -13,10 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ..config import Settings, configured_authority_root, load_settings, override_settings
+from ..config import Settings, configured_authority_root, override_settings
 from ..config_state_root import (
-    FormerProductStateError,
-    default_storage_root,
     live_state_root_inputs,
     platform_user_data_root,
 )
@@ -35,24 +32,6 @@ def _outside_every_override[T](read: Callable[[], T]) -> T:
     the process environment, rather than an override, answers.
     """
     return contextvars.Context().run(read)
-
-
-def _machine_beside_retired_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Point the live platform inputs at a data root that sits beside retired ``aeat`` state.
-
-    Every platform's user-data variable is redirected, so the live resolver lands
-    on the fabricated root wherever the test runs, and the storage-root variable
-    is removed so the platform default -- the path that refuses -- is the one
-    resolved.
-    """
-    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "platform-data"))
-    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "platform-data"))
-    monkeypatch.setenv("HOME", str(tmp_path / "home"))
-    monkeypatch.delenv(_STORAGE_ROOT_ENV, raising=False)
-    retired = platform_user_data_root(live_state_root_inputs()).parent / "aeat"
-    retired.mkdir(parents=True)
-    (retired / "custody-marker.bin").write_bytes(_RETIRED_MARKER)
-    return retired
 
 
 def test_an_absolute_environment_value_is_the_answer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -110,27 +89,20 @@ def test_an_override_block_answers_inside_its_scope(tmp_path: Path, monkeypatch:
         assert configured_authority_root() is None
 
 
-def test_the_authority_root_resolves_beside_retired_state_while_storage_and_profile_refuse(
+def test_authority_and_project_storage_ignore_unrelated_retired_state(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Only the product's own registry location is readable on a retired-state machine.
-
-    The settings construction every storage and profile access goes through
-    derives the storage root and reads the active-profile pointer; both refuse
-    here. The authority root is read without either, and the retired state is
-    left exactly as it was found.
-    """
-    retired = _machine_beside_retired_state(tmp_path, monkeypatch)
+    """Unrelated old platform state neither relocates nor blocks project-owned storage."""
+    retired = tmp_path / "aeat"
+    retired.mkdir()
+    (retired / "custody-marker.bin").write_bytes(_RETIRED_MARKER)
+    storage = tmp_path / "project-storage"
     published = tmp_path / "published-authority"
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage))
+    monkeypatch.delenv(_STORAGE_ROOT_ENV, raising=False)
     monkeypatch.setenv(_AUTHORITY_ROOT_ENV, str(published))
-
     assert _outside_every_override(configured_authority_root) == published.resolve()
-
-    with pytest.raises(FormerProductStateError, match="will not read, move, re-key, delete, or adopt"):
-        _outside_every_override(load_settings)
-    with pytest.raises(FormerProductStateError):
-        default_storage_root()
-
+    assert Settings().cadrumo_local_storage_root == storage
     assert sorted(entry.name for entry in retired.iterdir()) == ["custody-marker.bin"]
     assert (retired / "custody-marker.bin").read_bytes() == _RETIRED_MARKER

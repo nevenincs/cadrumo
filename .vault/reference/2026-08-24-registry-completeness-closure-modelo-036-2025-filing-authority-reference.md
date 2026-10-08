@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c2e1a3ada9e75544bd8efa9ba4f22a6421c6357c7bb82eba5db8b4b0be809208'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:e4d5d1ad9f7278ccefe8fd910b1e500fa2208ac460d8b4ea1aa6de20c9f4efec'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `Modelo 036 2025 filing authority adjudication`
 
 ## Summary
@@ -50,27 +50,9 @@ claimed. See `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y
 and `:76-81`. Its event domain is `alta`, `modificacion`, and `baja`, not a
 periodic tax-calculation cycle.
 
-The runtime reinforces that boundary. `portal_m036_censal` is a `CENSO` portal;
-`portals_for_modelo` deliberately excludes CENSO procedures from filing dispatch;
-and its regression expects no filing portal for `036`. See
-`src/cadrumo/domain/portals/_entries/portal_m036_censal.py:18-32`,
-`src/cadrumo/domain/portals/_registry.py:270-276`, and
-`src/cadrumo/domain/portals/tests/test_registry.py:128-131`.
-`record_m036_declaration` records an operator-declared filing made through Sede
-or in person at an AEAT office; it does not create, render, submit, or dispatch
-an M036 artifact. Its `sede_justificante` field is optional: it records an
-electronic receipt when the operator has one, and its absence does not negate
-an office filing or otherwise prevent the local lifecycle record. See
-`src/cadrumo/application/modelo/_m036_lifecycle.py:1-31` and `:90-145`.
+The runtime reinforces that boundary. `portal_m036_censal` is a `CENSO` portal; `portals_for_modelo` deliberately excludes CENSO procedures from filing dispatch; and its regression expects no filing portal for `036`. Its `sede_justificante` field is optional: it records an electronic receipt when the operator has one, and its absence does not negate an office filing or otherwise prevent the local lifecycle record.
 
-`FilingProducerKey` contains no member whose value starts `m036.`. A direct
-enumeration on 2026-08-24 returned `m036 producer keys: ()`. This is correct:
-the official design has many non-casilla identity, address, activity, representative,
-and repeated-party fields, while no typed application aggregate owns their complete
-value lifecycle. Adding enum strings before those producers would create a
-design-only shell and an ungrounded filing promise. The worklist's own producer
-gate states this dependency in
-`src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:234-269`.
+`FilingProducerKey` contains no member whose value starts `m036.`. A direct enumeration on 2026-08-24 returned `m036 producer keys: ()`. This is correct: the official design has many non-casilla identity, address, activity, representative, and repeated-party fields, while no typed application aggregate owns their complete value lifecycle. Adding enum strings before those producers would create a design-only shell and an ungrounded filing promise.
 
 ## Adjudication, owner, and reconsideration
 

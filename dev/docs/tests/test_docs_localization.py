@@ -55,19 +55,26 @@ def _catalogue_path(language: str, page: str) -> Path:
     return _LOCALES / language / "LC_MESSAGES" / Path(page).with_suffix(".po")
 
 
-def _catalogue_counts(po_path: Path) -> tuple[int, int]:
-    """Return the (untranslated, fuzzy) entry counts for one catalogue.
+def _catalogue_counts(po_path: Path) -> tuple[int, int, str]:
+    """Return the (untranslated, fuzzy, declared language) facts of one catalogue.
 
-    The header entry (empty msgid) is ignored; every real message is counted as
-    untranslated when it carries no translation string and as fuzzy when gettext
-    marked it fuzzy after a source edit. Both count as "not present" for the
-    all-languages completeness contract.
+    The header entry (empty msgid) is not counted; every real message is counted
+    as untranslated when it carries no translation string and as fuzzy when
+    gettext marked it fuzzy after a source edit. Both count as "not present" for
+    the all-languages completeness contract.
+
+    The declared language is the header's own ``Language:`` field, read in the
+    same pass because the file is already open: it is what every tool that is
+    not the compiler reads a catalogue's language from, where the compiler reads
+    the directory, so a catalogue whose two disagree is translated into one
+    language and reported as another.
 
     Args:
         po_path: The ``.po`` catalogue to read.
 
     Returns:
-        A ``(untranslated, fuzzy)`` count pair.
+        The untranslated count, the fuzzy count, and the declared language,
+        which is empty when the header declares none.
     """
     with po_path.open("rb") as handle:
         catalogue = read_po(handle)
@@ -80,33 +87,47 @@ def _catalogue_counts(po_path: Path) -> tuple[int, int]:
             untranslated += 1
         if message.fuzzy:
             fuzzy += 1
-    return untranslated, fuzzy
+    return untranslated, fuzzy, str(dict(catalogue.mime_headers).get("Language", ""))
 
 
 @pytest.mark.parametrize("language", TARGET_LANGUAGES)
-def test_every_user_page_is_fully_translated(language: str) -> None:
-    """Every user-scope page has a complete catalogue with no untranslated or fuzzy entries.
+def test_every_user_page_catalogue_is_complete_and_declares_its_language(language: str) -> None:
+    """Every user-scope page has a complete catalogue, declaring the language it sits under.
 
     A page whose catalogue is missing, or carries any untranslated or fuzzy
     entry, fails the language. The failure enumerates every incomplete page with
     its untranslated and fuzzy counts, so whether it is sizing an initial
     translation pass or naming the one page that regressed, the gate output is
     the worklist.
+
+    The declared language is held to the directory in the same pass, because
+    nothing else holds the two together: the compiler reads the directory and
+    picks the right catalogue whatever the header says, so a catalogue copied
+    from another language keeps that language's header and reads as a complete
+    translation while every tool that trusts the header reads it as the wrong
+    language's.
     """
     pages = user_scope_source_pages(_DOCS)
     assert pages, f"no user-scope source pages found under {_DOCS}; this gate scanned nothing"
     failures: list[str] = []
+    misdeclared: list[str] = []
     for page in pages:
         po_path = _catalogue_path(language, page)
         if not po_path.is_file():
             failures.append(f"{page}: catalogue missing at {po_path.relative_to(_REPO_ROOT).as_posix()}")
             continue
-        untranslated, fuzzy = _catalogue_counts(po_path)
+        untranslated, fuzzy, declared = _catalogue_counts(po_path)
         if untranslated or fuzzy:
             failures.append(f"{page}: {untranslated} untranslated, {fuzzy} fuzzy")
+        if declared != language:
+            misdeclared.append(f"{page}: header declares {declared!r}")
     assert not failures, (
         f"{language}: {len(failures)} of {len(pages)} page catalogue(s) incomplete "
         f"(untranslated or fuzzy entries fall back to English silently):\n  " + "\n  ".join(failures)
+    )
+    assert not misdeclared, (
+        f"{language}: {len(misdeclared)} catalogue(s) under {language}/ declare another language in their "
+        f"Language: header:\n  " + "\n  ".join(misdeclared)
     )
 
 

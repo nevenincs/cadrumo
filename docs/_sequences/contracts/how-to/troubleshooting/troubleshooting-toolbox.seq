@@ -1,4 +1,4 @@
-@step Check overall readiness of your profile, ledger, and modelos.
+@step Check overall readiness of your profile, records, and modelos.
 aeat app overview status
 @step Report the active profile.
 aeat config profile status

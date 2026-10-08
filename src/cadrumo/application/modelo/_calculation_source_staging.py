@@ -35,6 +35,7 @@ from types import MappingProxyType
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_initial_values import initial_value_casilla_ids
 from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -439,7 +440,6 @@ def add_unhandled_source_diagnostics(
     diagnostics = collect_unhandled_source_diagnostics(
         revision,
         handled_sources=frozenset(source_resolution.owned_sources) | CALCULATION_ROUTE_PRE_MESH_SOURCES,
-        manual_sources=frozenset({"manual_input"}),
     )
     if not diagnostics:
         return source_resolution
@@ -461,6 +461,35 @@ def add_terminal_origin_diagnostics(
     return source_resolution.model_copy(update={"diagnostics": source_resolution.diagnostics + diagnostics})
 
 
+def _present_source_gap_diagnostics(
+    missing: tuple[tuple[BindingId, CasillaId, BindingSourceKind], ...],
+    source_resolution: CalculationSourceResolution,
+    not_missing: set[BindingId],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Add only unresolved source gaps not already represented by a boxed diagnostic."""
+    reported_with_box = {
+        diagnostic.binding_id
+        for diagnostic in source_resolution.diagnostics
+        if diagnostic.reason == "unresolved_binding" and diagnostic.casilla_id is not None
+    }
+    diagnostics = tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=str(source),
+            binding_id=binding_id,
+            casilla_id=casilla_id,
+            message=(
+                f"binding {binding_id!r} (casilla {casilla_id!r}) declares present source "
+                f"{source!r} whose resolver produced no value; the bound casilla would otherwise "
+                "default to a silent zero. Supply the source records before filing."
+            ),
+        )
+        for binding_id, casilla_id, source in missing
+        if binding_id not in not_missing and binding_id not in reported_with_box
+    )
+    return diagnostics
+
+
 def add_expected_missing_binding_diagnostics(
     revision: ModeloRevision,
     source_resolution: CalculationSourceResolution,
@@ -468,7 +497,16 @@ def add_expected_missing_binding_diagnostics(
     """Mark present-source, no-value binding gaps unresolved instead of silent.
 
     ``revision`` is the compiled :class:`ModeloRevision` whose bound casillas
-    are checked for present-source, no-value binding gaps.
+    are checked for present-source, no-value binding gaps. Every gap is marked
+    unresolved, so the engine never reads it as a scalar value. Two are not
+    reported, because nothing is missing: a binding the owning resolver
+    declared inapplicable to the filer, and a row binding whose values arrived
+    on the row channel (one per activity or asset row) rather than as a scalar.
+
+    A gap the owning resolver already reported is reported once: a resolver
+    diagnostic that names the box stands, and one that names only the binding
+    gives way to the diagnostic naming its box, so one cause never shows at two
+    levels.
     """
     missing = expected_but_missing_binding_ids(
         revision,
@@ -485,24 +523,23 @@ def add_expected_missing_binding_diagnostics(
             }
         )
     )
-    diagnostics = tuple(
-        CalculationSourceDiagnostic(
-            reason="unresolved_binding",
-            source_kind=str(source),
-            binding_id=binding_id,
-            casilla_id=casilla_id,
-            message=(
-                f"binding {binding_id!r} (casilla {casilla_id!r}) declares present source "
-                f"{source!r} whose resolver produced no value; the bound casilla would otherwise "
-                "default to a silent zero. Supply the source records before filing."
-            ),
-        )
-        for binding_id, casilla_id, source in missing
+    not_missing = {
+        *source_resolution.inapplicable_binding_ids,
+        *(binding_id for binding_id, _row_index in source_resolution.row_binding_values),
+    }
+    diagnostics = _present_source_gap_diagnostics(missing, source_resolution, not_missing)
+    boxed = {diagnostic.binding_id for diagnostic in diagnostics}
+    kept = tuple(
+        diagnostic
+        for diagnostic in source_resolution.diagnostics
+        if diagnostic.reason != "unresolved_binding"
+        or diagnostic.casilla_id is not None
+        or diagnostic.binding_id not in boxed
     )
     return source_resolution.model_copy(
         update={
             "unresolved_binding_ids": unresolved_binding_ids,
-            "diagnostics": source_resolution.diagnostics + diagnostics,
+            "diagnostics": kept + diagnostics,
         },
     )
 
@@ -518,14 +555,19 @@ def expected_but_missing_binding_ids(
     ``revision`` is the compiled :class:`ModeloRevision` whose bindings and
     casillas are scanned for present-source, no-value gaps.
 
-    This is the generic, all-modelos, non-blocking silent-zero advisory. It is
-    deliberately narrower than the M202-only hard-blocking gate in
+    This is the generic, all-modelos silent-zero report. It does not refuse the
+    calculation: what it reports blocks filing only where the form prints the
+    box (a printed box's gap persists with the calculation and the
+    calculation-note gate refuses checking, exporting and recording on it), and
+    is worth checking on a working figure. It is deliberately narrower than the
+    M202-only hard-blocking gate in
     :func:`~cadrumo.application.modelo._required_binding_gate.require_modelo_required_bindings_resolved`,
-    which refuses outright on ANY declared non-constant binding with no
-    resolved value at all and carries no exclusion for the three source kinds
-    below. The two gates are not duplicates: this one flags a narrower
-    "present source produced no value" shape without blocking, appropriate for
-    modelos where a missing binding does not by itself invalidate the filing;
+    which refuses the calculation outright on ANY declared non-constant binding
+    with no resolved value at all and carries no exclusion for the three source
+    kinds below. The two gates are not duplicates: this one reports a narrower
+    "present source produced no value" shape without refusing the calculation,
+    appropriate for modelos where a missing binding does not by itself make the
+    figures uncomputable;
     M202's stricter gate reflects that a pago fraccionado cannot be computed
     with any declared input absent (Ley 27/2014 art. 40.2/40.3). Do not widen
     this advisory to M202-level strictness, and do not narrow M202's gate to
@@ -534,7 +576,7 @@ def expected_but_missing_binding_ids(
     non_silent_sources = frozenset(
         {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL, BindingSourceKind.MANUAL_INPUT},
     )
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     missing: list[tuple[BindingId, CasillaId, BindingSourceKind]] = []
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND or casilla.binding is None:

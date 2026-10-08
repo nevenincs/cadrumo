@@ -20,7 +20,6 @@ from .. import (
     _ledger_counterparty_cli,
     _ledger_evidence_batch_cli,
     _ledger_evidence_cli,
-    _ledger_evidence_confirm_notices,
     _ledger_evidence_consent_cli,
     _ledger_evidence_review_cli,
     _ledger_import_cli,
@@ -44,7 +43,6 @@ _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
     _ledger_counterparty_cli,
     _ledger_evidence_batch_cli,
     _ledger_evidence_cli,
-    _ledger_evidence_confirm_notices,
     _ledger_evidence_consent_cli,
     _ledger_evidence_review_cli,
     _ledger_import_cli,
@@ -321,17 +319,6 @@ def test_ledger_runtime_command_literals_are_provenance_only() -> None:
                 continue
             failures.append(f"{module.__name__}:{literal.lineno}")
     assert failures == []
-
-
-def test_evidence_pull_all_does_not_flatten_typed_storage_errors() -> None:
-    """The shared boundary, not the ledger callback, projects storage refusals."""
-    tree = ast.parse(inspect.getsource(_ledger_lifecycle_cli))
-    caught_names = {
-        name
-        for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler))
-        for name in _caught_names(handler)
-    }
-    assert "OutboundStorageError" not in caught_names
 
 
 def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback() -> None:

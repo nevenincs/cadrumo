@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#ledger-add-idempotency'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:19057e6f872fe50af37760dcc50763633fc22a1bf78f67ed3fe7d4638b6bb659'
-related:
-  - "[[2026-06-30-ledger-add-idempotency-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:867a68c1e9fd8406351c4325f7e6005c8e8a0fd908f0afed37261e28333810a1'
+related: []
 ---
 
 # `ledger-add-idempotency` audit: `ledger-add-idempotency close honesty review`
@@ -19,7 +18,7 @@ Fresh-context independent code review (dispatched to a dedicated reviewer person
 
 ### idempotency-guard-field-omission | medium | same-key add differing only in recargo_amount/source_jurisdiction silently no-ops (fixed)
 
-`_command_matches_current` (`src/aeat/application/ledger/_actions_common.py`), reused by the manual-add idempotency conflict gate, omitted `recargo_amount` and `source_jurisdiction`. A same-key add differing only in those fields silently no-oped and dropped the new value — a silent under-declaration of the recargo de equivalencia surcharge. FIXED in `bdd141a59`: both fields added to the match, with two regression tests proving each difference now raises the conflict refusal.
+`_command_matches_current` , reused by the manual-add idempotency conflict gate, omitted `recargo_amount` and `source_jurisdiction`. A same-key add differing only in those fields silently no-oped and dropped the new value — a silent under-declaration of the recargo de equivalencia surcharge. FIXED in `bdd141a59`: both fields added to the match, with two regression tests proving each difference now raises the conflict refusal.
 
 ### filing-anti-tautology-not-load-bearing | medium | filing-record id-mismatch proof passed for the wrong reason (fixed)
 

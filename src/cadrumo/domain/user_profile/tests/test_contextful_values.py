@@ -21,9 +21,9 @@ from ..values import (
     UserProfileRecord,
     UserProfileSnapshot,
     create_user_profile_record,
-    create_user_profile_snapshot,
     decode_user_profile_record,
 )
+from .snapshot_factory import create_user_profile_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -17,7 +17,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from .....application.user_profile.profile_record_repository import bound_profile_record_session
+from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .....application.workflow.profile_bucket_scan import resolve_profile_bucket
 from .....application.workflow.profile_health import assess_active_profile_health, repair_active_profile_pointer
 from .....application.workflow.state_models import WorkflowState

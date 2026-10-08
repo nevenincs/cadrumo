@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:ef9d1feb5c13c4e9da5a453fc1c66f12cddc3874dc035d6a1911b313b4696b1e'
+modified: '2026-10-03'
+body_hash: 'sha256:6ad87da3f72e497bac10bb5702d6f0839a9f6c8a404b300fdbcb6a1c72e6a83a'
 related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-fragment-headroom-audit]]'
 ---
 
@@ -35,19 +34,19 @@ instead of being executed immediately in P01.
 
 | Lines | Path |
 | ---: | --- |
-| 1536 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.toml` |
-| 1506 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.toml` |
-| 1296 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0003-export-layout.toml` |
-| 1296 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0003-export-layout.toml` |
-| 1239 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0002-export-layout.toml` |
-| 1239 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0002-export-layout.toml` |
-| 1039 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml` |
-| 627 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/revision.toml` |
-| 190 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0001-export-layout.toml` |
-| 190 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0001-export-layout.toml` |
-| 27 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` |
-| 19 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` |
-| 10 | `src/aeat/_data/registry/aeat/modelos/303/manifest.toml` |
+| 1536 | the retired data file |
+| 1506 | the retired data file |
+| 1296 | the retired data file |
+| 1296 | the retired data file |
+| 1239 | the retired data file |
+| 1239 | the retired data file |
+| 1039 | the retired data file |
+| 627 | the retired data file |
+| 190 | the retired data file |
+| 190 | the retired data file |
+| 27 | the retired data file |
+| 19 | the retired data file |
+| 10 | the retired data file |
 
 ## Threshold Counts
 
@@ -70,8 +69,8 @@ M303 has 13 TOML files.
 
 | Lines | Casillas | Path |
 | ---: | ---: | --- |
-| 1536 | 115 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.toml` |
-| 1506 | 113 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.toml` |
+| 1536 | 115 | the retired data file |
+| 1506 | 113 | the retired data file |
 
 The casilla pressure can be split at `[[revisions.<id>.casillas]]` boundaries.
 That uses existing revision append-array behavior and does not need a new
@@ -81,10 +80,10 @@ schema construct.
 
 | Lines | Layouts | Records | Fields | Path |
 | ---: | ---: | ---: | ---: | --- |
-| 1296 | 1 | 6 | 90 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0003-export-layout.toml` |
-| 1296 | 1 | 6 | 90 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0003-export-layout.toml` |
-| 1239 | 1 | 1 | 88 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0002-export-layout.toml` |
-| 1239 | 1 | 1 | 88 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0002-export-layout.toml` |
+| 1296 | 1 | 6 | 90 | the retired data file |
+| 1296 | 1 | 6 | 90 | the retired data file |
+| 1239 | 1 | 1 | 88 | the retired data file |
+| 1239 | 1 | 1 | 88 | the retired data file |
 
 The export pressure can be split with existing export-layout fragment behavior:
 
@@ -103,7 +102,7 @@ The follow-up is now explicit in the plan:
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_toml_fragments_stay_reviewable -q`
+- the historical check
   - Result: 2 passed in 10.28s.
 - `uv run --no-sync python -c "from aeat.domain.calculations.registry import load_modelo_directory; from aeat.core.resources import bundled_path; m=load_modelo_directory(bundled_path('registry','aeat','modelos','303')); print(m.id, sorted(m.revisions)); print([(rid, len(rev.casillas), len(rev.export_layouts)) for rid, rev in sorted(m.revisions.items())])"`
   - Result: `303 ['2009-y-siguientes', '2023-y-siguientes']` and `[('2009-y-siguientes', 113, 1), ('2023-y-siguientes', 115, 1)]`.

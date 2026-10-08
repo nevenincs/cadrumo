@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    RegistryAuthorityCapture,
+    RegistryAuthorityCurrentCoordinate,
+)
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -34,6 +39,7 @@ from cadrumo.application.modelo.workspace import (
     binding_schema_records,
     capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_captures,
+    contributors_still_current,
     fold_slots,
     formula_operand_references_for_casilla,
     formula_schema_records,
@@ -57,13 +63,17 @@ from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceFacetName,
     ModeloWorkspaceMaterializationRecordV1,
+    ModeloWorkspaceRefusalCode,
+    ModeloWorkspaceRefusedResultV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceScalarMaterializationRecordV1,
     ModeloWorkspaceScalarMaterializationV1,
     ModeloWorkspaceSchemaRecordV1,
+    ModeloWorkspaceStaticInspectionResultV1,
     ModeloWorkspaceVisibleFilingTargetV1,
 )
+from cadrumo.application.modelo.workspace_producers import ModeloWorkspaceWorkPortV1
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
@@ -860,14 +870,16 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
     _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = published_authority_operation()
 
-    minted = resolve_static_inspection_result(
+    first_page = resolve_static_inspection_result(
         _visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=authority,
         output_language=OutputLanguage.ES,
         page_size=5,
-    ).projection.schema_facet.next_cursor
+    )
+    assert isinstance(first_page, ModeloWorkspaceStaticInspectionResultV1)
+    minted = first_page.projection.schema_facet.next_cursor
     assert minted is not None
 
     foreign = minted.model_copy(update={"facet": ModeloWorkspaceFacetName.PROVENANCE})
@@ -900,6 +912,7 @@ def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
         output_language=OutputLanguage.ES,
     )
 
+    assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)
     projection = result.projection
     assert projection.target.modelo == "130"
     assert projection.target.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
@@ -910,19 +923,24 @@ def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
     assert projection.provenance_facet is None
 
     # Round-trip through JSON must reproduce the identical result.
-    from cadrumo.application.modelo.workspace_models import ModeloWorkspaceStaticInspectionResultV1
 
     reloaded = ModeloWorkspaceStaticInspectionResultV1.model_validate_json(result.model_dump_json())
     assert reloaded == result
 
 
-def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
+def test_resolve_static_inspection_result_reads_the_work_catalogue_once_to_capture_and_once_to_confirm(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
     caplog: pytest.LogCaptureFixture,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A single encrypted-SQL work-catalogue read must back the entire assembled result."""
+    """A single encrypted-SQL work-catalogue read backs the entire assembled result.
+
+    The one other read is the currentness pass, which observes the same
+    catalogue to prove no write landed between the capture and the baseline;
+    nothing is built from it. A third read would mean a contributor re-read
+    what it had already captured.
+    """
     import logging
 
     bucket_id, repository = workspace_repos
@@ -941,9 +959,10 @@ def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
             output_language=OutputLanguage.ES,
         )
 
+    assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)
     assert result.projection.target.modelo == "130"
     load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
-    assert len(load_log_lines) == 1
+    assert len(load_log_lines) == 2
 
 
 def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_registry_exactly_once(
@@ -1379,3 +1398,91 @@ def test_static_inspection_labels_equal_per_key_resolution_in_every_language() -
                 expected[1],
                 expected[2],
             )
+
+
+class _RepublishedAfterCapture:
+    """The real pinned operation, whose publication advances once a projection is captured.
+
+    Stands in for a republication landing between an admission's registry
+    capture and its currentness pass. The capture itself is the real
+    operation's; only the coordinate read after it reports a later generation.
+    """
+
+    def __init__(self, operation: PinnedAuthorityOperation) -> None:
+        self._operation = operation
+        self._captured = False
+
+    def capture_law_selected_projection(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        grade: RegistryAuthorityGrade | None = None,
+    ) -> RegistryAuthorityCapture:
+        capture = self._operation.capture_law_selected_projection(
+            modelo_id, filing_year=filing_year, period=period, on=on, grade=grade
+        )
+        self._captured = True
+        return capture
+
+    def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
+        current = self._operation.read_current_coordinate()
+        if not self._captured:
+            return current
+        return RegistryAuthorityCurrentCoordinate(
+            comparison_domain=current.comparison_domain,
+            generation=current.generation + 1,
+        )
+
+
+def test_a_work_capture_stays_current_until_its_catalogue_is_written(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
+) -> None:
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    port = ModeloWorkspaceWorkPortV1(
+        request=modelo_work_selector_request_for_target(_visible_target(bucket_id), bucket_id=bucket_id),
+        catalogue_repository=repository,
+    )
+    captured = port.capture_projection_with_epoch()
+
+    assert contributors_still_current(((port, captured.epoch),))
+
+    create_work_unit(
+        bucket_id=bucket_id,
+        modelo="130",
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "2T"),
+        revision_id=_LAW_SELECTED_REVISION_ID,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository, bucket_event_repository=BucketEventHistoryRepository()
+        ),
+        clock=_T0,
+        operation=operation,
+    )
+
+    assert not contributors_still_current(((port, captured.epoch),))
+
+
+def test_static_admission_refuses_as_changed_when_the_registry_moves_before_its_second_pass(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
+) -> None:
+    from cadrumo.core.external_constants import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+
+    result = resolve_static_inspection_result(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=_RepublishedAfterCapture(published_authority_operation()),
+        output_language=OutputLanguage.ES,
+    )
+
+    assert isinstance(result, ModeloWorkspaceRefusedResultV1)
+    assert result.refusal.code is ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED
+    assert result.refusal.selected_target is not None
+    assert result.refusal.selected_target.modelo == "130"

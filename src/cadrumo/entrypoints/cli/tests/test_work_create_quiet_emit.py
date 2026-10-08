@@ -35,7 +35,6 @@ from typer._click.core import Command as TyperCommand
 from typer.core import TyperGroup, TyperOption
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._modelo_payloads import WorkCreateResult
@@ -89,7 +88,7 @@ def _work_create_result() -> WorkCreateResult:
         {
             "operation": "modelo.work.create",
             "status": "created",
-            "status_message": "New work unit created.",
+            "status_message": "New declaration created.",
             "name_applied": None,
             "applicability_guard_bypassed": False,
             **work_unit_payload(_build_m130_unit()).model_dump(mode="python"),
@@ -140,23 +139,20 @@ def test_text_mode_quiet_suppresses_confirmation(capsys: pytest.CaptureFixture[s
     Modelo 100 only), so the quiet text surface is empty — proving the
     flag suppressed the prose without swallowing a notice.
     """
-    with bundled_indexed_authority().operation() as operation:
-        _emit_work_create_result(
-            _context("text"),
-            unit=_build_m130_unit(),
-            reused=False,
-            name=None,
-            name_applied=None,
-            allow_not_applicable=False,
-            authority_operation=operation,
-            profile=None,
-            quiet=True,
-        )
+    _emit_work_create_result(
+        _context("text"),
+        unit=_build_m130_unit(),
+        reused=False,
+        name=None,
+        name_applied=None,
+        allow_not_applicable=False,
+        quiet=True,
+    )
     out = capsys.readouterr().out
     assert out.strip() == ""
     assert "operation" not in out
     assert "work_unit_id" not in out
-    assert "New work unit created." not in out
+    assert "New declaration created." not in out
 
 
 def test_quiet_json_envelope_is_complete(capsys: pytest.CaptureFixture[str]) -> None:
@@ -166,18 +162,15 @@ def test_quiet_json_envelope_is_complete(capsys: pytest.CaptureFixture[str]) -> 
     ``result`` payload and the envelope spine must be emitted in full,
     proving the flag never degrades the machine surface.
     """
-    with bundled_indexed_authority().operation() as operation:
-        _emit_work_create_result(
-            _context("json"),
-            unit=_build_m130_unit(),
-            reused=False,
-            name=None,
-            name_applied=None,
-            allow_not_applicable=False,
-            authority_operation=operation,
-            profile=None,
-            quiet=True,
-        )
+    _emit_work_create_result(
+        _context("json"),
+        unit=_build_m130_unit(),
+        reused=False,
+        name=None,
+        name_applied=None,
+        allow_not_applicable=False,
+        quiet=True,
+    )
     envelope = json.loads(capsys.readouterr().out)
 
     assert envelope["schema_version"]
@@ -187,7 +180,7 @@ def test_quiet_json_envelope_is_complete(capsys: pytest.CaptureFixture[str]) -> 
     assert isinstance(result, dict)
     assert result["status"] == "created"
     assert result["operation"] == "modelo.work.create"
-    assert result["status_message"] == "New work unit created."
+    assert result["status_message"] == "New declaration created."
     assert result["work_unit_id"]
     assert result["modelo"] == "130"
 
@@ -217,7 +210,7 @@ def test_text_mode_emits_the_supplied_lines(capsys: pytest.CaptureFixture[str]) 
         "operation\tmodelo.work.create",
         "status\tcreated",
         "work_unit_id\tabc123",
-        "New work unit created.",
+        "New declaration created.",
     ]
 
     emit_envelope(_context("text"), command="modelo.work.create", result=result, lines=lines)
@@ -241,7 +234,7 @@ def test_json_output_is_byte_identical_regardless_of_lines(capsys: pytest.Captur
         _context("json"),
         command="modelo.work.create",
         result=result,
-        lines=["operation\tmodelo.work.create", "New work unit created."],
+        lines=["operation\tmodelo.work.create", "New declaration created."],
     )
     with_lines = capsys.readouterr().out
 

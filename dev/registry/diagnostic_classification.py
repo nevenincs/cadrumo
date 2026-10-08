@@ -16,7 +16,12 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RegistrySnapshot,
+)
 from cadrumo.domain.calculations.registry.snapshot import build_validated_snapshot
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
@@ -80,6 +85,218 @@ def derive_filing_revision_classifications(
     )
 
 
+def _selection_coordinates_for_revision(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    assessment_horizon: int,
+    assessment_floor: int,
+) -> tuple[tuple[int, str], ...] | RegistryDiagnosticFilingRevision:
+    """Resolve the revision's supported coordinates or preserve selection refusal."""
+    try:
+        coordinates = revision_selection_coordinates(
+            revision,
+            assessment_horizon=assessment_horizon,
+            assessment_floor=assessment_floor,
+        )
+    except ValueError as error:
+        return RegistryDiagnosticFilingRevision(
+            modelo=modelo.id,
+            revision=revision.id,
+            selection_coordinates=(),
+            layout_ids=(),
+            layout_json=None,
+            inspection=None,
+            refusal_reason="law_selection_failed",
+            refusal_detail=str(error),
+        )
+    if not coordinates:
+        return RegistryDiagnosticFilingRevision(
+            modelo=modelo.id,
+            revision=revision.id,
+            selection_coordinates=(),
+            layout_ids=(),
+            layout_json=None,
+            inspection=None,
+            refusal_reason="law_selection_failed",
+            refusal_detail="the revision has no coordinate inside the supported filing-years envelope",
+        )
+    return coordinates
+
+
+def _static_revision_inspection(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    *,
+    source_root: Path,
+    selection_coordinates: tuple[tuple[int, str], ...],
+) -> StaticGeneratedArtifactInspection | RegistryDiagnosticFilingRevision:
+    """Copy static inspection facts or return the declared inspection refusal."""
+    try:
+        inspection = RegistryRevisionInspection.from_revision(
+            modelo=modelo,
+            revision=revision,
+            source_root=source_root,
+            sources=catalogues.sources,
+            legal_ref_ids=frozenset(catalogues.legal),
+        )
+        return _static_generated_artifact_inspection(inspection)
+    except ValueError as error:
+        return RegistryDiagnosticFilingRevision(
+            modelo=modelo.id,
+            revision=revision.id,
+            selection_coordinates=selection_coordinates,
+            layout_ids=tuple(str(layout.id) for layout in revision.export_layouts),
+            layout_json=None,
+            inspection=None,
+            refusal_reason="revision_validation_failed",
+            refusal_detail=str(error),
+        )
+
+
+def _filing_snapshots_for_coordinates(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    *,
+    selection_coordinates: tuple[tuple[int, str], ...],
+    static_inspection: StaticGeneratedArtifactInspection,
+) -> tuple[RegistrySnapshot, ...] | RegistryDiagnosticFilingRevision:
+    """Build the selected filing snapshots or retain the exact refusal class."""
+    try:
+        with validating_governed_facts(
+            CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+        ):
+            snapshots = tuple(
+                build_validated_snapshot(
+                    modelo,
+                    catalogues,
+                    filing_year=filing_year,
+                    period=period,
+                    grade=RegistryAuthorityGrade.FILING,
+                )
+                for filing_year, period in selection_coordinates
+            )
+    except RegistryValidationError as error:
+        layout = revision.export_layouts[0] if len(revision.export_layouts) == 1 else None
+        return RegistryDiagnosticFilingRevision(
+            modelo=modelo.id,
+            revision=revision.id,
+            selection_coordinates=selection_coordinates,
+            layout_ids=tuple(str(item.id) for item in revision.export_layouts),
+            layout_json=None if layout is None else layout.model_dump_json(),
+            inspection=static_inspection,
+            refusal_reason="revision_validation_failed",
+            refusal_detail=str(error),
+        )
+    except RegistrySnapshotError as error:
+        return RegistryDiagnosticFilingRevision(
+            modelo=modelo.id,
+            revision=revision.id,
+            selection_coordinates=selection_coordinates,
+            layout_ids=(),
+            layout_json=None,
+            inspection=static_inspection,
+            refusal_reason="law_selection_failed",
+            refusal_detail=str(error),
+        )
+    if any(snapshot.revision.id != revision.id for snapshot in snapshots):
+        return RegistryDiagnosticFilingRevision(
+            modelo=modelo.id,
+            revision=revision.id,
+            selection_coordinates=selection_coordinates,
+            layout_ids=(),
+            layout_json=None,
+            inspection=static_inspection,
+            refusal_reason="law_selection_failed",
+            refusal_detail="a filing-grade snapshot selected a different revision",
+        )
+    return snapshots
+
+
+def _layout_classification(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    selection_coordinates: tuple[tuple[int, str], ...],
+    static_inspection: StaticGeneratedArtifactInspection,
+    snapshots: tuple[RegistrySnapshot, ...],
+) -> RegistryDiagnosticFilingRevision:
+    """Project one stable filing layout or preserve the diagnostic refusal."""
+    layout_ids = tuple(str(layout.id) for layout in snapshots[0].revision.export_layouts)
+    if not layout_ids or any(
+        tuple(str(layout.id) for layout in snapshot.revision.export_layouts) != layout_ids for snapshot in snapshots
+    ):
+        return RegistryDiagnosticFilingRevision(
+            modelo=modelo.id,
+            revision=revision.id,
+            selection_coordinates=selection_coordinates,
+            layout_ids=layout_ids,
+            layout_json=None,
+            inspection=static_inspection,
+            refusal_reason="layout_unavailable",
+            refusal_detail="the filing revision has no stable single layout across its selected coordinates",
+        )
+    if len(layout_ids) != 1:
+        return RegistryDiagnosticFilingRevision(
+            modelo=modelo.id,
+            revision=revision.id,
+            selection_coordinates=selection_coordinates,
+            layout_ids=layout_ids,
+            layout_json=None,
+            inspection=static_inspection,
+            refusal_reason="layout_unavailable",
+            refusal_detail="conformance supports exactly one generated filing layout per revision",
+        )
+    return RegistryDiagnosticFilingRevision(
+        modelo=modelo.id,
+        revision=revision.id,
+        selection_coordinates=selection_coordinates,
+        layout_ids=layout_ids,
+        layout_json=snapshots[0].revision.export_layouts[0].model_dump_json(),
+        inspection=static_inspection,
+    )
+
+
+def _classify_filing_revision(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    *,
+    source_root: Path,
+    assessment_horizon: int,
+    assessment_floor: int,
+) -> RegistryDiagnosticFilingRevision:
+    """Run the ordered selection, static-inspection, snapshot, and layout stages."""
+    coordinates = _selection_coordinates_for_revision(
+        modelo,
+        revision,
+        assessment_horizon=assessment_horizon,
+        assessment_floor=assessment_floor,
+    )
+    if isinstance(coordinates, RegistryDiagnosticFilingRevision):
+        return coordinates
+    static_inspection = _static_revision_inspection(
+        modelo,
+        revision,
+        catalogues,
+        source_root=source_root,
+        selection_coordinates=coordinates,
+    )
+    if isinstance(static_inspection, RegistryDiagnosticFilingRevision):
+        return static_inspection
+    snapshots = _filing_snapshots_for_coordinates(
+        modelo,
+        revision,
+        catalogues,
+        selection_coordinates=coordinates,
+        static_inspection=static_inspection,
+    )
+    if isinstance(snapshots, RegistryDiagnosticFilingRevision):
+        return snapshots
+    return _layout_classification(modelo, revision, coordinates, static_inspection, snapshots)
+
+
 def _derive_filing_revision_classifications(
     modelos: tuple[ModeloDefinition, ...],
     catalogues: RegistryCatalogues,
@@ -94,162 +311,14 @@ def _derive_filing_revision_classifications(
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
             if revision.authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
-            try:
-                selection_coordinates = revision_selection_coordinates(
+            classified.append(
+                _classify_filing_revision(
+                    modelo,
                     revision,
+                    catalogues,
+                    source_root=source_root,
                     assessment_horizon=assessment_horizon,
                     assessment_floor=assessment_floor,
-                )
-            except ValueError as error:
-                classified.append(
-                    RegistryDiagnosticFilingRevision(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        selection_coordinates=(),
-                        layout_ids=(),
-                        layout_json=None,
-                        inspection=None,
-                        refusal_reason="law_selection_failed",
-                        refusal_detail=str(error),
-                    )
-                )
-                continue
-            if not selection_coordinates:
-                classified.append(
-                    RegistryDiagnosticFilingRevision(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        selection_coordinates=(),
-                        layout_ids=(),
-                        layout_json=None,
-                        inspection=None,
-                        refusal_reason="law_selection_failed",
-                        refusal_detail="the revision has no coordinate inside the supported filing-years envelope",
-                    )
-                )
-                continue
-            try:
-                inspection = RegistryRevisionInspection.from_revision(
-                    modelo=modelo,
-                    revision=revision,
-                    source_root=source_root,
-                    sources=catalogues.sources,
-                    legal_ref_ids=frozenset(catalogues.legal),
-                )
-                static_inspection = _static_generated_artifact_inspection(inspection)
-            except ValueError as error:
-                classified.append(
-                    RegistryDiagnosticFilingRevision(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        selection_coordinates=selection_coordinates,
-                        layout_ids=tuple(str(layout.id) for layout in revision.export_layouts),
-                        layout_json=None,
-                        inspection=None,
-                        refusal_reason="revision_validation_failed",
-                        refusal_detail=str(error),
-                    )
-                )
-                continue
-            try:
-                with validating_governed_facts(
-                    CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
-                ):
-                    snapshots = tuple(
-                        build_validated_snapshot(
-                            modelo,
-                            catalogues,
-                            filing_year=filing_year,
-                            period=period,
-                            grade=RegistryAuthorityGrade.FILING,
-                        )
-                        for filing_year, period in selection_coordinates
-                    )
-            except RegistryValidationError as error:
-                layout = revision.export_layouts[0] if len(revision.export_layouts) == 1 else None
-                classified.append(
-                    RegistryDiagnosticFilingRevision(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        selection_coordinates=selection_coordinates,
-                        layout_ids=tuple(str(item.id) for item in revision.export_layouts),
-                        layout_json=None if layout is None else layout.model_dump_json(),
-                        inspection=static_inspection,
-                        refusal_reason="revision_validation_failed",
-                        refusal_detail=str(error),
-                    )
-                )
-                continue
-            except RegistrySnapshotError as error:
-                classified.append(
-                    RegistryDiagnosticFilingRevision(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        selection_coordinates=selection_coordinates,
-                        layout_ids=(),
-                        layout_json=None,
-                        inspection=static_inspection,
-                        refusal_reason="law_selection_failed",
-                        refusal_detail=str(error),
-                    )
-                )
-                continue
-            if any(snapshot.revision.id != revision.id for snapshot in snapshots):
-                classified.append(
-                    RegistryDiagnosticFilingRevision(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        selection_coordinates=selection_coordinates,
-                        layout_ids=(),
-                        layout_json=None,
-                        inspection=static_inspection,
-                        refusal_reason="law_selection_failed",
-                        refusal_detail="a filing-grade snapshot selected a different revision",
-                    )
-                )
-                continue
-            layout_ids = tuple(str(layout.id) for layout in snapshots[0].revision.export_layouts)
-            if not layout_ids or any(
-                tuple(str(layout.id) for layout in snapshot.revision.export_layouts) != layout_ids
-                for snapshot in snapshots
-            ):
-                classified.append(
-                    RegistryDiagnosticFilingRevision(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        selection_coordinates=selection_coordinates,
-                        layout_ids=layout_ids,
-                        layout_json=None,
-                        inspection=static_inspection,
-                        refusal_reason="layout_unavailable",
-                        refusal_detail=(
-                            "the filing revision has no stable single layout across its selected coordinates"
-                        ),
-                    )
-                )
-                continue
-            if len(layout_ids) != 1:
-                classified.append(
-                    RegistryDiagnosticFilingRevision(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        selection_coordinates=selection_coordinates,
-                        layout_ids=layout_ids,
-                        layout_json=None,
-                        inspection=static_inspection,
-                        refusal_reason="layout_unavailable",
-                        refusal_detail="conformance supports exactly one generated filing layout per revision",
-                    )
-                )
-                continue
-            classified.append(
-                RegistryDiagnosticFilingRevision(
-                    modelo=modelo.id,
-                    revision=revision.id,
-                    selection_coordinates=selection_coordinates,
-                    layout_ids=layout_ids,
-                    layout_json=snapshots[0].revision.export_layouts[0].model_dump_json(),
-                    inspection=static_inspection,
                 )
             )
     return tuple(classified)

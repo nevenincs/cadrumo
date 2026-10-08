@@ -28,7 +28,7 @@ requires registry ``legal_refs`` provenance. Neither model subsumes the
 other; do not collapse them.
 
 See Also:
-    :func:`~cadrumo.application.modelo.verification_actions.verify_modelo_revision`:
+    :func:`~cadrumo.application.modelo.verification_actions.verify_modelo_revision_with_preconditions`:
         The pre-file verification gate this validator runs inside, which
         owns :class:`ModeloVerificationFinding` and the persisted
         :class:`VerificationReport`.
@@ -228,6 +228,12 @@ class ModeloValidator:
                     draft.draft_id,
                     collection.schema_version,
                 )
+                continue
+            # Optional absent results retain unknown source membership. They
+            # carry no value or provenance to compare, and must not be turned
+            # into invented zeroes just to satisfy a trace check. Required
+            # absence remains an error in _validate_required and below.
+            if value.kind is ModeloValueKind.EMPTY and not casilla.required:
                 continue
             if not casilla.formula_input_casilla_ids:
                 if value.formula_trace_casilla_ids:

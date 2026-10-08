@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Final
 
 import pytest
@@ -21,7 +22,9 @@ from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .._app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
 from .._app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
 from .._command_target import resolve_deferred_target
-from ..command_spec import ArgumentSpec, CommandSpec, ParameterSpec
+from ..command_parameter_contracts import ArgumentSpec, ParameterSpec
+from ..command_shared_contracts import TranslationKey
+from ..command_spec import CommandSpec
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -44,7 +47,6 @@ _MINIMUM_ONE_CONSTRAINT: Final[tuple[object, ...]] = (1, *_DEFAULT_CONSTRAINT[1:
 _MINIMUM_ZERO_CONSTRAINT: Final[tuple[object, ...]] = (0, *_DEFAULT_CONSTRAINT[1:])
 _EXISTING_PATH_CONSTRAINT: Final[tuple[object, ...]] = (*_DEFAULT_CONSTRAINT[:4], True, *_DEFAULT_CONSTRAINT[5:])
 _NO_TRANSPORT: Final[tuple[str, ...]] = ("none", "not_applicable", "not_applicable")
-_REMOTE_HANDLE_TRANSPORT: Final[tuple[str, ...]] = ("remote_handle", "not_applicable", "not_applicable")
 _LOCAL_IN_FILE_PRIMARY_TRANSPORT: Final[tuple[str, ...]] = ("local_in", "file", "primary")
 _LOCAL_IN_FILE_AUXILIARY_TRANSPORT: Final[tuple[str, ...]] = ("local_in", "file", "auxiliary")
 _LOCAL_OUT_FILE_PRIMARY_TRANSPORT: Final[tuple[str, ...]] = ("local_out", "file", "primary")
@@ -247,37 +249,6 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         ),
     ),
     _expected_command(
-        "app_ledger_evidence_pull",
-        "app_ledger_evidence",
-        "pull",
-        "leaf",
-        "cli.app.ledger.evidence.pull_help",
-        "profile-bound",
-        "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_evidence_pull",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerAttachResult", "ledger.evidence.pull"
-        ),
-        (
-            _expected_argument("transaction_id", "cli.app.ledger.evidence.pull_id_help"),
-            _expected_option(
-                "source",
-                "--source",
-                "cli.app.ledger.evidence.pull_source_help",
-                annotation="cadrumo.domain.attachments.enums:DocumentLinkSource",
-                default=_REQUIRED_DEFAULT,
-            ),
-            _expected_option(
-                "reference",
-                "--reference",
-                "cli.app.ledger.evidence.pull_reference_help",
-                default=_REQUIRED_DEFAULT,
-                transport=_REMOTE_HANDLE_TRANSPORT,
-            ),
-            _expected_option("note", "--note", "cli.app.ledger.evidence.pull_note_help", default=_EMPTY_DEFAULT),
-            _expected_option("actor", "--actor", "cli.app.ledger.evidence.pull_actor_help"),
-        ),
-    ),
-    _expected_command(
         "app_ledger_evidence",
         "app_ledger",
         "evidence",
@@ -441,8 +412,9 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
                 is_flag=True,
                 flag_value=True,
             ),
-            _expected_option("period", "--period", "cli.ledger.export.period_help"),
-            _expected_option("year", "--year", "cli.ledger.check.year_help", annotation="builtins:int"),
+            _expected_option("period", "--period", "cli.ledger.import.period_help"),
+            _expected_option("year", "--year", "cli.ledger.import.year_help", annotation="builtins:int"),
+            _expected_option("account", "--account", "cli.ledger.import.account_help"),
         ),
     ),
     _expected_command(
@@ -546,6 +518,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
                 is_flag=True,
                 flag_value=True,
             ),
+            _expected_option("account", "--account", "cli.ledger.list.account_help"),
         ),
     ),
     _expected_command(
@@ -643,28 +616,6 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         None,
         _NO_RESULT_SCHEMA_CONTRACT,
         invocation=_GROUP_INVOCATION_CONTRACT,
-    ),
-    _expected_command(
-        "app_ledger_evidence_pull_all",
-        "app_ledger_evidence",
-        "pull-all",
-        "leaf",
-        "cli.app.ledger.evidence.pull_all_help",
-        "profile-bound",
-        "cadrumo.entrypoints.cli.ledger_lifecycle_cli:ledger_evidence_pull_all",
-        _expected_result_schema(
-            _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerEvidencePullAllResult", "ledger.evidence.pull_all"
-        ),
-        (
-            _expected_option(
-                "folder",
-                "--folder",
-                "cli.app.ledger.evidence.pull_all_folder_help",
-                default=_REQUIRED_DEFAULT,
-                transport=_REMOTE_HANDLE_TRANSPORT,
-            ),
-            _expected_option("note", "--note", "cli.app.ledger.evidence.pull_all_note_help", default=_EMPTY_DEFAULT),
-        ),
     ),
     _expected_command(
         "app_ledger_ratios",
@@ -973,6 +924,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
             ),
             _expected_option("notes", "--notes", "cli.ledger.update.notes_help"),
             _expected_option("group", "--group", "cli.ledger.update.group_help"),
+            _expected_option("account", "--account", "cli.ledger.update.account_help"),
             _expected_option("actor", "--actor", "cli.ledger.add.actor_help"),
         ),
     ),
@@ -1166,13 +1118,10 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
         management["app_ledger_llm_diagnostics"],
         management["app_ledger_merge"],
         management["app_ledger_preflight"],
-        management["app_ledger_evidence_pull_all"],
     ):
         assert spec.invocation is _LEAF_INVOCATION
 
-    assert operations["app_ledger_evidence_pull"].parameters[0] is _EVIDENCE_TRANSACTION_ID_ARGUMENT
     assert operations["app_ledger_exclude"].parameters[0] is _EVIDENCE_TRANSACTION_ID_ARGUMENT
-    assert operations["app_ledger_evidence_pull"].parameters[-1] is _EVIDENCE_ACTOR_OPTION
     assert operations["app_ledger_exclude"].parameters[-1] is _EVIDENCE_ACTOR_OPTION
     assert operations["app_ledger_export"].parameters[-1] is _LEDGER_ACTOR_OPTION
     for key in ("app_ledger_remove", "app_ledger_reset", "app_ledger_restore", "app_ledger_stash", "app_ledger_update"):
@@ -1183,11 +1132,15 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
     ] is _MERGE_REASON_OPTION
     for spec, positions in (
         (operations["app_ledger_export"], (3, 4)),
-        (operations["app_ledger_import"], (6, 7)),
         (management["app_ledger_list"], (1, 2)),
     ):
         assert spec.parameters[positions[0]] is _OPTIONAL_PERIOD_OPTION
         assert spec.parameters[positions[1]] is _OPTIONAL_YEAR_OPTION
+    # Import filters rows by the period, so it reuses the shared contracts and
+    # replaces only the help text that describes what the scope does.
+    import_period, import_year = operations["app_ledger_import"].parameters[6:8]
+    assert import_period == replace(_OPTIONAL_PERIOD_OPTION, help_key=TranslationKey("cli.ledger.import.period_help"))
+    assert import_year == replace(_OPTIONAL_YEAR_OPTION, help_key=TranslationKey("cli.ledger.import.year_help"))
 
     assert (
         tuple(

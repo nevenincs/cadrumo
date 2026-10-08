@@ -21,8 +21,8 @@ _GLYPH: Final[dict[StatusTone, str]] = {
     "idle": "·",
     "progress": "◌",
     "success": "✓",
-    "warning": "⚠",
-    "error": "✕",
+    "warning": "▲",
+    "error": "×",
 }
 
 

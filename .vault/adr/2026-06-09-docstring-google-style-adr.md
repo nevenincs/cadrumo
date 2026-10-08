@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#docstring-google-style'
 date: '2026-06-09'
-modified: '2026-07-17'
-body_hash: 'sha256:018386e435e0740e9670756f464a4e65274fc7c8a00642adc4ad0d802d9cb3b9'
+modified: '2026-10-03'
+body_hash: 'sha256:789deaf3734aae213df410c64fb59a00f754e604e309298048407ff6009c525d'
 related:
   - '[[2026-06-09-docstring-google-style-research]]'
 ---
@@ -20,7 +20,3 @@ Docstring style across the codebase was inconsistent, undermining the generated 
 Adopt Google-style docstrings across `src/cadrumo` and enforce the convention
 through the documentation gate, so generated reference material and source
 docstrings share one format.
-
-## Status
-
-Accepted.

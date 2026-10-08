@@ -29,7 +29,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
-from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS
+from cadrumo.domain.calculations.registry.modelo_obligation_scope import resolve_modelo_obligation_scope
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ...compiler.authority import compiled_bundled_authority
@@ -114,7 +114,7 @@ def _compose(
     )
     classification = build_classification_coherence_audit(
         modelos,
-        non_registry_modelo_codes=frozenset(item.value for item in NON_REGISTRY_MODELOS),
+        non_registry_modelo_codes=frozenset(item.value for item in resolve_modelo_obligation_scope()[1]),
         known_modelo_codes=frozenset(item.id for item in modelos),
         registry_validated=False,
     )
@@ -645,7 +645,7 @@ def test_a_modelo_absent_from_the_classification_audit_is_refused(
     )
     classification = build_classification_coherence_audit(
         modelos,
-        non_registry_modelo_codes=frozenset(item.value for item in NON_REGISTRY_MODELOS),
+        non_registry_modelo_codes=frozenset(item.value for item in resolve_modelo_obligation_scope()[1]),
         known_modelo_codes=frozenset(item.id for item in modelos),
         registry_validated=False,
     )

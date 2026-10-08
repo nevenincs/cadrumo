@@ -1,10 +1,9 @@
 ---
 tags: ['#audit', '#modelo-locales-cli']
 date: '2026-06-12'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:0f3127faeb0e9e59c5e799ce00f1c7069c752f9c135209ead5ee0a2741b3b64b'
 related:
-  - '[[2026-06-11-modelo-locales-cli-plan]]'
   - '[[2026-06-11-modelo-locales-cli-adr]]'
   - '[[2026-06-11-modelo-locales-cli-research]]'
 ---

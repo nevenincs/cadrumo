@@ -10,7 +10,7 @@ register entries.
 
 The one place a sector's lifecycle diverges from the whole-entity one is the
 seed SOURCE. The whole-entity carried seed reads the prior-year Modelo 303
-settlement observation (:func:`evaluate_carried_prior_definitiva_seed`), but a
+settlement observation (:func:`evaluate_carried_prior_definitiva_seed_from_observations`), but a
 sectorized taxpayer files one whole-entity Modelo 303 that carries a single
 percentage — it cannot supply a per-sector definitive. A sector's prior-year
 definitive lives in the register's own ``(ejercicio-1, sector_id)`` entry
@@ -18,7 +18,7 @@ definitive lives in the register's own ``(ejercicio-1, sector_id)`` entry
 the register, not the observation catalogue.
 
 See Also:
-    :func:`~application.prorrata_register.seed.evaluate_carried_prior_definitiva_seed`
+    :func:`~application.prorrata_register.seed.evaluate_carried_prior_definitiva_seed_from_observations`
         Whole-entity carried seed sourced from the prior Modelo 303 observation.
     :func:`~domain.iva.prorrata.compute_prorrata_definitiva_anual`
         Pure substrate that computes the year-end definitive percentage from the
@@ -36,7 +36,15 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva.prorrata import ProrrataInputs, compute_prorrata_definitiva_anual
-from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ...domain.prorrata_register.register import (
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    ProrrataRegisterValidationError,
+)
+
+
+class ProrrataSectorLifecycleUnavailableError(ProrrataRegisterValidationError):
+    """A requested sector carry or settlement lacks its required register entry."""
 
 
 def seed_sector_carried_definitive_from_register(
@@ -136,6 +144,7 @@ def settle_sector_definitive(
 
 
 __all__ = [
+    "ProrrataSectorLifecycleUnavailableError",
     "seed_sector_carried_definitive_from_register",
     "settle_sector_definitive",
 ]

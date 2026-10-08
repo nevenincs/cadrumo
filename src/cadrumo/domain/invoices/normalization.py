@@ -93,6 +93,7 @@ def normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
     for key, converter in (
         ("issued_at", _coerce_date),
         ("fx_rate_date", _coerce_optional_date),
+        ("fx_rate_observation_date", _coerce_optional_date),
         ("operation_date", _coerce_optional_date),
         ("created_at", _coerce_optional_datetime),
         ("updated_at", _coerce_optional_datetime),

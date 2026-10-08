@@ -104,10 +104,8 @@ def _prior_base_binding_values(*, certificado_trabajo: Decimal | None = None) ->
         # which declare no qualifying descendant.
         **_m100_2024_deduccion_maternidad_bindings(),
         # Art. 81.2 LIRPF guarderia bindings: zero in non-guarderia scenarios.
-        "renta-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-profile-incremento-guarderia": Decimal("0"),
         "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-profile-descendientes-guarderia": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),

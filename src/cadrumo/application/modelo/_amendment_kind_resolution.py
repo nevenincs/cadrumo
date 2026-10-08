@@ -43,7 +43,7 @@ from ...core.amendment_kind_regime import (
 )
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
-from ...core.result_disposition import result_disposition_casilla_ids
+from ...core.result_disposition import canonical_result_amount, result_disposition_casilla_ids
 from ...domain.calculations.registry.amendment_regime_policy import resolve_amendment_kind_regime_for_period
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from .action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
@@ -130,7 +130,10 @@ def _summed_result(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> 
     result_ids = result_disposition_casilla_ids(modelo)
     if result_ids is None:
         return None
-    return sum((casilla_values.get(casilla_id, Decimal("0")) for casilla_id in result_ids), Decimal("0"))
+    return canonical_result_amount(
+        modelo,
+        {casilla_id: casilla_values[casilla_id] for casilla_id in result_ids if casilla_id in casilla_values},
+    )
 
 
 def assert_complementaria_liability_direction_permitted(

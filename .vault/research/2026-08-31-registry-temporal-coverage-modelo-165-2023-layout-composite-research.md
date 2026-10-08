@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-temporal-coverage'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:23c41ab99af60807b881965418220fda99a4000f7f4308998a7e1361ef290370'
+body_hash: 'sha256:cdca7b08942ba470fe0c466b52f7d110482c188dfcbe2825afd0d315b746a439'
 related:
   - "[[2026-08-15-registry-temporal-coverage-acquisition-worklist-research]]"
   - "[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]"
@@ -26,7 +26,7 @@ The official record establishes the Modelo 165 2023--2025 layout era, but the pr
 
 ### The current AEAT URL cannot be used as the historical binary
 
-The repository's downloaded PDF from the URL named `DR_Mod_165_2023.pdf` is headed `Ejercicio 2026`. Existing tests correctly keep it out of the 2023--2025 interval. This is a source-stability problem, not a basis to reinterpret the later artefact as historical authority. `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf.extracted.md` `src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py`
+The repository's downloaded PDF from the URL named `DR_Mod_165_2023.pdf` is headed `Ejercicio 2026`. Existing tests correctly keep it out of the 2023--2025 interval. This is a source-stability problem, not a basis to reinterpret the later artefact as historical authority. `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf.extracted.md` the former source file
 
 ### The admissible representation needs a decision
 
@@ -38,4 +38,3 @@ The accepted design-authority ADR permits raw BOE material as provenance-only an
 - `https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11251`
 - `https://www.boe.es/diario_boe/txt.php?id=BOE-A-2013-13798`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf.extracted.md`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py`

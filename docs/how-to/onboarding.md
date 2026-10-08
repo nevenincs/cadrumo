@@ -1,7 +1,7 @@
 # The filing journey: from bank records to a filed modelo
 
-New to Cadrumo? This guide maps the whole journey - from your bank records to a
-tax form you file yourself - and points you to the right guide at each stage.
+New to Cadrumo? This guide maps the whole journey, from your bank records to a
+tax form you file yourself, and points you to the right guide at each stage.
 
 Cadrumo prepares, checks, and exports Spanish tax forms as local files on your own
 machine. It never submits anything to the Agencia Estatal de Administración
@@ -22,7 +22,7 @@ A first filing moves through six stages:
 2. Bring in your transactions.
 3. Classify each transaction.
 4. Find out which modelos apply to you.
-5. Check readiness, calculate, and verify.
+5. Confirm readiness, calculate, and check the draft.
 6. Export and file at AEAT.
 
 Each stage says what it is and why it matters, then links to the guide that
@@ -41,24 +41,26 @@ The examples in this documentation are recorded in English. `aeat` prints its
 messages in Spanish unless you
 [choose another language](profile-setup.md#choose-the-output-language).
 
-## Stage 1 - Set up your taxpayer profile
+(stage-1---set-up-your-taxpayer-profile)=
+## Stage 1: Set up your taxpayer profile
 
-A profile holds the facts about one taxpayer - identity (NIF or NIE),
-activity, regime, and residence - that every later command reads. The profile
-decides which forms apply and how each value is computed, so it is the foundation
-of every filing.
+A profile holds the facts about one taxpayer that every later command reads:
+identity (NIF or NIE), activity, regime, and residence. The profile decides which forms apply and how each value is computed, so it is the
+foundation of every filing.
 
 Start here: [Set up your taxpayer profile](profile-setup.md).
 
-## Stage 2 - Bring in your transactions
+(stage-2---bring-in-your-transactions)=
+## Stage 2: Bring in your transactions
 
-Your tax figures come from the income and expense records in your ledger. Import a
-bank statement, or add rows by hand. Nothing is imported until you run an import
+Your tax figures come from your income and expense records. Import a bank
+statement, or add rows by hand. Nothing is imported until you run an import
 command.
 
 Continue with: [Import and manage transactions](import-bank-statements.md).
 
-## Stage 3 - Classify each transaction
+(stage-3---classify-each-transaction)=
+## Stage 3: Classify each transaction
 
 An imported row has a date and an amount but no tax meaning yet. Classify each one
 as business, personal, or mixed, and give business expenses a category, so the
@@ -66,7 +68,8 @@ calculation counts the right amounts.
 
 Continue with: [Classify transactions](classify-transactions.md).
 
-## Stage 4 - Find out which modelos apply
+(stage-4---find-out-which-modelos-apply)=
+## Stage 4: Find out which modelos apply
 
 A modelo is a numbered AEAT form. Which ones you must file follows from your
 profile facts, not from guesswork. Ask the tool for a verdict and its reasons
@@ -74,36 +77,35 @@ before you prepare anything.
 
 Continue with: [Find out which modelos apply to you](choose-modelo.md).
 
-## Stage 5 - Check readiness, calculate, and verify
+(stage-5---check-readiness-calculate-and-verify)=
+## Stage 5: Confirm readiness, calculate, and check the draft
 
-Before you calculate, confirm the profile facts and transactions a form needs are
-in place. Then calculate the form's values from your ledger, and verify the draft
-against the registry rules. Verification is a local check; it does not contact
-AEAT.
+Before you calculate, confirm the profile facts and transactions a form needs
+are in place. Then calculate the form's values from your records, and check the
+draft against the tax rules. The check is local; it does not contact AEAT.
 
-Continue with: [Check that a filing is ready](filing-readiness.md), then
-[Verify a draft filing and act on the findings](verification-reports.md).
+Continue with: [Check that a filing is ready](filing-readiness.md), then [Check a draft declaration and act on the issues](verification-reports.md).
 
-## Stage 6 - Export and file at AEAT
+(stage-6---export-and-file-at-aeat)=
+## Stage 6: Export and file at AEAT
 
-Export the verified draft to a local file. Present the modelo yourself at the
+Export the checked draft to a local file. Present the modelo yourself at the
 AEAT portal, signed with your own certificate or Cl@ve. Cadrumo's Modelo 303
-and 390 files carry a development software identity that AEAT won't accept, so
+and Modelo 390 files carry a development software identity that AEAT won't accept, so
 key the calculated box values into the portal form. For Modelo 130, import the
-file if the portal offers a file import; otherwise key the values in too. Then record the filing locally
-and reconcile AEAT's receipt against your record.
+file if the portal offers a file import; otherwise key the values in too. Then record the filing in
+Cadrumo and reconcile the AEAT receipt against your record.
 
-Finish with: [File your modelo at the AEAT portal](file-at-aeat.md),
-then [Reconcile a filed modelo against its justificante](reconcile.md).
+Finish with: [File your modelo at the AEAT portal](file-at-aeat.md), then [Reconcile a filed modelo against its AEAT receipt](reconcile.md).
 
 ## Where to go next
 
-- [How your records become tax figures](../explanation/from-records-to-figures.md) -
+- [How your records become tax figures](../explanation/from-records-to-figures.md):
   understand the transaction-to-box pipeline behind these stages.
-- [Recording a filing, and why the tool never files for you](../explanation/recording-a-filing-and-the-boundary.md) -
-  why the tool never submits, and what "filed" means locally.
-- [Plan your filing calendar](filing-calendar.md) - see what is due and when.
-- [Diagnose and repair your local setup](troubleshooting.md) - if a command stops
+- [Recording a filing, and why the tool never files for you](../explanation/recording-a-filing-and-the-boundary.md):
+  why the tool never submits, and what "recorded as filed" means.
+- [Plan your filing calendar](filing-calendar.md): see what is due and when.
+- [Diagnose and repair your local setup](troubleshooting.md): if a command stops
   or the local state looks wrong.
 
 Unfamiliar terms are defined in the {doc}`glossary </_generated/glossary>`. Before

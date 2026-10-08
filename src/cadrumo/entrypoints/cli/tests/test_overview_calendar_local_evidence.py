@@ -27,7 +27,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests.inventory import FIXTURES_DIR
-from .._overview_evidence import local_calendar_filing_evidence
+from ...overview_evidence_composition import local_calendar_filing_evidence
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,
@@ -78,7 +78,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 },
                 source_headers=(
                     ObservedHeaderFact(
-                        header_key="declaration_type",
+                        header_key="filing.result_disposition",
                         value="I",
                         source_artefact_kind="submitted_file",
                         source_locator="overview-calendar-local-evidence:declaration-type",

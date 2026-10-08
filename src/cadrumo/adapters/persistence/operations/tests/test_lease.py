@@ -13,6 +13,8 @@ from queue import Empty
 
 import pytest
 
+from cadrumo.tests.process_results import receive_process_result
+
 from .....application.operations.capabilities import OperationRequestStoragePolicy
 from .....application.operations.models import OperationIdentity
 from .....application.operations.persistence.events import OperationPhaseEvent
@@ -375,13 +377,20 @@ def test_concurrent_acquire_has_one_durable_winner(tmp_path: Path) -> None:
         )
         for candidate in candidates
     )
-    for process in processes:
-        process.start()
-    start.set()
-    dispositions = sorted(results.get(timeout=15) for _ in processes)
-    for process in processes:
-        process.join(timeout=15)
-        assert process.exitcode == 0
+    try:
+        for process in processes:
+            process.start()
+        start.set()
+        dispositions = sorted(receive_process_result(results, owners=processes) for _ in processes)
+        for process in processes:
+            process.join(timeout=None)
+            assert process.exitcode == 0
+    finally:
+        for child_owner in processes:
+            if child_owner.is_alive():
+                child_owner.kill()
+            if child_owner.pid is not None:
+                child_owner.join(timeout=30)
 
     assert dispositions == [OperationLeaseDisposition.ACQUIRED.value, OperationLeaseDisposition.CONFLICT.value]
     current = asyncio.run(
@@ -412,14 +421,21 @@ def test_journal_commit_holds_the_exact_operation_journal_lock(tmp_path: Path) -
         target=_commit_in_process,
         args=(str(tmp_path), _snapshot(revision=1).model_dump_json(), lease.model_dump_json(), attempting, results),
     )
-    with exclusive_file_lock(storage.lock_target):
-        process.start()
-        assert attempting.wait(timeout=15)
-        with pytest.raises(Empty):
-            results.get(timeout=0.3)
-    assert results.get(timeout=15) == "committed"
-    process.join(timeout=15)
-    assert process.exitcode == 0
+    try:
+        with exclusive_file_lock(storage.lock_target):
+            process.start()
+            assert attempting.wait(timeout=15)
+            with pytest.raises(Empty):
+                results.get(timeout=0.3)
+        assert receive_process_result(results, owners=(process,)) == "committed"
+        process.join(timeout=None)
+        assert process.exitcode == 0
+    finally:
+        for child_owner in (process,):
+            if child_owner.is_alive():
+                child_owner.kill()
+            if child_owner.pid is not None:
+                child_owner.join(timeout=30)
 
 
 def test_journal_refuses_absent_expired_and_stale_durable_leases_without_byte_mutation(tmp_path: Path) -> None:

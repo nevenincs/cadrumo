@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#python-runtime-compatibility'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:9cc05cf64ff5bb1a5f5be7ad075dea9dd311582480ae86baf9c3f3eb79af9f94'
-related:
-  - "[[2026-09-02-python-runtime-compatibility-plan]]"
+related: []
 ---
 
 # `python-runtime-compatibility` audit: `Canary selector identity correction`

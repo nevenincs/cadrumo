@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel
 
@@ -14,6 +14,9 @@ from ....application.aeat_sync.workspace import (
 from ....application.operations.models import OperationDefinitionId
 from ....application.operator_actions.models import ActionReference
 from ....core.models import STRICT_FROZEN_CONFIG
+
+if TYPE_CHECKING:
+    from ..operations.controller_port import OperationControllerPort
 
 type AeatSyncDestinationIdV1 = Literal[
     "aeat_sync.overview",
@@ -66,14 +69,14 @@ class AeatSyncOperationHandoffV1(Protocol):
     """Host-owned supervisor handoff for a registered operation.
 
     The workspace only selects and admits the exact public action/operation
-    pair.  The installed host must resolve that request to the canonical
-    ``OperationController`` and mount the canonical ``OperationModal``;
-    that modal owns progress, partial/failure outcomes, detach and
+    pair.  The installed host must resolve that request to the canonical,
+    already-started ``OperationControllerPort``.  This screen mounts the
+    canonical ``OperationModal``, which owns progress, partial/failure outcomes, detach and
     cancellation.  Implementations must not execute the operation inline.
     """
 
-    async def __call__(self, request: AeatSyncOperationRequestV1, /) -> None:
-        """Present the exact request through the host's operation supervisor."""
+    async def __call__(self, request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
+        """Return one started operation for the screen to present."""
         ...
 
 

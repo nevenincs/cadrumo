@@ -3,14 +3,11 @@ tags:
   - '#research'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:726c9777b9954da4905a6cdb88dbe52c135b67a6790dd9e68044d465e88ac21c'
+body_hash: 'sha256:f1e0cffe2eb66252c8d673372dd9b9d247829a78a904175ab97aa75ccd5f20e5'
 related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
-  - '[[2026-08-14-registry-temporal-coverage-plan]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
-  - '[[2026-08-22-source-casilla-integration-plan]]'
 ---
 
 # `registry-completeness-closure` research: `shipped corpus closure boundary`
@@ -33,9 +30,7 @@ populated, cited as not applicable, or blocked pending evidence; the authority-g
 ladder refuses a revision whose declared calculation or filing reach outruns those
 families; the filing capability gate independently refuses every revision without an
 export layout. Treating any one of the three as the whole definition would hide a gap
-visible to another. `src/cadrumo/domain/calculations/registry/_schema_family_coverage.py:36`,
-`src/cadrumo/domain/calculations/registry/_validate_authority_grade.py:25`,
-`src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:353`.
+visible to another. the former source file,
 
 ### The measurable filing backlog is 14 revisions, not every known AEAT modelo
 
@@ -43,7 +38,6 @@ On 2026-08-24 the live filing-capability test derived 14 non-emitting revisions 
 13 modelos: 036, 038, 136, 182, 185, 187, 188, 194, 220 (two revisions), 390, 721, 763,
 and 840. This is the relevant shipped-registry denominator because the test walks the
 registered revisions rather than inventing modelos absent from the supported corpus.
-`src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:353`.
 
 The blockers already demonstrate four different remedy classes. M390/2021 has only 10
 casillas where filing-grade siblings have at least 325, so casilla authoring precedes its
@@ -52,7 +46,6 @@ M187, M188, M194, M220 and M763 cite designs whose authority does not cover thei
 open revision window. M136 and M721 have no bundled record design; M038's bundled form is
 not a trustworthy field table; and M840 exposes a transport-versus-record terminator
 semantic the renderer cannot currently express. The gate derives these reasons in
-`src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:131`.
 
 ### Existing approved campaigns already own the implementation layers
 
@@ -76,7 +69,7 @@ execution record exists, but S02 remains unchecked; S03 has implementation and t
 no matching execution record. The implementation rode inside broad commit `a16b0b8ffd7`,
 so independent review and explicit reconciliation are required before either row can be
 reported complete. `.vault/exec/2026-08-14-registry-temporal-coverage/2026-08-14-registry-temporal-coverage-W01-P01-S02.md:14`,
-`src/cadrumo/domain/calculations/registry/tests/test_authority_grade_ladder.py:1`, commit
+the former source file, commit
 `a16b0b8ffd7`.
 
 ### Evidence absence must remain a refusal, not a fabricated layout
@@ -100,13 +93,9 @@ inferences from filenames or similarity, and remain inputs to per-revision adjud
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_schema_family_coverage.py:36`
-- `src/cadrumo/domain/calculations/registry/_validate_authority_grade.py:25`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:131`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:353`
 - `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md:14`
 - `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md:143`
 - `.vault/plan/2026-08-22-source-casilla-integration-plan.md:325`
 - `.vault/exec/2026-08-14-registry-temporal-coverage/2026-08-14-registry-temporal-coverage-W01-P01-S02.md:14`
-- `src/cadrumo/domain/calculations/registry/tests/test_authority_grade_ladder.py:1`
+
 - commit `a16b0b8ffd7`

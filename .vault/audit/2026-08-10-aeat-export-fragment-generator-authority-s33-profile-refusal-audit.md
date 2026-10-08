@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:42a0d71c06cc22b8f8b2fad3c1b64f4e3464b2ca708099d6ad648bc310fb7b94'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S33 render-profile refusal review`

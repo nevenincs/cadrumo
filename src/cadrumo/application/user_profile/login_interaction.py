@@ -7,13 +7,11 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from ...core.profile_discovery import ProfileSummaryOutcome
-from .login_session import ProfileLoginOutcome, login_profile, resolve_login_target
+from .login_session import resolve_login_target
 from .profile_summary import ProfileSummaryInventory, summary_inventory
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,14 +20,6 @@ class ProfileLoginChoice:
 
     profile_id: str
     label: str
-
-
-@dataclass(frozen=True, slots=True)
-class ProfileLoginAttempt:
-    """A completed login operation represented without frontend exceptions."""
-
-    outcome: ProfileLoginOutcome | None = None
-    refusal: str | None = None
 
 
 class ProfileLoginInventoryState(StrEnum):
@@ -73,21 +63,50 @@ class ProfileLoginInventoryV1:
     def __post_init__(self) -> None:
         """Refuse a contradictory combination of state, choices, and reason."""
         identifiers = tuple(choice.profile_id for choice in self.choices)
-        if len(identifiers) != len(set(identifiers)):
-            raise ValueError("profile login inventory choices must each name one profile once")
-        if self.state is ProfileLoginInventoryState.RECOGNIZED:
-            if not self.choices or self.reason_code is not None:
-                raise ValueError("a recognized profile inventory carries choices and no reason code")
-        elif self.choices or self.preselected_profile_id is not None:
-            raise ValueError("an unavailable or empty profile inventory cannot carry login choices")
-        unavailable = self.state in {
-            ProfileLoginInventoryState.CONCURRENT_CHANGE,
-            ProfileLoginInventoryState.DEGRADED,
-        }
-        if unavailable != (self.reason_code is not None):
-            raise ValueError("a reason code names an unavailable inventory and nothing else")
-        if self.preselected_profile_id is not None and self.preselected_profile_id not in identifiers:
-            raise ValueError("the preselected profile is absent from the recognized choices")
+        _require_unique_login_choices(identifiers)
+        _require_login_inventory_state(
+            state=self.state,
+            choices=self.choices,
+            preselected_profile_id=self.preselected_profile_id,
+            reason_code=self.reason_code,
+            identifiers=identifiers,
+        )
+
+
+def _require_unique_login_choices(identifiers: tuple[str, ...]) -> None:
+    if len(identifiers) != len(set(identifiers)):
+        raise ValueError("profile login inventory choices must each name one profile once")
+
+
+def _require_login_inventory_state(
+    *,
+    state: ProfileLoginInventoryState,
+    choices: tuple[ProfileLoginChoice, ...],
+    preselected_profile_id: str | None,
+    reason_code: str | None,
+    identifiers: tuple[str, ...],
+) -> None:
+    if state is ProfileLoginInventoryState.RECOGNIZED:
+        if not choices or reason_code is not None:
+            raise ValueError("a recognized profile inventory carries choices and no reason code")
+    elif choices or preselected_profile_id is not None:
+        raise ValueError("an unavailable or empty profile inventory cannot carry login choices")
+    _require_reason_for_unavailable_inventory(state, reason_code)
+    _require_preselection_is_available(preselected_profile_id, identifiers)
+
+
+def _require_reason_for_unavailable_inventory(state: ProfileLoginInventoryState, reason_code: str | None) -> None:
+    unavailable = state in {
+        ProfileLoginInventoryState.CONCURRENT_CHANGE,
+        ProfileLoginInventoryState.DEGRADED,
+    }
+    if unavailable != (reason_code is not None):
+        raise ValueError("a reason code names an unavailable inventory and nothing else")
+
+
+def _require_preselection_is_available(preselected_profile_id: str | None, identifiers: tuple[str, ...]) -> None:
+    if preselected_profile_id is not None and preselected_profile_id not in identifiers:
+        raise ValueError("the preselected profile is absent from the recognized choices")
 
 
 def profile_login_choices() -> tuple[ProfileLoginChoice, ...]:
@@ -160,41 +179,10 @@ def observe_profile_login_inventory(
     )
 
 
-def attempt_profile_login(
-    profile_id: str,
-    passphrase: str,
-    *,
-    profile_decode_context: ProfileDecodeContext,
-) -> ProfileLoginAttempt:
-    """Unlock a chosen profile under the caller's pinned schema context.
-
-    The credential screen is deliberately frontend-neutral, so it receives the
-    decode context that the workflow owner already pinned.  Opening an
-    authority here would allow the screen to authenticate against a different
-    generation from the surrounding bootstrap/session composition.
-    """
-    from ...core.errors.error_codes import resolve_error_message
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from .authentication import ProfileAuthenticationRefusedError
-    from .login_session import ProfileLoginThrottledError
-
-    try:
-        outcome = login_profile(
-            name=profile_id,
-            passphrase_callback=lambda: passphrase,
-            profile_decode_context=profile_decode_context,
-        )
-    except (ProfileAuthenticationRefusedError, ProfileLoginThrottledError, ProfileNotFoundError) as refusal:
-        return ProfileLoginAttempt(refusal=resolve_error_message(refusal))
-    return ProfileLoginAttempt(outcome=outcome)
-
-
 __all__ = [
-    "ProfileLoginAttempt",
     "ProfileLoginChoice",
     "ProfileLoginInventoryState",
     "ProfileLoginInventoryV1",
-    "attempt_profile_login",
     "observe_profile_login_inventory",
     "preselected_profile_login_id",
     "profile_login_choices",

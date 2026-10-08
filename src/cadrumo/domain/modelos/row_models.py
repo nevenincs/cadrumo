@@ -18,11 +18,6 @@ Supported row types:
   (``--row rectificacion codigo_pais=DE nif_comunitario=DE123456789 razon_social=X``
   ``clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=Y base_anterior=Z``)
   Used when the operator declares Tipo-2 rectification records directly.
-* ``Modelo347ContraparteRow`` — contraparte declarada for modelo 347
-  (``--row contraparte nif=X nombre=Y importe_Q1=Z clave_operacion=A``)
-  One row per counterparty. Annual importe threshold check (> €3,005.06)
-  is performed by the CLI validator, not the model, so partial row sets
-  accumulate correctly before final validation.
 * ``Modelo210AgrupacionRentaRow`` — one component renta in an annual
   Modelo 210 agrupación (period ``0A``). The row retains the official
   two-digit renta code and the statutory grouping keys; it is evidence
@@ -39,7 +34,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, NoReturn
 
 from pydantic import (
     BaseModel,
@@ -58,12 +53,12 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ..calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.schema_base import DateAxis
 from ..transactions.m210_income_classification import resolve_m210_payer_mode
+from .m156_rows import Modelo156AfiliadoRow
 
 # ---------------------------------------------------------------------------
 # Shared type aliases
@@ -91,24 +86,12 @@ def _registry_detail_catalogue(
     mapping fact and leave the M349 projection absent.
     """
     as_of = effective_date
-    authority: GovernedFactSource | None = operation or governed_facts_in_scope()
-    if authority is None:
-        raise ValueError("detail-row registry resolution requires a generation-pinned authority operation or scope")
+    authority = require_governed_fact_authority(operation, subject="detail-row registry resolution")
     if (filing_year is None) != (period is None):
         raise ValueError("M349 registry selection requires both filing_year and period")
     periods = frozenset[str]()
     if filing_year is not None and period is not None:
-        if not isinstance(authority, PinnedAuthorityOperation):
-            raise ValueError("M349 registry selection requires a generation-pinned authority operation")
-        m349_revision = authority.revision_for_context(
-            "349",
-            filing_year=filing_year,
-            period=period,
-            on=as_of,
-        )
-        if not m349_revision.period_selector.declared_periods:
-            raise ValueError("selected M349 registry revision must declare detail-row scope")
-        periods = frozenset(str(candidate) for candidate in m349_revision.period_selector.declared_periods)
+        periods = _m349_detail_periods(authority, effective_date=as_of, filing_year=filing_year, period=period)
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="detail-m349-m210-catalogues",
@@ -120,6 +103,26 @@ def _registry_detail_catalogue(
         raise ValueError("detail M349/M210 catalogue must resolve as a mapping fact")
     declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
     return declarations, periods
+
+
+def _m349_detail_periods(
+    authority: GovernedFactSource,
+    *,
+    effective_date: date,
+    filing_year: int,
+    period: str,
+) -> frozenset[str]:
+    if not isinstance(authority, PinnedAuthorityOperation):
+        raise ValueError("M349 registry selection requires a generation-pinned authority operation")
+    m349_revision = authority.revision_for_context(
+        "349",
+        filing_year=filing_year,
+        period=period,
+        on=effective_date,
+    )
+    if not m349_revision.period_selector.declared_periods:
+        raise ValueError("selected M349 registry revision must declare detail-row scope")
+    return frozenset(str(candidate) for candidate in m349_revision.period_selector.declared_periods)
 
 
 def _required_detail_declaration(declarations: Mapping[str, str], key: str) -> str:
@@ -354,22 +357,14 @@ def _hydrate_m232_codigo[EnumT: StrEnum](*, field_name: str, value: object, code
 class Modelo232VinculadaRow(BaseModel):
     """One operación vinculada row for Modelo 232.
 
-    Fields mirror the related_party_operation binding source declared in
-    ``232/revisions/2018-y-siguientes/bindings/0218…0223-*.toml``.
+    Row ``n`` fills the ``n``-th of the positional related-party slots the
+    revision declares (casillas ``vinculada-<n>-*``) through
+    :func:`~domain.modelos.m232_row_materialisation.m232_related_party_row_casilla_values`.
 
     The three coded fields carry the closed catalogues AEAT's diseño de
     registro DR23200 publishes as Tablas A, C and B — off-catalogue codes are
     refused here rather than travelling into a fichero field that cannot hold
     them.
-
-    Parity assertions:
-
-    * ``nif`` → ``counterparty_tax_id`` (binding: modelo-232-related-party-row-nif)
-    * ``nombre`` → ``counterparty_legal_name`` (binding: modelo-232-related-party-row-name)
-    * ``pais`` → ``country_code`` (binding: modelo-232-related-party-row-country)
-    * ``tipo_operacion`` → ``operation_kind_code`` (binding: modelo-232-related-party-row-operation-kind)
-    * ``metodo`` → ``transfer_pricing_method_code`` (binding: modelo-232-related-party-row-tpr-method)
-    * ``importe`` → ``amount`` (binding: modelo-232-related-party-row-amount)
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -625,37 +620,167 @@ def validate_m349_country_prefix_context(
         raise ValueError(f"M349 operation key is not declared by the selected registry: {clave_operacion!r}")
     country = country_code.strip().upper()
     rectified_period_code = _normalise_m349_period(rectified_period) if rectified_period is not None else None
-
-    def refuse(reason: str) -> None:
-        raise Modelo349CountryPrefixContextError(
-            country_code=country,
-            clave_operacion=clave,
+    goods_only_prefix = _required_detail_declaration(declarations, "m349.goods_only_prefix")
+    if country == goods_only_prefix:
+        _validate_m349_goods_only_prefix(
+            country=country,
+            clave=clave,
             filing_year=filing_year,
             period=normalized_period,
-            reason=reason,
+            is_rectification=is_rectification,
+            rectified_year=rectified_year,
+            transition_year=transition_year,
+            service_keys=service_keys,
         )
-
-    if country == _required_detail_declaration(declarations, "m349.goods_only_prefix"):
-        if clave in service_keys:
-            refuse("Northern Ireland prefix XI is not accepted for service keys")
-        if is_rectification and rectified_year is not None and rectified_year < transition_year:
-            refuse("pre-transition rectifications use GB, not XI")
-        if not is_rectification and filing_year < transition_year:
-            refuse("XI applies only from the transition year onward")
         return
     if country != _required_detail_declaration(declarations, "m349.transition.prefix"):
         return
+    _validate_m349_transition_prefix(
+        country=country,
+        clave=clave,
+        filing_year=filing_year,
+        period=normalized_period,
+        is_rectification=is_rectification,
+        rectified_year=rectified_year,
+        rectified_period_code=rectified_period_code,
+        transition_year=transition_year,
+        first_periods=first_periods,
+        service_keys=service_keys,
+    )
+
+
+def _refuse_m349_country_prefix_context(
+    *,
+    country: str,
+    clave: str,
+    filing_year: int,
+    period: str,
+    reason: str,
+) -> NoReturn:
+    raise Modelo349CountryPrefixContextError(
+        country_code=country,
+        clave_operacion=clave,
+        filing_year=filing_year,
+        period=period,
+        reason=reason,
+    )
+
+
+def _validate_m349_goods_only_prefix(
+    *,
+    country: str,
+    clave: str,
+    filing_year: int,
+    period: str,
+    is_rectification: bool,
+    rectified_year: int | None,
+    transition_year: int,
+    service_keys: frozenset[str],
+) -> None:
+    if clave in service_keys:
+        _refuse_m349_country_prefix_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period=period,
+            reason="Northern Ireland prefix XI is not accepted for service keys",
+        )
+    if is_rectification and rectified_year is not None and rectified_year < transition_year:
+        _refuse_m349_country_prefix_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period=period,
+            reason="pre-transition rectifications use GB, not XI",
+        )
+    if not is_rectification and filing_year < transition_year:
+        _refuse_m349_country_prefix_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period=period,
+            reason="XI applies only from the transition year onward",
+        )
+
+
+def _validate_m349_transition_prefix(
+    *,
+    country: str,
+    clave: str,
+    filing_year: int,
+    period: str,
+    is_rectification: bool,
+    rectified_year: int | None,
+    rectified_period_code: str | None,
+    transition_year: int,
+    first_periods: frozenset[str],
+    service_keys: frozenset[str],
+) -> None:
     if is_rectification:
-        if rectified_year is not None and rectified_year < transition_year:
+        if _m349_rectification_uses_legacy_prefix(rectified_year, transition_year):
             return
-        if rectified_year == transition_year and rectified_period_code in first_periods and clave not in service_keys:
+        if _m349_rectification_uses_transition_prefix(
+            rectified_year,
+            rectified_period_code,
+            transition_year=transition_year,
+            first_periods=first_periods,
+            clave=clave,
+            service_keys=service_keys,
+        ):
             return
-        refuse("GB is limited to pre-transition rectifications and the transition year's first periods")
+        _refuse_m349_country_prefix_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period=period,
+            reason="GB is limited to pre-transition rectifications and the transition year's first periods",
+        )
     if filing_year < transition_year:
         return
-    if filing_year == transition_year and normalized_period in first_periods and clave not in service_keys:
+    if _m349_ordinary_operation_uses_transition_prefix(
+        filing_year,
+        period,
+        transition_year=transition_year,
+        first_periods=first_periods,
+        clave=clave,
+        service_keys=service_keys,
+    ):
         return
-    refuse("GB is not accepted for post-transition ordinary operations")
+    _refuse_m349_country_prefix_context(
+        country=country,
+        clave=clave,
+        filing_year=filing_year,
+        period=period,
+        reason="GB is not accepted for post-transition ordinary operations",
+    )
+
+
+def _m349_rectification_uses_legacy_prefix(rectified_year: int | None, transition_year: int) -> bool:
+    return rectified_year is not None and rectified_year < transition_year
+
+
+def _m349_rectification_uses_transition_prefix(
+    rectified_year: int | None,
+    rectified_period: str | None,
+    *,
+    transition_year: int,
+    first_periods: frozenset[str],
+    clave: str,
+    service_keys: frozenset[str],
+) -> bool:
+    return rectified_year == transition_year and rectified_period in first_periods and clave not in service_keys
+
+
+def _m349_ordinary_operation_uses_transition_prefix(
+    filing_year: int,
+    period: str,
+    *,
+    transition_year: int,
+    first_periods: frozenset[str],
+    clave: str,
+    service_keys: frozenset[str],
+) -> bool:
+    return filing_year == transition_year and period in first_periods and clave not in service_keys
 
 
 def _normalise_m349_period(period: str | None) -> str:
@@ -682,99 +807,6 @@ def m349_nif_number_for_export(nif: str, pais: str) -> str:
             f"nif_comunitario {nif} does not match the expected NIF-IVA format for country {pais}",
         )
     return normalized_nif[len(normalized_pais) :]
-
-
-# ---------------------------------------------------------------------------
-# Modelo 347 - contraparte declarada row
-#
-# Legal authority: Orden EHA/3012/2008 art. 1; RD 1065/2007 arts. 31-35
-# (reglamento de gestión e inspección tributaria, obligación de informar
-# sobre operaciones con terceros); Ley 58/2003 art. 93.
-# Threshold: total annual importe > €3,005.06 per counterparty (RD
-# 1065/2007 art. 33.1).  The threshold check is performed at the CLI
-# validator level, not here, so that partial row accumulation works.
-# ---------------------------------------------------------------------------
-
-
-class Modelo347ClaveOperacion(StrEnum):
-    """Clave de operación declarable on a Modelo 347 counterparty row.
-
-    This operation-key type is specific to the M347 row family and is not shared
-    with the registry-owned M349 operation-key shell.
-    """
-
-    A = "A"
-    B = "B"
-    C = "C"
-    D = "D"
-    E = "E"
-    F = "F"
-    G = "G"
-
-
-Modelo347ClaveOperacionValue = Literal[
-    Modelo347ClaveOperacion.A,
-    Modelo347ClaveOperacion.B,
-    Modelo347ClaveOperacion.C,
-    Modelo347ClaveOperacion.D,
-    Modelo347ClaveOperacion.E,
-    Modelo347ClaveOperacion.F,
-    Modelo347ClaveOperacion.G,
-]
-"""The same code set for a wire or operation payload field."""
-
-
-class Modelo347ContraparteRow(BaseModel):
-    """One contraparte declarada row for Modelo 347.
-
-    Fields mirror the per-counterparty Tipo-2 record layout declared in
-    ``347/revisions/2011-2024``.
-
-    One row per counterparty. The annual total importe (sum of Q1-Q4)
-    must exceed €3,005.06 per RD 1065/2007 art. 33.1.
-
-    Parity assertions:
-
-    * ``nif`` → ``contraparte.nif`` (counterparty tax id)
-    * ``nombre`` → ``contraparte.nombre`` (legal name)
-    * ``importe_Q1/Q2/Q3/Q4`` → quarterly importe slots
-    * ``clave_operacion`` → operation type code
-    * ``pais_codigo`` → ``contraparte.pais`` (ISO 3166-1; None = domestic)
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    row_type: Literal["contraparte"] = "contraparte"
-    nif: _NifStr
-    nombre: _NameStr = Field(default="")
-    importe_Q1: Decimal = Field(default=Decimal("0"))
-    importe_Q2: Decimal = Field(default=Decimal("0"))
-    importe_Q3: Decimal = Field(default=Decimal("0"))
-    importe_Q4: Decimal = Field(default=Decimal("0"))
-    clave_operacion: Modelo347ClaveOperacionValue = Modelo347ClaveOperacion.A
-    pais_codigo: _IsoCountryCode | None = None
-
-    @field_validator("nif")
-    @classmethod
-    def _nif_not_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("nif cannot be blank")
-        return value.upper()
-
-    @field_validator("pais_codigo")
-    @classmethod
-    def _pais_codigo_uppercase_alpha(cls, value: str | None) -> str | None:
-        if value is None:
-            return value
-        v = value.strip().upper()
-        if not v.isalpha() or len(v) != 2:
-            raise ValueError("pais_codigo must be an uppercase two-letter ISO 3166-1 country code or None for domestic")
-        return v
-
-    @property
-    def importe_total(self) -> Decimal:
-        """Sum of quarterly importes — used for M347 threshold check."""
-        return self.importe_Q1 + self.importe_Q2 + self.importe_Q3 + self.importe_Q4
 
 
 # ---------------------------------------------------------------------------
@@ -905,19 +937,41 @@ def _validate_agrupacion_payer_grouping(
 ) -> None:
     declarations, _ = _registry_detail_catalogue(effective_date=effective_date)
     _required_detail_declaration(declarations, "m210.grouping_period")
-    payer_mode_declarations = {
+    payer_mode_declarations = _payer_mode_declarations(declarations)
+    if _validate_declared_agrupacion_payer_mode(rows, code, payer_mode_declarations):
+        return
+    _require_single_agrupacion_payer(rows, code, payer_mode_declarations)
+
+
+def _payer_mode_declarations(declarations: Mapping[str, str]) -> dict[str, str]:
+    return {
         key.removeprefix("m210.code").removesuffix(".payer_mode"): value
         for key, value in declarations.items()
         if key.startswith("m210.code") and key.endswith(".payer_mode")
     }
+
+
+def _validate_declared_agrupacion_payer_mode(
+    rows: Sequence[Modelo210AgrupacionRentaRow],
+    code: str,
+    payer_mode_declarations: Mapping[str, str],
+) -> bool:
     required_mode = payer_mode_declarations.get(code)
-    if required_mode is not None:
-        if any(row.pagador_mode.value != required_mode for row in rows):
-            raise Modelo210AgrupacionRentaRowsError(
-                reason="payer_mode_not_declared",
-                detail="M210 payer mode does not match the selected registry declaration",
-            )
-        return
+    if required_mode is None:
+        return False
+    if any(row.pagador_mode.value != required_mode for row in rows):
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="payer_mode_not_declared",
+            detail="M210 payer mode does not match the selected registry declaration",
+        )
+    return True
+
+
+def _require_single_agrupacion_payer(
+    rows: Sequence[Modelo210AgrupacionRentaRow],
+    code: str,
+    payer_mode_declarations: Mapping[str, str],
+) -> None:
     if any(row.pagador_mode.value in payer_mode_declarations.values() for row in rows):
         raise Modelo210AgrupacionRentaRowsError(
             reason="payer_mode_not_declared",
@@ -951,11 +1005,11 @@ def validate_m210_agrupacion_renta_rows(
 # ---------------------------------------------------------------------------
 
 ModeloDetailRow = (
-    Modelo184MemberRow
+    Modelo156AfiliadoRow
+    | Modelo184MemberRow
     | Modelo232VinculadaRow
     | Modelo349OperadorRow
     | Modelo349RectificacionRow
-    | Modelo347ContraparteRow
     | Modelo210AgrupacionRentaRow
 )
 
@@ -964,22 +1018,8 @@ ModeloDetailRow = (
 
 
 # ---------------------------------------------------------------------------
-# Statutory cross-row / threshold validations (domain-owned)
+# Statutory cross-row validations (domain-owned)
 # ---------------------------------------------------------------------------
-
-
-class Modelo347ThresholdError(CadrumoError):
-    """A Modelo 347 contraparte row falls at or below the declarability threshold."""
-
-    def __init__(self, *, nif: str, total: Decimal, threshold: ResolvedScalarFact) -> None:
-        """Record the counterparty and the total that fell short of the threshold."""
-        self.nif = nif
-        self.total = total
-        self.threshold = threshold
-        super().__init__(
-            f"M347 contraparte (nif={nif!r}): importe total {total} does not exceed the "
-            f"{m347_threshold_decimal(threshold)} threshold required by RD 1065/2007 art. 33.1",
-        )
 
 
 class Modelo184ShareSumError(CadrumoError):
@@ -992,37 +1032,6 @@ class Modelo184ShareSumError(CadrumoError):
         super().__init__(
             f"M184 miembro rows: share percentages must sum to exactly 100%; got {total} across {count} rows",
         )
-
-
-def validate_m347_threshold(
-    rows: Sequence[Modelo347ContraparteRow],
-    *,
-    effective_date: date,
-) -> None:
-    """Enforce the Modelo 347 per-counterparty declarability threshold.
-
-    RD 1065/2007 art. 33.1: only counterparties whose annual operations exceed
-    EUR 3,005.06 are declarable. The threshold applies to the SUM of every
-    operation with the same person (same NIF), aggregated across all contraparte
-    rows — not to each row in isolation. A counterparty's operations may be split
-    across several rows (e.g. entregas and adquisiciones), so a per-row check would
-    wrongly reject a counterparty whose individual rows are each at/below the
-    threshold while their annual aggregate exceeds it (a missed declaration), and
-    would never apply the "same person" threshold the regulation defines.
-
-    Raises:
-        Modelo347ThresholdError: for the first counterparty (in NIF first-appearance
-            order) whose AGGREGATED annual total is at or below the threshold.
-    """
-    if not rows:
-        return
-    threshold = resolve_m347_counterparty_annual_threshold(effective_date=effective_date)
-    totals_by_nif: dict[str, Decimal] = {}
-    for row in rows:
-        totals_by_nif[row.nif] = totals_by_nif.get(row.nif, Decimal("0")) + row.importe_total
-    for nif, total in totals_by_nif.items():
-        if total <= m347_threshold_decimal(threshold):
-            raise Modelo347ThresholdError(nif=nif, total=total, threshold=threshold)
 
 
 def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
@@ -1051,8 +1060,6 @@ __all__ = [
     "Modelo210AgrupacionRentaRow",
     "Modelo210AgrupacionRentaRowsError",
     "Modelo232VinculadaRow",
-    "Modelo347ContraparteRow",
-    "Modelo347ThresholdError",
     "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
     "Modelo349RectificacionRow",
@@ -1062,7 +1069,6 @@ __all__ = [
     "resolve_detail_row_owning_modelos",
     "validate_m184_member_share_sum",
     "validate_m210_agrupacion_renta_rows",
-    "validate_m347_threshold",
     "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
 ]

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:1dc207b5e9be4076b63789a1d7a4eaa821f5512a861848bcd18a7afa37f95f75'
+modified: '2026-10-03'
+body_hash: 'sha256:2708d360b38de21aff2e8e3d0370baa74ee82c00ae7aabc4287263038b31f4b3'
 related: []
 ---
 
@@ -28,9 +28,9 @@ The relative-cwd adversity test now changes cwd directly in a `try`/`finally` bl
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_engine.py` passed with 6 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/engine.py src/aeat/adapters/persistence/storage/sql/test_engine.py` passed.
-- `if (rg "monkeypatch|pytest\\.MonkeyPatch" src/aeat/adapters/persistence/storage/sql/test_engine.py) { exit 1 }` passed.
+- the historical check passed with 6 tests.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Reviewer note: Gauss review found no issues in the S187 slice. The code path is settings-derived, uses centralized path normalization, preserves hashed route diagnostics, and does not swallow exceptions. Residual risk is limited to the focused slice scope; the reviewer did not run tests, but supervisor validation did.

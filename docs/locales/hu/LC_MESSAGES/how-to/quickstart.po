@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 19:17+0200\n"
+"POT-Creation-Date: 2026-10-02 00:01+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/quickstart.md:1
 msgid "Quickstart: prepare a modelo filing"
-msgstr "Gyorsindító: modelo-benyújtás előkészítése"
+msgstr "Gyorsindító: nyomtatvány-benyújtás előkészítése"
 
 #: ../../how-to/quickstart.md:3
 msgid ""
@@ -28,9 +28,10 @@ msgid ""
 "local records to figures you can present yourself at the Agencia Estatal "
 "de Administración Tributaria (AEAT) portal."
 msgstr ""
-"Akkor használd, ha új vagy a Cadrumóban, és a legrövidebb utat keresed a "
-"helyi nyilvántartásoktól azokig a számokig, amelyeket magad nyújthatsz be"
-" az Agencia Estatal de Administración Tributaria (AEAT) portálján."
+"Akkor használd ezt, ha új vagy a Cadrumóban, és a legrövidebb utat "
+"keresed a helyi nyilvántartásoktól azokig a számokig, amelyeket te magad "
+"nyújthatsz be az Agencia Estatal de Administración Tributaria (AEAT) "
+"portálján."
 
 #: ../../how-to/quickstart.md:7
 msgid ""
@@ -38,23 +39,24 @@ msgid ""
 " for Spanish tax forms. It does not submit filings to AEAT. You remain "
 "responsible for reviewing and filing through official AEAT channels."
 msgstr ""
-"A Cadrumo, amelyet az `aeat` parancsként hívsz meg, a spanyol "
-"adóűrlapokhoz előkészíti és ellenőrzi a helyi nyilvántartásokat. Nem "
-"nyújt be benyújtásokat az AEAT-nak. A felülvizsgálatért és a hivatalos "
-"AEAT-csatornákon keresztüli benyújtásért továbbra is te felelsz."
+"A Cadrumo, amelyet az `aeat` paranccsal hívsz meg, a spanyol "
+"adónyomtatványokhoz előkészíti és ellenőrzi a helyi nyilvántartásokat. "
+"Nem nyújt be bevallásokat az AEAT-nál. A felülvizsgálatért és a hivatalos"
+" AEAT-csatornákon keresztüli benyújtásért továbbra is te felelsz."
 
 #: ../../how-to/quickstart.md:11
 msgid ""
 "This page follows one complete path: create a profile, add two "
-"transactions, then calculate, verify, and file a Modelo 130 for the first"
-" quarter of 2026. Every command below is run in order. It links to deeper"
-" guides whenever a step has tax-specific setup or review choices."
+"transactions, then calculate a Modelo 130 for the first quarter of 2026, "
+"check it, and record it as filed. Every command below is run in order. It"
+" links to deeper guides whenever a step has tax-specific setup or review "
+"choices."
 msgstr ""
-"Ez az oldal egy teljes utat követ végig: hozz létre egy profilt, adj "
-"hozzá két tranzakciót, majd számíts ki, ellenőrizz és nyújts be egy "
-"Modelo 130-at 2026 első negyedévére. Az alábbi parancsokat sorrendben "
-"futtasd. Mélyebb útmutatókra hivatkozik, valahányszor egy lépésnél "
-"adóspecifikus beállítás vagy áttekintési döntés van."
+"Ez az oldal egy teljes utat követ: hozz létre egy profilt, adj hozzá két "
+"tranzakciót, majd számíts ki egy Modelo 130-at 2026 első negyedévére, "
+"ellenőrizd, és rögzítsd benyújtottként. Az alábbi parancsokat sorrendben "
+"kell futtatni. Mélyebb útmutatókra hivatkozik, amikor egy lépésnek "
+"adóspecifikus beállítási vagy felülvizsgálati választásai vannak."
 
 #: ../../how-to/quickstart.md:16
 msgid ""
@@ -68,7 +70,7 @@ msgstr ""
 
 #: ../../how-to/quickstart.md:20
 msgid "Before you start"
-msgstr "Mielőtt hozzákezdesz"
+msgstr "Mielőtt hozzákezd"
 
 #: ../../how-to/quickstart.md:22
 msgid ""
@@ -105,7 +107,7 @@ msgstr ""
 "Az `aeat` minden profilt saját véletlen kulccsal titkosít, amelyet az "
 "adott profil jelmondata véd. A profil létrejötte után a terminálos "
 "létrehozás felajánl egy opcionális helyreállítási kódot, amellyel "
-"visszaállíthatod az elfelejtett jelmondatot; kihagyhatod, és később "
+"visszaállíthatod az elfelejtett jelmondatodat; kihagyhatod, és később "
 "engedélyezheted az `aeat config profile recovery enable` paranccsal. Az "
 "első parancs, amely a tárolóhoz hozzáér, bekéri a jelmondatot, az eszköz "
 "pedig a munkamenet hátralévő részében újra felhasználja. A létrehozás "
@@ -119,7 +121,7 @@ msgid ""
 "setup.md#choose-the-output-language)."
 msgstr ""
 "A dokumentáció példái angol nyelven készültek. Az `aeat` spanyolul írja "
-"ki az üzeneteit, hacsak nem [választasz másik nyelvet](profile-setup.md"
+"ki az üzeneteit, hacsak nem választasz [másik nyelvet](profile-setup.md"
 "#choose-the-output-language)."
 
 #: ../../how-to/quickstart.md:47
@@ -137,18 +139,18 @@ msgstr ""
 #: ../../how-to/quickstart.md:56
 msgid ""
 "The wizard collects the name and surnames that filing requires and the "
-"activity start date that scopes out prior periods. The profile is "
-"published with its passphrase as its only door; recovery is offered "
-"afterwards and is optional."
+"activity start date that scopes out prior periods. The profile is created"
+" with its passphrase as its only door; recovery is offered afterwards and"
+" is optional."
 msgstr ""
-"A varázsló bekéri a benyújtáshoz szükséges nevet és vezetékneveket, "
+"A varázsló bekéri a bevalláshoz szükséges nevet és családi neveket, "
 "valamint a tevékenység kezdő dátumát, amely kizárja a korábbi "
-"időszakokat. A profil úgy jön létre, hogy egyetlen kulcsa a jelmondata; a"
-" helyreállítást a program utólag ajánlja fel, és az opcionális."
+"időszakokat. A profil a jelmondatával mint egyetlen ajtóval jön létre; a "
+"helyreállítást a program utána ajánlja fel, és az opcionális."
 
 #: ../../how-to/quickstart.md:60
 msgid "Confirm the active profile is configured and ready:"
-msgstr "Ellenőrizd, hogy az aktív profil be van állítva és készen áll:"
+msgstr "Ellenőrizd, hogy az aktív profil be van-e állítva és készen áll-e:"
 
 #: ../../how-to/quickstart.md:66
 msgid ""
@@ -157,10 +159,10 @@ msgid ""
 " question group, list or switch profiles, and export or import an "
 "existing profile."
 msgstr ""
-"A profilbeállítás sokkal több adókérdést tehet fel. Az [Állítsd be az "
-"adózói profilodat](profile-setup.md) oldalon kiválaszthatod a helyes "
-"válaszokat, megnézheted az összes profilkérdés-csoportot, listázhatod "
-"vagy válthatod a profilokat, és exportálhatsz vagy importálhatsz egy "
+"A profilbeállítás sokkal több adókérdést tehet fel. Az [Adózói profil "
+"beállítása](profile-setup.md) oldalon kiválaszthatod a helyes válaszokat,"
+" áttekintheted a profilkérdések minden csoportját, listázhatod a "
+"profilokat, válthatsz közöttük, és exportálhatsz vagy importálhatsz egy "
 "meglévő profilt."
 
 #: ../../how-to/quickstart.md:71
@@ -169,44 +171,44 @@ msgstr "2. Add hozzá a tranzakcióidat"
 
 #: ../../how-to/quickstart.md:73
 msgid ""
-"The tax calculation uses the income and expense records in your ledger. "
-"There are two ways to add them."
+"The tax calculation uses your income and expense records. There are two "
+"ways to add them."
 msgstr ""
-"Az adószámítás a ledgeredben lévő bevételi és kiadási nyilvántartásokat "
-"használja. Kétféleképpen adhatod hozzá őket."
+"Az adószámítás a bevételi és kiadási nyilvántartásaidat használja. "
+"Kétféleképpen adhatod hozzá őket."
 
 #: ../../how-to/quickstart.md:76
 msgid ""
 "The simplest is to add each row directly with its tax fields. `--amount` "
-"is the gross total (taxable base plus IVA); an expense row also needs a "
+"is the gross total (taxable base plus VAT); an expense row also needs a "
 "`--category-id` from the recognised expense families. The `--idempotency-"
-"key` on each row makes it safe to re-run without adding a duplicate."
+"key` on each row makes it safe to re-run without adding a duplicate:"
 msgstr ""
-"A legegyszerűbb, ha minden sort közvetlenül, az adómezőivel együtt adsz "
-"hozzá. Az `--amount` a bruttó végösszeg (adóalap plusz IVA); a "
-"kiadássornak emellett a felismert kiadáscsaládokból származó `--category-"
-"id` is kell. Az egyes sorokon lévő `--idempotency-key` miatt az "
-"újrafuttatás biztonságos, és nem ad hozzá duplikátumot."
+"A legegyszerűbb minden sort közvetlenül hozzáadni az adómezőivel. Az "
+"`--amount` a bruttó összeg (adóalap plusz IVA); egy kiadássornak "
+"`--category-id` értékre is szüksége van a felismert kiadáscsaládok közül."
+" Az egyes sorokon lévő `--idempotency-key` biztonságossá teszi az "
+"újrafuttatást duplikátum hozzáadása nélkül:"
 
 #: ../../how-to/quickstart.md:81
 msgid ""
-"The expense claims deductible IVA, so it needs its supplier invoice. "
+"The expense claims deductible VAT, so it needs its supplier invoice. "
 "Register the invoice first, then pass the `evidence_id` it returns to the"
 " expense row with `--purchase-invoice-evidence-id`. The invoice takes its"
-" IVA rate as a percentage (`--iva-rate 21`), while `ledger add` takes a "
+" VAT rate as a percentage (`--iva-rate 21`), while `ledger add` takes a "
 "decimal (`0.21`):"
 msgstr ""
-"A kiadás levonható IVA-t érvényesít, ezért kell hozzá a szállítói számla."
-" Előbb regisztráld a számlát, majd a visszaadott `evidence_id`-t add át a"
-" kiadássornak a `--purchase-invoice-evidence-id` kapcsolóval. A számla az"
-" IVA-kulcsát százalékban várja (`--iva-rate 21`), a `ledger add` viszont "
-"tizedes törtet (`0.21`):"
+"A kiadás levonható IVA-t igényel, ezért szüksége van a szállítói "
+"számlára. Előbb rögzítsd a számlát, majd a visszaadott `evidence_id` "
+"értéket add át a kiadássornak a `--purchase-invoice-evidence-id` "
+"kapcsolóval. A számla az IVA-kulcsát százalékban várja (`--iva-rate 21`),"
+" a `ledger add` viszont tizedes törtet (`0.21`):"
 
-#: ../../how-to/quickstart.md:90
+#: ../../how-to/quickstart.md:87
 msgid "List the recognised expense categories any time:"
-msgstr "Az elfogadott kiadáskategóriákat bármikor listázhatod:"
+msgstr "Az elfogadott kiadáskategóriákat bármikor listázhatod."
 
-#: ../../how-to/quickstart.md:96
+#: ../../how-to/quickstart.md:93
 msgid ""
 "If you instead have a bank export, import it. `aeat` reads a semicolon-"
 "delimited CSV with comma decimals and a negative `Importe` for money "
@@ -216,16 +218,16 @@ msgstr ""
 " CSV-t olvas, tizedesvesszővel, a számláról kimenő pénzhez pedig negatív "
 "`Importe` értékkel:"
 
-#: ../../how-to/quickstart.md:105
+#: ../../how-to/quickstart.md:102
 msgid ""
-"Preview the import, then run it for real (shown as a display-only "
-"example, since running it here would duplicate the two rows added above):"
+"Preview the import, then run it for real (shown as an example that is not"
+" run, since running it here would duplicate the two rows added above):"
 msgstr ""
-"Nézd meg az import előnézetét, majd futtasd élesben (csak bemutató "
+"Nézd meg az import előnézetét, majd futtasd le élesben (nem futtatott "
 "példaként szerepel, mert itt lefuttatva megkettőzné a fent hozzáadott két"
 " sort):"
 
-#: ../../how-to/quickstart.md:111
+#: ../../how-to/quickstart.md:107
 msgid ""
 "Imported rows arrive without a tax category and must be classified before"
 " they count in a calculation (see the next step). The `ledger add` rows "
@@ -236,22 +238,22 @@ msgstr ""
 " `ledger add` sorok már be vannak sorolva, ezért egyenesen a 4. lépésre "
 "ugorhatsz."
 
-#: ../../how-to/quickstart.md:115
+#: ../../how-to/quickstart.md:111
 msgid ""
 "Use [Import and manage transactions](import-bank-statements.md) for the "
 "full transaction workflow: import, add, update, remove, review, classify,"
 " allocate, and run readiness checks."
 msgstr ""
-"A teljes tranzakció-munkafolyamathoz - importálás, hozzáadás, módosítás, "
-"eltávolítás, áttekintés, besorolás, felosztás és készenléti ellenőrzések "
-"- használd a [Tranzakciók importálása és kezelése](import-bank-"
+"A teljes tranzakció-munkafolyamathoz (importálás, hozzáadás, módosítás, "
+"eltávolítás, áttekintés, besorolás, felosztás és készenléti ellenőrzések)"
+" használd a [Tranzakciók importálása és kezelése](import-bank-"
 "statements.md) oldalt."
 
-#: ../../how-to/quickstart.md:119
+#: ../../how-to/quickstart.md:115
 msgid "3. Classify imported transactions"
 msgstr "3. Sorold be az importált tranzakciókat"
 
-#: ../../how-to/quickstart.md:121
+#: ../../how-to/quickstart.md:117
 msgid ""
 "Each imported transaction has no tax category until you classify it. "
 "Classification tells `aeat` whether a row is a business expense, personal"
@@ -262,83 +264,82 @@ msgstr ""
 "sorolod őket. A besorolás megmondja az `aeat`-nak, hogy egy sor üzleti "
 "kiadás, személyes költés vagy a kettő keveréke. Vedd a "
 "tranzakcióazonosítót a sor kimenetéből, majd sorold be, és ellenőrizd, "
-"hogy a negyedév készen áll:"
+"hogy a negyedév készen áll-e:"
 
-#: ../../how-to/quickstart.md:130
+#: ../../how-to/quickstart.md:126
 msgid "`preflight` reports whether the quarter's rows are ready to calculate."
 msgstr "A `preflight` jelzi, hogy a negyedév sorai készen állnak-e a számításra."
 
-#: ../../how-to/quickstart.md:132
+#: ../../how-to/quickstart.md:128
 msgid ""
 "Use [Classify transactions](classify-transactions.md) for the detailed "
 "review path, including manual classification, bulk CSV classification, "
 "mixed-use allocation, tax fields, and optional LLM suggestions."
 msgstr ""
-"A részletes áttekintési útvonalhoz - kézi besorolás, tömeges CSV-s "
+"A részletes áttekintési útvonalhoz (kézi besorolás, tömeges CSV-s "
 "besorolás, vegyes felhasználású felosztás, adómezők és opcionális LLM-"
-"javaslatok - használd a [Tranzakciók besorolása](classify-"
-"transactions.md) oldalt."
+"javaslatok) használd a [Tranzakciók besorolása](classify-transactions.md)"
+" oldalt."
 
-#: ../../how-to/quickstart.md:136
-msgid "4. Create, calculate, and verify the draft"
+#: ../../how-to/quickstart.md:133
+msgid "4. Create, calculate, and check the draft"
 msgstr "4. Hozd létre, számítsd ki és ellenőrizd a piszkozatot"
 
-#: ../../how-to/quickstart.md:138
+#: ../../how-to/quickstart.md:135
 msgid ""
-"With the profile and a classified ledger in place, prepare the Modelo 130"
-" draft for the first quarter of 2026, calculate it, and verify it. A "
-"modelo is a Spanish tax form, and the year plus period identify the "
-"filing you are preparing."
+"With the profile and classified records in place, prepare the Modelo 130 "
+"draft for the first quarter of 2026, calculate it, and check it. A modelo"
+" is a Spanish tax form, and the year plus period identify the filing you "
+"are preparing."
 msgstr ""
-"Ha megvan a profil és a besorolt ledger, készítsd elő a Modelo 130 "
-"piszkozatot 2026 első negyedévére, számítsd ki, és ellenőrizd. A modelo "
-"spanyol adóűrlap, az év és az időszak együtt azonosítja az előkészített "
-"benyújtást."
+"A profil és az osztályozott nyilvántartások birtokában készítsd elő a "
+"Modelo 130 piszkozatát 2026 első negyedévére, számítsd ki és ellenőrizd. "
+"A modelo hivatalos spanyol adónyomtatvány, az év és az időszak pedig "
+"azonosítja az előkészített bevallást."
 
-#: ../../how-to/quickstart.md:147
-msgid "Read the frames in order:"
-msgstr "Olvasd el a kereteket sorrendben:"
+#: ../../how-to/quickstart.md:143
+msgid "Read the steps in order:"
+msgstr "Olvasd el a lépéseket sorrendben:"
 
-#: ../../how-to/quickstart.md:149
+#: ../../how-to/quickstart.md:145
 msgid ""
-"Create the draft. The command creates your filing workspace for that form"
-" if one does not exist yet; running it again returns the existing "
-"workspace. `--period 1T` means the first quarter (primer trimestre). "
+"Create the draft. The command creates the declaration for that modelo if "
+"one does not exist yet; running it again returns the existing "
+"declaration. `--period 1T` means the first quarter (primer trimestre). "
 "Other period codes are `2T`, `3T`, `4T` for subsequent quarters and `0A` "
 "for an annual filing."
 msgstr ""
-"Hozd létre a piszkozatot. A parancs létrehozza az adott űrlaphoz tartozó "
-"benyújtási munkaterületet, ha még nem létezik; újbóli futtatáskor a "
-"meglévő munkaterületet adja vissza. A `--period 1T` az első negyedévet "
-"jelenti (primer trimestre). A további negyedéveknek a `2T`, `3T`, `4T` "
-"időszakkódok felelnek meg, az éves benyújtásnak pedig a `0A`."
+"Hozd létre a piszkozatot. A parancs létrehozza az adott modelóhoz tartozó"
+" bevallást, ha még nem létezik; újbóli futtatásakor a meglévő bevallást "
+"adja vissza. A `--period 1T` az első negyedévet jelenti (primer "
+"trimestre). A további negyedévek időszakkódjai `2T`, `3T`, `4T`, az éves "
+"benyújtásé pedig `0A`."
 
-#: ../../how-to/quickstart.md:153
+#: ../../how-to/quickstart.md:149
 msgid ""
 "Calculate the values. Modelo 130 needs three prior-period figures; for a "
-"first filing they are all zero, passed as bindings so the calculation has"
-" no missing inputs. The tool fills the boxes from your ledger: casilla "
-"`01` is the quarter's income (`1000`, the taxable base, since IVA is "
-"never part of your income), casilla `03` the net yield (`500.00`), and "
-"casilla `04` the instalment (`100.00`, twenty percent of the net)."
+"first filing they are all zero, supplied by you so the calculation has no"
+" missing inputs. The tool fills the boxes from your records: box `01` is "
+"the quarter's income (`1000`, the taxable base, since VAT is never part "
+"of your income), box `03` the net yield (`500.00`), and box `04` the "
+"instalment (`100.00`, twenty percent of the net)."
 msgstr ""
-"Számítsd ki az értékeket. A Modelo 130-nak három korábbi időszaki adatra "
-"van szüksége; első benyújtásnál ezek mind nullák, kötésként átadva, hogy "
-"a számításnak ne legyen hiányzó bemenete. Az eszköz a ledgeredből tölti "
-"ki a casillákat: a `01` casilla a negyedév bevétele (`1000`, az adóalap, "
-"mivel az IVA soha nem része a bevételednek), a `03` casilla a nettó hozam"
-" (`500.00`), a `04` casilla pedig az előleg (`100.00`, a nettó húsz "
-"százaléka)."
+"Számítsd ki az értékeket. A Modelo 130-nak három korábbi időszakból "
+"származó adatra van szüksége; az első benyújtásnál ezek mind nullák, "
+"amelyeket neked kell megadnod, hogy a számításnak ne legyen hiányzó "
+"bemenete. Az eszköz a nyilvántartásaidból tölti ki a rovatokat: a `01` "
+"rovat a negyedév jövedelme (`1000`, az adóalap, mivel az IVA soha nem "
+"része a jövedelmednek), a `03` rovat a nettó hozam (`500.00`), a `04` "
+"rovat pedig a részlet (`100.00`, a nettó húsz százaléka)."
 
-#: ../../how-to/quickstart.md:159
+#: ../../how-to/quickstart.md:155
 msgid ""
-"Verify the draft. Verification is a local check. It does not send "
-"anything to AEAT. When the draft is complete the report reads "
-"`completeness_status complete` and `granted_verificado_completo true`. "
-"The report also carries two advisories, which do not block filing. One "
-"notes that the earlier Modelo 100 is set aside because your activity "
-"started in 2026. The other notes that the income row has no supporting "
-"evidence."
+"Check the draft. The check is local. It does not send anything to AEAT. "
+"When the draft is complete the report reads `completeness_status "
+"complete` and `granted_verificado_completo true`. The report also carries"
+" two advisories, which do not block filing. One notes that the earlier "
+"Modelo 100 is set aside because your activity started in 2026. The other "
+"notes that the income row has no supporting document."
 msgstr ""
 "Ellenőrizd a piszkozatot. Az ellenőrzés helyi művelet, nem küld semmit az"
 " AEAT-nak. Ha a piszkozat teljes, a jelentés `completeness_status "
@@ -346,13 +347,13 @@ msgstr ""
 " két figyelmeztetést is tartalmaz, amelyek nem akadályozzák a benyújtást."
 " Az egyik azt jelzi, hogy a korábbi Modelo 100 félre van téve, mert a "
 "tevékenységed 2026-ban kezdődött. A másik azt jelzi, hogy a bevételi "
-"sorhoz nincs alátámasztó bizonyíték."
+"sorhoz nincs bizonylat."
 
-#: ../../how-to/quickstart.md:166
+#: ../../how-to/quickstart.md:157
 msgid "Review every saved box with:"
-msgstr "Az összes mentett casillát megnézheted ezzel:"
+msgstr "Az összes mentett rovatot megnézheted ezzel:"
 
-#: ../../how-to/quickstart.md:172
+#: ../../how-to/quickstart.md:163
 msgid ""
 "If a value is missing or a modelo needs a value you must enter by hand, "
 "see [Review and supply calculation inputs](review-calculation-values.md)."
@@ -360,38 +361,38 @@ msgid ""
 "carried forward from earlier quarters. For how the tool organises filing "
 "work behind the scenes, see [The filing workflow](filing-spine.md)."
 msgstr ""
-"Ha egy érték hiányzik, vagy a modelóhoz kézzel kell megadnod egy értéket,"
-" lásd: [A számítási bemenetek áttekintése és megadása](review-"
-"calculation-values.md). Az az oldal a hiányzó casillaértékek megadását és"
-" a korábbi negyedévekből áthozott számok kezelését tárgyalja. Arról, "
-"hogyan szervezi az eszköz a háttérben a benyújtási munkát, lásd: [A "
-"benyújtási munkafolyamat](filing-spine.md)."
+"Ha egy érték hiányzik, vagy a nyomtatványhoz kézzel kell megadnod egy "
+"értéket, lásd: [A számítási bemenetek áttekintése és megadása](review-"
+"calculation-values.md). Az az oldal a hiányzó rovatértékek megadását és a"
+" korábbi negyedévekből áthozott számok kezelését tárgyalja. Arról, hogyan"
+" szervezi az eszköz a háttérben a benyújtási munkát, lásd: [A benyújtási "
+"munkafolyamat](filing-spine.md)."
 
-#: ../../how-to/quickstart.md:178
-msgid "5. Export the verified draft"
+#: ../../how-to/quickstart.md:170
+msgid "5. Export the checked draft"
 msgstr "5. Exportáld az ellenőrzött piszkozatot"
 
-#: ../../how-to/quickstart.md:180
-msgid "Export the verified Modelo 130 fichero-BOE artefact:"
+#: ../../how-to/quickstart.md:172
+msgid "Export the checked Modelo 130 fichero-BOE file:"
 msgstr "Exportáld az ellenőrzött Modelo 130 fichero-BOE fájlt:"
 
-#: ../../how-to/quickstart.md:186
+#: ../../how-to/quickstart.md:178
 msgid ""
-"The exported file is a local artefact, not evidence that AEAT accepted "
-"the return. Present it through the AEAT portal, as step 7 describes. "
-"Export refuses to overwrite an existing file unless you add `--replace`. "
-"It also refuses when the output directory does not exist."
+"The exported file is a local file, not proof that AEAT accepted the "
+"return. Present it through the AEAT portal, as step 7 describes. Export "
+"refuses to overwrite an existing file unless you add `--replace`. It also"
+" refuses when the output directory does not exist."
 msgstr ""
-"Az exportált fájl helyi fájl, nem bizonyíték arra, hogy az AEAT elfogadta"
-" a bevallást. Nyújtsd be az AEAT-portálon, ahogy a 7. lépés leírja. Az "
-"export nem írja felül a meglévő fájlt, hacsak nem adod meg a `--replace` "
+"Az exportált fájl helyi fájl, és nem bizonyítja, hogy az AEAT elfogadta a"
+" bevallást. Nyújtsd be az AEAT-portálon, ahogy a 7. lépés leírja. Az "
+"export nem írja felül a meglévő fájlt, hacsak meg nem adod a `--replace` "
 "kapcsolót. Akkor is elutasítja a futást, ha a kimeneti könyvtár nem "
 "létezik."
 
-#: ../../how-to/quickstart.md:191
+#: ../../how-to/quickstart.md:180
 msgid ""
-"Step 2 linked the purchase invoice before you calculated. Verification "
-"refuses a deducted IVA row that carries no invoice (the message reads "
+"Step 2 linked the purchase invoice before you calculated. The check "
+"refuses a deducted VAT row that carries no invoice (the message reads "
 "`Deductible IVA ledger rows require linked purchase invoice evidence`)."
 msgstr ""
 "A 2. lépés a számítás előtt hozzákapcsolta a beszerzési számlát. Az "
@@ -399,24 +400,25 @@ msgstr ""
 "számla (az üzenet: `Deductible IVA ledger rows require linked purchase "
 "invoice evidence`)."
 
-#: ../../how-to/quickstart.md:195
+#: ../../how-to/quickstart.md:182
 msgid ""
-"A draft bundles its evidence when you verify it, so an invoice attached "
-"afterwards does not reach a draft that is already verified. [Attach "
-"invoices and receipts](ledger-evidence.md) and [Prepare a Modelo 303 IVA "
-"filing](modelo-303.md) walk through the evidence workflow end to end."
+"A draft collects its supporting documents when you check it, so an "
+"invoice attached afterwards does not reach a draft that is already "
+"checked. [Attach invoices and receipts to transactions](ledger-"
+"evidence.md) and [Prepare a Modelo 303 VAT filing](modelo-303.md) walk "
+"through the supporting-document workflow end to end."
 msgstr ""
-"A piszkozat az ellenőrzéskor gyűjti össze a bizonyítékait, ezért az "
-"utólag csatolt számla nem kerül be egy már ellenőrzött piszkozatba. A "
-"[Számlák és bizonylatok csatolása](ledger-evidence.md) és a [Modelo 303 "
-"IVA-benyújtás előkészítése](modelo-303.md) oldal végigvezet a "
-"bizonyítékkezelésen az elejétől a végéig."
+"A piszkozat az ellenőrzéskor gyűjti össze a bizonylatait, ezért az utólag"
+" csatolt számla nem kerül be egy már ellenőrzött piszkozatba. A [Számlák "
+"és bizonylatok csatolása a tranzakciókhoz](ledger-evidence.md) és a "
+"[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md) oldal végigvezeti "
+"a bizonylatkezelésen az elejétől a végéig."
 
-#: ../../how-to/quickstart.md:200
+#: ../../how-to/quickstart.md:184
 msgid "6. Check what else is due (optional)"
 msgstr "6. Ellenőrizd, mi más esedékes (opcionális)"
 
-#: ../../how-to/quickstart.md:202
+#: ../../how-to/quickstart.md:186
 msgid ""
 "Use the local calendar to see what may be due for the active profile. On "
 "a fresh profile, first declare that your income comes from an economic "
@@ -426,12 +428,12 @@ msgid ""
 msgstr ""
 "A helyi naptárból megnézheted, mi lehet esedékes az aktív profilhoz. "
 "Friss profilnál először jelezd, hogy a jövedelmed gazdasági "
-"tevékenységből származik; ez a tény dönti el, hogy a Modelo 130 "
-"érvényes-e. Ezután add meg az `--allow-incomplete` kapcsolót, hogy az "
-"ütemterv lefusson, mielőtt minden profiladat ki lenne töltve. Az utolsó "
-"parancs megmagyarázza, miért vonatkozik rád a Modelo 130:"
+"tevékenységből származik; ez dönti el, hogy a Modelo 130 alkalmazandó-e. "
+"Ezután add meg az `--allow-incomplete` kapcsolót, hogy az ütemterv még "
+"azelőtt lefusson, hogy minden profiladatot kitöltenél. Az utolsó parancs "
+"megmagyarázza, miért vonatkozik rád a Modelo 130:"
 
-#: ../../how-to/quickstart.md:212
+#: ../../how-to/quickstart.md:196
 msgid ""
 "The calendar uses profile facts and local filing context. It does not "
 "replace AEAT's official portal. For the full calendar flow, see [Plan "
@@ -442,77 +444,78 @@ msgstr ""
 "munkafolyamathoz lásd: [Tervezd meg a benyújtási naptáradat](filing-"
 "calendar.md)."
 
-#: ../../how-to/quickstart.md:216
+#: ../../how-to/quickstart.md:200
 msgid "7. File manually through AEAT"
 msgstr "7. Nyújtsd be kézzel az AEAT-nál"
 
-#: ../../how-to/quickstart.md:218
+#: ../../how-to/quickstart.md:202
 msgid "The final filing step is outside `aeat`:"
 msgstr "A végső benyújtási lépés az `aeat`-on kívül történik:"
 
-#: ../../how-to/quickstart.md:220
+#: ../../how-to/quickstart.md:204
 msgid "Log in to the official AEAT electronic filing portal."
 msgstr "Jelentkezz be az AEAT hivatalos elektronikus benyújtási portáljára."
 
-#: ../../how-to/quickstart.md:221
+#: ../../how-to/quickstart.md:205
 msgid "Open the Modelo 130 form for the relevant year and period."
-msgstr "Nyisd meg a Modelo 130 űrlapot a megfelelő évre és időszakra."
+msgstr "Nyisd meg a Modelo 130 nyomtatványt a megfelelő évre és időszakra."
 
-#: ../../how-to/quickstart.md:222
+#: ../../how-to/quickstart.md:206
 msgid ""
-"Enter the box values the calculation produced. The command card below "
-"reads them back before it records the local filing marker."
+"Enter the box values the calculation produced. The step below reads them "
+"back before it records the filing."
 msgstr ""
-"Add meg a számítás által előállított casillaértékeket. Az alábbi "
-"parancskártya a helyi benyújtási jelölő rögzítése előtt visszaolvassa "
-"őket."
+"Add meg a számítás által előállított rovatértékeket. Az alábbi lépés a "
+"benyújtás rögzítése előtt visszaolvassa őket."
 
-#: ../../how-to/quickstart.md:224
-msgid "Review, sign, and keep the justificante AEAT issues after filing."
+#: ../../how-to/quickstart.md:207
+msgid ""
+"Review, sign, and keep the AEAT receipt (justificante) that AEAT issues "
+"after filing."
 msgstr ""
-"Nézd át, írd alá, és őrizd meg a justificantét, amelyet az AEAT a "
-"benyújtás után kiad."
+"Nézd át és írd alá a benyújtás után az AEAT által kiadott igazolást "
+"(justificante), majd őrizd meg."
 
-#: ../../how-to/quickstart.md:226
+#: ../../how-to/quickstart.md:210
 msgid ""
 "The full handoff checklist is in [File your modelo at the AEAT portal"
 "](file-at-aeat.md)."
 msgstr ""
-"A teljes átadási ellenőrzőlista a [Nyújtsd be a modelódat az AEAT-"
+"A teljes átadási ellenőrzőlista a [Nyújtsd be a nyomtatványodat az AEAT-"
 "portálon](file-at-aeat.md) oldalon található."
 
-#: ../../how-to/quickstart.md:229
-msgid "After a real filing, record the local filing marker:"
-msgstr "Valódi benyújtás után rögzítsd a helyi benyújtási jelölőt:"
+#: ../../how-to/quickstart.md:213
+msgid "After a real filing, record it as filed:"
+msgstr "Valódi benyújtás után rögzítsd benyújtottként:"
 
-#: ../../how-to/quickstart.md:235
+#: ../../how-to/quickstart.md:219
 msgid ""
-"`work file` refuses a deducted IVA row whose invoice is not linked "
+"`work file` refuses a deducted VAT row whose invoice is not linked "
 "(`Deductible IVA ledger rows require linked purchase invoice evidence`). "
-"The draft verified in step 4 already carries its invoice, so the marker "
-"records."
+"The draft checked in step 4 already carries its invoice, so the filing is"
+" recorded."
 msgstr ""
 "A `work file` elutasít egy levont IVA-t tartalmazó sort, ha a számlája "
 "nincs hozzákapcsolva (`Deductible IVA ledger rows require linked purchase"
 " invoice evidence`). A 4. lépésben ellenőrzött piszkozat már tartalmazza "
-"a számláját, ezért a jelölő rögzítésre kerül."
+"a számláját, ezért a benyújtás rögzítésre kerül."
 
-#: ../../how-to/quickstart.md:239
+#: ../../how-to/quickstart.md:221
 msgid ""
 "This only records the action on your own computer. It does not contact "
 "AEAT. To compare your local record with the AEAT receipt, see [Reconcile "
-"a filed modelo against its justificante](reconcile.md)."
+"a filed modelo against its AEAT receipt](reconcile.md)."
 msgstr ""
-"Ez csak a saját számítógépeden rögzíti a műveletet. Nem veszi fel a "
-"kapcsolatot az AEAT-tal. A helyi nyilvántartásod és az AEAT-bizonylat "
-"összevetéséhez lásd: [Egy benyújtott modelo egyeztetése a "
-"justificantéjével](reconcile.md)."
+"Ez csak a saját számítógépén rögzíti a műveletet. Nem lép kapcsolatba az "
+"AEAT-tal. A helyi nyilvántartás és az AEAT-igazolás összevetéséhez lásd: "
+"[Egy benyújtott nyomtatvány egyeztetése az AEAT-"
+"igazolással](reconcile.md)."
 
-#: ../../how-to/quickstart.md:243
+#: ../../how-to/quickstart.md:224
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/quickstart.md:245
+#: ../../how-to/quickstart.md:226
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) if profile facts are "
 "still incomplete."
@@ -520,45 +523,44 @@ msgstr ""
 "[Állítsd be az adózói profilodat](profile-setup.md), ha a profiladatok "
 "még hiányosak."
 
-#: ../../how-to/quickstart.md:247
+#: ../../how-to/quickstart.md:228
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) when your "
-"ledger is not ready yet."
+"records are not ready yet."
 msgstr ""
-"[Tranzakciók importálása és kezelése](import-bank-statements.md), ha a "
-"ledgered még nem áll készen."
+"[Tranzakciók importálása és kezelése](import-bank-statements.md), amikor "
+"a nyilvántartásaid még nem állnak készen."
 
-#: ../../how-to/quickstart.md:249
+#: ../../how-to/quickstart.md:230
 msgid ""
 "[Classify transactions](classify-transactions.md) before calculating from"
 " imported rows."
 msgstr ""
 "[Tranzakciók besorolása](classify-transactions.md), mielőtt importált "
-"sorokból számítanál."
+"sorokból számítana."
 
-#: ../../how-to/quickstart.md:251
+#: ../../how-to/quickstart.md:232
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
-"figures.md) - understand the transaction-to-box pipeline."
+"figures.md): understand the transaction-to-box pipeline."
 msgstr ""
 "[Hogyan válnak a nyilvántartásaid adóadatokká](../explanation/from-"
-"records-to-figures.md) - ismerd meg a tranzakciótól a casillákig vezető "
+"records-to-figures.md): értsd meg a tranzakcióktól a rovatokig vezető "
 "folyamatot."
 
-#: ../../how-to/quickstart.md:252
+#: ../../how-to/quickstart.md:235
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) when"
-" a modelo needs manual values, offsets, or binding review."
+" a modelo needs manual values, offsets, or a review of calculated values."
 msgstr ""
-"[A számítási bemenetek áttekintése és megadása](review-calculation-"
-"values.md), ha egy modelóhoz kézi értékek, beszámítások vagy kötések "
-"felülvizsgálata kell."
+"[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
+"values.md), amikor egy modelónak kézi értékekre, ellentételezésekre vagy "
+"a számított értékek felülvizsgálatára van szüksége."
 
-#: ../../how-to/quickstart.md:254
+#: ../../how-to/quickstart.md:237
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) if a command "
 "stops or the local state looks wrong."
 msgstr ""
 "[Diagnosztizáld és javítsd a helyi beállításodat](troubleshooting.md), ha"
 " egy parancs megáll, vagy a helyi állapot hibásnak tűnik."
-

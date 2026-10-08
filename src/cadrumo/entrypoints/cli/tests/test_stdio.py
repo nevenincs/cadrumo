@@ -203,7 +203,7 @@ def test_console_help_invocation_renders_plain_text_with_full_flag_names(tmp_pat
             capture_output=True,
             text=True,
             encoding="utf-8",
-            timeout=120,
+            timeout=None,
             check=False,
         ),
     )

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import sys
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
@@ -10,7 +12,15 @@ import pytest
 from ....application.ledger.actions_import import LedgerProviderID
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ._cli_json_support import _json_object
-from .ledger_ux_support import _FOUR_ROW_CSV, _FOUR_ROW_OFX, _N26_HEADER, _invoke, _open_bucket_session
+from .ledger_ux_support import (
+    _FOUR_ROW_CSV,
+    _FOUR_ROW_OFX,
+    _N26_HEADER,
+    _invoke,
+    _invoke_exact_profile,
+    _open_bucket_session,
+)
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
@@ -276,6 +286,85 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path, locale: s
     }
 
 
+def _two_quarter_statement(tmp_path: Path) -> Path:
+    statement = tmp_path / "two-quarters.csv"
+    statement.write_text(
+        _N26_HEADER
+        + "2026-01-15,Client SL,Invoice 1,121.00,EUR,n26-101\n"
+        + "2026-04-15,Client SL,Invoice 2,242.00,EUR,n26-102\n",
+        encoding="utf-8",
+    )
+    return statement
+
+
+def _period_import(profile: NativeCliProfileFixture, statement: Path, *scope: str) -> dict[str, object]:
+    result = _invoke_exact_profile(
+        profile,
+        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", *scope],
+    )
+    assert result.exit_code == 0, result.output
+    return _json_document(result.output)
+
+
+def test_import_period_keeps_only_rows_dated_inside_it(tmp_path: Path) -> None:
+    """`--period`/`--year` import the rows whose date falls in the period and no others."""
+    statement = _two_quarter_statement(tmp_path)
+    with native_cli_profile_scope(tmp_path / "native") as profile:
+        profile.register(label="period-ledger-import", facts={})
+        scoped = _json_object(_period_import(profile, statement, "--period", "1T", "--year", "2026")["result"])
+        whole = _json_object(_period_import(profile, statement)["result"])
+
+    assert (scoped["rows"], scoped["imported"], scoped["skipped"]) == (1, 1, 0)
+    assert (whole["rows"], whole["imported"], whole["skipped"]) == (2, 1, 1)
+
+
+def test_import_period_matching_no_rows_explains_the_zero_import(tmp_path: Path) -> None:
+    """A period no row falls in says so instead of claiming the file had no data rows."""
+    statement = _two_quarter_statement(tmp_path)
+    with native_cli_profile_scope(tmp_path / "native") as profile:
+        profile.register(label="period-ledger-import", facts={})
+        document = _period_import(profile, statement, "--period", "4T", "--year", "2026")
+
+    assert _json_object(document["result"])["imported"] == 0
+    assert _notice_projection(document, "ledger.import.no_rows_in_period") == {
+        "severity": "info",
+        "code": "ledger.import.no_rows_in_period",
+        "context": {"imported": "0", "skipped": "0"},
+        "action": None,
+    }
+
+
+def test_import_into_an_unregistered_own_account_is_refused(tmp_path: Path) -> None:
+    """`--account` names a register entry; an id the profile never registered refuses the import."""
+    statement = _two_quarter_statement(tmp_path)
+    with native_cli_profile_scope(tmp_path / "native") as profile:
+        profile.register(label="account-ledger-import", facts={})
+        refused = _invoke_exact_profile(
+            profile,
+            [
+                "--format",
+                "json",
+                "app",
+                "ledger",
+                "import",
+                "--file",
+                str(statement),
+                "--provider",
+                "csv",
+                "--account",
+                "acc-01",
+            ],
+        )
+        listed = _invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
+
+    assert refused.exit_code != 0
+    error = _json_object(_json_document(refused.output)["error"])
+    assert error["code"] == "ERROR_TRANSACTION_VALIDATION"
+    assert _json_object(error["context"])["effect"] == "none"
+    readback = _json_object(_json_document(listed.output)["result"])
+    assert readback["rows"] == []
+
+
 def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> None:
     """Re-importing only-duplicate rows reports why nothing was added."""
     statement = tmp_path / "statement.csv"
@@ -471,6 +560,75 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
         "context": {"likely_duplicate_count": "1"},
         "action": None,
     }
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+@pytest.mark.usefixtures("authority_operation")
+@pytest.mark.parametrize("source_kind", ["file", "directory"])
+def test_relative_import_and_verification_source_use_the_callers_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, source_kind: str
+) -> None:
+    """Native worker cwd must not reinterpret either caller-owned source path."""
+    caller = tmp_path / "caller"
+    statements = caller / "statements"
+    statements.mkdir(parents=True)
+    rows = _FOUR_ROW_CSV.splitlines(keepends=True)
+    if source_kind == "file":
+        (statements / "statement.csv").write_text(_FOUR_ROW_CSV, encoding="utf-8")
+        relative_source = Path("statements/statement.csv")
+        file_count = 1
+    else:
+        (statements / "a.csv").write_text(rows[0] + "".join(rows[1:3]), encoding="utf-8")
+        (statements / "b.csv").write_text(rows[0] + "".join(rows[3:]), encoding="utf-8")
+        relative_source = Path("statements")
+        file_count = 2
+    original_bytes = b"Synthetic original export, distinct from the imported statements.\n"
+    (caller / "original-export.bin").write_bytes(original_bytes)
+    monkeypatch.chdir(caller)
+
+    # Real encrypted worker and transport; OS-login/store observations are
+    # explicit synthetic controls, not native credential-store acceptance.
+    with native_cli_profile_scope(tmp_path / "native") as profile:
+        profile.register(label="relative-ledger-import", facts={})
+        assert profile.storage_root != caller
+        assert not (profile.storage_root / relative_source).exists()
+        assert not (profile.storage_root / "original-export.bin").exists()
+        imported = _invoke_exact_profile(
+            profile,
+            [
+                "--format",
+                "json",
+                "app",
+                "ledger",
+                "import",
+                "--file",
+                str(relative_source),
+                "--provider",
+                "csv",
+                "--verify",
+                "--verify-source",
+                "original-export.bin",
+            ],
+        )
+        assert imported.exit_code == 0, imported.output
+        result = _json_object(_json_document(imported.output)["result"])
+        assert result["rows"] == result["imported"] == 4
+        assert result["skipped"] == 0
+        assert result["verify"] is True
+        assert (
+            result["sources"]
+            == [{"requested": True, "path": None, "sha256": sha256(original_bytes).hexdigest()}] * file_count
+        )
+        validations = result["validations"]
+        assert isinstance(validations, list) and len(validations) == file_count
+        assert all(isinstance(item, dict) and item["valid"] is True for item in validations)
+
+        listed = _invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
+        assert listed.exit_code == 0, listed.output
+        readback = _json_object(_json_document(listed.output)["result"])
+        persisted_rows = readback["rows"]
+        assert isinstance(persisted_rows, list) and len(persisted_rows) == 4
 
 
 def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_path: Path) -> None:

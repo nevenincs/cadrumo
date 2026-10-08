@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#modelo-verify-nonzero-guards'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:4e2f6f21f8c5d7c2fdbd1d4ec65b5d0914ced1cd62ce963e46bece6682485786'
+modified: '2026-10-03'
+body_hash: 'sha256:67a3756e69e7c175df74c98764987886faf2f3d3509e6cff65c0e489d8b34d4f'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-adr]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-research]]"
@@ -18,7 +18,7 @@ related:
 An independent code review of the `modelo-verify-nonzero-guards` campaign
 raised a MEDIUM finding against the shipped M123 (retenciones capital
 mobiliario) ADVISORY guard `modelo-123-2024-base-total-implica-retenciones-total`
-(`implies_nonzero(["06", "09"])`, `src/aeat/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/verification_expectations/0002-verification_predicates.toml`):
+(`implies_nonzero(["06", "09"])`, the retired data file):
 the guard's false-positive-freedom claim was corroborated only against the
 `rd-439-2007:art-90` 19 percent base rate and its 60 percent capital-semilla
 reduction, not against RD 439/2007's retention-exoneration list (the

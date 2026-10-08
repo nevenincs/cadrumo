@@ -147,6 +147,117 @@ modelo:
           constituidas en el extranjero con presencia en territorio español). Pago
           fraccionado.
         title: IS pago fraccionado
+      form:
+        authored-historical:
+          context:
+            reducida-dimension:
+              heading: Empresa de reducida dimensión · artículo 101 LIS y tipo del
+                primer párrafo del artículo 29.1 LIS
+        authored2025:
+          column:
+            base:
+              heading: Base
+            importe:
+              heading: Importe del pago fraccionado
+            porcentaje:
+              heading: Porcentaje
+          context:
+            capital-riesgo:
+              heading: Capital-riesgo · régimen especial del artículo 50 LIS
+            cnae:
+              heading: CNAE de la actividad principal
+            complementaria:
+              heading: Autoliquidación complementaria
+            comunicacion-adicional:
+              heading: Comunicación de datos adicionales
+            cooperativa:
+              heading: Cooperativa fiscalmente protegida
+            datos-adicionales:
+              heading: Datos adicionales
+            denominacion:
+              heading: Apellidos o razón social
+            ejercicio:
+              heading: Ejercicio
+            iban:
+              heading: IBAN
+            justificante:
+              heading: Justificante de la autoliquidación anterior
+            multiples-tipos:
+              heading: Otras entidades que pueden aplicar más de un tipo impositivo
+            navieras:
+              heading: Entidades navieras · régimen por tonelaje
+            negocios-millon:
+              heading: 'Cifra de negocios del período anterior: inferior a 1.000.000
+                €'
+            negocios-seis-millones:
+              heading: 'Cifra de negocios de los 12 meses anteriores al inicio del
+                período: superior a 6.000.000 €'
+            nif:
+              heading: NIF
+            nombre:
+              heading: Nombre
+            nrs:
+              heading: Número de referencia de sociedades
+            periodo:
+              heading: Período
+            reducida-dimension:
+              heading: Empresa de reducida dimensión · artículo 101 LIS y tipo específico
+            sin-fines-lucrativos:
+              heading: Régimen de entidades sin fines lucrativos · Ley 49/2002
+            socimi:
+              heading: Régimen SOCIMI · Ley 11/2009
+            tipo-gravamen:
+              heading: Tipo de gravamen del Impuesto sobre Sociedades del ejercicio
+                en curso
+          page:
+            '1':
+              heading: Pago fraccionado · página 1
+            '2':
+              heading: Pago fraccionado · página 2
+          row:
+            amortizacion:
+              heading: Reversión del 30% de amortización contable
+            ic:
+              heading: Impuesto Complementario
+            is:
+              heading: Impuesto sobre Sociedades
+            reserva:
+              heading: Reserva de nivelación
+            reserva-cuotas:
+              heading: Reserva de nivelación
+            resto:
+              heading: Resto de correcciones, excepto compensación de pérdidas anteriores
+            tipo-1:
+              heading: Tipo 1
+            tipo-2:
+              heading: Tipo 2
+            tipo-3:
+              heading: Tipo 3
+            tipo-4:
+              heading: Tipo 4
+            total:
+              heading: Total de correcciones
+          section:
+            b1:
+              heading: B.1) Caso general · porcentaje único
+            b2:
+              heading: B.2) Casos específicos · varios porcentajes
+            base-imponible:
+              heading: B) Pago según la base imponible · artículo 40.3
+            complementaria:
+              heading: Autoliquidación complementaria
+            devengo:
+              heading: Devengo
+            identificacion:
+              heading: Identificación
+            informacion:
+              heading: Información adicional
+            ingreso:
+              heading: Ingreso
+            modalidad-cuota:
+              heading: A) Pago según la cuota anterior · artículo 40.2
+            resultado:
+              heading: Resultado e importe a ingresar
       revision:
         2019-2022:
           casilla:

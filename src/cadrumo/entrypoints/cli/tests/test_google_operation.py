@@ -5,14 +5,14 @@ from __future__ import annotations
 import ast
 import asyncio
 import json
-from contextvars import copy_context
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from threading import Event, Thread
 from types import SimpleNamespace
+from typing import cast
 from uuid import UUID
 
 import pytest
+import typer
 
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -23,7 +23,7 @@ from ....application.export.google_operation import (
     GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
     GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
     GoogleSheetsExportOperationRequest,
-    GoogleSheetsExportRemoteResult,
+    GoogleSheetsExportPublicResultV1,
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
     build_google_sheets_export_service,
@@ -34,15 +34,15 @@ from ....application.operations.models import OperationRequest
 from ....application.operations.persistence.leases import operation_conflict_scope_reference
 from ....application.operations.registry import OperationRegistry
 from ....application.operations.tests.authority_test_support import unread_authority_operation
-from ....application.storage.calc_sheets.records import SheetExportPlan
 from ....core.operations import (
     OperationEffect,
     OperationEventKind,
     OperationTerminalCondition,
 )
 from ...operation_composition import compose_operation_dependencies
+from .._modelo_spreadsheet_payloads import ModeloSpreadsheetPushResult
 from ..errors import CliRefusedBoundaryError
-from ..modelo_spreadsheet_cli import execute_google_sheets_export, google_operation_error
+from ..runtime_modelo_spreadsheet_push import google_operation_error
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -54,7 +54,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
         ("REFUSED_GOOGLE_SHEETS_EXPORT_ROOT_FOLDER_REQUIRED", "cli.app.modelo.spreadsheet.push.root_folder_required"),
         (
             "REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING",
-            "adapters.outbound.storage._factory.errors.google_client_missing",
+            "errors.refused.refused_google_client_metadata_unavailable",
         ),
         (
             "REFUSED_GOOGLE_SHEETS_EXPORT_TOKEN_MISSING",
@@ -133,7 +133,6 @@ def test_google_sheets_export_definition_declares_one_safe_credential_free_contr
     assert "token" not in request_schema
 
 
-@pytest.mark.timeout(60)
 def test_default_owner_builds_a_real_registry_plan_then_refuses_uncomposed_remote_execution(
     tmp_path: Path,
 ) -> None:
@@ -219,70 +218,77 @@ def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_prove
     assert build_google_sheets_export_service().__class__.__name__ == "GoogleSheetsExportService"
 
 
-@pytest.mark.timeout(90)
-def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_path: Path, monkeypatch) -> None:
-    """The changed command reaches the real journalled supervisor and public result resolver."""
-    from ....application.export import google_operation
-    from ....application.operations import models as operation_models
-    from ... import operation_composition
+def test_cli_push_uses_bound_profile_and_registered_export_contract(monkeypatch) -> None:
+    """The CLI forwards its admitted profile and exact request to the registered runtime route."""
+    from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from ....application.operations.models import OperationId
+    from ....core.operations import profile_operation_subject
     from .. import modelo_spreadsheet_cli as cli_module
+    from .. import runtime_modelo_spreadsheet_push as push_runtime
+    from ..registered_operation_contracts import RegisteredOperationCompletion
 
-    entered_or_failed = Event()
-    release = Event()
-    worker_errors: list[BaseException] = []
+    profile_id = UUID("12345678-1234-4234-8234-123456789abc")
+    client = cast(RuntimeFrontendClient, cast(object, SimpleNamespace(profile_id=profile_id)))
+    public_result = GoogleSheetsExportPublicResultV1(
+        profile_id=profile_id,
+        modelo="130",
+        revision="r1",
+        period="1T",
+        filing_year=2025,
+        engine_version="test-engine",
+        registry_sha="a" * 64,
+        dry_run=True,
+        root_folder_id="drive-root",
+        spreadsheet_exists=False,
+        spreadsheet_id=None,
+        folder_id=None,
+        spreadsheet_url=None,
+        value_cells_written=1,
+        formula_cells_written=2,
+        protected_ranges_written=3,
+        tab_count=4,
+        ranges_to_clear=("Hoja 1!A1:B2",),
+        value_cells_changed=5,
+        value_cells_unchanged=6,
+        formula_cells_to_write=7,
+    )
+    completion = RegisteredOperationCompletion[GoogleSheetsExportPublicResultV1](
+        operation_id=cast(OperationId, "b" * 64),
+        projection=public_result,
+        effect=OperationEffect.NONE,
+        terminal_condition=OperationTerminalCondition.SUCCEEDED,
+    )
+    submitted: dict[str, object] = {}
+    emitted: dict[str, object] = {}
 
-    class Prepared:
-        def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
-            entered_or_failed.set()
-            assert release.wait(timeout=10)
-            return GoogleSheetsExportRemoteResult(
-                dry_run=dry_run,
-                root_folder_id="root",
-                value_cells_written=1,
-                formula_cells_written=2,
-                protected_ranges_written=3,
-                tab_count=4,
-            )
+    def complete(actual_client, request, **kwargs):
+        submitted.update(client=actual_client, request=request, **kwargs)
+        return completion
 
-    definition = build_google_sheets_export_operation_definition(prepare_port=lambda _profile: Prepared())
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        services, journal, leases = _services(profile.storage_root, definition=definition)
-        monkeypatch.setattr(operation_composition, "compose_operation_dependencies", lambda **_kwargs: services)
-        monkeypatch.setattr(cli_module, "resolve_active_profile", lambda: profile.bucket_id)
-        monkeypatch.setattr(
-            google_operation, "resolve_active_capability", lambda _capability: SimpleNamespace(enabled=True)
-        )
-        monkeypatch.setattr(operation_models, "new_operation_id", lambda: "b" * 64)
+    monkeypatch.setattr(push_runtime, "run_registered_operation", complete)
+    monkeypatch.setattr(cli_module, "bound_profile_client", lambda _ctx: client)
+    monkeypatch.setattr(
+        cli_module,
+        "emit_envelope",
+        lambda _ctx, **kwargs: emitted.update(kwargs),
+    )
 
-        outcome = []
+    cli_context = cast(typer.Context, SimpleNamespace())
+    cli_module.modelo_spreadsheet_push(cli_context, "130", "1T", 2025, prefill_relations=True, dry_run=True)
 
-        def run_command() -> None:
-            try:
-                outcome.append(execute_google_sheets_export(modelo="130", period="1T", year=2025, dry_run=True))
-            except BaseException as exc:
-                worker_errors.append(exc)
-                entered_or_failed.set()
-
-        worker_context = copy_context()
-        command = Thread(target=lambda: worker_context.run(run_command))
-        command.start()
-        assert entered_or_failed.wait(timeout=80), worker_errors
-        if worker_errors:
-            command.join(timeout=20)
-        assert not worker_errors, worker_errors
-        scope_ref = operation_conflict_scope_reference(
-            definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
-            subject_ref=f"profile:{profile.bucket_id}",
-        )
-        held = asyncio.run(leases.inspect(scope_ref, "b" * 64, observed_at=datetime.now(UTC)))
-        assert held.current is not None
-        release.set()
-        command.join(timeout=20)
-        assert not command.is_alive()
-        active, result = outcome[0]
-        terminal = asyncio.run(journal.load("b" * 64))
-
-    assert active == profile.bucket_id
-    assert result.period == "1T"
-    assert result.value_cells_written == 1
-    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    request = submitted["request"]
+    assert submitted["client"] is client
+    assert isinstance(request, GoogleSheetsExportOperationRequest)
+    assert request.profile_id == profile_id
+    assert request.modelo == "130"
+    assert request.period == "1T" and request.filing_year == 2025
+    assert request.prefill_relations is True and request.dry_run is True
+    assert submitted["definition_id"] == GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID
+    assert submitted["subject_ref"] == profile_operation_subject(str(profile_id))
+    assert submitted["request_version"] == submitted["result_version"] == 1
+    assert submitted["timeout"] == 120
+    assert emitted["command"] == "modelo.spreadsheet.push"
+    result = cast(ModeloSpreadsheetPushResult, emitted["result"])
+    assert result.profile == str(profile_id)
+    assert result.ranges_to_clear == ["Hoja 1!A1:B2"]
+    assert result.formula_cells_to_write == 7

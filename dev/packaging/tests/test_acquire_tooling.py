@@ -54,13 +54,14 @@ _SOURCE_DIGEST = "a" * 64
 
 
 def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
-    """Create three real cohort wheels in a download dir and a matching cohort."""
+    """Create four real cohort wheels in a download dir and a matching cohort."""
     download = tmp_path / "downloads"
     download.mkdir()
     wheel_payloads = {
         "cadrumo": (f"cadrumo-{_VERSION}-py3-none-any.whl", b"cadrumo wheel bytes"),
         "cadrumo-data-manuals": (f"cadrumo_data_manuals-{_VERSION}-py3-none-any.whl", b"manuals wheel bytes"),
         "cadrumo-data-official": (f"cadrumo_data_official-{_VERSION}-py3-none-any.whl", b"official wheel bytes"),
+        "cadrumo-data-normatives": (f"cadrumo_data_normatives-{_VERSION}-py3-none-any.whl", b"normatives wheel bytes"),
     }
     sha256: dict[str, str] = {}
     for name, (filename, payload) in wheel_payloads.items():
@@ -71,6 +72,7 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
     sha256["cadrumo-sdist"] = hashlib.sha256(b"cadrumo sdist").hexdigest()
     sha256["cadrumo-data-manuals-sdist"] = hashlib.sha256(b"manuals sdist").hexdigest()
     sha256["cadrumo-data-official-sdist"] = hashlib.sha256(b"official sdist").hexdigest()
+    sha256["cadrumo-data-normatives-sdist"] = hashlib.sha256(b"normatives sdist").hexdigest()
 
     cohort = PythonCohort(
         directory=tmp_path,
@@ -85,7 +87,9 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
         manuals_wheel=download / wheel_payloads["cadrumo-data-manuals"][0],
         manuals_sdist=tmp_path / f"cadrumo_data_manuals-{_VERSION}.tar.gz",
         official_wheel=download / wheel_payloads["cadrumo-data-official"][0],
+        normatives_wheel=download / wheel_payloads["cadrumo-data-normatives"][0],
         official_sdist=tmp_path / f"cadrumo_data_official-{_VERSION}.tar.gz",
+        normatives_sdist=tmp_path / f"cadrumo_data_normatives-{_VERSION}.tar.gz",
         sha256=sha256,
     )
     return cohort, download
@@ -231,6 +235,7 @@ def test_verify_python_cohort_download_accepts_matching_wheels(tmp_path: Path) -
         "cadrumo",
         "cadrumo-data-manuals",
         "cadrumo-data-official",
+        "cadrumo-data-normatives",
     }
 
 
@@ -318,6 +323,7 @@ def _homebrew_formula(cohort: PythonCohort) -> dict[str, Any]:
         "resources": [
             {"name": "cadrumo-data-manuals", "checksum": cohort.sha256["cadrumo-data-manuals-sdist"]},
             {"name": "cadrumo-data-official", "checksum": cohort.sha256["cadrumo-data-official-sdist"]},
+            {"name": "cadrumo-data-normatives", "checksum": cohort.sha256["cadrumo-data-normatives-sdist"]},
         ],
     }
 
@@ -326,7 +332,7 @@ def test_verify_homebrew_formula_digests_accepts_matching(tmp_path: Path) -> Non
     """A formula declaring the exact cohort sdist digests verifies cleanly."""
     cohort, _download = _make_python_cohort(tmp_path)
     verified = acquire_homebrew.verify_homebrew_formula_digests(_homebrew_formula(cohort), cohort)
-    assert set(verified) == {"cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"}
+    assert set(verified) == {"cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives"}
 
 
 def test_verify_homebrew_formula_digests_refuses_drift(tmp_path: Path) -> None:
@@ -409,7 +415,7 @@ def test_parsers_require_cohort_and_evidence_dirs(
 
 
 def test_scoop_script_declares_public_acquisition_contract() -> None:
-    """The Scoop lane exposes a public bucket source, container mode, and oracles."""
+    """The Scoop lane exposes a public bucket source, container mode, and the CLI oracle."""
     script = (Path(__file__).resolve().parents[1] / "acquire_scoop.ps1").read_text(encoding="utf-8")
     assert "$BucketSource" in script
     assert '[string]$Mode = "Container"' in script

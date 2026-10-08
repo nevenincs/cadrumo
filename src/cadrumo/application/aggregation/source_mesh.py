@@ -41,6 +41,8 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -51,6 +53,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ...domain.calculations.row_coordinate import index_unique_row_coordinates
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.modelos.calculation_revision import (
     empty_row_casilla_provenance,
@@ -89,6 +92,42 @@ class SourceMeshError(CoreValidationError):
 
     def __init__(self, message_key: str) -> None:
         super().__init__(message_key, translated_message=message_key)
+
+
+def _list_form_rows(items: tuple[object, ...]) -> list[dict[str, object]] | None:
+    """Return a row channel's list-form entries, or ``None`` when one is not a mapping.
+
+    ``None`` hands the raw items back to field validation, which then rejects them
+    with the channel's own type error.
+    """
+    if not all(isinstance(item, Mapping) for item in items):
+        return None
+    return [STR_KEYED_MAPPING_ADAPTER.validate_python(item) for item in items]
+
+
+def _list_form_row_binding_value(row: Mapping[str, object]) -> object:
+    row_value = row.get("value")
+    if row.get("value_kind") != "decimal":
+        return row_value
+    decimal_value = coerce_decimal(row_value)
+    if decimal_value is None:
+        raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid")
+    return decimal_value
+
+
+def _list_form_row_casilla_value(row: Mapping[str, object]) -> Decimal:
+    row_value = coerce_decimal(row.get("value"))
+    if row_value is None:
+        raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_value_invalid")
+    return row_value
+
+
+def _duplicate_row_binding_coordinate(_coordinate: object) -> SourceMeshError:
+    return SourceMeshError("aggregation.source_mesh.errors.duplicate_row_binding_coordinate")
+
+
+def _duplicate_row_casilla_coordinate(_coordinate: object) -> SourceMeshError:
+    return SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
 
 
 CalculationSourceDiagnosticReason = Literal[
@@ -246,6 +285,16 @@ CalculationSourceDiagnosticReason = Literal[
     # cover) nor a silent ``True`` (over-declares) is acceptable, so an
     # undeclared fact surfaces here instead of picking a side.
     "unclassified_declarant_role_fact",
+    # A declared figure that rests on a reading of the law the registry marks
+    # as unsettled for the filing period: a grouping or floor the bundled
+    # corpus does not decide, a category whose exclusion is arguable, or a
+    # total whose sign the rule does not settle. The figure follows the
+    # registry's reading and is declared, never dropped; this reason exists so
+    # the reading is disclosed rather than presented as settled. Distinct from
+    # "unclassified_declarant_role_fact", where the filer's record leaves a
+    # fact undeclared: here the record is complete and the law is the open
+    # question, so the remedy is a check against AEAT guidance, not an edit.
+    "unsettled_legal_reading",
     # An invoice whose declared IVA treatment and whose counterparty contradict
     # each other: an intra-community supply to a third country, or an export to
     # a member state. Routing on the category alone would declare volume the
@@ -274,6 +323,9 @@ CalculationSourceDiagnosticReason = Literal[
     "settlement_not_computed",
     "prorrata_especial_obligatoria",
     "prorrata_especial_check_unavailable",
+    "prorrata_volume_check_unavailable",
+    "prorrata_volume_declaration_missing",
+    "prorrata_volume_divergence",
     "dt12_regime_window_closed",
     "dt12_regime_window_unverified",
     "dt12_parcial_rescate_guidance",
@@ -419,6 +471,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.COLLECTIBLE_INVOICE,
                 BindingSourceKind.PAYABLE_INVOICE,
                 BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+                BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
                 BindingSourceKind.INVENTORY,
             },
@@ -479,6 +532,12 @@ class CalculationSourceContext(BaseModel):
     A resolver that needs profile facts reads them here rather than decrypting
     the record again; it is ``None`` only for contexts built outside a
     calculation command.
+
+    ``operation`` retains the caller's
+    :class:`~cadrumo.domain.calculations.registry.authority.PinnedAuthorityOperation`
+    across source admission. It is transient and excluded from serialized
+    context data; standalone resolver boundaries admit a lease only when the
+    caller has supplied none.
     """
 
     model_config = _STRICT_FROZEN
@@ -497,6 +556,8 @@ class CalculationSourceContext(BaseModel):
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None
     profile: InstanceOf[ModeloWorkProfile] | None = None
+    operation: InstanceOf[PinnedAuthorityOperation] | None = Field(default=None, exclude=True, repr=False)
+    """Caller-owned generation lease; transient and excluded from serialization."""
 
 
 #: Cap on a diagnostic's operator-facing message.
@@ -844,6 +905,7 @@ class CalculationSourceResolution(BaseModel):
         exclude=True,
         repr=False,
     )
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = Field(default=(), exclude=True, repr=False)
     row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=empty_row_casilla_values)
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
         default_factory=empty_row_casilla_provenance,
@@ -853,6 +915,17 @@ class CalculationSourceResolution(BaseModel):
     relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
+    inapplicable_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
+    """Bindings this resolver owns that the filer's typed profile places outside the filing.
+
+    Each also stays in ``unresolved_binding_ids`` when it has no value, so the
+    engine treats it as absent exactly as before. What this channel adds is the
+    resolver's statement of WHY it is absent: the source does not apply to this
+    filer (a salaried filer has no activity inventory; a regime-general filer
+    has no simplified-regime summary), so no diagnostic reports it as a gap. A
+    resolver that cannot establish inapplicability from typed profile facts
+    leaves this empty, and the absence is reported as before.
+    """
     bound_inputs_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     detail_rows: tuple[ModeloDetailRow, ...] = Field(default_factory=tuple)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
@@ -950,18 +1023,13 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (list, tuple)):
             return value
         items = OBJECT_TUPLE_ADAPTER.validate_python(value)
-        normalized: dict[tuple[object, object], object] = {}
-        for item in items:
-            if not isinstance(item, Mapping):
-                return items
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
-            row_value = row.get("value")
-            if row.get("value_kind") == "decimal":
-                row_value = coerce_decimal(row_value)
-                if row_value is None:
-                    raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid")
-            normalized[(row.get("binding_id"), row.get("row_index"))] = row_value
-        return normalized
+        rows = _list_form_rows(items)
+        if rows is None:
+            return items
+        return index_unique_row_coordinates(
+            (((row.get("binding_id"), row.get("row_index")), _list_form_row_binding_value(row)) for row in rows),
+            duplicate=_duplicate_row_binding_coordinate,
+        )
 
     @field_validator("row_binding_values")
     @classmethod
@@ -986,18 +1054,24 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (list, tuple)):
             return value
         items = OBJECT_TUPLE_ADAPTER.validate_python(value)
-        normalized: dict[tuple[object, object], object] = {}
-        for item in items:
-            if not isinstance(item, Mapping):
-                return items
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
-            normalized[(row.get("binding_id"), row.get("row_index"))] = {
-                "source_kind": row.get("source_kind"),
-                "source_row_identity": row.get("source_row_identity"),
-                "fingerprint": row.get("fingerprint"),
-                "row_set_grouping": row.get("row_set_grouping"),
-            }
-        return normalized
+        rows = _list_form_rows(items)
+        if rows is None:
+            return items
+        return index_unique_row_coordinates(
+            (
+                (
+                    (row.get("binding_id"), row.get("row_index")),
+                    {
+                        "source_kind": row.get("source_kind"),
+                        "source_row_identity": row.get("source_row_identity"),
+                        "fingerprint": row.get("fingerprint"),
+                        "row_set_grouping": row.get("row_set_grouping"),
+                    },
+                )
+                for row in rows
+            ),
+            duplicate=_duplicate_row_binding_coordinate,
+        )
 
     @field_validator("row_source_identities")
     @classmethod
@@ -1022,19 +1096,13 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (list, tuple)):
             return value
         items = OBJECT_TUPLE_ADAPTER.validate_python(value)
-        normalized: dict[tuple[object, object], object] = {}
-        for item in items:
-            if not isinstance(item, Mapping):
-                return items
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
-            key = (row.get("casilla_id"), row.get("row_index"))
-            if key in normalized:
-                raise SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
-            row_value = coerce_decimal(row.get("value"))
-            if row_value is None:
-                raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_value_invalid")
-            normalized[key] = row_value
-        return normalized
+        rows = _list_form_rows(items)
+        if rows is None:
+            return items
+        return index_unique_row_coordinates(
+            (((row.get("casilla_id"), row.get("row_index")), _list_form_row_casilla_value(row)) for row in rows),
+            duplicate=_duplicate_row_casilla_coordinate,
+        )
 
     @field_validator("row_casilla_values")
     @classmethod
@@ -1056,22 +1124,25 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (list, tuple)):
             return value
         items = OBJECT_TUPLE_ADAPTER.validate_python(value)
-        normalized: dict[tuple[object, object], object] = {}
-        for item in items:
-            if not isinstance(item, Mapping):
-                return items
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
-            key = (row.get("casilla_id"), row.get("row_index"))
-            if key in normalized:
-                raise SourceMeshError("aggregation.source_mesh.errors.duplicate_row_casilla_coordinate")
-            normalized[key] = {
-                "source_binding_id": row.get("source_binding_id"),
-                "source_row_index": row.get("source_row_index"),
-                "source_identity": row.get("source_identity"),
-                "materialization_rule_id": row.get("materialization_rule_id"),
-                "materialization_rule_version": row.get("materialization_rule_version"),
-            }
-        return normalized
+        rows = _list_form_rows(items)
+        if rows is None:
+            return items
+        return index_unique_row_coordinates(
+            (
+                (
+                    (row.get("casilla_id"), row.get("row_index")),
+                    {
+                        "source_binding_id": row.get("source_binding_id"),
+                        "source_row_index": row.get("source_row_index"),
+                        "source_identity": row.get("source_identity"),
+                        "materialization_rule_id": row.get("materialization_rule_id"),
+                        "materialization_rule_version": row.get("materialization_rule_version"),
+                    },
+                )
+                for row in rows
+            ),
+            duplicate=_duplicate_row_casilla_coordinate,
+        )
 
     @field_validator("row_casilla_provenance")
     @classmethod
@@ -1115,6 +1186,12 @@ class CalculationSourceResolution(BaseModel):
             raise SourceMeshError("aggregation.source_mesh.errors.unresolved_binding_ids_duplicate")
         return tuple(sorted(normalized))
 
+    @field_validator("inapplicable_binding_ids")
+    @classmethod
+    @pydantic_validation_boundary
+    def _freeze_inapplicable_binding_ids(cls, value: tuple[BindingId, ...]) -> tuple[BindingId, ...]:
+        return tuple(sorted(set(value)))
+
     @field_validator("bound_inputs_by_casilla_id")
     @classmethod
     @pydantic_validation_boundary
@@ -1131,6 +1208,29 @@ class CalculationSourceResolution(BaseModel):
         if len(normalized) != len(set(normalized)):
             raise SourceMeshError("aggregation.source_mesh.errors.source_transaction_ids_duplicate")
         return tuple(sorted(normalized))
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _closed_record_rows_agree_with_values(self) -> CalculationSourceResolution:
+        supplied = (
+            set(self.binding_values)
+            | set(self.enum_binding_values)
+            | set(self.date_binding_values)
+            | set(self.boolean_binding_values)
+            | {binding_id for binding_id, _ in self.row_binding_values}
+        )
+        try:
+            validate_closed_record_row_sets(self.closed_record_row_sets, supplied_binding_ids=supplied)
+        except ValueError as exc:
+            raise SourceMeshError("aggregation.source_mesh.errors.closed_record_rows_conflict") from exc
+        for row_set in self.closed_record_row_sets:
+            if row_set.source_kind not in self.owned_sources or any(
+                diagnostic.binding_source is row_set.source_kind
+                and diagnostic.reason in ("storage_degraded", "unrouted_observation")
+                for diagnostic in self.diagnostics
+            ):
+                raise SourceMeshError("aggregation.source_mesh.errors.closed_record_rows_unadmitted")
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

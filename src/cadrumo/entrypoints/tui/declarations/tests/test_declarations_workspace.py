@@ -6,18 +6,24 @@ import ast
 import threading
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import override
 
 import pytest
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
+from textual.pilot import Pilot
 from textual.screen import Screen
+from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Static
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
-from .....application.modelo.declarations_workspace import (
+from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
+from .....application.modelo.declaration_targets import DeclarationTarget, declaration_targets
+from .....application.modelo.declarations_workspace import project_declarations_workspace
+from .....application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
@@ -25,13 +31,13 @@ from .....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
+from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
-from .....core.filing_year import FILING_YEAR_MIN
+from .....core.i18n.render import tr
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.modelos.calculation_revision import (
@@ -55,9 +61,10 @@ from ...components.host import ScreenHostApp
 from ...modelo.lifecycle import ModeloLifecycleActionUnavailableError
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
-from ..controller import DeclarationsWorkspaceController, declarations_copy
+from ..controller import DeclarationsWorkspaceController
 from ..filing_history import DeclarationsFilingHistoryScreen
 from ..models import (
+    DeclarationsWorkspaceWiringV1,
     FilingHandoffV1,
     ModeloWorkCreateHandoffV1,
     ModeloWorkCreateResultV1,
@@ -65,6 +72,7 @@ from ..models import (
     RevisionHandoffV1,
 )
 from ..overview import DeclarationsOverviewScreen
+from ..picker import NewDeclarationPicker
 from ..revisions import DeclarationsRevisionsScreen
 from ..routes import (
     DECLARATIONS_ROUTES,
@@ -72,6 +80,7 @@ from ..routes import (
     declarations_screen_factory,
     resolve_declarations_screen,
 )
+from .portfolio_fixtures import portfolio_projection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -81,32 +90,32 @@ _BUCKET = "11111111-1111-4111-8111-111111111111"
 _CASILLA = validated_casilla_id("01")
 _EXPECTED = {
     OutputLanguage.ES: (
-        "Resumen de declaraciones",
-        "Revisiones de cálculo",
+        "Tus declaraciones",
+        "Cálculos anteriores",
         "Historial de presentaciones",
-        "El estado local de presentación, la confirmación de la AEAT y la evidencia observada de la AEAT son hechos distintos.",
-        "Presentación registrada localmente",
+        "El estado local de presentación, la confirmación de la AEAT y el estado observado en la AEAT son hechos distintos.",
+        "Presentación registrada",
     ),
     OutputLanguage.EN: (
-        "Declarations overview",
-        "Calculation revisions",
+        "Your declarations",
+        "Earlier calculations",
         "Filing history",
-        "Local filing status, AEAT confirmation and externally observed AEAT evidence are separate facts.",
-        "Filing recorded locally",
+        "Local filing status, AEAT confirmation and externally observed AEAT status are separate facts.",
+        "Filing recorded",
     ),
     OutputLanguage.CA: (
-        "Resum de declaracions",
-        "Revisions de càlcul",
+        "Les teves declaracions",
+        "Càlculs anteriors",
         "Historial de presentacions",
-        "L'estat local de presentació, la confirmació de l'AEAT i l'evidència observada de l'AEAT són fets separats.",
-        "Presentació registrada localment",
+        "L'estat local de presentació, la confirmació de l'AEAT i l'estat observat a l'AEAT són fets separats.",
+        "Presentació registrada",
     ),
     OutputLanguage.HU: (
-        "Bevallások áttekintése",
-        "Számítási változatok",
+        "A bevallásaid",
+        "Korábbi számítások",
         "Benyújtási előzmények",
-        "A helyi benyújtási állapot, az AEAT-megerősítés és a megfigyelt AEAT-bizonyíték külön tények.",
-        "Benyújtás helyben rögzítve",
+        "A helyi benyújtási állapot, az AEAT-megerősítés és a megfigyelt AEAT-állapot külön tények.",
+        "Benyújtás rögzítve",
     ),
 }
 
@@ -300,61 +309,99 @@ def _controller(
     revision_handoff: RevisionHandoffV1 | None = None,
     filing_handoff: FilingHandoffV1 | None = None,
     work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
+    creation_targets: tuple[DeclarationTarget, ...] = (),
 ) -> DeclarationsWorkspaceController:
     return DeclarationsWorkspaceController(
         context or TuiScreenContextV1(destination="workbench.declarations"),
         projection,
-        work_action=_action("operator.modelo.work.list"),
-        revisions_action=_action("operator.modelo.work.revisions"),
-        filing_action=_action("operator.modelo.filing_record.list"),
-        modelo_workspace_factory=modelo_workspace_factory,
-        revision_handoff=revision_handoff,
-        filing_handoff=filing_handoff,
-        work_create_handoff=work_create_handoff,
+        DeclarationsWorkspaceWiringV1(
+            work_action=_action("operator.modelo.work.list"),
+            revisions_action=_action("operator.modelo.work.revisions"),
+            filing_action=_action("operator.modelo.filing_record.list"),
+            modelo_workspace_factory=modelo_workspace_factory,
+            revision_handoff=revision_handoff,
+            filing_handoff=filing_handoff,
+            work_create_handoff=work_create_handoff,
+            creation_targets=creation_targets,
+        ),
     )
 
 
+async def _select_creation(pilot: Pilot[None], modelo: str, period: Period) -> None:
+    """Choose both registry-backed steps with explicit keyboard confirmation."""
+    await pilot.press("plus")
+    await pilot.pause()
+    picker = pilot.app.screen
+    assert isinstance(picker, NewDeclarationPicker)
+    picker.query_one("#declaration-picker-all", Button).press()
+    await pilot.pause()
+    table = picker.query_one("#declaration-picker-table", DataTable)
+    table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == modelo))
+    table.focus()
+    await pilot.press("enter")
+    await pilot.pause()
+    assert picker.modelo == modelo
+    assert picker.query_one("#declaration-picker-create", Button).disabled
+    table.move_cursor(row=next(i for i, target in enumerate(picker.visible_targets) if target.period == period))
+    await pilot.press("enter")
+    await pilot.pause()
+    assert picker.selected == DeclarationTarget(modelo, period)
+    assert pilot.app.focused is picker.query_one("#declaration-picker-create", Button)
+    await pilot.press("enter")
+    await pilot.pause()
+
+
+def _select_declaration(table: DataTable[str], identity: str) -> None:
+    """Select a semantic declaration row after the group headers."""
+    table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == identity))
+    table.focus()
+
+
 @pytest.mark.asyncio
-async def test_declarations_create_selects_supported_work_and_refuses_invalid_input_before_handoff(
+async def test_declarations_create_selects_only_supported_targets_and_reopens_exact_work(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    # Any exercise of the support envelope is a valid selection; the refused one sits
-    # just below the application's accepted filing-year range.
-    year = authority_operation.supported_filing_years().floor
+    targets = declaration_targets(authority_operation)
+    target = DeclarationTarget("111", Period.from_year_and_code(2025, "2T"))
+    assert target in targets
     calls: list[tuple[str, int, Period]] = []
 
     def create(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
         calls.append((modelo, year, period))
         return ModeloWorkCreateResultV1(reused=len(calls) > 1)
 
-    screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation), work_create_handoff=create))
+    screen = DeclarationsOverviewScreen(
+        _controller(
+            _projection(authority_operation),
+            work_create_handoff=create,
+            creation_targets=targets,
+        )
+    )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
         await pilot.pause()
-        screen.query_one("#declarations-work-modelo", Input).value = "111"
-        screen.query_one("#declarations-work-year", Input).value = str(year)
-        screen.query_one("#declarations-work-period", Input).value = "2T"
-        screen.query_one("#declarations-work-create", Button).press()
+        await pilot.press("plus")
         await pilot.pause()
-        await pilot.app.workers.wait_for_complete()
-        assert calls == [("111", year, Period.from_year_and_code(year, "2T"))]
-        assert "111" in str(screen.query_one("#declarations-work-create-notice", Static).render())
-        screen.query_one("#declarations-work-create", Button).press()
+        picker = pilot.app.screen
+        assert isinstance(picker, NewDeclarationPicker)
+        assert tuple(row.key.value for row in picker.query_one(DataTable).ordered_rows) == ("130",)
+        assert picker.query_one("#declaration-picker-create", Button).disabled
+        assert not picker.query(Input)
+        await pilot.press("escape")
         await pilot.pause()
-        await pilot.app.workers.wait_for_complete()
-        assert len(calls) == 2
-        screen.query_one("#declarations-work-year", Input).value = str(FILING_YEAR_MIN - 1)
-        screen.query_one("#declarations-work-create", Button).press()
-        await pilot.pause()
-        assert len(calls) == 2
-        screen.query_one("#declarations-work-year", Input).value = str(year)
-        screen.query_one("#declarations-work-period", Input).value = "not-a-period"
-        screen.query_one("#declarations-work-create", Button).press()
-        await pilot.pause()
-        assert len(calls) == 2
+        assert calls == []
+        for _ in range(2):
+            await _select_creation(pilot, target.modelo, target.period)
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+        assert calls == [("111", 2025, target.period)] * 2
+        notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
+        assert "Modelo 111" in notice
+        assert "2025" in notice
+        assert tr("tui.declarations.work_create.reused", address="")[:10] in notice
 
 
 @pytest.mark.asyncio
-async def test_declarations_create_reports_the_submitted_address_when_fields_change_mid_write(
+async def test_declarations_create_keeps_the_submitted_address_and_refuses_a_second_busy_write(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     release = threading.Event()
@@ -365,22 +412,28 @@ async def test_declarations_create_reports_the_submitted_address_when_fields_cha
         assert release.wait(timeout=10)
         return ModeloWorkCreateResultV1(reused=False)
 
-    screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation), work_create_handoff=create))
+    screen = DeclarationsOverviewScreen(
+        _controller(
+            _projection(authority_operation),
+            work_create_handoff=create,
+            creation_targets=declaration_targets(authority_operation),
+        )
+    )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
         await pilot.pause()
-        screen.query_one("#declarations-work-modelo", Input).value = "111"
-        screen.query_one("#declarations-work-year", Input).value = "2025"
-        screen.query_one("#declarations-work-period", Input).value = "2T"
-        screen.query_one("#declarations-work-create", Button).press()
-        await pilot.pause()
-        screen.query_one("#declarations-work-modelo", Input).value = "115"
-        screen.query_one("#declarations-work-create", Button).press()
-        await pilot.pause()
-        release.set()
+        try:
+            await _select_creation(pilot, "111", Period.from_year_and_code(2025, "2T"))
+            assert len(calls) == 1
+            await pilot.press("plus")
+            screen.query_one("#declarations-new", Button).press()
+            await pilot.pause()
+            assert pilot.app.screen is screen
+            assert len(calls) == 1
+        finally:
+            release.set()
         await pilot.app.workers.wait_for_complete()
         await pilot.pause()
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
-
     assert calls == [("111", 2025, Period.from_year_and_code(2025, "2T"))]
     assert "Modelo 111" in notice
     assert "Modelo 115" not in notice
@@ -396,21 +449,20 @@ async def test_declarations_create_shows_the_application_refusal_as_itself(
             context={"modelo": modelo, "reason": "synthetic-reason"},
         )
 
-    screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation), work_create_handoff=create))
+    screen = DeclarationsOverviewScreen(
+        _controller(
+            _projection(authority_operation),
+            work_create_handoff=create,
+            creation_targets=declaration_targets(authority_operation),
+        )
+    )
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
         await pilot.pause()
-        screen.query_one("#declarations-work-modelo", Input).value = "200"
-        screen.query_one("#declarations-work-year", Input).value = "2025"
-        screen.query_one("#declarations-work-period", Input).value = "0A"
-        screen.query_one("#declarations-work-create", Button).press()
-        await pilot.pause()
+        await _select_creation(pilot, "200", Period.from_year_and_code(2025, "0A"))
         await pilot.app.workers.wait_for_complete()
         await pilot.pause()
         notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
-
-    assert notice == declarations_copy(
-        "tui.declarations.work_create.refusal.not_applicable", modelo="200", reason="synthetic-reason"
-    )
+    assert notice == tr("tui.declarations.work_create.refusal.not_applicable", modelo="200", reason="synthetic-reason")
     assert "--allow-not-applicable" not in notice
 
 
@@ -437,17 +489,21 @@ def test_closed_routes_and_factory_require_exact_catalogue_actions(
     )
     factory = declarations_screen_factory(
         _projection(authority_operation),
-        work_action=_action("operator.modelo.work.list"),
-        revisions_action=_action("operator.modelo.work.revisions"),
-        filing_action=_action("operator.modelo.filing_record.list"),
+        DeclarationsWorkspaceWiringV1(
+            work_action=_action("operator.modelo.work.list"),
+            revisions_action=_action("operator.modelo.work.revisions"),
+            filing_action=_action("operator.modelo.filing_record.list"),
+        ),
     )
     assert isinstance(factory(TuiScreenContextV1(destination="workbench.declarations")), DeclarationsOverviewScreen)
     with pytest.raises(ValueError, match="another application door"):
         declarations_screen_factory(
             _projection(authority_operation),
-            work_action=_action("operator.modelo.work.revisions"),
-            revisions_action=_action("operator.modelo.work.revisions"),
-            filing_action=_action("operator.modelo.filing_record.list"),
+            DeclarationsWorkspaceWiringV1(
+                work_action=_action("operator.modelo.work.revisions"),
+                revisions_action=_action("operator.modelo.work.revisions"),
+                filing_action=_action("operator.modelo.filing_record.list"),
+            ),
         )
 
 
@@ -463,7 +519,15 @@ async def test_each_screen_has_four_targets_one_outer_scroll_and_no_overflow(
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
-        assert screen.query_one("#declarations-navigation", DataTable).row_count == 5
+        if isinstance(screen, DeclarationsOverviewScreen):
+            assert {button.id for button in screen.query(Button)} == {
+                "declarations-new",
+                "declarations-revisions",
+                "declarations-filings",
+                "declarations-calendar",
+            }
+        else:
+            assert screen.query_one("#declarations-navigation", DataTable).row_count == 5
         assert geometry_band(app, 80) == []
         assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
         owners = tuple(widget for widget in screen.walk_children() if widget.display and widget.show_vertical_scrollbar)
@@ -531,15 +595,15 @@ async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refu
     app = ScreenHostApp[None](empty)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
-        assert declarations_copy("tui.declarations.empty") in _copy(empty)
+        assert tr("tui.declarations.list.empty") in _copy(empty)
     screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation)))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         table = screen.query_one("#declarations-list", DataTable)
-        table.focus()
+        _select_declaration(table, screen.controller.projection.declarations[0].work_unit_id)
         await pilot.press("enter")
-        assert declarations_copy("tui.declarations.refusal.handoff") in _copy(screen)
+        assert tr("tui.declarations.refusal.handoff") in _copy(screen)
 
 
 class _ModeloChild(Screen[None]):
@@ -569,7 +633,7 @@ async def test_modelo_workspace_route_opens_exact_selected_factory_child_and_res
         await root.push_screen(launcher)
         await pilot.pause()
         table = launcher.query_one("#declarations-list", DataTable)
-        table.focus()
+        _select_declaration(table, projection.declarations[0].work_unit_id)
         await pilot.press("enter")
         await pilot.pause()
         assert calls == [projection.declarations[0]]
@@ -628,8 +692,8 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         assert len(set(rows)) == 3
         assert all("03/09/2026" in row[1] and "UTC" in row[1] for row in rows)
         assert {row[-2:] for row in rows} == {
-            (declarations_copy("tui.declarations.value.yes"), declarations_copy("tui.declarations.value.yes")),
-            (declarations_copy("tui.declarations.value.no"), declarations_copy("tui.declarations.value.no")),
+            (tr("tui.declarations.value.yes"), tr("tui.declarations.value.yes")),
+            (tr("tui.declarations.value.no"), tr("tui.declarations.value.no")),
         }
         drafts = tuple(row for row in projection.calculation_revisions if not row.is_current and not row.is_filed)
         assert len(drafts) == 2
@@ -655,9 +719,9 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         filing_key = f"filing:{projection.filings[0].filing_record_id}"
         row = tuple(str(cell) for cell in table.get_row(filing_key))
         assert row[1] == "03/09/2026 10:00 UTC"
-        assert row[2] == declarations_copy("tui.declarations.filing_state.vigente")
-        assert row[3] == declarations_copy("tui.declarations.confirmation.confirmada")
-        assert row[4] == declarations_copy("tui.declarations.evidence.aeat_justificante_pdf")
+        assert row[2] == tr("tui.declarations.filing_state.vigente")
+        assert row[3] == tr("tui.declarations.confirmation.confirmada")
+        assert row[4] == tr("tui.declarations.evidence.aeat_justificante_pdf")
 
 
 @pytest.mark.asyncio
@@ -683,9 +747,12 @@ async def test_real_locales_change_copy_without_changing_semantic_rows(
                 assert expected in rendered
                 assert "tui.declarations." not in rendered
                 assert "work_unit" not in rendered.lower()
-                assert tuple(
-                    row.key.value for row in screen.query_one("#declarations-navigation", DataTable).ordered_rows
-                ) == tuple(route.destination for route in DECLARATIONS_ROUTES)
+                if not isinstance(screen, DeclarationsOverviewScreen):
+                    assert tuple(
+                        row.key.value for row in screen.query_one("#declarations-navigation", DataTable).ordered_rows
+                    ) == tuple(route.destination for route in DECLARATIONS_ROUTES)
+                else:
+                    assert not screen.query("#declarations-navigation")
                 if isinstance(screen, DeclarationsFilingHistoryScreen):
                     filing_copy = rendered
                     filing_keys = tuple(
@@ -705,6 +772,198 @@ class _Root(App[None]):
     @override
     def compose(self) -> ComposeResult:
         yield Static("root", id="root")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", tuple(OutputLanguage))
+@pytest.mark.parametrize("theme", ("cadrumo-dark", "cadrumo-light"))
+@pytest.mark.parametrize("size", ((80, 24), (120, 40)))
+async def test_initial_grouped_controls_remain_visible_above_the_scrolling_attention_rows(
+    locale: OutputLanguage, theme: str, size: tuple[int, int]
+) -> None:
+    from .....core.config import override_settings
+
+    workspace, calendar = portfolio_projection()
+    controller = _controller(workspace)
+    controller.calendar_projection = calendar
+    with override_settings(cadrumo_output_language=locale.value):
+        screen = DeclarationsOverviewScreen(controller)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=size) as pilot:
+            app.theme = theme
+            await pilot.pause()
+            search = screen.query_one("#declarations-search", Input)
+            context = screen.query_one("#declarations-list-context", Static)
+            page = screen.query_one("#declarations-page", VerticalScroll)
+            table = screen.query_one("#declarations-list", DataTable)
+            assert app.focused is table
+            assert table.ordered_rows[table.cursor_row].key.value == "group:attention"
+            assert table.region.y >= page.region.y
+            assert table.region.y + table.header_height < page.region.bottom
+            for control in (search, context):
+                assert control.visible and control.display
+                assert screen.region.contains_region(control.region)
+                assert control.region.y >= screen.query_one(".cadrumo-banner", Static).region.bottom
+                assert control.region.bottom <= page.region.y
+            initial_regions = (search.region, context.region)
+            assert tr("tui.declarations.list.filter.all") in str(context.render())
+            assert tr("tui.declarations.list.sort.deadline") in str(context.render())
+            assert page.max_scroll_y > 0
+            page.scroll_end(animate=False)
+            await pilot.pause()
+            assert page.scroll_y > 0
+            assert (search.region, context.region) == initial_regions
+            assert screen.region.contains_region(search.region)
+            assert screen.region.contains_region(context.region)
+            await pilot.press("/")
+            await pilot.pause()
+            assert app.focused is search
+            assert (search.region, context.region) == initial_regions
+            assert geometry_band(app, size[0]) == []
+            owners = tuple(
+                widget
+                for widget in screen.walk_children()
+                if isinstance(widget, Widget) and widget.display and widget.show_vertical_scrollbar
+            )
+            assert owners == (page,)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", tuple(OutputLanguage))
+async def test_grouped_keyboard_filter_search_sort_and_fold_preserve_declaration_identities(
+    locale: OutputLanguage, authority_operation: PinnedAuthorityOperation
+) -> None:
+    from .....core.config import override_settings
+
+    original = _projection(authority_operation)
+    base = original.declarations[0]
+    declarations = tuple(
+        base.model_copy(
+            update={
+                "work_unit_id": digit * 64,
+                "modelo": modelo,
+                "has_current_filing": False,
+                "summary": DeclarationSummary(
+                    state=DeclarationSummaryState.CALCULATED,
+                    result=None
+                    if value is None
+                    else ModeloFormResult(
+                        casilla_id=_CASILLA,
+                        box="01",
+                        value=Decimal(value),
+                        direction=ModeloFormResultDirection.NIL if value == "0" else ModeloFormResultDirection.TO_PAY,
+                    ),
+                ),
+            }
+        )
+        for digit, modelo, value in (("a", "303", "100"), ("b", "130", "0"), ("c", "111", None))
+    )
+    projection = original.model_copy(update={"declarations": declarations})
+    with override_settings(cadrumo_output_language=locale.value):
+        screen = DeclarationsOverviewScreen(_controller(projection))
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#declarations-list", DataTable)
+
+            def local_keys() -> tuple[str, ...]:
+                return tuple(
+                    str(row.key.value) for row in table.ordered_rows if not str(row.key.value).startswith("group:")
+                )
+
+            assert local_keys() == ("c" * 64, "b" * 64, "a" * 64)
+            await pilot.press("s", "s")
+            assert local_keys() == ("b" * 64, "a" * 64, "c" * 64)
+            assert "0,00" in _copy(screen) or "0.00" in _copy(screen)
+            assert "100,00" in _copy(screen) or "100.00" in _copy(screen)
+            assert not any(identity in _copy(screen) for identity in local_keys())
+            _select_declaration(table, "group:in_progress")
+            await pilot.press("enter")
+            assert local_keys() == ()
+            _select_declaration(table, "group:in_progress")
+            await pilot.press("enter")
+            assert local_keys() == ("b" * 64, "a" * 64, "c" * 64)
+            await pilot.press("f")
+            assert local_keys() == ()
+            assert tr("tui.declarations.list.filter.attention") in _copy(screen)
+            for _ in range(4):
+                await pilot.press("f")
+            assert local_keys() == ("b" * 64, "a" * 64, "c" * 64)
+            await pilot.press("/")
+            search = screen.query_one("#declarations-search", Input)
+            assert app.focused is search
+            await pilot.press("1", "3", "0")
+            assert local_keys() == ("b" * 64,)
+            name_term = {
+                OutputLanguage.ES: "estimacion",
+                OutputLanguage.EN: "direct",
+                OutputLanguage.CA: "estimacio",
+                OutputLanguage.HU: "kozvetlen",
+            }[locale]
+            await pilot.press("space", *tuple(name_term), "space", "2", "0", "2", "6")
+            assert local_keys() == ("b" * 64,)
+            await pilot.press("backspace", "5")
+            assert local_keys() == ()
+            await pilot.press("end", "ctrl+u")
+            await pilot.pause()
+            assert len(local_keys()) == 3
+            table.focus()
+            assert geometry_band(app, 80) == []
+            assert table.max_scroll_x == 0
+            assert "tui.declarations." not in _copy(screen)
+
+
+@pytest.mark.asyncio
+async def test_creation_result_opens_the_exact_new_declaration_and_refreshes_semantic_focus(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    original = _projection(authority_operation)
+    created = original.declarations[0].model_copy(
+        update={
+            "work_unit_id": "e" * 64,
+            "period": Period.from_year_and_code(2026, "2T"),
+            "has_current_calculation": False,
+            "has_current_filing": False,
+            "summary": DeclarationSummary(state=DeclarationSummaryState.DRAFT),
+        }
+    )
+    latest = original.model_copy(update={"declarations": (*original.declarations, created)})
+    calls: list[object] = []
+    child = _ModeloChild()
+    created_now = False
+
+    def create(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
+        nonlocal created_now
+        assert (modelo, year, period) == ("130", 2026, created.period)
+        created_now = True
+        return ModeloWorkCreateResultV1(reused=False, declaration=created)
+
+    def factory(declaration: DeclarationsWorkspaceDeclarationRefV1) -> Screen[None]:
+        calls.append(declaration)
+        return child
+
+    controller = _controller(
+        original,
+        modelo_workspace_factory=factory,
+        work_create_handoff=create,
+        creation_targets=declaration_targets(authority_operation),
+    )
+    controller.refresh_data = lambda: (latest if created_now else original, None)
+    screen = DeclarationsOverviewScreen(controller)
+    root = _Root()
+    async with root.run_test(size=(80, 24)) as pilot:
+        await root.push_screen(screen)
+        await pilot.pause()
+        await _select_creation(pilot, "130", created.period)
+        await root.workers.wait_for_complete()
+        await pilot.pause()
+        assert calls == [created]
+        assert root.screen is child
+        child.dismiss(None)
+        await pilot.pause()
+        table = screen.query_one("#declarations-list", DataTable)
+        assert root.focused is table
+        assert table.ordered_rows[table.cursor_row].key.value == created.work_unit_id
 
 
 @pytest.mark.asyncio

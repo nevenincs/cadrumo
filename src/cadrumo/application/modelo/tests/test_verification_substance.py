@@ -176,6 +176,93 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     )
 
 
+_M200_POSITIVE_APPLICATION_STOCK = 'positive_application_le_present_stock(["DP200014:00547", "00670"])'
+
+
+@pytest.mark.parametrize(
+    ("casilla_values", "expected"),
+    (
+        pytest.param({}, True, id="omitted-application-and-stock"),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("0")},
+            True,
+            id="zero-application-with-missing-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("1")},
+            False,
+            id="positive-application-with-missing-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("1"), _M200_BIN_OPEN_CASILLA: Decimal("0")},
+            False,
+            id="positive-application-with-explicit-zero-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("1"), _M200_BIN_OPEN_CASILLA: Decimal("-1")},
+            False,
+            id="positive-application-with-negative-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("50"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            True,
+            id="partial-application",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("100"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            True,
+            id="exact-stock-boundary",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("101"), _M200_BIN_OPEN_CASILLA: Decimal("100")},
+            False,
+            id="application-exceeds-stock",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("-1")},
+            True,
+            id="negative-application-is-not-sign-validated-here",
+        ),
+        pytest.param(
+            {_M200_BIN_APPLIED_CASILLA: Decimal("0"), _M200_BIN_OPEN_CASILLA: Decimal("-1")},
+            True,
+            id="zero-application-does-not-validate-stock-sign",
+        ),
+    ),
+)
+def test_positive_application_le_present_stock_contract(
+    casilla_values: dict[CasillaId, Decimal],
+    expected: bool,
+) -> None:
+    """Only a positive application requires a present stock no smaller than itself."""
+    assert (
+        evaluate_predicate_expression(_M200_POSITIVE_APPLICATION_STOCK, casilla_values, workflow_profile()) is expected
+    )
+
+
+def test_positive_application_le_present_stock_emits_block_when_stock_is_absent() -> None:
+    """The blocking rule refuses a positive application without a stock operand."""
+    predicate = VerificationPredicateDefinition(
+        id="positive-application-le-present-stock:compensacion-bin-no-excede-stock-disponible",
+        predicate_id="modelo-200-compensacion-bin-no-excede-stock-disponible",
+        legal_refs=("ley-27-2014:art-26",),
+        expression=_M200_POSITIVE_APPLICATION_STOCK,
+        finding_kind="BLOCKING_RULE",
+    )
+    findings = evaluate_verification_predicates(
+        (predicate,),
+        {_M200_BIN_APPLIED_CASILLA: Decimal("1")},
+        workflow_profile(),
+    )
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert findings[0].message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+    assert dict(findings[0].message_facts) == {
+        "predicate_id": "modelo-200-compensacion-bin-no-excede-stock-disponible",
+    }
+
+
 def test_at_most_one_positive_blocks_only_multiple_positive_casillas() -> None:
     """at_most_one_positive treats absent, zero, and negative values as non-positive."""
 
@@ -431,10 +518,16 @@ def test_casilla_equals_implies_nonzero_bad_arity_does_not_fire() -> None:
     assert evaluate_advisory_predicate_fires(expr, values, text_values) is False
 
 
-def test_casilla_equals_implies_nonzero_is_advisory_only_no_blocking_branch() -> None:
-    """The operator has no BLOCKING_RULE branch; it trivially holds via the unmatched-expression default."""
+def test_casilla_equals_implies_nonzero_blocking_branch_uses_exact_text() -> None:
+    """Missing/nonmatching text does not trigger; an exact match requires the value."""
     values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
     assert evaluate_predicate_expression(_CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile()) is True
+    assert not evaluate_predicate_expression(
+        _CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile(), {_CASILLA_01: "literal-value"}
+    )
+    assert evaluate_predicate_expression(
+        _CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile(), {_CASILLA_01: "literal-value "}
+    )
 
 
 def test_casilla_equals_implies_nonzero_emits_advisory_finding_via_evaluate_verification_predicates() -> None:
@@ -570,3 +663,48 @@ def test_shipped_m100_m200_advisory_implications_fire_only_for_a_positive_missin
             )
             == []
         )
+
+
+@pytest.mark.parametrize("marker", ["C ", " S"])
+@pytest.mark.parametrize("receipt", [None, "0", "1560000000001"])
+def test_categorical_blocking_rule_reports_required_field(marker, receipt) -> None:
+    expression = f'casilla_equals_implies_nonzero(["01", "{marker}", "07"])'
+    predicate = VerificationPredicateDefinition(
+        id="casilla-equals-implies-nonzero:test-receipt",
+        predicate_id="test-receipt",
+        legal_refs=("ley-35-2006:art-99",),
+        expression=expression,
+        finding_kind="BLOCKING_RULE",
+    )
+    values = {} if receipt is None else {_CASILLA_07: Decimal(receipt)}
+    findings = evaluate_verification_predicates((predicate,), values, workflow_profile(), {_CASILLA_01: marker})
+    if receipt == "1560000000001":
+        assert findings == []
+    else:
+        assert len(findings) == 1
+        assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+        assert findings[0].casilla_id == _CASILLA_07
+        assert findings[0].message_locale_key == "application.modelo.findings.selected_option_requires_nonzero"
+    assert evaluate_verification_predicates((predicate,), values, workflow_profile(), {_CASILLA_01: "  "}) == []
+
+
+@pytest.mark.parametrize("marker", [None, "  ", "C ", " S", " "])
+@pytest.mark.parametrize("receipt", [None, "0", "1", "-1", "0.01"])
+def test_categorical_zero_rule_requires_explicit_zero_only_for_exact_marker(marker, receipt) -> None:
+    expression = 'casilla_equals_implies_zero(["01", "  ", "07"])'
+    predicate = VerificationPredicateDefinition(
+        id="casilla-equals-implies-zero:test-receipt",
+        predicate_id="test-receipt",
+        legal_refs=("ley-35-2006:art-99",),
+        expression=expression,
+        finding_kind="BLOCKING_RULE",
+    )
+    values = {} if receipt is None else {_CASILLA_07: Decimal(receipt)}
+    texts = {} if marker is None else {_CASILLA_01: marker}
+    violation = marker == "  " and receipt != "0"
+    findings = evaluate_verification_predicates((predicate,), values, workflow_profile(), texts)
+    assert bool(findings) is violation
+    assert evaluate_advisory_predicate_fires(expression, values, texts) is violation
+    if violation:
+        assert findings[0].casilla_id == _CASILLA_07
+        assert findings[0].message_locale_key == "application.modelo.findings.selected_option_requires_zero"

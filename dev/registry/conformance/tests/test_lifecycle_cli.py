@@ -187,12 +187,16 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
                         casillas=(),
                         formulas=(),
                         export_layouts=(),
+                        dependency_classifications=(),
+                        period_selector=SimpleNamespace(declared_periods=()),
                     ),
                     "2025": SimpleNamespace(
                         bindings=(),
                         casillas=(),
                         formulas=(),
                         export_layouts=(),
+                        dependency_classifications=(),
+                        period_selector=SimpleNamespace(declared_periods=()),
                     ),
                 },
             ),
@@ -235,8 +239,8 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
     )
     monkeypatch.setattr(
         registry_status,
-        "load_bundled_runtime_authority",
-        lambda: calls.append("load") or SimpleNamespace(close=lambda: None),
+        "IndexedRegistryAuthority",
+        lambda _descriptor: calls.append("load") or SimpleNamespace(close=lambda: None),
     )
 
     status = registry_status.collect_registry_status(

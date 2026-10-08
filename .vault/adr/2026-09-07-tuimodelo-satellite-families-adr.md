@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-21'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c591e2186cf1d7cc1a7ef8e7ff5665bbafeb4ad7b1d22d0de48c44e1439c777e'
+body_hash: 'sha256:3216b9076b94a14f539fdf7ad6731506573e51d52777b8d6e8901081aaa4b103'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -62,11 +62,6 @@ honestly command-line work.
   safety would mis-describe most of the read surface. The denominator's drift check compares
   against the spec's own declaration, so an under-declaring spec is invisible to it
   (`2026-09-07-tuimodelo-reference`).
-- A SEPARATE under-declaration of the same class sits outside the review-package family and is
-  recorded here because this decision owns the class rather than the family: the telemetry flush
-  command performs network egress through an HTTP sink while declaring no network side effect.
-  The schema cannot catch it, because it validates that a declared network side effect carries its
-  capability and never that code performing egress declares one.
 - The evidence-bundle service has zero production callers and nothing writes its namespace, so
   all three audit verbs require an identifier an operator cannot obtain
   (`2026-09-07-tuimodelo-reference`).

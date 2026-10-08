@@ -14,7 +14,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from enum import StrEnum
-from operator import methodcaller
 from typing import Any, Final, cast
 
 from textual.app import App
@@ -66,25 +65,22 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarSourceObservationV1,
     project_declarations_calendar,
 )
-from ....application.modelo.declarations_workspace import (
+from ....application.modelo.declarations_workspace import project_declarations_workspace
+from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
-from ....application.operations.composition import OperationComposedServices, OperationSubmission
 from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
 from ....application.operations.frontend_requests import (
-    OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
-    OperationSubmissionReceiptV1,
 )
 from ....application.operations.models import OperationId
 from ....application.operations.persistence.replay import OperationReplayStatus
@@ -140,7 +136,7 @@ from ..aeat_sync.screens import (
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.controller import DeclarationsWorkspaceController
-from ..declarations.models import DeclarationsDestinationIdV1
+from ..declarations.models import DeclarationsDestinationIdV1, DeclarationsWorkspaceWiringV1
 from ..declarations.overview import DeclarationsModeloWorkspaceLauncherScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..home import HomeScreen
@@ -152,7 +148,7 @@ from ..navigation import (
     TuiScreenContextV1,
     build_destination_catalogue,
 )
-from ..operations.controller import OperationController
+from ..operations.controller_port import OperationControllerPort
 from ..operations.modal import OperationModal
 
 _BUCKET: Final[str] = "00000000-0000-4000-8000-000000000001"
@@ -254,6 +250,7 @@ def _operation_contracts() -> OperationPublicContractSetV1:
         browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=unopened_censal_fetch,
+        provider_preflight=lambda _profile_id, _operation: None,
     ).model_copy(update={"action_reference": ActionReference(action_id="operator.profile.edit")})
     contract = build_censal_operation_registration(definition).contract
     return OperationPublicContractSetV1.build((contract,))
@@ -369,9 +366,10 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
     )
 
 
-async def _host_operation_handoff(request: AeatSyncOperationRequestV1) -> None:
+async def _host_operation_handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
     """Stand in for the installed host's operation door; a fixture never runs the operation."""
     del request
+    raise AssertionError("workbench fixture must not execute an operation")
 
 
 def _aeat_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App[Any]:
@@ -597,10 +595,12 @@ def _declaration_controller(scenario: WorkbenchFixtureScenario) -> DeclarationsW
     return DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         projection,
-        work_action=action("operator.modelo.work.list"),
-        revisions_action=action("operator.modelo.work.revisions"),
-        filing_action=action("operator.modelo.filing_record.list"),
-        calendar_projection=_calendar_projection(scenario),
+        DeclarationsWorkspaceWiringV1(
+            work_action=action("operator.modelo.work.list"),
+            revisions_action=action("operator.modelo.work.revisions"),
+            filing_action=action("operator.modelo.filing_record.list"),
+            calendar_projection=_calendar_projection(scenario),
+        ),
     )
 
 
@@ -625,20 +625,19 @@ def _declaration_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App
 
 
 @dataclass(frozen=True, slots=True)
-class _FixtureObservationService:
-    """Preloaded observation service implementing the public operation door."""
+class _FixtureOperationController:
+    """A static operation view for layout checks of the current modal."""
 
     result: OperationObservationSuccessV1
+    actor_ref: str = "fixture:operator"
 
-    async def observe(self, _request: OperationObservationRequestV1) -> OperationObservationSuccessV1:
+    @property
+    def operation_id(self) -> OperationId:
+        return self.result.projection.operation_id
+
+    async def observe(self, _after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
+        del page_limit
         return self.result
-
-
-@dataclass(frozen=True, slots=True)
-class _FixtureOperationServices:
-    """Minimal injected service family used by the real OperationController."""
-
-    observation: _FixtureObservationService
 
 
 def _operation_modal_app() -> App[Any]:
@@ -687,17 +686,7 @@ def _operation_modal_app() -> App[Any]:
         restart_cursor=None,
     )
     observation = OperationObservationSuccessV1(projection=projection, event_page=page)
-    submission = OperationSubmission(
-        receipt=OperationSubmissionReceiptV1(operation_id=operation_id, secret_requirement=None),
-        response_capability=cast(Any, object()),
-    )
-    fixture_services = _FixtureOperationServices(_FixtureObservationService(observation))
-    controller = methodcaller(
-        "__call__",
-        services=fixture_services,
-        submission=submission,
-        actor_ref="fixture:operator",
-    )(OperationController)
+    controller = cast(OperationControllerPort, _FixtureOperationController(observation))
     return _host(OperationModal(controller))
 
 
@@ -732,7 +721,6 @@ def _root_app(scenario: WorkbenchFixtureScenario) -> App[Any]:
 
     catalogue = build_destination_catalogue(admissions=_root_admissions(), factories={"workbench.home": home_factory})
     return CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=catalogue,
         refresh_home=lambda: home_projection,
     )
@@ -892,6 +880,8 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
     from ....application.operator_actions.catalogue import lookup_action
     from ....application.operator_actions.models import ActionReference
     from ..ledger.controller import LedgerWorkspaceController
+    from ..ledger.own_accounts import LedgerOwnAccountDoorV1
+    from ..ledger.tests.own_account_fixtures import MemoryOwnAccountDoor
 
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
@@ -902,6 +892,7 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
             evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
             evidence_items=(),
             link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
+            own_account_door=cast(LedgerOwnAccountDoorV1, MemoryOwnAccountDoor()),
         ),
     )
     # The scenarios that used to be handed an injected classification target now

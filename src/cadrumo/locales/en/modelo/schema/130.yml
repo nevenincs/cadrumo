@@ -9,6 +9,34 @@ modelo:
         official_name: Personal Income Tax. Business activities under direct assessment.
           Instalment payment.
         title: IRPF instalment payment, direct assessment
+      form:
+        context:
+          apellidos: Surname
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous self-assessment receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          periodo: Period
+        page:
+          dr-13001:
+            heading: Page 1 · Instalment payment
+        section:
+          complementaria:
+            heading: Supplementary return (7)
+          devengo:
+            heading: Tax period (2)
+          identificacion:
+            heading: Declarant (1)
+          ingreso:
+            heading: Payment (4)
+          liquidacion-3-i-actividades-econ-estim-directa:
+            heading: I. Business activities under direct assessment
+          liquidacion-3-ii-actividades-agricolas-ga-829910:
+            heading: II. Farming, livestock, forestry and fishing activities
+          liquidacion-3-iii-total-liquidacion:
+            heading: III. Return total
       revision:
         2019-y-siguientes:
           casilla:

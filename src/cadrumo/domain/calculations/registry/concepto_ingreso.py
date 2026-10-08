@@ -16,8 +16,8 @@ from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
-from .facts.schema import FactSelector
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.variants import FactSelector
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 _FACT_ID = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"
@@ -79,23 +79,14 @@ def _resolve_catalogue(
     )
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_catalogue(effective_date: date) -> ConceptoIngresoCatalogue:
-    del effective_date
-    raise RegistryValidationError("income-concept catalogue requires an explicit authority operation or scope")
-
-
 def resolve_concepto_ingreso_catalogue(
     *,
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ConceptoIngresoCatalogue:
     """Resolve the selected dated income-concept vocabulary."""
-    coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_catalogue(coordinate)
-    return _resolve_catalogue(effective_date=coordinate, authority=selected)
+    selected = require_governed_fact_authority(authority, subject="income-concept catalogue")
+    return _resolve_catalogue(effective_date=effective_date or today_madrid(), authority=selected)
 
 
 def require_concepto_ingreso(

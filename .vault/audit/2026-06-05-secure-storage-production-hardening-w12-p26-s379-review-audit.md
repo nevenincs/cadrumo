@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:4c347009b56080410ca09bf6bb01c1e5ad0823abe38b5964507d5b2f370a32ac'
+modified: '2026-10-03'
+body_hash: 'sha256:5ce114710a2dbd4ba45d18ea18ef0f55936766996891a3cad3337df132c0a21b'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S379-001 | PASS | Google config is an intentional remote mirror surface
 
-`src/aeat/entrypoints/cli/_config/_google.py` owns operator-facing Google OAuth, Drive
+The retired module owned operator-facing Google OAuth, Drive
 folder configuration, sync probe, sync push, and calc-sheets export/pull transport. The
 remote-provider signal is therefore expected and closes as `remote-mirror`, not as an
 accidental runtime-default repository.
@@ -39,7 +39,7 @@ file is read once, parsed as JSON, rejected unless it has the Cloud Console
 
 ## S379-005 | FIXED | Google Drive provider AST guard follows moved test topology
 
-`src/aeat/adapters/outbound/storage/tests/test_google_drive.py` now reads the production
+The retired test now reads the production
 `_google_drive.py` module from the parent package directory. The assertion still checks
 for import-time `Settings` construction; only the path was corrected after the test
 topology move.
@@ -55,12 +55,12 @@ projected refusal detail through `tr()`.
 
 ## S379-007 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/_google_payloads.py src/aeat/entrypoints/cli/_config/tests/test_google_error_localisation.py src/aeat/entrypoints/cli/_config/tests/test_google_sync_push.py src/aeat/entrypoints/cli/_config/tests/test_google_sync_calc_pull_flag.py src/aeat/adapters/outbound/google/tests/test_records.py src/aeat/adapters/outbound/google/tests/test_session_store_roundtrip.py src/aeat/adapters/outbound/google/tests/test_profile_binding.py src/aeat/adapters/outbound/google/tests/test_oauth_flow.py src/aeat/adapters/outbound/storage/tests/test_google_drive.py` passed.
-- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/_config/tests/test_google_error_localisation.py src/aeat/entrypoints/cli/_config/tests/test_google_sync_push.py src/aeat/entrypoints/cli/_config/tests/test_google_sync_calc_pull_flag.py src/aeat/adapters/outbound/google/tests/test_records.py src/aeat/adapters/outbound/google/tests/test_session_store_roundtrip.py src/aeat/adapters/outbound/google/tests/test_profile_binding.py src/aeat/adapters/outbound/google/tests/test_oauth_flow.py src/aeat/adapters/outbound/storage/tests/test_google_drive.py` passed with 34 selected tests and 13 deselected tests.
+- the historical check passed.
+- the historical check passed with 34 selected tests and 13 deselected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-rag search "config google sync push secure object repository Drive remote mirror OAuth active profile session store" --type code --port 8766 --max-results 8` returned CLI payload, sync push, session-store, and active-profile binding evidence.
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests/test_google_sync_push.py src/aeat/entrypoints/cli/_config/tests/test_google_error_localisation.py` passed after the localized refusal change.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/_config/tests/test_google_sync_push.py src/aeat/entrypoints/cli/_config/tests/test_google_error_localisation.py` passed after the localized refusal change.
+- the historical check passed after the localized refusal change.
+- the historical check passed after the localized refusal change.
 - `uv run --no-sync -q python -m aeat.locales audit` passed after adding the locale leaves through the canonical CLI.
 
 ## S379-008 | FIXED | Broader Google adapter test topology follows moved package layout
@@ -74,8 +74,8 @@ parent package while preserving the existing rationale-marker assertions.
 
 Follow-up validation passed:
 
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/google/tests/test_calc_sheets_apply.py src/aeat/adapters/outbound/storage/tests/test_google_drive.py src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/tests/test_google_sync_push.py src/aeat/entrypoints/cli/_config/tests/test_google_error_localisation.py`
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/tests src/aeat/adapters/outbound/storage/tests/test_google_drive.py src/aeat/entrypoints/cli/_config/tests/test_google_sync_push.py src/aeat/entrypoints/cli/_config/tests/test_google_error_localisation.py` passed with 160 selected tests and 13 deselected tests.
+- the historical check
+- the historical check passed with 160 selected tests and 13 deselected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit`
 
 Reviewer note: no critical, high, medium, or low remote-mirror findings remain for the

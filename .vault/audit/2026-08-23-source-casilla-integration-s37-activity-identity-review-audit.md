@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:1469a6c5e717288263a94df4f24767951a848033ebc2842740169628b0da7601'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-23-inventory-casilla-mapping-adr]]"
 ---
 # `source-casilla-integration` audit: `S37 activity identity remediation`

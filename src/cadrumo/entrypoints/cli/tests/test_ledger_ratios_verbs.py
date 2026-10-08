@@ -114,7 +114,7 @@ def test_ratios_payloads_refuse_unknown_category_and_kind() -> None:
     assert row.model_dump(mode="json")["category"] == "suministros_home_office_luz"
     eligible = RatiosEligibleRowPayload(
         category=SpendingCategory.from_registry("suministros_home_office_luz"),
-        proportionality_kind=require_proportionality_kind("usage_ratio_home_area"),
+        proportionality_kind=require_proportionality_kind("usage_ratio_home_area").value,
         override_present=False,
     )
     assert eligible.model_dump(mode="json")["proportionality_kind"] == "usage_ratio_home_area"

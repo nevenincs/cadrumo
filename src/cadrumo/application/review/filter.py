@@ -27,8 +27,10 @@ adapters.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 from enum import StrEnum
+from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -128,6 +130,10 @@ def parse_filter_clauses(raw: Iterable[str]) -> tuple[FilterClause, ...]:
 # ---------------------------------------------------------------------
 
 
+#: Shape of an own-account register id, the only account reference a filter accepts.
+_OWN_ACCOUNT_ID_RE: Final = re.compile(r"acc-[0-9]{2,}")
+
+
 class LedgerReviewFilterKey(StrEnum):
     """Closed catalogue of ``aeat app ledger review --filter`` keys.
 
@@ -147,6 +153,8 @@ class LedgerReviewFilterKey(StrEnum):
             (``business`` / ``personal`` / ``mixed`` / ``not_yet_processed`` ...).
         DIRECTION: Filters to rows by money-flow direction — ``incoming``
             (ingreso), ``outgoing`` (gasto), or ``internal_transfer``.
+        ACCOUNT: Filters to rows bound to one of the taxpayer's own bank
+            accounts, by its register id (``acc-01``).
     """
 
     STATUS = "status"
@@ -157,6 +165,7 @@ class LedgerReviewFilterKey(StrEnum):
     CLASSIFICATION = "classification"
     TEXT = "text"
     DIRECTION = "direction"
+    ACCOUNT = "account"
 
 
 class LedgerReviewStatus(StrEnum):
@@ -337,6 +346,7 @@ def _ledger_filter_values(
     BusinessClassification | None,
     str | None,
     TransactionDirection | None,
+    str | None,
 ]:
     status: LedgerReviewStatus | None = None
     period_code: str | None = None
@@ -346,6 +356,7 @@ def _ledger_filter_values(
     classification: BusinessClassification | None = None
     text: str | None = None
     direction: TransactionDirection | None = None
+    account: str | None = None
     for clause in clauses:
         if clause.key == LedgerReviewFilterKey.STATUS:
             status = _enum_value_or_raise(
@@ -386,7 +397,20 @@ def _ledger_filter_values(
                 scope="ledger-direction",
                 case_fold=True,
             )
-    return status, period_code, filing_year, issue, import_id, classification, text, direction
+        elif clause.key == LedgerReviewFilterKey.ACCOUNT:
+            account = _own_account_id_or_raise(clause)
+    return status, period_code, filing_year, issue, import_id, classification, text, direction, account
+
+
+def _own_account_id_or_raise(clause: FilterClause) -> str:
+    """Accept only an own-account register id; account material is never a filter value."""
+    if _OWN_ACCOUNT_ID_RE.fullmatch(clause.value) is None:
+        # The rejected value is left out: an operator may have typed an account number.
+        raise FilterParseError(
+            "--filter account=",
+            reason="invalid-value-ledger-account",
+        )
+    return clause.value
 
 
 def _ledger_period_or_raise(period_code: str | None, filing_year: int | None) -> Period | None:
@@ -481,6 +505,7 @@ class LedgerReviewFilterSpec(BaseModel):
     classification: BusinessClassification | None = None
     text: str | None = None
     direction: TransactionDirection | None = None
+    account: str | None = None
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> LedgerReviewFilterSpec:
@@ -488,8 +513,8 @@ class LedgerReviewFilterSpec(BaseModel):
         clauses = parse_filter_clauses(raw)
         _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
         _ensure_unique_keys(clauses, scope="ledger")
-        status, period_code, filing_year, issue, import_id, classification, text, direction = _ledger_filter_values(
-            clauses,
+        status, period_code, filing_year, issue, import_id, classification, text, direction, account = (
+            _ledger_filter_values(clauses)
         )
         period = _ledger_period_or_raise(period_code, filing_year)
         return cls(
@@ -501,6 +526,7 @@ class LedgerReviewFilterSpec(BaseModel):
             classification=classification,
             text=text,
             direction=direction,
+            account=account,
         )
 
     @model_validator(mode="after")
@@ -549,6 +575,12 @@ class LedgerReviewFilterSpec(BaseModel):
             LedgerReviewFilterKey.DIRECTION,
             self.direction,
             field_name="direction",
+        )
+        _require_clause_field_match(
+            present_keys,
+            LedgerReviewFilterKey.ACCOUNT,
+            self.account,
+            field_name="account",
         )
         return self
 

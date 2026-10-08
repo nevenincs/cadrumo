@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#bucket-custody-completeness'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:bdf3fbb3f3c8648de5c493a90cacda12d98a08d5545c9a720119886f4154ec89'
+modified: '2026-10-03'
+body_hash: 'sha256:913e2fe5b51b8d6471c7319709a574854c028e344079b66b48586025575ee027'
 related:
-  - "[[2026-06-30-bucket-custody-completeness-plan]]"
   - "[[2026-06-30-bucket-custody-completeness-adr]]"
   - "[[2026-06-30-bucket-custody-completeness-research]]"
 ---
@@ -39,7 +38,7 @@ roundtrip tests over populated stores.
 
 ## Final Review Addendum
 
-- [x] HIGH - `ledger_business_operation_invoices` was classified as full-only, so structured export/import would have dropped typed payable/collectible invoice catalogues. The namespace was declared `FULL_CUSTODY_ONLY` in `src/aeat/adapters/persistence/storage/_namespace_registry.py`, but the owning repository persists slim pydantic `BusinessOperationInvoiceDocument` records with `source_kind`, amounts, and invoice metadata, not attachment bytes or live snapshots. Those records are calculation inputs: the invoice resolver loads `BusinessOperationInvoiceRepository` and emits binding source observations from `invoice.taxable_base` and `invoice.source_kind`. Because `StorageHierarchyRegistry.namespaces_for_custody_profile(StorageCustodyProfile.STRUCTURED)` includes only `STRUCTURED_CUSTODY`, the classification excluded those durable structured invoice catalogues from the structured custody profile. The ADR only forbids attachment bytes and byte-bearing live snapshots in the cleartext transport; it does not justify dropping structured invoice catalogues while existing structured financial categories still travel. Resolved by reclassifying the namespace as `STRUCTURED_CUSTODY` and asserting that it appears in both custody profiles.
+- [x] HIGH - `ledger_business_operation_invoices` was classified as full-only, so structured export/import would have dropped typed payable/collectible invoice catalogues. The namespace was declared `FULL_CUSTODY_ONLY` in the retired module, but the owning repository persists slim pydantic `BusinessOperationInvoiceDocument` records with `source_kind`, amounts, and invoice metadata, not attachment bytes or live snapshots. Those records are calculation inputs: the invoice resolver loads `BusinessOperationInvoiceRepository` and emits binding source observations from `invoice.taxable_base` and `invoice.source_kind`. Because `StorageHierarchyRegistry.namespaces_for_custody_profile(StorageCustodyProfile.STRUCTURED)` includes only `STRUCTURED_CUSTODY`, the classification excluded those durable structured invoice catalogues from the structured custody profile. The ADR only forbids attachment bytes and byte-bearing live snapshots in the cleartext transport; it does not justify dropping structured invoice catalogues while existing structured financial categories still travel. Resolved by reclassifying the namespace as `STRUCTURED_CUSTODY` and asserting that it appears in both custody profiles.
 
 ## P02 Review Addendum
 
@@ -62,7 +61,7 @@ roundtrip tests over populated stores.
 
 ## Direct-Source Hardening Addendum
 
-- [x] RESOLVED - A follow-up review enforced the user correction "no reexports; provision from real sources" across the bucket custody transport surface. Package-facade imports in `src/aeat/application/user_profile/_bundle.py`, `src/aeat/application/user_profile/_custody_carry.py`, `src/aeat/application/bucket_maintenance/_service.py`, `src/aeat/entrypoints/cli/_config/_profile_bundle.py`, and focused custody/profile tests were replaced with defining modules. A RAG-grounded reviewer reported no blocking issues. Verification: direct-source import scan clean, ruff passed, 59 focused custody/application tests passed, 6 CLI profile export/import integration tests passed, and diff whitespace check passed.
+- [x] RESOLVED - A follow-up review enforced the user correction "no reexports; provision from real sources" across the bucket custody transport surface. Package-facade imports in the retired module, the retired module, the retired module, the retired module, and focused custody/profile tests were replaced with defining modules. A RAG-grounded reviewer reported no blocking issues. Verification: direct-source import scan clean, ruff passed, 59 focused custody/application tests passed, 6 CLI profile export/import integration tests passed, and diff whitespace check passed.
 
 - [x] RESOLVED - Plan closure traceability was repaired after detecting that P03 through P07 were checked in the plan while only P01/P02 exec records existed locally. `vaultspec-core vault add exec --all-steps` scaffolded the missing P03.S07 through P07.S19 records, and each record now carries the executed scope, outcome, and verification notes.
 

@@ -22,15 +22,8 @@ import pytest
 
 from cadrumo.core import logging as _logging_mod
 from cadrumo.core.config import override_settings
-from cadrumo.core.logging import (
-    LogExtra,
-    SecretScrubbingFilter,
-    attach_run_sink,
-    configure_logging,
-    default_log_file_path,
-    detach_run_sink,
-    get_logger,
-)
+from cadrumo.core.logging import LogExtra, SecretScrubbingFilter, configure_logging, default_log_file_path, get_logger
+from cadrumo.core.observability.tests.sink_scope import attach_run_sink, detach_run_sink
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -413,7 +406,7 @@ def test_attach_and_detach_run_sink_are_symmetric(tmp_path: Path) -> None:
     Real-behavior: wire a real JsonlRunSink, observe root-logger handler list and
     sink filter list before, during, and after the attach/detach cycle.
     """
-    from cadrumo.core.observability.sink import JsonlRunSink
+    from cadrumo.core.observability.tests.sink import JsonlRunSink
 
     run_id = "a1b2c3d4e5f60001"
     sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
@@ -450,7 +443,7 @@ def test_attach_and_detach_run_sink_are_symmetric(tmp_path: Path) -> None:
 
 def test_detach_run_sink_is_idempotent_on_filter_removal(tmp_path: Path) -> None:
     """detach_run_sink called twice must not raise and must leave the sink filter-clean."""
-    from cadrumo.core.observability.sink import JsonlRunSink
+    from cadrumo.core.observability.tests.sink import JsonlRunSink
 
     run_id = "b2c3d4e5f6070002"
     sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
@@ -468,7 +461,7 @@ def test_detach_run_sink_is_idempotent_on_filter_removal(tmp_path: Path) -> None
 
 def test_attach_run_sink_does_not_double_install_scrubbing_filter(tmp_path: Path) -> None:
     """Calling attach_run_sink twice must install SecretScrubbingFilter exactly once."""
-    from cadrumo.core.observability.sink import JsonlRunSink
+    from cadrumo.core.observability.tests.sink import JsonlRunSink
 
     root_logger = logging.getLogger()
     run_id = "c3d4e5f607080003"

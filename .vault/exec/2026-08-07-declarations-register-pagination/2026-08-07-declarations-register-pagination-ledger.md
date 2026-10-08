@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#declarations-register-pagination'
 date: '2026-08-07'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8de0602b37f772a691ce4d04d50e6aeb89c4026ded9215c6985bb2f11dc900e4'
+body_hash: 'sha256:5630d9559f5158bb3f5c048c94f7e1197b61c0172e9aefff163a7c2ebdb506a4'
 related:
   - "[[2026-08-07-declarations-register-pagination-plan]]"
 ---
@@ -19,7 +19,7 @@ related:
 - `S03` `T`
 - `S04` `T`
 - `S05` `T`
-- `S06` `T` `src/cadrumo/application/live/_filed_data_capture.py`
+- `S06` `T`
 - `S07` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests/`
 - `S08` `T`
 - `S09` `T`

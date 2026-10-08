@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-07-05'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:9fc3a3f5b1be9c92e66fbba7e70dfe3ef23def4ac2e5f165909ed346f48af2ba'
-related:
-  - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
+related: []
 ---
 
 # `binding-source-kind-taxonomy-unification` audit: `exec record reconciliation review`

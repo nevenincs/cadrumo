@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#filing-period-casilla-channel'
 date: '2026-08-01'
-modified: '2026-08-01'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:598051ea7733bb37e3b54638bcd2786390aa9f1271fc0b35228d94ad0ac95946'
+body_hash: 'sha256:ab3bbb645852b55ad803b772c6c3957a074b93fcfcee5d036302b5be4b5e7366'
 related: []
 ---
 
@@ -28,7 +28,7 @@ session that produced it.
 Audited surfaces: the uncommitted typed-scalar routing change spanning
 `src/cadrumo/domain/calculations/registry/`, `src/cadrumo/domain/filing/`, and
 `src/cadrumo/application/filing/`; the informational filing-period casilla fill
-in `src/cadrumo/application/modelo/_binding_resolution.py`; the registry
+in the retired module; the registry
 declarations for `decl.periodo` under
 `src/cadrumo/_data/registry/aeat/modelos/303/` and `369/`; and the committed
 cli-sequence goldens under `docs/_sequences/`.
@@ -41,13 +41,12 @@ Read-only throughout. No production code was modified and no commit was made.
 
 The informational filing-period casilla is populated with the bare quarter
 ordinal. `resolve_declaration_period_inputs` in
-`src/cadrumo/application/modelo/_binding_resolution.py` resolves the casilla
+The retired module resolves the casilla
 carrying `semantic_role = "filing_period"` and assigns
 `Decimal(period.declaration_period_ordinal)` — the values `1`, `2`, `3`, `4`.
 
 Modelo 303 declares that same casilla, in its own revision tree, as a typed
 period code. In
-`src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`
 (identically in `2009-y-siguientes`): `data_type = "period_code"`,
 `label = "Periodo trimestral (1T / 2T / 3T / 4T)"`, `required = true`,
 `legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]`.
@@ -70,7 +69,7 @@ than a single instance.
 
 The registry declares a validator per scalar `data_type`; for `period_code`
 that validator is `_validate_period_code` in
-`src/cadrumo/domain/calculations/registry/_schema_scalars.py`. Whether a
+The retired module. Whether a
 casilla's value ever reaches its declared validator depended not on its
 declared type but on which input channel the filing builder routed it to.
 
@@ -97,7 +96,7 @@ naming one member.
 ### ordinal-fill-is-structurally-broken-for-modelo-369 | high | the ordinal approach cannot express an OSS extended period at all
 
 The ordinal fill is not merely wrong for Modelo 303; it is inexpressible for
-Modelo 369. `declaration_period_ordinal` in `src/cadrumo/core/_period.py`
+Modelo 369. `declaration_period_ordinal` in the retired module
 derives from `standard_code` and returns `None` for extended, event, and ad-hoc
 forms. The OSS extra-Union quarters `EXT-1T`–`EXT-4T` have no standard code, so
 the property returns `None` and `resolve_declaration_period_inputs` raises
@@ -143,10 +142,10 @@ commit shape is constrained.
 It cannot be committed per-package. `src/cadrumo/application/filing/` imports
 `registry_scalar_value_type` and `validate_registry_text_scalar`, both verified
 absent at `HEAD`; they are uncommitted additions in
-`src/cadrumo/domain/calculations/registry/_schema_scalars.py`. Committing the
+The retired module. Committing the
 application layer alone yields an unimportable `HEAD`. The set also carries the
 `min_value`/`max_value` to `CasillaConstraints` widening in
-`src/cadrumo/domain/filing/_protocols.py` and `_validator.py`, plus
+The retired module and `_validator.py`, plus
 `_formula_text_inputs.py` and `_formula_runtime.py` in the registry package.
 
 It breaks two pre-existing tests in its own package that were not updated. A

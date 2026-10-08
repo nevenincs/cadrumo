@@ -3,11 +3,11 @@ profile:
     foral_regime: 'Els residents a {tax_region} tributen davant la Hisenda Foral corresponent,
       no davant l''AEAT: els territoris bascos en virtut del Concert Econòmic (Llei
       12/2002) i Navarra en virtut del Conveni Econòmic (Llei 28/1990). Aquest CLI
-      no modela declaracions forals. Consulteu sede.bizkaia.eus (Biscaia), gipuzkoa.eus/ogasuna
+      no modela declaracions forals. Consulta sede.bizkaia.eus (Biscaia), gipuzkoa.eus/ogasuna
       (Guipúscoa), araba.eus/ogasun (Àlaba) o hacienda.navarra.es (Navarra) segons
-      el vostre territori.'
+      el teu territori.'
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
-      Executeu `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` per configurar-lo.
+      Executa `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` per configurar-lo.
   journey:
     source:
       censal_review:
@@ -27,8 +27,8 @@ profile:
     activities:
       description: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)
     capabilities:
-      google_export: Voleu activar l'exportació a Google Sheets?
-      llm_vision: Voleu activar la visió LLM local per llegir factures?
+      google_export: Vols activar l'exportació a Google Sheets?
+      llm_vision: Vols activar la visió LLM local per llegir factures?
     censo:
       activity_start_date: Des de quina data tens obligacions de declaració / quan
         et vas donar d'alta? (AAAA-MM-DD, opcional)
@@ -60,7 +60,7 @@ profile:
       special_regime: Règim especial IRPF (Llei Beckham / Art. 93 LIRPF)
       special_regime_start_date: Data d'inici del règim especial (AAAA-MM-DD)
     iva:
-      cash_accounting_regime_enrolled: Està inscrit al règim especial del criteri
+      cash_accounting_regime_enrolled: Estàs inscrit al règim especial del criteri
         de caixa?
       does_intracomunitario: Realitza operacions intracomunitàries
       group_dominant_entity_enrolled: Alta com a entitat dominant d'un grup d'IVA
@@ -75,7 +75,7 @@ profile:
       regime: Quin règim d'IVA s'aplica?
       roi_enrolled: Alta en ROI
       sii_enrolled: Inscrit al SII (Subministrament Immediat d'Informació)
-      voluntary_sii_enrolled: Està inscrit voluntàriament al SII?
+      voluntary_sii_enrolled: Estàs inscrit voluntàriament al SII?
     obligations:
       bienes_extranjero_above_threshold: Béns a l'estranger superen el llindar del
         Model 720
@@ -87,8 +87,10 @@ profile:
       premio_loteria_gravamen_especial_trimestres: Trimestres en què es va cobrar
         aquest premi de loteries o apostes (Model 136), com a tokens AAAA-nT separats
         per |
-      third_party_transactions_above_347_threshold: Operacions amb tercers superen
-        el llindar del Model 347
+      third_party_transactions_above_347_threshold: A l'any natural que cobreix el
+        Model 347, les teves operacions amb una mateixa persona o entitat van superar
+        3.005,06 € (300,51 € en els cobraments que facis per compte de tercers), comptant
+        per separat les vendes i les compres?
     preferences:
       output_language: Idioma de sortida de la CLI per a aquest perfil
     renta_family:
@@ -483,7 +485,8 @@ profile:
         premio_loteria_gravamen_especial_trimestres:
           label: Trimestres del premi (Model 136)
         third_party_transactions_above_347_threshold:
-          label: Llindar del Model 347 superat
+          label: 'Llindar del Model 347 superat: 3.005,06 € per persona o entitat
+            a l''any natural (300,51 € en cobraments per compte de tercers)'
       preferences:
         output_language:
           label: Idioma de sortida

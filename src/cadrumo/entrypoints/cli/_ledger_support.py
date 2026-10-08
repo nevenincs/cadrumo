@@ -9,19 +9,15 @@ id resolution. Mutation emitters validate their result through the supplied
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from datetime import date
+from collections.abc import Mapping
 from decimal import Decimal
-from typing import Final, Protocol
+from typing import Final
 
 import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
-from ...application.ledger.actions_manual import ledger_transaction_payload
-from ...application.ledger.id_resolution import resolve_transaction_id
-from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...application.ledger.source_jurisdiction import (
     SourceJurisdictionOutcome,
 )
@@ -31,97 +27,15 @@ from ...application.ledger.source_jurisdiction import (
 from ...core.decimal.formatting import format_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
-from ...core.json_contract import Notice, OutputSchema
 from ...core.unit_proportion import is_unit_proportion
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.categories.spending_category_catalogue import require_spending_category, spending_category_tokens
 from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines.models import IrpfSpecialRegime
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
-from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.errors import TransactionValidationError
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
-from .common import attach_cli_policy_verdict, bad, emit_envelope
-
-
-class TransactionRepo(Protocol):
-    """Structural interface consumed by :func:`_bucket_transaction_ids` and :func:`resolve_id`."""
-
-    @property
-    def bucket_id(self) -> str: ...
-
-    def load(self) -> TransactionCatalogue:
-        """Return the repository's current transaction catalogue."""
-        ...
-
-
-def emit_update_result(
-    ctx: typer.Context,
-    result_transaction: Transaction,
-    bucket_id: str,
-    events: tuple[str, ...],
-    *,
-    command: str,
-    result_cls: type[OutputSchema],
-    notices: list[Notice] | None = None,
-    prepend_lines: Sequence[str] = (),
-    extra_lines: Sequence[str] = (),
-) -> None:
-    """Emit the canonical single-transaction ledger mutation result.
-
-    ``notices`` rides the shared envelope notices channel
-    (``aeat-cli-contract``); mutation verbs pass any
-    non-blocking advisory here rather than re-modelling it as a bespoke result
-    field.
-
-    ``prepend_lines`` and ``extra_lines`` carry the text a verb needs around the
-    five quintet lines -- a ``reaffirmed`` marker ahead of them, an
-    idempotent-noop or prorrata note after them. They exist so a verb with
-    something extra to say still emits the quintet from here: without them the
-    only way to add a line was to rebuild the whole payload and call
-    :func:`emit_envelope` directly, which is how two verbs ended up
-    hand-maintaining a copy of the shape this function owns. The same idiom as
-    ``_emit_llm_single_classify``'s ``extra_lines``.
-
-    Core types:
-    :class:`~cadrumo.core.json_contract.OutputSchema`.
-    """
-    transaction_payload = ledger_transaction_payload(result_transaction)
-    review_status = ledger_transaction_review_status(result_transaction)
-    result = result_cls.model_validate(
-        {
-            "bucket_id": bucket_id,
-            "transaction_id": result_transaction.transaction_id,
-            "bucket_event_ids": list(events),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    emit_envelope(
-        ctx,
-        command=command,
-        result=result,
-        lines=[
-            *prepend_lines,
-            f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-            *extra_lines,
-        ],
-        notices=notices,
-    )
-
-
-def _bucket_transaction_ids(
-    transaction_repository: TransactionRepo,
-    catalogue: TransactionCatalogue | None,
-) -> tuple[str, ...]:
-    """Return the full transaction ids known to the active bucket."""
-    source = catalogue if catalogue is not None else transaction_repository.load()
-    return tuple(sorted(source.transactions))
+from .common import attach_cli_policy_verdict, bad
 
 
 def ledger_cli_no_recovery[ErrorT: CadrumoError](
@@ -135,39 +49,6 @@ def ledger_cli_no_recovery[ErrorT: CadrumoError](
         error,
         verdict=cli_exception_no_recovery_verdict(condition, facts=facts),
     )
-
-
-def resolve_id(
-    transaction_repository: TransactionRepo,
-    prefix: str,
-    *,
-    catalogue: TransactionCatalogue | None = None,
-) -> str:
-    """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
-
-    The single shared CLI-boundary wrapper over the canonical
-    :func:`resolve_transaction_id`. Used by the *mutation*
-    verbs (update, classify, allocate, link, attach, doclink, archive, stash,
-    restore, remove, split, merge). It matches only ids of rows still in the
-    catalogue, because a mutation always targets a live row. Read verbs use the
-    lineage-following ``resolve_ledger_transaction_id`` in
-    :mod:`_ledger_read_cli` instead, which resolves a superseded id through the
-    edit chain.
-
-    ``catalogue`` is a snapshot the verb already loaded and will hand to the
-    same action, so resolving the id does not decrypt the catalogue again.
-
-    Core types:
-    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
-    """
-    try:
-        return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository, catalogue))
-    except TransactionIdPrefixError as exc:
-        raise ledger_cli_no_recovery(
-            exc,
-            condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
-            facts={"transaction_id_resolves": False},
-        ) from None
 
 
 def invoice_link_error_bad_parameter() -> typer.BadParameter:
@@ -313,56 +194,6 @@ def resolve_source_jurisdiction(
     if resolution.requires_operator_statement:
         raise bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
     return resolution.jurisdiction
-
-
-def resolve_business_pct_with_censo(
-    *,
-    bucket_id: str,
-    active_profile: str | None,
-    category_id: str | None,
-    operator_supplied: Decimal | None,
-    year: int,
-    operation: PinnedAuthorityOperation,
-) -> Decimal | None:
-    """Read the censo fact this session can reach and stamp the resolved share.
-
-    Which share a row gets, and why it gets none, is decided by
-    :func:`~application.ledger.ratios.resolve_business_share_pct`: an operator
-    statement outranks the censo, a row with no category has nothing to
-    apportion, an unapplied censo leaves the ratio unknown, and a category
-    outside the home-office families is never apportioned at all. Those are
-    facts about the taxpayer and answer the same way for any frontend.
-
-    What is genuinely this session's is WHICH profile is active and whether
-    one is: without an active profile there is no censo to read, so the ratio
-    is passed as unknown and the resolution reports the censo as the reason.
-
-    ``year`` is the filing year whose category profiles supply the statutory
-    multiplier, taken from the transaction's own booked date rather than a
-    pinned literal: the multiplier is year-versioned regulatory data.
-    """
-    from ...application.ledger.ratios import resolve_business_share_pct
-    from ...application.user_profile.censo_sync import bound_raw_afectacion_ratio
-
-    category = (
-        None
-        if category_id is None
-        else require_spending_category(category_id, effective_date=date(year, 12, 31), authority=operation)
-    )
-    ratio: Decimal | None = None
-    if category is not None and active_profile is not None:
-        ratio = bound_raw_afectacion_ratio(
-            bucket_id=bucket_id,
-            profile_id=active_profile,
-            operation=operation,
-        )
-    return resolve_business_share_pct(
-        operator_supplied=operator_supplied,
-        category=category,
-        censo_afectacion_ratio=ratio,
-        year=year,
-        operation=operation,
-    ).business_pct
 
 
 def ledger_validation_bad(error: ValidationError) -> typer.BadParameter:

@@ -20,16 +20,14 @@ dispatches a real ``modelo.work.calculate`` through the actual CLI/MCP command
 handling and passes the decoded JSON ``observations`` rows in; this module only
 asserts over the already-fetched rows and never dispatches the call itself. The
 narration-faithfulness dimension (eval-catalogue category 9) follows the
-identical pattern one layer further: the caller runs the real
-``cadrumo_harness.mcp.faithfulness.faithfulness_check`` against a narration and
-the captured calculate JSON, and passes the per-step verdict in - this module
-never imports the MCP server layer and never runs the check itself. The
+identical pattern one layer further: the caller checks a narration against the
+captured calculate JSON and passes the per-step verdict in - this module
+never imports a transport layer and never runs the check itself. The
 confirmation-gate dimension (eval-catalogue category 8) follows the same pattern
-once more: the caller invokes the real
-``cadrumo_harness.mcp.hitl.confirmation_for_tool`` for a step and hands the
-resulting tier in as a :class:`~dev.agent_eval._models.ConfirmationGateCheck`;
-this module never imports the MCP server layer and never resolves a confirmation
-tier itself. The contradiction dimension (eval-catalogue category 4) follows the
+once more: the caller supplies a step's confirmation decision as a
+:class:`~dev.agent_eval._models.ConfirmationGateCheck`; this module never
+resolves a confirmation tier itself. The contradiction dimension
+(eval-catalogue category 4) follows the
 same pattern: the caller dispatches two independent real CLI/MCP invocations for
 the same target (a readiness-shaped signal and a second, legitimately-blocking
 signal) and passes in whether each reported ready / refused, plus a candidate
@@ -47,13 +45,14 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
-from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument
+from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument, ResolvedActionReference
 from cadrumo.core.toml import parse_toml
 from cadrumo_harness.resources import iter_skill_documents
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -77,8 +76,100 @@ from ._models import (
 
 if TYPE_CHECKING:
     from cadrumo.application.operator_actions.models import PreconditionVerdict
+    from cadrumo.entrypoints.cli.command_parameter_contracts import ParameterSpec
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+
+def _declared_verification_evidence(revision: object) -> tuple[set[str], bool]:
+    """Declared verification evidence."""
+    expectations = tuple(getattr(revision, "verification_expectations", ()) or ())
+    computed: set[str] = set()
+    grounded = False
+    for expectation in expectations:
+        ids = tuple(getattr(expectation, "computed_casilla_ids", ()) or ())
+        source_refs = tuple(getattr(expectation, "source_refs", ()) or ())
+        computed |= {str(i) for i in ids}
+        if ids and source_refs:
+            grounded = True
+    return (computed, grounded)
+
+
+def _check_negative_dispatch_envelope(
+    scenario: ExitCodeScenario, envelope: Mapping[str, object], exit_code: int, failures: list[str]
+) -> tuple[bool, bool]:
+    """Check negative dispatch envelope."""
+    status = _envelope_field(envelope, "status")
+    notices = _envelope_field(envelope, "notices")
+    envelope_well_formed = (
+        isinstance(envelope, Mapping)
+        and _envelope_field(envelope, "command") == scenario.command
+        and isinstance(status, str)
+        and isinstance(notices, list)
+    )
+    if not envelope_well_formed:
+        failures.append(
+            f"'{scenario.command}' response for exit code {exit_code} is not a well-formed JSON envelope "
+            "(missing command/status/notices)",
+        )
+
+    status_is_non_success = (
+        envelope_well_formed and status != EnvelopeStatus.SUCCESS.value and status == scenario.tool_result_status.value
+    )
+    if envelope_well_formed and not status_is_non_success:
+        failures.append(
+            f"'{scenario.command}' envelope status is '{status}' for a non-zero exit ({exit_code}); "
+            f"expected '{scenario.tool_result_status.value}'",
+        )
+    return (envelope_well_formed, status_is_non_success)
+
+
+def _run_canonical_recovery_and_retry(
+    scenario: ExitCodeScenario,
+    original_argv: Sequence[str],
+    action: ResolvedActionReference,
+    argument_bindings: tuple[ResolvedActionArgument, ...],
+    cli_path: tuple[str, ...],
+    failures: list[str],
+) -> None:
+    """Run canonical recovery and retry."""
+    try:
+        recovery_arguments = _canonical_action_arguments(
+            cli_path=cli_path,
+            argument_bindings=argument_bindings,
+        )
+    except ValueError as error:
+        failures.append(str(error))
+        return
+    recovery = _invoke_canonical_cli((*cli_path, *recovery_arguments))
+    recovery_envelope = _decoded_envelope(recovery.output)
+    recovery_completed = (
+        recovery.exit_code == 0
+        and recovery_envelope is not None
+        and recovery_envelope.get("command") == action.target_command_key
+    )
+    if not recovery_completed:
+        failures.append(
+            f"'{scenario.command}' canonical recovery action '{action.action_id}' did not complete as a JSON verdict",
+        )
+        return
+
+    retry = _invoke_canonical_cli(tuple(original_argv))
+    retry_envelope = _decoded_envelope(retry.output)
+    if retry_envelope is None or retry_envelope.get("command") != scenario.command:
+        failures.append(
+            f"'{scenario.command}' retry after canonical recovery '{action.action_id}' did not emit its JSON verdict",
+        )
+
+
+@dataclass
+class _ResponseProvenanceCensus:
+    """Retain ordered response evidence counts without losing per-observation state."""
+
+    expected_computed: set[str]
+    computed_seen: set[str]
+    computed_without_formula: list[str]
+    ungrounded: int = 0
 
 
 def load_scenario(path: Path) -> GoldenScenario:
@@ -176,34 +267,20 @@ def _check_response_provenance(
             f"{scenario.modelo} {scenario.period} calculate RESPONSE payload carried zero observations",
         )
         return False
-    ungrounded = 0
-    expected_computed = set(scenario.expected_computed_casillas)
-    expected_computed_seen: set[str] = set()
-    computed_without_formula: list[str] = []
+    census = _ResponseProvenanceCensus(set(scenario.expected_computed_casillas), set(), [])
     for observation in response_observations:
-        legal_refs = _observation_field(observation, "legal_refs")
-        source_refs = _observation_field(observation, "source_refs")
-        if not legal_refs or not source_refs:
-            ungrounded += 1
-        casilla_id = _observation_field(observation, "casilla_id")
-        if casilla_id is None or str(casilla_id) not in expected_computed:
-            continue
-        casilla_id_text = str(casilla_id)
-        expected_computed_seen.add(casilla_id_text)
-        formula_id = _observation_field(observation, "formula_id")
-        if not formula_id:
-            computed_without_formula.append(casilla_id_text)
-    if ungrounded:
+        _record_response_provenance(observation, census)
+    if census.ungrounded:
         failures.append(
-            f"{ungrounded} observation(s) in the {scenario.modelo} {scenario.period} calculate RESPONSE "
+            f"{census.ungrounded} observation(s) in the {scenario.modelo} {scenario.period} calculate RESPONSE "
             "payload lack legal_refs/source_refs",
         )
         return False
-    missing_computed = sorted(expected_computed - expected_computed_seen)
-    if computed_without_formula or missing_computed:
+    missing_computed = sorted(census.expected_computed - census.computed_seen)
+    if census.computed_without_formula or missing_computed:
         details: list[str] = []
-        if computed_without_formula:
-            details.append("missing formula_id: " + ", ".join(sorted(computed_without_formula)))
+        if census.computed_without_formula:
+            details.append("missing formula_id: " + ", ".join(sorted(census.computed_without_formula)))
         if missing_computed:
             details.append("absent from RESPONSE observations: " + ", ".join(missing_computed))
         failures.append(
@@ -252,7 +329,7 @@ def _check_confirmation_gate_checks(
 
     Closes eval-catalogue category 8. Each :class:`ConfirmationGateCheck` is a
     caller-injected verdict (mirroring ``narration_faithfulness_checks``): the
-    caller resolved a step's real ``confirmation_for_tool`` decision and handed
+    caller resolved a step's confirmation decision and handed
     the ``(expected_tier, actual_tier)`` pair in. This function performs no
     resolution itself; it only decides whether a mismatch fails the scenario.
 
@@ -281,15 +358,7 @@ def _check_verification_contract(scenario: GoldenScenario, revision: object, fai
     calculate/verify step has that grounded reconciliation target, and that the
     scenario's declared ``expected_computed_casillas`` are within it.
     """
-    expectations = tuple(getattr(revision, "verification_expectations", ()) or ())
-    computed: set[str] = set()
-    grounded = False
-    for expectation in expectations:
-        ids = tuple(getattr(expectation, "computed_casilla_ids", ()) or ())
-        source_refs = tuple(getattr(expectation, "source_refs", ()) or ())
-        computed |= {str(i) for i in ids}
-        if ids and source_refs:
-            grounded = True
+    computed, grounded = _declared_verification_evidence(revision)
     if not grounded:
         failures.append(
             f"{scenario.modelo} {scenario.period} declares no AEAT-grounded verification "
@@ -394,12 +463,12 @@ def run_golden_scenario(
             module never dispatches the calculate call itself.
         narration_faithfulness_checks: Zero or more per-step
             :class:`NarrationFaithfulness` verdicts, injected by the caller after
-            running the real ``faithfulness_check`` against a narration and the
+            checking a narration against the
             captured calculate JSON. Empty (the default) skips the dimension -
             this module never runs the faithfulness check itself.
         expected_confirmation_tiers: Zero or more per-step
             :class:`ConfirmationGateCheck` verdicts, injected by the caller after
-            resolving a step's real ``confirmation_for_tool`` decision. Empty (the
+            resolving a step's confirmation decision. Empty (the
             default) skips the dimension - this module never resolves a
             confirmation tier itself.
 
@@ -466,7 +535,6 @@ def _canonical_action_arguments(
     """
     from cadrumo.core.operator_action_enums import ActionArgumentStatus
     from cadrumo.core.product_identity import PRODUCT_IDENTITY
-    from cadrumo.entrypoints.cli.command_spec import OptionSpec
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     values: dict[str, object] = {}
@@ -482,26 +550,7 @@ def _canonical_action_arguments(
     arguments: list[str] = []
     consumed: set[str] = set()
     for parameter in command.parameters:
-        name = parameter.name
-        if name not in values:
-            continue
-        value = values[name]
-        consumed.add(name)
-        if not isinstance(parameter, OptionSpec):
-            arguments.append(str(value))
-            continue
-
-        declarations = parameter.declarations
-        long_options = tuple(declaration for declaration in declarations if declaration.startswith("--"))
-        if not long_options:
-            raise ValueError(f"canonical recovery option has no long declaration: {name}")
-        if parameter.is_flag:
-            if not isinstance(value, bool):
-                raise ValueError(f"canonical recovery flag requires a bool value: {name}")
-            if value:
-                arguments.append(long_options[0])
-            continue
-        arguments.extend((long_options[0], str(value)))
+        _append_recovery_parameter(parameter, values, consumed, arguments)
 
     unmatched = sorted(set(values) - consumed)
     if unmatched:
@@ -605,33 +654,9 @@ def _execute_safe_recovery_and_retry(
         )
         return
 
-    try:
-        recovery_arguments = _canonical_action_arguments(
-            cli_path=action.cli_path,
-            argument_bindings=resolved.argument_bindings,
-        )
-    except ValueError as error:
-        failures.append(str(error))
-        return
-    recovery = _invoke_canonical_cli((*action.cli_path, *recovery_arguments))
-    recovery_envelope = _decoded_envelope(recovery.output)
-    recovery_completed = (
-        recovery.exit_code == 0
-        and recovery_envelope is not None
-        and recovery_envelope.get("command") == action.target_command_key
+    _run_canonical_recovery_and_retry(
+        scenario, original_argv, action, resolved.argument_bindings, action.cli_path, failures
     )
-    if not recovery_completed:
-        failures.append(
-            f"'{scenario.command}' canonical recovery action '{action.action_id}' did not complete as a JSON verdict",
-        )
-        return
-
-    retry = _invoke_canonical_cli(tuple(original_argv))
-    retry_envelope = _decoded_envelope(retry.output)
-    if retry_envelope is None or retry_envelope.get("command") != scenario.command:
-        failures.append(
-            f"'{scenario.command}' retry after canonical recovery '{action.action_id}' did not emit its JSON verdict",
-        )
 
 
 def check_exit_code_scenario(
@@ -674,28 +699,9 @@ def check_exit_code_scenario(
             f"'{scenario.command}' expected exit code {scenario.expected_exit_code}, dispatch returned {exit_code}",
         )
 
-    status = _envelope_field(envelope, "status")
-    notices = _envelope_field(envelope, "notices")
-    envelope_well_formed = (
-        isinstance(envelope, Mapping)
-        and _envelope_field(envelope, "command") == scenario.command
-        and isinstance(status, str)
-        and isinstance(notices, list)
+    envelope_well_formed, status_is_non_success = _check_negative_dispatch_envelope(
+        scenario, envelope, exit_code, failures
     )
-    if not envelope_well_formed:
-        failures.append(
-            f"'{scenario.command}' response for exit code {exit_code} is not a well-formed JSON envelope "
-            "(missing command/status/notices)",
-        )
-
-    status_is_non_success = (
-        envelope_well_formed and status != EnvelopeStatus.SUCCESS.value and status == scenario.tool_result_status.value
-    )
-    if envelope_well_formed and not status_is_non_success:
-        failures.append(
-            f"'{scenario.command}' envelope status is '{status}' for a non-zero exit ({exit_code}); "
-            f"expected '{scenario.tool_result_status.value}'",
-        )
 
     if assertion.passed and coverage.profile.declaration.action is not None:
         _execute_safe_recovery_and_retry(
@@ -1074,3 +1080,47 @@ def check_profile_confirmation_scenario(
         confirmed_before_each_mutation=confirmed_before_each_mutation,
         failures=tuple(failures),
     )
+
+
+def _append_recovery_parameter(
+    parameter: ParameterSpec, values: dict[str, object], consumed: set[str], arguments: list[str]
+) -> None:
+    """Append recovery parameter."""
+    from cadrumo.entrypoints.cli.command_parameter_contracts import OptionSpec
+
+    name = parameter.name
+    if name not in values:
+        return
+    value = values[name]
+    consumed.add(name)
+    if not isinstance(parameter, OptionSpec):
+        arguments.append(str(value))
+        return
+
+    declarations = parameter.declarations
+    long_options = tuple(declaration for declaration in declarations if declaration.startswith("--"))
+    if not long_options:
+        raise ValueError(f"canonical recovery option has no long declaration: {name}")
+    if parameter.is_flag:
+        if not isinstance(value, bool):
+            raise ValueError(f"canonical recovery flag requires a bool value: {name}")
+        if value:
+            arguments.append(long_options[0])
+        return
+    arguments.extend((long_options[0], str(value)))
+
+
+def _record_response_provenance(observation: object, census: _ResponseProvenanceCensus) -> None:
+    """Record response provenance."""
+    legal_refs = _observation_field(observation, "legal_refs")
+    source_refs = _observation_field(observation, "source_refs")
+    if not legal_refs or not source_refs:
+        census.ungrounded += 1
+    casilla_id = _observation_field(observation, "casilla_id")
+    if casilla_id is None or str(casilla_id) not in census.expected_computed:
+        return
+    casilla_id_text = str(casilla_id)
+    census.computed_seen.add(casilla_id_text)
+    formula_id = _observation_field(observation, "formula_id")
+    if not formula_id:
+        census.computed_without_formula.append(casilla_id_text)

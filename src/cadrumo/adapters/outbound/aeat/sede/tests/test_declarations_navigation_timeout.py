@@ -1,6 +1,6 @@
 """Typed navigation-timeout outcome for the declaraciones register drive.
 
-``capture_expedientes`` (the ``aeat app live expedientes pull`` verb) reaches
+``capture_expedientes_with_outcome`` (the ``aeat app live expedientes pull`` verb) reaches
 AEAT through ``DeclaracionesRegisterSession.walk`` -> ``_drive_search``, the same
 form-drive helper :mod:`test_declarations_live` exercises against the real
 sede. This suite drives the real ``_drive_search`` coroutine through a local

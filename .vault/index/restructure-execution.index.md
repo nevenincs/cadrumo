@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#restructure-execution'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:93e4d05ec0903541493741c83d1ec7b671507118aa24f9dd5a3ef42df5191507'
+body_hash: 'sha256:52750930aa6900280a44701b1a4ccd02b18aebc3d9cc210208e0ff1701a5ac3d'
 related:
-  - '[[2026-06-04-restructure-execution-adr]]'
   - '[[2026-06-04-restructure-execution-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#restructure-execution`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-restructure-execution-adr` - `restructure-execution` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

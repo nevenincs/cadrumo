@@ -1,0 +1,13 @@
+# Original approved printed forms. Later revisions require their own
+# applicability check; enrolling this source does not attest unchanged forms.
+[sources."boe-2015-1656-modelos-130-131-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2015-1656-modelos-130-131.pdf"
+sha256 = "f62a61854eac561e96f689ebf11b8b2c75d418a6146a7f972e6e6a404a8063a0"
+bytes = 446569
+retrieved_at = 2026-10-05
+published_at = 2015-02-19
+source_url = "https://www.boe.es/boe/dias/2015/02/19/pdfs/BOE-A-2015-1656.pdf"
+review_status = "pending_review"

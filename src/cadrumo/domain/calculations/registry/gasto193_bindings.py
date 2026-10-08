@@ -3,21 +3,18 @@
 Modelo 193's hoja anexo (registro tipo 2, relación de gastos) carries one row
 per contribuyente for whom the declarante perceived the art. 26.1.a) LIRPF
 gastos de administracion y deposito de valores. This family validates the
-observation and binding-selector shapes consumed by row-set ingestion. The
-required declarante total is a separate explicit input until a secure
-observation owner exists.
+binding-selector shapes for this deferred detail-record provider. No secure
+observation owner or executable ingestion route is enrolled. The required
+declarante total remains a separate explicit input.
 """
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
-from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
@@ -31,7 +28,6 @@ if TYPE_CHECKING:
 
 __all__ = [
     "Gasto193ContributorProvider",
-    "Gasto193Observation",
     "validate_gasto193_binding_selector_shape",
 ]
 
@@ -49,29 +45,8 @@ def _runtime_object(value: object) -> object:
     return value
 
 
-class Gasto193Observation(BaseModel):
-    """One modelo 193 gastos-relationship row: contribuyente plus annual gastos."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_id: str = Field(min_length=1, max_length=128)
-    contributor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
-    contributor_legal_name: str = Field(default="", max_length=200)
-    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
-    """NIF of the minor's legal representative, declared by the design only when
-    the contribuyente is a minor; spaces elsewhere."""
-    transaction_date: date
-    importe_gastos: Decimal = Decimal("0")
-    """The annual gastos de administracion y deposito amount (positions 195-206),
-    the design's own zeros when none."""
-
-    def _non_negative_gastos(self) -> None:
-        if self.importe_gastos < Decimal("0"):
-            raise RegistryValidationError("gasto amounts must be non-negative")
-
-
 class Gasto193ContributorProvider(BaseModel):
-    """The Modelo 193 expense-contributor provider over the detail-record store."""
+    """Typed selector for deferred Modelo 193 expense-contributor bindings."""
 
     model_config = STRICT_FROZEN_CONFIG
 

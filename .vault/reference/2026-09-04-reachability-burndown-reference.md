@@ -3,12 +3,16 @@ tags:
   - '#reference'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f1987bb511448c66217988ae74118545b51e8572c6864f92f82bcf02065bdd18'
+body_hash: 'sha256:841ff0e4b92eab0c859948393e914de179cfb6beff8e556d4b27c213c1430a6c'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
+
+## Summary
+
+This reference records live unreachable-code signals and a zero-target cadence for resolving them without baselines or allowlists.
 
 ## Scope
 

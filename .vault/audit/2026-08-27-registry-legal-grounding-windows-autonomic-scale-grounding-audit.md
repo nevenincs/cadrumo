@@ -3,21 +3,20 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:803c49e0bfe963d5ed5b2348bef2e34802a5b89f3d332c233ce3b377b0eef745'
+body_hash: 'sha256:fcad68ec6360c68eaf16bdb3c41c8bf7b8db2362fd9fdaee29afc14f6d9c9e51'
 related: []
 ---
-
 # `registry-legal-grounding-windows` audit: `ninety autonomic scale tables cite the article that delegates the rate, not the one that sets it`
 
 ## Scope
 
+Review legal grounding for the 90 Modelo 100 autonomic-scale tables, separating verified amounts from the authority that establishes them.
+
 ## Findings
 
-## Recommendations
-
-## Finding
+### Finding
 
 Ninety Modelo 100 autonomic-scale bracket tables -- 15 Comunidades Autónomas
 across filing years 2020 to 2025 -- declare exactly one legal reference:
@@ -41,7 +40,7 @@ Affected: andalucia, aragon, asturias, baleares, canarias, cantabria,
 castilla-la-mancha, castilla-y-leon, cataluna, comunidad-valenciana,
 extremadura, galicia, la-rioja, madrid, murcia -- 15 per year, 6 years.
 
-## What is NOT wrong, stated precisely
+### What is NOT wrong, stated precisely
 
 The NUMBERS are cross-checked. All ninety carry `source_citations` with a
 `required_text` assertion against the bundled AEAT Renta manual for the year
@@ -53,7 +52,7 @@ establish the value it is attached to. That matters because the legal_refs are
 what travel to the operator as the value's authority, and an operator who
 follows art. 74 to check a rate finds an article that points somewhere else.
 
-## Precedent for the fix already exists
+### Precedent for the fix already exists
 
 `legal/irpf-autonomica-madrid.toml` catalogues a real autonomic authority --
 Madrid's Decreto Legislativo 1/2010, with `authority = "autonomous_community"`
@@ -61,7 +60,9 @@ and a corpus_ref. It grounds a deducción and the regional mínimo por
 descendientes, not the scale. So the shape of the correct entry is established;
 what is missing is one per region per applicable year for the scale itself.
 
-## Not repaired here
+## Recommendations
+
+### Not repaired here
 
 Grounding these needs the consolidated regional norm for each of fifteen
 Comunidades across six years, sourced from official text. Inventing the
@@ -69,6 +70,6 @@ citations, or reusing Madrid's DL 1/2010 as a template with other regions'
 identifiers guessed, would manufacture exactly the fabricated grounding
 `aeat-calculation-grounding` forbids: "Do not invent legal behavior."
 
-## Status
+### Status
 
 Open. Ninety values, verified figures, wrong establishing provision.

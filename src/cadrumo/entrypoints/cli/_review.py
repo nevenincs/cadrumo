@@ -1,28 +1,30 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from uuid import UUID
 
 import typer
 
+from ...application.operations.public_scalar import PublicDecimal
 from ...application.review.enums import ReviewState
-from ...application.review.errors import ReviewError
-from ...application.review.operator import (
-    ReviewQueueReport,
-    ReviewQueueRow,
-    project_review_item,
-    project_review_queue,
+from ...application.review.read_contracts import (
+    ReviewQueueReadRequest,
+    ReviewViewReadRequest,
+)
+from ...application.review.read_projections import (
+    ReviewQueueRowProjection,
 )
 from ...core.decimal.coercion import coerce_decimal_strict
-from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as current_output_language
 from ...core.i18n.render import tr
 from ...core.unit_proportion import is_unit_proportion
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 from .common import activate_subcommand_output_language, active_bucket_id_or_refuse, bad, emit_envelope
-from .state_projection_support import draft_review_ports_factory
+from .runtime_review import run_review_queue, run_review_view
 
 
-def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
+def _row_to_payload(row: ReviewQueueRowProjection) -> ReviewQueueRowPayload:
     """Project the application-side ``ReviewQueueRow`` onto the typed CLI payload.
 
     Keeps the CLI JSON contract pinned to the registered
@@ -96,26 +98,24 @@ def review_queue(
     """List read-only review queue rows."""
     activate_subcommand_output_language(ctx, output_language)
     threshold = _resolve_confidence_threshold(confidence_below)
-    ports = draft_review_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse())
-    try:
-        report = project_review_queue(
-            kinds=kinds,
-            source_kinds=source_kinds,
-            state=state,
-            modelo=modelo,
-            confidence_below=threshold,
-            ports=ports,
-        )
-    except ReviewError as exc:
-        raise bad(resolve_error_message(exc)) from exc
+    request = ReviewQueueReadRequest(
+        profile_id=UUID(active_bucket_id_or_refuse()),
+        kinds=tuple(kinds),
+        source_kinds=tuple(source_kinds),
+        state=state,
+        modelo=modelo,
+        confidence_below=PublicDecimal(decimal=str(threshold)) if threshold is not None else None,
+        output_language=OutputLanguage(current_output_language()),
+    )
+    projection = run_review_queue(ctx, request)
     typed_result = ReviewQueueResult(
-        rows=tuple(_row_to_payload(row) for row in report.rows),
+        rows=tuple(_row_to_payload(row) for row in projection.rows),
     )
     emit_envelope(
         ctx,
         command="review.queue",
         result=typed_result,
-        lines=_queue_lines(report, explain=explain),
+        lines=_queue_lines(projection.rows, explain=explain),
     )
 
 
@@ -127,11 +127,13 @@ def review_view(
 ) -> None:
     """View one read-only review queue item."""
     activate_subcommand_output_language(ctx, output_language)
-    ports = draft_review_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse())
-    try:
-        row = project_review_item(item_id, ports=ports)
-    except ReviewError as exc:
-        raise bad(resolve_error_message(exc)) from exc
+    request = ReviewViewReadRequest(
+        profile_id=UUID(active_bucket_id_or_refuse()),
+        item_id=item_id,
+        output_language=OutputLanguage(current_output_language()),
+    )
+    projection = run_review_view(ctx, request)
+    row = projection.row
     typed_result = ReviewViewResult(row=_row_to_payload(row))
     lines = [
         f"{tr('cli.review.labels.id')}\t{row.item_id}",
@@ -146,7 +148,7 @@ def review_view(
     emit_envelope(ctx, command="review.view", result=typed_result, lines=lines)
 
 
-def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[str]:
+def _queue_lines(rows: tuple[ReviewQueueRowProjection, ...], *, explain: bool = False) -> list[str]:
     """Render the review queue as tab-separated text.
 
     When ``explain`` is True, the
@@ -165,7 +167,7 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
     if explain:
         header = f"{header}\t{tr('cli.review.labels.legal_refs')}"
     lines = [header]
-    for row in report.rows:
+    for row in rows:
         base = (
             f"{row.item_id}\t{row.kind}\t{row.source_kind or ''}\t{row.affected_object_id}\t"
             f"{row.period or ''}\t{row.severity.value}\t{row.canonical_next_command}"
@@ -173,7 +175,7 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
         if explain:
             base = f"{base}\t{', '.join(row.legal_refs)}"
         lines.append(base)
-    if not report.rows:
+    if not rows:
         lines.append(tr("cli.review.queue.empty"))
     return lines
 

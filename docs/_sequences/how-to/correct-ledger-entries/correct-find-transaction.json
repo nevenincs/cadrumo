@@ -29,7 +29,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
             "a9ef0aa32d83010e35c72d35d6cc793ade13766f38979a9ae358646f1064352f"
@@ -77,7 +85,7 @@
           "transaction_id": "f83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -98,7 +106,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ACCOUNTING LEDGER TRANSACTIONS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\nf83add28\tf83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb\t2026-03-15\t210\tSilla de oficina\t\tpending\n"
+      "text": "TRANSACTIONS IN YOUR RECORDS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\nf83add28\tf83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb\t2026-03-15\t210\tSilla de oficina\t\tpending\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -114,7 +122,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "review_status": "pending",
@@ -159,7 +175,7 @@
           "transaction_id": "f83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

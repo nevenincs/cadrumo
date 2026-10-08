@@ -41,3 +41,11 @@ def test_an_unreadable_module_refuses_to_claim_zero(tmp_path: Path) -> None:
     root = _tree(tmp_path, lonely=_EXPORTED, broken="def nope(:\n")
     with pytest.raises(RuntimeError, match=r"broken\.py"):
         find_unconsumed(root, _unused(root, "lonely", "widget"))
+
+
+def test_a_same_named_module_in_another_package_does_not_consume_the_export(tmp_path: Path) -> None:
+    root = _tree(tmp_path, lonely=_EXPORTED, user="from other.lonely import widget\n")
+
+    assert [(finding.path, finding.name) for finding in find_unconsumed(root, _unused(root, "lonely", "widget"))] == [
+        ("lonely.py", "widget"),
+    ]

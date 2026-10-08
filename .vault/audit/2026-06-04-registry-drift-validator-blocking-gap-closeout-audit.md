@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-drift-validator-blocking-gap'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:986974a8c147052a6e702970d8da5ebd62ad675d5f5f100a15ccc67fa26173c2'
 related:
-  - '[[2026-06-04-registry-drift-validator-blocking-gap-plan]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-audit]]'
 ---
 

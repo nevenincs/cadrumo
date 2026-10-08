@@ -19,9 +19,10 @@ from ...categories.proportionality import (
     CategoryCitation,
     CategoryCitationSource,
     ProportionalityRule,
+    StatutoryCapAmount,
     parse_http_url,
 )
-from ...categories.proportionality_catalogue import require_proportionality_kind
+from ...categories.proportionality_catalogue import require_proportionality_kind, require_statutory_cap_period
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory, SpendingCategoryFamily
 from ..errors import RentaValidationError
@@ -448,6 +449,38 @@ def test_fixed_percentage_profiles_are_supported_by_the_evaluator(
     assert result.status is RentaDeductibilityStatus.ELIGIBLE
     assert result.deductible_amount == Decimal("71.6000")
     assert result.non_deductible_amount == Decimal("128.4000")
+
+
+@pytest.mark.parametrize("year, expected", [(2025, Decimal("75")), (2026, Decimal("100")), (2024, None)])
+def test_evaluator_uses_the_declared_cap_for_the_requested_year(
+    operation: PinnedAuthorityOperation, year: int, expected: Decimal | None
+) -> None:
+    category = SpendingCategory.from_registry("material_oficina")
+    profile = _profile(
+        category,
+        ProportionalityRule(
+            kind=require_proportionality_kind("statutory_cap", authority=operation),
+            statutory_cap_period=require_statutory_cap_period("year_per_person", authority=operation),
+            statutory_cap_schedule=(
+                StatutoryCapAmount(value=Decimal("75"), valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
+                StatutoryCapAmount(value=Decimal("100"), valid_from=date(2026, 1, 1), valid_to=date(2026, 12, 31)),
+            ),
+            citations=(_citation(),),
+            notes=tr("Regla de prueba con límites anuales."),
+        ),
+    )
+
+    result = evaluate_renta_deductibility(
+        _fact(category=category, amount=Decimal("200")), profile, _context(profile_year=year)
+    )
+
+    assert result.statutory_cap_applied == expected
+    if expected is None:
+        assert result.status is RentaDeductibilityStatus.INELIGIBLE
+        assert result.deductible_amount == Decimal("0")
+    else:
+        assert result.status is RentaDeductibilityStatus.ELIGIBLE
+        assert result.deductible_amount == expected
 
 
 def test_non_deductible_profiles_cannot_become_observations(operation: PinnedAuthorityOperation) -> None:

@@ -22,7 +22,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -42,6 +41,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
+from .....domain.calculations.registry.tests.tax_id_fixture import runtime_nif_check_letter
 from .published_authority_support import published_authority_operation
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None

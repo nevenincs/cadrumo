@@ -1,0 +1,150 @@
+/* The shell's length, type, radius, density, layer and motion tokens. Each has
+   one declaration, here. Colour is not declared in this file: values come
+   from the generated palette and roles from src/theme.css.
+
+   The first block is Tailwind's theme: every name in it is also a utility
+   (`h-control-md`, `text-sm`, `rounded-lg`, `size-icon-sm`), so components use
+   the utility and hand-written rules use the variable. Tailwind's own default
+   colour, type, radius and shadow scales are cleared, which leaves no second
+   scale to reach for by accident.
+
+   Every length is rem, so the shell scales with the root font size; the
+   webview applies the OS display scale to CSS pixels on its own. The hairline
+   and the focus ring are device edges, and the terminal font steps are pixel
+   numbers because xterm draws to a canvas: those are the only pixel lengths. */
+
+@theme static {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+
+  /* ── Spacing: one unit, a quarter rem. `p-2` and `--spacing(2)` are both
+     half a rem; the finest step in use is a quarter unit. ────────────── */
+  --spacing: 0.25rem;
+
+  /* ── Type scale, with the line height each size sets. ─────────────── */
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.75rem;
+  --text-sm--line-height: 1.125rem;
+  --text-base: 0.8125rem;
+  --text-base--line-height: 1.25rem;
+  --text-md: 1rem;
+  --text-md--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+
+  /* ── Radii. ──────────────────────────────────────────────────────── */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 0.875rem;
+
+  /* ── Density: the height of a control, and the side of a square one.
+     xs is an icon button in a header, sm a control in a toolbar, md a
+     control in a dialog or a header row, lg a rail button or a tab row. ── */
+  --spacing-control-xs: 1.5rem;
+  --spacing-control-sm: 1.75rem;
+  --spacing-control-md: 2rem;
+  --spacing-control-lg: 2.25rem;
+
+  /* ── Icon sizes. ─────────────────────────────────────────────────── */
+  --spacing-icon-xs: 0.75rem;
+  --spacing-icon-sm: 1rem;
+  --spacing-icon-md: 1.125rem;
+  --spacing-icon-lg: 1.25rem;
+
+  /* ── Widths of the fixed surfaces. ───────────────────────────────── */
+  --spacing-rail: 3rem;
+  --spacing-palette: 40rem;
+  --spacing-palette-max: 35rem;
+  --spacing-dialog: 24rem;
+  --spacing-settings: 21.25rem;
+  --spacing-menu: 13.75rem;
+  --spacing-field: 13.75rem;
+  --spacing-badge: 1rem;
+}
+
+/* A finger needs more than a mouse does. Where the main pointer is coarse
+   no control is smaller than a fingertip, through the same tokens. */
+@media (pointer: coarse) {
+  :root {
+    --spacing-control-xs: 2.75rem;
+    --spacing-control-sm: 2.75rem;
+    --spacing-control-md: 2.75rem;
+    --spacing-control-lg: 3rem;
+    --spacing-rail: 3.75rem;
+  }
+}
+
+:root {
+  /* ── Structural measures the layout code reads as pixel numbers at run
+     time (src/shell/metrics.ts). ─────────────────────────────────── */
+  --rail-w: var(--spacing-rail);
+  --docs-min: 12.5rem;
+  /* Also the panel's floor: enough height for a usable handful of terminal
+     rows at the smallest terminal font step. */
+  --panel-min: 8.75rem;
+  --split-min-a: 16.25rem;
+  --split-min-b-row: 20rem;
+  --split-min-b-col: 10rem;
+  --panel-collapse-threshold: 3.75rem;
+  --resize-step: 1.5rem;
+  /* How close to its end the log still counts as following the newest record. */
+  --log-follow-slack: 1.5rem;
+  /* The calendar page at this width shows its months and its list side by
+     side; narrower, one of them at a time. */
+  --calendar-split: 56rem;
+  /* The calendar page at this height keeps its whole head in view while it
+     scrolls; shorter, only its controls. */
+  --calendar-tall: 22rem;
+  /* Where a top-placed dialog sits: the same gap is kept below it. */
+  --overlay-top: 12vh;
+
+  /* ── Layers, lowest first. Overlays are portalled to the document body,
+     so only these few need an order. ─────────────────────────────── */
+  --layer-separator: 5;
+  /* A row of controls that stays while its page scrolls under it. */
+  --layer-pinned: 10;
+  --layer-popover: 40;
+  --layer-modal: 50;
+  --layer-menu: 60;
+  --layer-tooltip: 70;
+  --layer-toast: 80;
+
+  /* ── Motion. Every transition and animation takes one of these; the base
+     layer in src/theme.css removes them under reduced motion. ─────── */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ── Device edges: the only lengths here that are not rem. ───────── */
+  --hairline: 1px;
+  --focus-ring: 2px;
+
+  /* ── Terminal font-size steps: pixel numbers for xterm's canvas, behind
+     the named "small"/"medium"/"large"/"x-large" preference
+     (src/shell/layout.ts), read through src/shell/metrics.ts. ─────── */
+  --term-font-small: 12px;
+  --term-font-medium: 13px;
+  --term-font-large: 14px;
+  --term-font-xlarge: 16px;
+}
+
+/* With finger-sized controls the bottom panel's own bars are taller, so its
+   floor rises to keep a few rows of content under them. */
+@media (pointer: coarse) {
+  :root {
+    --panel-min: 13.75rem;
+  }
+}

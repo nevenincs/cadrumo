@@ -36,11 +36,11 @@ from typing import Final
 
 from pydantic import ValidationError
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import (
     scan_directory,
 )
 from cadrumo.core.hashing import sha256_file
+from cadrumo.core.text_fold import normalise_corpus_text
 from dev._paths import REPO_ROOT, UTF_8
 from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,

@@ -30,7 +30,8 @@ import pytest
 
 from .....core.config import override_settings
 from .. import authority as authority_module
-from ..authority import bundled_authority_descriptor_path, bundled_indexed_authority
+from ..authority import bundled_indexed_authority
+from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
 from ..errors import AuthorityDescriptorUnavailableError
 

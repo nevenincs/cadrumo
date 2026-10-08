@@ -355,10 +355,36 @@ modelo:
       construct:
         modelo-222-declaration-construct:
           field:
-            title: '222-es nyomtatvány: részletfizetés az adókonszolidációs rendszerben'
+            title: 'Modelo 222 nyomtatvány: részletfizetés az adókonszolidációs rendszerben'
       field:
         official_name: Modelo 222. Társasági adó. Adókonszolidációs rendszer. Részletfizetés.
         title: IS részletfizetés adókonszolidációs rendszerben (cégcsoportok)
+      form:
+        authored2025:
+          ajustes-grupo:
+            heading: A csoport adóalapjának korrekciói · LIS 19. kiegészítő rendelkezés
+          consolidacion:
+            heading: Halasztott eredmények és egyéb konszolidációs korrekciók
+          dominante:
+            heading: Az anyavállalat azonosítása
+          dominante-id:
+            heading: Az anyavállalat azonosító száma
+          dominante-nombre:
+            heading: Az anyavállalat cégneve
+          dominante-pais:
+            heading: Az anyavállalat országa vagy forális területe
+          grupo:
+            heading: Adócsoport száma
+          identificacion:
+            heading: Képviselő vagy anyavállalat
+          inicio:
+            heading: Az adóidőszak kezdete
+          nrs-variacion:
+            heading: A csoportváltozás hivatkozási száma
+          phone:
+            heading: Telefonszám
+          variacion:
+            heading: A csoport összetételének változásáról szóló bejelentés
       revision:
         '2022':
           field:

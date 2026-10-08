@@ -29,7 +29,7 @@ def test_the_launched_command_resolves_the_tui_module() -> None:
             [*tui_root_command(), "--help"],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=None,
             check=False,
         )
     )

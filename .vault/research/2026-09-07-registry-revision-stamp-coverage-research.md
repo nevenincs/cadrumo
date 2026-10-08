@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-revision-stamp-coverage'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9e0fb18ca85868140384432d3504b68a316b397deecf8ea3072676a0b12b562'
+body_hash: 'sha256:0f9aa8a4160f4e7c82b30cf62c61ad33d02e0b7f1f66ad0376957710644d565b'
 related:
   - "[[2026-09-07-registry-revision-stamp-coverage-reference]]"
   - "[[2026-06-10-period-revision-resolution-adr]]"
@@ -129,8 +129,7 @@ registry-derived-value provenance.
   `src/cadrumo/application/calculations/revision_carry_gate.py`
 - `CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE` in
   `src/cadrumo/application/calculations/cross_period_clean_state.py`
-- `src/cadrumo/application/calculations/_calculation_modelo_adjustments.py:319`
-- `src/cadrumo/application/calculations/calculation_actions.py:556`
+
 - `src/cadrumo/application/modelo/calculation.py:215`
 - `src/cadrumo/domain/modelos/verification_report.py:235`
 - `src/cadrumo/domain/filing/schema.py:312`
@@ -142,7 +141,7 @@ registry-derived-value provenance.
 - `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py:56`
 - `src/cadrumo/application/modelo/reconciliation_records.py:161`
 - `src/cadrumo/application/modelo/review_package.py:121`
-- `src/cadrumo/application/filing/export_proof.py:45`
+
 - `.vault/plan/2026-06-10-calculation-engine-foundations-plan.md:41`
 - `.vault/plan/2026-06-10-calculation-engine-foundations-plan.md:45`
 - `.vault/plan/2026-06-10-calculation-engine-foundations-plan.md:46`

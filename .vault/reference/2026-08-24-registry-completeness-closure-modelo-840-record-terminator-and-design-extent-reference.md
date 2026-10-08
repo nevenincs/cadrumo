@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a1f93cd56b790e74c43c79d1f729e44dc7be8e43972623d99315d8b7a257add0'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:915eed277c600c05763d7b8303edb80a932f5b192a0b0ac1688b1b956def0a52'
+related: []
 ---
 
 # `registry-completeness-closure` reference: `Modelo 840 record terminator and official design extent`
@@ -109,8 +108,4 @@ surface. No empty layout or generic codec result is evidence of filing support.
   https://www.boe.es/buscar/act.php?id=BOE-A-2003-17642
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_840/files/01-840-orden-hac-2572-2003-99-kb-pdf.pdf`
 - `src/cadrumo/_data/registry/aeat/legal/iae.toml`
-- `src/cadrumo/domain/calculations/registry/_record_design.py`
-- `src/cadrumo/domain/calculations/registry/_fixed_width_codec.py`
-- `dev/registry/pipeline/_semantic_map.py`
-- `dev/registry/pipeline/_semantic_map_validation.py`
 - `dev/registry/pipeline/_export_tree.py`

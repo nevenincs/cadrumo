@@ -21,6 +21,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import cache
+from pathlib import Path
+from typing import cast
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import TomlDecodeError, parse_toml
@@ -78,19 +80,7 @@ def scan_registry_keys() -> set[str]:
             f"cannot enumerate category profile locale keys from {path}: {type(exc).__name__}: {exc}",
         ) from exc
 
-    if not isinstance(document, Mapping):
-        raise LocaleRegistryEnumerationError(f"category profile source is not a TOML table: {path}")
-    fact = document.get("fact")
-    if not isinstance(fact, Mapping):
-        raise LocaleRegistryEnumerationError(f"category profile source has no [fact] table: {path}")
-    if fact.get("fact_id") != "categories.profile":
-        raise LocaleRegistryEnumerationError(
-            f"category profile source has unexpected fact_id {fact.get('fact_id')!r}: {path}",
-        )
-    if fact.get("family") != "mapping":
-        raise LocaleRegistryEnumerationError(
-            f"category profile source has unexpected family {fact.get('family')!r}: {path}",
-        )
+    fact = require_category_profile_fact(document, path)
 
     variants = fact.get("variants")
     if not isinstance(variants, list) or not variants:
@@ -98,50 +88,7 @@ def scan_registry_keys() -> set[str]:
 
     keys: set[str] = set()
     for variant_index, variant in enumerate(variants):
-        if not isinstance(variant, Mapping):
-            raise LocaleRegistryEnumerationError(
-                f"category profile variant[{variant_index}] is not a table: {path}",
-            )
-        payload = variant.get("payload")
-        if not isinstance(payload, Mapping) or payload.get("kind") != "mapping":
-            raise LocaleRegistryEnumerationError(
-                f"category profile variant[{variant_index}] has no mapping payload: {path}",
-            )
-        entries = payload.get("entries")
-        if not isinstance(entries, list) or not entries:
-            raise LocaleRegistryEnumerationError(
-                f"category profile variant[{variant_index}] has no mapping entries: {path}",
-            )
-        for entry_index, entry in enumerate(entries):
-            if not isinstance(entry, Mapping):
-                raise LocaleRegistryEnumerationError(
-                    f"category profile variant[{variant_index}].entries[{entry_index}] is not a table: {path}",
-                )
-            entry_key = entry.get("key")
-            entry_value = entry.get("value")
-            if not isinstance(entry_key, str) or not entry_key:
-                raise LocaleRegistryEnumerationError(
-                    f"category profile variant[{variant_index}].entries[{entry_index}] has no string key: {path}",
-                )
-            if "value" not in entry:
-                raise LocaleRegistryEnumerationError(
-                    f"category profile entry {entry_key!r} has no value: {path}",
-                )
-            if not _is_valid_category_entry(entry_key):
-                raise LocaleRegistryEnumerationError(
-                    f"category profile entry {entry_key!r} has an ambiguous cap-variant shape: {path}",
-                )
-            if _is_localized_category_entry(entry_key):
-                if (
-                    not isinstance(entry_value, str)
-                    or not entry_value.strip()
-                    or entry_value != entry_value.strip()
-                    or not entry_value.startswith(_CATEGORY_LOCALE_PREFIX)
-                ):
-                    raise LocaleRegistryEnumerationError(
-                        f"category profile entry {entry_key!r} has an ambiguous locale key {entry_value!r}: {path}",
-                    )
-                keys.add(entry_value)
+        collect_category_variant_keys(variant_index, variant, path, keys)
 
     if not keys:
         raise LocaleRegistryEnumerationError(f"category profile source declares no locale keys: {path}")
@@ -235,20 +182,6 @@ def scan_detail_row_fields() -> tuple[str, ...]:
 
     values: set[str] = set()
 
-    def _walk(node: object) -> None:
-        if isinstance(node, dict):
-            for key, value in node.items():
-                if key == "row_field":
-                    if not isinstance(value, str) or not value:
-                        raise LocaleRegistryEnumerationError(
-                            f"registry row_field declaration is not a non-empty string under {root}"
-                        )
-                    values.add(value)
-                _walk(value)
-        elif isinstance(node, list):
-            for value in node:
-                _walk(value)
-
     for path in paths:
         try:
             payload = parse_toml(path.read_text(encoding="utf-8"))
@@ -256,8 +189,150 @@ def scan_detail_row_fields() -> tuple[str, ...]:
             raise LocaleRegistryEnumerationError(
                 f"cannot enumerate registry row fields from {path}: {type(exc).__name__}: {exc}"
             ) from exc
-        _walk(payload)
+        collect_registry_row_fields(payload, root, values)
 
     if not values:
         raise LocaleRegistryEnumerationError(f"registry source contains no row_field declarations: {root}")
     return tuple(sorted(values))
+
+
+_FORM_LAYOUT_FRAGMENT_GLOB = "modelos/*/revisions/*/form_layouts/*.toml"
+
+
+def is_form_layout_heading_candidate(key: str) -> bool:
+    """Return whether ``key`` has the shape of a form layout heading key."""
+    return key.startswith("modelo.") and ".form." in f"{key}."
+
+
+@cache
+def scan_form_layout_heading_keys() -> frozenset[str]:
+    """Return every heading key the committed form layouts and the shared column vocabulary declare.
+
+    Layout headings are registry-declared and optional: the runtime falls back
+    from the operator's locale to Spanish, then to the design's official
+    Spanish heading, then to a technical name. They are therefore neither
+    required by key-set parity nor extra to it, but only a key some layout (or
+    the shared vocabulary) actually declares is exempt, so a stray or
+    misspelled heading key still reads as extra.
+
+    Raises:
+        LocaleRegistryEnumerationError: If a committed layout fragment cannot
+            be read or parsed.
+    """
+    from dev.registry.form_layout.column_vocabulary import SHARED_COLUMN_HEADING_KEY_PREFIX, SHARED_COLUMN_KEYS
+
+    root = bundled_path("registry", "aeat").resolve()
+    keys = {f"{SHARED_COLUMN_HEADING_KEY_PREFIX}.{member}" for member in SHARED_COLUMN_KEYS}
+
+    def _walk(node: object) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == "heading_key" and isinstance(value, str) and is_form_layout_heading_candidate(value):
+                    keys.add(value)
+                _walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                _walk(value)
+
+    for path in sorted(root.glob(_FORM_LAYOUT_FRAGMENT_GLOB)):
+        try:
+            _walk(parse_toml(path.read_text(encoding="utf-8")))
+        except (OSError, UnicodeError, TomlDecodeError) as exc:
+            raise LocaleRegistryEnumerationError(
+                f"cannot enumerate form layout heading keys from {path}: {type(exc).__name__}: {exc}"
+            ) from exc
+    return frozenset(keys)
+
+
+def require_category_profile_fact(document: object, path: Path) -> Mapping[str, object]:
+    """Admit the category mapping fact before inspecting its variants."""
+    if not isinstance(document, Mapping):
+        raise LocaleRegistryEnumerationError(f"category profile source is not a TOML table: {path}")
+    fact = document.get("fact")
+    if not isinstance(fact, Mapping):
+        raise LocaleRegistryEnumerationError(f"category profile source has no [fact] table: {path}")
+    if fact.get("fact_id") != "categories.profile":
+        raise LocaleRegistryEnumerationError(
+            f"category profile source has unexpected fact_id {fact.get('fact_id')!r}: {path}",
+        )
+    if fact.get("family") != "mapping":
+        raise LocaleRegistryEnumerationError(
+            f"category profile source has unexpected family {fact.get('family')!r}: {path}",
+        )
+    # TOML tables carry string keys; the Mapping checks above retain the
+    # original malformed-source refusal boundary.
+    return cast("Mapping[str, object]", fact)
+
+
+def collect_category_variant_keys(variant_index: int, variant: object, path: Path, keys: set[str]) -> None:
+    """Validate one mapping variant and collect its localized entries."""
+    if not isinstance(variant, Mapping):
+        raise LocaleRegistryEnumerationError(
+            f"category profile variant[{variant_index}] is not a table: {path}",
+        )
+    payload = variant.get("payload")
+    if not isinstance(payload, Mapping) or payload.get("kind") != "mapping":
+        raise LocaleRegistryEnumerationError(
+            f"category profile variant[{variant_index}] has no mapping payload: {path}",
+        )
+    entries = payload.get("entries")
+    if not isinstance(entries, list) or not entries:
+        raise LocaleRegistryEnumerationError(
+            f"category profile variant[{variant_index}] has no mapping entries: {path}",
+        )
+    for entry_index, entry in enumerate(entries):
+        collect_category_entry_key(variant_index, entry_index, entry, path, keys)
+
+
+def collect_category_entry_key(variant_index: int, entry_index: int, entry: object, path: Path, keys: set[str]) -> None:
+    """Validate one entry and collect its exact declared translation key."""
+    if not isinstance(entry, Mapping):
+        raise LocaleRegistryEnumerationError(
+            f"category profile variant[{variant_index}].entries[{entry_index}] is not a table: {path}",
+        )
+    entry_key = entry.get("key")
+    entry_value = entry.get("value")
+    if not isinstance(entry_key, str) or not entry_key:
+        raise LocaleRegistryEnumerationError(
+            f"category profile variant[{variant_index}].entries[{entry_index}] has no string key: {path}",
+        )
+    if "value" not in entry:
+        raise LocaleRegistryEnumerationError(
+            f"category profile entry {entry_key!r} has no value: {path}",
+        )
+    if not _is_valid_category_entry(entry_key):
+        raise LocaleRegistryEnumerationError(
+            f"category profile entry {entry_key!r} has an ambiguous cap-variant shape: {path}",
+        )
+    if _is_localized_category_entry(entry_key):
+        keys.add(require_category_entry_locale_key(entry_key, entry_value, path))
+
+
+def require_category_entry_locale_key(entry_key: str, entry_value: object, path: Path) -> str:
+    """Require a nonempty, unpadded key in the category namespace."""
+    if (
+        not isinstance(entry_value, str)
+        or not entry_value.strip()
+        or entry_value != entry_value.strip()
+        or not entry_value.startswith(_CATEGORY_LOCALE_PREFIX)
+    ):
+        raise LocaleRegistryEnumerationError(
+            f"category profile entry {entry_key!r} has an ambiguous locale key {entry_value!r}: {path}",
+        )
+    return entry_value
+
+
+def collect_registry_row_fields(node: object, root: Path, values: set[str]) -> None:
+    """Walk source structure and reject malformed row-field declarations."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "row_field":
+                if not isinstance(value, str) or not value:
+                    raise LocaleRegistryEnumerationError(
+                        f"registry row_field declaration is not a non-empty string under {root}"
+                    )
+                values.add(value)
+            collect_registry_row_fields(value, root, values)
+    elif isinstance(node, list):
+        for value in node:
+            collect_registry_row_fields(value, root, values)

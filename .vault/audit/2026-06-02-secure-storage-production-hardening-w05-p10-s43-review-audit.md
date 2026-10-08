@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:496323e410585c7d9ffaaabfc7682ff8154ec4a93da5ac034f4c965520b6bb64'
+modified: '2026-10-03'
+body_hash: 'sha256:32dd7ff48ef2fe0c2d4b835d57fc15b44f9ebfb02aab1648841f14c33d2abb6b'
 related: []
 ---
 
@@ -26,7 +26,7 @@ Resolution: resolved after S440. Secure-object rows now preserve `revision_ances
 
 ## S43-003 | LOW | Mirror inspection helpers are not yet wired into the operator sync path
 
-The new detection helpers are exported from `src/aeat/adapters/outbound/storage/__init__.py`, but repository search found uses only in tests and exports. The current Google sync push path uploads ciphertext objects and persists manifests, but does not call `inspect_remote_mirror_upload`, `inspect_remote_mirror_download`, or `compare_remote_mirror_manifests` before reporting success. If this is intentionally deferred to the next remote-mirror step, keep it tracked there; otherwise the production command can complete without surfacing the partial upload, partial download, stale mirror, or revision conflict conditions that S43 introduces.
+The new detection helpers are exported from the retired module, but repository search found uses only in tests and exports. The current Google sync push path uploads ciphertext objects and persists manifests, but does not call `inspect_remote_mirror_upload`, `inspect_remote_mirror_download`, or `compare_remote_mirror_manifests` before reporting success. If this is intentionally deferred to the next remote-mirror step, keep it tracked there; otherwise the production command can complete without surfacing the partial upload, partial download, stale mirror, or revision conflict conditions that S43 introduces.
 
 ## S43-004 | MEDIUM | Timestamp-only stale fallback can mask divergent older remote revisions
 
@@ -44,10 +44,10 @@ Resolution: resolved in S440. `secure_objects` now persists revision ancestry, `
 
 No S43 residual findings remain open. The scoped tests use real `SecureObjectRepository`, `EphemeralMasterKeyProvider`, SQLite-backed storage, and `LocalFileSystemProvider`; no fakes, mocks, stubs, monkeypatches, skips, or xfails were found in the reviewed S43 mirror test files. Exception handling remains typed for expected provider failures and does not catch broad exceptions. The provider implementations remain bytes-only; the concrete provider boundary continues to treat ciphertext as opaque payload.
 
-Validation run: `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_foundation.py` passed with 16 tests.
+Validation run: the historical check passed with 16 tests.
 
-Re-review validation run: `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_foundation.py` passed with 18 tests.
+Re-review validation run: the historical check passed with 18 tests.
 
-Final re-review validation was rerun after S440: `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_foundation.py` passed with 27 tests. `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_secure_objects.py` passed with 41 tests. Targeted Ruff over the storage, mirror, and secure-object ancestry surfaces passed.
+Final re-review validation was rerun after S440: the historical check passed with 27 tests. the historical check passed with 41 tests. Targeted Ruff over the storage, mirror, and secure-object ancestry surfaces passed.
 
 2026-06-03 continuation validation under `W06.P11.S441`: the enabled Google Drive live provider gate passed with 4 tests; focused storage/Google API tests passed with 46 tests; secure-object persistence/crypto/archive tests passed with 65 tests and 3 pre-existing SQLAlchemy datetime-adapter warnings; the calc-sheets/export and IVA wallet regression batch passed with 49 tests; targeted Ruff over the secure-storage, Google API, secure-object ancestry, and IVA wallet calculation refactor surfaces passed. Manual Drive connector inspection confirmed the app-owned hierarchy, XLSX export succeeded, a bounded formula read succeeded, a bounded value read first hit live HTTP 429 and then succeeded after quota reset.

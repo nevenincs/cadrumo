@@ -50,12 +50,9 @@ import ast
 
 import pytest
 
-from .._ast_scanner import (
-    _extract_locale_constant_keys,
-    dict_constant_naming_violations_in_tree,
-    find_dict_constant_naming_violations,
-    scan_source_tree,
-)
+from .._ast_key_flows import _extract_locale_constant_keys
+from .._ast_key_naming import dict_constant_naming_violations_in_tree, find_dict_constant_naming_violations
+from .._ast_scanner import scan_source_tree
 from .._paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -11,7 +11,6 @@ synthetic oracle comparisons, never a credential or a raw command transcript.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import secrets
 from collections.abc import Callable
@@ -20,15 +19,21 @@ from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
+from cadrumo.core.hashing import sha256_file
+from cadrumo.domain.calculations.registry.authority_store import (
+    AUTHORITY_DESCRIPTOR_FILENAME,
+    AuthorityDescriptor,
+    AuthorityStoreError,
+)
 from dev.acceptance.assets.export_journey import run_asset_export_journey
 from dev.acceptance.assets.installed_journey import run_installed_tui_probe
-from dev.acceptance.assets.installed_profile_setup import run_installed_cli_profile_setup
-from dev.acceptance.assets.installed_tui_child import (
+from dev.acceptance.assets.installed_method_fixture import (
     METHOD_ASSET_ID,
     METHOD_CORRECTED_FORECAST_AMOUNT,
     METHOD_REVISION_JSON,
     method_correction_json,
 )
+from dev.acceptance.assets.installed_profile_setup import run_installed_cli_profile_setup
 from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
 from dev.acceptance.income_tax.cli_journey import command_result
 from dev.acceptance.installed_cli import InstalledCli
@@ -71,10 +76,6 @@ class InstalledMethodProofReceipt:
         return cast("dict[str, object]", asdict(self))
 
 
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def _installed_package(python: Path) -> tuple[Path, str]:
     """Locate the installed package and hash its ``__init__`` in a fresh interpreter."""
     completed = run_command(
@@ -85,25 +86,25 @@ def _installed_package(python: Path) -> tuple[Path, str]:
     if completed.returncode != 0:
         raise InstalledMethodProofError("the installed interpreter could not import the product")
     init_path = Path(completed.stdout.strip())
-    return init_path.parent, _sha256(init_path)
+    return init_path.parent, sha256_file(init_path)
 
 
 def installed_identity(*, python: Path, wheel: Path, source_commit: str) -> tuple[InstalledIdentity, Path]:
     """Read the installed build's identities and its embedded authority root."""
     package_root, init_sha256 = _installed_package(python)
     authority_root = package_root / "_data" / "registry" / "authority"
-    descriptor: object = json.loads((authority_root / "authority.current.json").read_text(encoding="utf-8"))
-    if not isinstance(descriptor, dict):
-        raise InstalledMethodProofError("embedded authority descriptor is not a JSON object")
-    document = cast("dict[str, object]", descriptor)
+    try:
+        descriptor = AuthorityDescriptor.read(authority_root / AUTHORITY_DESCRIPTOR_FILENAME)
+    except AuthorityStoreError as exc:
+        raise InstalledMethodProofError(f"embedded authority descriptor is unavailable: {exc}") from exc
     return (
         InstalledIdentity(
             source_commit=source_commit,
-            wheel_sha256=_sha256(wheel),
+            wheel_sha256=sha256_file(wheel),
             installed_init_sha256=init_sha256,
             installed_origin_is_site_packages="site-packages" in package_root.parts,
-            authority_logical_generation=str(document.get("logical_generation")),
-            authority_database_sha256=str(document.get("database_sha256")),
+            authority_logical_generation=descriptor.logical_generation,
+            authority_database_sha256=descriptor.database_sha256,
         ),
         authority_root,
     )
@@ -360,7 +361,7 @@ def run_installed_method_proof(
         "m100_material_amortization": export.m100_material_amortization,
         "m100_intangible_amortization": export.m100_intangible_amortization,
         "xsd_valid": export.xsd_validation.xsd_valid,
-        "xml_sha256": _sha256(Path(export.export_path)),
+        "xml_sha256": sha256_file(Path(export.export_path)),
     }
     report("tui_first")
     stages["tui_first"] = _tui_first(

@@ -1,11 +1,11 @@
 """An amendment submitted as an operation can state the rows it declares.
 
-The authority has required this since it stopped guessing: for M184, M232,
-M347 and M349 the per-counterpart rows ARE the declaration, so
+The authority has required this since it stopped guessing: for M184, M232
+and M349 the per-counterpart rows ARE the declaration, so
 ``_require_amendment_detail_rows`` refuses an amendment that says nothing
 about them. But the registered ``modelo.work.amend`` request carried no such
 field, and its executor therefore called the authority without one -- which
-made the refusal unconditional. Amending any of those four modelos through the
+made the refusal unconditional. Amending any of those three modelos through the
 operation could not succeed at all.
 
 That was the safe direction to fail in and still a withdrawn capability. What
@@ -16,7 +16,7 @@ tuple is the rows themselves. A field that collapsed the first two would hand
 the authority a nil declaration the operator never made.
 
 The rows cross as the payload-safe wire mirror rather than the domain row.
-That is not ceremony: two of the six domain rows hydrate registry codes
+That is not ceremony: two of the five domain rows hydrate registry codes
 through before-validators, and the operations payload gate refuses those
 because a published schema would then not describe what validation accepts.
 The mirror already existed for the edit submission, so this reuses it rather
@@ -32,21 +32,17 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from ....domain.modelos.row_models import Modelo347ContraparteRow
+from ....domain.modelos.row_models import Modelo232VinculadaRow
 from .._calculation_modelo_adjustments import detail_row_declaration_modelos
-from ..operation_definitions import (
-    ModeloWorkAmendBaseline,
-    ModeloWorkAmendOverride,
-    ModeloWorkAmendRequest,
-)
+from ..work_amend_contracts import ModeloWorkAmendBaseline, ModeloWorkAmendOverride, ModeloWorkAmendRequest
 from .test_edit_detail_row_wire_mirror import _PAIRS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-#: The four modelos whose rows constitute the declaration, named here so the
+#: The three modelos whose rows constitute the declaration, named here so the
 #: test fails if the domain ever changes which they are rather than silently
 #: covering a set that no longer matches.
-_EXPECTED_BEARING = frozenset({"184", "232", "347", "349"})
+_EXPECTED_BEARING = frozenset({"184", "232", "349"})
 _EFFECTIVE_DATE = date(2025, 12, 31)
 
 
@@ -69,8 +65,8 @@ def _request(**overrides: object) -> ModeloWorkAmendRequest:
     return ModeloWorkAmendRequest.model_validate({**valid.model_dump(), **overrides})
 
 
-def test_the_domain_still_names_the_four_modelos_this_field_exists_for() -> None:
-    """The premise: rows are the declaration for exactly these four."""
+def test_the_domain_still_names_the_three_modelos_this_field_exists_for() -> None:
+    """The premise: rows are the declaration for exactly these three."""
     assert detail_row_declaration_modelos(effective_date=_EFFECTIVE_DATE) == _EXPECTED_BEARING
 
 
@@ -78,8 +74,8 @@ def test_an_amendment_that_declares_nothing_about_rows_is_the_default() -> None:
     """The control, and the majority path: most modelos have no rows at all.
 
     ``None`` must remain reachable without being spelled, because it is the
-    ordinary shape for every modelo outside the four -- and it is also the
-    exact state the authority refuses for those four, which is why the two
+    ordinary shape for every modelo outside the three -- and it is also the
+    exact state the authority refuses for those three, which is why the two
     cannot be told apart here and must not be.
     """
     request = _request()
@@ -109,12 +105,11 @@ def test_rows_reach_the_authority_as_the_exact_domain_rows_submitted() -> None:
     assertion is on the translated domain row rather than on the wire form
     the request happens to hold.
     """
-    row = Modelo347ContraparteRow(
+    row = Modelo232VinculadaRow(
         nif="B12345674",
         nombre="Acme SL",
-        importe_Q1=Decimal("1000.00"),
-        clave_operacion="B",
-        pais_codigo="ES",
+        pais="ES",
+        importe=Decimal("1000.00"),
     )
 
     request = _request(detail_rows=(row.model_dump(mode="json"),))
@@ -129,7 +124,7 @@ def test_rows_reach_the_authority_as_the_exact_domain_rows_submitted() -> None:
 
 @pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
 def test_every_detail_row_kind_can_be_carried_by_an_amendment(kind: str) -> None:
-    """All six kinds, not just the one a hand-picked example would exercise.
+    """All five kinds, not just the one a hand-picked example would exercise.
 
     An amendment addresses whichever modelo the baseline belongs to, so a
     request that admitted only some row kinds would refuse a lawful correction
@@ -144,19 +139,17 @@ def test_every_detail_row_kind_can_be_carried_by_an_amendment(kind: str) -> None
     assert carried[0].to_row() == expected
 
 
-def test_all_three_states_survive_the_journal_round_trip() -> None:
-    """The request is journalled, so it is read back before the executor sees it.
+def test_all_three_states_survive_request_json_round_trip() -> None:
+    """The serialized request preserves the ``None``/empty distinction.
 
-    A round trip that lost the ``None``/empty distinction would restore the
-    refusal this change removes -- or worse, turn a silent caller into one
-    that declared nil.
+    A round trip that lost the distinction would turn a silent caller into one
+    that declared nil, or restore the refusal this field removes.
     """
-    row_payload = Modelo347ContraparteRow(
+    row_payload = Modelo232VinculadaRow(
         nif="B12345674",
         nombre="Acme SL",
-        importe_Q1=Decimal("1000.00"),
-        clave_operacion="B",
-        pais_codigo="ES",
+        pais="ES",
+        importe=Decimal("1000.00"),
     ).model_dump(mode="json")
     for label, request in (
         ("said nothing", _request()),
@@ -173,17 +166,16 @@ def test_a_domain_row_cannot_be_submitted_in_place_of_its_mirror() -> None:
     """Why the mirror exists, stated as a refusal rather than a comment.
 
     The domain row is the richer type and the tempting one to pass. It is
-    refused here because the payload gate refuses it upstream: two of the six
+    refused here because the payload gate refuses it upstream: two of the five
     hydrate registry codes through before-validators, so a published schema
     would not describe what validation accepts. Admitting it at this boundary
     would move that mismatch to where nothing checks for it.
     """
-    row = Modelo347ContraparteRow(
+    row = Modelo232VinculadaRow(
         nif="B12345674",
         nombre="Acme SL",
-        importe_Q1=Decimal("1000.00"),
-        clave_operacion="B",
-        pais_codigo="ES",
+        pais="ES",
+        importe=Decimal("1000.00"),
     )
 
     with pytest.raises(ValidationError):

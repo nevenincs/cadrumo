@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#calc-engine-grounding-swarm'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee0cbb61052cc74e8da7091820f018778ed822664a2ff20795d1e58d6c562be4'
+body_hash: 'sha256:354edc93b988e2d3949c644a6f3bc99753f81b63ecd2f13a17caf0ee00b407a8'
 related:
-  - '[[2026-06-04-calc-engine-grounding-swarm-adr]]'
   - '[[2026-06-04-calc-engine-grounding-swarm-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#calc-engine-grounding-swarm`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-calc-engine-grounding-swarm-adr` - `calc-engine-grounding-swarm` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

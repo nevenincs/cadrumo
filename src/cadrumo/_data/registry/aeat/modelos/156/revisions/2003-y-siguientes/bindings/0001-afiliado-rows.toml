@@ -1,0 +1,650 @@
+# Member facts follow exact type-2 fields of the enrolled AEAT design.
+# Provider routing remains deferred; these declarations do not promote filing capability.
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-nif"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "afiliado-nif"
+fact = "row_field"
+row_field = "nif"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-nombre"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "afiliado-nombre"
+fact = "row_field"
+row_field = "nombre"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-numero-afiliacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "numero-afiliacion"
+fact = "row_field"
+row_field = "numero_afiliacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-01-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-enero-situacion"
+fact = "row_field"
+row_field = "cotizacion_01_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-01-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-enero"
+fact = "row_field"
+row_field = "cotizacion_01_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-02-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-febrero-situacion"
+fact = "row_field"
+row_field = "cotizacion_02_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-02-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-febrero"
+fact = "row_field"
+row_field = "cotizacion_02_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-03-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-marzo-situacion"
+fact = "row_field"
+row_field = "cotizacion_03_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-03-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-marzo"
+fact = "row_field"
+row_field = "cotizacion_03_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-04-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-abril-situacion"
+fact = "row_field"
+row_field = "cotizacion_04_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-04-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-abril"
+fact = "row_field"
+row_field = "cotizacion_04_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-05-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-mayo-situacion"
+fact = "row_field"
+row_field = "cotizacion_05_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-05-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-mayo"
+fact = "row_field"
+row_field = "cotizacion_05_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-06-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-junio-situacion"
+fact = "row_field"
+row_field = "cotizacion_06_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-06-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-junio"
+fact = "row_field"
+row_field = "cotizacion_06_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-07-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-julio-situacion"
+fact = "row_field"
+row_field = "cotizacion_07_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-07-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-julio"
+fact = "row_field"
+row_field = "cotizacion_07_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-08-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-agosto-situacion"
+fact = "row_field"
+row_field = "cotizacion_08_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-08-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-agosto"
+fact = "row_field"
+row_field = "cotizacion_08_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-09-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-septiembre-situacion"
+fact = "row_field"
+row_field = "cotizacion_09_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-09-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-septiembre"
+fact = "row_field"
+row_field = "cotizacion_09_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-10-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-octubre-situacion"
+fact = "row_field"
+row_field = "cotizacion_10_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-10-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-octubre"
+fact = "row_field"
+row_field = "cotizacion_10_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-11-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-noviembre-situacion"
+fact = "row_field"
+row_field = "cotizacion_11_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-11-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-noviembre"
+fact = "row_field"
+row_field = "cotizacion_11_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-12-situacion"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-diciembre-situacion"
+fact = "row_field"
+row_field = "cotizacion_12_situacion"
+grouping = "per_member"
+record = "afiliado"
+data_type = "text"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]
+[[revisions.2003-y-siguientes.bindings]]
+id = "modelo-156-row-cotizacion-12-importe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["enrolled-modelo-156-layout", "enrolled-modelo-156-procedure"]
+
+[revisions.2003-y-siguientes.bindings.provider]
+kind = "afiliado_cotizacion"
+target_casilla_id = "cotizacion-diciembre"
+fact = "row_field"
+row_field = "cotizacion_12_importe"
+grouping = "per_member"
+record = "afiliado"
+data_type = "money"
+
+[revisions.2003-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+
+[revisions.2003-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2003-y-siguientes.bindings.source_citations]]
+source_ref = "enrolled-modelo-156-procedure"
+required_text = ["Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad"]

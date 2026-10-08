@@ -16,18 +16,85 @@ analysis uses to inspect ``src`` from outside it.
 from __future__ import annotations
 
 import ast
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.first_party_source import is_test_source
 
 TUI_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui"
 
 _TEXTUAL_APP_ROOT: Final[str] = "textual.app.App"
 _TEXTUAL_SCREEN_ROOTS: Final[frozenset[str]] = frozenset({"textual.screen.Screen", "textual.screen.ModalScreen"})
 """The qualified Textual bases that make a subclass an operator-facing surface."""
+
+
+def _source_declarations(root: Path) -> dict[str, _Declaration]:
+    """Source declarations."""
+    declared: dict[str, _Declaration] = {}
+    for path in sorted(root.rglob("*.py")):
+        if is_test_source(path, root=root):
+            continue
+        tree = ast.parse(path.read_text(encoding=UTF_8), filename=str(path))
+        module = _module_name(path)
+        bindings = _import_bindings(tree, module, is_package=path.name == "__init__.py")
+        for node in ast.walk(tree):
+            _record_class_declaration(node, module, path, bindings, declared)
+    return declared
+
+
+def _interface_lineage(declared: dict[str, _Declaration]) -> tuple[set[str], set[str], dict[str, list[str]]]:
+    """Interface lineage."""
+    by_name: dict[str, list[str]] = {}
+    for qualname, declaration in declared.items():
+        by_name.setdefault(declaration.name, []).append(qualname)
+
+    def resolve_base(module: str, base: str) -> str | None:
+        """Resolve a local base first, then an unambiguous imported class name."""
+        local = f"{module}.{base}"
+        if local in declared:
+            return local
+        if base in declared:
+            return base
+        candidates = by_name.get(base.rsplit(".", maxsplit=1)[-1], ())
+        return candidates[0] if len(candidates) == 1 else None
+
+    apps: set[str] = set()
+    screens: set[str] = set()
+    while True:
+        grown = False
+        for qualname, declaration in declared.items():
+            grown = _admit_interface_declaration(qualname, declaration, apps, screens, resolve_base) or grown
+        if not grown:
+            break
+
+    children: dict[str, list[str]] = {}
+    for qualname, declaration in declared.items():
+        _register_subclasses(qualname, declaration, resolve_base, apps, screens, children)
+    return (apps, screens, children)
+
+
+def _declared_interfaces(
+    declared: dict[str, _Declaration], apps: set[str], screens: set[str], children: dict[str, list[str]]
+) -> tuple[Interface, ...]:
+    """Declared interfaces."""
+    interfaces = [
+        Interface(
+            name=declaration.name,
+            module=_module_name(declaration.path),
+            path=declaration.path,
+            line=declaration.line,
+            kind=InterfaceKind.APP if qualname in apps else InterfaceKind.SCREEN,
+            bases=declaration.bases,
+            subclassed_by=tuple(sorted(children.get(qualname, ()))),
+        )
+        for qualname, declaration in declared.items()
+        if qualname in apps or qualname in screens
+    ]
+    return tuple(sorted(interfaces, key=lambda item: item.qualname))
 
 
 @dataclass(frozen=True)
@@ -129,17 +196,7 @@ def _import_bindings(tree: ast.Module, module: str, *, is_package: bool) -> dict
     """Map module-level imported names and aliases to their qualified symbols."""
     bindings: dict[str, str] = {}
     for node in tree.body:
-        if isinstance(node, ast.ImportFrom):
-            source = _imported_module(module, node.module, node.level, is_package=is_package)
-            for alias in node.names:
-                if alias.name == "*":
-                    continue
-                local = alias.asname or alias.name
-                bindings[local] = f"{source}.{alias.name}" if source else alias.name
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                local = alias.asname or alias.name.split(".", maxsplit=1)[0]
-                bindings[local] = alias.name if alias.asname else local
+        _record_import_bindings(node, module, is_package, bindings)
     return bindings
 
 
@@ -158,11 +215,6 @@ def _module_name(path: Path) -> str:
     return ".".join(relative.parts)
 
 
-def _is_test_path(path: Path) -> bool:
-    """Whether a file sits in a test tree rather than the shipped surface."""
-    return "tests" in path.parts
-
-
 def scan(root: Path = TUI_ROOT) -> tuple[Interface, ...]:
     """Return every ``App`` or ``Screen`` subclass declared under ``root``.
 
@@ -171,87 +223,87 @@ def scan(root: Path = TUI_ROOT) -> tuple[Interface, ...]:
     it stops growing, so declaration order across files never decides whether
     an interface is found.
     """
-    declared: dict[str, _Declaration] = {}
-    for path in sorted(root.rglob("*.py")):
-        if _is_test_path(path):
-            continue
-        tree = ast.parse(path.read_text(encoding=UTF_8), filename=str(path))
-        module = _module_name(path)
-        bindings = _import_bindings(tree, module, is_package=path.name == "__init__.py")
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ClassDef):
-                continue
-            bases = tuple(name for name in (_base_name(base) for base in node.bases) if name is not None)
-            if bases:
-                resolved_bases = tuple(
-                    _resolve_import_alias(reference, bindings)
-                    for reference in (_base_reference(base) for base in node.bases)
-                    if reference is not None
-                )
-                declared[f"{module}.{node.name}"] = _Declaration(
-                    name=node.name,
-                    path=path,
-                    line=node.lineno,
-                    bases=bases,
-                    resolved_bases=resolved_bases,
-                )
+    declared = _source_declarations(root)
 
-    by_name: dict[str, list[str]] = {}
-    for qualname, declaration in declared.items():
-        by_name.setdefault(declaration.name, []).append(qualname)
+    apps, screens, children = _interface_lineage(declared)
 
-    def resolve_base(module: str, base: str) -> str | None:
-        """Resolve a local base first, then an unambiguous imported class name."""
-        local = f"{module}.{base}"
-        if local in declared:
-            return local
-        if base in declared:
-            return base
-        candidates = by_name.get(base.rsplit(".", maxsplit=1)[-1], ())
-        return candidates[0] if len(candidates) == 1 else None
-
-    apps: set[str] = set()
-    screens: set[str] = set()
-    while True:
-        grown = False
-        for qualname, declaration in declared.items():
-            if qualname in apps or qualname in screens:
-                continue
-            resolved_bases = {
-                resolved
-                for base in declaration.resolved_bases
-                if (resolved := resolve_base(_module_name(declaration.path), base))
-            }
-            if _TEXTUAL_APP_ROOT in declaration.resolved_bases or apps & resolved_bases:
-                apps.add(qualname)
-                grown = True
-            elif _TEXTUAL_SCREEN_ROOTS & set(declaration.resolved_bases) or screens & resolved_bases:
-                screens.add(qualname)
-                grown = True
-        if not grown:
-            break
-
-    children: dict[str, list[str]] = {}
-    for qualname, declaration in declared.items():
-        for base in declaration.resolved_bases:
-            resolved = resolve_base(_module_name(declaration.path), base)
-            if resolved in apps or resolved in screens:
-                children.setdefault(resolved, []).append(qualname)
-
-    interfaces = [
-        Interface(
-            name=declaration.name,
-            module=_module_name(declaration.path),
-            path=declaration.path,
-            line=declaration.line,
-            kind=InterfaceKind.APP if qualname in apps else InterfaceKind.SCREEN,
-            bases=declaration.bases,
-            subclassed_by=tuple(sorted(children.get(qualname, ()))),
-        )
-        for qualname, declaration in declared.items()
-        if qualname in apps or qualname in screens
-    ]
-    return tuple(sorted(interfaces, key=lambda item: item.qualname))
+    return _declared_interfaces(declared, apps, screens, children)
 
 
 __all__ = ["TUI_ROOT", "Interface", "InterfaceKind", "scan"]
+
+
+def _record_import_bindings(node: ast.stmt, module: str, is_package: bool, bindings: dict[str, str]) -> None:
+    """Record import bindings."""
+    if isinstance(node, ast.ImportFrom):
+        source = _imported_module(module, node.module, node.level, is_package=is_package)
+        for alias in node.names:
+            if alias.name == "*":
+                continue
+            local = alias.asname or alias.name
+            bindings[local] = f"{source}.{alias.name}" if source else alias.name
+    elif isinstance(node, ast.Import):
+        for alias in node.names:
+            local = alias.asname or alias.name.split(".", maxsplit=1)[0]
+            bindings[local] = alias.name if alias.asname else local
+
+
+def _record_class_declaration(
+    node: ast.AST, module: str, path: Path, bindings: dict[str, str], declared: dict[str, _Declaration]
+) -> None:
+    """Record class declaration."""
+    if not isinstance(node, ast.ClassDef):
+        return
+    bases = tuple(name for name in (_base_name(base) for base in node.bases) if name is not None)
+    if bases:
+        resolved_bases = tuple(
+            _resolve_import_alias(reference, bindings)
+            for reference in (_base_reference(base) for base in node.bases)
+            if reference is not None
+        )
+        declared[f"{module}.{node.name}"] = _Declaration(
+            name=node.name,
+            path=path,
+            line=node.lineno,
+            bases=bases,
+            resolved_bases=resolved_bases,
+        )
+
+
+def _admit_interface_declaration(
+    qualname: str,
+    declaration: _Declaration,
+    apps: set[str],
+    screens: set[str],
+    resolve_base: Callable[[str, str], str | None],
+) -> bool:
+    """Admit one class against the current transitive Textual lineage."""
+    if qualname in apps or qualname in screens:
+        return False
+    resolved_bases = {
+        resolved
+        for base in declaration.resolved_bases
+        if (resolved := resolve_base(_module_name(declaration.path), base))
+    }
+    if _TEXTUAL_APP_ROOT in declaration.resolved_bases or apps & resolved_bases:
+        apps.add(qualname)
+        return True
+    elif _TEXTUAL_SCREEN_ROOTS & set(declaration.resolved_bases) or screens & resolved_bases:
+        screens.add(qualname)
+        return True
+    return False
+
+
+def _register_subclasses(
+    qualname: str,
+    declaration: _Declaration,
+    resolve_base: Callable[[str, str], str | None],
+    apps: set[str],
+    screens: set[str],
+    children: dict[str, list[str]],
+) -> None:
+    """Register subclasses."""
+    for base in declaration.resolved_bases:
+        resolved = resolve_base(_module_name(declaration.path), base)
+        if resolved in apps or resolved in screens:
+            children.setdefault(resolved, []).append(qualname)

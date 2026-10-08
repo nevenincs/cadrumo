@@ -87,9 +87,8 @@ class ProfileArchivePushResult(OutputSchema):
     manifest_pushed_by_namespace: dict[str, int] = {}
     failed_manifests: list[ProfileArchivePushFailedManifestPayload] = []
     degraded_manifests: list[ProfileArchivePushDegradedManifestPayload] = []
-    # A namespace whose manifest was withheld for an object failure rolls
-    # back every object it already pushed (see ``_push_mirror_objects``); a
-    # row here means that rollback delete itself failed, so the object is
-    # durable on the remote provider with no manifest that can enumerate or
-    # reconcile it and requires manual operator cleanup.
+    # Objects retained after an incomplete namespace upload, including when
+    # deletion was deliberately withheld because creation ownership was not
+    # established. Earlier acknowledged ciphertext is preserved; these rows
+    # do not imply a rollback or a complete, recoverable remote manifest.
     cleanup_failed_objects: list[ProfileArchivePushFailedObjectPayload] = []

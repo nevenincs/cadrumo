@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#live-pull-verification-sweep'
 date: '2026-07-10'
-modified: '2026-07-10'
+modified: '2026-10-03'
 body_hash: 'sha256:afa07aefd90cc939b1c08cc8c533792da2cbe7184c7a3ee7b5648790a06b8837'
 related:
-  - "[[2026-06-12-live-pull-verification-sweep-plan]]"
   - "[[2026-06-12-live-pull-verification-sweep-live-auth-blocker-audit]]"
   - "[[2026-06-12-live-pull-verification-sweep-code-review-audit]]"
-  - "[[2026-06-05-live-censo-calendar-reconciliation-plan]]"
 ---
 
 # `live-pull-verification-sweep` audit: `closeout reconciliation`

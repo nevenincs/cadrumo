@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a341e9bce335b4319534b6e0d21a847af5a878aeeba43b56709b79c028e778bb'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-research]]"
 ---
 # `casilla-schema` audit: `S03 XML dictionary casilla identity review`

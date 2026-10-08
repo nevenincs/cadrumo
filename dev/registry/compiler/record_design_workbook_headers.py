@@ -38,6 +38,7 @@ class WorkbookHeader:
     description_index: int
     validation_index: int | None
     content_index: int | None
+    relative_offset_index: int | None = None
 
 
 def is_blank_row(values: tuple[object, ...]) -> bool:
@@ -133,6 +134,7 @@ def _probe_header_row(
         description_index=description_index,
         validation_index=validation_index,
         content_index=_optional_header_index(values, "contenido"),
+        relative_offset_index=_optional_header_index(values, "pos. rel."),
     )
     return header, length_correction
 

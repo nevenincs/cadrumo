@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:a34366f16602dd583c4604cd75d2497cc438d6a2eb551a879aefb8b827ddfc5c'
+modified: '2026-10-03'
+body_hash: 'sha256:c1d253087725e8b60cd1082d89fe5a1325ab83fae16c5ead9a9f724a76aa6cf8'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S280-001 | PASS | Workflow error taxonomy false positive
 
-The `W12.P26.S280` review found that `src/aeat/application/workflow/_errors.py`
+The `W12.P26.S280` review found that the retired module
 declares typed workflow exception classes only. The active-profile, manifest-bucket,
 and master-key scanner signals are names and docstring references in error taxonomy
 copy, not executable storage access. The module does not read manifests, resolve
@@ -49,7 +49,7 @@ error messages unchanged.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/workflow/_errors.py src/aeat/core/errors/registry/_application.py src/aeat/application/workflow/test_engine.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/test_locale_coverage_hardened_errors.py`
-- `uv run --no-sync pytest -q src/aeat/application/workflow/test_engine.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/entrypoints/cli/test_error_registry_contract.py src/aeat/test_locale_coverage_hardened_errors.py`
+- the historical check
+- the historical check
 - `uv run --no-sync python -c "from aeat.application.workflow._errors import WorkflowError, WorkflowInputMismatchError; from aeat.core.errors import AeatError, CoreValidationError, get_registered_error_code; assert issubclass(WorkflowError, AeatError); assert issubclass(WorkflowInputMismatchError, CoreValidationError); assert get_registered_error_code(WorkflowError) is not None; assert get_registered_error_code(WorkflowInputMismatchError) is not None"`
 - `uv run --no-sync vaultspec-rag search "workflow errors exception hierarchy active profile manifest bucket master key registry" --type code --port 8766 --max-results 8`

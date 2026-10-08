@@ -14,23 +14,31 @@ from dev.registry.compiler.record_design_schema import (
 )
 
 from .record_design_pdf_columns import PdfColumnRow, document_declares_column_table, extract_pdf_column_rows
-from .record_design_pdf_repairs import (
+from .record_design_pdf_coordinate_repairs import (
     collapse_doubled_coordinate_rows,
     collapse_stuttered_row_prefix,
-    join_wrapped_row_descriptions,
-    reattach_stranded_casilla_tags,
     recover_coordinate_stutter_rows,
     rejoin_bare_coordinate_rows,
+)
+from .record_design_pdf_fragment_repairs import (
+    join_wrapped_row_descriptions,
+    reattach_stranded_casilla_tags,
+    split_row_from_wrapped_content,
+    split_tail_from_leading_fragment,
+)
+from .record_design_pdf_repairs import (
+    recover_m349_operator_blank_run,
     rejoin_reversed_column_rows,
+    separate_m270_birth_country_coordinate,
+    undouble_struck_rows,
+)
+from .record_design_pdf_state import PdfParseState, contiguity_failure, extract_pdf_lines
+from .record_design_pdf_token_repairs import (
     repair_truncated_offset_rows,
     split_fused_ordinal_offset_rows,
     split_fused_ordinal_position_prefix,
     split_glued_naturaleza_rows,
-    split_row_from_wrapped_content,
-    split_tail_from_leading_fragment,
-    undouble_struck_rows,
 )
-from .record_design_pdf_state import PdfParseState, contiguity_failure, extract_pdf_lines
 from .record_design_pdf_visual import (
     extract_pdf_text_lines,
     extract_pdfplumber_text_lines,
@@ -121,7 +129,10 @@ def _prepare_record_design_pdf_lines(
     corrections: CorrectionIndex,
 ) -> tuple[str, ...]:
     base_lines = extract_pdf_text_lines(pdf_bytes, source_label=source_label)
-    lines = _repair_base_record_design_lines(base_lines)
+    lines = recover_m349_operator_blank_run(
+        separate_m270_birth_country_coordinate(_repair_base_record_design_lines(base_lines), pdf_bytes),
+        pdf_bytes,
+    )
     if not uses_page_record_layout(base_lines):
         return lines
     page_lines = _repair_page_record_lines(

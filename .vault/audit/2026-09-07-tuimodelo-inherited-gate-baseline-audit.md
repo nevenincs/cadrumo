@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:603b38bea19f2ad5d2c6bd1e99bf4ae1632e6db9a293bb05d0d91f454f616cb7'
-related:
-  - "[[2026-09-07-tuimodelo-plan]]"
+related: []
 ---
 
 # `tuimodelo` audit: `the gate state this campaign starts from`

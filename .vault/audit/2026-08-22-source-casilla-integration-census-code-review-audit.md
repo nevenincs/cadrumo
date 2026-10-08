@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:9b298f8c544d80ed0c008967cefb91d542531c4c2f2971ff179a1a9a95fbf411'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
   - "[[2026-08-22-source-casilla-integration-research]]"
 ---

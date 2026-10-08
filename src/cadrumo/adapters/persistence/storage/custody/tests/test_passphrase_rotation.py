@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPa
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_recovery_material,
@@ -27,7 +28,7 @@ from cadrumo.application.user_profile.custody_ports import (
     unlock_profile_custody_password,
     unlock_profile_custody_recovery,
 )
-from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import (
     ProfilePassphraseRotationError,
     rotate_profile_passphrase,
@@ -130,13 +131,13 @@ def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -
         # Registration closes its own session, so the profile is locked here;
         # reading the "before" record needs a real login exactly as an
         # operator's next command would.
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_LABEL, passphrase_callback=lambda: _CURRENT, profile_decode_context=_profile_decode_context_for_test
         )
         before = ProfileRecordRepository.for_current_session(
             outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
         ).load(outcome.profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
 
         rotate_profile_passphrase(
             profile_id=profile_id,
@@ -146,7 +147,7 @@ def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -
             profile_decode_context=_profile_decode_context_for_test,
         )
 
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: _REPLACEMENT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -165,7 +166,7 @@ def test_the_rotation_is_recorded_in_the_profile_history(tmp_path: Path) -> None
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = _register()
-        logout_active_profile()
+        reset_test_profile_session()
 
         rotate_profile_passphrase(
             profile_id=UUID(outcome.profile_id),
@@ -175,7 +176,7 @@ def test_the_rotation_is_recorded_in_the_profile_history(tmp_path: Path) -> None
             profile_decode_context=_profile_decode_context_for_test,
         )
 
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: _REPLACEMENT,
             profile_decode_context=_profile_decode_context_for_test,

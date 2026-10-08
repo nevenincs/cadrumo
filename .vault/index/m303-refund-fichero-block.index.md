@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#m303-refund-fichero-block'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:468843c2249bf87fd197ba6fec0cd3d3247e12f58543611285b8116520037e1f'
+body_hash: 'sha256:5bf20a76a067be0c3acea926f84b805676cc02f4e4152f5d46fb38a0eeaae479'
 related:
   - '[[2026-06-24-m303-refund-fichero-block-adr]]'
-  - '[[2026-06-24-m303-refund-fichero-block-ledger]]'
-  - '[[2026-06-24-m303-refund-fichero-block-plan]]'
   - '[[2026-07-10-m303-refund-fichero-block-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#m303-refund-fichero-block`.
 ### adr
 
 - `2026-06-24-m303-refund-fichero-block-adr` - `m303-refund-fichero-block` adr: `REDEME field and IBAN/SWIFT-BIC secure-storage refund block` | (**status:** `accepted`)
-
-### exec
-
-- `2026-06-24-m303-refund-fichero-block-ledger` - `m303-refund-fichero-block` ledger
-
-### plan
-
-- `2026-06-24-m303-refund-fichero-block-plan` - `m303-refund-fichero-block` plan
 
 ### research
 

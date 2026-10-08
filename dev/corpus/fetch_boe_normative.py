@@ -184,6 +184,24 @@ _CRLF: Final[bytes] = b"\r\n"
 _LF: Final[bytes] = b"\n"
 
 
+def _assert_article_envelope(payload: str, block: str) -> None:
+    """Article envelope."""
+    found_code = _ENVELOPE_CODE.search(payload)
+    code = found_code.group("code") if found_code else None
+    if code != "200":
+        found_message = _ENVELOPE_MESSAGE.search(payload)
+        message = found_message.group("message").strip() if found_message else "no status text"
+        raise NormativeAcquisitionError(
+            f"the API envelope reports code {code!r}, not 200: {message}. The HTTP status is 200 either way, "
+            "so this is asserted on the envelope rather than on the transport"
+        )
+
+    found_block = _BLOCK_ID.search(payload)
+    served_block = found_block.group("block") if found_block else None
+    if served_block != block:
+        raise NormativeAcquisitionError(f"payload describes block {served_block!r}, not the requested {block!r}")
+
+
 class NormativeAcquisitionError(RuntimeError):
     """The payload cannot be shown to be the consolidated text in force."""
 
@@ -587,20 +605,7 @@ def assert_serves_the_article_in_force(payload: str, *, document_id: str, block:
     Raises:
         NormativeAcquisitionError: On any of the four refusals above.
     """
-    found_code = _ENVELOPE_CODE.search(payload)
-    code = found_code.group("code") if found_code else None
-    if code != "200":
-        found_message = _ENVELOPE_MESSAGE.search(payload)
-        message = found_message.group("message").strip() if found_message else "no status text"
-        raise NormativeAcquisitionError(
-            f"the API envelope reports code {code!r}, not 200: {message}. The HTTP status is 200 either way, "
-            "so this is asserted on the envelope rather than on the transport"
-        )
-
-    found_block = _BLOCK_ID.search(payload)
-    served_block = found_block.group("block") if found_block else None
-    if served_block != block:
-        raise NormativeAcquisitionError(f"payload describes block {served_block!r}, not the requested {block!r}")
+    _assert_article_envelope(payload, block)
 
     redactions = article_redactions(payload)
     if not redactions:

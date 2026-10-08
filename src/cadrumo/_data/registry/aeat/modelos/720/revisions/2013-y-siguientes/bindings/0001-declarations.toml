@@ -1,49 +1,26 @@
 [[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_1.tipo-de-registro"
-provider = { kind = "design_constant", record = "type_1", field = "tipo-de-registro", offset = 1, length = 1, data_type = "integer", value = "1" }
-value = { data_type = "integer", channel = "integer" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_1.modelo-declaracion"
-provider = { kind = "design_constant", record = "type_1", field = "modelo-declaracion", offset = 2, length = 3, data_type = "integer", value = "720" }
-value = { data_type = "integer", channel = "integer" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_1.ejercicio"
-provider = { kind = "manual_input", record = "type_1", field = "ejercicio", offset = 5, length = 4, data_type = "integer" }
-value = { data_type = "integer", channel = "integer" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_1.n-i-f-del-declarante"
-provider = { kind = "manual_input", record = "type_1", field = "n-i-f-del-declarante", offset = 9, length = 9, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_1.apellidos-y-nombre-o-razon-social-del-declarante"
-provider = { kind = "manual_input", record = "type_1", field = "apellidos-y-nombre-o-razon-social-del-declarante", offset = 18, length = 40, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_1.tipo-de-soporte"
 provider = { kind = "manual_input", record = "type_1", field = "tipo-de-soporte", offset = 58, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
+# The official PDF prints two distinct contact facts: 59-67 phone and 68-107 name.
 [[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_1.persona-con-quien-relacionarse"
-provider = { kind = "manual_input", record = "type_1", field = "persona-con-quien-relacionarse", offset = 59, length = 49, data_type = "text" }
+id = "modelo-720.type_1.telefono-contacto"
+provider = { kind = "manual_input", record = "type_1", field = "telefono-contacto", offset = 59, length = 9, data_type = "text" }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720.type_1.nombre-contacto"
+provider = { kind = "manual_input", record = "type_1", field = "nombre-contacto", offset = 68, length = 40, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_1.numero-identificativo-de-la-declaracion"
-provider = { kind = "manual_input", record = "type_1", field = "numero-identificativo-de-la-declaracion", offset = 108, length = 13, data_type = "integer" }
-value = { data_type = "integer", channel = "integer" }
+provider = { kind = "manual_input", record = "type_1", field = "numero-identificativo-de-la-declaracion", offset = 108, length = 13, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
@@ -54,8 +31,8 @@ legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_1.numero-identificativo-de-la-declaracion-anterior"
-provider = { kind = "manual_input", record = "type_1", field = "numero-identificativo-de-la-declaracion-anterior", offset = 123, length = 13, data_type = "integer" }
-value = { data_type = "integer", channel = "integer" }
+provider = { kind = "manual_input", record = "type_1", field = "numero-identificativo-de-la-declaracion-anterior", offset = 123, length = 13, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
@@ -66,38 +43,14 @@ legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_1.suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s"
-provider = { kind = "manual_input", record = "type_1", field = "suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s", offset = 145, length = 18, data_type = "text" }
-value = { data_type = "text", channel = "text" }
+provider = { kind = "manual_input", record = "type_1", field = "suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s", offset = 145, length = 18, data_type = "money", signed = true }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_1.suma-total-de-valoracion-2-importe-o-valor-de-la-transmision"
-provider = { kind = "manual_input", record = "type_1", field = "suma-total-de-valoracion-2-importe-o-valor-de-la-transmision", offset = 163, length = 18, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_2.tipo-de-registro"
-provider = { kind = "design_constant", record = "type_2", field = "tipo-de-registro", offset = 1, length = 1, data_type = "integer", value = "2" }
-value = { data_type = "integer", channel = "integer" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_2.modelo-declaracion"
-provider = { kind = "design_constant", record = "type_2", field = "modelo-declaracion", offset = 2, length = 3, data_type = "integer", value = "720" }
-value = { data_type = "integer", channel = "integer" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_2.ejercicio"
-provider = { kind = "manual_input", record = "type_2", field = "ejercicio", offset = 5, length = 4, data_type = "integer" }
-value = { data_type = "integer", channel = "integer" }
-legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2013-y-siguientes".bindings]]
-id = "modelo-720.type_2.n-i-f-del-declarante"
-provider = { kind = "manual_input", record = "type_2", field = "n-i-f-del-declarante", offset = 9, length = 9, data_type = "text" }
-value = { data_type = "text", channel = "text" }
+provider = { kind = "manual_input", record = "type_1", field = "suma-total-de-valoracion-2-importe-o-valor-de-la-transmision", offset = 163, length = 18, data_type = "money", signed = true }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
@@ -204,8 +157,8 @@ legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_2.fecha-de-incorporacion"
-provider = { kind = "manual_input", record = "type_2", field = "fecha-de-incorporacion", offset = 415, length = 8, data_type = "integer" }
-value = { data_type = "integer", channel = "integer" }
+provider = { kind = "manual_input", record = "type_2", field = "fecha-de-incorporacion", offset = 415, length = 8, data_type = "date" }
+value = { data_type = "date", channel = "date" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
@@ -216,20 +169,20 @@ legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_2.fecha-de-extincion"
-provider = { kind = "manual_input", record = "type_2", field = "fecha-de-extincion", offset = 424, length = 8, data_type = "integer" }
-value = { data_type = "integer", channel = "integer" }
+provider = { kind = "manual_input", record = "type_2", field = "fecha-de-extincion", offset = 424, length = 8, data_type = "date" }
+value = { data_type = "date", channel = "date" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_2.valoracion-1-saldo-o-valor-a-31-de-diciembre-saldo-o-valor-e"
-provider = { kind = "manual_input", record = "type_2", field = "valoracion-1-saldo-o-valor-a-31-de-diciembre-saldo-o-valor-e", offset = 432, length = 15, data_type = "text" }
-value = { data_type = "text", channel = "text" }
+provider = { kind = "manual_input", record = "type_2", field = "valoracion-1-saldo-o-valor-a-31-de-diciembre-saldo-o-valor-e", offset = 432, length = 15, data_type = "money", signed = true }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_2.valoracion-2-importe-o-valor-de-la-transmision-saldo-medio-u"
-provider = { kind = "manual_input", record = "type_2", field = "valoracion-2-importe-o-valor-de-la-transmision-saldo-medio-u", offset = 447, length = 15, data_type = "text" }
-value = { data_type = "text", channel = "text" }
+provider = { kind = "manual_input", record = "type_2", field = "valoracion-2-importe-o-valor-de-la-transmision-saldo-medio-u", offset = 447, length = 15, data_type = "money", signed = true }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
@@ -240,8 +193,8 @@ legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_2.numero-de-valores"
-provider = { kind = "manual_input", record = "type_2", field = "numero-de-valores", offset = 463, length = 12, data_type = "integer" }
-value = { data_type = "integer", channel = "integer" }
+provider = { kind = "manual_input", record = "type_2", field = "numero-de-valores", offset = 463, length = 12, data_type = "decimal", decimals = 2 }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
@@ -252,9 +205,48 @@ legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_2.porcentaje-de-participacion"
-provider = { kind = "manual_input", record = "type_2", field = "porcentaje-de-participacion", offset = 476, length = 5, data_type = "integer" }
-value = { data_type = "integer", channel = "integer" }
+provider = { kind = "manual_input", record = "type_2", field = "porcentaje-de-participacion", offset = 476, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "decimal", channel = "decimal" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-asset-ref"
+provider = { kind = "foreign_asset", fact = "row_field", row_field = "asset_ref", grouping = "per_foreign_asset", data_type = "text" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the Modelo 720 foreign-asset resolver, which joins each lot to its registered asset and declaration entries; the record design has no slot for it" }
+value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-valuation-event"
+provider = { kind = "foreign_asset", fact = "row_field", row_field = "valuation_event", grouping = "per_foreign_asset", data_type = "text" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the Modelo 720 foreign-asset resolver, which takes the euro rate at 31 December or at the cessation or extinction date the event names" }
+value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-valuation-event-date"
+provider = { kind = "foreign_asset", fact = "row_field", row_field = "valuation_event_date", grouping = "per_foreign_asset", data_type = "text" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the Modelo 720 foreign-asset resolver, which converts a cessation or extinction valuation at the rate of this date" }
+value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-class"
 provider = { kind = "foreign_asset", fact = "row_field", row_field = "asset_class_code", grouping = "per_foreign_asset", record = "bien", data_type = "text" }
@@ -281,7 +273,8 @@ required_text = ["bienes y derechos situados en el extranjero"]
 
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-currency"
-provider = { kind = "foreign_asset", fact = "row_field", row_field = "currency_code", grouping = "per_foreign_asset", record = "bien", data_type = "text" }
+provider = { kind = "foreign_asset", fact = "row_field", row_field = "currency_code", grouping = "per_foreign_asset", data_type = "text" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "the Modelo 720 foreign-asset resolver, which converts the lot's valuation to euros through the ECB reference-rate port; the record design has no currency slot" }
 value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
@@ -329,6 +322,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-prior-year-cuentas-valoracion-baseline"
 provider = { kind = "previous_filing", source_modelo = "720", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] }, source_casilla_id = "cuentas.valoracion" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "Modelo 720 re-declaration advisory: the prior-year valuation baseline the 20.000 EUR increase test compares against" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "orden-hap-72-2013:art-2"]
@@ -341,6 +335,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-prior-year-valores-valoracion-baseline"
 provider = { kind = "previous_filing", source_modelo = "720", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] }, source_casilla_id = "valores.valoracion" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "Modelo 720 re-declaration advisory: the prior-year valuation baseline the 20.000 EUR increase test compares against" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-ter", "orden-hap-72-2013:art-2"]
@@ -353,6 +348,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-prior-year-inmuebles-valoracion-baseline"
 provider = { kind = "previous_filing", source_modelo = "720", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] }, source_casilla_id = "inmuebles.valoracion" }
+applicability = { kind = "non_calculation", reason = "application_calculation_handoff", consumed_by = "Modelo 720 re-declaration advisory: the prior-year valuation baseline the 20.000 EUR increase test compares against" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-2"]

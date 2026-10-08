@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#website-repository-boundary'
 date: '2026-08-23'
-modified: '2026-09-30'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fed1da09ec9c20697a44aaa4fd669ba66d0acd4b4705acd20deb80e02a17bb7'
+body_hash: 'sha256:18a85a9c608ffa7583cd9210b4583e5c8eb049d07db60ae413d80eaaef604576'
 related:
   - '[[2026-08-23-website-repository-boundary-adr]]'
   - '[[2026-08-23-website-repository-boundary-research]]'
@@ -31,7 +31,7 @@ Auto-generated index of all documents tagged with `#website-repository-boundary`
 ### reference
 
 - `2026-09-22-website-repository-boundary-docs-deployment-ownership-reference` - `website-repository-boundary` reference: `documentation build and deployment ownership`
-- `2026-10-01-website-repository-boundary-static-delivery-grounding-reference` - `website-repository-boundary` reference: `Historical evidence for the static documentation delivery decision`
+- `2026-10-01-website-repository-boundary-static-delivery-grounding-reference` - `website-repository-boundary` reference: `historical evidence for static documentation delivery`
 
 ### research
 

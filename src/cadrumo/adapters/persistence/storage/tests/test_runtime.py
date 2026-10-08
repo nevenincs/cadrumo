@@ -35,6 +35,7 @@ from ..runtime_repository import (
 )
 from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from ..sql.secure_objects import SecureObjectRepository
+from ..sql.tests.raw_key_writer import save_with_raw_key
 from .registered_bucket import publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -352,7 +353,8 @@ def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_cha
         repo = runtime.secure_object_repository()
         with activate_session(_session(_BUCKET_B_ID)):
             with pytest.raises(StorageValidationError) as raised:
-                repo.save_with_raw_key(
+                save_with_raw_key(
+                    repo,
                     namespace=namespace,
                     hashed_object_key=hashed_object_key,
                     classification=WORKFLOW_STATE_NAMESPACE.sensitivity,

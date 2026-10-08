@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m210-irnr-phase-1'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:0bc9fbe7a6bb6dc90ad4be5487aaaaf5a094d9e7b07dbe62b22d4f13f9b5de9d'
+modified: '2026-10-03'
+body_hash: 'sha256:6188c1be3fa4cbfc07dfbb528b3bfa9c407119cbd218ea02a9939b64cf46422a'
 related: []
 ---
 
@@ -61,7 +61,7 @@ Subagent corpus-discovery pass for #627 W09.P41.S393-S396
 - `verification_expectations/`, `application_links/`,
   `constructs/`, `workbook_parity_refs/` directories exist.
 
-### Legal catalogue (`src/aeat/_data/registry/aeat/legal/irnr.toml`)
+### Legal catalogue
 
 - Articles 2, 10, 13.1.h, 24, 25.1.a, 25.1.b, and 25.1.f authored
   with `reviewed` status.
@@ -70,7 +70,7 @@ Subagent corpus-discovery pass for #627 W09.P41.S393-S396
 
 ### User profile schema
 
-`src/aeat/_data/registry/aeat/user_profile/schema.toml` lines
+the former source file lines
 360-386 already carry `country_of_fiscal_residence`,
 `representante_fiscal_nif`, `representante_fiscal_nombre` on the
 `taxpayer` section with selectors `taxpayer.representante_fiscal_nif`
@@ -81,26 +81,25 @@ needed at the M210 engine wiring side.
 
 ### M210 engine code
 
-- `src/aeat/application/modelo/_m210_rate.py` — current
+- the former source file — current
   `resolve_m210_rate` implementation.
-- `src/aeat/application/modelo/_verification_actions.py` —
+- the former source file —
   `_rewrite_m210_sentinels` integration.
-- `src/aeat/domain/calculations/registry/__init__.py` — exports
+- the former source file — exports
   `M210_CONVENIO_MISSING_SENTINEL`, `M210_DEFERRED_TIPO_SENTINEL`,
   `M210_NOT_YET_AUTHORED_SENTINEL`.
-- `src/aeat/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
+
   — Olivia (GB/general), Khadija (MA/interest), Felipe (AR/pension),
   ZW non-Convenio, resident pension, sentinel rewrite, and representante
   predicate personas.
-- `src/aeat/domain/calculations/registry/tests/test_modelo_210_registry.py`
+
   — committed registry, art. 25.1.f interest, art. 13.1.h
   imputed-real-estate, and pension tariff grounding.
 
 ### 183-day advisory site
 
 NO `_advisories.py` exists under `src/aeat/application/user_profile/`.
-The only "183" hits in the source tree are in
-`src/aeat/domain/deadlines/_models.py` and `_profiles.py`. There is
+The only "183" hits in the source tree are  and `_profiles.py`. There is
 no advisory module at the referenced path — this is a corpus-blocker
 for S394's advisory cross-reference unless we treat the deadlines
 surface as the canonical site.
@@ -223,8 +222,7 @@ plus `test_modelo_210_imputed_real_estate_aeat_guidance_source_is_available`.
 - **Legal-catalogue gap (CLOSED 2026-06-29)**: `convenio-rates.toml` cited
   `boe-a-1985-13340` as `legal_ref_anchor` but no `legal."convenio-..."`
   entry existed. Current registry state supersedes this gap: MA/interest
-  cites `convenio-es-ma-1978:art-11`, defined in
-  `src/aeat/_data/registry/aeat/legal/irnr.toml` with corpus ref
+  cites `convenio-es-ma-1978:art-11`, defined  with corpus ref
   `corpus/normatives/html/convenio-es-ma-1978-art-11.html#art-11`
   and required text for the 10 percent interest cap.
 
@@ -242,16 +240,8 @@ plus `test_modelo_210_imputed_real_estate_aeat_guidance_source_is_available`.
 Subagent ground-truth discovery 2026-06-03 against #627 W09.P41
 S393-S396. Cited file:line evidence:
 
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/parameters/0001-m210-tipo-gravamen-2025.toml`
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/parameters/0002-m210-convenio-rates.toml`
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/casillas/0001-casillas.toml`
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/formulas/0002-m210-tipo-gravamen-2025-resolve.toml`
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/bindings/0001-bindings.toml`
-- `src/aeat/_data/registry/aeat/legal/irnr.toml`
-- `src/aeat/_data/registry/aeat/user_profile/schema.toml:360-386`
-- `src/aeat/application/modelo/_m210_rate.py` (`resolve_m210_rate`)
-- `src/aeat/application/modelo/_verification_actions.py` (`_rewrite_m210_sentinels`)
-- `src/aeat/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
-- `src/aeat/domain/calculations/registry/tests/test_modelo_210_registry.py`
-- `src/aeat/domain/deadlines/_profiles.py` (only existing 183-day site)
+- the former source file (`resolve_m210_rate`)
+- the former source file (`_rewrite_m210_sentinels`)
+
+- the former source file (only existing 183-day site)
 - `src/aeat/application/user_profile/` — no `_advisories.py` exists

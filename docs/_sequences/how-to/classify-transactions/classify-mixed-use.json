@@ -47,7 +47,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t15\namortizacion_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\narrendamiento_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\ncomunidad_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\nibi_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_agua\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_gas\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_internet\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_luz\tusage_ratio_home_area\tdefault=-\toverride=.\ntelefonia_fija\tusage_ratio_home_area\tdefault=-\toverride=.\ntelefonia_movil\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_combustible\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_mantenimiento\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_parking\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_peaje\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_seguro\tusage_ratio_personal\tdefault=-\toverride=.\n"
+      "text": "bucket\t<profile-id>\ncount\t15\namortizacion_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\narrendamiento_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\ncomunidad_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\nibi_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_agua\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_gas\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_internet\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_luz\tusage_ratio_home_area\tdefault=-\toverride=.\ntelefonia_fija\tusage_ratio_home_area\tdefault=-\toverride=.\ntelefonia_movil\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_combustible\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_mantenimiento\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_parking\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_peaje\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_seguro\tusage_ratio_personal\tdefault=-\toverride=.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -65,7 +65,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ntelefonia_movil\t0.5\n"
+      "text": "bucket\t<profile-id>\ntelefonia_movil\t0.5\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -87,7 +87,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e\nDate\t2026-03-15\nAmount\t60.5\nDescription\tFactura movil\nReview status\treviewed\n"
+      "text": "ID\t80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e\nDate\t2026-03-15\nAmount\t60.5\nDescription\tFactura movil\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -103,7 +103,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "review_status": "reviewed",
@@ -148,7 +156,7 @@
           "transaction_id": "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

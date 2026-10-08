@@ -3,17 +3,16 @@ tags:
   - '#audit'
   - '#registry-bindings-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:e22244a2209b662de07c59f453465e1d97ca732f4a19287be8092a45e90a3b56'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:52831627a13ba71512ec5bb6a6e726ffff3af6f4de8221bcdf9f7f72d42c3d47'
+related: []
 ---
 
 # `registry-bindings-boundary` audit: `binding resolver extraction boundary audit`
 
 ## Scope
 
-Audited `src/aeat/domain/calculations/registry/_bindings.py` as the
+Audited the retired module as the
 largest production module in the registry package and the next planned
 P04 monolith target. The audit assessed whether resolver families can be
 split into private helper modules without creating a new binding
@@ -38,7 +37,7 @@ shared-worktree edits.
   tree contains non-format feature WIP. Editing it now would risk
   cross-committing or obscuring another agent's change.
 - Previous-filing is also coupled to runtime internals:
-  `src/aeat/domain/calculations/registry/_formula_runtime.py` imports
+  the retired module imports
   `_PreviousModeloSelector` directly. Any extraction of that family must
   preserve the private import contract or first move the runtime
   dependency behind a stable helper.
@@ -48,7 +47,7 @@ shared-worktree edits.
 - Invoice and counterpart aggregation share `_InvoiceSelector`,
   invoice-style row builders, and the `_counterpart_to_invoice` adapter.
   Counterpart should not be split independently until invoice helper
-  ownership is explicit, or the extraction will create import cycles and
+  ownership is explicit, or the extraction will create import cycles
   selector duplication.
 - Ledger aggregation is internally separable by source family: OSS/IOSS,
   IVA, and Renta have distinct observation models and selector builders.
@@ -66,7 +65,7 @@ shared-worktree edits.
 ### Low
 
 - `CasillaObservation`, `RegistryModeloObservation`,
-  `OracleModeloObservation`, `RegistryModeloObservationRequirement`, and
+  `OracleModeloObservation`, `RegistryModeloObservationRequirement`,
   `resolve_bound_casilla_inputs` are core cross-family DTO/API elements.
   They can remain in `_bindings.py` during resolver extraction, or move
   later to a small observation module only after public API boundary tests
@@ -102,7 +101,7 @@ shared-worktree edits.
    `test_ledger_iva_aggregation_binding.py`,
    `test_ledger_oss_aggregation_binding.py`,
    `test_ledger_renta_expense_binding.py`,
-   `test_selector_shape.py`, and
+   `test_selector_shape.py`,
    `test_public_api_boundaries.py`, scoped to the touched family.
 
 ## Codification candidates

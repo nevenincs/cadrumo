@@ -192,6 +192,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         document: DocumentT,
         *,
         expected_revision_id: str | None = None,
+        serialization_context: Mapping[str, object] | None = None,
     ) -> SecureObjectWrite:
         """Prepare the Envelope-wrapped encrypted-SQL upsert without committing it.
 
@@ -213,6 +214,9 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         """
         from ..storage.envelope.contract import Envelope
 
+        # Namespace-owned flags remain authoritative; the additional context is
+        # local to this write and is never retained by the persistence instance.
+        context = {**(serialization_context or {}), **self._serialization_context}
         envelope = Envelope[self._model_type](  # ty: ignore[invalid-type-form]  # reason: pydantic runtime generic parameterisation; the model type is a per-instance value, which no static type expression can carry
             schema_version=self._definition.schema_version,
             written_at=now(),
@@ -225,13 +229,13 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             classification=self._definition.sensitivity,
             schema_version=self._definition.schema_version,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json(context=self._serialization_context).encode(UTF_8_ENCODING),
+            payload=envelope.model_dump_json(context=context).encode(UTF_8_ENCODING),
             expected_revision_id=expected_revision_id,
         )
 
-    def save(self, document: DocumentT) -> None:
+    def save(self, document: DocumentT, *, serialization_context: Mapping[str, object] | None = None) -> None:
         """Encrypt, wrap in an Envelope, and save one document."""
-        write = self.to_secure_object_write(document)
+        write = self.to_secure_object_write(document, serialization_context=serialization_context)
         self._objects.save(
             namespace=write.namespace,
             object_key=write.object_key,

@@ -1,6 +1,6 @@
 """Read-only walker over AEAT's *Consultar declaraciones presentadas* surface.
 
-The expediente-tree walker (`_walker.walk_expedientes_tree`) walks
+The legacy expediente tree uses
 ``Mis Expedientes`` (``/wlpl/TEWV-CORE/ResumenVlt``) which is a
 *procedures* surface — sanciones, recursos, gestión recaudación —
 not the canonical filings register. To read the operator's actual
@@ -64,6 +64,7 @@ from ._declarations_fetch import (
     SEDE_BASE,
     assert_declarations_read_browser_action,
     assert_declarations_read_http,
+    capture_row_pdf_artefact,
     get_buscar_settle_ms,
     get_form_interaction_timeout_ms,
 )
@@ -76,6 +77,7 @@ from .declarations_observations import (
 from .declarations_schema import Declaracion
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import (
+    FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
@@ -264,7 +266,7 @@ def filed_register_modelo_options(html: str) -> tuple[str, ...]:
 
     The shape is the one the shipped selection path already matches against the
     live form: a modelo option reads ``"<code> - <description>"``, which is why
-    :func:`_drive_search` selects on ``f"{modelo} -"``. Requiring the dash is
+    :func:`_drive_search` selects on the code parsed from it. Requiring the dash is
     what keeps this disjoint from an ejercicio option, which is a bare year.
 
     Duplicates are collapsed in first-seen order, so the result is what AEAT
@@ -366,7 +368,9 @@ async def discover_filed_declaration_availability(
         log.info("discover_filed_declaration_availability: register offers %d modelo option(s)", len(modelos))
         for modelo in modelos:
             try:
-                if not await _select_combobox_value(page, label_text="Modelo (*)", option_match=f"{modelo} -"):
+                if not await _select_combobox_value(
+                    page, label_text="Modelo (*)", option_pattern=_MODELO_OPTION_RE, option_match=modelo
+                ):
                     log.info(
                         "discover_filed_declaration_availability: modelo option vanished between reads modelo=%s",
                         modelo,
@@ -424,6 +428,34 @@ class DeclaracionesRegisterSession:
             ejercicio,
         )
         return results
+
+    async def capture_justificante(self, declaration: Declaracion) -> tuple[FiledDeclaracionArtefact, bytes]:
+        """Read the selected register row's receipt without requiring calculation extraction."""
+        snapshot = _registry_snapshot_for_declaration(declaration, operation=self._operation)
+        read_policy = _read_guard_policy_from_snapshot(snapshot)
+        if not await _drive_search(
+            self._page,
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+            read_policy=read_policy,
+        ):
+            raise SedeNavigationError("AEAT declarations register no longer offers the selected filing year")
+        current = _register_rows_from_snapshot(
+            await self._page.content(),
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+        )
+        selected = next((item for item in current if item.expediente_id == declaration.expediente_id), None)
+        if selected is None or selected.period != declaration.period or not selected.justificante_link_text:
+            raise SedeNavigationError("AEAT declarations register no longer exposes the selected period's receipt")
+        return await capture_row_pdf_artefact(
+            context=self._context,
+            row_locator=_row_locator_for_expediente(self._page, expediente_id=selected.expediente_id),
+            declaration=selected,
+            cell_index=selected.justificante_cell_index,
+            kind="justificante_pdf",
+            read_policy=read_policy,
+        )
 
     async def capture_observation(
         self,
@@ -634,7 +666,8 @@ async def _drive_search(
     if not await _select_combobox_value(
         page,
         label_text="Modelo (*)",
-        option_match=f"{modelo} -",
+        option_pattern=_MODELO_OPTION_RE,
+        option_match=modelo,
         read_policy=read_policy,
     ):
         raise SedeNavigationError(
@@ -651,6 +684,7 @@ async def _drive_search(
     if not await _select_combobox_value(
         page,
         label_text="Ejercicio (*)",
+        option_pattern=_EJERCICIO_OPTION_RE,
         option_match=str(ejercicio),
         read_policy=read_policy,
     ):
@@ -815,23 +849,43 @@ async def _select_combobox_value(
     page: Page,
     *,
     label_text: str,
+    option_pattern: re.Pattern[str],
     option_match: str,
     read_policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> bool:
-    """Open the combobox after ``label_text`` and pick an option matching ``option_match``."""
+    """Open the combobox after ``label_text`` and pick the option ``option_pattern`` parses to ``option_match``.
+
+    Raises:
+        SedeParseError: When distinct option labels parse to ``option_match``.
+    """
     await _open_combobox(page, label_text=label_text, read_policy=read_policy)
 
     options = page.locator(".z-comboitem-text")
-    matching_options = options.filter(has_text=option_match)
-    if await matching_options.count() == 0:
+    # Each option pattern captures the option's identifier as its one group. An
+    # identical label rendered twice collapses to its first; distinct labels
+    # sharing an identifier are ambiguous.
+    matching_indexes: dict[str, int] = {}
+    for index, text in enumerate(await options.all_text_contents()):
+        label = " ".join(text.split())
+        parsed = option_pattern.match(label)
+        if parsed is not None and parsed.group(1) == option_match:
+            matching_indexes.setdefault(label, index)
+    if not matching_indexes:
         log.info(
             "AEAT combobox option unavailable label=%s option=%s",
             label_text,
             option_match,
         )
         return False
+    if len(matching_indexes) > 1:
+        raise SedeParseError(
+            f"declaraciones register combobox {label_text!r} offers {len(matching_indexes)} distinct options "
+            f"for {option_match!r}; refusing to guess which one to select",
+            translated_message=tr("adapters.sede.errors.parse_failed"),
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+        )
 
-    target = matching_options.first
+    target = options.nth(next(iter(matching_indexes.values())))
     try:
         assert_declarations_read_browser_action(f"select-option-{option_match}", policy=read_policy)
         await target.click(timeout=get_form_interaction_timeout_ms())

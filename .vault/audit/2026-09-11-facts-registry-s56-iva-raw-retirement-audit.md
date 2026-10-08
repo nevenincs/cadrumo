@@ -3,17 +3,16 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cdc41a8e0d0fa0d71fa629df5ebe80a731712ae68142c7e1f1c521ecb72bb039'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+body_hash: 'sha256:6eff4eb96d76504ef69af05bfcdc6a89aaf9ef124132efd9569a7ee97b9bb6ec'
+related: []
 ---
 # `facts-registry` audit: `S56 IVA raw provider retirement review`
 
 ## Scope
 
-Independent review of W04.P17.S56 against the accepted governed-fact catalogue ADR, discovery ledger, adapted-family normalization reference, S30 execution and audit, and the S56 retirement ledger. The review covered the deleted `dev/registry/compiler/iva.py` and raw `rates.toml` and `recargo-rates.toml` inputs; the changed retained IVA and recargo authority projections; the retirement census; provider registration; focused tests; and production stale-path searches. It also checked that the separate local-grounding and resource-repository work remains assigned to S57.
+Independent review of W04.P17.S56 against the accepted governed-fact catalogue ADR, discovery ledger, adapted-family normalization reference, S30 execution and audit, and the S56 retirement ledger. It also checked that the separate local-grounding and resource-repository work remains assigned to S57.
 
 ## Findings
 

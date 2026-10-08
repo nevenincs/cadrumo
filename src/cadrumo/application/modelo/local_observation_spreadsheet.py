@@ -34,8 +34,6 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
-from openpyxl import load_workbook
-
 from ...core.decimal.coercion import normalize_decimal_separators
 from ...core.decimal.grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
 from ...core.external_constants import XLSX_EXTENSION
@@ -279,6 +277,8 @@ def _decode_bytes(source_bytes: bytes, *, path: Path) -> str:
 
 
 def _read_xlsx_rows(path: Path) -> list[list[str]]:
+    from openpyxl import load_workbook
+
     try:
         workbook = load_workbook(filename=path, read_only=True, data_only=False)
     except Exception as exc:  # openpyxl raises multiple unrelated types (OSError/KeyError/...) on a bad workbook

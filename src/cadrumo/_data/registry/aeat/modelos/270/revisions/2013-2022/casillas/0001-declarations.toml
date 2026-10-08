@@ -326,13 +326,10 @@ data_type = "date"
 semantic_role = "m270_fecha_nacimiento"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 
-# AEAT declares 461-497 as ONE 37-position campo, "LUGAR DE NACIMIENTO",
-# subdivided in its own prose into 461-495 CIUDAD (35) and 496-497 CÓDIGO PAÍS
-# (2). It is declared here as the single campo the design declares, because
-# the record's addressing is the design's own: splitting it into two casillas
-# would address two coordinates AEAT does not declare. The composite value
-# therefore carries the ciudad left-justified in its 35 positions followed by
-# the two-character country code from Anexo II of Orden EHA/3496/2011.
+# AEAT declares a 37-position parent, LUGAR DE NACIMIENTO, and explicitly
+# subdivides it into independently named 461-495 CIUDAD and 496-497 CÓDIGO
+# PAÍS positions. The aggregate remains a legacy manual export input until
+# generated export and form cut over atomically to the two source components.
 [[revisions."2013-2022".casillas]]
 id = "perc.lugar-nacimiento"
 continuidad_id = "m270-lugar-nacimiento"
@@ -340,6 +337,22 @@ number = "461-497"
 section = ["perceptor", "no_residente"]
 data_type = "text"
 semantic_role = "m270_lugar_nacimiento"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.ciudad-nacimiento"
+number = "461-495"
+section = ["perceptor", "no_residente", "lugar_nacimiento"]
+data_type = "text"
+semantic_role = "m270_ciudad_nacimiento"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+
+[[revisions."2013-2022".casillas]]
+id = "perc.codigo-pais-nacimiento"
+number = "496-497"
+section = ["perceptor", "no_residente", "lugar_nacimiento"]
+data_type = "country_code"
+semantic_role = "m270_codigo_pais_nacimiento"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 
 [[revisions."2013-2022".casillas]]

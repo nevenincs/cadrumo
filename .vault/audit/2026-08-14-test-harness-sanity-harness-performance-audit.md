@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-26'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a1e7f56c0aa48f0144f82aea4cbe5408b1bde56ba7b881493f2849f99d915d38'
-related:
-  - "[[2026-08-14-test-harness-sanity-plan]]"
+body_hash: 'sha256:68e1217fcbc266d46856458806d0a4b02acc1bb7eda357ef6c746c0af1fb99eb'
+related: []
 ---
 # `test-harness-sanity` audit: harness performance
 
@@ -655,7 +654,7 @@ with IDENTICAL failure sets by name (5 failed, 54 passed both sides).
 
 ### A knock-on nobody had to ask for
 
-`src/cadrumo/tests/test_parity.py` reads catalogues through this manager. Its
+The retired test read catalogues through this manager. Its
 `test_codebase_to_locale_parity` setup fell from 53.64s to 24.36s with no change
 to that module at all. Fixing a shared primitive beat fixing its callers one at
 a time -- the opposite conclusion to the earlier rounds, where the sharing had
@@ -837,7 +836,7 @@ worker running only narrow gates would parse only what it touches rather than
 the whole tree.
 
 It cannot be done, and the reason is a credit to whoever wrote the gate.
-`src/cadrumo/tests/test_shared_source_corpus_floor.py:66` asserts
+The retired test asserted
 `len(source_tree_ast) > _COLLAPSE_FLOOR` -- a dedicated tripwire against the
 shared corpus silently collapsing to nothing. Lazy priming empties that mapping
 at fixture time and trips it. Two further gates
@@ -1239,7 +1238,7 @@ SAME fixed point the function returns when the grid cannot be measured before
 its deadline, "a stronger point than the measured band's floor, so nothing
 about the wrap weakens".
 
-`src/cadrumo/tests/secure_sql.py` already takes that seam in three places. The
+The retired test already takes that seam in three places. The
 shared CLI registration door, `register_cli_profile`, did not -- and it has
 **156 call sites across 62 modules**. The lever was not a new idea; it was an
 existing, documented, already-used decision that one door had missed.
@@ -1722,7 +1721,7 @@ located.
 Profiling the largest in-process CLI module (`test_ledger_list_filter.py`, 155s)
 under cProfile, first-party frames by cumulative time:
 
-    148.4s  n=67   tests/cli_runner.py:invoke_cached_cli
+    148.4s n=67 the retired module:invoke_cached_cli
      89.3s  n=10   test_ledger_list_filter.py:_import_corpus
      82.5s  n=40   _ledger_import_cli.py:ledger_import
      63.3s  n=40   application/ledger/_actions_import.py:import_ledger_transactions
@@ -3338,8 +3337,8 @@ this per document, not once.
   varies run to run. Anything that binds 11434 would change these tests'
   behaviour outright.
 - **`cadrumo_llm_ollama_chat_url` is declared in the wrong module.** Every other
-  `cadrumo_llm_*` field -- provider, model, API keys, timeouts, retries, cache
-  and telemetry dirs -- is declared in `core/_config_llm_fields.py`. The Ollama
+  `cadrumo_llm_*` field -- provider, model, API keys, timeouts, retries, and cache
+  dirs -- is declared in `core/_config_llm_fields.py`. The Ollama
   endpoint alone sits in `core/_config_runtime_fields.py:18`. It is a normal
   Settings field with the normal env override; only its home is wrong.
 

@@ -70,6 +70,14 @@ class ExportValuePolicy(StrEnum):
     #: presenting itself as a reconstructed quantity.
     INTEGER_PART = "integer-part"
     FRACTIONAL_DIGITS = "fractional-digits"
+    SIGNED_COMPONENT_SIGN = "signed-component-sign"
+    SIGNED_COMPONENT_MAGNITUDE = "signed-component-magnitude"
+    SIGNED_COMPONENT_ZERO_SIGN = "signed-component-zero-sign"
+    SIGNED_COMPONENT_INTEGER_PART = "signed-component-integer-part"
+    SIGNED_COMPONENT_FRACTIONAL_DIGITS = "signed-component-fractional-digits"
+    YYYYMMDD_TEXT_YEAR = "yyyymmdd-text-year"
+    YYYYMMDD_TEXT_MONTH = "yyyymmdd-text-month"
+    YYYYMMDD_TEXT_DAY = "yyyymmdd-text-day"
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +114,11 @@ _WIRE_LENGTH_BY_POLICY: dict[ExportValuePolicy, int] = {
     ExportValuePolicy.FOUR_DIGIT_YEAR: 4,
     ExportValuePolicy.TWO_DIGIT_MONTH: 2,
     ExportValuePolicy.TWO_DIGIT_DAY: 2,
+    ExportValuePolicy.SIGNED_COMPONENT_SIGN: 1,
+    ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN: 1,
+    ExportValuePolicy.YYYYMMDD_TEXT_YEAR: 4,
+    ExportValuePolicy.YYYYMMDD_TEXT_MONTH: 2,
+    ExportValuePolicy.YYYYMMDD_TEXT_DAY: 2,
 }
 
 
@@ -120,8 +133,6 @@ def project_export_value(policy: ExportValuePolicy | None, value: object) -> obj
     ``None`` is deliberately inert: it is not an inference hook and does not
     select a policy from field width, type, identifier, or historical layout.
     """
-    if policy is None:
-        return value
     if isinstance(value, ParsedExportPolicyWireValue):
         if policy not in _RETAINED_WIRE_POLICIES or value.policy is not policy:
             raise RegistryValidationError(
@@ -129,6 +140,8 @@ def project_export_value(policy: ExportValuePolicy | None, value: object) -> obj
             )
         validate_export_wire_value(policy, value.raw)
         return value.raw
+    if policy is None:
+        return value
     projector = _PROJECTOR_BY_POLICY.get(policy)
     if projector is None:
         raise RegistryValidationError(f"unknown export value policy {policy!r}")
@@ -139,8 +152,9 @@ def policy_defines_absent_slot(policy: ExportValuePolicy | None) -> bool:
     """Whether ``policy`` assigns its OWN meaning to a slot carrying no value.
 
     An unselected checkbox is not an absent number: its policy declares that the
-    empty slot means ``0``, so the value must reach the projector. Every other
-    policy leaves absence to the field's declared blank fill, which is what
+    empty slot means ``0``, so the value must reach the projector. A negative-only
+    sign likewise declares ``0`` when no negative amount is present. Other
+    policies leave absence to the field's declared blank fill, which is what
     AEAT's designs state ("los campos numericos que no tengan contenido se
     rellenaran a ceros"). Named rather than inlined at the call site so the
     exception stays one auditable list instead of a condition readers must
@@ -253,6 +267,41 @@ def _project_unsigned_decimal(value: object) -> Decimal:
     return number
 
 
+def _signed_component_number(value: object) -> Decimal:
+    number = _strict_decimal(value, label="signed component")
+    if number.is_zero() and number.is_signed():
+        raise RegistryValidationError("signed component cannot encode negative zero")
+    if number.copy_abs() * 100 != (number.copy_abs() * 100).to_integral_value():
+        raise RegistryValidationError("signed component requires an exact cent amount")
+    return number
+
+
+def _project_signed_component_sign(value: object) -> str:
+    return "N" if _signed_component_number(value) < 0 else " "
+
+
+def _project_signed_component_magnitude(value: object) -> Decimal:
+    return _signed_component_number(value).copy_abs()
+
+
+def _project_signed_component_zero_sign(value: object) -> str:
+    if value is None or (isinstance(value, str) and value == ""):
+        return "0"
+    number = _signed_component_number(value)
+    if number > 0:
+        raise RegistryValidationError("negative-only signed component cannot encode a positive amount")
+    return "N" if number < 0 else "0"
+
+
+def _project_yyyymmdd_text_part(value: object, *, part: str) -> int:
+    if not isinstance(value, str):
+        raise RegistryValidationError("text YYYYMMDD component requires an eight-digit text casilla")
+    _validate_yyyymmdd(value)
+    spans = {"year": (0, 4), "month": (4, 6), "day": (6, 8)}
+    start, end = spans[part]
+    return int(value[start:end])
+
+
 def _strict_decimal(value: object, *, label: str) -> Decimal:
     if isinstance(value, bool) or value is None or isinstance(value, (float, Fraction)):
         raise RegistryValidationError(f"{label} export value must be an exact integer, Decimal, or canonical string")
@@ -300,10 +349,14 @@ def _project_full_year(value: object) -> str:
         raw = f"{value.year:04d}"
     elif isinstance(value, int):
         raw = str(value)
+    elif isinstance(value, Decimal) and value.is_finite() and value == value.to_integral_value():
+        raw = str(int(value))
     elif isinstance(value, str):
         raw = value
     else:
-        raise RegistryValidationError("four-digit-year export value must be an integer or ASCII digit string")
+        raise RegistryValidationError(
+            "four-digit-year export value must be an integer, an integral Decimal or an ASCII digit string",
+        )
     _validate_full_year(raw)
     return raw
 
@@ -424,13 +477,21 @@ _PROJECTOR_BY_POLICY: dict[ExportValuePolicy, Callable[[object], object]] = {
     ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: _project_mistyped_alphanumeric_text,
     ExportValuePolicy.INTEGER_PART: partial(_project_split_part, ExportValuePolicy.INTEGER_PART),
     ExportValuePolicy.FRACTIONAL_DIGITS: partial(_project_split_part, ExportValuePolicy.FRACTIONAL_DIGITS),
+    ExportValuePolicy.SIGNED_COMPONENT_SIGN: _project_signed_component_sign,
+    ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE: _project_signed_component_magnitude,
+    ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN: _project_signed_component_zero_sign,
+    ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART: _project_signed_component_magnitude,
+    ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS: _project_signed_component_magnitude,
+    ExportValuePolicy.YYYYMMDD_TEXT_YEAR: partial(_project_yyyymmdd_text_part, part="year"),
+    ExportValuePolicy.YYYYMMDD_TEXT_MONTH: partial(_project_yyyymmdd_text_part, part="month"),
+    ExportValuePolicy.YYYYMMDD_TEXT_DAY: partial(_project_yyyymmdd_text_part, part="day"),
 }
 
 #: Policies that give an EMPTY slot a meaning of their own, so absence must be
-#: projected rather than filled. Only the checkbox does: its unselected state is
-#: the declared ``0``, not a missing number.
+#: projected rather than filled. Unselected checkboxes and absent negative-only
+#: sign components both require the declared ``0`` token.
 _POLICIES_DEFINING_ABSENCE: frozenset[ExportValuePolicy] = frozenset(
-    {ExportValuePolicy.SELECTED_1_UNSELECTED_0},
+    {ExportValuePolicy.SELECTED_1_UNSELECTED_0, ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN},
 )
 
 #: Policies whose wire token cannot be inverted to the semantic value it came
@@ -441,6 +502,14 @@ _RETAINED_WIRE_POLICIES: frozenset[ExportValuePolicy] = frozenset(
         ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
         ExportValuePolicy.INTEGER_PART,
         ExportValuePolicy.FRACTIONAL_DIGITS,
+        ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
+        ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+        ExportValuePolicy.SIGNED_COMPONENT_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE,
+        ExportValuePolicy.YYYYMMDD_TEXT_YEAR,
+        ExportValuePolicy.YYYYMMDD_TEXT_MONTH,
+        ExportValuePolicy.YYYYMMDD_TEXT_DAY,
     },
 )
 
@@ -469,7 +538,42 @@ _WIRE_VALIDATOR_BY_POLICY: dict[ExportValuePolicy, Callable[[str], None]] = {
     ExportValuePolicy.YYYYMMDD: _validate_yyyymmdd,
     ExportValuePolicy.DDMMYYYY: _validate_ddmmyyyy,
     ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: _validate_mistyped_alphanumeric_text,
+    ExportValuePolicy.SIGNED_COMPONENT_SIGN: lambda raw: _validate_signed_component_sign(raw),
+    ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN: lambda raw: _validate_signed_component_zero_sign(raw),
+    ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE: partial(
+        _require_ascii_digits, label=ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE.value
+    ),
+    ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART: partial(
+        _require_ascii_digits, label=ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART.value
+    ),
+    ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS: partial(
+        _require_ascii_digits, label=ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS.value
+    ),
+    ExportValuePolicy.YYYYMMDD_TEXT_YEAR: lambda raw: _validate_calendar_component_or_zero(raw, _validate_full_year),
+    ExportValuePolicy.YYYYMMDD_TEXT_MONTH: lambda raw: _validate_calendar_component_or_zero(
+        raw, partial(_validate_calendar_part, label="month", minimum=1, maximum=12)
+    ),
+    ExportValuePolicy.YYYYMMDD_TEXT_DAY: lambda raw: _validate_calendar_component_or_zero(
+        raw, partial(_validate_calendar_part, label="day", minimum=1, maximum=31)
+    ),
 }
+
+
+def _validate_calendar_component_or_zero(raw: str, validate: Callable[[str], None]) -> None:
+    if raw == "0" * len(raw):
+        return
+    validate(raw)
+
+
+def _validate_signed_component_sign(raw: str) -> None:
+    if raw not in {" ", "N"}:
+        raise RegistryValidationError("signed component sign must be a space or N")
+
+
+def _validate_signed_component_zero_sign(raw: str) -> None:
+    if raw not in {"0", "N"}:
+        raise RegistryValidationError("negative-only signed component sign must be 0 or N")
+
 
 __all__ = [
     "ExportValuePolicy",

@@ -25,7 +25,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.hashing import content_hash_hex
-from ..producer_capture import ProducerCapture, ProducerCaptureScope
+from ..producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ def _calculation_owner_observation(*, ports: CalculationActionPorts) -> tuple[st
     validated against the work-unit catalogue that owns it, so a write to
     either between two reads makes the revision a stitch across two states.
     """
-    _calculations, calculation_revision = ports.calculation_repository.load_revisioned()
+    _calculations, calculation_revision = ports.calculation_repository.load_revisioned(operation=ports.operation)
     _work_units, work_unit_revision = ports.work_unit_repository.load_revisioned()
     return (calculation_revision, work_unit_revision)
 
@@ -80,6 +80,18 @@ def capture_modelo_calculation(
         coordinate=_calculation_capture_coordinate(calculation_revision_id),
         observe=lambda: _calculation_owner_observation(ports=ports),
         build=lambda: get_calculation_revision(calculation_revision_id, ports=ports),
+    )
+
+
+def read_modelo_calculation_current_coordinate(
+    calculation_revision_id: CalculationRevisionId,
+    *,
+    ports: CalculationActionPorts,
+) -> ProducerCaptureCoordinate:
+    """Read the coordinate a later pass compares a calculation capture against."""
+    return _CALCULATION_CAPTURE_SCOPE.read_current_coordinate(
+        coordinate=_calculation_capture_coordinate(calculation_revision_id),
+        observe=lambda: _calculation_owner_observation(ports=ports),
     )
 
 
@@ -121,6 +133,7 @@ def visible_calculation_observations(
 
 __all__ = [
     "capture_modelo_calculation",
+    "read_modelo_calculation_current_coordinate",
     "visible_calculation_casilla_values",
     "visible_calculation_observations",
 ]

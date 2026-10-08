@@ -3,20 +3,19 @@ tags:
   - '#audit'
   - '#calendar-live-filing-integration'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:947b2a9ea0533512085c2a0336521a8f44637aa65ccf1a74fc0424e953340926'
+modified: '2026-10-03'
+body_hash: 'sha256:e3a1f43e248ce96e048367b3f59555ab7342363105bfddf4c439f25b6fe96380'
 related:
   - '[[2026-06-04-calendar-live-filing-integration-research]]'
   - '[[2026-06-04-calendar-live-filing-integration-reference]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
-  - '[[2026-06-04-calendar-live-filing-integration-plan]]'
 ---
 
 # `calendar-live-filing-integration` Code Review
 
 ## REVIEW-001 | LOW | Type-only snapshot imports referenced the wrong ownership surface
 
-`src/aeat/application/overview/__init__.py` originally imported persisted snapshot types from `aeat.application.live` under `TYPE_CHECKING`, while the concrete classes are owned by `aeat.application.live._expedientes` and `aeat.application.live._notifications`. Runtime behavior was not affected because annotations are postponed, but the import path was weaker for static analysis and future re-export changes. Fixed during review by importing the two persisted snapshot types from their defining modules.
+The retired module originally imported persisted snapshot types from `aeat.application.live` under `TYPE_CHECKING`, while the concrete classes are owned by `aeat.application.live._expedientes` and `aeat.application.live._notifications`. Runtime behavior was not affected because annotations are postponed, but the import path was weaker for static analysis and future re-export changes. Fixed during review by importing the two persisted snapshot types from their defining modules.
 
 Status: resolved.
 

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from ...core.time.clock import today_madrid
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .enums import TransactionDirection
 
@@ -25,9 +25,7 @@ class LedgerIrpfCategoryDescriptor:
 
 def _registry_taxonomy_declarations(*, authority: GovernedFactSource | None = None) -> Mapping[str, str]:
     """Resolve the dated IRPF ledger category taxonomy."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise ValueError("IRPF ledger category taxonomy requires an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="IRPF ledger category taxonomy")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="irpf-ledger-category-taxonomy",

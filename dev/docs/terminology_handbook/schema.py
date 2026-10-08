@@ -127,6 +127,17 @@ _FreeShort = Annotated[
 ]
 
 
+def _validate_concept_relation_axes(self: ConceptRecord) -> None:
+    """Validate concept relation axes."""
+    if self.concept_id in self.broader:
+        raise TerminologyValidationError(f"concept {self.concept_id!r}: broader must not reference itself")
+    if self.concept_id in self.related:
+        raise TerminologyValidationError(f"concept {self.concept_id!r}: related must not reference itself")
+    for axis_name, axis in (("broader", self.broader), ("related", self.related)):
+        if len(set(axis)) != len(axis):
+            raise TerminologyValidationError(f"concept {self.concept_id!r}: duplicate {axis_name} entries")
+
+
 def _coerce_str_enum(enum_type: type[StrEnum], value: object) -> object:
     """Coerce a raw TOML string into ``enum_type`` for a ``before`` validator."""
     if isinstance(value, enum_type):
@@ -319,13 +330,7 @@ class ConceptRecord(BaseModel):
 
     @model_validator(mode="after")
     def _validate_concept(self) -> Self:
-        if self.concept_id in self.broader:
-            raise TerminologyValidationError(f"concept {self.concept_id!r}: broader must not reference itself")
-        if self.concept_id in self.related:
-            raise TerminologyValidationError(f"concept {self.concept_id!r}: related must not reference itself")
-        for axis_name, axis in (("broader", self.broader), ("related", self.related)):
-            if len(set(axis)) != len(axis):
-                raise TerminologyValidationError(f"concept {self.concept_id!r}: duplicate {axis_name} entries")
+        _validate_concept_relation_axes(self)
         if self.lifecycle is ConceptLifecycle.RETIRED and self.replaced_by is None:
             raise TerminologyValidationError(f"concept {self.concept_id!r}: retired concept requires replaced_by")
         if self.lifecycle in (ConceptLifecycle.DRAFT, ConceptLifecycle.APPROVED) and self.replaced_by is not None:

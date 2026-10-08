@@ -1,4 +1,4 @@
-"""A journalled request may not carry a field whose name says it holds a secret.
+"""A credential-free journal request may not carry a field named as a secret.
 
 The credential-free journal keeps secrets out structurally: the storage policy
 says what may be persisted, and an ephemeral secret travels a separate channel
@@ -18,17 +18,17 @@ matching must stay whole-token, because ordinary fields contain these letters --
 ``spinner_visible`` is a real field on a real view model and contains "pin". And
 ``clave`` must stay OFF the list: it names the Cl@ve authentication system, but
 AEAT also spells an operation key ``clave``, and ``clave``/``clave_operacion``/
-``clave_declarado`` are real fields on the detail rows an amendment journals.
-Adding it would refuse a lawful M184 or M347 amendment to catch a credential
-nothing names that way.
+``clave_declarado`` are real fields on amendment detail rows. Those financial
+requests use secure-reference storage; their schema is not credential-free.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ...modelo.operation_definitions import ModeloWorkAmendRequest
-from ..registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
+from ...modelo.work_amend_contracts import ModeloWorkAmendRequest
+from ..models import CredentialFreeOperationRequest
+from ..registry_schema_validation import validate_credential_free_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -92,14 +92,6 @@ def test_the_words_the_original_set_already_held_are_still_refused() -> None:
             validate_credential_free_schema(_schema(field_name))
 
 
-def test_the_real_amend_request_still_publishes_a_credential_free_schema() -> None:
-    """The end-to-end control: a registered request that journals ``clave`` fields.
-
-    ``ModeloWorkAmendRequest`` carries detail rows whose wire mirrors declare
-    ``clave``, ``clave_operacion`` and ``clave_declarado``, and it is stored
-    under the credential-free journal policy. If the tripwire ever refused
-    those, amending an M184 or M347 would stop working -- and it would fail at
-    registry build, not at the operator, which is why this is worth pinning
-    beside the word list rather than left to the registry's own construction.
-    """
-    validate_credential_free_schema(strict_model_json_schema(ModeloWorkAmendRequest))
+def test_the_amend_request_is_not_a_credential_free_journal_schema() -> None:
+    """The financial request uses secure-reference storage, not this tripwire."""
+    assert not issubclass(ModeloWorkAmendRequest, CredentialFreeOperationRequest)

@@ -1,12 +1,12 @@
 """Tests for the corpus-binary resolution seam over the cadrumo_data namespace.
 
 The command-bearing ``cadrumo`` wheel excludes
-``_data/corpus/**/*.{pdf,xls,xlsx}``; those binaries ship in TWO mandatory
-sub-cap distributions (``cadrumo-data-manuals`` and
-``cadrumo-data-official``) that both contribute subtrees to the SAME
+``_data/corpus/**/*.{pdf,xls,xlsx}``; those binaries ship in three mandatory
+sub-cap distributions (``cadrumo-data-manuals``, ``cadrumo-data-official`` and
+``cadrumo-data-normatives``) that contribute subtrees to the SAME
 ``cadrumo_data`` PEP 420 implicit namespace package. :func:`resolve_corpus_binary`
 must resolve a corpus binary identically whether it lives under the ``cadrumo`` tree
-(full checkout) or under EITHER companion portion of the ``cadrumo_data`` namespace
+(full checkout) or under any companion portion of the ``cadrumo_data`` namespace
 (installed cohort), because ``importlib.resources.files("cadrumo_data")`` resolves a
 ``MultiplexedPath`` spanning every installed portion. These tests exercise the
 real ``importlib.resources`` behaviour: each companion portion is simulated with
@@ -168,6 +168,8 @@ _OFFICIAL_PORTION_PARTS = (
     "official-seam-probe.xlsx",
 )
 _OFFICIAL_PORTION_BYTES = b"official-portion-probe\x00\x11"
+_NORMATIVES_PORTION_PARTS = ("corpus", "normatives", "seam_probe", "normatives-seam-probe.pdf")
+_NORMATIVES_PORTION_BYTES = b"normatives-portion-probe\x00\x12"
 
 
 @pytest.fixture
@@ -234,17 +236,62 @@ def test_companion_resolution_spans_portions_without_an_init(
     assert resolve_companion_binary(*_OFFICIAL_PORTION_PARTS) is not None
 
 
+def test_normative_portion_joins_the_existing_namespace(
+    tmp_path: Path, two_companion_portions: tuple[Path, Path]
+) -> None:
+    """Three separate implicit namespace portions preserve paths and payload bytes."""
+    normatives_root = tmp_path / "portion_normatives"
+    package_root = normatives_root / "cadrumo_data"
+    probe = package_root / "_data" / Path(*_NORMATIVES_PORTION_PARTS)
+    probe.parent.mkdir(parents=True)
+    probe.write_bytes(_NORMATIVES_PORTION_BYTES)
+    sys.path.insert(0, str(normatives_root))
+    sys.modules.pop("cadrumo_data", None)
+    importlib.invalidate_caches()
+    try:
+        assert not (package_root / "__init__.py").exists()
+        for parts, payload in (
+            (_MANUALS_PORTION_PARTS, _MANUALS_PORTION_BYTES),
+            (_OFFICIAL_PORTION_PARTS, _OFFICIAL_PORTION_BYTES),
+            (_NORMATIVES_PORTION_PARTS, _NORMATIVES_PORTION_BYTES),
+        ):
+            resolved = resolve_corpus_binary(*parts)
+            assert resolved is not None
+            assert resolved.read_bytes() == payload
+        roots = bundled_data_roots()
+        assert {root / "cadrumo_data" / "_data" for root in (*two_companion_portions, normatives_root)} <= set(
+            roots[1:]
+        )
+        # A neighbour found from the official portion still resolves from the
+        # normative portion's exact position in the same logical resource tree.
+        official_root = two_companion_portions[1]
+        requested = official_root / "cadrumo_data" / "_data" / Path(*_NORMATIVES_PORTION_PARTS)
+        assert not requested.exists()
+        assert resolve_data_root_copies(requested) == (probe,)
+    finally:
+        sys.path.remove(str(normatives_root))
+        sys.modules.pop("cadrumo_data", None)
+        importlib.invalidate_caches()
+
+
+def test_absent_normative_binary_is_not_supplied_by_another_portion(
+    two_companion_portions: tuple[Path, Path],
+) -> None:
+    """Missing normative content stays absent when only other portions are installed."""
+    assert resolve_corpus_binary(*_NORMATIVES_PORTION_PARTS) is None
+
+
 @pytest.fixture(scope="module")
 def built_companion_portions(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Iterator[tuple[tuple[tuple[str, ...], bytes], ...]]:
-    """Build and expose both real companion wheels as separate namespace portions."""
+    """Build and expose all three real wheels as separate namespace portions."""
     root = tmp_path_factory.mktemp("cadrumo-companion-wheels")
     uv = shutil.which("uv")
     assert uv is not None, "the real companion-wheel test requires uv on PATH"
     portions: list[Path] = []
     expected: list[tuple[tuple[str, ...], bytes]] = []
-    for project_name in ("cadrumo_data_manuals", "cadrumo_data_official"):
+    for project_name in ("cadrumo_data_manuals", "cadrumo_data_official", "cadrumo_data_normatives"):
         project = _REPO_ROOT / "packaging" / project_name
         wheel_dir = root / f"{project_name}-wheel"
         portion = root / f"{project_name}-portion"
@@ -286,7 +333,8 @@ def built_companion_portions(
 def test_built_companion_wheels_share_one_readable_namespace(
     built_companion_portions: tuple[tuple[tuple[str, ...], bytes], ...],
 ) -> None:
-    """Production resolution reads byte-exact payloads from both built wheel portions."""
+    """Production resolution reads byte-exact payloads from all three built portions."""
+    assert len(built_companion_portions) == 3
     for parts, expected_bytes in built_companion_portions:
         resolved = resolve_companion_binary(*parts)
         assert resolved is not None

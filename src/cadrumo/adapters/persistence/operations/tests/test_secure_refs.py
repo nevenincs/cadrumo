@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager, suppress
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
 
@@ -61,8 +64,9 @@ def test_secure_reference_refuses_absent_wrong_type_and_digest_corruption(tmp_pa
             asyncio.run(store.resolve("a" * 64, _Operand))
 
         reference = asyncio.run(store.put(operand, written_at=_WRITTEN_AT))
-        with pytest.raises(RepositoryError, match="requested operand type"):
+        with pytest.raises(RepositoryError, match="requested operand type") as wrong_type:
             asyncio.run(store.resolve(reference, _OtherOperand))
+        assert isinstance(wrong_type.value.__cause__, ValidationError)
 
         objects.save(
             namespace=OPERATION_SECURE_REFERENCE_NAMESPACE.namespace,
@@ -128,3 +132,170 @@ def test_secure_reference_storage_runs_off_the_awaiting_event_loop(tmp_path: Pat
     assert resolved == operand
     assert len(storage_threads) == 2
     assert loop_thread not in storage_threads
+
+
+_HYDRATION_HOOK: ContextVar[Callable[[object], object] | None] = ContextVar("secure_reference_hydration", default=None)
+_HYDRATION_IDENTITY: ContextVar[str] = ContextVar("secure_reference_identity", default="")
+
+
+class _HeldOperand(_Operand):
+    """Exercise the real strict parser while its model validator owns a blocking read body."""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _hold_hydration(cls, value: object) -> object:
+        hook = _HYDRATION_HOOK.get()
+        return value if hook is None else hook(value)
+
+
+async def _await_hydration_entry[T](pending: asyncio.Task[T], entered: asyncio.Event) -> None:
+    """Detect a synchronous-parser regression without blocking the event loop or imposing a timer."""
+    waiting = asyncio.create_task(entered.wait())
+    try:
+        await asyncio.wait((pending, waiting), return_when=asyncio.FIRST_COMPLETED)
+        if not entered.is_set():
+            pending.result()
+            pytest.fail("the strict parser did not enter its held validation body")
+    finally:
+        waiting.cancel()
+        with suppress(asyncio.CancelledError):
+            await waiting
+
+
+def test_strict_hydration_yields_to_control_and_copies_context(tmp_path: Path) -> None:
+    """A live encrypted read retains its context while an independent loop task progresses."""
+    operand = _HeldOperand(subject="held-hydration", amount=4)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        store = operation_secure_reference_repository(objects=profile.repository)
+        reference = asyncio.run(store.put(operand, written_at=_WRITTEN_AT))
+
+        async def read() -> None:
+            loop = asyncio.get_running_loop()
+            loop_thread = threading.get_ident()
+            entered, progressed = asyncio.Event(), asyncio.Event()
+            resume = threading.Event()
+
+            def hold(value: object) -> object:
+                assert threading.get_ident() != loop_thread
+                assert _HYDRATION_IDENTITY.get() == "original-read-context"
+                loop.call_soon_threadsafe(entered.set)
+                resume.wait()
+                return value
+
+            async def control() -> None:
+                assert entered.is_set() and not resume.is_set()
+                progressed.set()
+
+            identity = _HYDRATION_IDENTITY.set("original-read-context")
+            hook = _HYDRATION_HOOK.set(hold)
+            pending = asyncio.create_task(store.resolve(reference, _HeldOperand))
+            try:
+                await _await_hydration_entry(pending, entered)
+                await asyncio.create_task(control())
+                assert progressed.is_set() and not pending.done()
+                resume.set()
+                assert await pending == operand
+            finally:
+                resume.set()
+                _HYDRATION_HOOK.reset(hook)
+                _HYDRATION_IDENTITY.reset(identity)
+                if not pending.done():
+                    await pending
+
+        asyncio.run(read())
+
+
+@pytest.mark.parametrize("refuse", [False, True])
+def test_cancelled_hydration_settles_before_the_callers_guard_releases(tmp_path: Path, refuse: bool) -> None:
+    """Repeated cancellation cannot release a caller's authority while strict hydration still runs."""
+    operand = _HeldOperand(subject="cancelled-hydration", amount=6)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        store = operation_secure_reference_repository(objects=profile.repository)
+        reference = asyncio.run(store.put(operand, written_at=_WRITTEN_AT))
+
+        async def read() -> None:
+            loop = asyncio.get_running_loop()
+            loop_thread = threading.get_ident()
+            entered = asyncio.Event()
+            resume = threading.Event()
+            events: list[str] = []
+
+            def hold(value: object) -> object:
+                assert threading.get_ident() != loop_thread
+                loop.call_soon_threadsafe(entered.set)
+                resume.wait()
+                events.append("hydration-settled")
+                if refuse:
+                    raise ValueError("synthetic strict hydration refusal")
+                return value
+
+            @asynccontextmanager
+            async def caller_guard() -> AsyncGenerator[None]:
+                events.append("authority-held")
+                try:
+                    yield
+                finally:
+                    events.append("authority-released")
+
+            async def guarded_read() -> _HeldOperand:
+                async with caller_guard():
+                    return await store.resolve(reference, _HeldOperand)
+
+            hook = _HYDRATION_HOOK.set(hold)
+            pending = asyncio.create_task(guarded_read())
+            try:
+                await _await_hydration_entry(pending, entered)
+                pending.cancel()
+                await asyncio.sleep(0)
+                pending.cancel()
+                await asyncio.sleep(0)
+                assert not pending.done()
+                assert events == ["authority-held"]
+                resume.set()
+                with pytest.raises(asyncio.CancelledError) as cancelled:
+                    await pending
+                assert events == ["authority-held", "hydration-settled", "authority-released"]
+                error = cancelled.value.__dict__.get("cleanup_error")
+                if refuse:
+                    assert isinstance(error, RepositoryError)
+                    assert isinstance(error.__cause__, ValidationError)
+                    assert "requested operand type" in str(error)
+                else:
+                    assert error is None
+            finally:
+                resume.set()
+                _HYDRATION_HOOK.reset(hook)
+                if not pending.done():
+                    with suppress(asyncio.CancelledError):
+                        await pending
+
+        asyncio.run(read())
+
+
+def test_every_hydration_reads_and_verifies_current_encrypted_bytes(tmp_path: Path) -> None:
+    """Success never caches a plaintext operand or masks later addressed-byte corruption."""
+    operand = _Operand(subject="fresh-hydration", amount=8)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        reads: list[int] = []
+
+        def objects() -> SecureObjectRepository:
+            reads.append(threading.get_ident())
+            return profile.repository
+
+        store = OperationSecureReferenceRepository(
+            objects_factory=objects, namespace=OPERATION_SECURE_REFERENCE_NAMESPACE
+        )
+        reference = asyncio.run(store.put(operand, written_at=_WRITTEN_AT))
+        for _ in range(2):
+            assert asyncio.run(store.resolve(reference, _Operand)) == operand
+        profile.repository.save(
+            namespace=OPERATION_SECURE_REFERENCE_NAMESPACE.namespace,
+            object_key=reference,
+            classification=OPERATION_SECURE_REFERENCE_NAMESPACE.sensitivity,
+            schema_version=OPERATION_SECURE_REFERENCE_NAMESPACE.schema_version,
+            written_at=_WRITTEN_AT,
+            payload=b'{"subject":"substituted","amount":9}',
+        )
+        with pytest.raises(RepositoryError, match="digest mismatch"):
+            asyncio.run(store.resolve(reference, _Operand))
+        assert len(reads) == 4

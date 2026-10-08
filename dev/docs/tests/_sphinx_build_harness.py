@@ -1,8 +1,10 @@
 """Shared harness for the real nitpicky Sphinx build gates.
 
-The docs lane's dominant cost is its set of real ``-n -W`` Sphinx builds (full
-scope, user scope, and one per translation language). Two structural choices
-keep the lane fast without weakening any check:
+The docs lane's dominant cost is its real ``-n -W`` Sphinx builds: the
+full-scope read, the one compile that carries every language, and the one
+language's own build the compile is measured against
+(``test_docs_build_localized_compile``). Two structural choices keep the lane
+fast without weakening any check:
 
 * **One heavy build per test module.** pytest-xdist distributes by file
   (``--dist=loadfile``), so a module that carries several multi-minute builds
@@ -38,12 +40,6 @@ from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
 
 DOCS = REPO_ROOT / "docs"
-
-#: Wall ceiling for every spawned gate-build subprocess, set BELOW the 1800 s
-#: per-test ceiling so the subprocess timeout wins the race and names itself
-#: (``TimeoutExpired`` reports the command and the limit) instead of pytest
-#: dumping a stack with no indication of which build hung.
-SUBPROCESS_TIMEOUT_S = 1200
 
 #: Bounded default width for gate builds: parallel enough to finish, small
 #: enough to leave the host usable. Overridable via ``CADRUMO_DOCS_JOBS``.
@@ -138,5 +134,4 @@ def run_nitpicky_dummy_build(
         ],
         cwd=REPO_ROOT,
         environment=env,
-        timeout_seconds=SUBPROCESS_TIMEOUT_S,
     )

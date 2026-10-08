@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:98ef6e8bb615fe42950ea468b4a4ff7cb9be5ca940f6708888714cda9d7a9bc3'
-related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 # `registry-authority-artifact-boundary` audit: `retencion authority publication review`
 

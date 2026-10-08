@@ -6,6 +6,7 @@ import pytest
 
 from .....core.casilla_id import validated_casilla_id
 from .....core.estado_casilla_oficial import EstadoCasillaOficial
+from ...export_field_kind import CasillaFieldKind
 from .. import export as owner
 from ..export import clasificar_casillas_oficiales
 from .published_authority import published_snapshot
@@ -21,22 +22,28 @@ def test_classifier_is_the_public_registry_identity() -> None:
 def test_m720_binding_derived_design_distinguishes_declared_binding_representation() -> None:
     revision = bundled_modelo_components("720")[0].revisions["2013-y-siguientes"]
 
-    # M720 declares no inline CASILLA-bearing field: every box it addresses is
-    # represented through a binding, which is what `clasificar_casillas_oficiales`
-    # is being asked to distinguish below.
-    #
-    # The records do each carry ONE inline field, and asserting `not record.fields`
-    # therefore fails. Those two fields are trailing FILLERS -- type-1 at 181..500
-    # and type-2 at 481..500 -- added so the emitted line reaches the 500 positions
-    # the diseño declares, instead of the 180 and 480 a purely binding-derived
-    # layout produced. Both cover exactly one design field, and the design itself
-    # classifies both as reserved/blank, so they pad reserved space and blank no
-    # data. They carry neither a casilla_id nor a literal, which is what the
-    # narrowed assertion pins: an inline field that DID name a casilla would still
-    # fail here, so this admits the filler without admitting inline representation.
-    inline = [record.fields for layout in revision.export_layouts for record in layout.records]
-    assert all(field.casilla_id is None and field.literal is None for fields in inline for field in fields), (
-        "M720 must represent every casilla through a binding, never an inline export field"
+    # Generated records materialize the reviewed bindings alongside literal
+    # record/model markers, draft headers, and reserved trailing padding.
+    # None directly addresses a casilla, so classification must still honor
+    # the explicitly declared binding representation.
+    records = [record for layout in revision.export_layouts for record in layout.records]
+    assert {record.binding_record for record in records} == {"type_1", "type_2"}
+    assert all(field.casilla_id is None for record in records for field in record.fields)
+    assert {
+        (field.offset, field.length, field.literal)
+        for record in records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.LITERAL
+    } == {(1, 1, "1"), (1, 1, "2"), (2, 3, "720")}
+    assert {
+        (field.offset, field.length)
+        for record in records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.FILLER
+    } == {(181, 320), (481, 20)}
+    assert all(
+        any(field.kind is CasillaFieldKind.BINDING and field.binding is not None for field in record.fields)
+        for record in records
     )
 
     statuses = clasificar_casillas_oficiales(revision)

@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#iva-autoconsumo-promotor'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:740ac5d0680c7a30dac6edcc980cb74fbf38bf293f03109f4161dcdfb9bb6762'
+body_hash: 'sha256:7092203e8766d292c206a0cffbbdfd37bd990a6bddb775c22b077fa974df54fc'
 related:
-  - '[[2026-05-27-iva-autoconsumo-promotor-task-222-exec]]'
   - '[[2026-06-04-iva-autoconsumo-promotor-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#iva-autoconsumo-promotor`.
 
 ## Documents
-
-### exec
-
-- `2026-05-27-iva-autoconsumo-promotor-task-222-exec` - `task-222` M303 IVA autoconsumo promotor Art. 9.1.c LISIVA (Ramón round-24)
 
 ### research
 

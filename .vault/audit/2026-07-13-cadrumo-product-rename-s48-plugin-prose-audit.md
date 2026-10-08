@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s48-plugin-prose'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:6761b7451c5bb4a00d84551b692df5cd90c6011cd5d17015ae8b339358c564b9'
+modified: '2026-10-03'
+body_hash: 'sha256:2be3ea713efc1699a2253c562a51f9dff0c38b8db2d682f849e35e92f91dacf6'
 related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
 ---
 
@@ -41,7 +40,7 @@ did not take its unavailable-CLI branch. Ruff lint, Ruff format, and Python
 compilation passed for the changed source. Plan convention checking is clean
 apart from the already documented non-monotonic `PLAN022` warning. The pinned
 commit changes only the S48 execution record, the S48 plan checkbox, and
-`src/cadrumo/agent/_workspace.py`; its scoped diff passes whitespace
+The retired module; its scoped diff passes whitespace
 validation. S49 test refinements, marketplace `.gitignore` work, generated
 marketplace output, and documentation are absent from the commit. S49 remains
 unchecked in the pinned plan. The appended continuation accurately describes

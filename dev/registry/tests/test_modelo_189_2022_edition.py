@@ -83,10 +83,17 @@ def _corpus_text(source_id: str) -> str:
 def _declarado_fields(revision: ModeloRevision) -> dict[str, tuple[int, int, str]]:
     (layout,) = revision.export_layouts
     (record,) = [record for record in layout.records if record.record_type == "declarado"]
-    fields = {}
+    fields: dict[str, tuple[int, int, str]] = {}
     for field in record.fields:
         assert field.offset is not None and field.length is not None, field.id
-        fields[field.id] = (field.offset, field.length, field.kind)
+        owner = str(field.casilla_id) if field.casilla_id is not None else f"{field.kind}:{field.offset}"
+        if owner in fields:
+            start, length, kind = fields[owner]
+            assert start + length == field.offset
+            assert kind == field.kind
+            fields[owner] = (start, length + field.length, kind)
+        else:
+            fields[owner] = (field.offset, field.length, field.kind)
     return fields
 
 
@@ -122,11 +129,11 @@ def test_each_edition_writes_the_moved_fields_where_its_design_prints_them(desig
     assert design in revision.source_refs
     fields = _declarado_fields(revision)
     casillas = {casilla.id: casilla for casilla in revision.casillas}
-    for (casilla_id, field_id), (offset, length) in _MOVED[design].items():
-        assert fields[field_id][:2] == (offset, length)
+    for (casilla_id, _field_id), (offset, length) in _MOVED[design].items():
+        assert fields[casilla_id][:2] == (offset, length)
         assert casillas[casilla_id].number == f"tipo2.{offset}-{offset + length - 1}"
     blank_offset = max(offset + length for offset, length in _MOVED[design].values())
-    assert fields[f"modelo-189-t2-blancos-{blank_offset}"] == (blank_offset, 501 - blank_offset, "filler")
+    assert fields[f"filler:{blank_offset}"] == (blank_offset, 501 - blank_offset, "filler")
     assert sum(length for _, length, _ in fields.values()) == 500
     for printed in _PRINTED[design]:
         assert printed in _corpus_text(design)
@@ -141,7 +148,7 @@ def test_every_other_casilla_and_field_is_unchanged_across_the_designs() -> None
         if left.id not in moved:
             assert (left.number, left.data_type, left.section) == (right.number, right.data_type, right.section)
     older_fields, newer_fields = _declarado_fields(older), _declarado_fields(newer)
-    moved_fields = {field_id for _, field_id in _MOVED[_DESIGN]}
+    moved_fields = {casilla_id for casilla_id, _ in _MOVED[_DESIGN]}
     for field_id, spec in older_fields.items():
-        if field_id not in moved_fields and not field_id.startswith("modelo-189-t2-blancos-1"):
+        if field_id not in moved_fields and not (spec[2] == "filler" and spec[0] >= 164):
             assert newer_fields[field_id] == spec

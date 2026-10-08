@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c420f0e5812c9df4ac129a71538bcc570da21fad3aec142c78a8dce26db26379'
+body_hash: 'sha256:cd4e2218a71acecb4a7511486e62c5f12a923bb31f8e001fa06cb1d1db171f12'
 related:
   - "[[2026-08-22-profile-registration-password-policy-tui-custody-validation-mismatch-reference]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
@@ -28,9 +28,8 @@ incidental patch.
 
 The accepted custody ADR requires 15 through 256 Unicode scalar values, at most
 1,024 strict UTF-8 bytes, no normalization or rewriting, and full preservation by
-every transport. The persistence validator implements those limits at
-`src/cadrumo/adapters/persistence/storage/custody/_records.py:34` and
-`src/cadrumo/adapters/persistence/storage/custody/_records.py:77`. The new failure
+every transport. The persistence validator implements those limits  and
+the former source file. The new failure
 trace records how the upstream capability diverged.
 
 NIST SP 800-63B-4 requires at least 15 characters for a single-factor password,
@@ -43,18 +42,16 @@ they must not be smuggled into a crash repair.
 
 ### The application contract is stale, incomplete, and misnamed as generic NIST policy
 
-`src/cadrumo/core/_credentials.py:24` declares a generic eight-character minimum.
+the former source file declares a generic eight-character minimum.
 Registration re-exports it as its capability contract and defines acceptability only
-as not below that floor at `src/cadrumo/application/user_profile/_registration.py:63`
-and `src/cadrumo/application/user_profile/_registration.py:94`. It neither models the
+as not below that floor
+and the former source file. It neither models the
 256-scalar ceiling, 1,024-byte ceiling, nor invalid scalar/transport cases. Registration
-then reaches custody material creation at
-`src/cadrumo/application/user_profile/_registration.py:240`, after the incomplete gate.
+then reaches custody material creation , after the incomplete gate.
 
-Password rotation imports and repeats the same incomplete assessment at
-`src/cadrumo/application/user_profile/_passphrase_rotation.py:50` and
-`src/cadrumo/application/user_profile/_passphrase_rotation.py:116`, then uses the same
-custody mint at `src/cadrumo/application/user_profile/_passphrase_rotation.py:144`.
+Password rotation imports and repeats the same incomplete assessment  and
+the former source file, then uses the same
+custody mint .
 The defect is therefore an establish/change capability defect, not a TUI-only defect.
 
 ### Establishing a secret and authenticating an existing secret require different mappings
@@ -64,21 +61,18 @@ reasons before KDF, staging, locking, or transaction work. Login, password resto
 recovery-artifact authorization verify an already-enrolled exact sequence; applying
 prospective-password quality guidance there would create an authentication oracle.
 Those surfaces should collapse malformed and incorrect submissions into one localized
-authentication-refusal family. The current broad predicate at
-`src/cadrumo/application/user_profile/_custody_ports.py:1013` classifies every custody
+authentication-refusal family. The current broad predicate  classifies every custody
 password error as authentication failure, so structurally invalid input also consumes
-login throttle at `src/cadrumo/application/user_profile/_login_session.py:1122`.
+login throttle .
 
 ### Structured custody-password errors solve localization without destabilizing the registry
 
 `resolve_error_message` prioritizes a typed translation key, then a raw positional
-message, then the registered code message at `src/cadrumo/core/errors/_registry.py:492`.
+message, then the registered code message .
 Every `ProfileCustodyPasswordError` constructor supplies raw English, while its localized
 registry row exists at `src/cadrumo/core/errors/registry/_adapters_part2.py:651`.
-Registration catches only `ProfileRegistrationError` at
-`src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:451`, so the TUI worker reaches
+Registration catches only `ProfileRegistrationError` , so the TUI worker reaches
 the unexpected-error renderer at
-`src/cadrumo/adapters/inbound/tui/_credential_screen.py:121`.
 
 Reordering the resolver globally would replace precise raw diagnostics across hundreds
 of integrity and refusal construction sites with broad registry prose. The narrower
@@ -91,8 +85,7 @@ changing unrelated resolver semantics.
 
 Recovery uses a generated 24-word BIP-39 mnemonic, an independent credential domain,
 but the KDF supervision path passes generic recovery `secret` values through
-`validate_profile_password` and its byte decoder at
-`src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py:362` and
+`validate_profile_password` and its byte decoder  and
 `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py:130`. Today's mnemonic
 happens to fit the password limits. A separate exact recovery-secret codec prevents a
 future encoding change from being constrained accidentally by profile-password policy.
@@ -101,7 +94,7 @@ future encoding change from being constrained accidentally by profile-password p
 
 The accepted rollup describes recovery-based password reset, but the current recovery
 restore republishes the existing password envelope and explicitly leaves lost-password
-access lost at `src/cadrumo/application/user_profile/_recovery_custody.py:238`. This is
+access lost . This is
 a capability gap, but repairing it changes archive publication and password-envelope
 lineage. It should receive its own decision and execution boundary; the current repair
 may add a protective characterization or follow-up but must not redesign restore
@@ -142,21 +135,7 @@ restore, run live AEAT operations, or alter production code.
 - `.vault/adr/2026-08-13-profile-password-custody-rollup-adr.md`
 - `.vault/reference/2026-08-22-profile-registration-password-policy-tui-custody-validation-mismatch-reference.md`
 - https://pages.nist.gov/800-63-4/sp800-63b/authenticators/
-- `src/cadrumo/core/_credentials.py:24`
-- `src/cadrumo/core/errors/_registry.py:492`
+
 - `src/cadrumo/core/errors/registry/_adapters_part2.py:651`
-- `src/cadrumo/application/user_profile/_registration.py:63`
-- `src/cadrumo/application/user_profile/_registration.py:94`
-- `src/cadrumo/application/user_profile/_registration.py:240`
-- `src/cadrumo/application/user_profile/_passphrase_rotation.py:50`
-- `src/cadrumo/application/user_profile/_passphrase_rotation.py:116`
-- `src/cadrumo/application/user_profile/_passphrase_rotation.py:144`
-- `src/cadrumo/application/user_profile/_custody_ports.py:1013`
-- `src/cadrumo/application/user_profile/_login_session.py:1122`
-- `src/cadrumo/application/user_profile/_recovery_custody.py:238`
-- `src/cadrumo/adapters/persistence/storage/custody/_records.py:34`
-- `src/cadrumo/adapters/persistence/storage/custody/_records.py:77`
-- `src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py:362`
+
 - `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py:130`
-- `src/cadrumo/adapters/inbound/tui/_credential_screen.py:121`
-- `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:451`

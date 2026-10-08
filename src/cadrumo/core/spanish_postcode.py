@@ -45,6 +45,12 @@ SPANISH_POSTCODE_PATTERN: Final[str] = SPANISH_PROVINCE_CODE_PATTERN + r"[0-9]{3
 OptionalSpanishPostcode = Annotated[str, StringConstraints(pattern=rf"^$|^{SPANISH_POSTCODE_PATTERN}$")]
 """A postcode field an operator may legitimately have left undeclared."""
 
+SpanishPostcode = Annotated[str, StringConstraints(pattern=rf"^{SPANISH_POSTCODE_PATTERN}$")]
+"""A postcode a record requires to be declared."""
+
+SpanishProvinceCode = Annotated[str, StringConstraints(pattern=rf"^{SPANISH_PROVINCE_CODE_PATTERN}$")]
+"""A standalone province code in 01..52, as an AEAT record design's provincia field carries it."""
+
 _COMPILED: Final[re.Pattern[str]] = re.compile(rf"^{SPANISH_POSTCODE_PATTERN}$")
 
 
@@ -62,5 +68,7 @@ __all__ = [
     "SPANISH_POSTCODE_PATTERN",
     "SPANISH_PROVINCE_CODE_PATTERN",
     "OptionalSpanishPostcode",
+    "SpanishPostcode",
+    "SpanishProvinceCode",
     "is_spanish_postcode",
 ]

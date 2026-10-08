@@ -20,7 +20,7 @@ from .....domain.calculations.registry.ids import ModeloId
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..engine import build_export_plan
-from ..records import SheetExportPlan, TabName
+from ..records import AnySheetExportPlan, SheetExportMetadata, TabName
 from ..workbook_export import ModeloWorkbookExport, export_modelo_workbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -32,9 +32,9 @@ class _RecordingMaterializer:
     """Stands in for a transport and keeps the plan it was handed."""
 
     def __init__(self) -> None:
-        self.plans: list[SheetExportPlan] = []
+        self.plans: list[AnySheetExportPlan] = []
 
-    def __call__(self, plan: SheetExportPlan, /) -> bytes:
+    def __call__(self, plan: AnySheetExportPlan, /) -> bytes:
         self.plans.append(plan)
         return _PAYLOAD
 
@@ -60,6 +60,7 @@ def test_entry_hands_the_canonical_plan_to_the_transport() -> None:
 
     assert len(materializer.plans) == 1
     handed = materializer.plans[0]
+    assert isinstance(handed.metadata, SheetExportMetadata)
     # Same plan as the engine's own for this snapshot; the export timestamp is the
     # only thing two builds of one snapshot legitimately differ on.
     assert handed.model_dump(exclude={"metadata"}) == expected.model_dump(exclude={"metadata"})
@@ -78,13 +79,14 @@ def test_reported_facts_describe_the_returned_payload() -> None:
     )
 
     plan = materializer.plans[0]
+    assert isinstance(plan.metadata, SheetExportMetadata)
     covered = {cell.casilla_id for cell in plan.value_cells if cell.casilla_id is not None}
-    covered |= {cell.casilla_id for cell in plan.formula_cells}
+    covered |= {cell.casilla_id for cell in plan.formula_cells if cell.casilla_id is not None}
 
     assert export.payload == _PAYLOAD
     assert export.byte_size == len(_PAYLOAD)
     assert export.sha256 == hashlib.sha256(_PAYLOAD).hexdigest()
-    assert export.tab_names == tuple(tab.value for tab in TabName)
+    assert export.tab_names == tuple(tab.value for tab in plan.tabs)
     assert export.casilla_count == len(covered)
     assert export.modelo == "303"
     assert export.period == "1T"

@@ -1,19 +1,19 @@
 """``aeat config profile censo`` — the two censal ingestion doors.
 
-Both transports of the CLI pull-and-file standard live here: ``pull``
+Both transports of the CLI pull-and-import standard live here: ``pull``
 reads the taxpayer's censal state live from AEAT's *Mis Datos Censales*
-consulta, and ``file --file PATH`` reads a Certificado de Situación
+consulta, and ``import --file PATH`` reads a Certificado de Situación
 Censal (procedure G313) the operator downloaded from Sede themselves.
 They differ in transport and evidence tier. Certificate files commit through
 the single cotejo apply authority
 (:func:`~cadrumo.application.user_profile.cotejo_apply.apply_cotejo`, which delegates
 to the manual-enrolment write path and emits exactly one
-``CENSO_APPLIED`` per apply-commit; no parallel write route). The live pull is
-preview-only until its frontend can complete the canonical
-``user-profile.censo-review`` interaction; ``--apply`` fails before acquisition
-instead of bypassing that reviewed operation.
+``CENSO_APPLIED`` per apply-commit; no parallel write route). The file
+``--apply`` path runs an exact-profile registered operation around that
+authority. The live pull's ``--apply`` path completes the canonical
+``user-profile.censo-review`` interaction through the authenticated runtime.
 
-``file`` parses through the inbound censo adapter — today structure-only,
+``import`` parses through the inbound censo adapter — today structure-only,
 so every document meets an instructive refusal — and enrolls at the
 non-official artefact evidence tier, leaving the calendar's
 ``censo.enrolment_unverified`` advisory standing. ``pull`` reads the
@@ -23,9 +23,10 @@ never set, or one whose current value a previous censal read wrote and
 the authority has since changed. A value the operator declared, and a
 path they deliberately cleared, are reported for them to adjudicate.
 
-What ``pull`` fills is identity and address, and only that: the censal
-regime fields have no working read route, so the verb neither promises
-nor writes them. The read is always of the authenticated session's own
+The live observation includes identity, addresses, activities, premises,
+tax status and obligations. Profile adoption uses the existing supported
+address mappings; captured regime rows are evidence, not inferred profile
+settings. The read is always of the authenticated session's own
 record — there is no option to aim it at another taxpayer, because the
 product does not support acting as a representative. Its result reports
 all three outcomes, adopted, unchanged and diverging: a path the profile
@@ -39,25 +40,58 @@ Core types:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 import typer
 
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from ..common import current_workflow_state, emit_envelope
-from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
+from ..common import emit_envelope
+from ._censo_payloads import (
+    CensoFactPayload,
+    CensoFileIngestResult,
+    CensoPullDivergencePayload,
+    CensoPullResult,
+    CensoStoredResult,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
-    from ....application.user_profile.censal_observation import CensalObservation
-    from ....application.user_profile.censal_operation import CensalReviewFieldProjectionV1
-    from ....application.user_profile.censo_sync import CensalReconciliation
-    from ....application.user_profile.projections import EffectiveFact
-    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
-    from ...censal_review import CensalReviewedFrontendResult
+    from ....application.user_profile.censal_operation import CensalReviewFieldProjectionV1, CensalReviewProjectionV1
+    from ....application.user_profile.censal_prepare_operation import CensalPrepareOperationProjection
+    from ....application.user_profile.censal_preview_operation import CensalPreviewOperationResult
+
+
+class _EffectiveValue(Protocol):
+    @property
+    def value(self) -> str | None: ...
+
+
+class _ReviewedCensalResult(Protocol):
+    @property
+    def projection(self) -> CensalReviewProjectionV1: ...
+
+    @property
+    def applied(self) -> bool: ...
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedEffectiveValue:
+    value: str | None
+
+
+def _effective_from_prepare(projection: CensalPrepareOperationProjection) -> dict[str, _EffectiveValue]:
+    """Retain explicit clears while omitting only genuinely unset paths."""
+    from ....application.user_profile.censal_prepare_operation import CensalPrepareFieldState
+
+    return {
+        field.path: _PreparedEffectiveValue(field.effective_value)
+        for field in projection.effective_fields
+        if field.state is not CensalPrepareFieldState.UNSET
+    }
 
 
 def censo_import(
@@ -67,38 +101,20 @@ def censo_import(
 ) -> None:
     """Parse the certificate and preview — or with ``--apply``, enroll — its censal facts."""
     from ....adapters.inbound.censo.parser import parse_certificado_censal_bytes
-    from ....application.user_profile.cotejo_apply import apply_cotejo
-    from ....application.workflow.persistence import workflow_state_repository
     from ....domain.censo.certificado import censo_facts_from_certificado
-    from ..state_projection_support import authority_operation
 
     certificado = parse_certificado_censal_bytes(file.read_bytes())
     facts = censo_facts_from_certificado(certificado)
 
     if apply:
-        # The file door is the adopt-all shape of the cotejo apply: every
-        # mapped censo fact is adopted, none deferred. Route it through the
-        # single current-record apply authority (never a parallel fact writer)
-        # write) so a censal artefact-apply always emits exactly one
-        # ``CENSO_APPLIED`` event, at the non-official evidence tier.
-        # Declaring zero deferred means the namespace-replace clears every
-        # pre-existing open divergence: a full adopt-all reconciliation
-        # cannot coherently leave a prior deferral standing.
-        repository = workflow_state_repository()
-        state = repository.load()
-        repository.save(
-            apply_cotejo(
-                state,
-                adopted=facts,
-                divergences=(),
-                profile_decode_context=authority_operation(ctx).profile_decode_context(),
-            )
-        )
+        from .runtime_censal_file_import import import_censal_file_facts
+
+        receipt = import_censal_file_facts(ctx, facts)
+        apply = receipt.applied
 
     rows = tuple(CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts)
-    result = CensoFileIngestResult(applied=apply, facts=rows)
-    lines = [f"applied\t{str(apply).lower()}"]
-    lines.extend(f"fact\t{row.path}\t{row.value}" for row in rows)
+    result = CensoFileIngestResult(applied=apply, certificate=certificado, facts=rows)
+    lines = _file_import_preview_lines(result)
     notices = [
         Notice(
             code="config.profile.censo.non_official_tier",
@@ -109,54 +125,50 @@ def censo_import(
     emit_envelope(ctx, command="config.profile.censo.import", result=result, lines=lines, notices=notices)
 
 
+def _file_import_preview_lines(result: CensoFileIngestResult) -> list[str]:
+    """Keep all six certified axes visible alongside the separately adoptable facts."""
+    return [
+        f"applied\t{str(result.applied).lower()}",
+        result.certificate.model_dump_json(indent=2),
+        *(f"fact\t{row.path}\t{row.value}" for row in result.facts),
+    ]
+
+
 def censo_pull(
     ctx: typer.Context,
     apply: bool = False,
 ) -> None:
-    """Preview the censal consulta, refusing legacy direct apply before acquisition."""
-    import asyncio
-
-    from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
-    from ....application.live.censo import pull_censal_datos
-    from ....application.user_profile.projections import record_to_effective_facts
-    from ...censal_review import run_censal_review
-    from ..state_projection_support import censal_fetch_port, certificate_secret_backend_factory, operator_scope_ports
+    """Preview the censal consulta or complete its registered reviewed apply."""
+    from ..runtime_profile_binding import bound_profile_client
     from ._censo_review_cli import confirm_censal_review
-
-    # Refuse an absent active profile before the read, not after: the live
-    # navigation can trigger a Cl@ve push, and asking the operator to
-    # authenticate for a reconciliation that has no profile to land on
-    # would spend their second factor on nothing.
-    state = current_workflow_state()
-    record = state.active_profile_record()
-
-    # Read the EFFECTIVE facts, not the value projection: a path the
-    # operator cleared survives here as ``value=None`` where the value
-    # projection drops it entirely. That distinction is the whole
-    # difference between "they declared something else" and "they deleted
-    # this", and the two must not render alike.
-    effective = record_to_effective_facts(record)
+    from .runtime_censal_prepare import prepare_censal_review
+    from .runtime_censal_preview import preview_censal_with_runtime
+    from .runtime_censal_review import review_censal_with_runtime
 
     if apply:
-        reviewed = run_censal_review(actor_ref="operator:cli-censo", decide=confirm_censal_review)
+        prepared = prepare_censal_review(ctx)
+        reviewed = review_censal_with_runtime(
+            bound_profile_client(ctx),
+            prepared.operation_request,
+            decide=confirm_censal_review,
+        )
+        effective = _effective_from_prepare(prepared)
         adopted, unchanged, divergences, source_url = _reviewed_pull_outcomes(
             reviewed=reviewed,
             effective=effective,
         )
+        # A rejected REVIEW exposes a proposal, not committed adoptions.
+        # Report the operation's terminal decision rather than the CLI flag.
+        apply = reviewed.applied
+        if not apply:
+            adopted = ()
+        # The review result identifies its exact proposal. A separate latest
+        # capture read could race another pull and misattribute its evidence.
+        observation = None
     else:
-        read = asyncio.run(
-            pull_censal_datos(
-                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-                browser_session_factory=default_browser_session_factory,
-                operator_scope_ports=operator_scope_ports(ctx),
-                censal_fetch_port=censal_fetch_port(ctx),
-            )
-        )
-        adopted, unchanged, divergences, source_url = _preview_pull_outcomes(
-            read=read,
-            record=record,
-            effective=effective,
-        )
+        preview = preview_censal_with_runtime(ctx)
+        adopted, unchanged, divergences, source_url = _projected_preview_outcomes(preview)
+        observation = preview.observation
 
     result = CensoPullResult(
         applied=apply,
@@ -164,6 +176,7 @@ def censo_pull(
         adopted=adopted,
         unchanged=unchanged,
         divergences=divergences,
+        observation=observation,
     )
     lines = _pull_lines(
         applied=apply,
@@ -189,17 +202,14 @@ def censo_pull(
     )
 
 
-def _reviewed_projected_facts(
-    fields: Iterable[CensalReviewFieldProjectionV1],
-) -> tuple[UserProfileFact, ...]:
-    from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
-    from ....domain.user_profile.values import UserProfileFact
+def censo_show(ctx: typer.Context) -> None:
+    """Read the latest saved census through the existing exact-profile runtime door."""
+    from .runtime_censal_prepare import prepare_censal_review
 
-    return tuple(
-        UserProfileFact(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
-        for field in fields
-        if field.observed_value is not None
-    )
+    observation = prepare_censal_review(ctx).observation
+    result = CensoStoredResult(observation=observation)
+    lines = ["captured\tfalse"] if observation is None else [observation.model_dump_json(indent=2)]
+    emit_envelope(ctx, command="config.profile.censo.show", result=result, lines=lines)
 
 
 def _reviewed_adopted_payloads(
@@ -217,7 +227,7 @@ def _reviewed_adopted_payloads(
 
 def _reviewed_divergence_payloads(
     fields: Iterable[CensalReviewFieldProjectionV1],
-    effective: Mapping[str, EffectiveFact],
+    effective: Mapping[str, _EffectiveValue],
 ) -> tuple[CensoPullDivergencePayload, ...]:
     from ....application.user_profile.censal_operation import CensalFieldIntent
 
@@ -230,13 +240,18 @@ def _reviewed_divergence_payloads(
         for field in fields
         if field.intent is CensalFieldIntent.PRESERVE
         and field.observed_value is not None
-        and ((current := effective.get(field.path)) is None or current.value != field.observed_value)
+        and not _reviewed_values_match((current := effective.get(field.path)), field.observed_value)
     )
+
+
+def _reviewed_values_match(current: _EffectiveValue | None, observed: str) -> bool:
+    """Use the canonical censal comparison: trim surrounding whitespace only."""
+    return current is not None and current.value is not None and current.value.strip() == observed.strip()
 
 
 def _reviewed_unchanged_payloads(
     fields: Iterable[CensalReviewFieldProjectionV1],
-    effective: Mapping[str, EffectiveFact],
+    effective: Mapping[str, _EffectiveValue],
 ) -> tuple[CensoFactPayload, ...]:
     from ....application.user_profile.censal_operation import CensalFieldIntent
     from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
@@ -246,15 +261,14 @@ def _reviewed_unchanged_payloads(
         for field in fields
         if field.intent is CensalFieldIntent.PRESERVE
         and field.observed_value is not None
-        and (current := effective.get(field.path)) is not None
-        and current.value == field.observed_value
+        and _reviewed_values_match(effective.get(field.path), field.observed_value)
     )
 
 
 def _reviewed_pull_outcomes(
     *,
-    reviewed: CensalReviewedFrontendResult,
-    effective: Mapping[str, EffectiveFact],
+    reviewed: _ReviewedCensalResult,
+    effective: Mapping[str, _EffectiveValue],
 ) -> tuple[
     tuple[CensoFactPayload, ...],
     tuple[CensoFactPayload, ...],
@@ -264,10 +278,6 @@ def _reviewed_pull_outcomes(
     from ....core.config import Settings
 
     fields = reviewed.projection.fields
-    # Constructing these facts is an intentional validation side effect: the
-    # reviewed projection must still cross the canonical profile-fact model
-    # before its selected rows are reported or applied.
-    _reviewed_projected_facts(fields)
     adopted = _reviewed_adopted_payloads(fields)
     divergences = _reviewed_divergence_payloads(fields, effective)
     unchanged = _reviewed_unchanged_payloads(fields, effective)
@@ -277,85 +287,28 @@ def _reviewed_pull_outcomes(
     return adopted, unchanged, divergences, source_url
 
 
-def _preview_adopted_payloads(
-    reconciliation: CensalReconciliation,
-) -> tuple[CensoFactPayload, ...]:
-    return tuple(
-        CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in reconciliation.adopted
-    )
-
-
-def _preview_divergence_payloads(
-    reconciliation: CensalReconciliation,
-    effective: Mapping[str, EffectiveFact],
-) -> tuple[CensoPullDivergencePayload, ...]:
-    return tuple(
-        CensoPullDivergencePayload(
-            path=path,
-            profile_value=(fact.value if (fact := effective.get(path)) is not None else None),
-            aeat_value=value,
-        )
-        for path, value in reconciliation.divergences
-    )
-
-
-def _preview_pull_outcomes(
-    *,
-    read: CensalObservation,
-    record: UserProfileRecord | None,
-    effective: Mapping[str, EffectiveFact],
+def _projected_preview_outcomes(
+    projection: CensalPreviewOperationResult,
 ) -> tuple[
     tuple[CensoFactPayload, ...],
     tuple[CensoFactPayload, ...],
     tuple[CensoPullDivergencePayload, ...],
     str,
 ]:
-    from ....application.user_profile.censo_sync import (
-        CENSAL_ADOPTABLE_PATHS,
-        censal_facts_from_read,
-        reconcile_censal_read,
+    """Render the worker's complete reconciliation without redeciding it."""
+    adopted = tuple(CensoFactPayload(path=row.path, value=row.value, source=row.source) for row in projection.adopted)
+    unchanged = tuple(
+        CensoFactPayload(path=row.path, value=row.value, source=row.source) for row in projection.unchanged
     )
-
-    projected = censal_facts_from_read(read)
-    reconciliation = reconcile_censal_read(record, projected, incoming_identity=read.identity.nif)
-    adopted = _preview_adopted_payloads(reconciliation)
-    divergences = _preview_divergence_payloads(reconciliation, effective)
-    unchanged = _unchanged_facts(
-        projected=projected,
-        reconciliation=reconciliation,
-        adoptable_paths=CENSAL_ADOPTABLE_PATHS,
+    divergences = tuple(
+        CensoPullDivergencePayload(
+            path=row.path,
+            profile_value=row.profile_value,
+            aeat_value=row.aeat_value,
+        )
+        for row in projection.divergences
     )
-    return adopted, unchanged, divergences, str(read.source_url)
-
-
-def _unchanged_facts(
-    *,
-    projected: Iterable[UserProfileFact],
-    reconciliation: CensalReconciliation,
-    adoptable_paths: Iterable[str],
-) -> tuple[CensoFactPayload, ...]:
-    """Project the read's third outcome: paths already at the authority's value.
-
-    The reconciliation emits a path the profile already holds at AEAT's value
-    as neither an adoption nor a disagreement, because it is a no-op to WRITE.
-    It is not a no-op to REPORT. This derives that set from the projection
-    rather than re-deciding it, so the split stays the authority's.
-
-    Scoped to the adoptable paths, because the projection also carries the
-    fiscal identity, which the reconciliation consumes to decide whether the
-    read belongs to this profile at all and then skips. It is not an outcome
-    of the reconciliation, so it belongs in none of the three lists: calling
-    it unchanged would tell an operator whose profile carries no identity yet
-    — the ordinary first-read case, which the ownership guard deliberately
-    allows — that AEAT agrees with a value they never recorded.
-    """
-    adoptable = frozenset(adoptable_paths)
-    decided = {fact.path for fact in reconciliation.adopted} | {path for path, _ in reconciliation.divergences}
-    return tuple(
-        CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
-        for fact in projected
-        if fact.path in adoptable and fact.path not in decided
-    )
+    return adopted, unchanged, divergences, str(projection.source_url)
 
 
 def _pull_lines(
@@ -503,4 +456,4 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> li
     return notices
 
 
-__all__ = ["censo_import", "censo_pull"]
+__all__ = ["censo_import", "censo_pull", "censo_show"]

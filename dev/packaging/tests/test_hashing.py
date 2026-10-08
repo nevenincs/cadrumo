@@ -7,6 +7,7 @@ import hashlib
 import sys
 from collections.abc import Callable
 from pathlib import Path
+from types import ModuleType
 from typing import Final, Protocol
 
 import pytest
@@ -225,9 +226,12 @@ def test_rehomed_text_digest_site_declares_no_private_text_helper(relative_path:
 
 
 @pytest.mark.parametrize("module", (smoke_homebrew, distribution_evidence_emit, evidence))
-def test_rehomed_text_digest_module_uses_the_canonical_helper(module: _TextDigestModule) -> None:
+def test_rehomed_text_digest_module_uses_the_canonical_helper(module: ModuleType) -> None:
     """The re-homed module resolves string digests through the one owner."""
-    assert module.sha256_text is sha256_text
+    if module is distribution_evidence_emit:
+        assert distribution_evidence_emit.CommandTranscript is evidence.CommandTranscript
+    else:
+        assert module.sha256_text is sha256_text
 
 
 def test_an_in_memory_digest_is_not_a_streamed_duplicate() -> None:

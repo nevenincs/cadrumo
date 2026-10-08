@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b3017f59754b8fceced44333b5e21d6276cb5be03221333d3bfec489a3e92eb'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:0c2b5e055430c546913d0648a89ee6a6f0b7a76f74f87c4dffe079249c361e8b'
+related: []
 ---
+
 # `registry-completeness-closure` audit: `S52 source-composer whitespace post-review`
 
 ## Scope
@@ -19,7 +19,7 @@ Independent review of tracking-only commits `0f2ef90324` and `52a10f0036`, their
 
 ### repair-provenance | medium | The S52 record attributes the repair to the wrong prior step
 
-`git show --check 2cf4175917` reproduces the historical trailing whitespace in `src/cadrumo/application/registry/_source_connectivity_coverage.py`. The clean replacement of that blank line occurs in S45 commit `a4bd65ed1c`; S49 `9a1f88e83d` is later and does not contain that removal. The resulting committed composer is clean, but S52's evidence statement must name S45 to remain traceable.
+The clean replacement of that blank line occurs in S45 commit `a4bd65ed1c`; S49 `9a1f88e83d` is later and does not contain that removal. The resulting committed composer is clean, but S52's evidence statement must name S45 to remain traceable.
 
 ### step-surface-check | medium | The S52 record claims a clean whole-Step diff check while adding an EOF blank line
 

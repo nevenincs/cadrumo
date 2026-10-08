@@ -2,6 +2,10 @@
 id = "112"
 number = "112"
 section = ["iva", "resultado"]
+# DP30303 row33 and the BOE annex identify the active fuel-deposit payment deduction.
+semantic_role = "m303_pago_a_cuenta_deposito_distinto_del_aduanero"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The design has one payment-on-account deduction for fuel deliveries after leaving the non-customs deposit, summing Modelo319 box36. It first applies to February/Q2 and differs from the early zero-only transport slot."
 continuidad_id = "dr303-112"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx.extracted.md:429 (sha256 0be8b156da22) prints box [112]; corpus/aeat_official/disenos_registro/modelo_303/files/06-303-ejercicio-2025-actualizado-04-12-2025-380-kb-xlsx.xlsx.extracted.md (sha256 6c3d7eeb714e) prints no box [112] and retires none"

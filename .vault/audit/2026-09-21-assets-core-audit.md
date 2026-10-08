@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-09-23'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:e454ef892a81e7847bf288a278b90910177397152cda24dc8cc27ffbb8acd0f4'
 related:
-  - "[[2026-09-21-assets-core-plan]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
-  - '[[2026-09-23-assets-core-plan]]'
   - '[[2026-09-23-assets-core-amortization-method-set-adr]]'
 ---
 

@@ -3,15 +3,14 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0a2d0d1d09a55c6ce3ed8ab51ee3564ced346dfdcf19e93513948f1804670a64'
+body_hash: 'sha256:f88f7b4503cd2308cb9a2f8bfc9e48f007b3eaba4c2daefe7c4bf16c94f323ba'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
   - '[[2026-08-11-tui-interface-adr]]'
   - '[[2026-07-23-tui-wizard-substrate-adr]]'
-  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-07-24-profile-bundle-tui-adr]]'
   - '[[2026-07-25-censal-profile-autofill-adr]]'
   - '[[2026-08-08-sync-control-surface-adr]]'
@@ -24,7 +23,9 @@ related:
   - '[[2026-08-10-current-schema-only-purge-adr]]'
   - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]'
   - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
+  - '[[2026-09-26-mcp-purpose-authentication-audit]]'
 ---
+
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
 
 ## Canonical defining-module amendment
@@ -998,8 +999,8 @@ joins every exported schema, projector, adapter, and custody declaration to
 production composition.
 
 Initial operation executors remain with their application owners:
-`src/cadrumo/application/user_profile/_censal_operation.py` and
-`src/cadrumo/application/live/_filed_history_operation.py`. Their definitions
+the former source file and
+the former source file. Their definitions
 are exported only through the owning package facades.
 
 The operation platform reuses `JournalRepositoryBase` as the hardened,
@@ -1208,7 +1209,7 @@ the exact C0 artifact
 `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`.
 It validates as `TuiOperationObservationDependencyReceiptV1` under the sole
 live-tree validator
-`src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
+
 No alternate path, schema alias, prose attestation, fixture-only validator, or
 receipt artifact not committed at the validator's clean current HEAD opens C0.
 
@@ -1537,3 +1538,19 @@ D11's no-import direction remains mandatory. Its permitted external reference is
 packaging, direct module execution, and this single opaque root-launch command. All earlier
 `aeat --tui`, `AVAILABLE`/`NOT_IMPLEMENTED`, and CLI destination-launch authorizations are
 superseded.
+
+## Amendment 2026-09-28: registered encrypted refusal explanations
+
+The authenticated-runtime migration must preserve actionable domain refusals without reopening private frontend reads. Evidence is recorded in the work-create-refusal-detail finding of `2026-09-26-mcp-purpose-authentication-audit`. This refines D1, D6 and the registered-terminal-failure amendment under the operator's authorization to execute the approved MCP authentication plan and maintain CLI/TUI parity.
+
+A REFUSED receipt continues to require its canonical registered refusal code in `refusal_ref` and continues to forbid `result_ref` and `failure_error_code`. It may additionally carry a distinct optional `refusal_detail_ref` addressing encrypted, definition-owned explanatory data. That reference is allowed only on REFUSED. It never changes the terminal condition or effect, never becomes diagnostic correlation or approval authority, and never implies rollback. Public observation need not reveal this private reference.
+
+Definitions opt in with an explicit finite set of canonical REFUSED registry codes included in their public definition contract digest. Opt-in requires a registered closed, versioned domain projection schema and an explicit registered projector that correlates the explanatory outcome and code with the exact terminal receipt. The existing domain terminal-projection schema may contain a discriminated refusal arm alongside ordinary outcomes. The existing separation between the private stored result type and the public projection remains mandatory for this projector; the opt-in cannot expose a private successful result or financial output by identity. Explanatory data belongs in a dedicated closed, bounded refusal arm, never a generic payload bag. Unenrolled definitions and ordinary caught exceptions retain code-only refusal settlement.
+
+An executor may return a typed refusal-evidence outcome containing only the declared code and encrypted detail reference. The supervisor validates the declaration and registered payload/projection before settling REFUSED through its existing cleanup protocol. It does not serialize exception messages, arguments, contexts, types or tracebacks. Only deliberately constructed, bounded domain facts needed to explain the refusal belong in the detail. Credentials, financial input values, reversible financial derivatives, arbitrary mappings and frontend-localized prose remain prohibited. The encrypted detail is not a second domain or lifecycle journal.
+
+The existing terminal-projection service may resolve this distinct reference from the authoritative REFUSED receipt only as its explicitly opted-in explanatory arm. Its ordinary result path retains the existing operation_not_successful refusal when no eligible terminal reference exists. The caller supplies operation identity, exact terminal revision, definition digest and registered schema identity, never a storage reference. Retrieval retains the same exact-profile, operation-ownership, period, current-session and RESULT-disclosure checks as other private terminal projections, including the output-release fence. Absence, corrupt detail, undeclared code, mismatched outcome/schema/digest/revision or revoked access refuses detail release. A successful projection response means only that explanatory data was read; the operation remains REFUSED. Workspace refresh continues to require a successful operation.
+
+Frontend consumers explicitly opting into these explanations correlate the code and refused outcome with the observed terminal receipt and preserve operation identity, terminal condition and effect in their refusal presentation. Failure to retrieve or render detail must not discard the known refusal or effect, substitute success, trigger automatic replay or fall back to direct profile reads.
+
+The private journal and affected public definition contracts use existing current-only cutover rules. Old private shapes are rejected; affected nonterminal work must be drained before cutover, and no compatibility reader or migration shim is introduced. Acceptance covers code-only defaults, undeclared evidence rejection, real encrypted detail and sentinel confinement, exact correlation, post-refusal revocation/lock, unavailable or corrupt detail, preserved UNKNOWN effects, and refusal of unsupported private versions. This amendment does not establish that implementation or those checks have passed.

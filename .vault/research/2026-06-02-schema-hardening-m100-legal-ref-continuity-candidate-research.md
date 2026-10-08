@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:84dfc6eb0ceb0846a8acc58f0b08c291d4e2f722aa954a56d6a9e6d7e7bc6433'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:929ab2b1a605840fea72ff81910c3c80c998a89faa5041b119f9d5a8a058e96d'
+related: []
 ---
 
 # `schema-hardening` research: `m100 legal-reference-only continuity candidate`
@@ -62,13 +61,6 @@ Stable fields across all six revisions:
 - `semantic_role`: `irpf_inmueble_porcentaje_propiedad`
 
 Source files:
-
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/casillas/0058-0063.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2021/casillas/0062-0063.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2022/casillas/0063-0063.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2023/casillas/0064-0063.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/casillas/0064-0063.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/casillas/0218-0063.toml`
 
 Observed legal-reference signatures:
 

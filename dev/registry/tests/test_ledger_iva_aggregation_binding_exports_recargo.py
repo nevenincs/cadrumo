@@ -305,16 +305,16 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     assert resolved["modelo-303-recargo-equivalencia-super-reducido-cuota"] == Decimal("0")
 
 
-def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_ledger() -> None:
+def test_modelo_303_2022_revision_recargo_and_intracom_export_aggregate_from_ledger() -> None:
     """#41 regression: the 2022 revision also aggregates recargo de
-    equivalencia (casillas 21/24/158) and the intra-community / export base
+    equivalencia (casillas 18/21/24) and the intra-community / export base
     (casillas 59/60) from the ledger — the rest of the 2009 coverage tail behind #15.
 
     These casillas existed but were input_kind="manual" with no binding, so a
     ledger-driven 2022 M303 reported zero recargo (even when a supplier charged
     it) and zero intra-community / export base. The recargo cuotas now aggregate by
     tier via recargo_amount_sum (LIVA art. 161); 59/60 via base_amount_sum — mirroring
-    the 2023 revision. filing_year=2022 resolves to the 2009 revision; expected values
+    the 2023 revision. filing_year=2022 resolves to the 2022 revision; expected values
     derive from the seeded amounts, not a formula re-run.
     """
     revision = _m303_2022_2t_snapshot().revision
@@ -367,7 +367,13 @@ def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_led
     # Recargo cuotas now aggregate by tier (0 before the back-fill).
     assert values["modelo-303-recargo-equivalencia-general-cuota"] == Decimal("52.00")
     assert values["modelo-303-recargo-equivalencia-reducido-cuota"] == Decimal("14.00")
+    # The 2022 design already prints [16]-[18], although it leaves [17] free.
+    # LIVA art. 161.3 governs the super-reduced population's 0.50 percent recargo.
     assert values["modelo-303-recargo-equivalencia-super-reducido-cuota"] == Decimal("5.00")
+    inputs = resolve_available_bound_inputs_by_casilla_id(revision, values)
+    assert inputs[validated_casilla_id("18")] == Decimal("5.00")
+    construct = next(member for member in revision.constructs if member.id == "modelo-303-iva-autoliquidacion")
+    assert "modelo-303-recargo-equivalencia-super-reducido-cuota" in construct.bindings
     # Intra-community / export base now aggregate (0 before the back-fill).
     assert values["modelo-303-casilla-59-entregas-intracomunitarias-base"] == Decimal("2000")
     assert values["modelo-303-casilla-60-exportaciones-base"] == Decimal("3000")
@@ -399,12 +405,22 @@ def _calculate_303_2009_from_observations(
     return _calculate_303_from_observations(filing_year=filing_year, period=period, observations=observations)
 
 
-def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_changes_total() -> None:
+@pytest.mark.parametrize(
+    ("tier", "applied_rate", "iva_amount", "recargo_amount"),
+    [
+        ("general", Decimal("0.21"), Decimal("5040.00"), Decimal("1248.00")),
+        ("reduced", Decimal("0.10"), Decimal("2400.00"), Decimal("336.00")),
+        ("super_reduced", Decimal("0.04"), Decimal("960.00"), Decimal("120.00")),
+    ],
+)
+def test_modelo_303_2022_revision_cuota_devengada_total_anti_tautology_recargo_changes_total(
+    tier: str, applied_rate: Decimal, iva_amount: Decimal, recargo_amount: Decimal
+) -> None:
     """The 2022 casilla-27 total now includes recargo de equivalencia.
 
     Backport of the post-2022 casilla-27 grounding (see the comment on
     ``modelo-303-iva-cuota-devengada-total`` in this revision's
-    formulas/0001-formulas.toml): the 2022 revision (filing years
+    formulas/0001-declarations.toml): the 2022 revision (filing years
     2022) summed only the five non-recargo devengado components, silently
     excluding the recargo cuota tiers (casillas 18/21/24, LIVA art. 161) a
     ledger-driven filer's supplier may have charged. filing_year=2022 resolves
@@ -416,7 +432,7 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     Anti-tautology: this does not hand-compute the with-recargo absolute
     figure from the registry's own formula under test. It runs the full
     :func:`calculate_registry_snapshot` engine twice — once with a recargo
-    general (5.2pct) ledger observation, once with the identical scenario but
+    ledger observation for each legal tier, once with the identical scenario but
     recargo zeroed — and asserts the delta in the devengada total equals
     exactly the dropped recargo_amount. A formula that ignored the recargo
     terms, or always returned a constant, would fail this check — mirroring
@@ -427,15 +443,15 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     def _observations(*, include_recargo: bool) -> tuple[IvaLedgerObservation, ...]:
         return (
             _observation(
-                applied_rate=Decimal("0.21"),
+                applied_rate=applied_rate,
                 ledger_id="op-ventas-recargo-equivalencia",
                 txn_date=date(2022, 5, 15),
-                category=IvaCategory("domestic_general"),
-                rate_kind=IvaRateKind("general"),
+                category=IvaCategory(f"domestic_{tier}"),
+                rate_kind=IvaRateKind(tier),
                 flow=IvaFlowDirection.from_registry("repercutido"),
                 base=Decimal("24000.00"),
-                iva=Decimal("5040.00"),
-                recargo=(Decimal("1248.00") if include_recargo else Decimal("0")),
+                iva=iva_amount,
+                recargo=(recargo_amount if include_recargo else Decimal("0")),
             ),
         )
 
@@ -450,11 +466,14 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
         observations=_observations(include_recargo=False),
     )
 
-    assert with_recargo.values[_CASILLA_CUOTA_DEVENGADA_TOTAL] - without_recargo.values[
-        _CASILLA_CUOTA_DEVENGADA_TOTAL
-    ] == Decimal("1248.00")
+    assert (
+        with_recargo.values[_CASILLA_CUOTA_DEVENGADA_TOTAL] - without_recargo.values[_CASILLA_CUOTA_DEVENGADA_TOTAL]
+        == recargo_amount
+    )
     # Recargo is devengado-only (no matching deducible leg), so the resultado
-    # side must shift by exactly the same 1.248,00 EUR.
-    assert with_recargo.values[_CASILLA_RESULTADO_REGIMEN_GENERAL] - without_recargo.values[
-        _CASILLA_RESULTADO_REGIMEN_GENERAL
-    ] == Decimal("1248.00")
+    # side must shift by exactly the same seeded recargo amount.
+    assert (
+        with_recargo.values[_CASILLA_RESULTADO_REGIMEN_GENERAL]
+        - without_recargo.values[_CASILLA_RESULTADO_REGIMEN_GENERAL]
+        == recargo_amount
+    )

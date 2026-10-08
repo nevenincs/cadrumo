@@ -9,8 +9,8 @@ related:
   - "[[2026-06-10-cli-operator-surface-adr]]"
   - "[[2026-07-24-profile-login-session-adr]]"
 superseded_by: '2026-08-13-cli-action-envelope-successor-adr'
-modified: '2026-08-15'
-body_hash: 'sha256:3719ec63451cacae223d3b13302c23f6d2316f98dc2a87fe02f4071ea951b4d0'
+modified: '2026-10-05'
+body_hash: 'sha256:8343842e33f87954b60ad42cba62e7a20c38392220e3fd53a50dafcaae90dc29'
 ---
 # `cli-authority-verb-conformance` adr: `Single backend authorities and cost-aware CLI verbs` | (**status:** `superseded`)
 
@@ -450,7 +450,7 @@ truncation, and identifier semantics.  The audited bodies are in
 `adapters/outbound/llm/_cache.py`,
 `adapters/persistence/storage/_rotation.py`,
 `adapters/persistence/storage/sql/engine.py`,
-`agent/eval/_flywheel.py`, `entrypoints/mcp/_telemetry.py`,
+`agent/eval/_flywheel.py`,
 `application/aggregation/_percepciones_observations_repository.py`,
 `application/aggregation/_retencion_observations_repository.py`,
 the two bodies in

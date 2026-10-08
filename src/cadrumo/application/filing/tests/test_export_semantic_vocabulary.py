@@ -20,10 +20,10 @@ from ....domain.calculations.registry.schema_exports import (
 )
 from .. import export as export_module
 from .._producer_ownership import filing_producer_ownership
-from .._record_field_renderer import COMPUTED_VALUE_PRODUCERS, DRAFT_VALUE_PRODUCERS
 from ..export import export_draft, render_filing_envelope
 from ..export_envelope import FilingEnvelopeOccurrence, FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
 from ..export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
+from ..record_field_renderer import COMPUTED_VALUE_PRODUCERS, DRAFT_VALUE_PRODUCERS
 
 modelo_export_module = import_module("...modelo.export", package=__package__)
 
@@ -69,11 +69,22 @@ def test_draft_vocabulary_has_no_profile_or_taxpayer_identity_fallback() -> None
     assert "profile_tax_id" not in {member.value for member in ExportDraftAttribute}
 
 
-#: Modelo 303 prints the shared envelope grammar in its thirteen-row spelling:
-#: every role except the composed opening tag, which is the ALTERNATIVE spelling
-#: of the six rows this design prints separately.
-_M303_PREFIX_ROLES: tuple[FilingEnvelopePrefixRole, ...] = tuple(
-    role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
+#: Modelo 303 prints these thirteen declared rows. Other roles in the shared
+#: vocabulary belong to different official envelope families.
+_M303_PREFIX_ROLES: tuple[FilingEnvelopePrefixRole, ...] = (
+    FilingEnvelopePrefixRole.OPENING_TAG,
+    FilingEnvelopePrefixRole.MODELO,
+    FilingEnvelopePrefixRole.DISCRIMINANT,
+    FilingEnvelopePrefixRole.FILING_YEAR,
+    FilingEnvelopePrefixRole.PERIOD,
+    FilingEnvelopePrefixRole.RECORD_TYPE,
+    FilingEnvelopePrefixRole.AUX_OPENING_TAG,
+    FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
+    FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER,
+    FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER,
+    FilingEnvelopePrefixRole.DEVELOPER_TAX_ID,
+    FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER,
+    FilingEnvelopePrefixRole.AUX_CLOSING_TAG,
 )
 
 

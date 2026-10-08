@@ -15,11 +15,14 @@ from pathlib import Path
 from uuid import uuid4
 
 from . import filesystem as _filesystem
-from ._capsule_filesystem import renameat2_noreplace, windows_mark_handle_for_deletion
+from ._capsule_filesystem import windows_mark_handle_for_deletion
 from .errors import ProfileCustodyRecordError
 from .filesystem_primitives import (
     anchor_directory,
+    native_atomic_rename,
     posix_directory_fd,
+    rename_exchange_at,
+    rename_noreplace_at,
     windows_create_file_api,
     windows_file_information_type,
 )
@@ -105,7 +108,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(
     maximum_bytes: int,
 ) -> None:
     """Perform the idempotent receipt transition below one pinned POSIX parent."""
-    if not sys.platform == "linux":
+    if native_atomic_rename(sys.platform, exchange=True) is None:
         raise ProfileCustodyRecordError(
             "atomic local custody record idempotent compare-and-replace is unavailable on this POSIX host"
         )
@@ -139,7 +142,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(
             os.close(descriptor)
         exchanged = False
         try:
-            _filesystem.renameat2_exchange(parent_fd=parent_fd, first_name=path.name, second_name=stage_name)
+            rename_exchange_at(parent_fd=parent_fd, first_name=path.name, second_name=stage_name)
             exchanged = True
             displaced = _filesystem.read_regular_file_fd(
                 parent_fd,
@@ -155,7 +158,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(
                 # making a new target mutation or trusting an arbitrary file.
                 os.fsync(parent_fd)
                 return
-            _filesystem.renameat2_exchange(parent_fd=parent_fd, first_name=path.name, second_name=stage_name)
+            rename_exchange_at(parent_fd=parent_fd, first_name=path.name, second_name=stage_name)
             exchanged = False
             if displaced == current:
                 return
@@ -333,8 +336,8 @@ def _posix_compare_and_replace_local_record(
     replacement: bytes,
     maximum_bytes: int,
 ) -> None:
-    """CAS through Linux ``renameat2(EXCHANGE)`` below one pinned directory."""
-    if not sys.platform == "linux":
+    """CAS through one atomic exchange below one pinned directory."""
+    if native_atomic_rename(sys.platform, exchange=True) is None:
         raise ProfileCustodyRecordError(
             "atomic local custody record compare-and-replace is unavailable on this POSIX host"
         )
@@ -348,7 +351,7 @@ def _posix_compare_and_replace_local_record(
             os.close(descriptor)
         exchanged = False
         try:
-            _filesystem.renameat2_exchange(parent_fd=parent_fd, first_name=path.name, second_name=stage_name)
+            rename_exchange_at(parent_fd=parent_fd, first_name=path.name, second_name=stage_name)
             exchanged = True
             displaced = _filesystem.read_regular_file_fd(
                 parent_fd,
@@ -358,7 +361,7 @@ def _posix_compare_and_replace_local_record(
                 trace=None,
             )
             if displaced != expected:
-                _filesystem.renameat2_exchange(parent_fd=parent_fd, first_name=path.name, second_name=stage_name)
+                rename_exchange_at(parent_fd=parent_fd, first_name=path.name, second_name=stage_name)
                 exchanged = False
                 raise ProfileCustodyRecordError("local custody record changed before compare-and-replace mutation")
             os.unlink(stage_name, dir_fd=parent_fd)
@@ -374,7 +377,7 @@ def _posix_compare_and_replace_local_record(
 
 def _posix_compare_and_clear_local_record(path: Path, *, expected: bytes, maximum_bytes: int) -> None:
     """Move only the exact expected leaf aside, then delete that verified inode."""
-    if not sys.platform == "linux":
+    if native_atomic_rename(sys.platform, exchange=False) is None:
         raise ProfileCustodyRecordError(
             "atomic local custody record compare-and-clear is unavailable on this POSIX host"
         )
@@ -382,7 +385,7 @@ def _posix_compare_and_clear_local_record(path: Path, *, expected: bytes, maximu
         _compare_posix_local_record(parent_fd, path.name, expected=expected, maximum_bytes=maximum_bytes)
         stage_name = _local_record_stage_name(path)
         try:
-            renameat2_noreplace(
+            rename_noreplace_at(
                 source_fd=parent_fd,
                 source_name=path.name,
                 destination_fd=parent_fd,
@@ -396,7 +399,7 @@ def _posix_compare_and_clear_local_record(path: Path, *, expected: bytes, maximu
                 trace=None,
             )
             if displaced != expected:
-                renameat2_noreplace(
+                rename_noreplace_at(
                     source_fd=parent_fd,
                     source_name=stage_name,
                     destination_fd=parent_fd,

@@ -14,7 +14,14 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from .test_google_oauth_provisioning import client_document
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def synthetic_build_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", client_document())
 
 
 def _hook_module() -> ModuleType:
@@ -78,6 +85,28 @@ def test_a_real_distribution_ignores_the_editable_skip(
     assert build_data["force_include"], "the wheel lost its authority payload"
 
 
+@pytest.mark.parametrize("target_name,prefix", [("wheel", ""), ("sdist", "src/")])
+def test_distributions_embed_selected_client_and_clean_staging(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target_name: str, prefix: str
+) -> None:
+    hook = _hook_module()
+    _record_resolutions(hook, monkeypatch, tmp_path / "pair")
+    instance = hook.CustomBuildHook(str(tmp_path), {}, None, None, str(tmp_path), target_name)
+    build_data: dict[str, object] = {}
+    instance.initialize("standard", build_data)
+    mapping = build_data["force_include"]
+    assert isinstance(mapping, dict)
+    selected = {destination: Path(source) for source, destination in mapping.items()}
+    resource = selected[f"{prefix}cadrumo/_data/google/oauth_client.json"]
+    assert resource.read_text(encoding="utf-8") == client_document()
+    assert not resource.is_relative_to(tmp_path)
+    assert not any(name.endswith(".env") for name in selected)
+    if target_name == "sdist":
+        assert "dev/packaging/google_oauth.py" in selected
+    instance.finalize("standard", build_data, "unused-artifact")
+    assert not resource.exists()
+
+
 def test_an_editable_build_still_resolves_by_default(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -91,9 +120,11 @@ def test_an_editable_build_still_resolves_by_default(
     assert resolved == [tmp_path]
 
 
+@pytest.mark.parametrize("seeded_override", [False, True])
 def test_fresh_source_tree_bootstraps_repo_root_authority(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    seeded_override: bool,
 ) -> None:
     hook = _hook_module()
     expected = tmp_path / ".authority"
@@ -104,6 +135,8 @@ def test_fresh_source_tree_bootstraps_repo_root_authority(
         return destination
 
     monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    if seeded_override:
+        monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(expected))
     monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
 
     assert hook._authority_root(tmp_path) == expected
@@ -114,7 +147,7 @@ def test_a_current_publication_is_read_without_publishing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A copy of the session's current publication describes the live sources, so it is reused."""
+    """An existing publication is reused even when this source tree has no matching sources."""
     hook = _hook_module()
     current = Path(os.environ["CADRUMO_AUTHORITY_ROOT"])
     descriptor = json.loads((current / "authority.current.json").read_text(encoding="utf-8"))
@@ -132,11 +165,11 @@ def test_a_current_publication_is_read_without_publishing(
     assert hook._authority_root(tmp_path) == published
 
 
-def test_a_descriptor_that_describes_no_current_generation_is_republished(
+def test_a_malformed_existing_descriptor_is_refused_without_republication(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A directory holding a descriptor proves a publication happened, not that it is current."""
+    """A corrupt publication is refused rather than silently overwritten."""
     hook = _hook_module()
     published = tmp_path / ".authority"
     published.mkdir()
@@ -150,18 +183,25 @@ def test_a_descriptor_that_describes_no_current_generation_is_republished(
     monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
     monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
 
-    assert hook._authority_root(tmp_path) == published
-    assert calls == [(tmp_path, published)]
+    with pytest.raises(ValueError, match="invalid database"):
+        hook._authority_root(tmp_path)
+    assert calls == []
 
 
+@pytest.mark.parametrize("missing_database", [False, True])
 def test_an_interrupted_publication_is_completed_rather_than_read(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    missing_database: bool,
 ) -> None:
     """A directory a failed publication created, holding no descriptor, is not a publication."""
     hook = _hook_module()
     interrupted = tmp_path / ".authority"
     (interrupted / "authority-candidate-left-behind").mkdir(parents=True)
+    if missing_database:
+        (interrupted / "authority.current.json").write_text(
+            json.dumps({"database": f"authority-{'0' * 64}.sqlite3"}), encoding="utf-8"
+        )
     calls: list[tuple[Path, Path]] = []
 
     def publish(build_root: Path, destination: Path) -> Path:

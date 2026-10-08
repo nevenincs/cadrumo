@@ -12,7 +12,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -49,10 +49,8 @@ def _calculate(
         date_context={"filing_period": _FILING_DATE},
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-            "renta-profile-descendientes-guarderia": Decimal("0"),
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

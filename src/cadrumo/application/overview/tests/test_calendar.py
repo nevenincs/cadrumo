@@ -9,6 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -37,6 +38,7 @@ from ...live.notification_ports import RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
 from ..calendar import (
     _calendar_entry_from_obligation,
+    _entry_intersects_range,
     _registry_window_for_work_unit,
     build_overview_calendar,
     build_overview_calendar_events,
@@ -328,6 +330,7 @@ _INVALID_PAGADORES_ADVISORY_CASES: tuple[tuple[str, dict[str, str], str, str, st
 )
 def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
     caplog: pytest.LogCaptureFixture,
+    authority_operation: PinnedAuthorityOperation,
     raw_value: str,
     profile_values: dict[str, str],
     expected_message: str,
@@ -335,7 +338,7 @@ def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
     expected_error_type: str,
 ) -> None:
     with caplog.at_level(logging.DEBUG, logger="cadrumo.application.overview"):
-        advisories = build_filing_obligation_advisories(profile_values)
+        advisories = build_filing_obligation_advisories(profile_values, operation=authority_operation)
 
     assert advisories == ()
     relevant = [record for record in caplog.records if record.getMessage() == expected_message]
@@ -348,7 +351,9 @@ def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
 _MULTIPLE_PAGADORES_OBLIGATION_KEY = "cli.overview.status.filing_obligation_multiple_pagadores"
 
 
-def test_multi_payer_over_reduced_limit_surfaces_obligation_advisory() -> None:
+def test_multi_payer_over_reduced_limit_surfaces_obligation_advisory(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     # 2 pagadores, secondary €1,600 > €1,500, total €18,000 over the 2024 reduced
     # limit (€15,876) → the Art. 96.3 LIRPF obligation advisory fires.
     advisories = build_filing_obligation_advisories(
@@ -358,11 +363,14 @@ def test_multi_payer_over_reduced_limit_surfaces_obligation_advisory() -> None:
             "irpf.pagadores_total_work_income": "18000",
         },
         filing_year=2024,
+        operation=authority_operation,
     )
     assert advisories == (_MULTIPLE_PAGADORES_OBLIGATION_KEY,)
 
 
-def test_multi_payer_under_reduced_limit_does_not_surface_advisory() -> None:
+def test_multi_payer_under_reduced_limit_does_not_surface_advisory(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     # Same multiple-pagadores trigger but total €10,000 is below the 2024 reduced
     # limit (€15,876) → not obliged, no advisory.
     advisories = build_filing_obligation_advisories(
@@ -372,11 +380,14 @@ def test_multi_payer_under_reduced_limit_does_not_surface_advisory() -> None:
             "irpf.pagadores_total_work_income": "10000",
         },
         filing_year=2024,
+        operation=authority_operation,
     )
     assert advisories == ()
 
 
-def test_single_payer_under_general_limit_does_not_surface_advisory() -> None:
+def test_single_payer_under_general_limit_does_not_surface_advisory(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     # 1 pagador, total €18,000 below the general €22,000 → no obligation.
     advisories = build_filing_obligation_advisories(
         {
@@ -385,11 +396,14 @@ def test_single_payer_under_general_limit_does_not_surface_advisory() -> None:
             "irpf.pagadores_total_work_income": "18000",
         },
         filing_year=2024,
+        operation=authority_operation,
     )
     assert advisories == ()
 
 
-def test_multi_payer_total_undeclared_surfaces_conservatively() -> None:
+def test_multi_payer_total_undeclared_surfaces_conservatively(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     # Total work income undeclared but the multiple-pagadores trigger is met →
     # the advisory surfaces conservatively rather than granting a false clear.
     advisories = build_filing_obligation_advisories(
@@ -398,6 +412,7 @@ def test_multi_payer_total_undeclared_surfaces_conservatively() -> None:
             "irpf.pagadores_secondary_income": "1600",
         },
         filing_year=2024,
+        operation=authority_operation,
     )
     assert advisories == (_MULTIPLE_PAGADORES_OBLIGATION_KEY,)
 
@@ -1220,6 +1235,64 @@ def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
     assert entry.holiday_territory is None
 
 
+@pytest.mark.parametrize(
+    ("language", "coverage", "expected"),
+    (
+        (
+            "en",
+            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "national and applicable regional holidays checked; local holidays not checked",
+        ),
+        (
+            "en",
+            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+            "national holidays only; the applicable regional calendar is unverified; local holidays are not checked",
+        ),
+        (
+            "es",
+            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "festivos nacionales y autonómicos aplicables comprobados; festivos locales sin comprobar",
+        ),
+        (
+            "es",
+            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+            "solo festivos nacionales; el calendario autonómico aplicable no está verificado; los festivos locales no se comprueban",
+        ),
+        (
+            "ca",
+            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "festius nacionals i autonòmics aplicables comprovats; festius locals sense comprovar",
+        ),
+        (
+            "ca",
+            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+            "només festius nacionals; el calendari autonòmic aplicable no està verificat; els festius locals no es comproven",
+        ),
+        (
+            "hu",
+            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            "országos és az alkalmazandó regionális ünnepnapok ellenőrizve; a helyi ünnepnapok nincsenek ellenőrizve",
+        ),
+        (
+            "hu",
+            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+            "csak országos ünnepnapok; az alkalmazandó regionális naptár nincs ellenőrizve; a helyi ünnepnapok sincsenek ellenőrizve",
+        ),
+    ),
+)
+def test_generic_holiday_coverage_uses_literal_locale_copy_without_a_territory(
+    language: str,
+    coverage: DeadlineHolidayCoverage,
+    expected: str,
+) -> None:
+    with override_settings(cadrumo_output_language=language):
+        statement = holiday_coverage_statement(coverage, None)
+
+    assert statement == expected
+    assert "None" not in statement
+    assert "%{" not in statement
+
+
 def test_entry_refuses_a_shift_its_coverage_did_not_evaluate() -> None:
     with pytest.raises(ValidationError, match="did not evaluate"):
         OverviewCalendarEntry(
@@ -1364,3 +1437,79 @@ def test_calendar_warnings_include_registry_deadline_window_predicates(
     assert "111" in warnings_by_code["has_employees"].affected_modelos
     assert "123" in warnings_by_code["pays_capital_income_with_retencion"].affected_modelos
     assert "130" in warnings_by_code["art109_activity_income_withholding_ge_70pct"].affected_modelos
+
+
+# 2026-01-31 is a Saturday: the annual 2025 campaigns that close on it move to
+# Monday 2026-02-02, inside a February range that the nominal date misses.
+_SATURDAY_CLOSE = date(2026, 1, 31)
+_MONDAY_EFFECTIVE_CLOSE = date(2026, 2, 2)
+_FEBRUARY_2026 = OverviewCalendarRange(from_date=date(2026, 2, 1), to_date=date(2026, 2, 28))
+
+
+def test_calendar_places_a_work_unit_by_its_effective_deadline(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    assert _SATURDAY_CLOSE.weekday() == 5
+    work_unit = _annual_work_unit(modelo="180", filing_year=2025)
+    window = _registry_window_for_work_unit(work_unit, operation=authority_operation)
+    assert window is not None
+    assert window.closes_on == _SATURDAY_CLOSE
+
+    calendar = build_overview_calendar(
+        _profile(),
+        _FEBRUARY_2026,
+        operation=authority_operation,
+        today=_FEBRUARY_2026.from_date,
+        work_units=(work_unit,),
+    )
+
+    entry = next(item for item in calendar.entries if item.local_work_unit_id == work_unit.work_unit_id)
+    assert entry.closes_on == _SATURDAY_CLOSE
+    assert entry.adjusted_closes_on == _MONDAY_EFFECTIVE_CLOSE
+
+
+def test_calendar_leaves_out_a_work_unit_whose_effective_deadline_precedes_the_range(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    work_unit = _annual_work_unit(modelo="180", filing_year=2025)
+    after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
+
+    calendar = build_overview_calendar(
+        _profile(),
+        after_effective_close,
+        operation=authority_operation,
+        today=after_effective_close.from_date,
+        work_units=(work_unit,),
+    )
+
+    assert work_unit.work_unit_id not in {item.local_work_unit_id for item in calendar.entries}
+
+
+def test_registry_obligation_intersects_a_range_through_its_effective_deadline(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    obligation = ModeloDeadline(
+        modelo="190",
+        period=Period.from_year_and_code(2025, "0A"),
+        opens_on=date(2026, 1, 1),
+        closes_on=_SATURDAY_CLOSE,
+        payment_cutoff_on=None,
+        status=ObligationStatus.UPCOMING,
+        applies_because="synthetic weekend-close obligation",
+        boe_references=(),
+        recovery=None,
+    )
+    after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
+
+    assert _entry_intersects_range(
+        obligation,
+        _FEBRUARY_2026,
+        holiday_territory=None,
+        operation=authority_operation,
+    )
+    assert not _entry_intersects_range(
+        obligation,
+        after_effective_close,
+        holiday_territory=None,
+        operation=authority_operation,
+    )

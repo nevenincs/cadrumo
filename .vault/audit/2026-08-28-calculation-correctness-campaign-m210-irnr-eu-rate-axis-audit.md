@@ -3,25 +3,15 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d1b3afbcd2a0f7394549b4058172953278b5f943d67f009aefad81a4c9a5d73a'
+body_hash: 'sha256:bdffe2a28db0d5ad8db5dfed588e05e5f0d17f16b50996a55676195d7cc77711'
 related: []
 ---
 
 # `calculation-correctness-campaign` audit: `M210 IRNR: the art 25.1.a EU/EEA reduced rate is unreachable for canones and inmobiliaria`
 
-## Correction
-
-**The over-payment claim this audit originally made is WITHDRAWN.** It was
-authored from reading the resolver and the parameter table, without driving the
-engine. Driving the engine refutes it. The corrected finding is narrower and is
-a naming/modelling defect, not a liability defect. The original text is
-superseded in full by what follows; nothing was changed in production code,
-registry data or tests at any point.
-
-## What was claimed, and what the engine actually does
-
+## Scope
 The claim was that an EU/EEA-resident filer declaring `canones` or
 `inmobiliaria` is silently charged the 24 % general rate where TRLIRNR art.
 25.1.a entitles them to 19 %, in the over-payment direction, with nothing
@@ -59,17 +49,10 @@ intended, in the direction the original finding claimed was unwatched.
 `canones` + DE resolving to 0 is likewise correct: the ES-DE convenio exempts
 royalties at source, and the `ceiling` / `flat` override machinery applied it.
 
-## What survives: a misleading model, not a wrong number
-
+## Findings
 Two things in the original reading remain true and are worth recording, neither
 of which changes a computed liability:
 
-- The parameter table at
-  `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/parameters/0001-m210-tipo-gravamen-2025.toml`
-  (byte-identical in `2026-y-siguientes/`, correctly so — art. 25 is year-stable)
-  carries `ue_residente` as a *value* of an income-type enum, beside `canones`,
-  `inmobiliaria` and `general`. Residence and income type are two axes of art.
-  25.1.a collapsed into one lookup key.
 - That file's own comment for `canones` — "La reduccion al 19% para residentes
   UE/EEE del art 25.1.a se alcanza por el concepto `ue_residente`" — describes a
   path that, as the table above shows, does not actually reach 19 % either: a
@@ -83,8 +66,7 @@ filers receive a finding rather than a figure. That is the safe direction, and i
 is the same gap already recorded for M360 (LIVA art. 119 not catalogued) —
 missing bundled treaty and directive text, not a defective calculation.
 
-## Method note
-
+## Recommendations
 This is the second instance in this campaign of the same error shape: calling a
 registry state a defect from a static reading. The first was the M100 2025
 relief casillas (reverted in `8258892c64`, audit corrected in `d35d2894ca`). The
@@ -99,3 +81,11 @@ static reading cannot see which branch is live; three lines of
 
 The `no-silent-under-declaration` organising question stays sound — the answer
 here was simply that something *does* watch that direction.
+## Correction
+
+**The over-payment claim this audit originally made is WITHDRAWN.** It was
+authored from reading the resolver and the parameter table, without driving the
+engine. Driving the engine refutes it. The corrected finding is narrower and is
+a naming/modelling defect, not a liability defect. The original text is
+superseded in full by what follows; nothing was changed in production code,
+registry data or tests at any point.

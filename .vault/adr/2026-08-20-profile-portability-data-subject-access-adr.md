@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#profile-portability'
 date: '2026-08-20'
-modified: '2026-08-20'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5a545936ca7cf9aafb322253f7fe13e36e318409b553da0ac645f7351c332ec1'
+body_hash: 'sha256:dadf3d70cf53276b587de84cf30f59040020a8944ad90a8768cb0ea42b190c6e'
 related:
   - "[[2026-08-13-profile-portability-successor-adr]]"
   - '[[2026-08-20-profile-portability-bundle-surface-inventory-audit]]'
@@ -31,7 +31,7 @@ because the absence is otherwise recorded nowhere.
   answered no access request made by another party.
 - The withdrawn verb hardcoded cleartext transport with no override.
 - A profile bundle carries third-party personal data: counterparty identities, and a
-  descendant disability grade in `src/cadrumo/domain/contribuyente/_descendant_facts.py`.
+  descendant disability grade.
 - The one capability with no successor is the data-category disclosure: the verb reported
   which categories the bundle carried and which stayed in encrypted storage. The profile
   manager's export discards that record.
@@ -60,7 +60,7 @@ record does not settle it and must not be read as settling it.
 ## Implementation
 
 The capability stays unbuilt. Three corrections carry the decision. The declaration entry
-in `src/cadrumo/entrypoints/cli/_verb_input_schema.py` states the missing capability - the
+ states the missing capability - the
 data-category disclosure - instead of asserting a legal duty, and its gate docstring says
 the same. The orphaned `sar_help` and `sar_catalogue_info` strings, which advertised a
 right-of-access archive in all four catalogues, are removed. The reference documentation

@@ -2,32 +2,21 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import typer
-
-if TYPE_CHECKING:
-    from ....application.auth.apoderado_service import ApoderadoService
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ._profile_support import require_active_profile_pointer as _active_profile_pointer
-
-
-def _service(ctx: typer.Context) -> ApoderadoService:
-    """Construct the apoderado service from the root's explicit composition."""
-    from ....application.auth.apoderado_service import ApoderadoService
-    from ....core.config import load_settings
-    from ..state_projection_support import apoderado_config_repository_factory, authority_operation
-
-    return ApoderadoService(
-        repository_factory=apoderado_config_repository_factory(ctx),
-        operation=authority_operation(ctx),
-        settings=load_settings(),
-    )
+from ..runtime_profile_binding import bound_profile_client
+from .runtime_auth_apoderado import (
+    apoderado_catalogue,
+    check_apoderado,
+    clear_apoderado,
+    configure_apoderado,
+    read_apoderado_status,
+)
 
 
 def apoderado_scopes_list(
@@ -38,13 +27,13 @@ def apoderado_scopes_list(
     _activate_subcommand_output_language(ctx, output_language)
     from ..config_payloads import ApoderadoScopesListResult
 
-    svc = _service(ctx)
-    lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
+    catalogue = apoderado_catalogue(ctx)
+    lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in catalogue.scopes]
     # Projected field-by-field: a JSON round-trip hands the strict schema lists
     # where the catalogue holds tuples, and the schema correctly refuses them.
     scopes_result = ApoderadoScopesListResult(
-        catalogue_version=svc.catalogue.catalogue_version,
-        scopes=list(svc.catalogue.scopes),
+        catalogue_version=catalogue.catalogue_version,
+        scopes=list(catalogue.scopes),
     )
     emit_envelope(ctx, command="config.auth.apoderado.scopes.list", result=scopes_result, lines=lines)
 
@@ -56,9 +45,7 @@ def apoderado_status(
     _activate_subcommand_output_language(ctx, output_language)
     from ..config_payloads import ApoderadoStatusResult
 
-    pointer = _active_profile_pointer()
-    svc = _service(ctx)
-    result = svc.status(bucket_id=pointer.bucket_id)
+    result = read_apoderado_status(ctx)
 
     lines = [
         f"bucket_id\t{result.bucket_id}",
@@ -73,7 +60,7 @@ def apoderado_status(
     # JSON dump would hand it a stringified instant that the strict schema
     # correctly refuses.
     status_result = ApoderadoStatusResult(
-        bucket_id=result.bucket_id,
+        bucket_id=str(result.bucket_id),
         configured=result.configured,
         represented_nif=result.represented_nif,
         granted_scopes=list(result.granted_scopes),
@@ -101,20 +88,15 @@ def apoderado_configure(
     profile fact.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.apoderado_flow import run_apoderado_flow
+    from ....application.auth.apoderado_flow import collect_apoderado_flow_answers
     from ....application.auth.apoderado_service import ApoderadoRepresentedNifInvalidError
-    from ....application.workflow.persistence import workflow_state_repository
+    from ....application.flows.errors import FlowUnsupportedConsoleError
 
-    workflow_state_repository().load()
-    pointer = _active_profile_pointer()
-    svc = _service(ctx)
-
+    catalogue = apoderado_catalogue(ctx)
     scope_tokens = tuple(scope or ())
     if represented_nif is None:
-        from ....application.flows.errors import FlowUnsupportedConsoleError
-
         try:
-            result = run_apoderado_flow(svc, bucket_id=pointer.bucket_id)
+            represented_nif, scope_tokens = collect_apoderado_flow_answers(catalogue)
         except FlowUnsupportedConsoleError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.auth.apoderado.configure.no_console_hint",
@@ -130,21 +112,17 @@ def apoderado_configure(
             # operator's first instructive surface.
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.auth.apoderado.configure.scope_required",
-                context={"codes": ", ".join(sorted(svc.catalogue.code_set()))},
+                context={"codes": ", ".join(sorted(catalogue.code_set()))},
             )
 
-        try:
-            result = svc.configure(
-                bucket_id=pointer.bucket_id,
-                represented_nif=represented_nif,
-                scope_tokens=scope_tokens,
-            )
-        except ApoderadoRepresentedNifInvalidError as exc:
-            # Both transports commit through the service's single identity
-            # authority; the raw identifier never enters the refusal context.
-            raise _CliRefusedBoundaryError(
-                translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
-            ) from exc
+    try:
+        result = configure_apoderado(ctx, represented_nif=represented_nif, scope_tokens=scope_tokens)
+    except ApoderadoRepresentedNifInvalidError as exc:
+        # The NIF is sent only as an ephemeral operation operand and never enters
+        # the request or refusal context.
+        raise _CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
+        ) from exc
 
     from ..config_payloads import ApoderadoConfigureResult
 
@@ -154,7 +132,7 @@ def apoderado_configure(
         f"granted_scopes\t{','.join(result.granted_scopes)}",
     ]
     configure_result = ApoderadoConfigureResult(
-        bucket_id=result.bucket_id,
+        bucket_id=str(result.bucket_id),
         represented_nif=result.represented_nif,
         granted_scopes=list(result.granted_scopes),
         catalogue_version=result.catalogue_version,
@@ -169,17 +147,14 @@ def apoderado_clear(
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.workflow.persistence import workflow_state_repository
     from ..config_payloads import ApoderadoClearResult
 
-    workflow_state_repository().load()
-    pointer = _active_profile_pointer()
-    svc = _service(ctx)
-    cleared = svc.clear(bucket_id=pointer.bucket_id)
+    profile_id = bound_profile_client(ctx).profile_id
+    cleared = clear_apoderado(ctx)
 
-    clear_result = ApoderadoClearResult(bucket_id=pointer.bucket_id, cleared=cleared)
+    clear_result = ApoderadoClearResult(bucket_id=str(profile_id), cleared=cleared)
     lines = [
-        f"bucket_id\t{pointer.bucket_id}",
+        f"bucket_id\t{profile_id}",
         f"cleared\t{cleared}",
     ]
     emit_envelope(ctx, command="config.auth.apoderado.clear", result=clear_result, lines=lines)
@@ -190,18 +165,12 @@ def apoderado_check(
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.workflow.persistence import workflow_state_repository
-
-    workflow_state_repository().load()
-    pointer = _active_profile_pointer()
-    svc = _service(ctx)
-
     # ``check`` is the live-verification verb. The live AEAT-read path is not
     # wired (live reads are refused at this boundary per the safety gate), so
     # the service refuses rather than silently re-reading stored configuration
     # and presenting it as a live result. Surface the registered refusal copy;
     # ``status`` is the offline configuration read.
-    svc.check(bucket_id=pointer.bucket_id)
+    check_apoderado(ctx)
 
 
 __all__ = [

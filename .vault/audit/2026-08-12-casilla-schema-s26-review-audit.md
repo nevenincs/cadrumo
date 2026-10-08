@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:eedca1495438262d25d738713673aeb5056bb3f39705b98adb8d1acea527cfac'
-related:
-  - "[[2026-08-10-casilla-schema-plan]]"
+related: []
 ---
 # `casilla-schema` audit: `W03.P07.S26 modelo work review envelope`
 

@@ -18,8 +18,7 @@ from cadrumo.application.modelo.reconciliation import (
     ModeloReconciliationCommand,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
-    modelo_reconcile,
-    reconcile_parsed_justificante,
+    prepare_modelo_reconcile,
 )
 from cadrumo.application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
@@ -33,6 +32,8 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.tests.inventory import FIXTURES_DIR
+
+from .reconciliation_persist_support import modelo_reconcile, reconcile_parsed_justificante
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 
@@ -186,6 +187,24 @@ def test_modelo_reconcile_emits_modelo_reconciled_event(operation: PinnedAuthori
     assert matching, [event.event_type for event in catalogue.events.values()]
     assert matching[-1].payload["verdict"] == ModeloReconciliationVerdict.MATCHES.value
     assert matching[-1].payload["source_kind"] == "justificante"
+
+
+def test_reconcile_preparation_leaves_the_atomic_write_for_the_commit_boundary(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    command = ModeloReconciliationCommand(
+        work_unit_id=work_unit_id,
+        source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+        source_path=MODELO_130_FIXTURE,
+    )
+
+    prepared = prepare_modelo_reconcile(command, operation=operation)
+    assert prepared.report.work_unit_id == work_unit_id
+    assert prepared.event.event_id not in BucketEventHistoryRepository().load().events
+
+    assert prepared.persist() == prepared.report
+    assert prepared.event.event_id in BucketEventHistoryRepository().load().events
 
 
 def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payload_cap(

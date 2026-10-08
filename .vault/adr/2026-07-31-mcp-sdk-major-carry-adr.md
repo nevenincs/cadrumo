@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-sdk-major-carry'
 date: '2026-07-31'
-modified: '2026-07-31'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0331197e8fbc1f8f02e6032410c3ebc26a2a7eb8151725ec3bae25836f90fe91'
+body_hash: 'sha256:ef1ad062a3ef05e92a8a30b845dc7efe3f3ea56008007996a605e24ab6c4851f'
 related:
   - "[[2026-06-30-agent-harness-adr]]"
   - "[[2026-06-15-dependency-provisioning-adr]]"
@@ -111,7 +111,7 @@ group's `vaultspec-core` floor moves from `>=0.1.25` to `>=0.1.55`. Every
 call site touching a renamed `mcp_types` attribute is swept to the
 snake_case spelling, scoped to genuine attribute access; the one site
 building a pinned inventory digest off a wire-shaped path segment
-(`dev/packaging/verify_distribution_identity.py`) keeps its `"inputSchema"`
+ keeps its `"inputSchema"`
 string label and changes only the attribute read behind it, with an inline
 note explaining why the string does not move alongside the attribute.
 `entrypoints/mcp/_server.py`'s `build_server()` is rewritten from decorator
@@ -151,12 +151,12 @@ record: `build_server()` does not currently instantiate against the
 installed SDK, so the shipped `cadrumo-mcp` server does not currently run
 until its decorator registration is rewritten; twelve files under
 `entrypoints/mcp/tests/` needed the snake_case attribute sweep; the
-release-readiness verifier `dev/packaging/verify_distribution_identity.py`,
+release-readiness verifier the former source file,
 the clean-install proof `2026-06-28-product-packaging-adr` established, and
-the installed-CLI oracle `dev/packaging/installed_mcp_oracle.py` both broke
+the installed-CLI oracle the former source file both broke
 on the same renames, so the blast radius reached release tooling, not only
 test coverage; the packaging serving-path benchmark and the agent eval
-live harness (`src/cadrumo/agent/eval/_live_harness.py`) each needed a
+live harness each needed a
 separate fix for a relocated or removed SDK symbol.
 
 A hazard this decision surfaces for future SDK majors: an attribute rename

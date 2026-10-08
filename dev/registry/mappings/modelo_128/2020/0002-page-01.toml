@@ -1,0 +1,341 @@
+schema_version = 1
+fragment_id = "page-01"
+modelo = "128"
+design_epoch = "2020"
+source_ref = "aeat-dr-128-2020"
+source_sha256 = "2cdf1540b2aaca1cd5cf5a19380179ba72271a7656eba8a6dd157833866a5cc0"
+records = []
+variable_envelopes = []
+
+[[entries]]
+export_field_id = "modelo-128-page-01-open"
+kind = "literal"
+literal = "<T"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 6
+source_cell = "A6"
+record_identity = "Pág. 1"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-modelo"
+kind = "literal"
+literal = "128"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 7
+source_cell = "A7"
+record_identity = "Pág. 1"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-pagina"
+kind = "literal"
+literal = "01000"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 8
+source_cell = "A8"
+record_identity = "Pág. 1"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-identifier-close"
+kind = "literal"
+literal = ">"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 9
+source_cell = "A9"
+record_identity = "Pág. 1"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-indicador-pagina-complementaria"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 10
+source_cell = "A10"
+record_identity = "Pág. 1"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-tipo-declaracion"
+kind = "header"
+producer_key = "filing.result_disposition"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 11
+source_cell = "A11"
+record_identity = "Pág. 1"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-nif"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 12
+source_cell = "A12"
+record_identity = "Pág. 1"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-apellidos"
+kind = "header"
+producer_key = "taxpayer.surnames_or_legal_name"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 13
+source_cell = "A13"
+record_identity = "Pág. 1"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-nombre"
+kind = "header"
+producer_key = "taxpayer.given_name"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 14
+source_cell = "A14"
+record_identity = "Pág. 1"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+record_identity = "Pág. 1"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-periodo"
+kind = "draft"
+draft_attribute = "period_code"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 16
+source_cell = "A16"
+record_identity = "Pág. 1"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-128-casilla-01"
+kind = "casilla"
+casilla_id = "01"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 17
+source_cell = "A17"
+record_identity = "Pág. 1"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-128-casilla-02"
+kind = "casilla"
+casilla_id = "02"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 18
+source_cell = "A18"
+record_identity = "Pág. 1"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-128-casilla-03"
+kind = "casilla"
+casilla_id = "03"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 19
+source_cell = "A19"
+record_identity = "Pág. 1"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-128-casilla-04"
+kind = "casilla"
+casilla_id = "04"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 20
+source_cell = "A20"
+record_identity = "Pág. 1"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-128-casilla-05"
+kind = "casilla"
+casilla_id = "05"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 21
+source_cell = "A21"
+record_identity = "Pág. 1"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-128-casilla-06"
+kind = "casilla"
+casilla_id = "06"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 22
+source_cell = "A22"
+record_identity = "Pág. 1"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-128-casilla-07"
+kind = "casilla"
+casilla_id = "07"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 23
+source_cell = "A23"
+record_identity = "Pág. 1"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-iban"
+kind = "header"
+producer_key = "selected_account.iban"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 24
+source_cell = "A24"
+record_identity = "Pág. 1"
+ordinal = "19"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-declaracion-complementaria"
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 25
+source_cell = "A25"
+record_identity = "Pág. 1"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-justificante-anterior"
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 26
+source_cell = "A26"
+record_identity = "Pág. 1"
+ordinal = "21"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-reserved-aeat"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 27
+source_cell = "A27"
+record_identity = "Pág. 1"
+ordinal = "22"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-sello-electronico"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 28
+source_cell = "A28"
+record_identity = "Pág. 1"
+ordinal = "23"
+
+[[entries]]
+export_field_id = "modelo-128-page-01-close"
+kind = "literal"
+literal = "</T12801000>"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["aeat-dr-128-2020"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 29
+source_cell = "A29"
+record_identity = "Pág. 1"
+ordinal = "24"

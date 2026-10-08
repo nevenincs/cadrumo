@@ -179,6 +179,10 @@ class JournalRepositoryBase[T: JournalOperation]:
         identifiers. Validation provides no MAC, signature, or other authenticity
         proof.
         """
+        return self._decode_payload(operation_id, self._read_payload(operation_id))
+
+    def _read_payload(self, operation_id: str) -> str:
+        """Read one contained, non-link journal with bounded contention handling."""
         if not self._validate_existing_root():
             raise self._not_found_type(operation_id)
         path = self.path_for(operation_id)
@@ -190,6 +194,10 @@ class JournalRepositoryBase[T: JournalOperation]:
             raise self._not_found_type(operation_id) from exc
         except OSError as exc:
             raise self._corrupt_type(f"cannot read {self._subject} {operation_id}") from exc
+        return raw
+
+    def _decode_payload(self, operation_id: str, raw: str) -> T:
+        """Validate the model and exact filename identity of already-read bytes."""
         try:
             operation = self._parse_operation(raw)
         except (ValidationError, ValueError) as exc:
@@ -258,9 +266,12 @@ class JournalRepositoryBase[T: JournalOperation]:
         return True
 
     def _write(self, path: Path, operation: T) -> None:
+        self._write_payload(path, operation.model_dump_json(indent=2) + "\n")
+
+    def _write_payload(self, path: Path, payload: str) -> None:
+        """Atomically replace a validated journal through the canonical write guard."""
         if os.path.lexists(path) and is_link_like(path):
             raise self._error_type(f"{self._subject} file cannot be a symlink or junction")
-        payload = operation.model_dump_json(indent=2) + "\n"
         _waiting_out_contention(
             lambda: atomic_write_hardened_text(path, payload, encoding=UTF_8_ENCODING, mode=_FILE_MODE),
             subject=self._subject,

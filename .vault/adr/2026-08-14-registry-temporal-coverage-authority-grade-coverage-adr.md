@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:158e079114477f1f0b9a7216ea5507293d15e428fae0248998aafe873bf28363'
+body_hash: 'sha256:af0cc69fc28870d1f33c4f57450aee280aa079b42893f7f0daa7a3643533c371'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -30,13 +30,12 @@ did not account for.
 
 First, the registry already has per-modelo schema divergence at three layers:
 one modelo's private authority is a named field on the generic snapshot types
-(`m303_annual_orden` at `src/cadrumo/domain/calculations/registry/_schema.py:1273`
+(`m303_annual_orden`
 and `:1297`, populated by a modelo branch inside generic authority construction
-at `src/cadrumo/domain/calculations/registry/_authority.py:369`); roughly three
+); roughly three
 quarters of every registry load, warm or cold, is that one modelo's annual-orden
 HTML being re-parsed and re-rendered uncached; and the applicability rules of 27
-modelos live as Python literals, one rule per modelo, in
-`src/cadrumo/domain/calculations/registry/_applicability.py` — regulatory data
+modelos live as Python literals, one rule per modelo,  — regulatory data
 the `aeat-registry-authority-flow` rule requires to live in the registry
 authoring tree. The operator has ruled that no modelo may carry its own schema
 divergence.
@@ -49,7 +48,7 @@ unless a fingerprint changes. Any enforcement this record installs must be
 placed where it demonstrably executes.
 
 Third, the package already contains a coverage ledger with no governing
-decision record: `src/cadrumo/domain/calculations/registry/_coverage.py` (754
+decision record: the former source file (754
 lines) assesses each revision at exactly one representative year
 (`_coverage.py:748`), so the registry-wide coverage audit never observes the
 overwhelming majority of the years the corpus claims, and its `filing_gaps`
@@ -74,7 +73,7 @@ happens to the ungoverned coverage ledger.
 - The generic snapshot types already carry one modelo's private authority as a
   named field, so any new schema surface added without correcting that ratifies
   divergence as precedent
-  (`src/cadrumo/domain/calculations/registry/_schema.py:1273`).
+
 - A warm load executes 3 of 42 validator modules and skips validation via a
   persisted verdict; the verdict is keyed on the registry tree fingerprint and
   package version, so data invariants certified at build remain sound for
@@ -85,7 +84,7 @@ happens to the ungoverned coverage ledger.
   certified state, not whether validation executed, and must not be used as a
   regime discriminator (campaign load traces).
 - Informative modelos with export layouts and no formulas are consumed through
-  filing snapshots today — `src/cadrumo/application/modelo/_m145_communication.py:95`
+  filing snapshots today — the former source file
   resolves `authority.snapshot(...)`, which hardwires operator review. M145,
   M036 and M720 are this shape; a grade ladder that makes filing require an
   unconditional calculation closure leaves them no legal cell.
@@ -207,8 +206,7 @@ happens to the ungoverned coverage ledger.
   measurement, and it closed against the original premise. The data CAN change
   without changing the verdict key, for the bundled tree, for the duration of
   its fingerprint TTL — `BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS`, currently
-  10 seconds, in
-  `src/cadrumo/domain/calculations/registry/loader_cache.py`. The window covers
+  10 seconds, . The window covers
   layout changes as well as content changes, because the fingerprint walk is
   itself what would observe a layout change. The guarantee is therefore
   restated: a verdict certifies the tree **as observed no staler than the

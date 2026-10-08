@@ -30,7 +30,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, ValidationError
 
-from ....core.aeat_csv import is_aeat_csv, normalise_aeat_csv
+from ....core.aeat_csv import AEAT_CSV_PATTERN, is_aeat_csv, normalise_aeat_csv
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
 from ....core.logging import get_logger
 from ....core.period import Period, PeriodError
@@ -53,15 +53,16 @@ _logger = get_logger(__name__)
 # then confirmed against :func:`core.aeat_csv.is_aeat_csv` in :func:`_extract_csv`. The
 # tiers previously stopped at 24, so a legitimately longer CSV was truncated
 # to a wrong identifier or missed entirely.
+_CSV_CAPTURE = AEAT_CSV_PATTERN.pattern
 _CSV_LABEL_RE = re.compile(
-    r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n\s*[:\-]?\s*([A-Z0-9]{8,32})\b",
+    rf"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n\s*[:\-]?\s*({_CSV_CAPTURE})\b",
     re.IGNORECASE,
 )
 # Older AEAT layouts (Modelo 100 pre-2022) render labels on the right
 # column and values on the left, so pdfplumber's top-down / left-right
 # traversal emits VALUE then LABEL.
 _CSV_LABEL_INVERTED_RE = re.compile(
-    r"\b([A-Z0-9]{8,32})\s+C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n",
+    rf"\b({_CSV_CAPTURE})\s+C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n",
     re.IGNORECASE,
 )
 # Every AEAT justificante ends with a stable authenticity footer:
@@ -72,20 +73,20 @@ _CSV_LABEL_INVERTED_RE = re.compile(
 # lifts into the text. This footer is the most reliable fallback.
 _CSV_AUTHENTICITY_FOOTER_RE = re.compile(
     r"mediante\s+el\s+C[óo]digo\s+Seguro\s*(?:\d+\s+)?"
-    r"de\s+Verificaci[óo]n\s+([A-Z0-9]{8,32})\b",
+    rf"de\s+Verificaci[óo]n\s+({_CSV_CAPTURE})\b",
     re.IGNORECASE,
 )
 # AEAT also serves the receipt in English when the user files via
 # the English-language sede UI. pdfplumber sees
 # "Secure Verification Code: <csv>" in place of the Spanish label.
 _CSV_LABEL_EN_RE = re.compile(
-    r"Secure\s+Verification\s+Code\s*[:\-]?\s*([A-Z0-9]{8,32})\b",
+    rf"Secure\s+Verification\s+Code\s*[:\-]?\s*({_CSV_CAPTURE})\b",
     re.IGNORECASE,
 )
 # Used only as a last resort: the 'CSV' token is noisy in normalised
 # text ("Presentador" includes the letter sequence), so we require a
 # colon/dash separator and the 'CSV=' equality form.
-_CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9]{8,32})\b", re.IGNORECASE)
+_CSV_FALLBACK_RE = re.compile(rf"\bCSV\s*[=:]\s*({_CSV_CAPTURE})\b", re.IGNORECASE)
 
 _MODELO_RE = re.compile(
     # Spanish "Modelo <N>" or English "Form <N>" (English-language

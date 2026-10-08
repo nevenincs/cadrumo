@@ -44,19 +44,19 @@ Drive-folder names.
 
 The refusal is non-destructive. Cadrumo does not read, connect to, copy, move,
 re-key, delete, migrate, or adopt that state. Detection leaves the former bytes
-untouched and requires the operator to choose a separate, explicit disposition.
+untouched and requires you to choose a separate, explicit disposition.
 
 ## Safety and filing scope
 
 | Surface | Cadrumo behavior |
 | --- | --- |
-| Calculation and verification | Local; evaluates saved records against bundled registry rules and evidence |
-| Export | Writes an AEAT-compatible local file after verification and required evidence gates pass; refuses to overwrite an existing file without `--replace`; portal acceptance is not guaranteed, and files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept |
+| Calculation and check | Local; evaluates your saved records against the bundled tax rules and supporting documents |
+| Export | Writes an AEAT-compatible local file after the check and the required supporting-document conditions pass; refuses to overwrite an existing file without `--replace`; portal acceptance is not guaranteed, and files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept |
 | Live AEAT access | Separately invoked, authenticated, and read-only |
 | Submission | Forbidden; no Cadrumo submission command exists |
 | Official filing | Performed by a human through an official AEAT channel; for modelos whose file AEAT does not accept, the human keys the calculated values into the portal form |
-| Filing history | Recorded locally after the human filing; reconciliation compares header fields, the result total where the modelo declares its result box, and, for enrolled modelos, casilla values from a filed declaration |
-| Responsibility | The taxpayer or authorized filer reviews figures, meets deadlines, uploads, and retains the justificante |
+| Filing history | Recorded as filed in Cadrumo after the human filing; reconciliation compares header fields, the result total where the modelo declares its result box, and, for modelos that support it, box values from a filed declaration |
+| Responsibility | The taxpayer or authorized filer reviews figures, meets deadlines, uploads, and keeps the AEAT receipt (justificante) |
 
 See [Protect access to your data](../how-to/protect-data-access.md) for recovery,
 locking, export, and reset tasks. The [filing-boundary

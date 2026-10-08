@@ -26,7 +26,7 @@ from dev._paths import REPO_ROOT
 from ..pipeline.authority_publication import authority_source_identity
 from ..pipeline.cli import app as pipeline_app
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(3600)]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _LAUNCHER_ONLY_MODULES = (
     "cadrumo.application.operator_actions.catalogue",

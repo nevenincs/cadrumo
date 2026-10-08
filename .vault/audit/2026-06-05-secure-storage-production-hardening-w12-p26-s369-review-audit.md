@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:954e4ed8055e0da76c1d71e5c5490f8a1e6831c490673101371e943b807a067f'
+modified: '2026-10-03'
+body_hash: 'sha256:1b45b77903ac069bbbd03cbab275ce62cacd778e184144d08ed0c2aae0d27bf7'
 related: []
 ---
 
@@ -33,9 +33,9 @@ Validation drift remains logged with traceback context before it is wrapped.
 
 ## S369-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/transactions/_repository.py src/aeat/domain/transactions/test_repository.py src/aeat/domain/transactions/test_repository_roundtrip.py src/aeat/domain/transactions/test_cross_bucket_isolation.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/transactions/test_repository.py src/aeat/domain/transactions/test_repository_roundtrip.py src/aeat/domain/transactions/test_cross_bucket_isolation.py` passed with 13 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "transaction or TransactionCatalogueRepository"` passed with 3 tests and 90 deselected.
+- the historical check passed.
+- the historical check passed with 13 tests.
+- the historical check passed with 3 tests and 90 deselected.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with the known PLAN022 warning.
 - `uv run --no-sync vaultspec-rag search "TransactionCatalogueRepository inspect_bucket_storage_runtime load_settings secure object runtime default classification version envelope" --type code --port 8766 --max-results 8` returned the repository and storage runtime contract evidence.

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-relation-and-export-integrity'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a3bcc693262303cd06e575eb584fb8f7f57c8b32c7fcaacfcea830a11749caf'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:0bcbaa2ed794bb9d8c48e9eaa470eceb1c9c3cd6ea1991ede0f138b4d863ebae'
+related: []
 ---
 
 # `registry-relation-and-export-integrity` audit: `modelo 210 annual grouped renta export fidelity determination`
@@ -61,7 +60,7 @@ could feed into for this income type.
 ### An existing, already-committed e2e test proves the property directly
 
 `test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path`
-(`src/cadrumo/application/modelo/tests/test_modelo_210_agrupacion_renta_e2e.py:83`) builds two
+ builds two
 `Modelo210AgrupacionRentaRow` rows totalling EUR 300.00, declares `rendimientos_integros` =
 EUR 900.00 through `casilla_inputs`, calculates a real `0A` revision, and asserts
 `revision.casilla_values["base_imponible"] == Decimal("900.00")` — the manual declared value,

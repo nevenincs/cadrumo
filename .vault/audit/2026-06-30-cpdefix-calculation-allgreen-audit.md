@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cpdefix-calculation-allgreen'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:d8dead71a184f06bbda98ba3d46b2dd55d420d683d24edd3e0bfe2eda278ed76'
+modified: '2026-10-03'
+body_hash: 'sha256:f4b70d39742b90636881332e2eaf4184fdf29afdf7452391cac10c0a50e2e472'
 related: []
 ---
 
@@ -34,7 +34,7 @@ adapter gate passed:
 `uv run --no-sync pytest src/aeat/adapters/inbound/declaracion/tests -q --tb=short`
 reported 218 passing tests after the Modelo 130 parser-boundary split. The
 targeted registry parity/reviewability check passed:
-`uv run --no-sync pytest -q --tb=short src/aeat/domain/calculations/registry/tests/test_formula_modelo_registry_parity.py src/aeat/domain/calculations/registry/tests/test_modelo_parity_coverage.py src/aeat/domain/calculations/registry/tests/test_registry_reviewability.py`
+the historical check
 reported 6 passing tests.
 
 ### persona-risk-verifiers | low | testimonial residuals are covered by focused gates
@@ -53,7 +53,7 @@ tests.
 ### test-helper-drift | low | ledger import UX helper used a retired profile id shape
 
 The focused ledger/profile verifier initially exposed a setup error in
-`src/aeat/entrypoints/cli/tests/_ledger_validation_support.py`: the helper used
+The retired test: the helper used
 `tester` as both label and profile id, but current profile registration requires
 a UUIDv4 bucket/profile id. The helper now uses a stable UUIDv4 id and preserves
 `tester` as the display label. The worker grounded the change with

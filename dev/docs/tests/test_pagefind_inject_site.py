@@ -1,8 +1,9 @@
 """Pagefind injection against a real built-HTML site.
 
 Runs the vendored Pagefind binary over a copied subset of the real built HTML
-and asserts the injection lands per language with deep-link targets and ranking
-weights. These are ``integration``: they need the binary and the built site.
+and asserts the injection lands once per record, reachable from every language,
+with deep-link targets and ranking weights. These are ``integration``: they need
+the binary and the built site.
 
 The projection and weighting checks that share the record helper are in
 ``test_pagefind_inject``; the helper itself is in ``_pagefind_inject_support``.
@@ -16,9 +17,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
+from dev.docs.build_paths import docs_html_root
 
-from ..pagefind_index import build_search_index
+from ..pagefind_index import SHARED_INDEX_LANGUAGE, build_search_index
 from ..pagefind_inject import (
     InjectionStats,
     _inject_records,
@@ -32,12 +35,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
-_BUILT_HTML = _REPO_ROOT / "docs" / "_build" / "html"
-_PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
+_BUILT_HTML = docs_html_root(_REPO_ROOT)
 
 
 def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
-    """Copy a small real built-HTML subset + the pagefind.yml into tmp.
+    """Copy a small real built-HTML subset into tmp.
 
     Refuses, naming the absent artefact, when the built HTML root is missing or
     holds fewer than ``pages`` pages. The built site is an uncommitted build
@@ -66,20 +68,20 @@ def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
         dest = site / source.relative_to(_BUILT_HTML)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(source, dest)
-    shutil.copy(_PAGEFIND_YML, site / "pagefind.yml")
     return site
 
 
-def test_injection_lands_one_record_per_concept_in_primary_language(
+def test_injection_lands_one_record_per_concept_reachable_from_every_language(
     tmp_path: Path,
 ) -> None:
-    """Each concept injects once into the primary (page) index, discoverably.
+    """Each concept injects once into the site's one index, reachable from every language.
 
-    Real Pagefind build (no mock): the directory pass indexes the English
-    pages; the injection adds ONE custom record per concept into the primary
-    language with combined multilingual content, so the record is in the index
-    a reader's page loads. Asserts one record per concept (not four) and that
-    the en index split is present.
+    Real Pagefind build (no mock): the directory pass indexes the pages; the
+    injection adds ONE custom record per concept, with combined multilingual
+    content and every published language as its ``language`` filter values, into
+    the single index split every page loads. Asserts one record per concept (not
+    one per language, which is what four index splits once required) and that
+    the written index is that one split.
     """
     site = _fixture_site(tmp_path)
     materialised = concept_records()
@@ -94,13 +96,13 @@ def test_injection_lands_one_record_per_concept_in_primary_language(
     assert result.page_count == 3
     stats = captured[0]
     assert stats.concepts == materialised.concepts
-    # One custom record per concept (single primary language), not per-language.
+    # One custom record per concept for the whole site, not one per language.
     assert stats.custom_records_written == materialised.concepts
-    assert stats.languages == ("en",)
+    assert sorted(stats.languages) == sorted(member.value for member in OutputLanguage)
 
     pf = site / "pagefind"
     languages = {p.name.split("_")[0] for p in scan_directory(pf, pattern="*.pf_index", recursive=True)}
-    assert "en" in languages
+    assert languages == {SHARED_INDEX_LANGUAGE}, languages
 
 
 def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:

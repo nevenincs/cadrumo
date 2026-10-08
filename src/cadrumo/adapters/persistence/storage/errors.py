@@ -17,6 +17,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final
 
+from pydantic import ValidationError
+
 from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
 from ....core.errors.hierarchy import CadrumoError
 
@@ -270,4 +272,23 @@ STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
+)
+
+
+#: What a storage operation can raise on its own account: a storage refusal or an
+#: operating-system failure. A caller that builds its own input before calling
+#: storage keeps a validation error on that input outside this set, because the
+#: caller, not stored data, is at fault.
+STORAGE_OPERATION_FAILURES: Final[tuple[type[Exception], ...]] = (StorageError, OSError)
+
+#: Everything reading a stored record can raise when the record cannot be honoured:
+#: the storage failures plus stored bytes that are not valid UTF-8 or do not
+#: validate as the repository's envelope. The last two come straight from
+#: envelope parsing and are not :class:`StorageError`, so a translator that lists
+#: only the storage classes lets a corrupt row escape as a raw parser error
+#: instead of the application's typed persistence failure.
+STORED_RECORD_FAILURES: Final[tuple[type[Exception], ...]] = (
+    *STORAGE_OPERATION_FAILURES,
+    ValidationError,
+    UnicodeDecodeError,
 )

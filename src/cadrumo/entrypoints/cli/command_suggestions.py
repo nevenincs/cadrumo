@@ -280,18 +280,17 @@ class LazySubcommand:
                     raise InternalInvariantError("required lazy-target refusal returned instead of raising") from error
             # An import target hands back the same module-level Typer for every
             # language; the error boundary must wrap it only once.
-            if self._decorate is not None and not any(seen is typer_instance for seen in self._decorated):
-                self._decorate(typer_instance)
-                self._decorated.append(typer_instance)
+            self._decorate_target(typer_instance)
             command = _typer_get_command(typer_instance)
             command.name = self.name
             self._commands[language] = command
         return command
 
-    @property
-    def loader_owner(self) -> str:
-        """Return the stable Python owner of this deferred loader."""
-        return self._target.owner
+    def _decorate_target(self, typer_instance: typer.Typer) -> None:
+        """Decorate a shared module-level target only once across output languages."""
+        if self._decorate is not None and not any(seen is typer_instance for seen in self._decorated):
+            self._decorate(typer_instance)
+            self._decorated.append(typer_instance)
 
     @property
     def target(self) -> LazyNodeTarget:

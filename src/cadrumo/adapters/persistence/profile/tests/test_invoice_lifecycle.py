@@ -29,11 +29,11 @@ from .....application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
     remove_catalogue_invoice,
     resolve_catalogue_invoice,
-    resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
+from .....application.invoices.catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
 from .....domain.invoices.enums import PaymentStatus, resolve_iva_rate_slot
-from .....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
+from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
 from ....outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
@@ -90,16 +90,22 @@ def test_resolve_catalogue_invoice_by_full_id_and_unambiguous_prefix() -> None:
 def test_resolve_catalogue_invoice_blank_id_refused() -> None:
     """A blank id is refused with the typed required-id error, not a miss."""
     catalogue = build_invoice_catalogue([_build("2026-0142")])
-    with pytest.raises(InvoiceNotFoundError) as exc:
+    with pytest.raises(InvoiceLookupRefusedError) as exc:
         resolve_catalogue_invoice(catalogue, "   ")
+    assert exc.value.reason is InvoiceLookupRefusalReason.REQUIRED
+    assert exc.value.invoice_id == ""
+    assert exc.value.candidate_ids == ()
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_id_required"
 
 
 def test_resolve_catalogue_invoice_not_found_names_the_id() -> None:
     """An id matching no invoice raises the localized not-found error with context."""
     catalogue = build_invoice_catalogue([_build("2026-0142")])
-    with pytest.raises(InvoiceNotFoundError) as exc:
+    with pytest.raises(InvoiceLookupRefusedError) as exc:
         resolve_catalogue_invoice(catalogue, "deadbeefdeadbeef")
+    assert exc.value.reason is InvoiceLookupRefusalReason.NOT_FOUND
+    assert exc.value.invoice_id == "deadbeefdeadbeef"
+    assert exc.value.candidate_ids == ()
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_not_found"
     assert exc.value.context == {"invoice_id": "deadbeefdeadbeef"}
 
@@ -116,16 +122,16 @@ def test_resolve_catalogue_invoice_ambiguous_prefix_names_candidates() -> None:
     shared_char, members = _two_invoices_sharing_a_prefix()
     catalogue = build_invoice_catalogue(members)
 
-    with pytest.raises(InvoiceValidationError) as exc:
+    with pytest.raises(InvoiceLookupRefusedError) as exc:
         resolve_catalogue_invoice(catalogue, shared_char)
+    expected_candidates = tuple(
+        invoice.invoice_id for invoice in catalogue.values() if invoice.invoice_id.startswith(shared_char)
+    )
+    assert exc.value.reason is InvoiceLookupRefusalReason.AMBIGUOUS
+    assert exc.value.invoice_id == shared_char
+    assert exc.value.candidate_ids == expected_candidates
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.ambiguous_invoice_prefix"
-    assert exc.value.context is not None
-    candidates = exc.value.context["candidates"]
-    assert isinstance(candidates, str)
-    sharing = [invoice for invoice in members if invoice.invoice_id.startswith(shared_char)]
-    assert len(sharing) >= 2
-    for invoice in sharing:
-        assert invoice.invoice_id in candidates
+    assert exc.value.context == {"invoice_id": shared_char, "candidates": ", ".join(expected_candidates)}
 
 
 def _two_invoices_sharing_a_prefix() -> tuple[str, list[Invoice]]:
@@ -165,10 +171,7 @@ def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path: Path) -> Non
 
         # Resolve through the repository before removal to prove the read path.
         lifecycle_ports = build_catalogue_lifecycle_ports(bucket_id=_BUCKET_ID)
-        resolved = resolve_catalogue_invoice_from_repository(
-            invoice_id=invoice_id[:8],
-            ports=lifecycle_ports.read_ports,
-        )
+        resolved = resolve_catalogue_invoice(lifecycle_ports.read_ports.invoice_reader.load(), invoice_id[:8])
         assert resolved.invoice_id == invoice_id
 
         result = remove_catalogue_invoice(
@@ -426,14 +429,24 @@ def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> No
     catalogue = build_invoice_catalogue([_build("2026-0142")])
     shared_char, members = _two_invoices_sharing_a_prefix()
 
-    raised: list[InvoiceNotFoundError | InvoiceValidationError] = []
-    for query, expected_error in (("   ", InvoiceNotFoundError), ("deadbeefdeadbeef", InvoiceNotFoundError)):
-        with pytest.raises(expected_error) as exc:
+    raised: list[InvoiceLookupRefusedError | InvoiceValidationError] = []
+    for query, expected_reason in (
+        ("   ", InvoiceLookupRefusalReason.REQUIRED),
+        ("deadbeefdeadbeef", InvoiceLookupRefusalReason.NOT_FOUND),
+    ):
+        with pytest.raises(InvoiceLookupRefusedError) as exc:
             resolve_catalogue_invoice(catalogue, query)
+        assert exc.value.reason is expected_reason
         raised.append(exc.value)
 
-    with pytest.raises(InvoiceValidationError) as ambiguous:
-        resolve_catalogue_invoice(build_invoice_catalogue(members), shared_char)
+    ambiguous_catalogue = build_invoice_catalogue(members)
+    with pytest.raises(InvoiceLookupRefusedError) as ambiguous:
+        resolve_catalogue_invoice(ambiguous_catalogue, shared_char)
+    expected_candidates = tuple(
+        invoice.invoice_id for invoice in ambiguous_catalogue.values() if invoice.invoice_id.startswith(shared_char)
+    )
+    assert ambiguous.value.reason is InvoiceLookupRefusalReason.AMBIGUOUS
+    assert ambiguous.value.candidate_ids == expected_candidates
     raised.append(ambiguous.value)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):

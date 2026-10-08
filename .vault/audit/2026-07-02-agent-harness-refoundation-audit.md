@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:1267a5ab1876a1eb43ba4706154f7e81b55e4c072383f38cac1e2acb018b85e5'
+modified: '2026-10-05'
+body_hash: 'sha256:a947c9e905b44a810f384a432afb72065a5a8ccbaf775b98fa8f242c308f3428'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
-  - '[[2026-07-02-agent-harness-refoundation-plan]]'
   - '[[2026-07-02-agent-harness-refoundation-research]]'
 ---
 
@@ -313,7 +312,7 @@ recorded separately under the honesty-review findings.
   client's own destructiveHint UI (ADR R6 accepts this, handoff never). Both
   recorded as accepted.
 - **VERIFIED CLEAN by the reviewer:** live-submit impossibility, elicitation
-  fail-closed, the stdin-DEVNULL fix, telemetry-no-payloads, hexagonal
+  fail-closed, the stdin-DEVNULL fix, hexagonal
   direction (no production eval module imports `entrypoints.mcp`), skill CLI
   claims real, `applies_when` typed and fact-validated, zero mocks/skips/xfail.
 

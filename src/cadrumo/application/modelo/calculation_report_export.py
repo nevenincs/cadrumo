@@ -168,7 +168,7 @@ def _latest_verification_facts(
 ) -> tuple[VerificationReportId | None, VerificationCompletenessStatus | None]:
     """Return the id and verdict of the last verification run for the revision."""
     reports = require_verification_report_coordinates_current(
-        export_ports.verification.load(),
+        export_ports.verification.load(operation=operation),
         operation=operation,
     ).for_calculation_revision(revision.calculation_revision_id)
     if not reports:

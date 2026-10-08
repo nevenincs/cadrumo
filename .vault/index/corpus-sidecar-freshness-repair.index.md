@@ -4,12 +4,11 @@ tags:
   - '#index'
   - '#corpus-sidecar-freshness-repair'
 date: '2026-09-10'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:88d6112bfe6a5457c084fcebff94680fd694a7da38fbebef3a3c70ba759d2355'
+body_hash: 'sha256:3635cc3c7c100cc140764c29111fb23618c3ebdce9ffae5d9a41a456dc248445'
 related:
   - '[[2026-09-10-corpus-sidecar-freshness-repair-implementation-review-audit]]'
-  - '[[2026-09-10-corpus-sidecar-freshness-repair-plan]]'
   - '[[2026-09-10-corpus-sidecar-freshness-repair-research]]'
 ---
 
@@ -22,10 +21,6 @@ Auto-generated index of all documents tagged with `#corpus-sidecar-freshness-rep
 ### audit
 
 - `2026-09-10-corpus-sidecar-freshness-repair-implementation-review-audit` - `corpus-sidecar-freshness-repair` audit: `implementation review`
-
-### plan
-
-- `2026-09-10-corpus-sidecar-freshness-repair-plan` - `corpus-sidecar-freshness-repair` plan
 
 ### research
 

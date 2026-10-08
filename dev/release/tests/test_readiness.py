@@ -37,7 +37,8 @@ def _write_pyprojects(root: Path, version: str) -> None:
     _write_project(root_project, name="cadrumo", version=version)
     root_project.write_text(
         root_project.read_text(encoding="utf-8")
-        + f'dependencies = ["cadrumo-data-manuals=={version}", "cadrumo-data-official=={version}"]\n',
+        + f'dependencies = ["cadrumo-data-manuals=={version}", "cadrumo-data-official=={version}", '
+        f'"cadrumo-data-normatives=={version}"]\n',
         encoding="utf-8",
     )
     _write_project(
@@ -48,6 +49,11 @@ def _write_pyprojects(root: Path, version: str) -> None:
     _write_project(
         root / "packaging" / "cadrumo_data_official" / "pyproject.toml",
         name="cadrumo-data-official",
+        version=version,
+    )
+    _write_project(
+        root / "packaging" / "cadrumo_data_normatives" / "pyproject.toml",
+        name="cadrumo-data-normatives",
         version=version,
     )
 
@@ -93,7 +99,7 @@ def test_project_names_are_canonical_for_root_and_both_companions(tmp_path: Path
 
     assert check.passed is True
     assert check.severity == "blocking"
-    assert "cadrumo, cadrumo-data-manuals, cadrumo-data-official" in check.detail
+    assert "cadrumo, cadrumo-data-manuals, cadrumo-data-official, cadrumo-data-normatives" in check.detail
 
 
 @pytest.mark.parametrize(
@@ -102,6 +108,7 @@ def test_project_names_are_canonical_for_root_and_both_companions(tmp_path: Path
         ("pyproject.toml", "aeat-cli"),
         ("packaging/cadrumo_data_manuals/pyproject.toml", "aeat-data-manuals"),
         ("packaging/cadrumo_data_official/pyproject.toml", "aeat-data-official"),
+        ("packaging/cadrumo_data_normatives/pyproject.toml", "foreign-data-normatives"),
     ),
 )
 def test_project_names_reject_each_former_product_distribution(
@@ -133,30 +140,32 @@ def test_version_surfaces_agree_fails_on_drift(tmp_path: Path) -> None:
     assert "2.0.0" in check.detail
 
 
-def test_version_surfaces_agree_fails_on_companion_project_drift(tmp_path: Path) -> None:
+@pytest.mark.parametrize("companion", ("manuals", "official", "normatives"))
+def test_version_surfaces_agree_fails_on_companion_project_drift(tmp_path: Path, companion: str) -> None:
     """A companion project version that drifts from the release cohort blocks release."""
     root = _make_repo_root(tmp_path, version="2.0.0")
     _write_project(
-        root / "packaging" / "cadrumo_data_manuals" / "pyproject.toml",
-        name="cadrumo-data-manuals",
+        root / "packaging" / f"cadrumo_data_{companion}" / "pyproject.toml",
+        name=f"cadrumo-data-{companion}",
         version="1.9.9",
     )
 
     check = readiness.check_version_surfaces_agree(root)
 
     assert check.passed is False
-    assert "cadrumo_data_manuals" in check.detail
+    assert f"cadrumo_data_{companion}" in check.detail
     assert "1.9.9" in check.detail
 
 
-def test_version_surfaces_agree_fails_on_nonmatching_mandatory_exact_pin(tmp_path: Path) -> None:
+@pytest.mark.parametrize("companion", ("manuals", "official", "normatives"))
+def test_version_surfaces_agree_fails_on_nonmatching_mandatory_exact_pin(tmp_path: Path, companion: str) -> None:
     """A mandatory companion pin that does not name the cohort version blocks release."""
     root = _make_repo_root(tmp_path, version="2.0.0")
     project = root / "pyproject.toml"
     project.write_text(
         project.read_text(encoding="utf-8").replace(
-            "cadrumo-data-official==2.0.0",
-            "cadrumo-data-official==1.9.9",
+            f"cadrumo-data-{companion}==2.0.0",
+            f"cadrumo-data-{companion}==1.9.9",
         ),
         encoding="utf-8",
     )
@@ -164,16 +173,19 @@ def test_version_surfaces_agree_fails_on_nonmatching_mandatory_exact_pin(tmp_pat
     check = readiness.check_version_surfaces_agree(root)
 
     assert check.passed is False
-    assert "cadrumo-data-official==1.9.9" in check.detail
+    assert f"cadrumo-data-{companion}==1.9.9" in check.detail
 
 
-def test_version_surfaces_agree_fails_when_a_mandatory_companion_is_missing(tmp_path: Path) -> None:
+@pytest.mark.parametrize("companion", ("manuals", "official", "normatives"))
+def test_version_surfaces_agree_fails_when_a_mandatory_companion_is_missing(tmp_path: Path, companion: str) -> None:
     """Removing a base dependency cannot recreate the retired slim-only install."""
     root = _make_repo_root(tmp_path, version="2.0.0")
     project = root / "pyproject.toml"
     project.write_text(
         project.read_text(encoding="utf-8").replace(
-            ', "cadrumo-data-official==2.0.0"',
+            f'"cadrumo-data-{companion}==2.0.0", '
+            if companion == "manuals"
+            else f', "cadrumo-data-{companion}==2.0.0"',
             "",
         ),
         encoding="utf-8",
@@ -182,7 +194,7 @@ def test_version_surfaces_agree_fails_when_a_mandatory_companion_is_missing(tmp_
     check = readiness.check_version_surfaces_agree(root)
 
     assert check.passed is False
-    assert "cadrumo-data-manuals==2.0.0" in check.detail
+    assert f"cadrumo-data-{companion}==2.0.0" not in check.detail
 
 
 def test_changelog_ready_fails_when_missing(tmp_path: Path) -> None:

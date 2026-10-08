@@ -1,0 +1,23 @@
+[sources."boe-2007-20485-modelo-123-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2007-20485-modelos-117-123-124-126-128.pdf"
+sha256 = "574468223c16a0a37833cf0ef521a8b0242ec72561a8b3b8679f0d34ce9ab5f9"
+bytes = 1350673
+retrieved_at = 2026-10-05
+published_at = 2007-11-29
+source_url = "https://www.boe.es/eli/es/o/2007/11/23/eha3435/dof/spa/pdf"
+review_status = "pending_review"
+
+[sources."boe-2024-1772-modelo-123-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2024-1772-modelos-123-216-210.pdf"
+sha256 = "8168643abd8e9ef3ab8459179723d7c51aaf0d8012f72751929742d81899de5e"
+bytes = 1015931
+retrieved_at = 2026-10-05
+published_at = 2024-01-31
+source_url = "https://www.boe.es/boe/dias/2024/01/31/pdfs/BOE-A-2024-1772.pdf"
+review_status = "pending_review"

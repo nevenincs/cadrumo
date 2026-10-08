@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#settings-di-deferred'
 date: '2026-06-03'
-modified: '2026-07-10'
-body_hash: 'sha256:e7068a823e2596ada6e7f39dd92c885f3ef1b8a6f57858cf8065c77dff3836f7'
+modified: '2026-10-03'
+body_hash: 'sha256:1b65190fe0ba43929933b12519461f94059ab044114ff928cb82a9c50045c2c9'
 related:
   - '[[2026-06-03-plan-triage-approach-adr]]'
   - '[[2026-06-04-settings-di-deferred-research]]'
@@ -117,9 +117,9 @@ addresses the surrounding issue.
   sites systematically bypass the override seam), a new ADR may
   re-open the dedicated-sprint approach for that specific field.
 
-## Status
+## Archival authorization
 
-Accepted. Archive of `2026-05-14-settings-di-plan` authorised on
+Archive of `2026-05-14-settings-di-plan` authorised on
 landing of this ADR. The PM dispatches
 `vaultspec-core vault feature archive settings-di` after the
 incoming-references discovery pass mandated by

@@ -26,10 +26,9 @@ from .....application.operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from .....application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .....application.operations.owner import OperationExecutorContext
 from .....application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -317,6 +316,8 @@ def test_exact_one_shot_submission_executes_once_and_never_reaches_filesystem(tm
     assert initial_document["snapshot"]["request_storage"] == "credential_free_journal"
 
     for mismatch in _mutated_requirements(requirement):
+        with pytest.raises(ValueError, match="does not match"):
+            asyncio.run(supervisor.require_ephemeral_secret_ready(mismatch))
         submitted = bytearray(_SECRET)
         with pytest.raises(ValueError, match="does not match"):
             asyncio.run(supervisor.submit_ephemeral_secret(mismatch, submitted))
@@ -330,10 +331,16 @@ def test_exact_one_shot_submission_executes_once_and_never_reaches_filesystem(tm
         asyncio.run(supervisor.submit_ephemeral_secret(wrong_operation, wrong_operation_buffer))
     assert wrong_operation_buffer == bytearray(len(_SECRET))
 
+    before_ready = journal_path.read_bytes()
+    asyncio.run(supervisor.require_ephemeral_secret_ready(requirement))
+    asyncio.run(supervisor.require_ephemeral_secret_ready(requirement))
+    assert journal_path.read_bytes() == before_ready
     submitted = bytearray(_SECRET)
     asyncio.run(supervisor.submit_ephemeral_secret(requirement, submitted))
     assert submitted == bytearray(len(_SECRET))
     duplicate = bytearray(_SECRET)
+    with pytest.raises(ValueError, match="already has a submission"):
+        asyncio.run(supervisor.require_ephemeral_secret_ready(requirement))
     with pytest.raises(ValueError, match="already has a submission"):
         asyncio.run(supervisor.submit_ephemeral_secret(requirement, duplicate))
     assert duplicate == bytearray(len(_SECRET))
@@ -346,6 +353,8 @@ def test_exact_one_shot_submission_executes_once_and_never_reaches_filesystem(tm
     assert executor.second_consume_refused
     assert executor.backing_zeroized
     after_terminal = bytearray(_SECRET)
+    with pytest.raises(ValueError, match="no longer awaiting"):
+        asyncio.run(supervisor.require_ephemeral_secret_ready(requirement))
     with pytest.raises(ValueError, match="no longer awaiting"):
         asyncio.run(supervisor.submit_ephemeral_secret(requirement, after_terminal))
     assert after_terminal == bytearray(len(_SECRET))
@@ -390,6 +399,8 @@ def test_expiry_cancellation_and_shutdown_clear_pre_entry_secret_waits(tmp_path:
     expiry_buffer = bytearray(_SECRET)
     asyncio.run(supervisor.submit_ephemeral_secret(expiry_requirement, expiry_buffer))
     clock[0] = expiry_requirement.expires_at
+    with pytest.raises(ValueError, match="expired"):
+        asyncio.run(supervisor.require_ephemeral_secret_ready(expiry_requirement))
     expired = asyncio.run(run_to_settlement(supervisor, expiry_id))
     assert expired.terminal_condition is OperationTerminalCondition.INTERRUPTED
     assert expired.effect is OperationEffect.NONE
@@ -412,11 +423,16 @@ def test_expiry_cancellation_and_shutdown_clear_pre_entry_secret_waits(tmp_path:
     shutdown_buffer = bytearray(_SECRET)
     asyncio.run(supervisor.submit_ephemeral_secret(shutdown_requirement, shutdown_buffer))
     asyncio.run(supervisor.shutdown())
+    assert shutdown_buffer == bytearray(len(_SECRET))
+    assert not supervisor._ephemeral_secrets.has_exact(shutdown_requirement, observed_at=clock[0])
+    assert asyncio.run(supervisor.inspect(shutdown_id)).lifecycle is OperationLifecycle.CREATED
     post_shutdown_buffer = bytearray(_SECRET)
-    with pytest.raises(ValueError, match="submission channel is closed"):
+    with pytest.raises(ValueError, match="operation owner is draining"):
+        asyncio.run(supervisor.require_ephemeral_secret_ready(shutdown_requirement))
+    with pytest.raises(ValueError, match="operation owner is draining"):
         asyncio.run(supervisor.submit_ephemeral_secret(shutdown_requirement, post_shutdown_buffer))
     assert post_shutdown_buffer == bytearray(len(_SECRET))
-    with pytest.raises(ValueError, match="no exact live submission"):
+    with pytest.raises(ValueError, match="operation owner is draining"):
         asyncio.run(run_to_settlement(supervisor, shutdown_id))
     _assert_no_secret_or_derivative(tmp_path)
 

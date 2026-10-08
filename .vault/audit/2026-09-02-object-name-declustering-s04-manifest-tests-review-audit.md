@@ -3,25 +3,17 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:afad1e0ce165d0003d82a3f0ea1d4ae31b70a01d65ecc8c1600c9a189534e036'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+body_hash: 'sha256:481cd5659cfb6e3aaba833badda7ca227bf934926cd546294f9bfbb047a5586b'
+related: []
 ---
 
 # `object-name-declustering` audit: `s04 manifest tests review`
 
 ## Scope
 
-Reviewed `dev/quality/tests/test_object_name_manifest.py` for `W01.P02.S04`
-against the current production manifest loader, accepted ADR, repository
-reference, plan, and detector-teeth rules. The review covered real TOML parsing,
-strict schema refusal, path safety, ambiguity and repeated finding operations,
-inventory and byte drift, advisory findings, target collisions, locator/path
-binding, Python module targets, linked paths, generated ownership, canonical
-digesting, execution selection, and successful symbol and module manifests. No
-production or test code was changed.
+The review covered real TOML parsing, strict schema refusal, path safety, ambiguity and repeated finding operations, inventory and byte drift, advisory findings, target collisions, locator/path binding, Python module targets, linked paths, generated ownership, canonical digesting, execution selection, and successful symbol and module manifests. No production or test code was changed.
 
 The suite exercises the real `scan`, TOML loader, Pydantic models, live
 filesystem preconditions, validator, digest serializer, and execution selector.

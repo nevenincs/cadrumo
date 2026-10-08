@@ -38,19 +38,12 @@ from ..adjudications import (
     VariantsDistinct,
     load_adjudications,
 )
-from ..manager import (
-    CATEGORY_SEMANTIC_ROLE,
-    EVENT_SEMANTIC_ROLE,
-    AeipOccurrence,
-    EvolutionPair,
-    build_inventory,
-    chain_id_for,
-    derive_slug,
-    detect_stale_adjudications,
-    extract_occurrences,
-    plan_chains,
-    render_evolution_record,
-)
+from ..constants import CATEGORY_SEMANTIC_ROLE, EVENT_SEMANTIC_ROLE
+from ..identity import chain_id_for, derive_slug
+from ..inventory import build_inventory, extract_occurrences
+from ..planning import plan_chains, render_evolution_record
+from ..stale_adjudications import detect_stale_adjudications
+from ..types import AeipOccurrence, EvolutionPair
 
 # The family is read from the shipped registry authoring tree on disk.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cli-errors-domain-package-lazy-import'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:05d04fb95dca6317547ffe1ae3c0b55a71be5c270a1561bebbfde0fb48567e50'
+modified: '2026-10-03'
+body_hash: 'sha256:49f9df7566d93e84f8149b9b468a53bd55b0c3a4d5bec7e86ab7e483e5b8d49b'
 related:
   - '[[2026-06-03-user-profile-lazy-import-adr]]'
 ---
@@ -13,11 +13,9 @@ related:
 
 Successor research to `2026-06-03-user-profile-lazy-import-adr`. The parent
 campaign fixed the `aeat.application.user_profile` package boundary via PEP 562
-PEP-562 dispatch (commit `20992e0d4`); the producer-side probe at
-`src/aeat/application/user_profile/test_lazy_boundary.py` confirms that
+PEP-562 dispatch (commit `20992e0d4`); the producer-side probe  confirms that
 importing the application package now places zero `aeat.domain.calculations.registry*`
-modules in `sys.modules`. The CLI-side gate at
-`src/aeat/entrypoints/cli/test_lazy_command_tree.py` nonetheless remained red
+modules in `sys.modules`. The CLI-side gate  nonetheless remained red
 for all five state-free-surface tests. This research diagnoses the orthogonal
 leak vector and characterises the patterns available to close it.
 
@@ -180,9 +178,8 @@ imports at module-load. Pattern (a) leaves all 13 sites unchanged.
 ### F6. Producer-side regression contract
 
 The orthogonal-vector diagnosis suggests a producer-side regression
-test at `src/aeat/domain/user_profile/test_lazy_boundary.py` mirroring
-the application-side probe the parent campaign landed at
-`src/aeat/application/user_profile/test_lazy_boundary.py`. The probe
+test  mirroring
+the application-side probe the parent campaign landed . The probe
 runs in a fresh subprocess (interpreters can be polluted by warm-cache
 imports from other test modules in the same session); the assertion
 is identical in shape: importing `aeat.domain.user_profile` places

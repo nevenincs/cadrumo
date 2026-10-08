@@ -34,7 +34,10 @@ from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from sphinx.application import Sphinx
+    from sphinx.config import Config
 
     from .cli_tree import CliTree
     from .sequences.golden_store import GoldenFrame, SequenceGolden
@@ -76,6 +79,19 @@ _JSON_HIGHLIGHT_MAX_BYTES: int = 16_384
 
 #: Continuation-line indent, in spaces, for wrapped command lines.
 _CONTINUATION_INDENT: str = "  "
+
+
+def _sequence_config_roots(config: Config) -> tuple[Path | None, Path | None, Path | None]:
+    """Sequence config roots."""
+    from pathlib import Path
+
+    goldens_root = getattr(config, "cadrumo_sequences_goldens_root", None)
+    seeds_root = getattr(config, "cadrumo_sequences_seeds_root", None)
+    contracts_root = getattr(config, "cadrumo_sequences_contracts_root", None)
+    goldens_root = Path(goldens_root) if goldens_root else None
+    seeds_root = Path(seeds_root) if seeds_root else None
+    contracts_root = Path(contracts_root) if contracts_root else None
+    return goldens_root, seeds_root, contracts_root
 
 
 def parse_shells(raw: str | None) -> list[str]:
@@ -490,12 +506,7 @@ class CliSequenceDirective(Directive):
         # The golden and seed roots default to the committed ``docs/_sequences``
         # tree; a Sphinx config value (tests set it to a fixture directory)
         # overrides each so the directive is buildable in isolation.
-        goldens_root = getattr(env.config, "cadrumo_sequences_goldens_root", None)
-        seeds_root = getattr(env.config, "cadrumo_sequences_seeds_root", None)
-        contracts_root = getattr(env.config, "cadrumo_sequences_contracts_root", None)
-        goldens_root = Path(goldens_root) if goldens_root else None
-        seeds_root = Path(seeds_root) if seeds_root else None
-        contracts_root = Path(contracts_root) if contracts_root else None
+        goldens_root, seeds_root, contracts_root = _sequence_config_roots(env.config)
         body = "\n".join(self.content)
 
         try:

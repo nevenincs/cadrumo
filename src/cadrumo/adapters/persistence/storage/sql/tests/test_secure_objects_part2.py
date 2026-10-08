@@ -29,6 +29,7 @@ from ._secure_objects_support import (
     _ephemeral_secure_repo_at,
     _seed_under_key,
 )
+from .raw_key_writer import save_with_raw_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -508,7 +509,8 @@ def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path
     with _ephemeral_secure_repo(tmp_path, "revision-raw-key.db") as (db_path, _, repo):
         raw_key = bytes(range(32))
         payload = b"raw-key-revision-payload"
-        repo.save_with_raw_key(
+        save_with_raw_key(
+            repo,
             namespace="cadrumo.revision.raw",
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,

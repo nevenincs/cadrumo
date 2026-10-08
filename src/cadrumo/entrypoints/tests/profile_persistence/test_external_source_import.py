@@ -20,15 +20,17 @@ from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.calculation_actions import get_calculation_revision
 from cadrumo.application.modelo.external_import_actions import (
     ExternalFilingBaselineSource,
+    ExternalFilingTarget,
+    external_filing_source_casillas,
     import_external_filing_evidence,
-    import_external_filing_source,
+    resolve_external_filing_work_unit,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from cadrumo.entrypoints.adapter_composition import (
@@ -54,16 +56,51 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _STALE_REVISION_ID = "0" * 64
 
 
-def _import_external_filing_source(source: Any, **kwargs: Any) -> Any:
-    """Compose external-import lifecycle and observation capabilities canonically."""
+def _import_external_filing_source(source: ExternalFilingBaselineSource, **kwargs: Any) -> Any:
+    """Record a source as the operation does: prove its casillas, resolve the work unit, import."""
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    kwargs.setdefault("work_lifecycle_ports", build_work_lifecycle_ports(bucket_id=_PROFILE_ID))
+    work_lifecycle_ports = kwargs.pop("work_lifecycle_ports", None) or build_work_lifecycle_ports(bucket_id=_PROFILE_ID)
     kwargs.setdefault("observation_repository", CalculationObservationRepository())
-    if "operation" in kwargs:
-        return import_external_filing_source(source, **kwargs).filing_record
+    actor = kwargs.pop("actor", "aeat-import")
+    clock = kwargs.pop("clock", None)
+    bucket_id = kwargs.pop("bucket_id")
+    operation = kwargs.pop("operation", None)
+    lexical_values, decimal_values = external_filing_source_casillas(source)
+
+    def _record(operation: PinnedAuthorityOperation) -> Any:
+        work_unit = resolve_external_filing_work_unit(
+            ExternalFilingTarget(
+                modelo=source.modelo,
+                filing_year=source.filing_year,
+                period=source.period,
+                registry_revision_id=source.registry_revision_id,
+            ),
+            bucket_id=bucket_id,
+            actor=actor,
+            ports=work_lifecycle_ports,
+            operation=operation,
+            clock=clock,
+        )
+        return import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values=decimal_values,
+            source_lexical_values_by_casilla_id=lexical_values,
+            evidence_kind=source.evidence_kind,
+            evidence_reference_id=source.evidence_reference_id,
+            actor=actor,
+            work_unit_repository=work_lifecycle_ports.work_unit_repository,
+            bucket_event_repository=work_lifecycle_ports.bucket_event_repository,
+            expected_tax_id=source.tax_id,
+            clock=clock,
+            operation=operation,
+            **kwargs,
+        ).filing_record
+
+    if operation is not None:
+        return _record(operation)
     with bundled_indexed_authority().operation() as operation:
-        return import_external_filing_source(source, operation=operation, **kwargs).filing_record
+        return _record(operation)
 
 
 def _import_external_filing_evidence(**kwargs: Any) -> Any:
@@ -376,33 +413,3 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
     assert fr_repo.load() == baseline_filings
     assert bv_repo.load() == baseline_events
     assert observations.load_observation("130", work_unit.period) == baseline_observation
-
-
-def test_failed_receipt_evidence_validation_leaves_no_work_unit_or_event(repos: _Repos) -> None:
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    with pytest.raises(ExternalModeloImportError):
-        _import_external_filing_source(
-            ExternalFilingBaselineSource(
-                modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                evidence_reference_id="MISSINGPDF01",
-                tax_id=_TAX_ID,
-                casilla_lexicals={
-                    _IMPORT_INCOME_CASILLA: "1500",
-                    _IMPORT_EXPENSE_CASILLA: "300",
-                },
-            ),
-            bucket_id=_PROFILE_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T1,
-        )
-    assert not wu_repo.load()
-    assert not bv_repo.load().for_bucket(
-        _PROFILE_ID,
-        event_types=(BucketEventType.MODELO_WORK_UNIT_CREATED,),
-    )

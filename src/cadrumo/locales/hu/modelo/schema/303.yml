@@ -84,13 +84,13 @@ modelo:
           dr303-155:
             label: Keletkezett ÁFA, általános rendszer új kulcs, 2. sáv - adóösszeg
           dr303-156:
-            label: Egyenértékűségi felár 0,5% - adóalap
+            label: 1,75%-os egyenértékűségi felár - adóalap
           dr303-157:
-            label: Egyenértékűségi felár 0,5% - kulcs százaléka
+            label: 1,75%-os egyenértékűségi felár - Kulcs (%)
           dr303-158:
-            label: Egyenértékűségi felár 0,5% - adóösszeg
+            label: 1,75%-os egyenértékűségi felár - adóösszeg
           dr303-16:
-            label: Egyenértékűségi felár 1,0% - adóalap
+            label: Egyenértékűségi felár - adóalap
           dr303-165:
             label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap
           dr303-166:
@@ -103,11 +103,11 @@ modelo:
           dr303-169:
             label: Új egyenértékűségi felárkulcs 2024-től - kulcs százaléka
           dr303-17:
-            label: Egyenértékűségi felár 1,0% - kulcs százaléka
+            label: Egyenértékűségi felár - Kulcs (%)
           dr303-170:
             label: Új egyenértékűségi felárkulcs 2024-től - adóösszeg
           dr303-18:
-            label: Egyenértékűségi felár 1,0% - adóösszeg
+            label: Egyenértékűségi felár - adóösszeg
           dr303-19:
             label: Egyenértékűségi felár 1,4% - adóalap
           dr303-20:
@@ -212,19 +212,19 @@ modelo:
             label: Kiegészítő információ - a LIVA 75. cikke szerint keletkezett pénzforgalmi
               szemléletű teljesítések ÁFA összege
           dr303-64:
-            help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+            help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
               véve.
           dr303-65:
             label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
           dr303-66:
-            help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+            help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
               véve.
           dr303-68:
             label: Közös adózás éves korrekciós eredménye
           dr303-70:
             label: Ugyanazon év és időszak korábbi önbevallásaiból fizetendő összegek
           dr303-71:
-            help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+            help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
               véve.
           dr303-74:
             label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések adóalapja
@@ -379,315 +379,598 @@ modelo:
           iva-regularizacion-inversiones:
             label: Beruházási javak korrekciója (LIVA 107-110. cikk)
           iva-resultado-autoliquidacion:
-            help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+            help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
               véve.
           iva-resultado-regimen-general:
             label: Általános rendszer eredménye
           m303-deducciones-sector-1-domestic-current-base:
-            help: A 303-es nyomtatvány 700. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 700. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, belföldi
               ügyletek - Forgóeszközök és szolgáltatások - Adóalap
           m303-deducciones-sector-1-domestic-current-cuota:
-            help: A 303-es nyomtatvány 701. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 701. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, belföldi
               ügyletek - Forgóeszközök és szolgáltatások - Levonható adóösszeg
           m303-deducciones-sector-1-domestic-investment-base:
-            help: A 303-es nyomtatvány 702. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 702. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, belföldi
               ügyletek - Beruházási javak - Adóalap
           m303-deducciones-sector-1-domestic-investment-cuota:
-            help: A 303-es nyomtatvány 703. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 703. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, belföldi
               ügyletek - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-1-import-current-base:
-            help: A 303-es nyomtatvány 704. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 704. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, import
               - Forgóeszközök - Adóalap
           m303-deducciones-sector-1-import-current-cuota:
-            help: A 303-es nyomtatvány 705. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 705. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, import
               - Forgóeszközök - Levonható adóösszeg
           m303-deducciones-sector-1-import-investment-base:
-            help: A 303-es nyomtatvány 706. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 706. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, import
               - Beruházási javak - Adóalap
           m303-deducciones-sector-1-import-investment-cuota:
-            help: A 303-es nyomtatvány 707. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 707. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, import
               - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-1-intra-eu-current-base:
-            help: A 303-es nyomtatvány 708. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 708. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, Közösségen
               belüli beszerzések - Forgóeszközök és szolgáltatások - Adóalap
           m303-deducciones-sector-1-intra-eu-current-cuota:
-            help: A 303-es nyomtatvány 709. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 709. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, Közösségen
               belüli beszerzések - Forgóeszközök és szolgáltatások - Levonható adóösszeg
           m303-deducciones-sector-1-intra-eu-investment-base:
-            help: A 303-es nyomtatvány 710. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 710. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, Közösségen
               belüli beszerzések - Beruházási javak - Adóalap
           m303-deducciones-sector-1-intra-eu-investment-cuota:
-            help: A 303-es nyomtatvány 711. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 711. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, Közösségen
               belüli beszerzések - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-1-investment-regularisation:
-            help: A 303-es nyomtatvány 716. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 716. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Beruházási javak
               korrekciója
           m303-deducciones-sector-1-reagp-base:
-            help: A 303-es nyomtatvány 712. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 712. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Kompenzáció, mezőgazdasági,
               állattenyésztési és halászati különszabályozás - Adóalap
           m303-deducciones-sector-1-reagp-cuota:
-            help: A 303-es nyomtatvány 713. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 713. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Kompenzáció, mezőgazdasági,
               állattenyésztési és halászati különszabályozás - Levonható adóösszeg
           m303-deducciones-sector-1-rectification-base:
-            help: A 303-es nyomtatvány 714. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 714. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonások helyesbítése
               - Adóalap
           m303-deducciones-sector-1-rectification-cuota:
-            help: A 303-es nyomtatvány 715. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 715. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonások helyesbítése
               - Levonható adóösszeg
           m303-deducciones-sector-1-total:
-            help: A 303-es nyomtatvány 717. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 717. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 1 - Levonások összege
           m303-deducciones-sector-2-domestic-current-base:
-            help: A 303-es nyomtatvány 718. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 718. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, belföldi
               ügyletek - Forgóeszközök és szolgáltatások - Adóalap
           m303-deducciones-sector-2-domestic-current-cuota:
-            help: A 303-es nyomtatvány 719. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 719. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, belföldi
               ügyletek - Forgóeszközök és szolgáltatások - Levonható adóösszeg
           m303-deducciones-sector-2-domestic-investment-base:
-            help: A 303-es nyomtatvány 720. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 720. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, belföldi
               ügyletek - Beruházási javak - Adóalap
           m303-deducciones-sector-2-domestic-investment-cuota:
-            help: A 303-es nyomtatvány 721. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 721. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, belföldi
               ügyletek - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-2-import-current-base:
-            help: A 303-es nyomtatvány 722. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 722. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, import
               - Forgóeszközök - Adóalap
           m303-deducciones-sector-2-import-current-cuota:
-            help: A 303-es nyomtatvány 723. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 723. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, import
               - Forgóeszközök - Levonható adóösszeg
           m303-deducciones-sector-2-import-investment-base:
-            help: A 303-es nyomtatvány 724. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 724. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, import
               - Beruházási javak - Adóalap
           m303-deducciones-sector-2-import-investment-cuota:
-            help: A 303-es nyomtatvány 725. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 725. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, import
               - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-2-intra-eu-current-base:
-            help: A 303-es nyomtatvány 726. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 726. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, Közösségen
               belüli beszerzések - Forgóeszközök és szolgáltatások - Adóalap
           m303-deducciones-sector-2-intra-eu-current-cuota:
-            help: A 303-es nyomtatvány 727. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 727. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, Közösségen
               belüli beszerzések - Forgóeszközök és szolgáltatások - Levonható adóösszeg
           m303-deducciones-sector-2-intra-eu-investment-base:
-            help: A 303-es nyomtatvány 728. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 728. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, Közösségen
               belüli beszerzések - Beruházási javak - Adóalap
           m303-deducciones-sector-2-intra-eu-investment-cuota:
-            help: A 303-es nyomtatvány 729. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 729. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, Közösségen
               belüli beszerzések - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-2-investment-regularisation:
-            help: A 303-es nyomtatvány 734. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 734. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Beruházási javak
               korrekciója
           m303-deducciones-sector-2-reagp-base:
-            help: A 303-es nyomtatvány 730. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 730. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Kompenzáció, mezőgazdasági,
               állattenyésztési és halászati különszabályozás - Adóalap
           m303-deducciones-sector-2-reagp-cuota:
-            help: A 303-es nyomtatvány 731. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 731. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Kompenzáció, mezőgazdasági,
               állattenyésztési és halászati különszabályozás - Levonható adóösszeg
           m303-deducciones-sector-2-rectification-base:
-            help: A 303-es nyomtatvány 732. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 732. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonások helyesbítése
               - Adóalap
           m303-deducciones-sector-2-rectification-cuota:
-            help: A 303-es nyomtatvány 733. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 733. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonások helyesbítése
               - Levonható adóösszeg
           m303-deducciones-sector-2-total:
-            help: A 303-es nyomtatvány 735. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 735. rovata, 2022. adóév.
             label: 13. Elkülönített levonási szabályozások - 2 - Levonások összege
           m303-exonerado-390-107:
-            help: A 303-es nyomtatvány 107. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 107. rovata, 2022. adóév.
             label: 'Területi adózási információ: közös terület'
           m303-exonerado-390-125:
-            help: A 303-es nyomtatvány 125. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 125. rovata, 2022. adóév.
             label: Fordított adózás alá tartozó ügyletek
           m303-exonerado-390-126:
-            help: A 303-es nyomtatvány 126. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 126. rovata, 2022. adóév.
             label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
               különszabályozás alá tartozó ügyletek
           m303-exonerado-390-127:
-            help: A 303-es nyomtatvány 127. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 127. rovata, 2022. adóév.
             label: OSS. Az egyablakos különszabályozás alá tartozó adóköteles ügyletek
           m303-exonerado-390-128:
-            help: A 303-es nyomtatvány 128. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 128. rovata, 2022. adóév.
             label: A LIVA 78. és 79. cikke szerint értékelt csoporton belüli ügyletek
           m303-exonerado-390-79:
-            help: A 303-es nyomtatvány 79. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 79. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Nem szokásos ingatlanértékesítés,
               pénzügyi és befektetési arany ügyletek
           m303-exonerado-390-80:
-            help: A 303-es nyomtatvány 80. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 80. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Általános rendszerű ügyletek
           m303-exonerado-390-81:
-            help: A 303-es nyomtatvány 81. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 81. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - A LIVA 75. cikke szerinti pénzforgalmi
               különszabályozás ügyletei
           m303-exonerado-390-83:
-            help: A 303-es nyomtatvány 83. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 83. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Levonási jogot nem keletkeztető
               adómentes ügyletek
           m303-exonerado-390-84:
-            help: A 303-es nyomtatvány 84. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 84. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - A teljesítési hely szabályai szerint
               nem adóztatandó ügyletek (a 126. rovat kivételével)
           m303-exonerado-390-86:
-            help: A 303-es nyomtatvány 86. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 86. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Egyszerűsített szabályozás szerinti
               ügyletek
           m303-exonerado-390-88:
-            help: A 303-es nyomtatvány 88. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 88. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Teljes ügyleti forgalom
           m303-exonerado-390-89:
-            help: A 303-es nyomtatvány 89. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 89. rovata, 2022. adóév.
             label: 'Területi adózási információ: Álava'
           m303-exonerado-390-90:
-            help: A 303-es nyomtatvány 90. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 90. rovata, 2022. adóév.
             label: 'Területi adózási információ: Gipuzkoa'
           m303-exonerado-390-91:
-            help: A 303-es nyomtatvány 91. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 91. rovata, 2022. adóév.
             label: 'Területi adózási információ: Bizkaia'
           m303-exonerado-390-92:
-            help: A 303-es nyomtatvány 92. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 92. rovata, 2022. adóév.
             label: 'Területi adózási információ: Navarra'
           m303-exonerado-390-93:
-            help: A 303-es nyomtatvány 93. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 93. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Közösségen belüli termékértékesítés
               és szolgáltatásnyújtás
           m303-exonerado-390-94:
-            help: A 303-es nyomtatvány 94. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 94. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Export és egyéb, levonásra jogosító
               adómentes ügyletek
           m303-exonerado-390-95:
-            help: A 303-es nyomtatvány 95. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 95. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Mezőgazdasági, állattenyésztési
               és halászati különszabályozás ügyletei
           m303-exonerado-390-96:
-            help: A 303-es nyomtatvány 96. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 96. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Az egyenértékű felár különszabályozása
               alá tartozó adóalanyok ügyletei
           m303-exonerado-390-97:
-            help: A 303-es nyomtatvány 97. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 97. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Használt cikkek, műalkotások, régiségek
               és gyűjteménydarabok különszabályozásának ügyletei
           m303-exonerado-390-98:
-            help: A 303-es nyomtatvány 98. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 98. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Utazási irodák különszabályozásának
               ügyletei
           m303-exonerado-390-99:
-            help: A 303-es nyomtatvány 99. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 99. rovata, 2022. adóév.
             label: Az adóévben végzett ügyletek - Beruházási javak értékesítése
           m303-prorrata-actividad-fila-1-cnae:
-            help: A 303-es nyomtatvány 500. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 500. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 1 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-1-operaciones-con-derecho:
-            help: A 303-es nyomtatvány 502. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 502. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 1 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-1-operaciones-total:
-            help: A 303-es nyomtatvány 501. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 501. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 1 - Ügyletek összege
           m303-prorrata-actividad-fila-1-porcentaje:
-            help: A 303-es nyomtatvány 504. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 504. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 1 - Arányosítási %
           m303-prorrata-actividad-fila-1-tipo:
-            help: A 303-es nyomtatvány 503. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 503. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 1 - Arányosítás típusa
           m303-prorrata-actividad-fila-2-cnae:
-            help: A 303-es nyomtatvány 505. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 505. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 2 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-2-operaciones-con-derecho:
-            help: A 303-es nyomtatvány 507. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 507. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 2 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-2-operaciones-total:
-            help: A 303-es nyomtatvány 506. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 506. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 2 - Ügyletek összege
           m303-prorrata-actividad-fila-2-porcentaje:
-            help: A 303-es nyomtatvány 509. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 509. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 2 - Arányosítási %
           m303-prorrata-actividad-fila-2-tipo:
-            help: A 303-es nyomtatvány 508. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 508. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 2 - Arányosítás típusa
           m303-prorrata-actividad-fila-3-cnae:
-            help: A 303-es nyomtatvány 510. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 510. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 3 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-3-operaciones-con-derecho:
-            help: A 303-es nyomtatvány 512. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 512. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 3 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-3-operaciones-total:
-            help: A 303-es nyomtatvány 511. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 511. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 3 - Ügyletek összege
           m303-prorrata-actividad-fila-3-porcentaje:
-            help: A 303-es nyomtatvány 514. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 514. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 3 - Arányosítási %
           m303-prorrata-actividad-fila-3-tipo:
-            help: A 303-es nyomtatvány 513. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 513. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 3 - Arányosítás típusa
           m303-prorrata-actividad-fila-4-cnae:
-            help: A 303-es nyomtatvány 515. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 515. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 4 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-4-operaciones-con-derecho:
-            help: A 303-es nyomtatvány 517. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 517. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 4 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-4-operaciones-total:
-            help: A 303-es nyomtatvány 516. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 516. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 4 - Ügyletek összege
           m303-prorrata-actividad-fila-4-porcentaje:
-            help: A 303-es nyomtatvány 519. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 519. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 4 - Arányosítási %
           m303-prorrata-actividad-fila-4-tipo:
-            help: A 303-es nyomtatvány 518. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 518. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 4 - Arányosítás típusa
           m303-prorrata-actividad-fila-5-cnae:
-            help: A 303-es nyomtatvány 520. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 520. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 5 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-5-operaciones-con-derecho:
-            help: A 303-es nyomtatvány 522. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 522. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 5 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-5-operaciones-total:
-            help: A 303-es nyomtatvány 521. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 521. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 5 - Ügyletek összege
           m303-prorrata-actividad-fila-5-porcentaje:
-            help: A 303-es nyomtatvány 524. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 524. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 5 - Arányosítási %
           m303-prorrata-actividad-fila-5-tipo:
-            help: A 303-es nyomtatvány 523. rovata, 2022. adóév.
+            help: A Modelo 303 nyomtatvány 523. rovata, 2022. adóév.
             label: Arányosítási kulcsok - 5 - Arányosítás típusa
       construct:
         modelo-303-iva-autoliquidacion:
           field:
-            title: '303-es nyomtatvány: IVA önadózási bevallás'
+            title: 'Modelo 303 nyomtatvány: IVA önadózási bevallás'
+        modelo-303-printed-disclosure-arithmetic-2026-hasta-01-y-1t:
+          field:
+            title: 'Modelo 303: éves forgalom, 2026. január és első negyedév'
+        modelo-303-printed-disclosure-arithmetic-2026-y-siguientes:
+          field:
+            title: 'Modelo 303: éves forgalom, 2026. februártól és a második negyedévtől
+              alkalmazandó nyomtatvány'
       field:
         official_name: Modelo 303. Hozzáadottérték-adó. Önbevallás.
         title: IVA. Önbevallás (negyedéves)
+      form:
+        authored:
+          administracion-copy:
+            heading: Az adóhatóság vagy a pénzintézet példánya
+          annual:
+            activity-1:
+              heading: Főtevékenység
+            activity-2:
+              heading: 1. egyéb tevékenység
+            activity-3:
+              heading: 2. egyéb tevékenység
+            activity-4:
+              heading: 3. egyéb tevékenység
+            activity-5:
+              heading: 4. egyéb tevékenység
+            activity-6:
+              heading: 5. egyéb tevékenység
+            third-parties:
+              heading: Harmadik felekkel folytatott ügyletek
+            third-parties-declaration:
+              heading: D · Harmadik felekkel folytatott ügyletek éves bevallásának
+                kötelezettsége
+          annual-clave-2022:
+            heading: B · Tevékenységkód
+          banco:
+            heading: Bank neve
+          bic:
+            heading: SWIFT-BIC kód
+          ciudad-banco:
+            heading: Város
+          complementaria:
+            heading: Kiegészítő bevallás (5)
+          complementaria-2022:
+            heading: Kiegészítő bevallás (8)
+          concurso:
+            heading: Fizetésképtelenség megállapítása ebben az időszakban
+          conjunta:
+            heading: Közös önadózás
+          criterio-caja:
+            heading: Pénzforgalmi elszámolás
+          cuenta-bancaria:
+            heading: Bankszámla befizetéshez vagy visszatérítéshez
+          deducible:
+            heading: Levonható áfa és az általános rendszer eredménye
+          destinatario-caja:
+            heading: Pénzforgalmi elszámolású ügyletek címzettje
+          devengado:
+            heading: Fizetendő áfa
+          devengo:
+            heading: Adóidőszak (2)
+          direccion-banco:
+            heading: Bank címe
+          exonerado:
+            heading: Mentes a 390-es éves összesítő bevallás alól
+          fecha-concurso:
+            heading: Fizetésképtelenségi végzés dátuma
+          foral:
+            heading: Kizárólag forális adózás
+          gasolinas:
+            heading: Üzemanyag-értékesítési adóelőlegek levonására való jogosultság
+          grupo-1:
+            heading: 'Levonható áfa: 1. csoport'
+          grupo-2:
+            heading: 'Levonható áfa: 2. csoport'
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Azonosítás (1)
+          importacion-corriente:
+            heading: 'Import: folyó termékek'
+          importacion-inversion:
+            heading: 'Import: beruházási javak'
+          interior-corriente:
+            heading: 'Belföldi ügyletek: folyó termékek és szolgáltatások'
+          interior-inversion:
+            heading: 'Belföldi ügyletek: beruházási javak'
+          intra-corriente:
+            heading: 'Közösségen belüli beszerzések: folyó termékek és szolgáltatások'
+          intra-inversion:
+            heading: 'Közösségen belüli beszerzések: beruházási javak'
+          justificante:
+            heading: Korábbi bevallás igazolási száma
+          motivo-discrepancia:
+            heading: Eltérés a hatósági értelmezéstől
+          motivo-rectificacion:
+            heading: Helyesbítések
+          nif:
+            heading: Adóazonosító szám
+          'no':
+            heading: Nem
+          nombre:
+            heading: Teljes név vagy cégnév
+          opcion-prorrata:
+            heading: Különleges levonási hányad választása
+          operaciones-anuales:
+            heading: Az év során végzett ügyletek
+          page-1:
+            heading: Azonosítás és általános rendszer
+          page-2:
+            heading: Egyszerűsített rendszer
+          page-3:
+            heading: Kiegészítő adatok és eredmény
+          page-4:
+            heading: Éves adatok a 390-es bevallás alól menteseknek
+          page-5:
+            heading: Levonási hányad és elkülönített levonások
+          page-6:
+            heading: Befizetés, visszatérítés és bankszámla
+          pais-banco:
+            heading: Országkód
+          reagp:
+            heading: Mezőgazdasági, állattenyésztési és halászati rendszer kompenzációja
+          rectificacion-devolucion:
+            heading: Helyesbítés miatti visszatérítés (9)
+          rectificaciones-deducciones:
+            heading: Levonások helyesbítése
+          rectificativa:
+            heading: Helyesbítés (5)
+          redeme:
+            heading: Havi visszatérítési nyilvántartás
+          regimen:
+            heading: Adózási rendszer
+          resultado:
+            heading: Eredmény
+          revocacion-prorrata:
+            heading: Különleges levonási hányad választásának visszavonása
+          rg-rs:
+            heading: Általános és egyszerűsített rendszer
+          rs:
+            actividad-a1:
+              heading: A1 tevékenység
+            actividad-a2:
+              heading: A2 tevékenység
+            actividad-b1:
+              heading: B1 tevékenység
+            actividad-b2:
+              heading: B2 tevékenység
+            activity-code:
+              heading: Tevékenységkód
+            cuota-anual-derivada-regimen-simplificado:
+              heading: Egyszerűsített rendszer éves adója
+            cuota-devengada:
+              heading: Keletkezett adó
+            cuota-devengada-operaciones-corrientes:
+              heading: Folyó ügyletek fizetendő áfája
+            cuota-minima:
+              heading: Minimumadó
+            cuota-soportada-operaciones-corrientes:
+              heading: Folyó ügyletek előzetesen felszámított áfája
+            cuotas-soportadas-operaciones-corrientes:
+              heading: Folyó ügyletek előzetesen felszámított áfája
+            devolucion-cuotas-soportadas-otros-paises:
+              heading: Külföldön felszámított áfa visszatérítése
+            iae-epigrafe:
+              heading: IAE tevékenységi tétel
+            indice-corrector-actividad-temporada:
+              heading: Idényjellegű tevékenység korrekciós együtthatója · 1., 2. és
+                3. negyedév
+            indice-corrector-actividades-temporada:
+              heading: Idényjellegű tevékenység korrekciós együtthatója · 4. negyedév
+            indice-cuota:
+              heading: Adóegyüttható
+            ingreso-cuenta:
+              heading: Adóelőleg
+            modulo-1-importe:
+              heading: 1. modul · Összeg
+            modulo-1-unidades:
+              heading: 1. modul · Egységek száma
+            modulo-2-importe:
+              heading: 2. modul · Összeg
+            modulo-2-unidades:
+              heading: 2. modul · Egységek száma
+            modulo-3-importe:
+              heading: 3. modul · Összeg
+            modulo-3-unidades:
+              heading: 3. modul · Egységek száma
+            modulo-4-importe:
+              heading: 4. modul · Összeg
+            modulo-4-unidades:
+              heading: 4. modul · Egységek száma
+            modulo-5-importe:
+              heading: 5. modul · Összeg
+            modulo-5-unidades:
+              heading: 5. modul · Egységek száma
+            modulo-6-importe:
+              heading: 6. modul · Összeg
+            modulo-6-unidades:
+              heading: 6. modul · Egységek száma
+            modulo-7-importe:
+              heading: 7. modul · Összeg
+            modulo-7-unidades:
+              heading: 7. modul · Egységek száma
+            porcentaje-cuota-minima:
+              heading: Minimumadó százaléka
+            porcentaje-ingreso-cuenta:
+              heading: Adóelőleg százaléka
+            reducciones:
+              heading: Csökkentések
+            resultado-cuarto-trimestre:
+              heading: Eredmény · 4. negyedév
+            volumen-ingresos:
+              heading: Bevétel
+          rs-anticipos:
+            heading: 'Adóelőlegek: 1., 2. és 3. negyedév'
+          rs-anual:
+            heading: 'Éves adó: 4. negyedév'
+          rs-deducible:
+            heading: Levonható áfa
+          rs-devengado:
+            heading: Fizetendő áfa
+          rs-resultado:
+            heading: Egyszerűsített rendszer eredménye
+          si:
+            heading: Igen
+          sii:
+            heading: Önkéntes SII-részvétel
+          sin-marca:
+            heading: Nincs megjelölve
+          solo-rg:
+            heading: Csak általános rendszer
+          solo-rs:
+            heading: Csak egyszerűsített rendszer
+          territorio:
+            heading: Adózás területenként
+          tipo-concurso:
+            heading: Fizetésképtelenség előtti vagy utáni bevallás
+          total-devengado:
+            heading: Összes fizetendő áfa
+          volumen:
+            heading: Nullától eltérő éves forgalom
+        row:
+          '1':
+            heading: 1. sor
+          '2':
+            heading: 2. sor
+          '3':
+            heading: 3. sor
+          '4':
+            heading: 4. sor
+          '5':
+            heading: 5. sor
+          adquisiciones-intracomunitarias-de-bienes-368e6a:
+            heading: Közösségen belüli termék- és szolgáltatásbeszerzések
+          en-adquisiciones-intracomunitarias-de-bie-13bc2d:
+            heading: Beruházási javak Közösségen belüli beszerzésénél
+          en-adquisiciones-intracomunitarias-de-bie-1944dc:
+            heading: Forgóeszközök és szolgáltatások Közösségen belüli beszerzésénél
+          importes-de-las-entregas-de-bienes-y-pres-c77f8b:
+            heading: Pénzforgalmi elszámolású ügyletek az általános szabály szerinti
+              teljesítéssel (LIVA 75. cikk)
+          modificacion-bases-y-cuotas:
+            heading: Adóalapok és adóösszegek módosítása
+          modificaciones-bases-y-cuotas-del-recargo-b27892:
+            heading: Kiegyenlítő pótlék alapjainak és összegeinek módosítása
+          otras-operaciones-con-inversion-del-sujet-951686:
+            heading: Egyéb fordított adózású ügyletek (a Közösségen belüli beszerzések
+              kivételével)
+          por-cuotas-soportadas-en-las-importacione-66dc6d:
+            heading: Beruházási javak importjának előzetesen felszámított adója
+          por-cuotas-soportadas-en-las-importacione-f35018:
+            heading: Forgóeszközök importjának előzetesen felszámított adója
+          por-cuotas-soportadas-en-operaciones-inte-08f33c:
+            heading: Belföldi folyó ügyletek előzetesen felszámított adója
+          por-cuotas-soportadas-en-operaciones-inte-5598b4:
+            heading: Belföldi beruházási ügyletek előzetesen felszámított adója
+          recargo-equivalencia:
+            heading: Kiegyenlítő pótlék
+          rectificacion-de-deducciones:
+            heading: Levonások helyesbítése
+          regimen-general:
+            heading: Általános szabályok
+        section:
+          informacion-adicional:
+            heading: Kiegészítő adatok
+          prorratas:
+            heading: Arányosítás
       revision:
         '2022':
           casilla:
@@ -749,6 +1032,9 @@ modelo:
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, adóév 2025
+        2026-hasta-01-y-1t:
+          field:
+            label: Modelo 303, 2026-os adóév, január és első negyedév
         2026-y-siguientes:
           casilla:
             '01':
@@ -835,13 +1121,13 @@ modelo:
               help: '155. mező: keletkezett ÁFA összege az általános rendszer új kulcsának
                 2. sávjában.'
             '156':
-              help: '156. mező: a 0,5%-os egyenértékűségi felár adóalapja.'
+              help: '156. mező: az 1,75%-os egyenértékűségi felár adóalapja.'
             '157':
-              help: '157. mező: a 0,5%-os egyenértékűségi felár kulcsának százaléka.'
+              help: '157. mező: az egyenértékűségi felár 1,75%-os kulcsa.'
             '158':
-              help: '158. mező: a 0,5%-os egyenértékűségi felár összege.'
+              help: '158. mező: az 1,75%-os egyenértékűségi felár összege.'
             '16':
-              help: '16. mező: az 1,0%-os egyenértékűségi felár adóalapja.'
+              help: '16. mező: az egyenértékűségi felár adóalapja.'
             '165':
               help: '165. mező: keletkezett ÁFA adóalapja az általános rendszer 2024-től
                 alkalmazandó 2%-os kulcsán.'
@@ -858,11 +1144,11 @@ modelo:
               help: '169. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs
                 százaléka.'
             '17':
-              help: '17. mező: az 1,0%-os egyenértékűségi felár kulcsának százaléka.'
+              help: '17. mező: az egyenértékűségi felár százalékos kulcsa.'
             '170':
               help: '170. mező: a 2024-től alkalmazandó új egyenértékűségi felár összege.'
             '18':
-              help: '18. mező: az 1,0%-os egyenértékűségi felár összege.'
+              help: '18. mező: az egyenértékűségi felár összege.'
             '19':
               help: '19. mező: az 1,4%-os egyenértékűségi felár adóalapja.'
             '20':

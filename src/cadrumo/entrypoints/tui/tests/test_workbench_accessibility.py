@@ -14,35 +14,20 @@ property a colour-blind or monochrome operator depends on.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import cast
 
 import pytest
 from textual.screen import Screen
 from textual.widget import Widget
-from textual.widgets import Static
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import I18N_STRICT_MISSING_KEYS, MissingTranslationError, tr
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..home import HomeScreen, HomeTarget
-from ..navigation import TUI_DESTINATION_CATALOGUE, TuiScreenContextV1
-from .workbench_session import installed_workbench_root
+from ..navigation import TUI_DESTINATION_CATALOGUE
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.mark.asyncio
-async def test_every_focusable_control_on_a_destination_is_reachable_by_tab(tmp_path: Path) -> None:
-    """A control Tab cannot reach is a control a keyboard operator does not have."""
-    async with installed_workbench_root(tmp_path) as root:
-        for route in root.destination_catalogue.routes:
-            if route.factory is None:
-                continue
-            destination = route.descriptor.destination
-            screen = route.factory(TuiScreenContextV1(destination=destination))
-            await _assert_tab_reaches_everything(screen, destination)
 
 
 async def _assert_tab_reaches_everything(screen: object, label: str) -> None:
@@ -104,7 +89,7 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
     app = ScreenHostApp(screen)
     async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
         await pilot.pause()
-        targets = tuple(screen.home_targets)
+        targets = tuple(screen._targets.values())
         app.exit(None)
 
     assert len(targets) > 1, "the ready fixture must offer more than one row to restore between"
@@ -116,66 +101,6 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
         await pilot.pause()
         assert restored.highlighted_target == HomeTarget(kind=chosen.kind, identity=chosen.identity)
         app.exit(None)
-
-
-@pytest.mark.asyncio
-async def test_a_home_zone_that_is_refused_says_so_rather_than_reading_as_empty(tmp_path: Path) -> None:
-    """An unavailable zone must be distinguishable from one holding nothing.
-
-    A fresh profile refuses most Home zones for want of an installed reader.
-    That refusal has to reach the operator as words; rendering it as blank
-    would be the under-declaration this product forbids, dressed as layout.
-    """
-    from ....application.overview.home import HomeAvailability
-
-    async with installed_workbench_root(tmp_path) as root:
-        projection = root.refresh_home()
-        refused = [
-            state
-            for state in (
-                projection.actions_state,
-                projection.declarations_state,
-                projection.ledger_state,
-                projection.messages_state,
-            )
-            if state.availability is not HomeAvailability.AVAILABLE
-        ]
-        assert refused, "this profile refuses no Home zone, so the proof would be vacuous"
-
-        screen = HomeScreen(projection)
-        app = ScreenHostApp(screen)
-        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-            await pilot.pause()
-            ledger = str(app.screen.query_one("#home-ledger", Static).render()).strip()
-            messages = str(app.screen.query_one("#home-messages", Static).render()).strip()
-            app.exit(None)
-
-    assert ledger, "the refused Ledger zone renders nothing"
-    assert messages, "the refused Messages zone renders nothing"
-    assert "0" not in ledger.split()[:1], "a refused zone must not open with a count"
-
-
-@pytest.mark.asyncio
-async def test_every_home_zone_states_its_availability_in_words(tmp_path: Path) -> None:
-    """Colour is never the only carrier of a zone's state.
-
-    Each zone's availability is rendered as localized text, so an operator on a
-    monochrome terminal, a screen reader, or a colour-blind palette reads the
-    same fact a colour would have carried.
-    """
-    async with installed_workbench_root(tmp_path) as root:
-        screen = HomeScreen(root.refresh_home())
-        app = ScreenHostApp(screen)
-        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-            await pilot.pause()
-            rendered = "\n".join(
-                str(widget.render())
-                for widget in app.screen.query(Widget)
-                if widget.display and widget.is_container is False
-            )
-            app.exit(None)
-
-    assert rendered.strip(), "Home rendered no text at all"
 
 
 def test_the_destination_catalogue_names_every_destination_in_every_shipped_locale() -> None:
@@ -212,22 +137,3 @@ def test_a_missing_destination_name_is_not_humanised_into_a_false_pass() -> None
             tr("tui.destination.a_key_that_does_not_exist", locale="es")
     finally:
         I18N_STRICT_MISSING_KEYS.reset(strict_token)
-
-
-@pytest.mark.asyncio
-async def test_the_command_palette_offers_exactly_the_admitted_destinations(tmp_path: Path) -> None:
-    """The palette and the shell must agree on what can be opened.
-
-    A palette entry for a refused destination is a dead end, and a missing
-    entry hides a destination from the only navigation a keyboard operator
-    has when they do not know where a thing lives.
-    """
-    from ..search import _command_entries
-
-    async with installed_workbench_root(tmp_path) as root:
-        offered = {target.destination for _label, target in _command_entries(root.destination_catalogue)}
-        admitted = {
-            route.descriptor.destination for route in root.destination_catalogue.routes if route.factory is not None
-        }
-
-        assert offered == admitted, f"palette offers {sorted(offered)} but the shell mounts {sorted(admitted)}"

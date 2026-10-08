@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:641291f902aed2d673305f94658c64d63aa4b5bcce4c6484cca90ee608c78e2c'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
-  - "[[2026-08-08-profile-requirement-grounding-plan]]"
   - "[[2026-08-09-profile-requirement-grounding-per-operation-axis-and-silent-defaults-audit]]"
 ---
 

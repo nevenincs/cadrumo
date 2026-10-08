@@ -36,26 +36,43 @@ def check() -> None:
     """Require consistent release markers and usable search indexes on both mounts."""
     releases: set[str] = set()
     for base in BASES:
-        for path in ("/", "/en/", "/es/", "/ca/", "/hu/"):
-            headers, _ = probe(base + path)
-            release = headers.get("x-cadrumo-docs-release")
-            if not release:
-                raise ValueError(f"Missing release identity: {base}{path}")
-            if headers.get("x-cadrumo-docs-delivery") != "static":
-                raise ValueError(f"Documentation is not on native static delivery: {base}{path}")
-            releases.add(release)
-            if path != "/":
-                for kind in ("index", "fragment"):
-                    _, payload = probe(base + f"/_health{path}{kind}", redirect_release=release)
-                    if not payload:
-                        raise ValueError(f"Empty public search payload: {base}{path}{kind}")
-        _, body = probe(base + "/en/pagefind/pagefind-entry.json")
-        entry = json.loads(body)
-        if not any(row.get("page_count", 0) > 0 for row in entry.get("languages", {}).values()):
-            raise ValueError(f"Search index is empty: {base}")
+        _check_mount(base, releases)
     if len(releases) != 1:
         raise ValueError("Documentation mounts serve inconsistent releases")
     print(f"Documentation health passed: {next(iter(releases))}")
+
+
+def _check_mount(base: str, releases: set[str]) -> None:
+    """Check mount.
+
+    Every language's entry page is probed, because the pages are per language.
+    The search index is probed once, at the apex: the site has one index and
+    every language's pages load it from there.
+    """
+    served = {_check_mount_path(base, path) for path in ("/", "/en/", "/es/", "/ca/", "/hu/")}
+    releases.update(served)
+    if len(served) != 1:
+        raise ValueError(f"Documentation paths serve inconsistent releases: {base}")
+    release = next(iter(served))
+    _, body = probe(base + "/pagefind/pagefind-entry.json")
+    entry = json.loads(body)
+    if not any(row.get("page_count", 0) > 0 for row in entry.get("languages", {}).values()):
+        raise ValueError(f"Search index is empty: {base}")
+    for kind in ("index", "fragment"):
+        _, payload = probe(base + f"/_health/{kind}", redirect_release=release)
+        if not payload:
+            raise ValueError(f"Empty public search payload: {base}/{kind}")
+
+
+def _check_mount_path(base: str, path: str) -> str:
+    """Check mount path and return the release it answered from."""
+    headers, _ = probe(base + path)
+    release = headers.get("x-cadrumo-docs-release")
+    if not release:
+        raise ValueError(f"Missing release identity: {base}{path}")
+    if headers.get("x-cadrumo-docs-delivery") != "static":
+        raise ValueError(f"Documentation is not on native static delivery: {base}{path}")
+    return release
 
 
 if __name__ == "__main__":

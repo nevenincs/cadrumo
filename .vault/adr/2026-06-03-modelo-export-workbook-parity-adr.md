@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-export-workbook-parity'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:a562b4cc97e5d1d549a737d42051bc10b83c85817dbc83877a2ba80569cac821'
+modified: '2026-10-07'
+body_hash: 'sha256:5b6784227589377fa9f99755fece77bcf14b784a83b3fedeab064cd46970732e'
 related:
   - "[[2026-06-03-modelo-export-evidence-parity-research]]"
   - "[[2026-06-03-modelo-export-evidence-parity-adr]]"
@@ -35,11 +35,11 @@ export-workbook UX and the parity gate that enforces it.
   builder) and materialised identically to offline xls and online Sheets. The
   transports differ only in how they write cells, never in what the workbook
   says.
-- **Live calculation engine, explicit boundaries.** The workbook must compute
-  live (spreadsheet formulas, already emitted as `SheetFormulaCell`), and the
-  operator must see, unambiguously labelled, where input (start) ends and the
-  filing result (final / resultado) is produced — an explicit anchor, not an
-  implicit tab order.
+- **Saved baselines and explicit scenario boundaries.** Selected-revision review
+  baselines contain saved canonical values. Templates or separately labeled
+  scenarios may use live spreadsheet formulas. Show where inputs start and the
+  result is presented with explicit anchors; external scenario edits are never
+  production calculation inputs. Amended under the 2026-10-05 outbound decision.
 - **Official-structure fidelity is a gate.** The registry is the authority
   (`CasillaDefinition.number` / `segmento` / `section`, the
   `CalculationCompletenessManifest` derived from the AEAT Diseño de Registros).
@@ -53,6 +53,8 @@ export-workbook UX and the parity gate that enforces it.
   `formula_cells`, `protected_ranges`, `cell_constraints`, `guide`, `metadata`)
   and the existing apply adapter; add formatting + start/final + evidence as new
   plan facets, not a parallel builder.
+
+Amendment 2026-10-05: the live-calculation consideration above applies to templates or separately labeled scenarios. Selected-revision review baselines carry saved values, with the scoped parity rule stated in Implementation. Neither online scenario edits nor review notes are product calculation inputs.
 
 ## Constraints
 
@@ -86,8 +88,12 @@ identical workbook offline and online.
 A parity gate validates every covered modelo's generated plan against the
 registry authority: the exported casilla set equals the completeness-manifest
 required set (numbering + segmento), section ordering follows the registry
-declaration order, every computed casilla carries a live formula, and the
-start/final anchors are present and correctly placed. Divergence fails the gate.
+declaration order, and the start/final anchors are present and correctly placed.
+For selected-revision review exports, computed baseline values are the saved
+canonical results, not live formulas. Formula parity applies only to separately
+labeled scenarios/template surfaces; scenarios are never ingested into product
+calculations. This scoped exception is authorized by the 2026-10-05 outbound
+review amendment and does not remove offline XLSX or shared formatting. Divergence fails the gate.
 Where an official published-workbook layout fixture exists, an additional
 structural-mirror assertion compares the generated grid shape to it.
 
@@ -95,6 +101,24 @@ The Evidencia surface (from the sibling evidence ADR) is rendered as a dedicated
 protected tab listing, per casilla, the bundled ledger contributors and manual
 fact basis with amounts and legal grounding. Offline and online exports share the
 plan, so both carry the evidence surface identically.
+
+### Human workbook transport controls (2026-10-06)
+
+The user's approved registry-workbook-compiler continuation explicitly requires removal of technical internals from human documents while retaining all financial inputs, calculations and references. Within that scope, a human workbook may omit an explicitly authored transport-control placement with a grounded reason. This is a workbook-only presentation exception to the displayed casilla-set rule above: it does not delete the casilla, its value, its export mapping or its ordinary application form projection. Registry placement coverage remains total and the filing export remains unchanged.
+
+Omission is limited to unnumbered working figures classified as transport controls, not computed internal financial intermediates or merely unplaced fields. The shared workbook builder must refuse omission of financial/bound fields, declared calculation/binding/page dependencies, generated sheet-formula references or recorded evidence. Both transports consume the same resulting plan. A source classification without evidence is not authority to infer omissions by field name, numeric position or regular expression. Verification must prove retained financial data and refusal paths, as well as absence of the technical controls from rendered workbook surfaces. Existing unclassified placements retain their previous behavior. This amendment records the user's requested scope and the bounded implementation contract, not complete inventory classification or completed delivery.
+
+### Administrative communication workbooks (2026-10-06)
+
+The approved all-modelo template scope includes registry communications that are not tax filings, such as Modelo 145. Shared workbook metadata preserves these administrative selectors in a separate strict typed frame; it must not substitute a quarterly, annual or ad-hoc filing period. Core filing-period validation remains unchanged. The existing wire coordinate fields and shared materializers are retained. Calendar filing pull must refuse administrative frames, including a forged matching-metadata verdict. This is presentation support, not a new filing capability, legal validity claim, or permission to ingest scenario edits. Tests cover distinct frame admission, coordinate round trips, year binding, unchanged filing refusals and populated form references.
+
+### Fictional historical template previews (2026-10-06)
+
+The approved all-modelo/all-revision template exercise includes enrolled historical revisions outside the runtime filing support envelope. Development-only previews may project an explicitly selected, validated enrolled revision into fictional workbook cells and spreadsheet formulas. They use a distinct strict template source and preview metadata identity, never a RegistrySnapshot manufactured for the purpose or a RegistryRevisionInspection passed into calculation or filing-instance APIs. The development admission factory must verify the exact modelo, revision, source and illustrative frame through canonical authority selection; it must not change the support floor, substitute current declarations for historical ones, or use a raw-loader fallback.
+
+Shared neutral cell-plan assembly and form geometry remain the single compiler used by both workbook materializers. Preview inputs, dates and rows are explicit fictional fixtures; profile reads, filing producers, saved calculation revisions and relation-resolution authority are outside this preview path. Existing spreadsheet formula translation may illustrate the revision's declared expressions, preserving unknown dependencies. Preview metadata uses a separate kind and namespace, carries no publication or snapshot identity, and cannot decode as production export metadata. Human surfaces disclose that the workbook is a fictional example and is not valid for filing, without displaying technical digests.
+
+This bounded template exception does not establish fiscal validity, filing support, legal review, authority adoption, publication eligibility or import authority. Runtime snapshot gates, historical static-inspection restrictions under 2026-08-14-registry-temporal-coverage-adr, and remote-input refusals remain unchanged. Verification must prove ordinary historical snapshot refusal, preview source/revision/frame mismatch refusal, distinct metadata in both transports, absent production data authority, and correct formula/blank/zero behavior. This records the implementation contract within the user's approved exercise, not completed historical preview delivery.
 
 ## Rationale
 
@@ -130,3 +154,7 @@ uses, not a separate hand-maintained spec — eliminating a drift surface.
   explicit labelled start/final, and pass the registry-grounded parity gate
   (casilla set, numbering, section order) — a structural divergence from the
   official AEAT layout is a hard failure, never a warning.
+
+## Amendment 2026-10-05 - outbound review
+
+The product owner's Session 01 instruction authorizes the scoped wording changes above, governed by 2026-10-05-google-outbound-review-adr. Earlier descriptions of then-current behavior remain historical evidence, not permission to retain retired routes. Other commitments remain in force. This amendment records architecture, not completed implementation or live acceptance.

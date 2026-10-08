@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:59876307061c75c000eb13d68a67ca0427ca64783432f7b8c23b32d20948fcc5'
 related:
-  - '[[2026-08-24-quality-gate-zero-closure-plan]]'
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
 ---
 

@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#data-provenance-consolidation'
 date: '2026-09-10'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b9e030d3aa629fe21884f14f101a628642285977b81548f9fbf346b2921833b'
+body_hash: 'sha256:0cee150eb1e5ba2dbb12a9ae3eb1e0fdd28ee3688815ae78851325ffda65ea12'
 related:
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
-  - '[[2026-09-10-data-provenance-consolidation-ledger]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
-  - '[[2026-09-10-data-provenance-consolidation-plan]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p01-s01-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p01-s02-adapter-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p01-s03-compiler-review-audit]]'
@@ -20,8 +18,6 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w01-p02-s05-defect-detector-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p02-s06-integrity-detector-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p03-s07-catalogue-binding-review-audit]]'
-  - '[[2026-09-10-data-provenance-consolidation-w02-p03-s08-origin-gate-review-audit]]'
-  - '[[2026-09-10-data-provenance-consolidation-w02-p03-s09-integration-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p04-s10-sync-catalogue-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p04-s11-off-host-alignment-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p04-s12-sync-rejection-review-audit]]'
@@ -60,8 +56,6 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w01-p02-s05-defect-detector-review-audit` - `data-provenance-consolidation` audit: `w01 p02 s05 defect detector review`
 - `2026-09-10-data-provenance-consolidation-w01-p02-s06-integrity-detector-review-audit` - `data-provenance-consolidation` audit: `w01 p02 s06 integrity detector review`
 - `2026-09-10-data-provenance-consolidation-w02-p03-s07-catalogue-binding-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s07 catalogue binding review`
-- `2026-09-10-data-provenance-consolidation-w02-p03-s08-origin-gate-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s08 origin gate review`
-- `2026-09-10-data-provenance-consolidation-w02-p03-s09-integration-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s09 integration review`
 - `2026-09-10-data-provenance-consolidation-w02-p04-s10-sync-catalogue-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s10 sync catalogue review`
 - `2026-09-10-data-provenance-consolidation-w02-p04-s11-off-host-alignment-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s11 off host alignment review`
 - `2026-09-10-data-provenance-consolidation-w02-p04-s12-sync-rejection-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s12 sync rejection review`
@@ -79,14 +73,6 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w04-p08-s25-sync-verification-review-audit` - `data-provenance-consolidation` audit: `w04 p08 s25 sync verification review`
 - `2026-09-11-data-provenance-consolidation-authority-publication-import-boundary-audit` - `data-provenance-consolidation` audit: `authority-publication and import-boundary review`
 - `2026-09-11-data-provenance-consolidation-consumer-boundary-reconciliation-audit` - `data-provenance-consolidation` audit: `consumer boundary reconciliation`
-
-### exec
-
-- `2026-09-10-data-provenance-consolidation-ledger` - `data-provenance-consolidation` ledger
-
-### plan
-
-- `2026-09-10-data-provenance-consolidation-plan` - `data-provenance-consolidation` plan
 
 ### reference
 

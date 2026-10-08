@@ -1,0 +1,11 @@
+/* The product's stylesheet entry. Class names are read from this directory,
+   without the development tooling and the catalogue's stories, so the product
+   carries no utility only they use. The generated palette is loaded beside
+   this file by the entry module, because it is absent until its generator has
+   run. */
+
+@import "tailwindcss" source(".");
+@import "./shell.css";
+
+@source not "./dev";
+@source not "./**/*.stories.tsx";

@@ -86,6 +86,13 @@ the worst offender.
 """
 
 
+def _undeclared_emission_fields(document: IngestCorpusDocument, emitted: Mapping[str, Any]) -> tuple[str, ...]:
+    """Undeclared emission fields."""
+    declared = set(document.ground_truth)
+    undeclared = tuple(sorted(name for name in emitted if name not in declared and not _is_abstention(emitted[name])))
+    return undeclared
+
+
 class FieldVerdict(StrEnum):
     """What happened at one declared slot.
 
@@ -256,28 +263,11 @@ def _values_agree(truth: Any, emitted: Any, *, tolerance_cents: int) -> bool:
     if isinstance(truth, bool):
         return isinstance(emitted, bool) and truth == emitted
     if isinstance(truth, str):
-        truth_amount = _as_finite_decimal(truth)
-        if truth_amount is not None:
-            if isinstance(emitted, bool) or not isinstance(emitted, str | int | Decimal):
-                return False
-            emitted_amount = _as_finite_decimal(str(emitted))
-            if emitted_amount is None:
-                return False
-            return amounts_match(emitted_amount, truth_amount, tolerance_cents=tolerance_cents)
-        return isinstance(emitted, str) and normalise_whitespace(truth) == normalise_whitespace(emitted)
+        return _string_values_agree(truth, emitted, tolerance_cents=tolerance_cents)
     if isinstance(truth, Mapping):
-        if not isinstance(emitted, Mapping) or set(truth) != set(emitted):
-            return False
-        return all(
-            _values_agree(value, emitted[name], tolerance_cents=tolerance_cents) for name, value in truth.items()
-        )
+        return _mapping_values_agree(truth, emitted, tolerance_cents=tolerance_cents)
     if isinstance(truth, Sequence):
-        if isinstance(emitted, str) or not isinstance(emitted, Sequence) or len(truth) != len(emitted):
-            return False
-        return all(
-            _values_agree(item, other, tolerance_cents=tolerance_cents)
-            for item, other in zip(truth, emitted, strict=True)
-        )
+        return _sequence_values_agree(truth, emitted, tolerance_cents=tolerance_cents)
     return truth == emitted
 
 
@@ -328,6 +318,34 @@ def score_emission(*, document: IngestCorpusDocument, emitted: Mapping[str, Any]
             ),
         )
 
-    declared = set(document.ground_truth)
-    undeclared = tuple(sorted(name for name in emitted if name not in declared and not _is_abstention(emitted[name])))
+    undeclared = _undeclared_emission_fields(document, emitted)
     return FieldScoring(doc_id=document.doc_id, outcomes=tuple(outcomes), undeclared=undeclared)
+
+
+def _string_values_agree(truth: str, emitted: Any, *, tolerance_cents: int) -> bool:
+    """Compare authored string truth using its strict original shape rules."""
+    truth_amount = _as_finite_decimal(truth)
+    if truth_amount is not None:
+        if isinstance(emitted, bool) or not isinstance(emitted, str | int | Decimal):
+            return False
+        emitted_amount = _as_finite_decimal(str(emitted))
+        if emitted_amount is None:
+            return False
+        return amounts_match(emitted_amount, truth_amount, tolerance_cents=tolerance_cents)
+    return isinstance(emitted, str) and normalise_whitespace(truth) == normalise_whitespace(emitted)
+
+
+def _mapping_values_agree(truth: Mapping[str, Any], emitted: Any, *, tolerance_cents: int) -> bool:
+    """Compare authored mapping truth using its strict original shape rules."""
+    if not isinstance(emitted, Mapping) or set(truth) != set(emitted):
+        return False
+    return all(_values_agree(value, emitted[name], tolerance_cents=tolerance_cents) for name, value in truth.items())
+
+
+def _sequence_values_agree(truth: Sequence[Any], emitted: Any, *, tolerance_cents: int) -> bool:
+    """Compare authored sequence truth using its strict original shape rules."""
+    if isinstance(emitted, str) or not isinstance(emitted, Sequence) or len(truth) != len(emitted):
+        return False
+    return all(
+        _values_agree(item, other, tolerance_cents=tolerance_cents) for item, other in zip(truth, emitted, strict=True)
+    )

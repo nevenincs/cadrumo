@@ -1,0 +1,6 @@
+/* The development stylesheet entry, for the scenario page and the catalogue:
+   the same shell styles as the product, with class names also read from the
+   development tooling and the stories. */
+
+@import "tailwindcss" source("..");
+@import "../shell.css";

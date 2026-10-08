@@ -4,18 +4,16 @@ tags:
   - '#index'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1dccb92c1cd586fb8cc3dd53ede3adf22dc2a8f22c7259ef06454c77279b12a6'
+body_hash: 'sha256:ee7e0868853d13f4a55306e2d2e3be904d71829b2ddf028a5580497d930134ea'
 related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-audit]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-drift-census-audit]]'
-  - '[[2026-08-14-registry-temporal-coverage-ledger]]'
   - '[[2026-08-14-registry-temporal-coverage-load-closure-census-audit]]'
   - '[[2026-08-14-registry-temporal-coverage-load-topology-reference]]'
-  - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-14-registry-temporal-coverage-research]]'
   - '[[2026-08-15-registry-temporal-coverage-acquisition-worklist-research]]'
   - '[[2026-08-15-registry-temporal-coverage-audit]]'
@@ -55,8 +53,6 @@ related:
   - '[[2026-09-10-registry-temporal-coverage-corpus-provenance-w01-p01-audit]]'
   - '[[2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-adr]]'
   - '[[2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-research]]'
-  - '[[2026-09-10-registry-temporal-coverage-ledger]]'
-  - '[[2026-09-10-registry-temporal-coverage-plan]]'
   - '[[2026-09-10-registry-temporal-coverage-w01-p02-provenance-authority-review-audit]]'
   - '[[2026-09-10-registry-temporal-coverage-w06-provenance-closure-audit]]'
 ---
@@ -111,16 +107,6 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-09-10-registry-temporal-coverage-corpus-provenance-w01-p01-audit` - `registry-temporal-coverage` audit: `Corpus provenance classifier review`
 - `2026-09-10-registry-temporal-coverage-w01-p02-provenance-authority-review-audit` - `registry-temporal-coverage` audit: `Provenance authority review`
 - `2026-09-10-registry-temporal-coverage-w06-provenance-closure-audit` - `registry-temporal-coverage` audit: `W06 provenance closure review`
-
-### exec
-
-- `2026-08-14-registry-temporal-coverage-ledger` - `registry-temporal-coverage` ledger
-- `2026-09-10-registry-temporal-coverage-ledger` - `registry-temporal-coverage` ledger
-
-### plan
-
-- `2026-08-14-registry-temporal-coverage-plan` - `registry-temporal-coverage` plan
-- `2026-09-10-registry-temporal-coverage-plan` - `registry-temporal-coverage` plan
 
 ### reference
 

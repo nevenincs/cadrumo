@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#declaracion-real-render-verification'
 date: '2026-07-27'
-modified: '2026-07-27'
-body_hash: 'sha256:cfafcc62ef50726adb820d030c2e2b680e557b1cdace9423208bfb234652e5ae'
+modified: '2026-10-03'
+body_hash: 'sha256:e8c8bc9a45be02ec8ff34301a7d2d9479f0c4f66db8b654d776e8f186212575f'
 related:
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
-  - "[[2026-07-26-declaracion-real-render-verification-plan]]"
 ---
 
 # `declaracion-real-render-verification` audit: `fixture amount grounding claim retraction`
@@ -116,7 +115,7 @@ borrador fixture is the exception and is genuinely circular.
 
 ### guarded-skip-vacuity-is-an-unscreened-shape | medium | the vacuity screen cannot see the shape that produced the 4T false green
 
-The `test-harness-honesty` campaign built `dev/audit/vacuity_screen.py` to hunt
+The `test-harness-honesty` campaign built the retired module to hunt
 exactly this class. It does not cover this instance. The screen detects a gate
 that asserts a collection is empty or a count is zero without proving it
 scanned, and its own docstring is explicit that it covers the four known shapes

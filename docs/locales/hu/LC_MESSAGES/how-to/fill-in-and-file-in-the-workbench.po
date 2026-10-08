@@ -1,0 +1,1269 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-02 09:28+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:1
+msgid "Fill in and record a filing on the declaration screen"
+msgstr "Bevallás kitöltése és benyújtásának rögzítése a bevallás képernyőjén"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:3
+msgid ""
+"The full-screen interface gives each declaration one screen: its official"
+" pages, every box with its value and where that value comes from, the one"
+" thing to do next, and the help for the box under the cursor. This guide "
+"shows how to see what you owe, fill in the boxes that need you, "
+"understand where a value comes from, check and fix issues, and record the"
+" filing."
+msgstr ""
+"A teljes képernyős felület minden bevallásnak egy képernyőt ad: a "
+"hivatalos oldalait, minden rovatot az értékével és azzal, honnan "
+"származik az érték, a következő teendőt, valamint a kurzor alatti rovat "
+"súgóját. Ez az útmutató megmutatja, hogyan láthatod, mivel tartozol, "
+"hogyan töltheted ki a rád váró rovatokat, hogyan értheted meg, honnan "
+"származik egy érték, hogyan ellenőrizheted és javíthatod a problémákat, "
+"és hogyan rögzítheted a benyújtást."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:9
+msgid ""
+"Cadrumo never submits a return to the AEAT. \"Record filing\" tells "
+"Cadrumo that you filed; you file with the AEAT yourself. [File at AEAT"
+"](file-at-aeat.md) explains that step."
+msgstr ""
+"A Cadrumo soha nem nyújt be bevallást az AEAT-nak. A „Benyújtás "
+"rögzítése” azt közli a Cadrumóval, hogy benyújtottad a bevallást; a "
+"bevallást magad nyújtod be az AEAT-nál. [Benyújtás az AEAT-nál](file-at-"
+"aeat.md) ismerteti ezt a lépést."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:13
+msgid "Before you start"
+msgstr "Mielőtt elkezdi"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:15
+msgid ""
+"Your taxpayer profile is complete: see [Set up your taxpayer profile"
+"](profile-setup.md)."
+msgstr ""
+"Az adózói profilod teljes: lásd [Az adózói profil beállítása](profile-"
+"setup.md)."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:16
+msgid "Know which modelo, filing year and period you want to work on."
+msgstr ""
+"Határozd meg, melyik nyomtatvánnyal, adóévvel és időszakkal szeretnél "
+"dolgozni."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:18
+msgid "Open a declaration"
+msgstr "Bevallás megnyitása"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:20
+msgid "Start the full-screen interface with `aeat app tui` and sign in."
+msgstr ""
+"Indítsd el a teljes képernyős felületet az `aeat app tui` paranccsal, és "
+"jelentkezz be."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:21
+msgid "Open **Declarations**. Press Enter on a group to open or close it."
+msgstr ""
+"Nyisd meg a **Bevallások** területet. Az Enter billentyűvel megnyithatsz "
+"vagy bezárhatsz egy csoportot."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:22
+msgid ""
+"Select a local declaration and press Enter to open it. For a period "
+"marked **Not started**, Enter asks you to confirm that you want to start "
+"it."
+msgstr ""
+"Válassz ki egy helyi bevallást, és nyomd meg az Enter billentyűt a "
+"megnyitásához. A **Nincs elkezdve** jelzésű időszaknál az Enter "
+"megerősítést kér a kezdéshez."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:25
+msgid ""
+"To choose another declaration, press `+`. Choose the Modelo first. In the"
+" period picker, press Enter to select a period, then select **Create and "
+"open**. Esc on the period picker returns to the Modelo picker; Esc there "
+"cancels."
+msgstr ""
+"Ha másik bevallást szeretnél választani, nyomd meg a `+` billentyűt. "
+"Először válaszd ki a nyomtatványt. Az időszakválasztóban az Enter "
+"billentyűvel válassz időszakot, majd válaszd a **Létrehozás és "
+"megnyitás** lehetőséget. Az időszakválasztóban az Esc visszalép a "
+"nyomtatványválasztóhoz; ott az Esc megszakítja a választást."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:29
+msgid ""
+"The list shows the state, result direction, deadline and next action. Use"
+" `/` to search by modelo number, name or period in words; accents do not "
+"affect the search. Press `f` to cycle through **All**, **Needs "
+"attention**, **This year**, **Recorded** and **Not started**. Press `s` "
+"to sort by deadline, modelo, result or state. Press `t` when you need the"
+" technical details."
+msgstr ""
+"A lista az állapotot, az eredmény irányát, a határidőt és a következő "
+"teendőt mutatja. A `/` billentyűvel nyomtatványszámra, névre vagy "
+"szavakkal megadott időszakra kereshetsz; az ékezetek nem befolyásolják a "
+"keresést. Az `f` billentyűvel válthatsz a **Mind**, **Figyelmet "
+"igényel**, **Idei év**, **Benyújtottként rögzítve** és **Nincs elkezdve**"
+" szűrők között. Az `s` billentyűvel határidő, nyomtatvány, eredmény vagy "
+"állapot szerint rendezhetsz. A technikai részletekhez nyomd meg a `t` "
+"billentyűt."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:35
+msgid ""
+"Some modelos appear as possible obligations or have limited local "
+"support. Read their coverage and next action before starting. A completed"
+" filing found at the AEAT can appear separately from a local draft. "
+"Seeing it does not mean the draft is linked to that filing or that its "
+"receipt is saved; the draft is kept separately."
+msgstr ""
+"Egyes modelók lehetséges kötelezettségként jelennek meg, vagy csak "
+"korlátozott helyi támogatásuk van. Kezdés előtt olvasd el, milyen "
+"mértékben támogatottak, és mi a következő teendő. Az AEAT-nál befejezett "
+"benyújtás külön jelenhet meg a helyi piszkozattól. A megjelenése nem "
+"jelenti azt, hogy a piszkozat ehhez a benyújtáshoz van kapcsolva, vagy "
+"hogy az igazolása mentve van; a piszkozat külön marad meg."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:41
+msgid "The declaration opens on the first box that needs you."
+msgstr "A bevallás az első olyan rovatnál nyílik meg, amelyik rád vár."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:43
+msgid "See what you owe"
+msgstr "Annak megtekintése, mivel tartozik"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:45
+msgid ""
+"The header names your declaration, its deadline and its calculated "
+"result. It stays visible while you use the docked box panel. A dialog "
+"repeats the result and the counts of things that need you."
+msgstr ""
+"A fejléc megnevezi a bevallásodat, annak határidejét és számított "
+"eredményét. Az alsó rovatpanel használata közben is látható marad. A "
+"párbeszédablak megismétli az eredményt és a rád váró teendők számát."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:49
+msgid ""
+"**Line 1** names the Modelo and the period in words. On the right it "
+"shows the deadline, the last day to file, and the days left. The deadline"
+" turns amber at 7 days or fewer and red at 3 or fewer. After the deadline"
+" it says so in red. When no deadline is on record, it says that instead "
+"of guessing a date."
+msgstr ""
+"**1. sor:** szavakkal kiírja a Modelo típusát és az időszakot. Jobbra "
+"mutatja a határidőt, vagyis a benyújtás utolsó napját, és a hátralévő "
+"napokat. A határidő borostyánsárgára vált, ha 7 nap vagy kevesebb van "
+"hátra, és pirosra, ha 3 vagy kevesebb. A határidő lejárta után ezt "
+"pirossal jelzi. Ha nincs nyilvántartott határidő, ezt írja ki, és nem "
+"találgat dátumot."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:54
+msgid ""
+"**Line 2** shows the result with its direction: **TO PAY**, **TO BE "
+"REFUNDED**, **TO CARRY FORWARD** or **RESULT ZERO**, with the amount in "
+"euros and the box it comes from. Next to it are the counts of things that"
+" need you, one per level (see [Check and fix issues](#check-and-fix-"
+"issues))."
+msgstr ""
+"**2. sor:** az eredményt mutatja az irányával: **FIZETENDŐ**, "
+"**VISSZATÉRÍTENDŐ**, **KÉSŐBB BESZÁMÍTHATÓ** vagy **NULLA EREDMÉNY**, az "
+"összeggel euróban és azzal a rovattal, amelyből származik. Mellette a rád"
+" váró tételek száma látható, szintenként egy (lásd [Problémák ellenőrzése"
+" és javítása](#check-and-fix-issues))."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:58
+msgid ""
+"**Line 3** shows the four steps: Fill in, Calculate, Check and Record "
+"filing, and the next thing to do with its key. A step marked ✓ is done, ▲"
+" is blocked, and the step you are on shows ▸. Steps still to come have no"
+" mark."
+msgstr ""
+"**3. sor:** a négy lépést mutatja: Kitöltés, Számítás, Ellenőrzés és "
+"Benyújtás rögzítése, valamint a következő teendőt a hozzá tartozó "
+"billentyűvel. A ✓ jelű lépés kész, a ▲ jelű akadályozott, az a lépés "
+"pedig, ahol tart, ▸ jelet kap. A még hátralévő lépéseken nincs jel."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:62
+msgid ""
+"Before the first calculation the result reads \"not calculated yet\" with"
+" the key to calculate. After a change, or when your records changed, the "
+"result carries ◷ and says \"out of date\". Do not rely on an amount "
+"marked ◷: apply your changes with `R` or calculate with `c` first."
+msgstr ""
+"Az első számítás előtt az eredmény ezt mutatja: „még nincs kiszámítva”, a"
+" számítás billentyűjével. Módosítás után, vagy ha a nyilvántartásaid "
+"megváltoztak, az eredmény ◷ jelet kap, és ezt írja: „elavult”. Ne "
+"támaszkodj a ◷ jelű összegre: előbb alkalmazd a módosításaidat az `R` "
+"billentyűvel, vagy számíts újra a `c` billentyűvel."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:67
+#, python-brace-format
+msgid ""
+"On Modelo 130, a negative result reads \"Negative result: {amount} to "
+"deduct in later quarters\" in the first three quarters and \"Negative "
+"result: nothing to pay\" in the fourth."
+msgstr ""
+"Modelo 130 esetén a negatív eredmény az első három negyedévben ezt "
+"mutatja: „Negatív eredmény: {amount} a következő negyedévekben "
+"levonható”, a negyedikben pedig ezt: „Negatív eredmény: nincs fizetendő”."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:71
+msgid "The figures are Cadrumo's calculation. The AEAT has not seen them."
+msgstr "A számok a Cadrumo számításának eredményei. Az AEAT még nem látta őket."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:73
+msgid "Read the screen"
+msgstr "A képernyő olvasása"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:75
+msgid ""
+"**The navigator** on the left lists the official pages and their "
+"sections. Each shows the most serious thing inside it (▲, then !, then ◐)"
+" with a count. A finished section shows ✓. A section that does not apply "
+"this period is dimmed and says so. Press Space, or ← and →, to close or "
+"open a page. On a narrow terminal the navigator becomes one line above "
+"the list; use `[` and `]` to change page."
+msgstr ""
+"**A navigációs panel** a bal oldalon felsorolja a hivatalos oldalakat és "
+"a szakaszaikat. Mindegyik a benne lévő legsúlyosabb dolgot mutatja (▲, "
+"majd !, majd ◐) számmal. A befejezett szakasz ✓ jelet kap. Az a szakasz, "
+"amely ebben az időszakban nem alkalmazandó, halványan látszik, és ezt ki "
+"is írja. A Space vagy a ← és → billentyűvel bezárhatsz vagy megnyithatsz "
+"egy oldalt. Keskeny terminálon a navigációs panel a lista feletti "
+"egyetlen sorrá alakul; az oldal váltásához használd a `[` és `]` "
+"billentyűt."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:81
+msgid ""
+"**The list** shows each box: its number in brackets, its label, its value"
+" with its unit, and where the value comes from, in a glyph and one or two"
+" words."
+msgstr ""
+"**A lista** minden rovatot megmutat: a számát szögletes zárójelben, a "
+"címkéjét, az értékét a mértékegységével, és azt, honnan származik az "
+"érték, egy jellel és egy-két szóval."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:84
+msgid ""
+"**The help band** at the bottom explains the box under the cursor: what "
+"it asks for, where its value comes from, what you can do about it, and "
+"its formula, the official text and its legal basis."
+msgstr ""
+"**A súgósáv** alul a kurzor alatti rovatot magyarázza el: mit kér, honnan"
+" származik az értéke, mit tehetsz vele kapcsolatban, valamint a képletét,"
+" a hivatalos szöveget és a jogalapját."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:87
+msgid ""
+"**Tables.** A grid on the official form, such as the rates in Modelo 303,"
+" appears as a table. Press ← and → (or `h` and `l`) to move between cells"
+" and ↑ and ↓ to move between rows. On a narrow terminal the table is "
+"stacked instead."
+msgstr ""
+"**Táblázatok.** A hivatalos nyomtatvány rácsa, például a Modelo 303 "
+"adókulcsai, táblázatként jelenik meg. A ← és → (vagy `h` és `l`) "
+"billentyűvel cellák között, a ↑ és ↓ billentyűvel sorok között "
+"mozoghatsz. Keskeny terminálon a táblázat egymás alá rendezve látszik."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:91
+msgid ""
+"**Records that repeat**, such as the intra-community traders in Modelo "
+"349, appear as a numbered table. Use ↑ and ↓ or Page Up and Page Down to "
+"scroll through the rows. These values are read-only here; change them "
+"where they come from, for example in your records."
+msgstr ""
+"**Ismétlődő bejegyzések**, például a Modelo 349 közösségen belüli "
+"szereplőinek adatai, számozott táblázatban jelennek meg. A sorok között a"
+" ↑ és ↓, illetve a Page Up és Page Down billentyűvel görgethetsz. Ezek az"
+" értékek itt csak olvashatók; ott módosítsd őket, ahonnan származnak, "
+"például a nyilvántartásaidban."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:96
+msgid ""
+"A missing value is always said in words, never shown as a zero. "
+"\"Optional, empty\", \"Needs your input\", \"Assumed, please confirm\" "
+"and \"Not applicable\" are different things and read differently."
+msgstr ""
+"A hiányzó értéket mindig szavakkal jelzi, és sosem mutatja nullaként. A "
+"„Nem kötelező, üres”, az „Adatra van szükség tőled”, a „Feltételezett, "
+"kérjük erősítsd meg” és a „Nem alkalmazandó” különböző dolgok, és másként"
+" olvashatók."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:100
+msgid "Find your way around"
+msgstr "Eligazodás a képernyőn"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Key"
+msgstr "Billentyű"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "What it does"
+msgstr "Mit csinál"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`/`"
+msgstr "`/`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Search by box number or by words, across all pages. Enter jumps to the box"
+msgstr ""
+"Keresés rovatszám vagy szavak alapján, az összes oldalon. Az Enter a "
+"rovatra ugrik"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`g`"
+msgstr "`g`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go to a box by its number"
+msgstr "Ugrás egy rovatra a száma alapján"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`f`"
+msgstr "`f`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Show every box, only those that need you, or only your own values"
+msgstr ""
+"Az összes rovat, csak a rád váró rovatok, vagy csak a saját értékeid "
+"megjelenítése"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`o`"
+msgstr "`o`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Sort by form order, box number, amount or needs attention"
+msgstr ""
+"Rendezés a nyomtatvány sorrendje, a rovatszám, az összeg vagy a figyelmet"
+" igénylő tételek szerint"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`n` and `N`"
+msgstr "`n` és `N`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go to the next or the previous thing to do, across pages"
+msgstr "Ugrás a következő vagy az előző teendőre, oldalakon át"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`[` and `]`"
+msgstr "`[` és `]`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go to the previous or the next page"
+msgstr "Ugrás az előző vagy a következő oldalra"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Space"
+msgstr "Szóköz"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Open or close the page under the cursor"
+msgstr "Megnyitja vagy bezárja a kurzor alatti oldalt"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`d`"
+msgstr "`d`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Show each box on one line or on two"
+msgstr "Minden rovatot egy vagy két sorban jelenít meg"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:113
+msgid "Fill in the boxes that need you"
+msgstr "A rád váró rovatok kitöltése"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:115
+msgid "Press `n` to go to the next thing to do, or use `/` or `g` to reach a box."
+msgstr ""
+"Nyomd meg az `n` billentyűt a következő teendőre ugráshoz, vagy használd "
+"a `/` vagy a `g` billentyűt egy rovat eléréséhez."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:116
+msgid ""
+"Press Enter. The box opens in a panel with what it asks, its current "
+"value, where it comes from, what it affects and a field for your value. "
+"The header and the neighbouring rows stay visible. On a screen under 30 "
+"rows high, the panel opens as a dialog instead."
+msgstr ""
+"Nyomd meg az Enter billentyűt. A rovat egy panelben nyílik meg, amely "
+"megmutatja, mit kér, az aktuális értékét, honnan származik, mire hat, és "
+"tartalmaz egy mezőt a saját értékedhez. A fejléc és a szomszédos sorok "
+"láthatók maradnak. 30 sornál alacsonyabb képernyőn a panel "
+"párbeszédablakként nyílik meg."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:121
+msgid ""
+"Type the value the way you write numbers in your language, for example "
+"`1.234,56` in Spanish or `1,234.56` in English. The panel shows how it "
+"will read the value. If a number could be read two ways, it names both "
+"and asks you to retype it."
+msgstr ""
+"Írd be az értéket úgy, ahogyan a saját nyelveden szoktad írni a számokat,"
+" például `1.234,56` spanyolul vagy `1,234.56` angolul. A panel "
+"megmutatja, hogyan fogja értelmezni az értéket. Ha egy szám kétféleképpen"
+" is olvasható, mindkettőt megnevezi, és arra kér, hogy írd be újra."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:126
+msgid ""
+"Press Enter to keep it and go to the next box that needs you, or "
+"Ctrl+Enter to keep it and stay."
+msgstr ""
+"Nyomd meg az Enter billentyűt az érték megtartásához és a következő, rád "
+"váró rovatra lépéshez, vagy a Ctrl+Enter billentyűvel tartsd meg az "
+"értéket, és maradj a helyeden."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:129
+msgid ""
+"Nothing is applied yet. The box shows Δ, and the header says \"changes "
+"not applied yet\". When a box cannot be typed into, the panel says why "
+"and what to do: a value that follows your records, for example, is "
+"corrected in Records and then recalculated."
+msgstr ""
+"Még semmi sem került alkalmazásra. A rovat Δ jelet mutat, a fejléc pedig "
+"ezt írja: „nem alkalmazott módosítások”. Ha egy rovatba nem lehet írni, a"
+" panel megmondja, miért, és mit kell tenned: a nyilvántartásaidból "
+"származó értéket például a Nyilvántartás területen javíthatod, majd "
+"újraszámíthatod."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:134
+msgid ""
+"Press `x` or Delete to clear a value you entered, and `u` to go back to "
+"the value before your change."
+msgstr ""
+"Nyomd meg az `x` vagy a Delete billentyűt az általad megadott érték "
+"törléséhez, az `u` billentyűvel pedig visszatérhetsz a módosítás előtti "
+"értékhez."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:137
+msgid "Confirm an assumed value"
+msgstr "Feltételezett érték megerősítése"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:139
+msgid ""
+"An assumed value ◐ is a value Cadrumo holds but nobody entered: a "
+"required box, or a box with a non-zero value. An optional box that is "
+"empty or zero is not assumed."
+msgstr ""
+"A feltételezett érték ◐ olyan érték, amelyet a Cadrumo tárol, de senki "
+"nem adott meg: egy kötelező rovat, vagy egy nullától eltérő értékű rovat."
+" Az üres vagy nulla értékű, nem kötelező rovat nem feltételezett."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:143
+msgid ""
+"Assumed values keep \"Fill in\" open, and Cadrumo refuses to export or "
+"record the filing until you confirm them."
+msgstr ""
+"A feltételezett értékek miatt a „Kitöltés” lépés nyitva marad, és a "
+"Cadrumo nem engedélyezi az exportálást vagy a benyújtás rögzítését, amíg "
+"meg nem erősíted őket."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:146
+msgid "To confirm one:"
+msgstr "Egy érték megerősítéséhez:"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:148
+msgid "Open the box. Its value is already filled in and selected."
+msgstr "Nyisd meg a rovatot. Az értéke már ki van töltve és ki van jelölve."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:149
+msgid "Press Enter to accept it as it is, or type the right value."
+msgstr ""
+"Nyomd meg az Enter billentyűt, ha el akarod fogadni így, vagy írd be a "
+"helyes értéket."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:151
+msgid ""
+"The confirmation is a change waiting for review. Press `R`, review it and"
+" choose **Apply and recalculate**. The saved box then reads \"Entered by "
+"you\"."
+msgstr ""
+"A megerősítés egy ellenőrzésre váró módosítás. Nyomd meg az `R` "
+"billentyűt, nézd át, majd válaszd az **Alkalmazás és újraszámítás** "
+"lehetőséget. A mentett rovat ezután ezt mutatja: „Te adtad meg”."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:154
+msgid ""
+"To confirm many at once, press `b` with the cursor in their section or "
+"page. Cadrumo lists the values it can confirm, each with its box number "
+"and label. Read the list, tick \"I have checked these values and they are"
+" right for me\", and confirm. Values that need a source change are listed"
+" separately by reason. Review and apply the changes with `R`. You cannot "
+"confirm the whole declaration in one go."
+msgstr ""
+"Több érték egyszerre történő megerősítéséhez nyomd meg a `b` billentyűt, "
+"amikor a kurzor az érintett szakaszon vagy oldalon áll. A Cadrumo "
+"felsorolja azokat az értékeket, amelyeket megerősíthetsz, mindegyiknél a "
+"rovat számával és megnevezésével. Olvasd el a listát, jelöld be az "
+"„Átnéztem ezeket az értékeket, és helyesek” négyzetet, majd erősítsd meg "
+"őket. A forrásmódosítást igénylő értékeket a Cadrumo külön listázza, az "
+"indokukkal együtt. Az `R` billentyűvel ellenőrizd és alkalmazd a "
+"módosításokat. A teljes bevallást egyszerre nem erősítheted meg."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:161
+msgid "Review and apply your changes"
+msgstr "A módosítások áttekintése és alkalmazása"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:163
+msgid ""
+"Press `R`. Cadrumo first checks your changes against the declaration as "
+"it stands. The review lists each change with its box, how it read before,"
+" how it will read after, and what the change does. It warns you when your"
+" value replaces one from your records or from a calculation: your value "
+"keeps winning until you go back to the source."
+msgstr ""
+"Nyomd meg az `R` billentyűt. A Cadrumo először összeveti a módosításaidat"
+" a bevallás jelenlegi állapotával. Az áttekintés minden módosítást "
+"felsorol a rovatával, azzal, hogyan szólt korábban, hogyan fog szólni "
+"utána, és mit eredményez a módosítás. Figyelmeztet, ha a saját értéked "
+"felülír egy, a nyilvántartásaidból vagy egy számításból származó értéket:"
+" a saját értéked marad érvényben, amíg vissza nem térsz a forráshoz."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:169
+msgid ""
+"Under the changes, the review lists what the check found. An item marked "
+"▲ would stop the changes from being applied, so **Apply and recalculate**"
+" stays unavailable until you resolve it."
+msgstr ""
+"A módosítások alatt az áttekintés felsorolja, mit talált az ellenőrzés. A"
+" ▲ jelű tétel megakadályozná a módosítások alkalmazását, ezért az "
+"**Alkalmazás és újraszámítás** addig nem érhető el, amíg meg nem oldod."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:173
+msgid ""
+"The review asks you to tick **I have checked what applying does** before "
+"you apply in two cases:"
+msgstr ""
+"Az áttekintés két esetben kéri, hogy alkalmazás előtt jelöld be ezt: "
+"**Ellenőriztem, mit tesz az alkalmazás**:"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:176
+msgid ""
+"The declaration was last calculated without saved input history. Cadrumo "
+"cannot tell which of its values you typed, so the review names the boxes "
+"whose values go back to what their source says. To keep one, enter its "
+"value first."
+msgstr ""
+"A bevallást utoljára mentett adatbeviteli előzmények nélkül számították "
+"ki. A Cadrumo nem tudja megállapítani, mely értékeket írtad be, ezért az "
+"áttekintés megnevezi azokat a rovatokat, amelyeknek az értéke visszaáll "
+"arra, amit a forrásuk mond. Ha meg akarsz tartani egyet, előbb add meg az"
+" értékét."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:180
+msgid ""
+"The declaration changed after you made your changes. Your changes are "
+"kept, a change that no longer applies is removed, and the lines whose box"
+" now reads differently are marked."
+msgstr ""
+"A bevallás megváltozott, miután elvégezted a módosításaidat. A "
+"módosításaid megmaradnak; a már nem alkalmazható módosítás törlődik, a "
+"most eltérő értéket mutató rovatok sorai pedig meg vannak jelölve."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:184
+msgid ""
+"Choose **Apply and recalculate** to apply the changes and recalculate, or"
+" **Discard all** to drop them. After applying, the declaration screen "
+"lists every box that changed and why: your change, recalculated, from "
+"your records, or another change. Press Enter on a line to go to its box. "
+"If you leave with changes not applied yet, it asks you first."
+msgstr ""
+"Válaszd az **Alkalmazás és újraszámítás** lehetőséget a módosítások "
+"alkalmazásához és újraszámításához, vagy az **Összes elvetése** "
+"lehetőséget azok elvetéséhez. Az alkalmazás után a bevallás képernyője "
+"felsorolja az összes megváltozott rovatot és az okát: a saját "
+"módosításod, újraszámítás, a nyilvántartásaidból származó érték vagy "
+"másik módosítás. Nyomd meg az Enter billentyűt egy soron, hogy a hozzá "
+"tartozó rovatra ugorj. Ha alkalmazatlan módosításokkal lépsz ki, előbb "
+"rákérdez."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:190
+msgid "Understand where a value comes from"
+msgstr "Annak megértése, honnan származik egy érték"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:192
+msgid "Every row shows where its value comes from:"
+msgstr "Minden sor megmutatja, honnan származik az értéke:"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Mark"
+msgstr "Jel"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Words on the row"
+msgstr "Szavak a soron"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Meaning"
+msgstr "Jelentés"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "●"
+msgstr "●"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Entered by you"
+msgstr "Te adtad meg"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "You typed it, or you confirmed an assumed value"
+msgstr "Te írtad be, vagy te erősítettél meg egy feltételezett értéket"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "≠"
+msgstr "≠"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Yours, replaces your records"
+msgstr "A tiéd, felülírja a nyilvántartásaidat"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid ""
+"Your value replaces the value from another source, in this declaration "
+"only"
+msgstr ""
+"A saját értéked felülírja egy másik forrás értékét, csak ebben a "
+"bevallásban"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "="
+msgstr "="
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Calculated"
+msgstr "Számított"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Cadrumo worked it out from other boxes"
+msgstr "A Cadrumo más rovatokból számította ki"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "↓"
+msgstr "↓"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "From your records, From your profile, From AEAT data"
+msgstr "A nyilvántartásaidból, a profilodból, AEAT-adatokból"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Read from your data"
+msgstr "A saját adataidból beolvasva"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "«"
+msgstr "«"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "From an earlier declaration"
+msgstr "Egy korábbi bevallásból"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Carried from a declaration you recorded before"
+msgstr "Egy korábban rögzített bevallásból átvéve"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◇"
+msgstr "◇"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Reference value"
+msgstr "Referenciaérték"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "The official form fixes it"
+msgstr "A hivatalos nyomtatvány rögzíti"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◐"
+msgstr "◐"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Assumed, please confirm"
+msgstr "Feltételezett, kérjük erősítsd meg"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Nobody entered it"
+msgstr "Senki nem adta meg"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "!"
+msgstr "!"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Needs your input"
+msgstr "Tőled szükséges adat"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Required, and nobody has given it"
+msgstr "Kötelező, és senki nem adta meg"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:205
+msgid ""
+"Press Enter on a box and read the panel: for a calculated box it shows "
+"the formula with the numbers in it, for a box from your records it says "
+"what was added up. Where a box can be replaced, the panel says so and "
+"explains that your records do not change."
+msgstr ""
+"Nyomd meg az Enter billentyűt egy rovaton, és olvasd el a panelt: a "
+"számított rovatnál a számokkal kitöltött képletet mutatja, a "
+"nyilvántartásaidból származó rovatnál pedig azt, hogy mit adtak össze. "
+"Ahol a rovat felülírható, a panel ezt közli, és elmagyarázza, hogy a "
+"nyilvántartásaid nem változnak."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:210
+msgid ""
+"**Override a value.** Type your own value over one that comes from your "
+"records. The row then reads \"Yours, replaces your records\". The panel "
+"says your value replaces the amount from your records in this declaration"
+" only, and lets you go back to the source."
+msgstr ""
+"**Érték felülírása.** Add meg a saját értékedet egy, a "
+"nyilvántartásaidból származó érték helyett. A sor ezután ezt mutatja: "
+"„Saját érték, felülírja a nyilvántartást”. A panel jelzi, hogy a saját "
+"értéked csak ebben a bevallásban váltja fel a nyilvántartási összeget, és"
+" lehetővé teszi a visszatérést a forráshoz."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:215
+msgid ""
+"**Go back to the source.** Open the box and choose **Go back to the "
+"source's value** when its panel offers it. Review and apply this change "
+"with `R`. The `u` key only undoes a change you have not applied."
+msgstr ""
+"**Visszatérés a forráshoz.** Nyisd meg a rovatot, és válaszd a **Vissza a"
+" forrás értékéhez** lehetőséget, amikor a panel felajánlja. Az `R` "
+"billentyűvel ellenőrizd és alkalmazd a módosítást. Az `u` billentyűvel "
+"csak egy még nem alkalmazott módosítást vonhatsz vissza."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:219
+msgid ""
+"**Open the source area.** If the panel offers an action such as **Open "
+"Records**, choose it to correct the source there, then return and "
+"recalculate."
+msgstr ""
+"**A forrás területének megnyitása.** Ha a panel felajánl egy műveletet, "
+"például a **Nyilvántartás megnyitása** lehetőséget, válaszd azt, javítsd "
+"a forrást az adott területen, majd térj vissza és számíts újra."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:222
+msgid ""
+"**See every source at once.** Press `s` for the sources map. It counts "
+"boxes, not sources: how many come from your records, earlier declarations"
+" and AEAT data, how many you entered, confirmed or replaced, what is "
+"assumed and what is calculated. \"None found\" means Cadrumo looked in "
+"that source and found nothing, which is different from zero. Press Enter "
+"on a line to see its boxes, and Enter on a box to go to it."
+msgstr ""
+"**Az összes forrás megtekintése egyszerre.** Nyomd meg az `s` billentyűt "
+"a források térképéhez. Rovatokat számol, nem forrásokat: hány származik a"
+" nyilvántartásaidból, korábbi bevallásokból és AEAT-adatokból, hányat "
+"adtál meg, erősítettél meg vagy írtál felül, mi feltételezett és mi "
+"számított. A „nincs találat” azt jelenti, hogy a Cadrumo megnézte az "
+"adott forrást, és nem talált semmit, ami más, mint a nulla. Nyomd meg az "
+"Enter billentyűt egy soron a hozzá tartozó rovatok megtekintéséhez, az "
+"Enter billentyűt pedig egy rovaton, hogy oda ugorj."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:229
+msgid "Calculate"
+msgstr "Számítás"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:231
+msgid ""
+"Press F8 to run the step the header offers, or `c` to calculate at any "
+"time once your changes are applied. The values you entered are kept. "
+"Press `c` whenever the header says ◷ \"out of date: recalculate\", for "
+"example after your records changed."
+msgstr ""
+"Nyomd meg az F8 billentyűt a fejléc által felkínált lépés futtatásához, "
+"vagy a `c` billentyűvel számíts bármikor, miután alkalmaztad a "
+"módosításaidat. Az általad megadott értékek megmaradnak. Nyomd meg a `c` "
+"billentyűt, valahányszor a fejléc ezt mutatja: ◷ „elavult: számold újra”,"
+" például ha megváltoztak a nyilvántartásaid."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:236
+msgid ""
+"If the declaration was last calculated without saved input history, "
+"calculating asks first and names the boxes whose values go back to their "
+"source."
+msgstr ""
+"Ha a bevallást utoljára mentett adatbeviteli előzmények nélkül "
+"számították ki, a számítás előtt rákérdez, és megnevezi azokat a "
+"rovatokat, amelyeknek az értéke visszaáll a forrására."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:239
+msgid ""
+"The first Modelo 303 calculation asks the filing answers its period "
+"needs: whether you file a joint return and, in the last period of the "
+"year, whether you are exempt from Modelo 390."
+msgstr ""
+"A Modelo 303 első számítása bekéri a benyújtási válaszokat, amelyekre az "
+"időszakának szüksége van: közös bevallást nyújtasz-e be, és az év utolsó "
+"időszakában mentesülsz-e a Modelo 390 benyújtása alól."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:243
+msgid "Check and fix issues"
+msgstr "Problémák ellenőrzése és javítása"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:245
+msgid ""
+"Press `i` to open **Issues to look at**. The header shows the same "
+"counts, one per level:"
+msgstr ""
+"Nyomd meg az `i` billentyűt az **Átnézendő problémák** megnyitásához. A "
+"fejléc ugyanezeket a számokat mutatja, szintenként egyet:"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Level"
+msgstr "Szint"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "What it means"
+msgstr "Mit jelent"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "▲"
+msgstr "▲"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Blocks filing"
+msgstr "Akadályozza a benyújtást"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Fix it before you can export or record the filing"
+msgstr "Javítsd ki, mielőtt exportálhatnád vagy rögzíthetnéd a benyújtást"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "A required value nobody has given"
+msgstr "Kötelező érték, amelyet senki nem adott meg"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "A value nobody entered; confirm it or type the right one"
+msgstr ""
+"Olyan érték, amelyet senki sem adott meg; erősítsd meg, vagy írd be a "
+"helyeset"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◆"
+msgstr "◆"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Worth checking"
+msgstr "Érdemes átnézni"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Does not stop you"
+msgstr "Nem akadályozza a benyújtást"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`i`"
+msgstr "`i`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "For your information"
+msgstr "Tájékoztatásul"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "An explanation"
+msgstr "Magyarázat"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:256
+msgid ""
+"Each issue says what is wrong, what to do and where. Press Enter on an "
+"issue to go to its box, or to open its details or the area that owns the "
+"problem. Press `t` for technical details."
+msgstr ""
+"Minden probléma megmondja, mi a hiba, mit kell tenned, és hol. Nyomd meg "
+"az Enter billentyűt egy problémán, hogy a rovatára ugorj, vagy hogy "
+"megnyisd a részleteit, illetve azt a területet, amelyhez a probléma "
+"tartozik. A technikai részletekhez nyomd meg a `t` billentyűt."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:260
+msgid ""
+"Problems found while calculating appear in the same list. An amount from "
+"your records that lands in no box, or any other problem that could make "
+"you under-declare, is marked ▲ and blocks export and recording. A problem"
+" that would only make you pay more is marked ◆. After a change, problems "
+"from the last calculation are labelled as such until you calculate again."
+msgstr ""
+"A számítás közben talált problémák ugyanebben a listában jelennek meg. A "
+"nyilvántartásaidból származó, egyik rovatba sem kerülő összeg, vagy "
+"bármely más probléma, amely miatt kevesebbet vallhatsz be a kelleténél, ▲"
+" jelet kap, és blokkolja az exportálást és a rögzítést. Az a probléma, "
+"amely miatt csak többet fizetnél, ◆ jelet kap. Módosítás után az utolsó "
+"számítás problémái ilyen címkét kapnak, amíg újra nem számolsz."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:266
+msgid ""
+"Press F8 at the Check step to check the declaration. A box that stops you"
+" from filing shows ▲, and the navigator counts it on its section."
+msgstr ""
+"Nyomd meg az F8 billentyűt az Ellenőrzés lépésnél a bevallás "
+"ellenőrzéséhez. A benyújtást akadályozó rovat ▲ jelet mutat, és a "
+"navigációs panel beszámítja a szakaszánál."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:269
+msgid "Create the file and record the filing"
+msgstr "A fájl létrehozása és a benyújtás rögzítése"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:271
+msgid "Resolve every ▲ and confirm every ◐."
+msgstr "Oldj meg minden ▲ jelű tételt, és erősíts meg minden ◐ jelűt."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:272
+msgid ""
+"Press `e`, choose where to save the file, which file to write and, for "
+"Modelo 303, the refund, payment and direct debit choices. The result says"
+" that the file has not been sent to the AEAT."
+msgstr ""
+"Nyomd meg az `e` billentyűt, válaszd ki, hová mentsd a fájlt, melyik "
+"fájlt írd ki, valamint a Modelo 303 esetén a visszatérítés, a befizetés "
+"és a csoportos beszedés beállításait. Az eredmény közli, hogy a fájlt nem"
+" küldték el az AEAT-nak."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:275
+msgid "File with the AEAT yourself: [File at AEAT](file-at-aeat.md)."
+msgstr ""
+"A bevallást te magad nyújtsd be az AEAT-nál: [Benyújtás az AEAT-nál"
+"](file-at-aeat.md)."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:276
+msgid "Press F8 to record the filing. Cadrumo asks you to confirm."
+msgstr ""
+"Nyomd meg az F8 billentyűt a benyújtás rögzítéséhez. A Cadrumo "
+"megerősítést kér."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:278
+msgid "The header then reads \"Recorded as filed\" with the date."
+msgstr "A fejléc ezután ezt mutatja: „Benyújtottként rögzítve”, a dátummal."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:280
+#, python-brace-format
+msgid ""
+"A recorded declaration opens read-only: attention marks are hidden and "
+"editing is refused. To change it, {ref}`start a correction <correct-an-"
+"already-filed-local-record>` (complementaria or rectificativa)."
+msgstr ""
+"A benyújtottként rögzített bevallás csak olvasható: a figyelmeztető "
+"jelzések rejtve maradnak, és a szerkesztés nem engedélyezett. "
+"Módosításhoz {ref}`indíts helyesbítést <correct-an-already-filed-local-"
+"record>` (complementaria vagy rectificativa)."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:284
+msgid "Look up a symbol"
+msgstr "Egy jel jelentésének megkeresése"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:286
+msgid ""
+"Press `?` once. The help band opens and its first line lists the symbols "
+"on this screen, with counts."
+msgstr ""
+"Nyomd meg egyszer a `?` billentyűt. Megnyílik a súgósáv, és az első sora "
+"felsorolja a képernyő jeleit, számokkal."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:288
+msgid ""
+"Press `?` a second time to open **Symbols and keys**: every symbol with "
+"its meaning, grouped, and the keys. Press Esc or `?` to close it."
+msgstr ""
+"Nyomd meg másodszor is a `?` billentyűt a **Jelek és billentyűk** "
+"megnyitásához: minden jel a jelentésével, csoportosítva, és a billentyűk."
+" A bezáráshoz nyomd meg az Esc vagy a `?` billentyűt."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:290
+msgid ""
+"The first time you open a declaration, a notice says \"New here? Press ? "
+"to see what each symbol means.\""
+msgstr ""
+"Amikor először nyitsz meg egy bevallást, egy értesítés ezt írja: „Először"
+" jársz itt? Nyomd meg a ? billentyűt, és megtudod, mit jelentenek a "
+"jelek.”"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "-"
+msgstr "-"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Not applicable"
+msgstr "Nem alkalmazandó"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "○"
+msgstr "○"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Optional, empty"
+msgstr "Nem kötelező, üres"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "□"
+msgstr "□"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Cleared by you"
+msgstr "Te törölted"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◌"
+msgstr "◌"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Not calculated yet"
+msgstr "Még nincs kiszámítva"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "×"
+msgstr "×"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Could not be calculated"
+msgstr "Nem számítható ki"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "…"
+msgstr "…"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Not imported yet"
+msgstr "Még nincs importálva"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`Δ`"
+msgstr "`Δ`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Changed, not applied"
+msgstr "Módosítva, nincs alkalmazva"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◷"
+msgstr "◷"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Out of date"
+msgstr "Elavult"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "✓"
+msgstr "✓"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Done"
+msgstr "Kész"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "▸"
+msgstr "▸"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "You are here"
+msgstr "Itt tart"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "▹ ▿"
+msgstr "▹ ▿"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Closed, open section"
+msgstr "Bezárt, nyitott szakasz"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:307
+msgid "Keys"
+msgstr "Billentyűk"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`Enter`"
+msgstr "`Enter`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Open the box under the cursor"
+msgstr "Megnyitja a kurzor alatti rovatot"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Next or previous thing to do"
+msgstr "Következő vagy előző teendő"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`/` and `g`"
+msgstr "`/` és `g`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Search; go to a box"
+msgstr "Keresés; ugrás egy rovatra"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`f`, `o`, `d`"
+msgstr "`f`, `o`, `d`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Filter, sort, density"
+msgstr "Szűrő, rendezés, sűrűség"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Previous or next page"
+msgstr "Előző vagy következő oldal"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "← and → or `h` and `l`"
+msgstr "← és → vagy `h` és `l`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Move between cells in a table"
+msgstr "Mozgás a táblázat cellái között"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Open or close a page"
+msgstr "Oldal megnyitása vagy bezárása"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`b`"
+msgstr "`b`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Confirm assumed values of a section or page"
+msgstr "A szakasz vagy oldal feltételezett értékeinek megerősítése"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`x` or Delete"
+msgstr "`x` vagy Delete"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Clear a value you entered"
+msgstr "Az általad megadott érték törlése"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`u`"
+msgstr "`u`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Undo a change you have not applied"
+msgstr "Még nem alkalmazott módosítás visszavonása"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`s`"
+msgstr "`s`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "The sources map"
+msgstr "A források térképe"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Issues"
+msgstr "Problémák"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`R`"
+msgstr "`R`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Review changes"
+msgstr "Módosítások"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`c`"
+msgstr "`c`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`e`"
+msgstr "`e`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Export"
+msgstr "Exportálás"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "F8"
+msgstr "F8"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Run the next step"
+msgstr "A következő lépés végrehajtása"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`?`"
+msgstr "`?`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Symbols on this screen; twice for Symbols and keys"
+msgstr "A képernyő jelei; kétszer megnyomva: Jelek és billentyűk"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`Esc`"
+msgstr "`Esc`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go back"
+msgstr "Vissza"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "F3"
+msgstr "F3"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Switch between the light and the dark appearance"
+msgstr "Váltás a világos és a sötét megjelenés között"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:331
+msgid "The footer shows as many keys as fit the width of the terminal."
+msgstr "A lábléc annyi billentyűt mutat, amennyi elfér a terminál szélességében."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:333
+msgid "When something looks unexpected"
+msgstr "Ha valami váratlannak tűnik"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:335
+msgid ""
+"**Assumed, please confirm** on a declaration calculated without saved "
+"input history: Cadrumo cannot tell which values you typed. Open the box "
+"and press Enter to confirm it; otherwise the next apply or calculation "
+"returns it to its source."
+msgstr ""
+"**Feltételezett, kérjük erősítsd meg** egy olyan bevallásban, amelyet a "
+"megadott adatok előzménye nélkül számítottak ki: a Cadrumo nem tudja, "
+"mely értékeket adtad meg. Nyisd meg a rovatot, és nyomd meg az Enter "
+"billentyűt a megerősítéshez; különben a következő alkalmazás vagy "
+"számítás visszaállítja a forrás értékét."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:338
+msgid ""
+"**Reference value.** The official form fixes the box; you cannot change "
+"it."
+msgstr ""
+"**Referenciaérték.** A hivatalos nyomtatvány rögzíti a rovatot; nem "
+"módosíthatod."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:339
+msgid ""
+"**Pages arranged automatically.** Cadrumo arranged the pages from the "
+"official design and nobody has reviewed them by hand. Every box still "
+"appears exactly once."
+msgstr ""
+"**Automatikusan elrendezett oldalak.** A Cadrumo a hivatalos tervezet "
+"alapján rendezte el az oldalakat, és senki sem nézte át őket kézzel. "
+"Minden rovat továbbra is pontosan egyszer jelenik meg."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:342
+msgid ""
+"A modelo with no arrangement opens with every box in box number order, "
+"for viewing only."
+msgstr ""
+"A rendezés nélküli Modelo az összes rovatot rovatszám szerinti sorrendben"
+" nyitja meg, csak megtekintésre."

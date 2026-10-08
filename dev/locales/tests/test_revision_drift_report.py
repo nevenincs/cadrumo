@@ -15,7 +15,7 @@ import pytest
 
 from .._revision_drift import classify_revision_moves
 from ..cli import _echo_file_audit
-from ..manager import _audit_locale_file
+from ..locale_audit import _audit_locale_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

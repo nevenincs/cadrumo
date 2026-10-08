@@ -24,7 +24,8 @@ from dev.acceptance.income_tax.cli_journey import (
     ingest_income_fixture,
 )
 from dev.acceptance.income_tax.scenario import IncomeTaxScenario, build_scenario
-from dev.acceptance.income_tax.tui_journey import LocalXsdValidationEvidence, validate_modelo_100_xsd
+from dev.acceptance.income_tax.tui_contracts import LocalXsdValidationEvidence
+from dev.acceptance.income_tax.tui_xsd_validation import validate_modelo_100_xsd
 from dev.acceptance.installed_cli import InstalledCli
 
 _YEAR = 2025
@@ -190,6 +191,36 @@ def _calculate_and_file_m130(
     return income, expenses
 
 
+def _m100_asset_destinations(calculation: dict[str, object], oracle: AssetOverlayOracle) -> tuple[str, str, str]:
+    values = calculation.get("casilla_values")
+    if not isinstance(values, dict):
+        raise JourneyError("Modelo 100 returned no casilla map")
+    typed_values = cast("dict[str, object]", values)
+    income_value = typed_values.get("0171")
+    ordinary_expense_value = typed_values.get("0218")
+    material_value = typed_values.get("0208")
+    intangible_value = typed_values.get("0227")
+    if income_value is None or ordinary_expense_value is None or material_value is None or intangible_value is None:
+        raise JourneyError("Modelo 100 returned no ordinary-income/asset destination values")
+    income = _money(income_value)
+    ordinary_expenses = _money(ordinary_expense_value)
+    material = _money(material_value)
+    intangible = _money(intangible_value)
+    expected_income = _money(oracle.control.annual_oracle.activity_income)
+    expected_ordinary_expenses = oracle.m100_asset_total_expenses
+    if (
+        income != expected_income
+        or ordinary_expenses != expected_ordinary_expenses
+        or material != oracle.m100_asset_material
+        or intangible != oracle.m100_intangible
+    ):
+        raise JourneyError(
+            "Modelo 100 total-expense/material-destination composition mismatch: "
+            f"income={income}, ordinary_expenses={ordinary_expenses}, material={material}, intangible={intangible}"
+        )
+    return income, material, intangible
+
+
 def _calculate_export_m100(
     cli: InstalledCli, *, oracle: AssetOverlayOracle, output_dir: Path, report_stage: Callable[[str], None]
 ) -> tuple[str, str, str, Path]:
@@ -239,32 +270,7 @@ def _calculate_export_m100(
             )
         )
     )
-    values = calculation.get("casilla_values")
-    if not isinstance(values, dict):
-        raise JourneyError("Modelo 100 returned no casilla map")
-    typed_values = cast("dict[str, object]", values)
-    income_value = typed_values.get("0171")
-    ordinary_expense_value = typed_values.get("0218")
-    material_value = typed_values.get("0208")
-    intangible_value = typed_values.get("0227")
-    if income_value is None or ordinary_expense_value is None or material_value is None or intangible_value is None:
-        raise JourneyError("Modelo 100 returned no ordinary-income/asset destination values")
-    income = _money(income_value)
-    ordinary_expenses = _money(ordinary_expense_value)
-    material = _money(material_value)
-    intangible = _money(intangible_value)
-    expected_income = _money(oracle.control.annual_oracle.activity_income)
-    expected_ordinary_expenses = oracle.m100_asset_total_expenses
-    if (
-        income != expected_income
-        or ordinary_expenses != expected_ordinary_expenses
-        or material != oracle.m100_asset_material
-        or intangible != oracle.m100_intangible
-    ):
-        raise JourneyError(
-            "Modelo 100 total-expense/material-destination composition mismatch: "
-            f"income={income}, ordinary_expenses={ordinary_expenses}, material={material}, intangible={intangible}"
-        )
+    income, material, intangible = _m100_asset_destinations(calculation, oracle)
     # 0218 is the composed total-expense field; 0208 separately classifies the
     # same one effective material claim. This is a destination projection, not
     # a second basis-consuming deduction.
@@ -279,6 +285,23 @@ def _calculate_export_m100(
     if not target.is_file() or target.stat().st_size == 0:
         raise JourneyError("Modelo 100 export did not write an XML artifact")
     return income, material, intangible, target
+
+
+def _assert_asset_claim_handoff(handoff: dict[str, object], claim_id: str) -> None:
+    material_m100 = handoff.get("material_m100")
+    material_m130 = handoff.get("material_m130")
+    if not isinstance(material_m100, dict) or not isinstance(material_m130, dict):
+        raise JourneyError("asset filing handoff did not return material claim projections")
+    m100_projection = cast("dict[str, object]", material_m100)
+    m130_projection = cast("dict[str, object]", material_m130)
+    m100_amount = m100_projection.get("amount")
+    m130_amount = m130_projection.get("amount")
+    if m100_amount is None or m130_amount is None:
+        raise JourneyError("asset filing handoff did not return material claim amounts")
+    if _money(m100_amount) != str(_ASSET_AMOUNT) or _money(m130_amount) != str(_ASSET_AMOUNT):
+        raise JourneyError("asset filing handoff did not preserve the single effective claim")
+    if m100_projection.get("claim_ids") != [claim_id] or m130_projection.get("claim_ids") != [claim_id]:
+        raise JourneyError("asset filing handoff did not reference the recorded claim exactly once")
 
 
 def run_asset_export_journey(
@@ -343,20 +366,7 @@ def run_asset_export_journey(
     handoff = command_result(
         cli.run(("app", "ledger", "actividad-asset", "filing-handoff", "--tax-year", "2025", "--m130-period", "4T"))
     )
-    material_m100 = handoff.get("material_m100")
-    material_m130 = handoff.get("material_m130")
-    if not isinstance(material_m100, dict) or not isinstance(material_m130, dict):
-        raise JourneyError("asset filing handoff did not return material claim projections")
-    m100_projection = cast("dict[str, object]", material_m100)
-    m130_projection = cast("dict[str, object]", material_m130)
-    m100_amount = m100_projection.get("amount")
-    m130_amount = m130_projection.get("amount")
-    if m100_amount is None or m130_amount is None:
-        raise JourneyError("asset filing handoff did not return material claim amounts")
-    if _money(m100_amount) != str(_ASSET_AMOUNT) or _money(m130_amount) != str(_ASSET_AMOUNT):
-        raise JourneyError("asset filing handoff did not preserve the single effective claim")
-    if m100_projection.get("claim_ids") != [claim_id] or m130_projection.get("claim_ids") != [claim_id]:
-        raise JourneyError("asset filing handoff did not reference the recorded claim exactly once")
+    _assert_asset_claim_handoff(handoff, claim_id)
     for control_quarter in oracle.control.quarter_oracle[:-1]:
         report_stage(f"m130.{control_quarter.period}")
         _calculate_and_file_m130(

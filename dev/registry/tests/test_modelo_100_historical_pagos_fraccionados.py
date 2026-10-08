@@ -26,9 +26,9 @@ from cadrumo.domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     relation_prefill_bindings_for_period,
     relation_source_requirements,
-    resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
 
 from ..compiler.loader import load_modelo_directory
 from ._cross_dependency_calculation_support import _observations_from_requirements

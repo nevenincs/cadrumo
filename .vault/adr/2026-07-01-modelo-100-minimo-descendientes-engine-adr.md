@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-100-minimo-descendientes-engine'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:fd6f574dd41f2282b77afa33019ac5164eacb6897dd29ad35c30dc0a9b23aea8'
+modified: '2026-10-03'
+body_hash: 'sha256:8cec007040d33e7309a0a32433a4525f5b782e64a63661300a899319784f10bf'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
@@ -278,7 +278,6 @@ minimo advisory + fix dangling descendientes selector (#515)`):
   wired into the post-calculation advisory coordinator
   (`_calculation_diagnostics.py`) with real-adapter tests (encrypted bucket,
   loaded registry snapshot, real domain eligibility logic — no mocks) in
-  `src/cadrumo/application/modelo/tests/test_minimo_descendientes_advisory.py`.
 
 **Citation correction found during implementation:** the custodia-compartida
 prorrateo is Art. **61.1ª** LIRPF ("Cuando dos o más contribuyentes tengan
@@ -322,15 +321,14 @@ prorrateo for descendientes, so `RentaFamilyProfile.minimo_descendientes_estatal
 applies the full annual birth-order amount regardless of the descendant's entry
 date within the ejercicio.
 
-- New domain method `RentaFamilyProfile.minimo_descendientes_estatal` (
-  `src/cadrumo/domain/contribuyente/family.py`) ranks Art. 58.1-eligible
+- New domain method `RentaFamilyProfile.minimo_descendientes_estatal`  ranks Art. 58.1-eligible
   descendants by `birth_date` ascending, sums the birth-order tranche (1º/2º/3º/
   4º-y-siguientes) plus the Art. 58.2 menor-3 supplement, and applies the
   Art. 61.1ª custodia-compartida 0.5 factor per descendant. Amounts are passed
   in by the caller from the revision's own registry `money` parameters — the
   domain method contains no hardcoded euro figure.
 - New application-layer injector
-  `inject_derived_minimo_descendientes_facts` (`src/cadrumo/application/modelo/_profile_binding.py`)
+  `inject_derived_minimo_descendientes_facts`
   reads `snapshot.revision.parameters` for the per-year tranche/menor-3 params,
   computes the aggregate, and projects it onto the (previously-dangling)
   user-profile schema field `renta_family.descendientes_minimos_aggregate_{year}`

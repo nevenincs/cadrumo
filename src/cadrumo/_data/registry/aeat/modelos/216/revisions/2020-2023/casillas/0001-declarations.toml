@@ -53,6 +53,9 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 # @211+17 Num. Liquidacion - Partida 7 - Resultado ingresar [15 enteros + 2 decimales]
 [[revisions."2020-2023".casillas]]
 id = "7"
+input_kind = "computed"
+formula = "modelo-216-resultado"
+additional_source_refs = ["boe-2008-18497-modelo-216-form-pdf"]
 continuidad_id = "cuota-a-ingresar"
 number = "7"
 semantic_role = "cuota_a_ingresar"

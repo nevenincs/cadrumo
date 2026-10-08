@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#mcp-hardening-conformance'
 date: '2026-07-09'
-modified: '2026-07-10'
+modified: '2026-10-03'
 body_hash: 'sha256:226a6eac0b151edeba51f05249004d26139a029c247363339f1fb825f4637ec4'
-related:
-  - "[[2026-07-08-mcp-hardening-conformance-plan]]"
+related: []
 ---
 
 # `mcp-hardening-conformance` audit: `honesty review (campaign close): verified findings + dispositions`

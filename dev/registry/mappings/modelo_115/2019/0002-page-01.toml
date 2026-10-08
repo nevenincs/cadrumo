@@ -1,0 +1,311 @@
+schema_version = 1
+fragment_id = "page-01"
+modelo = "115"
+design_epoch = "2019"
+source_ref = "aeat-dr-115-2019-v13"
+source_sha256 = "d0b4c2cb344fe2d4b91a082bc85cc7906e383be792134504ddaedd0dc8bb2694"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-open"
+kind = "literal"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+literal = "<T"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-modelo"
+kind = "literal"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+literal = "115"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-pagina"
+kind = "literal"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+literal = "01"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-identifier-close"
+kind = "literal"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+literal = "000>"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-reservado-12"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-tipo-declaracion"
+kind = "header"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+producer_key = "filing.result_disposition"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-nif"
+kind = "header"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+producer_key = "taxpayer.tax_id"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-apellidos"
+kind = "header"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+producer_key = "taxpayer.surnames_or_legal_name"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-nombre"
+kind = "header"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+producer_key = "taxpayer.given_name"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-ejercicio"
+kind = "draft"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+draft_attribute = "filing_year"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-periodo"
+kind = "draft"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+draft_attribute = "period_code"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-casilla-01"
+kind = "casilla"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+casilla_id = "01"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-casilla-02"
+kind = "casilla"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+casilla_id = "02"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-casilla-03"
+kind = "casilla"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+casilla_id = "03"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-casilla-04"
+kind = "casilla"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+casilla_id = "04"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-casilla-05"
+kind = "casilla"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+casilla_id = "05"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-declaracion-complementaria"
+kind = "header"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+producer_key = "amendment_evidence.is_complementaria"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-justificante-anterior"
+kind = "header"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+producer_key = "amendment_evidence.original_aeat_receipt"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-iban"
+kind = "header"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+producer_key = "selected_account.iban"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-reserved-aeat"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-sello-electronico"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "DR 11501"
+
+[[entries]]
+export_field_id = "modelo-115-page-01-close"
+kind = "literal"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+literal = "</T11501000>"
+
+[entries.anchor]
+sheet = "DR 11501"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "DR 11501"

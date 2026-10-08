@@ -153,8 +153,37 @@ def test_run_scratch_follows_its_owner_and_the_grace_period(tmp_path: Path, monk
         live: False,
         young: False,
         dead: True,
-        abandoned: True,
+        # A live owner spares its scratch however long the directory's own mtime has been still.
+        abandoned: False,
     }
+
+
+def test_scratch_sweep_removes_only_dead_owner_idle_scratch_directly_in_its_base(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    now = 2_000_000_000.0
+    grace = reaper.INTERRUPTED_GRACE_SECONDS + 1
+    base = tmp_path / "base"
+    dead = base / "cr_303_0a0b0c"
+    (dead / "pytest" / "deep").mkdir(parents=True)
+    (dead / "pytest" / "deep" / "store.db").write_text("ninety megabytes, in spirit", encoding="utf-8")
+    os.utime(dead, (now - grace, now - grace))
+    live = _scratch(base, "cr_301_a1b2c3", age=reaper.PID_TRUST_CEILING_SECONDS + 1, now=now)
+    young = _scratch(base, "cr_304_d4e5f6", age=60, now=now)
+    foreign = _scratch(base, "cr_notapid_a1b2c3", age=reaper.PID_TRUST_CEILING_SECONDS + 1, now=now)
+    nested = _scratch(base / "sub", "cr_305_0d0e0f", age=grace, now=now)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    link = base / "cr_306_abcdef"
+    link.symlink_to(outside, target_is_directory=True)
+    monkeypatch.setattr(reaper, "process_is_live", lambda pid: pid == 301)
+
+    assert reaper.sweep_scratch_directories(base, now=now) == 1
+
+    assert not dead.exists()
+    for kept in (live, young, foreign, nested, outside):
+        assert kept.is_dir(), kept
+    assert link.is_symlink()
 
 
 def test_run_scratch_assessment_ignores_what_other_programs_keep_in_temp(tmp_path: Path) -> None:

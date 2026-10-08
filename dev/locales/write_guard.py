@@ -35,7 +35,6 @@ write path: every write still lands through
 
 from __future__ import annotations
 
-import hashlib
 import os
 import time
 from collections.abc import Generator
@@ -44,6 +43,7 @@ from pathlib import Path
 
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
 from cadrumo.core.logging import get_logger
 from cadrumo.core.pid_liveness import pid_is_alive
@@ -70,15 +70,10 @@ not that, and is reported rather than retried forever.
 _ABSENT_DIGEST = ""
 
 
-def _digest_bytes(raw: bytes) -> str:
-    """Return the content fingerprint used to detect an out-of-band write."""
-    return hashlib.sha256(raw).hexdigest()
-
-
 def _digest_path(path: Path) -> str:
     """Fingerprint ``path``, distinguishing an absent file from an empty one."""
     try:
-        return _digest_bytes(path.read_bytes())
+        return sha256_hex(path.read_bytes())
     except FileNotFoundError:
         return _ABSENT_DIGEST
 
@@ -117,7 +112,7 @@ class CatalogueWriteGuard:
         to rewrite.
         """
         raw = path.read_bytes()
-        self._observed.setdefault(path.resolve(), _digest_bytes(raw))
+        self._observed.setdefault(path.resolve(), sha256_hex(raw))
         return _decode_universal_newlines(raw)
 
     def observe(self, path: Path) -> None:
@@ -151,7 +146,7 @@ class CatalogueWriteGuard:
                 "Another writer or a hand edit landed first. Re-run the command to apply it on top."
             )
         _replace_catalogue(path, text)
-        self._observed[key] = _digest_bytes(text.encode(UTF_8_ENCODING))
+        self._observed[key] = sha256_hex(text.encode(UTF_8_ENCODING))
 
 
 def _replace_catalogue(path: Path, text: str) -> None:

@@ -1,9 +1,9 @@
-"""The one retention selector the cache, usage, and telemetry stores share.
+"""The one retention selector the cache, usage, and run-record stores share.
 
 The three LLM stores bound their growth under a single operational
 obligation -- age cutoff, then oldest-first count cap -- while carrying
 different record types and different retention timestamp fields
-(``created_at`` for cache and usage, ``started_at`` for run telemetry).
+(``created_at`` for cache and usage, ``started_at`` for run record).
 These tests pin the *policy* on the canonical selector so the three stores
 cannot drift apart on ordering or on either boundary, and prove each real
 store's ``prune`` reaches that selector with its own timestamp projection.
@@ -29,7 +29,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.config_support import LLMProvider
-from ....persistence.llm.run_telemetry import LLMRunRecord
+from ....persistence.llm.run_records import LLMRunRecord
 from ..models import CachedEntry, LLMResponse, UsageRecord
 from ..retention import select_retention_removal_keys
 
@@ -87,7 +87,7 @@ def _usage_row(created_at: datetime, key: str) -> tuple[UsageRecord, str]:
     )
 
 
-def _telemetry_row(started_at: datetime, key: str) -> tuple[LLMRunRecord, str]:
+def _run_record_row(started_at: datetime, key: str) -> tuple[LLMRunRecord, str]:
     return (
         LLMRunRecord(
             run_id=key,
@@ -190,7 +190,7 @@ def test_a_key_is_never_selected_twice_when_both_bounds_bite() -> None:
 
 
 def test_all_three_stores_select_identically_for_the_same_ages() -> None:
-    """Cache, usage, and telemetry agree on age, count, order and boundary.
+    """Cache, usage, and run-record agree on age, count, order and boundary.
 
     MIXED, deliberately. The three-way equality assertion is SUPPORTING: now
     that the stores share one selector they cannot diverge, so that assertion
@@ -215,14 +215,14 @@ def test_all_three_stores_select_identically_for_the_same_ages() -> None:
         max_records=2,
         timestamp=lambda record: record.created_at,
     )
-    telemetry = select_retention_removal_keys(
-        [_telemetry_row(s, k) for s, k in zip(stamps, keys, strict=True)],
+    records = select_retention_removal_keys(
+        [_run_record_row(s, k) for s, k in zip(stamps, keys, strict=True)],
         cutoff=_CUTOFF,
         max_records=2,
         timestamp=lambda record: record.started_at,
     )
 
-    assert cache == usage == telemetry
+    assert cache == usage == records
     # k0/k1 are strictly older than the cutoff. k2 sits exactly at it, so it
     # survives the age stage -- and is then evicted by the cap alongside k3,
     # leaving the newest two (k4, k5). That hand-off between the two stages is
@@ -236,23 +236,23 @@ def test_each_store_prune_reaches_the_canonical_selector() -> None:
     DISCRIMINATING, and the only test here that catches silent
     re-duplication. A store that reinstated a byte-identical private copy
     passes every behavioural assertion above -- verified by mutation:
-    re-inlining the telemetry copy left the other five tests green and failed
+    re-inlining the run-record copy left the other five tests green and failed
     only this one. Behaviour cannot detect a duplicate that has not yet
     drifted, so the wiring is asserted directly.
     """
     import inspect
 
     from ....persistence.llm import cache as _cache
-    from ....persistence.llm import run_telemetry as _run_telemetry
+    from ....persistence.llm import run_records as _run_record
     from ....persistence.llm import usage as _usage
 
-    for module in (_cache, _usage, _run_telemetry):
+    for module in (_cache, _usage, _run_record):
         assert module.select_retention_removal_keys is select_retention_removal_keys, module.__name__
 
     for source_owner, prune in (
         (_cache.LLMCache, _cache.LLMCache.prune),
         (_usage.UsageRecorder, _usage.UsageRecorder.prune),
-        (_run_telemetry.LLMRunTelemetryRecorder, _run_telemetry.LLMRunTelemetryRecorder.prune),
+        (_run_record.LLMRunRecorder, _run_record.LLMRunRecorder.prune),
     ):
         source = inspect.getsource(prune)
         assert "select_retention_removal_keys(" in source, source_owner.__name__

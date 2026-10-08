@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:61f794393412ec3135a393235c3e45f463070e99f55ef2324ddfb5a1e87ced67'
+modified: '2026-10-03'
+body_hash: 'sha256:662bf93dd25dd02b60097b4463020cec2aeb53138ac2771706f4b902a2bd9ef8'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S275-001 | PASS | Prompter storage ownership
 
-The `W12.P26.S275` review found that `src/aeat/application/wizard/_prompter.py`
+The `W12.P26.S275` review found that the retired module
 does not own persistence. The module renders questionary prompts, returns
 canonical-token strings, and logs progress through the structured logger. It does not
 construct repositories, write bucket manifests, manage master-key material, read
@@ -50,8 +50,8 @@ fakes, monkeypatching, skips, or duplicated business logic.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_prompter.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_questionary_smoke.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_questionary_smoke.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 
 Disposition: close `AFR-173`.

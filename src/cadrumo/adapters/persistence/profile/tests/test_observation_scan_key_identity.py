@@ -83,7 +83,7 @@ def _write_under_key(
         source_kind="aeat_sede_justificante",
         source_headers=(
             ObservedHeaderFact(
-                header_key="declaration_type",
+                header_key="filing.result_disposition",
                 value="I",
                 source_artefact_kind="submitted_file",
                 source_locator="test:observation-scan:declaration-type",
@@ -146,7 +146,7 @@ def test_iter_modelo_yields_an_observation_filed_under_its_own_key(
                 captured_at=_CAPTURED_AT,
                 source_headers=(
                     ObservedHeaderFact(
-                        header_key="declaration_type",
+                        header_key="filing.result_disposition",
                         value="I",
                         source_artefact_kind="submitted_file",
                         source_locator="test:observation-scan:declaration-type",

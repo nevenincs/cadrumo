@@ -31,13 +31,14 @@ from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
-from ....domain.calculations.registry.m347_threshold import (
-    m347_threshold_decimal,
-    resolve_m347_clave_c_declaration_threshold,
-    resolve_m347_counterparty_annual_threshold,
+from ....domain.calculations.registry.invoice_bindings import (
+    InvoiceObservation,
+    resolve_invoice_binding_row_values,
+    resolve_invoice_binding_values,
 )
+from ....domain.calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_threshold_buckets
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -57,7 +58,9 @@ def _m347_threshold() -> Decimal:
 
 
 def _m347_clave_c_threshold() -> Decimal:
-    return m347_threshold_decimal(resolve_m347_clave_c_declaration_threshold(effective_date=_M347_EFFECTIVE_DATE))
+    bucket = resolve_m347_threshold_buckets(effective_date=_M347_EFFECTIVE_DATE).bucket_of("C")
+    assert bucket.floor_fact is not None
+    return m347_threshold_decimal(bucket.floor_fact)
 
 
 def _revision(revision_id: str):
@@ -110,7 +113,7 @@ def test_declarado_record_is_wired_for_row_indexed_binding_rendering(revision_id
     record = _declarado_record(_revision(revision_id))
 
     assert record.repeat == "binding_rows"
-    assert record.row_field_casilla_ids["party_tax_id"] == "contraparte.nif"
+    assert record.row_field_casilla_ids["declarado_tax_id"] == "contraparte.nif"
     assert record.row_field_casilla_ids["importe_q1"] == "contraparte.importe-Q1"
 
 
@@ -146,13 +149,13 @@ def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
 def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(revision_id: str) -> None:
-    """RD 1065/2007 art. 31's floor, proven for all three cases through the real resolver.
+    """RD 1065/2007 art. 33.1's floor, proven for all three cases through the real resolver.
 
     Before this fix, the ``contraparte_clave`` per-row family applied NO
     threshold at all -- a real over-declaration bug, distinct from the
     under-declaration findings elsewhere in this area. This proves the
     fix routes through the one canonical comparison
-    (``m347_declarable_party_ids``) rather than a new one written here: a
+    (``m347_declarable_party_buckets``) rather than a new one written here: a
     counterparty BELOW the floor produces no row, one landing EXACTLY on it
     (the `>`, never `>=`, semantics the canonical comparison's own docstring
     names) produces no row either, and one ABOVE it still produces its row.
@@ -402,7 +405,7 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
 def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id: str) -> None:
-    """The conditional fields (importe-metalico, transmisiones, ...) stay off the binding path.
+    """The conditional money fields (importe-metalico, transmisiones, ...) stay off the binding path.
 
     Confirms the repointed scope is exactly the money fields this repoint built
     a real per-row source for, and that the conditional fields the diseño
@@ -412,7 +415,7 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
     record = _declarado_record(_revision(revision_id))
 
     bound_casilla_ids = {
-        record.row_field_casilla_ids["party_tax_id"],
+        record.row_field_casilla_ids["declarado_tax_id"],
         record.row_field_casilla_ids["party_legal_name"],
         record.row_field_casilla_ids["clave"],
         record.row_field_casilla_ids["importe_total"],
@@ -420,7 +423,9 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
         record.row_field_casilla_ids["importe_q2"],
         record.row_field_casilla_ids["importe_q3"],
         record.row_field_casilla_ids["importe_q4"],
-        record.row_field_casilla_ids["country_code"],
+        record.row_field_casilla_ids["residence_country_code"],
+        record.row_field_casilla_ids["business_premises_lease_mark"],
+        record.row_field_casilla_ids["provincia_code"],
     }
     conditional_casillas: set[CasillaId] = {
         field.casilla_id
@@ -431,8 +436,14 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
     assert "contraparte.importe-metalico" in conditional_casillas
     assert "contraparte.importe-transmisiones-inmuebles" in conditional_casillas
     assert "contraparte.operacion-seguro" in conditional_casillas
-    assert "contraparte.arrendamiento-local-negocio" in conditional_casillas
-    assert "contraparte.provincia-codigo" in conditional_casillas
+    # ARRENDAMIENTO LOCAL NEGOCIO (pos. 100) marks the business-premises lease each
+    # row relates apart (RD 1065/2007 art. 34.1.d), so it is bound per row as well.
+    assert record.row_field_casilla_ids["business_premises_lease_mark"] == "contraparte.arrendamiento-local-negocio"
+    assert "contraparte.arrendamiento-local-negocio" not in conditional_casillas
+    # CÓDIGO PROVINCIA (pos. 77-78) is no conditional money field: each row carries
+    # its own, "99" for a non-resident, so it is bound per row and never scalar.
+    assert record.row_field_casilla_ids["provincia_code"] == "contraparte.provincia-codigo"
+    assert "contraparte.provincia-codigo" not in conditional_casillas
 
 
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
@@ -440,9 +451,13 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
     """`país-código` per row, not one value stamped across every occurrence.
 
     `país-código` is a real per-row binding sourced from each observation's
-    own `country_code`. Asserts the VALUES, not merely the row count -- a
-    record stamping one counterparty's country onto every row would still
-    pass a count-only assertion.
+    own `country_code`. Both designs fill it only "en el caso de no residentes
+    sin establecimiento permanente", with "el Código del país de residencia del
+    declarado", so a resident's row leaves it blank and each non-resident's row
+    carries its own country. Asserts the VALUES per counterparty, not merely the
+    row count -- a record stamping one counterparty's country onto every row
+    would still pass a count-only assertion, and two non-residents of different
+    countries make that stamping visible.
     """
     revision = _revision(revision_id)
     observations = (
@@ -465,11 +480,96 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             country_code="US",
         ),
+        _observation(
+            invoice_id="inv-mx",
+            party_tax_id="D33333336",
+            party_legal_name="Importadora Mexicana SA",
+            transaction_date=date(2025, 9, 15),
+            total="4100.00",
+            operation_clave="B",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+            country_code="MX",
+        ),
     )
 
     resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
     pais_binding_id = next(bid for (bid, _row) in resolved if bid.endswith("-pais-codigo"))
-    countries_by_row = {row: resolved[(pais_binding_id, row)] for (bid, row) in resolved if bid == pais_binding_id}
+    name_binding_id = next(bid for (bid, _row) in resolved if bid.endswith("-nombre"))
+    countries_by_name = {
+        resolved[(name_binding_id, row)]: resolved[(pais_binding_id, row)]
+        for (bid, row) in resolved
+        if bid == pais_binding_id
+    }
 
-    assert set(countries_by_row.values()) == {"ES", "US"}
-    assert len(countries_by_row) == 2, "each counterparty must resolve its OWN pais-codigo row"
+    assert countries_by_name == {
+        "Contraparte Uno SL": "",
+        "Acme Imports Inc": "US",
+        "Importadora Mexicana SA": "MX",
+    }, "each counterparty must resolve its OWN pais-codigo row"
+
+
+@pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
+def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_id: str) -> None:
+    """Type 1 positions 136-144 and 145-160 summarise the type 2 records actually emitted.
+
+    Both designs: the count is the number of declarado records, a declarado
+    counted once per record it appears in, and the amount is the signed sum of
+    those records' annual amounts. One counterparty whose sales and purchases
+    each exceed the floor is two records (RD 1065/2007 art. 33.1 computes the
+    entregas and the adquisiciones separately); a clave C beneficiary above its
+    own lower floor is one; a counterparty under the general floor emits
+    nothing and adds nothing.
+    """
+    revision = _revision(revision_id)
+    above_general = (_m347_threshold() + Decimal("1000.00")).quantize(Decimal("0.01"))
+    above_clave_c = (_m347_clave_c_threshold() + Decimal("50.00")).quantize(Decimal("0.01"))
+    observations = (
+        _observation(
+            invoice_id="sale",
+            party_tax_id="B11111112",
+            party_legal_name="Contraparte Uno SL",
+            transaction_date=date(2025, 3, 1),
+            total=str(above_general),
+            operation_clave="B",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        ),
+        _observation(
+            invoice_id="purchase",
+            party_tax_id="B11111112",
+            party_legal_name="Contraparte Uno SL",
+            transaction_date=date(2025, 6, 1),
+            total=str(above_general),
+            operation_clave="A",
+        ),
+        _observation(
+            invoice_id="collection",
+            party_tax_id="A22222224",
+            party_legal_name="Beneficiario Dos SA",
+            transaction_date=date(2025, 9, 1),
+            total=str(above_clave_c),
+            operation_clave="C",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        ),
+        _observation(
+            invoice_id="below",
+            party_tax_id="B33333336",
+            party_legal_name="Contraparte Tres SL",
+            transaction_date=date(2025, 10, 1),
+            total="1000.00",
+            operation_clave="B",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        ),
+    )
+
+    totals = resolve_invoice_binding_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
+    importe_binding = next(bid for (bid, _row) in rows if bid.endswith("-row-importe"))
+    emitted = [value for (bid, _row), value in rows.items() if bid == importe_binding]
+    assert all(isinstance(value, Decimal) for value in emitted)
+
+    assert len(emitted) == 3
+    assert totals["modelo-347-declarante-numero-personas-entidades"] == Decimal(len(emitted))
+    assert totals["modelo-347-declarante-importe-total-anual-operaciones"] == sum(emitted, Decimal("0"))
+    assert totals["modelo-347-declarante-importe-total-anual-operaciones"] == (
+        above_general + above_general + above_clave_c
+    )

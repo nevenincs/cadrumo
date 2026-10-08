@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#m303-carry-reconciliation'
 date: '2026-06-21'
-modified: '2026-08-09'
-body_hash: 'sha256:3da8f7946dca1914b7ce9d859387c9fc521017f83bc8bda4b026e92e7cf32d73'
+modified: '2026-10-04'
+body_hash: 'sha256:97d7c9bddfb9c807933d1b936a4f0a05a4342d3102e2954945eaf5e4b98b6d4d'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
+  - '[[2026-10-04-taxpayer-bank-accounts-adr]]'
 ---
-
 # `m303-carry-reconciliation` adr: `Modelo 303 refunded period generates zero carry-forward: disposition feeds compensacion-disponible` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -86,6 +86,10 @@ real gap reachable through the app's own file-then-recalculate flow.
   determined disposition feeds that gate so a period is refunded OR compensated,
   never both.
 
+### Captured disposition header repair (2026-10-04)
+
+The registry-selected disposition header is the generated export producer key `filing.result_disposition`. Earlier wording naming `source_headers[header_key='declaration_type']` describes the historical captured-evidence spelling; it is not the current producer contract. The governed carry-disposition mapping may explicitly declare that historical evidence spelling alongside the canonical key. Ingress preserves the original immutable header provenance and requires exactly one matching fact; two matching facts, missing facts, unknown codes and sign-incompatible dispositions still refuse. This does not reintroduce a legacy export/profile API or infer a disposition from amounts. Historical evidence remains readable under the architecture rule distinguishing evidence from obsolete internal APIs.
+
 ## Rationale
 
 The grounding pass established the gap is real and that its root is a missing fact:
@@ -118,7 +122,7 @@ art. 30 / Ley 37/1992 art. 116 (a refunded credit is returned, not carried).
   drives the fichero `D` and the disposition that drives the cross-period carry MUST
   be the one determined fact, never computed twice and never allowed to disagree.
 
-## Status
+## Original proposal and carry relationship
 
 `proposed`. The carry mechanism this ADR decides is a child of the canonical
 compensación-carry direction set by the PHASE ADRs (not a central apex doc): the
@@ -224,3 +228,7 @@ account; it is a refund destination, not a debit mandate. Current U continues to
 charge/refund specimens must prove the correct source. Casilla 111 requires a negative
 casilla 71, so U is already sign-incompatible whenever Nota 3 applies; that fail-closed
 invariant is retained rather than inventing a combined-account precedence rule.
+
+## Amendment (2026-10-04): charge and refund accounts come from the ledger register
+
+Applied under `2026-10-04-taxpayer-bank-accounts-adr`. Where this record calls `ChargeAccount` "distinct encrypted durable profile data", read: a CHARGE designation (or per-filing choice) of an own account in the encrypted ledger register `cadrumo.ledger.own_accounts`; the refund account is the REFUND designation of the same register. Charge and refund stay distinct roles and neither is inferred from the other. U admissibility moves from a 303-only branch to each modelo's declared disposition keys, and U refuses after the window's `payment_cutoff_on`. Receipts and events may carry the role and opaque `own_account_id`, still never account material.

@@ -97,6 +97,15 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
         )
 
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M390)
+    # These synthetic specimens state the ordinary 21%, 10% and 4% quotas.
+    # The current annual total sums the printed rate tiers [2], [4] and [6].
+    for source_id, target_id in (
+        (_M390_REPERCUTIDO_GENERAL_CASILLA, "iva.anual.repercutido.tipo-21.cuota"),
+        (_M390_REPERCUTIDO_REDUCIDO_CASILLA, "iva.anual.repercutido.tipo-10.cuota"),
+        (_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA, "iva.anual.repercutido.tipo-4.cuota"),
+    ):
+        if source_id in inputs:
+            inputs[validated_casilla_id(target_id)] = inputs[source_id]
     printed_49 = extracted.get(_M390_SOPORTADO_INTERIORES_CASILLA)
     if isinstance(printed_49, Decimal):
         inputs[_M390_SOPORTADO_INTERIORES_SOPORTADO_CASILLA] = printed_49

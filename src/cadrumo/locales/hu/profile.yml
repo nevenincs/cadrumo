@@ -4,16 +4,15 @@ profile:
       benyújtani, nem az AEAT-nél: a baszk területek a Concierto Económico (Ley 12/2002),
       Navarra pedig a Convenio Económico (Ley 28/1990) alapján. Ez a CLI nem kezeli
       a forális adóbevallásokat. Lásd: sede.bizkaia.eus (Vizcaya), gipuzkoa.eus/ogasuna
-      (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es (Navarra) az
-      Ön területének megfelelően.'
-    not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtassa
-      a(z) `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a
-      beállításához.
+      (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es (Navarra), attól
+      függően, melyik területen élsz.'
+    not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtasd a(z)
+      `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a beállításához.
   journey:
     source:
       censal_review:
         action: Nyilvántartás áttekintése
-        description: Olvassa be az adózó saját nyilvántartási adatait, és tekintse
+        description: Olvasd be az adózó saját nyilvántartási adatait, és tekintsd
           át a javasolt módosításokat elfogadás előtt.
         title: AEAT nyilvántartás
       credential_requirement:
@@ -21,13 +20,13 @@ profile:
         missing: AEAT hitelesítés szükséges (nincs beállítva)
       filed_history:
         action: Előzmények lekérése
-        description: Kérje le az adózó korábbi bevallási előzményeit az AEAT-tól a
+        description: Kérd le az adózó korábbi bevallási előzményeit az AEAT-tól a
           már bevallott adatok átviteléhez.
         title: Korábbi bevallások
   keys:
     activities:
-      description: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használja
-        az IAE fejezetet, ha ismeri)
+      description: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használd az
+        IAE fejezetet, ha ismered)
     capabilities:
       google_export: Engedélyezi a Google Sheets exportálást?
       llm_vision: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
@@ -62,7 +61,7 @@ profile:
       special_regime: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
       special_regime_start_date: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
     iva:
-      cash_accounting_regime_enrolled: Be van jelentkezve az IVA pénzforgalmi különleges
+      cash_accounting_regime_enrolled: Bejelentkeztél az IVA pénzforgalmi különleges
         rendszerébe?
       does_intracomunitario: Végez intraközösségi ügyleteket
       group_dominant_entity_enrolled: IVA-csoport domináns szervezeteként bejelentkezett
@@ -71,25 +70,26 @@ profile:
         előlegek levonására?
       intracommunity_operations_exceed_50000_eur: Intraközösségi ügyletek meghaladják
         az 50 000 EUR-t
-      m303_regime_composition: Melyik 303-as nyomtatvány rendszerösszetétel alkalmazandó?
+      m303_regime_composition: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
       oss_enrolled: OSS-be bejelentkezett
       redeme_enrolled: REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)
       regime: Melyik IVA-rendszer alkalmazandó?
       roi_enrolled: ROI-ba bejelentkezett
       sii_enrolled: SII-be bejelentkezett (azonnali információszolgáltatás)
-      voluntary_sii_enrolled: Önkéntesen bejelentkezett az SII-be?
+      voluntary_sii_enrolled: Önkéntesen csatlakoztál az SII-hez?
     obligations:
-      bienes_extranjero_above_threshold: Külföldi vagyon meghaladja a 720-as nyomtatvány
-        küszöbértékét
+      bienes_extranjero_above_threshold: Külföldi vagyon meghaladja a Modelo 720 küszöbértékét
       monedas_virtuales_extranjero_above_threshold: Külföldi virtuális valuták meghaladják
-        a 721-es nyomtatvány küszöbértékét
+        a Modelo 721 küszöbértékét
       premio_loteria_gravamen_especial_sin_retencion: Különadó alá eső lottó- vagy
-        fogadási nyeremény forrásadó-levonás és adóelőleg nélkül (136-os nyomtatvány)
+        fogadási nyeremény forrásadó-levonás és adóelőleg nélkül (Modelo 136)
       premio_loteria_gravamen_especial_trimestres: Negyedévek, amelyekben az ilyen
-        lottó- vagy fogadási nyereményt felvették (136-os nyomtatvány), |-jellel elválasztott
+        lottó- vagy fogadási nyereményt felvették (Modelo 136), |-jellel elválasztott
         ÉÉÉÉ-nT tokenekként
-      third_party_transactions_above_347_threshold: Harmadik féllel folytatott ügyletek
-        meghaladják a 347-es nyomtatvány küszöbértékét
+      third_party_transactions_above_347_threshold: A Modelo 347 által lefedett naptári
+        évben meghaladták-e az ugyanazzal a személlyel vagy szervezettel folytatott
+        ügyleteid a 3 005,06 EUR-t (a harmadik felek nevében beszedett összegeknél
+        a 300,51 EUR-t), az értékesítéseket és a beszerzéseket külön számítva?
     preferences:
       output_language: CLI kimeneti nyelv ehhez a profilhoz
     renta_family:
@@ -119,12 +119,12 @@ profile:
       id: Adóazonosító (NIF/CIF/DNI/NIE)
     tax_residence:
       ccaa: Adóügyi illetőség szerinti autonóm közösség
-      jurisdiction_scope: Melyik adóterület alkalmazandó erre a 303-es nyomtatványra?
+      jurisdiction_scope: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
     taxpayer_type:
       country_of_fiscal_residence: Adóügyi illetőség szerinti ország (ISO 3166-1 alfa-2
         kód, pl. GB, DE, FR)
       declaration_roles: A bejelentő szervezet betölt-e valamelyik alábbi intézményi
-        szerepet a 347-es modell (harmadik felekkel folytatott ügyletek) szempontjából?
+        szerepet a Modelo 347 (harmadik felekkel folytatott ügyletek) szempontjából?
       entity_type: Entitástípus
       fiscal_residency: Adóügyi illetőségi kategória
       incn_prior_12_months: Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban,
@@ -133,11 +133,11 @@ profile:
       legal_entity_form: Jogi forma
       ley_49_2002_special_regime_option_date: A Ley 49/2002 szerinti különleges rendszer
         választásának bejelentett dátuma
-      ley_49_2002_special_regime_option_declared: A szervezet a 036-os nyomtatványon
-        bejelentette a Ley 49/2002 II. címe szerinti különleges adózási rendszer választását?
+      ley_49_2002_special_regime_option_declared: A szervezet a Modelo 036-on bejelentette
+        a Ley 49/2002 II. címe szerinti különleges adózási rendszer választását?
       ley_49_2002_special_regime_renunciation_date: A Ley 49/2002 szerinti különleges
         rendszerről való lemondás bejelentett dátuma
-      ley_49_2002_special_regime_renunciation_declared: A szervezet a 036-os nyomtatványon
+      ley_49_2002_special_regime_renunciation_declared: A szervezet a Modelo 036-on
         bejelentette a Ley 49/2002 II. címe szerinti különleges adózási rendszerről
         való lemondást?
       new_entity_first_two_profit_periods: Ez egy újonnan létrehozott jogi személy
@@ -147,9 +147,9 @@ profile:
       representante_fiscal_nombre: A spanyolországi adóügyi képviselő neve
     withholding:
       has_employees: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
-      modelo_111_no_retenciones_periods: 111-es nyomtatvány forrásadó nélküli időszakok
-      modelo_115_no_relevant_payment_periods: 115-ös nyomtatvány releváns kifizetés
-        nélküli időszakai
+      modelo_111_no_retenciones_periods: Modelo 111 forrásadó nélküli időszakok
+      modelo_115_no_relevant_payment_periods: Modelo 115 releváns kifizetés nélküli
+        időszakai
       pays_capital_income_with_retencion: Forrásadóval terhelt tőkejövedelmet fizet
       pays_professionals_with_retencion: Forrásadóval terhelt díjazást fizet szakembereknek
       pays_rent_with_retencion: Forrásadóval terhelt helyi bérleti díjat fizet
@@ -174,7 +174,7 @@ profile:
         base_imponible_assigned:
           label: Tagra jutó adóalap
         clave:
-          label: A jövedelemtétel kódja (184-es nyomtatvány)
+          label: A jövedelemtétel kódja (Modelo 184)
         clave_declarado:
           label: Az ingatlan tulajdonjogi kódja
         codigo_provincia:
@@ -219,7 +219,7 @@ profile:
         situacion_inmueble:
           label: Az ingatlan elhelyezkedési státusza
         subclave:
-          label: A jövedelemtétel alkódja (184-es nyomtatvány)
+          label: A jövedelemtétel alkódja (Modelo 184)
       attribution_received:
         base_imponible_attributed:
           label: Tagra jutó hozzárendelt adóalap
@@ -305,7 +305,7 @@ profile:
             where: A DNI- vagy NIE-kártyáján, illetve az AEAT által kiadott NIF-kártyán.
               Bármely korábbi bevalláson vagy AEAT-levélen is szerepel.
             why: Minden bevallást ezzel a számmal nyújtanak be; az AEAT ez alapján
-              azonosítja önt.
+              azonosít téged.
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
         activity_kind:
@@ -367,19 +367,18 @@ profile:
           label: Ingatlanfejlesztői önadóztatás adóalapja
         cash_accounting_regime_enrolled:
           help:
-            what: Választotta-e a pénzforgalmi áfa különleges rendszerét (criterio
-              de caja).
-            where: A 036-os nyomtatványon kell választani, és az adózói adatai között
-              látható. Ha nem választotta, a válasz Nem.
+            what: A pénzforgalmi áfa különleges rendszerét (criterio de caja) választottad?
+            where: A Modelo 036-on kell választani, és az adózói adataid között látható.
+              Ha nem választottad, a válasz Nem.
             why: Ebben a rendszerben az áfa a számlák kifizetésekor és nem kiállításukkor
               esedékes, ami megváltoztatja az egyes időszakok számait.
           label: Pénzforgalmi rendszerbeli tagság
         does_intracomunitario:
           label: Közösségen belüli ügyletek
         group_dominant_entity_enrolled:
-          label: IVA-csoport domináns tagja (353-as nyomtatvány)
+          label: IVA-csoport domináns tagja (Modelo 353)
         group_member_enrolled:
-          label: IVA-csoporttag (322-es nyomtatvány)
+          label: IVA-csoporttag (Modelo 322)
         hydrocarbon_deposit_advance_payment_deduction_entitled:
           help:
             what: Levonhatja-e azokat az áfa-előlegeket, amelyeket szénhidrogéneknek
@@ -397,20 +396,20 @@ profile:
             mixed: Általános és egyszerűsített rendszer együtt
             simplified: Csak egyszerűsített rendszer
           help:
-            what: 'Mely áfarendszereket kombinálja a 303-as bevallása: csak az általánost,
+            what: 'Mely áfarendszereket kombinálja a 303-as bevallásod: csak az általánost,
               csak az egyszerűsítettet, vagy mindkettőt.'
             where: Az adózói bejelentkezésén szereplő egyes tevékenységek áfarendszeréből
               következik.
-            why: A 303-as nyomtatványnak minden rendszerhez külön része van; ez dönti
-              el, mely részeket kell kitölteni.
-          label: A 303-es nyomtatvány rendszerösszetétele
+            why: A Modelo 303-nak minden rendszerhez külön része van; ez dönti el,
+              mely részeket kell kitölteni.
+          label: A Modelo 303 rendszerösszetétele
         oss_enrolled:
           label: OSS/IOSS-regisztráció
         redeme_enrolled:
           help:
             what: Szerepel-e a REDEME-ben, a havi áfa-visszatérítési nyilvántartásban.
-            where: A 036-os nyomtatványon kell kérelmezni, és az adózói adatai között
-              látható. Ha soha nem kérte, a válasz Nem.
+            where: A Modelo 036-on kell kérelmezni, és az adózói adataid között látható.
+              Ha soha nem kérted, a válasz Nem.
             why: A nyilvántartásba vétel miatt az áfabevallás negyedéves helyett havi
               lesz, és az SII kötelezővé válik.
           label: REDEME-regisztráció
@@ -425,8 +424,8 @@ profile:
           help:
             what: Az az áfa- (IVA-) rendszer, amelyben a tevékenysége nyilvántartásba
               van véve.
-            where: Az adózói bejelentkezésén (036-os vagy 037-es nyomtatvány), vagy
-              az adózói adatai között az AEAT elektronikus ügyfélkapujában.
+            where: Az adózói bejelentkezésén (Modelo 036 vagy Modelo 037), vagy az
+              adózói adatai között az AEAT elektronikus ügyfélkapujában.
             why: Ez dönti el, milyen áfabevallásokat nyújt be, és hogyan számítják
               az áfát az eladásain és beszerzésein.
           label: IVA-rendszer
@@ -436,10 +435,10 @@ profile:
           label: SII-regisztráció
         voluntary_sii_enrolled:
           help:
-            what: Önként csatlakozott-e az SII-hez, az áfa-nyilvántartások azonnali
+            what: Önként csatlakoztál-e az SII-hez, az áfa-nyilvántartásaid azonnali
               elektronikus továbbításához az AEAT felé.
-            where: Az önkéntes csatlakozást a 036-os nyomtatványon kell kérelmezni,
-              és az adózói adatai között látható. Ha soha nem kérte, a válasz Nem.
+            where: Az önkéntes csatlakozást a Modelo 036-on kell kérelmezni, és az
+              adózói adataid között látható. Ha soha nem kérted, a válasz Nem.
             why: Az SII-tagok online vezetik áfa-nyilvántartásaikat az AEAT-nál, ami
               egyes kötelezettségeket és határidőket megváltoztat.
           label: Önkéntes SII-tagság
@@ -481,15 +480,17 @@ profile:
           label: Trabajador del mar (besorolás)
       obligations:
         bienes_extranjero_above_threshold:
-          label: 720-as nyomtatvány küszöbérték túllépve
+          label: Modelo 720 küszöbérték túllépve
         monedas_virtuales_extranjero_above_threshold:
-          label: 721-es nyomtatvány küszöbérték túllépve
+          label: Modelo 721 küszöbérték túllépve
         premio_loteria_gravamen_especial_sin_retencion:
-          label: Lottónyeremény forrásadó-levonás nélkül (136-os nyomtatvány)
+          label: Lottónyeremény forrásadó-levonás nélkül (Modelo 136)
         premio_loteria_gravamen_especial_trimestres:
-          label: Nyeremény negyedévei (136-os nyomtatvány)
+          label: Nyeremény negyedévei (Modelo 136)
         third_party_transactions_above_347_threshold:
-          label: 347-es nyomtatvány küszöbérték túllépve
+          label: 'Modelo 347 küszöbérték túllépve: személyenként vagy szervezetenként
+            3 005,06 EUR a naptári évben (harmadik felek nevében történő beszedésnél
+            300,51 EUR)'
       preferences:
         output_language:
           label: Kimeneti nyelv
@@ -508,9 +509,9 @@ profile:
         source:
           choices:
             aeat_censo_read: Az AEAT nyilvántartásából olvasva
-            censo_artefact_g313: Az ön által benyújtott adózói igazolásból olvasva
+            censo_artefact_g313: Az általad benyújtott adózói igazolásból olvasva
             manual_cli: Kézzel megadva
-            modelo_036_import: 036-os nyomtatványból importálva
+            modelo_036_import: Modelo 036-ból importálva
             registry_inference: Nyilvántartási szabályokból levezetve
             setup_wizard: Beállítási varázsló
           label: Adat eredete
@@ -631,7 +632,7 @@ profile:
               vagy Navarra) szabályait követi-e.
             where: 'Az adózási lakcíméből következik: Álava, Bizkaia, Gipuzkoa vagy
               Navarra területén forális, Spanyolország többi részén közös terület.'
-            why: Ez dönti el, melyik adóhatóság és milyen szabályok vonatkoznak önre.
+            why: Ez dönti el, melyik adóhatóság és milyen szabályok vonatkoznak rád.
               A forális területek a saját adóhivatalukhoz nyújtanak be, ez még nem
               támogatott.
           label: Területi adórendszer
@@ -639,7 +640,7 @@ profile:
         country_of_fiscal_residence:
           label: Adóügyi illetőség országa
         declaration_roles:
-          label: Harmadik feles bevallói szerepkörök (347-es modell)
+          label: Harmadik feles bevallói szerepkörök (Modelo 347)
         entity_type:
           choices:
             attribution_entity: Jövedelem-hozzárendelési jogalany
@@ -704,9 +705,9 @@ profile:
         has_employees:
           label: Van alkalmazottja
         modelo_111_no_retenciones_periods:
-          label: 111-es nyomtatvány forrásadó nélküli időszakok
+          label: Modelo 111 forrásadó nélküli időszakok
         modelo_115_no_relevant_payment_periods:
-          label: 115-ös nyomtatvány releváns kifizetés nélküli időszakai
+          label: Modelo 115 releváns kifizetés nélküli időszakai
         pays_capital_income_with_retencion:
           label: Tőkejövedelmet forrásadóval fizet
         pays_professionals_with_retencion:
@@ -715,22 +716,22 @@ profile:
           label: Bérleti díjat forrásadóval fizet
     section:
       activities:
-        summary: Az ön által végzett gazdasági tevékenységek, tevékenységenként egy
+        summary: Az általad végzett gazdasági tevékenységek, tevékenységenként egy
           sorral.
         title: Gazdasági tevékenységek
       attribution_entity:
-        summary: Az ön által működtetett jövedelem-hozzárendelési jogalany (comunidad
+        summary: Az általad működtetett jövedelem-hozzárendelési jogalany (comunidad
           de bienes, sociedad civil) jogi formája.
         title: Jövedelem-hozzárendelő entitás jogi formája
       attribution_entity_socios:
         summary: A jogalany tagjai és az egyes tagoknak hozzárendelt jövedelemrész.
         title: A hozzárendelő entitás tagjai
       attribution_received:
-        summary: Azok a jövedelmek, amelyeket olyan jogalanyok rendelnek önhöz, amelyeknek
-          tagja.
+        summary: Azok a jövedelmek, amelyeket olyan jogalanyok rendelnek hozzád, amelyeknek
+          tagja vagy.
         title: Kapott hozzárendelt jövedelem
       auth:
-        summary: 'Hogyan azonosítja magát az AEAT felé: tanúsítvánnyal, Cl@ve Móvil
+        summary: 'Hogyan azonosítod magad az AEAT felé: tanúsítvánnyal, Cl@ve Móvil
           vagy Cl@ve PIN használatával.'
         title: AEAT-hitelesítés
       capabilities:
@@ -738,14 +739,14 @@ profile:
           a beolvasott dokumentumok helyi olvasását.
         title: Szolgáltatási képességek
       censo:
-        summary: Az AEAT adózói nyilvántartásába (036/037-es nyomtatvány) történt
-          bejelentkezése és annak dátumai.
+        summary: Az AEAT adózói nyilvántartásába (Modelo 036/037) történt bejelentkezése
+          és annak dátumai.
         title: Censo és bejelentkezés
       contact:
-        summary: Hol érheti el önt az AEAT, és mi az adózási lakcíme.
+        summary: Hol érhet el téged az AEAT, és mi az adózási lakcímed.
         title: Kapcsolat és adóügyi cím
       identity:
-        summary: 'A neve és NIF-száma: kinek a nevében készülnek a bevallások.'
+        summary: 'A neved és NIF-számod: kinek a nevében készülnek a bevallások.'
         title: Azonosítás
       irpf:
         summary: Hogyan számítják a személyi jövedelemadóját (IRPF), és milyen levonások
@@ -762,11 +763,11 @@ profile:
           benyújtania.
         title: Bevallási kötelezettség küszöbértékei
       preferences:
-        summary: Hogyan kommunikál önnel az alkalmazás, például az egyes képernyők
+        summary: Hogyan kommunikál veled az alkalmazás, például az egyes képernyők
           nyelve.
         title: Kezelői beállítások
       properties:
-        summary: Az ön tulajdonában lévő vagy bérbe adott ingatlanok, ingatlanonként
+        summary: A tulajdonodban lévő vagy általad bérbe adott ingatlanok, ingatlanonként
           egy sorral.
         title: Ingatlanok és bérbeadás
       provenance:
@@ -783,7 +784,7 @@ profile:
         summary: A bérbeadásból származó jövedelem háttéradatai az éves bevallásban.
         title: Bérbeadási környezet (Renta)
       renta_spouse:
-        summary: A házastársa adatai, amelyekre a közös bevalláshoz van szükség.
+        summary: A házastársad adatai, amelyekre a közös bevalláshoz van szükség.
         title: Házastárs (Renta)
       renta_taxpayer:
         summary: Az adózó személyes körülményei, amelyeket az éves bevallás felhasznál.
@@ -793,18 +794,18 @@ profile:
           területet.
         title: Adóügyi illetőség és joghatóság
       taxpayer_type:
-        summary: Milyen típusú adózó ön, és milyen jövedelemfajtákból van bevétele.
+        summary: Milyen típusú adózó vagy, és milyen jövedelemfajtákból van bevételed.
         title: Adózó típusa és jövedelemkategóriák
       usage_ratios:
         summary: A közösen használt eszközök, például autó vagy telefon üzleti használatának
           aránya.
         title: Használati arányok és levonhatóság
       vivienda_office:
-        summary: Használja-e a fő lakóhelye egy részét irodaként a tevékenységéhez.
+        summary: Használod-e a fő lakóhelyed egy részét irodaként a tevékenységedhez.
         title: Állandó lakás irodai hasznosítása
       withholding:
-        summary: Azok a levonások, amelyeket önnek kell alkalmaznia, amikor másoknak
-          fizet, például alkalmazottaknak vagy bérbeadóknak.
+        summary: Azok a levonások, amelyeket alkalmaznod kell, amikor másoknak fizetsz,
+          például alkalmazottaknak vagy bérbeadóknak.
         title: Forrásadó-fizetői kötelezettségek
   validation:
     boolean_field_invalid: Érvénytelen logikai mező

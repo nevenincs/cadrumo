@@ -38,20 +38,7 @@ from ..closure_models import (
 )
 from ..filing_export_coverage import FilingExportCoverageReport
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.timeout(900)]
-"""The 900-second budget is the live-mode closure walk, not a slow test.
-
-Measured serially, the live-mode case takes 297.85s against the repository's
-300-second default - 99.3% of a ceiling that does not fail the test when it
-expires. pytest-timeout's thread method kills the process, so the worker dies
-and every sibling on it is reported as never having run; that is exactly the
-`node down: Not properly terminated` this directory produced under xdist. Two
-more cases here stand at 190.32s and 184.23s, so the margin is the registry's
-growth away from a cliff, not the ceiling.
-
-The walk itself stays real and unnarrowed: it is the closure over every
-bundled revision, which is the subject.
-"""
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _AS_OF = date(2026, 8, 24)
 

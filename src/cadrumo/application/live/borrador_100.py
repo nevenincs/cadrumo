@@ -178,14 +178,6 @@ class Borrador100SnapshotRepository(SnapshotRepository[Borrador100Snapshot], Pro
     """
 
 
-class Borrador100SnapshotRepositoryFactory(Protocol):
-    """Construct the required borrador repository for one profile bucket."""
-
-    def __call__(self, *, bucket_id: str) -> Borrador100SnapshotRepository:
-        """Return the application repository capability for ``bucket_id``."""
-        ...
-
-
 class _Borrador100CaptureRequest(BaseModel):
     model_config = _STRICT_FROZEN
 
@@ -217,14 +209,24 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         captured_at: datetime,
         source_url: str,
         binding_values: Mapping[BindingId, _BorradorValue],
+        operation: PinnedAuthorityOperation | None = None,
     ) -> Borrador100Snapshot:
         """Execute this public contract operation."""
-        with bundled_indexed_authority().operation() as operation:
-            snapshot_ref = operation.snapshot(
-                Modelo("100").value,
-                filing_year=filing_year,
-                period=period.registry_token,
-            ).snapshot_ref
+        if operation is None:
+            with bundled_indexed_authority().operation() as pinned:
+                return self.capture(
+                    filing_year=filing_year,
+                    period=period,
+                    captured_at=captured_at,
+                    source_url=source_url,
+                    binding_values=binding_values,
+                    operation=pinned,
+                )
+        snapshot_ref = operation.snapshot(
+            Modelo("100").value,
+            filing_year=filing_year,
+            period=period.registry_token,
+        ).snapshot_ref
         return self._capture_with_lifecycle(
             _Borrador100CaptureRequest(
                 filing_year=filing_year,
@@ -245,13 +247,12 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         *,
         filing_year: int | None = None,
         state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> tuple[Borrador100Snapshot, ...]:
-        with bundled_indexed_authority().operation() as operation:
-            return self._list_snapshots_current(
-                operation=operation,
-                filing_year=filing_year,
-                state=state,
-            )
+        if operation is None:
+            with bundled_indexed_authority().operation() as pinned:
+                return self._list_snapshots_current(operation=pinned, filing_year=filing_year, state=state)
+        return self._list_snapshots_current(operation=operation, filing_year=filing_year, state=state)
 
     def _list_snapshots_current(
         self,
@@ -355,7 +356,6 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
 __all__ = [
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
-    "Borrador100SnapshotRepositoryFactory",
     "Borrador100SnapshotService",
     "BorradorSnapshotNotFoundError",
     "borrador_100_snapshot_object_key",

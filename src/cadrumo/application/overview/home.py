@@ -115,17 +115,29 @@ class HomeZoneState(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_honest_availability_evidence(self) -> Self:
-        if self.missing_profile_paths and self.reason_code is None:
-            raise ValueError("missing profile paths explain a reason and require one")
-        if self.availability is HomeAvailability.AVAILABLE and self.reason_code is not None:
-            raise ValueError("an available Home zone cannot carry an unavailability reason")
-        if self.availability is not HomeAvailability.AVAILABLE and self.reason_code is None:
-            raise ValueError("a non-available Home zone requires a reason code")
-        if self.availability is HomeAvailability.NEVER_CAPTURED and self.observed_at is not None:
-            raise ValueError("a never-captured Home zone cannot carry an observation time")
-        if self.availability is HomeAvailability.STALE and self.observed_at is None:
-            raise ValueError("a stale Home zone requires its last observation time")
+        _validate_missing_paths_reason(self)
+        _validate_reason_matches_availability(self)
+        _validate_observation_matches_availability(self)
         return self
+
+
+def _validate_missing_paths_reason(state: HomeZoneState) -> None:
+    if state.missing_profile_paths and state.reason_code is None:
+        raise ValueError("missing profile paths explain a reason and require one")
+
+
+def _validate_reason_matches_availability(state: HomeZoneState) -> None:
+    if state.availability is HomeAvailability.AVAILABLE and state.reason_code is not None:
+        raise ValueError("an available Home zone cannot carry an unavailability reason")
+    if state.availability is not HomeAvailability.AVAILABLE and state.reason_code is None:
+        raise ValueError("a non-available Home zone requires a reason code")
+
+
+def _validate_observation_matches_availability(state: HomeZoneState) -> None:
+    if state.availability is HomeAvailability.NEVER_CAPTURED and state.observed_at is not None:
+        raise ValueError("a never-captured Home zone cannot carry an observation time")
+    if state.availability is HomeAvailability.STALE and state.observed_at is None:
+        raise ValueError("a stale Home zone requires its last observation time")
 
 
 class HomeAccountSession(BaseModel):

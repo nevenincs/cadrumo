@@ -2,7 +2,7 @@
 
 Single authoritative source for the extension sets that route
 ``_ordered_candidates`` and the concrete providers, and for the
-``FinancialProvider.supported_extensions`` declarations on each concrete
+the extension probes on each concrete
 provider class.
 
 Keeping these constants in one place ensures that the detection

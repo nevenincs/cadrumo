@@ -3,15 +3,16 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:312964a092a8ee188c43fa0a4d1e2e6d20d0708ce9eda248aaa4541a298bc96f'
+body_hash: 'sha256:a54fc7bada1ca8e1fe62341ec8ac3d259dd4d68731a01a31ffc3c9bd92cf16ac'
 related: []
 ---
-
 # `calculation-correctness-campaign` audit: verification power across the registry
 
-## Why this, and not a list of bad tests
+## Scope
+
+### Why this, and not a list of bad tests
 
 The tautology hunt asks of any calculation test: "would this fail if the registry
 formula were wrong against AEAT?" Reading the suite for individually bad tests
@@ -28,7 +29,9 @@ reconciled against an AEAT-authoritative expected value."
 
 Nothing reports that number. This audit reports it.
 
-## The measurement
+## Findings
+
+### The measurement
 
 Taken with the repository's own fold, `audit_bundled_external_grounding()`, not a
 reimplementation.
@@ -61,7 +64,29 @@ The 116 uncovered revisions span 58 modelos, including every revision of 184,
 763, 714, 131, 165, 308, 309, 490 and 194, and single revisions of 111, 115,
 130, 190, 193, 210, 216, 296, 347, 360 and 720.
 
-## What follows from it
+### Checked and found SOUND
+
+`test_modelo_202_cuota_base_ejercicio_anterior_continuity.py` is the reference
+shape for a non-tautological registry assertion and should be copied. It derives
+the wiring assertion from the live snapshot parameter, and separately pins the
+statutory 18 % (LIS art. 40.2) as a literal whose only job is to catch registry
+drift. Its comments reason about the tautology risk explicitly.
+
+The 130 assertions whose expected side reads the system under test were reviewed
+and are, on inspection, overwhelmingly carry-forward and wiring invariants over
+test-authored inputs -- structural claims, not AEAT numeric claims.
+
+### Probe limitation, stated
+
+The provenance classifier (`tautology_scan.py`) sorts by keyword and cannot
+recognise an oracle test that binds its expected value to a plain `expected`
+variable; it reported zero oracle-derived assertions, which is false. Its buckets
+are not trustworthy as counts and were used only to select candidates for reading.
+The coverage figures above come from the repository's own fold, not from it.
+
+## Recommendations
+
+### What follows from it
 
 For those 116 revisions every numeric assertion in the suite rests on arithmetic
 someone authored. That is not the same as saying those tests are wrong -- most
@@ -72,7 +97,7 @@ caught, which is precisely the failure mode `no-silent-under-declaration`
 describes: "A value reconciled only against the app's own engine cannot catch a
 systematic engine error the filing matches."
 
-## A gate weakness worth an owner's ruling
+### A gate weakness worth an owner's ruling
 
 The existing gate's coverage assertions are `assert audit.inventory.evidence`,
 `assert audit.rows` and `assert audit.checked_revision_count` -- all non-emptiness
@@ -85,23 +110,3 @@ The obvious remedy is a floor, and `aeat-quality-gates` forbids exactly that:
 the tally." A raw count floor would trade one defect for a rule violation, so the
 shape of the ratchet is a genuine design decision and is left to an owner rather
 than guessed at here.
-
-## Checked and found SOUND
-
-`test_modelo_202_cuota_base_ejercicio_anterior_continuity.py` is the reference
-shape for a non-tautological registry assertion and should be copied. It derives
-the wiring assertion from the live snapshot parameter, and separately pins the
-statutory 18 % (LIS art. 40.2) as a literal whose only job is to catch registry
-drift. Its comments reason about the tautology risk explicitly.
-
-The 130 assertions whose expected side reads the system under test were reviewed
-and are, on inspection, overwhelmingly carry-forward and wiring invariants over
-test-authored inputs -- structural claims, not AEAT numeric claims.
-
-## Probe limitation, stated
-
-The provenance classifier (`tautology_scan.py`) sorts by keyword and cannot
-recognise an oracle test that binds its expected value to a plain `expected`
-variable; it reported zero oracle-derived assertions, which is false. Its buckets
-are not trustworthy as counts and were used only to select candidates for reading.
-The coverage figures above come from the repository's own fold, not from it.

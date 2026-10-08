@@ -31,7 +31,7 @@ from __future__ import annotations
 import collections
 import sys
 from dataclasses import dataclass
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -40,6 +40,9 @@ from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import resolved_export_endpoints
 from .corpus import bundled_modelo_ids
+
+if TYPE_CHECKING:
+    from .manifest_uncited_references import UncitedManifestReference
 
 __all__ = [
     "OutsideReferenceScope",
@@ -276,29 +279,51 @@ def main() -> int:
     """Print one greppable row per outside reference and a per-kind summary; always exit 0."""
     findings = screen_authority(compiled_bundled_authority(), bundled_modelo_ids())
     index = outside_reference_index(findings)
+    _write_outside_manifest_rows(index)
+    authority = compiled_bundled_authority()
+    scopes = outside_reference_scope(
+        index, {modelo: len(authority.modelo(modelo).revisions) for modelo in bundled_modelo_ids()}
+    )
+    _write_scope_rows(scopes)
+    from .manifest_uncited_references import screen_authority as uncited_screen
+
+    uncited = uncited_screen(authority, bundled_modelo_ids())
+    _write_uncited_rows(uncited)
+    _write_summary(findings, index, scopes, uncited)
+    return 0
+
+
+def _write_outside_manifest_rows(index: dict[tuple[str, str, str, str], int]) -> None:
     for (modelo, revision, ref_kind, reference), sites in sorted(index.items()):
         sys.stdout.write(
             f"provenance_outside_manifest modelo={modelo} revision={revision} "
             f"ref_kind={ref_kind} outside={reference} citing_children={sites}\n",
         )
-    authority = compiled_bundled_authority()
-    scopes = outside_reference_scope(
-        index, {modelo: len(authority.modelo(modelo).revisions) for modelo in bundled_modelo_ids()}
-    )
+
+
+def _write_scope_rows(scopes: tuple[OutsideReferenceScope, ...]) -> None:
     for scope in scopes:
         sys.stdout.write(
             f"provenance_reference_scope modelo={scope.modelo} ref_kind={scope.ref_kind} "
             f"reference={scope.reference} revisions={len(scope.revisions)} "
             f"spans_every_revision={str(scope.spans_every_revision).lower()} sites={scope.sites}\n",
         )
-    from .manifest_uncited_references import screen_authority as uncited_screen
 
-    uncited = uncited_screen(authority, bundled_modelo_ids())
+
+def _write_uncited_rows(uncited: tuple[UncitedManifestReference, ...]) -> None:
     for item in uncited:
         sys.stdout.write(
             f"provenance_uncited_manifest_ref modelo={item.modelo} revision={item.revision} "
             f"ref_kind={item.ref_kind} reference={item.reference}\n",
         )
+
+
+def _write_summary(
+    findings: tuple[ProvenanceFinding, ...],
+    index: dict[tuple[str, str, str, str], int],
+    scopes: tuple[OutsideReferenceScope, ...],
+    uncited: tuple[UncitedManifestReference, ...],
+) -> None:
     by_kind: dict[str, int] = {}
     for f in findings:
         by_kind[f"{f.child_kind}.{f.ref_kind}"] = by_kind.get(f"{f.child_kind}.{f.ref_kind}", 0) + 1
@@ -316,7 +341,6 @@ def main() -> int:
         f"spanning_every_revision={sum(s.spans_every_revision for s in scopes)} "
         f"cited_by_one_child={single} uncited_manifest_refs={len(uncited)} {census}\n"
     )
-    return 0
 
 
 if __name__ == "__main__":

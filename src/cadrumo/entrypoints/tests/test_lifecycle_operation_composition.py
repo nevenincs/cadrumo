@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from ...application.modelo import operation_definitions as definitions_module
-from ...application.operations.registry import OperationDefinition
+from ...application.operations.operation_definition import OperationDefinition
 from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -31,6 +31,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "signing_keypair_capability_factory": lambda *args, **kwargs: None,
     "calculation_summary_pdf_writer": lambda *args, **kwargs: b"",
     "operator_scope_ports": object(),
+    "prerequisite_observer": None,
 }
 
 

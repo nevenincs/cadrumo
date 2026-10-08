@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#packaging-smoke-architecture'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:de26013e56b272db3611deda2cc32bed876b8c97a51d50aa635940406d0d66b2'
+body_hash: 'sha256:6a69b2b35378ea8450cc989b3f521016325421d98af3a4c127bbe7a92091d9d0'
 related:
   - "[[2026-07-20-ci-speed-redesign-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-research]]"
@@ -26,7 +26,7 @@ its manifest `checks=` tuple — both were found to overstate.
 
 Enumeration method, stated so its blind spots are visible. Lanes were enumerated from
 the `_LANES` registry itself, which is authoritative: `campaign.py` resolves lanes only
-through that dict, and `tests/test_campaign.py` asserts every profile references only
+through that dict, and the retired test asserted every profile references only
 known lanes. That enumeration is complete for campaign lanes. The wider "smoke surface"
 was enumerated by the `smoke_*` filename glob, and that enumeration is NOT complete for
 proof surfaces: it misses `installed_tax_oracle`, `installed_mcp_oracle`,
@@ -71,7 +71,7 @@ instrument being less scrutinised than the thing it checks.
 ### installed-tax-oracle-runs-three-times | high | The most expensive assertion in the campaign executes three times per run
 
 `run_installed_tax_oracle` is invoked by `smoke_core.main()`, by
-`smoke_split_install.main()`, and again by `tests/test_installed_oracles.py`, all three
+`smoke_split_install.main()`, and again by the retired test, all three
 of which execute in a single `portable` or `ci` campaign. The prior readiness research
 measured the installed oracle at 83.3 seconds and the whole split lane at 740 seconds.
 The three invocations run against the same cohort bytes, from the same source commit,
@@ -85,7 +85,7 @@ it, so the duplication is oracle execution, not wheel construction.
 ### conformance-pin-is-a-substring-check | high | The claim that profiles cannot drift from the just recipes is not what the test enforces
 
 `campaign.py`'s module docstring states "The lane registry is conformance-pinned by
-`tests/test_campaign.py` so the profiles cannot silently drift from the per-lane `just`
+The retired test so the profiles cannot silently drift from the per-lane `just`
 recipes." The test that carries that name,
 `test_lane_commands_match_the_per_lane_just_recipes`, asserts only that each lane's
 module basename appears somewhere in the justfile text. It does not compare any
@@ -105,7 +105,7 @@ proves.
 nondeterministic element is whether the model emits a tool call, while the observable
 being tested is deterministic — `smoke_desktop_client._perform_attempt` gates on
 `len(observation.successful_calls) > baseline_calls` read from Claude Desktop's own MCP
-server telemetry log, requiring a NEW call that was really served AND carried no error
+server log, requiring a NEW call that was really served AND carried no error
 marker. Retrying a nondeterministic trigger for a deterministic observable is the same
 shape as polling, not a coin flip. The loop is also fail-closed: exhaustion raises, and
 every attempt is retained in `attempts.json` and embedded verbatim in the emitted

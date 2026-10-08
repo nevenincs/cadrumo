@@ -42,6 +42,8 @@ from ._registry_thresholds import (
     registry_menor_tres_supplement,
     registry_thresholds,
 )
+from .family_counts import descendientes_eligible_minimum, descendientes_menores_3_year_end
+from .under_three import is_eligible_menor_tres
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -251,11 +253,11 @@ class TestDescendantInfoAgeCalculation:
 
     def test_is_eligible_menor_tres_age_1_is_true(self) -> None:
         d = DescendantInfo(birth_date=date(2023, 1, 15))
-        assert d.is_eligible_menor_tres(2024, context=_FACT_CONTEXT) is True
+        assert is_eligible_menor_tres(d, 2024, context=_FACT_CONTEXT) is True
 
     def test_is_eligible_menor_tres_age_3_is_false(self) -> None:
         d = DescendantInfo(birth_date=date(2021, 12, 31))
-        assert d.is_eligible_menor_tres(2024, context=_FACT_CONTEXT) is False
+        assert is_eligible_menor_tres(d, 2024, context=_FACT_CONTEXT) is False
 
 
 # ---------------------------------------------------------------------------
@@ -284,7 +286,7 @@ class TestRentaFamilyProfileDerivedProperties:
                 DescendantInfo(birth_date=date(2019, 6, 1)),  # age 5 at year-end 2024
             ),
         )
-        assert p.descendientes_menores_3_year_end(2024, context=_FACT_CONTEXT) == 1
+        assert descendientes_menores_3_year_end(p, 2024, context=_FACT_CONTEXT) == 1
 
     def test_descendientes_eligible_minimum_count(self) -> None:
         p = RentaFamilyProfile(
@@ -294,7 +296,7 @@ class TestRentaFamilyProfileDerivedProperties:
                 DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33),  # disabled, eligible
             ),
         )
-        assert p.descendientes_eligible_minimum(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 2
+        assert descendientes_eligible_minimum(p, 2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -398,7 +400,8 @@ class TestParseDescendienteFlag:
     def test_full_flag(self) -> None:
         d = parse_descendiente_flag(
             "NACIMIENTO=2020-03-15,RELACION=adoptado,INSCRIPCION=2024-05-12,"
-            "ACOGIMIENTO=2022-01-10,DISCAPACIDAD=33,CONVIVENCIA=false,NIF=TAXIDABCD",
+            "ACOGIMIENTO=2022-01-10,DISCAPACIDAD=33,CONVIVENCIA=false,NIF=12.345.678-z",
+            authority=PublishedGovernedFactSource(),
         )
         assert d.birth_date == date(2020, 3, 15)
         assert d.relacion == DescendantRelacion.from_registry("adoptado")
@@ -406,7 +409,14 @@ class TestParseDescendienteFlag:
         assert d.acogimiento_resolucion_date == date(2022, 1, 10)
         assert d.discapacidad_grado == 33
         assert d.convive_con_contribuyente is False
-        assert d.nif == "TAXIDABCD"
+        assert d.nif == "12345678Z"
+
+    @pytest.mark.parametrize("nif", ["TAXIDABCD", "12345678A", "12.345.678-A"])
+    def test_a_nif_the_identity_authority_refuses_is_refused_by_key_without_echoing_it(self, nif: str) -> None:
+        with pytest.raises(ProfileAnswerTypeError, match="NIF is not a valid") as raised:
+            parse_descendiente_flag(f"NACIMIENTO=2020-03-15,NIF={nif}", authority=PublishedGovernedFactSource())
+        assert raised.value.context == {"key": "NIF"}
+        assert nif not in str(raised.value)
 
     def test_missing_nacimiento_raises_value_error(self) -> None:
         with pytest.raises(ProfileAnswerTypeError, match="NACIMIENTO"):

@@ -1,3 +1,0 @@
-@step Pull typed edits back from the reviewed spreadsheet.
-@static aeat app modelo spreadsheet pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
-@blocked external-service The pull verb reads the reviewed spreadsheet from Google Sheets, which the hermetic sandbox must not contact.

@@ -16,7 +16,6 @@ from ...adapters.outbound.google.errors import GoogleAuthError, GoogleAuthValida
 from ...adapters.persistence.storage.bucket.errors import BucketError, BucketValidationError
 from ...application.storage.calc_sheets.errors import (
     CalcSheetsEngineError,
-    CalcSheetsParityError,
     CalcSheetsRecordError,
 )
 from ...core.errors.error_codes import ErrorEnvelope, build_error_envelope, get_registered_error_code
@@ -35,11 +34,6 @@ _CALC_SHEETS_ERROR_CASES: tuple[tuple[type[CadrumoError], str, CadrumoError], ..
         CalcSheetsRecordError,
         "ERROR_CALC_SHEETS_RECORD",
         CalcSheetsRecordError("column index must be 1-based"),
-    ),
-    (
-        CalcSheetsParityError,
-        "ERROR_CALC_SHEETS_PARITY",
-        CalcSheetsParityError("unknown casilla ids [999]"),
     ),
 )
 

@@ -33,7 +33,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nValue date\t2026-02-11\nAmount\t605\nCurrency\tEUR\nDirection\tOUTGOING\nDescription\tCompra de material de oficina proveedor local\nCounterparty\t-\nClassification\tNOT_YET_PROCESSED\nBusiness %\t-\nCategory\t-\nUsage ratio id\t-\nTaxable base\t-\nIVA rate\t-\nIVA amount\t-\nIVA category\t-\nEstablished in\t-\nVAT identified in\t-\nIRPF category\t-\nNotes\t-\nPurchase invoice evidence\t-\nAttachments\t-\nLifecycle state\tACTIVE\nClassified by\tauto\nClassified at\t-\nClassification confidence\t-\nClassification reason\t-\nReview status\tpending\n"
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nValue date\t2026-02-11\nAmount\t605\nCurrency\tEUR\nDirection\tOUTGOING\nDescription\tCompra de material de oficina proveedor local\nCounterparty\t-\nClassification\tNOT_YET_PROCESSED\nBusiness %\t-\nCategory\t-\nUsage ratio id\t-\nTaxable base\t-\nIVA rate\t-\nIVA amount\t-\nIVA category\t-\nEstablished in\t-\nVAT identified in\t-\nIRPF category\t-\nNotes\t-\nPurchase invoice evidence\t-\nAttachments\t-\nLifecycle state\tACTIVE\nClassified by\tauto\nClassified at\t-\nClassification confidence\t-\nClassification reason\t-\nReview status\tpending\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -49,7 +49,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.history",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "event_count": 1,
@@ -77,7 +85,7 @@
           "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

@@ -415,13 +415,8 @@ class ProfileCustodyTransactionService:
         transaction's commit and exact inventory.  The pointer is never replaced
         when another operation has changed it since the journal was prepared.
 
-        Selecting the new capsule DISPLACES whichever profile the pointer named
-        before, so the displaced profile's durable session material is retired
-        here, strictly before the swap.  Ordering it ahead of the swap is what
-        makes the property crash-proof without a second durable state: a process
-        death can leave the retirement done and the pointer unmoved, which costs
-        the operator one passphrase, but it can never leave the pointer moved and
-        the receipt live, which costs a passphrase-free bucket key.
+        Selecting another capsule does not revoke its runtime-owned sign-in.
+        Local key handover is settled by the session publication owner.
         """
         proposed_custody_digest_value = _staged(journal.proposed_custody_digest, field="proposed_custody_digest")
         self._refuse_duplicate_label_publication_under_root_lock(journal)
@@ -458,7 +453,6 @@ class ProfileCustodyTransactionService:
         with active_profile_pointer_transaction(self._root) as pointer_transaction:
             current = pointer_transaction.read()
             if current == journal.pointer_before:
-                self._retire_displaced_profile_session(journal)
                 pointer_transaction.compare_and_select(
                     expected=journal.pointer_before,
                     bucket_id=replacement_bucket_id,
@@ -467,65 +461,12 @@ class ProfileCustodyTransactionService:
                 raise ProfileCustodyTransactionConflictError(
                     "create recovery will not overwrite an independently changed pointer"
                 )
-            else:
-                self._retire_displaced_profile_session(journal)
         published = journal.with_update(
             state=ProfileCustodyTransactionState.POINTER_PUBLISHED,
             updated_at=instant,
         )
         self._repository.save_journal(published)
         return published
-
-    def _retire_displaced_profile_session(self, journal: ProfileCustodyTransactionJournal) -> None:
-        """Void the durable session of the profile this create is about to displace.
-
-        Creation selects its new capsule, and until this ran nothing retired the
-        profile it selected AWAY from.  That profile kept a resumable
-        acceleration receipt, so its bucket key stayed recoverable with no
-        passphrase for the whole window until some later login happened to
-        observe the boundary -- and permanently for a registration no login ever
-        follows.
-
-        The identity comes from ``pointer_before``: the durable pointer value
-        this transaction captured under the custody lock and journalled before
-        it staged anything.  Neither of the two identities a fresh process can
-        otherwise reach is honest here.  A live in-process session is absent in
-        the ordinary operator flow, where every invocation is a new process, and
-        the handover journal is written from that same live value, so both are
-        blank in exactly the case that leaks.  The pointer's PREVIOUS value is
-        durable, is recorded before the swap that invalidates it, and is
-        therefore readable on every replay.
-
-        Routed through the one revocation primitive the delete transaction
-        already uses, so a second implementation of "this profile's stored
-        session is void" cannot exist to disagree with the first.  That
-        primitive verifies the artefact is gone and raises when it is not; the
-        refusal is deliberately converted rather than swallowed, so a retirement
-        that did not complete refuses the registration with the pointer still on
-        the displaced profile.
-
-        A pointer naming something that is not a profile UUID owns no session
-        record -- session artefacts are UUID-keyed -- so there is nothing to
-        retire and nothing to leak.  It is passed over rather than refused,
-        because registering a fresh profile is the operator's route out of a
-        corrupt pointer and must not be blocked by it.
-        """
-        displaced = self._selected_profile_before(journal.pointer_before)
-        if displaced is None or displaced == str(journal.profile_id):
-            return
-        try:
-            UUID(displaced)
-        except ValueError:
-            return
-        try:
-            remove_profile_session_acceleration_for_custody_delete(
-                storage_root=self._root,
-                bucket_id=displaced,
-            )
-        except Exception as exc:
-            raise ProfileCustodyDisplacedSessionRetirementError(
-                "displaced profile session acceleration could not be retired before pointer publication"
-            ) from exc
 
     @staticmethod
     def _selected_profile_before(snapshot: BucketPointer) -> str | None:
@@ -980,6 +921,8 @@ class ProfileCustodyTransactionService:
         )
 
     def _revoke_process_secrets(self, journal: ProfileCustodyTransactionJournal, instant: datetime) -> None:
+        self._adapters.fence_human_sign_in(profile_id=journal.profile_id, root=self._root)
+        self._adapters.retire_automation(profile_id=journal.profile_id, root=self._root)
         self._record_owner_effect(
             journal,
             instant,

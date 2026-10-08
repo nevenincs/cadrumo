@@ -1,0 +1,110 @@
+{
+  "platform": "macos-arm64",
+  "backend": "macos",
+  "stdlib_exclude": [
+    "site-packages",
+    "__pycache__",
+    "test",
+    "tests",
+    "idlelib",
+    "tkinter",
+    "turtledemo",
+    "ensurepip",
+    "lib-dynload"
+  ],
+  "package_exclusions": [
+    {
+      "pattern": "PIL/ImageTk.py",
+      "reason": "Optional Pillow Tk adapter; Tk is excluded from the CADRUMO runtime"
+    },
+    {
+      "pattern": "PIL/_imagingtk.*.so",
+      "reason": "Optional Pillow Tk extension; Tk is excluded from the CADRUMO runtime"
+    }
+  ],
+  "paths": {
+    "executable": "python",
+    "packages": "lib/cadrumo/site-packages"
+  },
+  "entrypoint_suffix": "",
+  "application_images": [
+    {
+      "name": "cadrumo",
+      "placement": ".",
+      "target": "desktop-host-build",
+      "artifact": "CADRUMO_DESKTOP_HOST_EXECUTABLE",
+      "desktop": true,
+      "signed": true,
+      "version_arguments": [
+        "--headless",
+        "--",
+        "--version"
+      ]
+    },
+    {
+      "name": "cadrumo-manager",
+      "placement": ".",
+      "target": "rust_manager",
+      "artifact": "CADRUMO_MANAGER_EXECUTABLE",
+      "desktop": false,
+      "signed": true,
+      "version_arguments": [
+        "--version"
+      ]
+    }
+  ],
+  "files": {
+    "development_executable": "python_d",
+    "path_file": "lib/cadrumo/python.pth",
+    "bridge": "cadrumo_python.dylib",
+    "runtime": "libpython3.13.dylib"
+  },
+  "sdk": {
+    "root": "cpython-pbs",
+    "archive_root": "python",
+    "executable": "install/bin/python3.13",
+    "include": "install/include/python3.13",
+    "stdlib": "install/lib/python3.13",
+    "extensions": "install/lib/python3.13/lib-dynload",
+    "link_library": "install/lib/libpython3.13.dylib",
+    "native_files": [
+      "install/lib/libpython3.13.dylib"
+    ],
+    "license": "licenses/LICENSE.cpython.txt",
+    "licenses": {
+      "licenses": "docs/licenses/CPython-dependencies",
+      "PYTHON.json": "docs/licenses/CPython-dependencies/PYTHON.json"
+    },
+    "metadata": "PYTHON.json",
+    "extension_suffix": ".cpython-313-darwin.so",
+    "extension_exclusions": [
+      {
+        "pattern": "_tkinter.*.so",
+        "reason": "Tk is excluded from the CADRUMO runtime"
+      },
+      {
+        "pattern": "_ctypes_test.*.so",
+        "reason": "CPython extension test support is excluded from the CADRUMO runtime"
+      }
+    ]
+  },
+  "smoke_modules": {},
+  "bootstrap": "interpreter/posix/bootstrap.py",
+  "package_root_from_executable": ".",
+  "native_system_libraries": [
+    "/usr/lib/libSystem.B.dylib",
+    "/usr/lib/libncurses.5.4.dylib",
+    "/usr/lib/libpanel.5.4.dylib",
+    "/usr/lib/libedit.3.dylib",
+    "/usr/lib/libz.1.dylib",
+    "/usr/lib/libc++.1.dylib",
+    "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+    "/System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration",
+    "/usr/lib/libiconv.2.dylib",
+    "/usr/lib/libbz2.1.0.dylib",
+    "/usr/lib/libffi.dylib",
+    "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+    "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+    "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation"
+  ]
+}

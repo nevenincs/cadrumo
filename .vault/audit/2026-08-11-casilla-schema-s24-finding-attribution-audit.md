@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:1ddcda26b6f6bf179e9216bb03264be553226e25f7bf102eb4fd98a3fb4ba48c'
-related:
-  - "[[2026-08-10-casilla-schema-plan]]"
+related: []
 ---
 # `casilla-schema` audit: `S24 finding-to-casilla attribution`
 

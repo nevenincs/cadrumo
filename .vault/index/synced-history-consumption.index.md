@@ -4,14 +4,11 @@ tags:
   - '#index'
   - '#synced-history-consumption'
 date: '2026-08-16'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea19096df7db399e8197799cba4ff0e721a94110906db4c3cdca5243f91590df'
+body_hash: 'sha256:9c27ae81c0196afb317608e2ec654b2d894b10f60aaabeb66c66a8acad97c302'
 related:
-  - '[[2026-08-08-synced-history-consumption-P03-summary]]'
   - '[[2026-08-08-synced-history-consumption-adr]]'
-  - '[[2026-08-08-synced-history-consumption-ledger]]'
-  - '[[2026-08-08-synced-history-consumption-plan]]'
   - '[[2026-08-08-synced-history-consumption-pulled-fact-classification-reference]]'
   - '[[2026-08-08-synced-history-consumption-pulled-fact-consumption-census-reference]]'
   - '[[2026-08-08-synced-history-consumption-research]]'
@@ -39,15 +36,6 @@ Auto-generated index of all documents tagged with `#synced-history-consumption`.
 - `2026-08-13-synced-history-consumption-p02-s35-audit` - `synced-history-consumption` audit: `p02 s35`
 - `2026-08-13-synced-history-consumption-s18-code-review-audit` - `synced-history-consumption` audit: `s18 code review`
 - `2026-08-13-synced-history-consumption-s40-remediation-audit` - `synced-history-consumption` audit: `S40 progress diagnostics remediation`
-
-### exec
-
-- `2026-08-08-synced-history-consumption-ledger` - `synced-history-consumption` ledger
-- `2026-08-08-synced-history-consumption-P03-summary` - `synced-history-consumption` `P03` summary
-
-### plan
-
-- `2026-08-08-synced-history-consumption-plan` - `synced-history-consumption` plan
 
 ### reference
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import re
 import subprocess
 import sys
@@ -13,6 +12,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, cast
+
+from dev.product_environment import clean_product_env
 
 _SCHEMA_VERSION = "activity-asset-installed-tui-supervisor-v3"
 type InstalledAssetTuiJourney = Literal[
@@ -78,13 +79,10 @@ class InstalledTuiProcessError(RuntimeError):
 
 def build_assets_installed_environment(*, storage_root: Path) -> dict[str, str]:
     """Keep host launch prerequisites but remove ambient product configuration."""
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
     # The harness module is found from its working directory.  A source-tree
     # Python path or another virtual-environment marker would invalidate the
     # installed-product origin assertion before the journey even starts.
-    environment.pop("PYTHONPATH", None)
-    environment.pop("PYTHONHOME", None)
-    environment.pop("VIRTUAL_ENV", None)
+    environment = clean_product_env()
     environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["PYTHONIOENCODING"] = "utf-8"
@@ -235,6 +233,40 @@ def _failure_identity(stderr: bytes | None) -> str | None:
     return identity[:240]
 
 
+def _prepare_probe_storage(storage_root: Path, profile_bootstrap: Literal["register", "existing"]) -> None:
+    if profile_bootstrap == "register":
+        if storage_root.exists() and any(storage_root.iterdir()):
+            raise ValueError("installed TUI registration probe requires an empty scenario storage root")
+        storage_root.mkdir(parents=True, exist_ok=True)
+    elif not storage_root.is_dir() or not any(storage_root.iterdir()):
+        raise ValueError("installed TUI existing-profile probe requires a populated scenario storage root")
+
+
+def _terminate_probe_child(process: subprocess.Popen[bytes]) -> Literal["terminated", "failed"]:
+    try:
+        process.terminate()
+        process.wait(timeout=10.0)
+    except subprocess.TimeoutExpired:
+        try:
+            process.kill()
+            process.wait(timeout=10.0)
+        except subprocess.TimeoutExpired:
+            return "failed"
+        return "terminated"
+    return "terminated"
+
+
+def _child_proof_status(
+    return_code: int | None,
+    child_status: str | None,
+    required_stage_missing: str | None,
+    timed_out: bool,
+) -> Literal["proven", "failed"]:
+    if return_code == 0 and child_status == "proven" and required_stage_missing is None and not timed_out:
+        return "proven"
+    return "failed"
+
+
 def run_installed_tui_probe(
     *,
     python_executable: Path,
@@ -256,12 +288,7 @@ def run_installed_tui_probe(
     """
     if not python_executable.is_file():
         raise ValueError("installed TUI probe requires an existing Python executable")
-    if profile_bootstrap == "register":
-        if storage_root.exists() and any(storage_root.iterdir()):
-            raise ValueError("installed TUI registration probe requires an empty scenario storage root")
-        storage_root.mkdir(parents=True, exist_ok=True)
-    elif not storage_root.is_dir() or not any(storage_root.iterdir()):
-        raise ValueError("installed TUI existing-profile probe requires a populated scenario storage root")
+    _prepare_probe_storage(storage_root, profile_bootstrap)
     receipt_path.parent.mkdir(parents=True, exist_ok=True)
     argv = (
         str(python_executable.resolve()),
@@ -310,19 +337,7 @@ def run_installed_tui_probe(
     if process.poll() is None:
         timed_out = True
         last_stage, child_status, completed_stages = read_receipt_progress(receipt_path)
-        try:
-            process.terminate()
-            process.wait(timeout=10.0)
-        except subprocess.TimeoutExpired:
-            try:
-                process.kill()
-                process.wait(timeout=10.0)
-            except subprocess.TimeoutExpired:
-                cleanup = "failed"
-            else:
-                cleanup = "terminated"
-        else:
-            cleanup = "terminated"
+        cleanup = _terminate_probe_child(process)
     stdout, stderr = process.communicate(timeout=10.0)
     last_stage, child_status, completed_stages = read_receipt_progress(receipt_path)
     required_stage_missing = _first_missing_required_stage(
@@ -337,11 +352,7 @@ def run_installed_tui_probe(
     )
     receipt = InstalledTuiProcessReceipt(
         schema_version=_SCHEMA_VERSION,
-        status=(
-            "proven"
-            if process.returncode == 0 and child_status == "proven" and required_stage_missing is None and not timed_out
-            else "failed"
-        ),
+        status=_child_proof_status(process.returncode, child_status, required_stage_missing, timed_out),
         command_sha256=command_sha,
         process_id=process.pid,
         return_code=process.returncode,

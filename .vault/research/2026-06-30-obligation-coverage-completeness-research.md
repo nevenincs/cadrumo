@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#obligation-coverage-completeness'
 date: '2026-06-30'
-modified: '2026-08-15'
-body_hash: 'sha256:636972e55e77072b8055f66798c69182ee60871aac9b56264a66b6f0854d30f5'
+modified: '2026-10-03'
+body_hash: 'sha256:c6c89d2d2be41ed8d77bce415e417d8e5576c7a300e653879482c26ceb28aec4'
 related: []
 ---
 
@@ -31,7 +31,7 @@ live data pulls are out of scope.
 ### F1 — There is one canonical obligation producer, gated twice
 
 The single producer of the pending-obligation datum is
-`compute_obligation_schedule` (`src/aeat/domain/deadlines/_engine.py:443`), which
+`compute_obligation_schedule` , which
 delegates to `DeadlineEngine.compute`. Both the operator state read-projection
 (`pending_obligations`) and the workflow `NO_PENDING_OBLIGATION` gate route
 through it, so the two cannot draw a divergent obligation set. An obligation
@@ -45,7 +45,7 @@ default-visible trace.
 registered deadline window for that year never enters the schedule at all** — the
 engine cannot emit a row it has no window to place. `build_overview_calendar`
 catches the benign `NoDeadlineWindowsError` per covered year and continues
-(`src/aeat/application/overview/_calendar.py:1311`), so a windowless modelo
+, so a windowless modelo
 contributes zero entries and zero diagnostics.
 
 **Gate 2 — seed applicability rule (calendar).** For every obligation the engine
@@ -55,9 +55,9 @@ when `verdict is ApplicabilityVerdict.APPLICABLE`
 (`_calendar.py:1349-1360`). Any other verdict is dropped. The dropped row is
 captured into a **separate** `suppressed_entries` list **only when
 `show_suppressed=True`** — a CLI flag that defaults to `False`
-(`_calendar.py:1235`, `src/aeat/entrypoints/cli/_overview.py:509`). The seed rule
+(`_calendar.py:1235`, the former source file). The seed rule
 table `_MODELO_APPLICABILITY_RULES`
-(`src/aeat/domain/calculations/registry/_applicability.py:571`) is explicitly
+ is explicitly
 narrow; a modelo absent from it resolves to `INCOMPLETE` via
 `_incomplete_applicability(..., unruled=True)` (`_applicability.py:1227-1229`),
 carrying the `_SEED_COVERAGE_NOTICE` "deferred expansion" rationale.
@@ -69,8 +69,8 @@ Everything else is silent by default.
 
 `agenda` and `backlog` are not independent surfaces. Both compose
 `build_overview_calendar` and iterate **only** `calendar.entries`
-(`src/aeat/application/overview/_agenda.py:134-147`,
-`src/aeat/application/overview/_backlog.py:124-133`). Neither reads
+
+the former source file). Neither reads
 `suppressed_entries`. So the intersection gate governs `calendar`, `agenda`, and
 `backlog` alike; the suppressed/incomplete remainder is invisible on every
 default surface. `explain` is the only surface that answers per-modelo on demand,

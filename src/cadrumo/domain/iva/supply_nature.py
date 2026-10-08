@@ -9,7 +9,7 @@ explicit projection boundary that accepts selected catalogue data.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
+from ._fact_mapping_entries import mapping_entries
 from .errors import IvaValidationError
 from .schema import IvaCategory
 
@@ -142,59 +143,77 @@ def registry_citation_catalogue(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise IvaValidationError("IVA statutory citation catalogue must resolve as a mapping fact")
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise IvaValidationError("IVA statutory citation mapping entries must be string-to-string")
-        if entry.key in entries:
-            raise IvaValidationError(f"duplicate IVA statutory citation mapping key {entry.key!r}")
-        entries[entry.key] = entry.value
+    entries = dict(mapping_entries(resolved, subject="IVA statutory citation mapping"))
+    qualifier_order = tuple(
+        token.strip() for token in _required_citation_entry(entries, "qualifier_order").split(",") if token.strip()
+    )
+    qualifiers = tuple(_required_citation_entry(entries, f"qualifier.{token}") for token in qualifier_order)
+    citation_order = tuple(
+        token.strip() for token in _required_citation_entry(entries, "citation_order").split(",") if token.strip()
+    )
+    citations = _citation_rows(entries, citation_order)
+    category_citations = _category_citation_projections(
+        entries,
+        effective_date=effective_date,
+        authority=selected_authority,
+        require_category=require_iva_category,
+    )
+    return CitationCatalogue(
+        citations=citations,
+        qualifiers=qualifiers,
+        category_citations=category_citations,
+    )
 
-    def required(key: str) -> str:
-        value = entries.get(key)
-        if value is None or not value.strip():
-            raise IvaValidationError(f"IVA statutory citation mapping is missing {key!r}")
-        return value
 
-    qualifier_order = tuple(token.strip() for token in required("qualifier_order").split(",") if token.strip())
-    qualifiers = tuple(required(f"qualifier.{token}") for token in qualifier_order)
-    citation_order = tuple(token.strip() for token in required("citation_order").split(",") if token.strip())
-    citations: list[StatutoryCitation] = []
-    for token in citation_order:
-        prefix = f"citation.{token}"
-        establishes = required(f"{prefix}.establishes")
-        try:
-            nature = None if establishes == "none" else SupplyNature(establishes)
-        except ValueError as exc:
-            raise IvaValidationError(f"unknown supply nature {establishes!r} in registry citation {token!r}") from exc
-        citations.append(
-            StatutoryCitation(
-                article=required(f"{prefix}.article"),
-                heading=required(f"{prefix}.heading"),
-                corpus_ref=required(f"{prefix}.corpus_ref"),
-                establishes=nature,
-            ),
-        )
+def _required_citation_entry(entries: Mapping[str, str], key: str) -> str:
+    value = entries.get(key)
+    if value is None or not value.strip():
+        raise IvaValidationError(f"IVA statutory citation mapping is missing {key!r}")
+    return value
+
+
+def _citation_rows(entries: Mapping[str, str], citation_order: tuple[str, ...]) -> tuple[StatutoryCitation, ...]:
+    return tuple(_citation_row(entries, token) for token in citation_order)
+
+
+def _citation_row(entries: Mapping[str, str], token: str) -> StatutoryCitation:
+    prefix = f"citation.{token}"
+    establishes = _required_citation_entry(entries, f"{prefix}.establishes")
+    try:
+        nature = None if establishes == "none" else SupplyNature(establishes)
+    except ValueError as exc:
+        raise IvaValidationError(f"unknown supply nature {establishes!r} in registry citation {token!r}") from exc
+    return StatutoryCitation(
+        article=_required_citation_entry(entries, f"{prefix}.article"),
+        heading=_required_citation_entry(entries, f"{prefix}.heading"),
+        corpus_ref=_required_citation_entry(entries, f"{prefix}.corpus_ref"),
+        establishes=nature,
+    )
+
+
+def _category_citation_projections(
+    entries: Mapping[str, str],
+    *,
+    effective_date: date,
+    authority: GovernedFactSource,
+    require_category: Callable[..., IvaCategory],
+) -> dict[IvaCategory, tuple[str, ...]]:
     category_citations: dict[IvaCategory, tuple[str, ...]] = {}
     for key, value in entries.items():
         if not key.startswith("category."):
             continue
         try:
-            category = require_iva_category(
+            category = require_category(
                 key.removeprefix("category."),
                 effective_date=effective_date,
-                authority=selected_authority,
+                authority=authority,
             )
         except ValueError as exc:
             raise IvaValidationError(f"unknown IVA category {key!r} in statutory citation mapping") from exc
         category_citations[category] = tuple(reference.strip() for reference in value.split(",") if reference.strip())
     if not category_citations:
         raise IvaValidationError("IVA statutory citation mapping has no category projections")
-    return CitationCatalogue(
-        citations=tuple(citations),
-        qualifiers=qualifiers,
-        category_citations=category_citations,
-    )
+    return category_citations
 
 
 def _citation_pattern(article: str) -> re.Pattern[str]:

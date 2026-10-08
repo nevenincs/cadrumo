@@ -91,6 +91,7 @@ from cadrumo.entrypoints.adapter_composition import (
 )
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -262,7 +263,8 @@ def _seed_180_retencion_observations() -> Decimal:
     # The Modelo 180 annual summary reads the year's quarterly Modelo 115
     # retenciones, so the perceptors are captured where the 115 quarter holds them.
     period = Period.from_year_and_code(_YEAR, "1T")
-    build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.replace_observations(
+    replace_retencion_observations(
+        build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository,
         modelo="115",
         filing_year=_YEAR,
         period=period,

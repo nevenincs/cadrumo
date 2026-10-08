@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:be9d3cc07a3a8fbd5085be24fd90a70828458aa39978d90c8981cc3d7abbe386'
+modified: '2026-10-03'
+body_hash: 'sha256:fcc62907d1bd63a5f4423de03b0e9f840dd6e5a6db6a8a7fe5f28691b5b1865c'
 related: []
 ---
 
@@ -20,8 +20,8 @@ Resolution: the module docstring now states the split explicitly. Foundation tes
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_foundation.py src/aeat/adapters/outbound/storage/test_local.py -k "storage_error_hierarchy_unified or every_leaf_carries or corruption"` passed with 5 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/storage/_errors.py src/aeat/adapters/outbound/storage/test_foundation.py` passed.
+- the historical check passed with 5 selected tests.
+- the historical check passed.
 - Source scan found no direct `Settings()`, `PROJECT_ROOT`, `os.environ`, print/echo output, `# noqa`, pragma, `type: ignore`, `except Exception`, or `except BaseException` in the S141 files.
 
 Disposition: close `AFR-039` as `remote-mirror`.

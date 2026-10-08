@@ -1,14 +1,14 @@
 """Retention-window pruning for :class:`~adapters.outbound.llm.LLMCache`.
 
 ``prune`` bounds the response cache's growth in two stages mirroring
-:meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.prune`: an age cutoff
+:meth:`~adapters.outbound.llm.LLMRunRecorder.prune`: an age cutoff
 (``retention_days``) then a record-count cap (``max_records``), both defaulting
 to central settings.
 
-The cache stamps ``created_at = now()`` at write time (unlike telemetry, which
+The cache stamps ``created_at = now()`` at write time (unlike run records, which
 takes the timestamp from the record). A frozen clock cannot establish a past
 age here: freezing to any instant unrelated to the real session deadline
-expires the active bucket session (see the run-telemetry retention test). So an
+expires the active bucket session (see the run-record retention test). So an
 aged entry is written by replicating the real write path (real redaction, real
 encrypted save) with an explicit past ``created_at`` under the real clock,
 which keeps the session valid while giving ``prune`` a genuinely old entry to

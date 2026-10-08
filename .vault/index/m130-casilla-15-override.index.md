@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#m130-casilla-15-override'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9df25f5a7498965282944a82084840c73a1701d2f9fde15fd1aeb5a2b09c858'
+body_hash: 'sha256:e16a2ab487087664cc9bbb165a7c3e807807867b71f3b4272f2848e2b2e7b99d'
 related:
-  - '[[2026-06-04-m130-casilla-15-override-adr]]'
   - '[[2026-06-04-m130-casilla-15-override-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#m130-casilla-15-override`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-m130-casilla-15-override-adr` - `m130-casilla-15-override` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

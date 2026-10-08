@@ -8,7 +8,7 @@ from typer.testing import CliRunner
 
 from .._command_target import resolve_deferred_target
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import CommandSpecGraph
+from ..command_graph import CommandSpecGraph
 from ..main import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -29,6 +29,8 @@ def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> No
         "profile",
         "profile_secrets_stdin",
         "profile_secrets_fd",
+        "profile_auth_method",
+        "profile_credential_ref",
         "version",
         "detail",
         "help_",

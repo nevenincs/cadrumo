@@ -52,14 +52,6 @@ class FilingProducerKey(StrEnum):
     #: rendering "S" from `is_complementaria` being false would assert a
     #: substitution nobody declared.
     AMENDMENT_SUSTITUTIVA_OR_COMPLEMENTARIA_MARKER = "amendment_evidence.sustitutiva_or_complementaria_marker"
-    #: The entidad desarrolladora (EEDD) identity block AEAT reserves at @93+4 and
-    #: @101+9 of the auxiliary header, footnoted "A cumplimentar por las entidades
-    #: desarrolladoras". Cadrumo IS the entidad desarrolladora, so these carry
-    #: Cadrumo's own identity and no AEAT document can supply their values --
-    #: which is why they are producer keys (the slot is named here; the value
-    #: arrives from product identity at render time) rather than literals.
-    ENTIDAD_DESARROLLADORA_VERSION_PROGRAMA = "entidad_desarrolladora.version_programa"
-    ENTIDAD_DESARROLLADORA_TAX_ID = "entidad_desarrolladora.tax_id"
     AMENDMENT_ORIGINAL_AEAT_RECEIPT = "amendment_evidence.original_aeat_receipt"
     AMENDMENT_M303_MOTIVE_RECTIFICACIONES = "amendment_evidence.m303_motive.rectificaciones"
     AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO = (

@@ -20,9 +20,10 @@ import pytest
 from textual.widgets import DataTable, Static
 
 from .....application.ledger.workspace import LedgerWorkspaceArea
+from .....core.i18n.render import tr
 from ...components.host import ScreenHostApp
 from ..classification import LedgerClassificationScreen
-from ..controller import LedgerWorkspaceController, ledger_copy
+from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
@@ -123,8 +124,8 @@ async def test_without_a_chosen_entry_classification_refuses_and_says_why() -> N
         await pilot.pause()
         assert app.screen is screen, "an unreachable area must not replace the body"
         notice = str(screen.query_one("#ledger-refusal", Static).render())
-        assert notice == ledger_copy("tui.ledger.refusal.selection_required")
-        assert notice != ledger_copy("tui.ledger.refusal.submission_unavailable")
+        assert notice == tr("tui.ledger.refusal.selection_required")
+        assert notice != tr("tui.ledger.refusal.submission_unavailable")
 
 
 def test_the_refused_classification_body_names_the_missing_selection() -> None:

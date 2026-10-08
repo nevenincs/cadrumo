@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:186692c158f80d2538548330e1d7796273b9c5adaa7255f3903bf284d97138ad'
+body_hash: 'sha256:ac3083f8118ff4b9e7dc696a7fa6a45437a6fbd45d75b311ea6124bd2420216c'
 related:
   - "[[2026-08-06-llm-package-split-adr]]"
-  - "[[2026-08-06-llm-package-split-plan]]"
 ---
 
 # `llm-package-split` audit: `Enforcement gaps, the vacuous-green defect class, and the disposition register`
@@ -35,11 +34,11 @@ concurrent agent sessions, so every measurement here is a static analysis of cap
 
 ### enumerated-gate-tier-fails-open | critical | The strictest secure-storage gate reports success for a surface that does not exist or has been emptied
 
-`_SENSITIVE_SURFACES` in `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`
+`_SENSITIVE_SURFACES` in the retired test
 is an **enumerated tuple, not a walk**. Verified at HEAD: it carries exactly **eighteen**
 entries, and `adapters/outbound/llm` is one of them, so the modules this campaign relocates
 sit in the gate's strictest tier today. The iteration feeds each entry to
-`non_test_python_files_under` in `src/cadrumo/tests/_inventory.py`, which filters an rglob.
+`non_test_python_files_under` in the retired test, which filters an rglob.
 There is no existence check, no `is_dir()`, and no non-vacuity assertion anywhere in either
 file.
 

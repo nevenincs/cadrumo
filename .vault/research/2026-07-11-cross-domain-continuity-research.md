@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cross-domain-continuity'
 date: '2026-07-11'
-modified: '2026-08-15'
-body_hash: 'sha256:99d3d16968d31c63cf3309a5a2d55fdfe05a7a51572f6ea660120f899823f462'
+modified: '2026-10-03'
+body_hash: 'sha256:a2606d2cb1565a20e0f551fc241da2a106c19cdaa491a1151af7e77d1db8e9e2'
 related: []
 ---
 
@@ -16,11 +16,11 @@ Decision research for the two remaining legal-grounding blockers in the cross-do
 
 ### S343 — Article 27 LGT rate posture is not a statutory assessment
 
-Current code correctly resolves the post-2021 graduated band at the exact twelve-month boundary: the anniversary remains 13 percent and the following day enters the 15-percent-plus-interest tail. It also fails closed for known prior requirement and non-positive payable amount. Evidence: `src/aeat/domain/deadlines/_recargo.py`, `src/aeat/application/modelo/_work_plazo.py`, and `src/aeat/entrypoints/cli/_modelo_rendering.py`.
+Current code correctly resolves the post-2021 graduated band at the exact twelve-month boundary: the anniversary remains 13 percent and the following day enters the 15-percent-plus-interest tail. It also fails closed for known prior requirement and non-positive payable amount. Evidence: the former source file, the former source file, and the former source file.
 
 Its current `conditional=False` branch is nevertheless not an Article 27 assessment. It accepts unproven primitives, has no monetary recargo or interest calculation, can fall back to a present-day reference date, and cannot prove absence of an AEAT prior requirement. Local filing state is non-official evidence under `.codex/rules/local-filed-observations-are-non-official-evidence.md`.
 
-The bundled Article 27 extraction is incomplete: `src/aeat/_data/corpus/normatives/html/ley-58-2003-art-27.html.extracted.md` lacks the same-facts safe harbour in 27.2, payment/executive consequences in 27.3, and period-identification condition in 27.4. It also lacks an effective-dated regime for the 2021 amendment and the historical interest inputs required for a money result.
+The bundled Article 27 extraction is incomplete: the former source file lacks the same-facts safe harbour in 27.2, payment/executive consequences in 27.3, and period-identification condition in 27.4. It also lacks an effective-dated regime for the 2021 amendment and the historical interest inputs required for a money result.
 
 Options:
 
@@ -48,4 +48,4 @@ Recommendation: approve an ADR that supersedes only the Art. 20.Uno.26/casilla-6
 
 Primary sources: https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2026/instrucciones-02-12-2t-4t-2026.html, https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-iva-2021/capitulo-1-novedades-destacar-2021/modelo-303.html, https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740, and https://sede.agenciatributaria.gob.es/Sede/iva/que-iva-soportado-puedo-deducir/que-actividades-derecho-deduccion.html.
 
-Code locators: `src/aeat/domain/iva/_schema.py`, `src/aeat/domain/iva/_classification.py`, `src/aeat/application/calculations/_prorrata_regularizacion.py`, and `src/aeat/application/calculations/tests/test_prorrata_regularizacion.py`.
+Code locators: the former source file, the former source file, the former source file, and the former source file.

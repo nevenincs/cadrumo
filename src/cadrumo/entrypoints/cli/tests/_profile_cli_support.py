@@ -3,12 +3,39 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from pathlib import Path
 
+import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .cli_runner import invoke_cached_cli
+
+
+@pytest.fixture
+def native_profile_runtime(tmp_path: Path) -> Iterator[None]:
+    """Run a real installed profile worker for a test's isolated storage root."""
+    storage_root = tmp_path / "cadrumo-storage"
+    storage_root.mkdir(parents=True, exist_ok=True)
+    with native_profile_view_server(storage_root):
+        yield
+
+
+def invoke_protected_profile(name: str, *args: str, json_output: bool = False, language: str | None = None) -> Result:
+    """Prove the exact registered profile with its password on a native leaf."""
+    from ....core.config import load_settings
+
+    prefix = ("--format", "json") if json_output else ()
+    if language is not None:
+        prefix = (*prefix, "--language", language)
+    secret = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    return invoke_cached_cli(
+        (*prefix, "--profile", name, "--profile-secrets-stdin", "config", "profile", *args),
+        input=json.dumps({"profile_passphrase": secret}),
+    )
 
 
 def seed_profile(name: str, **facts: str) -> str:
@@ -65,15 +92,11 @@ def login_profile(name: str) -> Result:
 
 
 def edit_quiet_profile(name: str, *options: str) -> Result:
-    # No credential channel here on purpose: `config profile edit` declares no
-    # --secrets-stdin option, so passing one is refused as an unknown option. Edit
-    # works against the session an earlier login opened rather than taking a
-    # passphrase of its own.
-    return invoke_cached_cli(("config", "profile", "edit", name, "--quiet", *options))
+    return invoke_protected_profile(name, "edit", "--quiet", *options)
 
 
 def profile_rows(name: str) -> dict[str, str]:
-    result = invoke_cached_cli(("config", "profile", "view", name))
+    result = invoke_protected_profile(name, "view")
     assert result.exit_code == 0, result.output
     rows: dict[str, str] = {}
     for line in result.output.splitlines():

@@ -6,14 +6,17 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ....core.identity.nif_iva import NifIvaFormatSpec, NifIvaPrefix
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "NIF-IVA catalogue"
@@ -92,32 +95,10 @@ class NifIvaCatalogue:
         return self.definition(value).iso_country
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("NIF-IVA catalogue entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate NIF-IVA catalogue key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _resolve_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("NIF-IVA country-format fact must resolve as a mapping")
-    return _mapping_entries(resolved)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def _definition(entries: Mapping[str, str], raw_prefix: str) -> NifIvaDefinition:
@@ -177,13 +158,7 @@ def resolve_nif_iva_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> NifIvaCatalogue:
     """Resolve the selected NIF-IVA country/format fact."""
-    coordinate = effective_date or today_madrid()
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "NIF-IVA catalogue resolution requires a generation-pinned governed-fact source",
-        )
-    return _catalogue(_resolve_entries(effective_date=coordinate, authority=authority))
+    return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
 def nif_iva_format_for_country(iso_country: str) -> NifIvaFormatSpec | None:

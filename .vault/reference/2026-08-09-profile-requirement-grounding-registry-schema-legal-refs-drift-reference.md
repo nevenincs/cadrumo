@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:478960eba35fece74eb51ff52aaf458a79a877e85ff67c3c829a93edaca41c5c'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
-  - "[[2026-08-08-profile-requirement-grounding-plan]]"
   - "[[2026-08-09-profile-requirement-grounding-per-modelo-grounding-inventory-reference]]"
 ---
 

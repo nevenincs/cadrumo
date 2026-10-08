@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#sociedades-manual-coverage'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:e07fc9b8f671eee8956be5b5bb52188e97628668fd621ee62fbb17098f378543'
-related:
-  - "[[2026-09-10-sociedades-manual-coverage-plan]]"
+related: []
 ---
 
 # `sociedades-manual-coverage` audit: `p01 contract`

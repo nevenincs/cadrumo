@@ -27,7 +27,7 @@ modelo:
           m345-declarado-nombre:
             label: Surname and forename of the reported person
           m345-declarante-nif:
-            label: Tax ID of the filer
+            label: Declarant's NIF
           m345-declarante-razon-social:
             label: Surname and first name or company name of the filer
           m345-devoluciones-excesos:
@@ -69,7 +69,7 @@ modelo:
           m345-rendimientos-trabajo-no-superiores-60000:
             label: Gross employment income not exceeding 60,000 euros
           m345-representante-legal-nif:
-            label: Tax ID of the legal representative
+            label: Legal representative's NIF
           m345-subclave:
             label: Sub-key
           m345-total-declarados:

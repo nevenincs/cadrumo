@@ -188,6 +188,7 @@ def resolve_iva_compensation_annual_partition_binding_values(
     report = build_iva_compensation_carry_forward_report(
         states,
         as_of_year=filing_year,
+        operation=operation,
         opening_balance=opening_balance,
     )
     partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=filing_year)

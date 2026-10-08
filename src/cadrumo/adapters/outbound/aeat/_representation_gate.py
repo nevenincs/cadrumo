@@ -216,8 +216,8 @@ async def dismiss_pre303_alert_modal_if_present(
     alert_modal_selector: str,
     alert_continue_button_text: str,
     on_declined_hidden_modal: Callable[[], None] | None = None,
-) -> None:
-    """Dismiss AEAT's pre303 alert modal, but only when it genuinely carries ``"show"``.
+) -> bool:
+    """Dismiss a visibly shown AEAT alert and report whether a dismissal was performed.
 
     Collapses the two independent implementations this session found (round-3
     semantic duplicate discovery): the auth caller checked the modal's
@@ -266,22 +266,29 @@ async def dismiss_pre303_alert_modal_if_present(
     content = getattr(page, "content", None)
     click = getattr(page, "click", None)
     if content is None or click is None:
-        return
+        return False
     html = await content()
     soup = parse_html(html)
     modal = soup.select_one(alert_modal_selector)
     if modal is None:
-        return
-    if not _html_node_has_class(modal, "show"):
+        return False
+    shown_by_class = _html_node_has_class(modal, "show")
+    # AEAT's live DialogoRepresentacion (captured 2026-10-03) shows this modal with an inline
+    # `display: block` and no "show" class; it covers the own-name submit until dismissed.
+    shown_by_style = "display:block" in str(getattr(modal, "get", _absent_attribute)("style", "")).replace(" ", "")
+    if not (shown_by_class or shown_by_style):
         if on_declined_hidden_modal is not None:
             on_declined_hidden_modal()
-        return
-    selectors = continue_button_selectors(alert_modal_selector, alert_continue_button_text, scoped_to_shown=True)
+        return False
+    selectors = continue_button_selectors(
+        alert_modal_selector, alert_continue_button_text, scoped_to_shown=shown_by_class
+    )
     # CAST-RATIONALE-DUCK-TYPED-PAGE: the getattr probes above already
     # established that this page provides click; this function stays
     # duck-typed by design, returning early for a page that does not, so the
     # capability is proven here rather than declared.
     await click_first_matching_selector(cast("ClickablePage", page), selectors)
+    return True
 
 
 __all__ = [

@@ -10,7 +10,11 @@ import pytest
 
 from ..authority import PinnedAuthorityOperation
 from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
-from ..iva_schema_vocabulary import _BY_AUTHORITY, _PROJECTIONS, resolve_iva_cash_accounting_catalogue
+from ..iva_cash_accounting_vocabulary import resolve_iva_cash_accounting_catalogue
+from ..iva_schema_vocabulary_source import (
+    _BY_AUTHORITY,
+    _PROJECTIONS,
+)
 from ..schema import SupportedFilingYearsCatalogue
 from ..schema_base import DateAxis
 

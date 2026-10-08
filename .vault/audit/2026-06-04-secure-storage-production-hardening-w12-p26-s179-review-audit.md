@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:ffe5efea212518384c327318d2b3c14c4fbd04c0662a510a122d280a08d46d41'
+modified: '2026-10-03'
+body_hash: 'sha256:4d5f2a487d114f751d6ba78bd1430a647c3d04ca4a8c5b85de1f8dfdfc9f3304'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The focused tests exercise BIP-39 reference vectors, real envelope mint/unwrap, 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py src/aeat/adapters/persistence/storage/master_key/test_recovery.py` passed with 33 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_recovery_facade.py src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py src/aeat/adapters/persistence/storage/master_key/test_recovery.py` passed.
+- the historical check passed with 33 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Touched-surface hygiene scan found no broad exception suppressions, pragma/noqa/type-ignore suppressions, direct settings construction, naked environment access, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, or naked encoding literals.
 

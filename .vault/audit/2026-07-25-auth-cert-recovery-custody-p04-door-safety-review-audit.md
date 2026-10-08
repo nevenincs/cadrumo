@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#auth-cert-recovery-custody'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:aebd5351fad89403243ae618e088aeb9eb5ed302ff9d408bd87d4782744c29f7'
+modified: '2026-10-03'
+body_hash: 'sha256:cd71d9596ea7aa7f00a6c0b84f3b485594ee9621c15fcc39157a8e21c3798f65'
 related:
-  - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
   - "[[2026-07-17-auth-cert-recovery-custody-adr]]"
 ---
 
@@ -20,11 +19,8 @@ had been claimed but never performed. Nothing in the prior claim was taken as
 evidence; every verdict below is grounded in code read at HEAD `5467b60b86`,
 and the two load-bearing ones are grounded in executed reproduction probes.
 
-Surfaces read in full: `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`,
-`src/cadrumo/entrypoints/cli/_config/_secure_input.py`,
+Surfaces read in full: the retired module,
 `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`,
-`src/cadrumo/application/user_profile/_custody.py`,
-`src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`,
 `_recovery_facade.py`, and `_recovery_record.py`. Followed outward where the
 call graph left the nominal scope: `_master_key_io.py`, `_master_key.py`,
 `_login_throttle.py`, `_login_session.py`, `_config_payloads.py`,

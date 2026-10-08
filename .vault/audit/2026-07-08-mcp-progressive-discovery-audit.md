@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:9170b187f4e5d6b75174be0d5f7bf342da89195ef44b3f73ff1d0100153808fa'
+modified: '2026-10-03'
+body_hash: 'sha256:1de13eeea9863f91d0679e8749ba174c730eb5adf7d9d785dd86d46e3739b3ea'
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
-  - '[[2026-07-08-mcp-progressive-discovery-plan]]'
   - '[[2026-07-08-mcp-progressive-discovery-research]]'
 ---
 
@@ -21,10 +20,10 @@ DETERMINISTIC core-vs-full discovery comparison that is provable today without a
 live model, and the discovery selection-quality scoring the live persona harness
 will run once a model is driven against the scenario. It audits three shipped
 artifacts: the discovery golden scenario `descubrimiento_verbo.toml`, the
-discovery scoring helpers in `src/aeat/agent/eval/_live_scoring.py`
+discovery scoring helpers in the retired module
 (`score_discovery_trajectory`, `compare_surface_discovery`, and the
 `DiscoveryScore` / `SurfaceDiscoveryComparison` verdicts), and the gate
-`src/aeat/agent/eval/tests/test_discovery_scoring.py`. All numbers below were
+The retired test. All numbers below were
 measured from the live descriptor set (`build_tool_descriptors`) and the live
 surface policy (`advertised_descriptors`, `SurfaceMode`) on 2026-07-08.
 

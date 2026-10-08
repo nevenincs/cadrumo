@@ -18,12 +18,13 @@ from typing import Any
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 
 from ......core.config import Settings
-from ......core.config_state_root import live_state_root_inputs, platform_user_data_root
 from ......tests.env_scope import scoped_env_var
+from ......tests.inventory import REPO_ROOT
 from ...errors import StorageError
-from ..engine import create_engine_from_settings, dispose_engine
+from ..engine import _normalize_sqlite_url, create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _ENGINE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.engine"
@@ -213,20 +214,14 @@ def test_engine_refuses_creating_a_database_with_former_product_filename(tmp_pat
 def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     tmp_path: Path,
 ) -> None:
-    """Relative SQLite URLs resolve against the application-data anchor, not cwd.
+    """URL normalization uses the checkout anchor despite cwd and user-data overrides.
 
-    ``core.paths._relative_path_anchor`` documents that this anchor has no
-    source-checkout arm: a relative override always resolves under the
-    platform user-data root, never a repo-root walk and never the process
-    cwd, even from inside a checkout (the corpus-root decision pinned by
-    ``test_justificante_corpus_derivation.py`` is the same shape). Every
-    platform's user-data input is pinned to an isolated tmp_path subtree so the
-    test never touches the real machine's application-data directory.
+    Inspect the normalized URL without opening a database under the real
+    checkout. The engine's connection and directory creation have separate
+    absolute-path cases above.
     """
     isolated_app_data = tmp_path / "app-data"
     relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
-    settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
-
     cwd_marker = tmp_path / "cwd"
     cwd_marker.mkdir()
     original_cwd = Path.cwd()
@@ -237,13 +232,10 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
             scoped_env_var("XDG_DATA_HOME", str(isolated_app_data)),
             scoped_env_var("HOME", str(isolated_app_data)),
         ):
-            anchored_db = platform_user_data_root(live_state_root_inputs()) / relative_db
-            assert anchored_db.is_relative_to(isolated_app_data), "the anchor escaped the isolated tree"
-            with _engine_for(settings) as engine:
-                with engine.connect() as conn:
-                    conn.execute(text("select 1"))
-                assert Path(engine.url.database or "") == anchored_db
-                assert anchored_db.exists()
-                assert not (cwd_marker / relative_db).exists()
+            normalized = make_url(_normalize_sqlite_url(f"sqlite:///{relative_db.as_posix()}"))
+            anchored_db = Path(normalized.database or "")
+            assert anchored_db == REPO_ROOT / relative_db
+            assert not anchored_db.is_relative_to(cwd_marker)
+            assert not anchored_db.is_relative_to(isolated_app_data)
     finally:
         os.chdir(original_cwd)

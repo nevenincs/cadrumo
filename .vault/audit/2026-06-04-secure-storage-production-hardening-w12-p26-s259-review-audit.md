@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:7b2ff27e89b9dcf629be8f666da83c6efe029bede91cecede6820d24a112fdc1'
+modified: '2026-10-03'
+body_hash: 'sha256:a9780dabc8df2c6103f27c3d98da5816b260860460c959d3dfd7410d09f32d64'
 related: []
 ---
 
@@ -28,8 +28,8 @@ All records continue to use the shared strict frozen model config. The module pe
 
 ## S259-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/storage/calc_sheets/_errors.py src/aeat/application/storage/calc_sheets/_records.py src/aeat/application/storage/calc_sheets/test_records_hardening.py src/aeat/test_calc_sheets_error_hierarchy.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/storage/calc_sheets/test_records_hardening.py src/aeat/application/storage/calc_sheets/test_records_evidence.py src/aeat/application/storage/calc_sheets/test_records.py src/aeat/test_calc_sheets_error_hierarchy.py` passed with 21 tests.
+- the historical check passed.
+- the historical check passed with 21 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-157` as `remote-mirror` with workbook metadata shape, typed validation errors, and write-plan collision validation hardened.

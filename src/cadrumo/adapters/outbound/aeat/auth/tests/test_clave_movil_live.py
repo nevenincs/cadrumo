@@ -15,18 +15,21 @@ import pytest
 from playwright.async_api import BrowserContext
 
 from ......application.auth.session_types import AeatLoginAssertion, AeatSession, ClaveMovilSessionDetail
-from ......core.config import Settings
+from ......core.config import Settings, load_settings
 from ......tests.live_gate import requires_live_enabled
+from .....persistence.profile.tests.profile_registration import live_clave_movil_profile
 from ...browser.factory import default_browser_session_factory
 from .. import session_store as session_store
 from ..clave_movil import ClaveMovilAuthProvider
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
+__all__ = ["live_clave_movil_profile"]
+
 
 def _settings_or_skip() -> Settings:
     requires_live_enabled()
-    return Settings()
+    return load_settings()
 
 
 async def _central_browser_session(settings: Settings):
@@ -61,6 +64,7 @@ async def test_clave_movil_playwright_entrypoint_reaches_live_selector() -> None
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("live_clave_movil_profile")
 async def test_clave_movil_provider_probes_persisted_session_with_central_playwright() -> None:
     """Real provider + central Playwright verify an existing encrypted Cl@ve session."""
 
@@ -92,6 +96,7 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("live_clave_movil_profile")
 async def test_clave_movil_provider_full_login_with_central_playwright_when_explicitly_enabled() -> None:
     """Run the real Cl@ve Móvil login flow through the centralized Playwright backend."""
 

@@ -22,14 +22,12 @@ from collections.abc import Iterator
 from http import HTTPStatus
 from pathlib import Path
 from typing import ClassVar, override
+from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    open_test_profile_session,
-    set_active_test_profile_facts,
-)
+from cadrumo.adapters.persistence.profile.tests.confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.outbound.llm.tests.load_headroom_support import extraction_ports_under_admitted_load
 from ....adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
@@ -40,7 +38,6 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.ledger import invoice_confirmation
 from ....application.ledger.confirmation_gate import ConfirmationBlockedError, confirmation_blockers
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH
-from ....application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from ....application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
@@ -50,7 +47,6 @@ from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
-from ....domain.user_profile.values import UserProfileFact
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -61,11 +57,10 @@ from ....tests.loopback_llm import (
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ...adapter_composition import build_ledger_evidence_ports
 from ...ledger_evidence_extraction_composition import invoice_draft_extraction_ports
-from .cli_runner import invoke_cached_cli
+from .portable_human_cli_runtime import portable_human_cli_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10"
 READING_RUNTIME_MODEL = "qwen2.5:7b"
 _FILER_CIF = "B17283946"
 _COUNTERPARTY_CIF = "B12345674"
@@ -180,18 +175,20 @@ class _LiveDocument:
         self,
         evidence_id: str,
         *,
+        bucket_id: str,
         operation: PinnedAuthorityOperation,
         legends: tuple[RegimeLegend, ...],
     ) -> None:
+        self.bucket_id = bucket_id
         self.evidence_id = evidence_id
         self.operation = operation
         self.legends = legends
 
     def extract(self) -> InvoiceDraft:
-        evidence_ports = build_ledger_evidence_ports(bucket_id=_PROFILE_ID)
+        evidence_ports = build_ledger_evidence_ports(bucket_id=self.bucket_id)
         return extract_invoice_draft_from_evidence(
             evidence_id=self.evidence_id,
-            bucket_id=_PROFILE_ID,
+            bucket_id=self.bucket_id,
             settings=load_settings(),
             ports=extraction_ports_under_admitted_load(invoice_draft_extraction_ports(evidence_ports=evidence_ports)),
             operation=self.operation,
@@ -199,16 +196,16 @@ class _LiveDocument:
         )
 
     def confirm(self, *, kind: InvoiceKind) -> None:
-        evidence_ports = build_ledger_evidence_ports(bucket_id=_PROFILE_ID)
+        evidence_ports = build_ledger_evidence_ports(bucket_id=self.bucket_id)
         confirm_invoice_draft_from_evidence(
-            bucket_id=_PROFILE_ID,
+            bucket_id=self.bucket_id,
             kind=kind,
             counterparty_country="ES",
             evidence_id=self.evidence_id,
             settings=load_settings(),
-            catalogue_creation_ports=build_catalogue_creation_ports(bucket_id=_PROFILE_ID),
-            invoice_confirmation_ports=build_invoice_confirmation_ports(bucket_id=_PROFILE_ID),
-            counterparty_establishment_repository=CounterpartyEstablishmentRepository(bucket_id=_PROFILE_ID),
+            catalogue_creation_ports=build_catalogue_creation_ports(bucket_id=self.bucket_id),
+            invoice_confirmation_ports=build_invoice_confirmation_ports(bucket_id=self.bucket_id),
+            counterparty_establishment_repository=CounterpartyEstablishmentRepository(bucket_id=self.bucket_id),
             evidence_ports=evidence_ports,
             extraction_ports=extraction_ports_under_admitted_load(
                 invoice_draft_extraction_ports(evidence_ports=evidence_ports)
@@ -240,37 +237,32 @@ def live_document(tmp_path: Path, reader_url: str):
             cadrumo_llm_contention_check_override=True,
             cadrumo_llm_contention_safety_margin_bytes=0,
         ),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         bundled_indexed_authority().operation() as operation,
     ):
-        # Seeded through a detached WorkflowState, never a repository read:
-        # the capsule publishes by an atomic no-replace rename onto
-        # ``buckets/<profile-id>``, which a workflow-state repository
-        # construction would otherwise materialise first and collide with.
-        register_minimal_profile(profile_id=_PROFILE_ID, display_name="tester")
-        set_active_test_profile_facts(
-            (UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_FILER_CIF),),
-        )
+        profile_id = register_cli_profile(label="tester", facts={FILER_TAX_ID_FACT_PATH: _FILER_CIF}, log_in=False)
+        with portable_human_cli_runtime(
+            storage_root=storage_root, profile_id=UUID(profile_id), label="tester"
+        ) as runtime:
+            period = default_invoice_extraction_period()
+            legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
-        period = default_invoice_extraction_period()
-        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
+            def _add(lines: tuple[str, ...], read: dict[str, str]) -> _LiveDocument:
+                _ReaderEndpoint.reply = json.dumps({**_COMMON_READ, **read})
+                document = tmp_path / f"factura-{len(lines)}-{len(read)}.pdf"
+                document.write_bytes(text_pdf_bytes(lines))
+                added = runtime.invoke(
+                    ["--format", "json", "app", "ledger", "evidence", "add", str(document), "--supplier", "Acme SL"],
+                )
+                assert added.exit_code == 0, added.output
+                return _LiveDocument(
+                    json.loads(added.output)["result"]["evidence_id"],
+                    bucket_id=profile_id,
+                    operation=operation,
+                    legends=legends,
+                )
 
-        def _add(lines: tuple[str, ...], read: dict[str, str]) -> _LiveDocument:
-            _ReaderEndpoint.reply = json.dumps({**_COMMON_READ, **read})
-            document = tmp_path / f"factura-{len(lines)}-{len(read)}.pdf"
-            document.write_bytes(text_pdf_bytes(lines))
-            added = invoke_cached_cli(
-                ["--format", "json", "app", "ledger", "evidence", "add", str(document), "--supplier", "Acme SL"],
-            )
-            assert added.exit_code == 0, added.output
-            return _LiveDocument(
-                json.loads(added.output)["result"]["evidence_id"],
-                operation=operation,
-                legends=legends,
-            )
-
-        yield _add
+            yield _add
     dispose_engine()
 
 

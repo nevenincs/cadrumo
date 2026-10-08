@@ -13,11 +13,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.toml import parse_toml
-from dev.registry.analysis.casilla_lineage_seed import (
-    EXCLUDED_MODELOS,
-    partition_contradictions,
-    render_ledger,
-)
+from dev.registry.analysis.casilla_lineage_seed_ledger import partition_contradictions, render_ledger
+from dev.registry.analysis.casilla_lineage_seed_types import EXCLUDED_MODELOS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

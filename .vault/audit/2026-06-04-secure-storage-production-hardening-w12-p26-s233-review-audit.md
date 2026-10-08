@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:af184238e4da2fdb2ffcf70dd087395b093e19909f19ae70d3ff8bd1b1fe2231'
+modified: '2026-10-03'
+body_hash: 'sha256:4dfedfc0383c4bd056e95f22d5d32e9abbd29667ae57c6635294514c4d3d5785'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S233-001 | PASS | Modelo actions orchestrate secure runtime repositories
 
-`src/aeat/application/modelo/_actions.py` coordinates modelo work-unit,
+The retired module coordinates modelo work-unit,
 calculation-revision, verification-report, filing-record, bucket-event, and
 workflow-run lifecycle actions. Durable local modelo state is delegated to
 domain repositories that resolve runtime-created secure-object repositories,
@@ -49,28 +49,28 @@ were authored through `python -m aeat.locales set`, then verified with
 
 `vaultspec-rag search "Modelo 303 IVA wallet prior compensation gate" --type
 code --port 8766 --max-results 12` clustered production gate ownership in
-`src/aeat/application/modelo/_iva_wallet_gate.py`, with `_actions.py` no longer
+The retired module, with `_actions.py` no longer
 retaining the deleted local constant/helper implementation. The remaining
 compatibility alias in `_actions.py` points at the extracted helper so older
 imports continue to resolve without duplicating business logic.
 
 `vaultspec-rag search "modelo actions secure object repository orchestration"
 --type code --port 8766 --max-results 12` clustered modelo secure persistence
-in `src/aeat/domain/modelos/_runtime_repository.py` and domain repositories,
+in the retired module and domain repositories,
 supporting the runtime-repository classification.
 
 ## S233-006 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/modelo/_actions.py src/aeat/application/modelo/test_actions.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_actions.py` passed with 24 tests.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_bucket_aggregation_flow.py src/aeat/application/modelo/test_import_flow.py` passed with 27 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "modelo or s85_runtime"` passed with 10 selected tests.
+- the historical check passed.
+- the historical check passed with 24 tests.
+- the historical check passed with 27 tests.
+- the historical check passed with 10 selected tests.
 - `python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 ## S233-007 | OBSERVATION | Workflow run marker settings remain adjacent follow-up
 
 `WorkflowRunRepository.save()` still resolves the returned marker path with a
-direct `Settings()` constructor in `src/aeat/application/workflow/_persistence.py`.
+direct `Settings()` constructor in the retired module.
 The encrypted workflow run payload is still secure-object backed, and `_actions.py`
 passes workflow runs through `WorkflowRunRepository(objects=bv_repo.secure_object_repository)`;
 the remaining settings-construction cleanup belongs to the workflow persistence

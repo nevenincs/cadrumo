@@ -14,7 +14,7 @@ import yaml
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
-from ..lane_reachability import _recipe_bodies, _recipes_invoked_by
+from ..lane_recipe_commands import _recipe_bodies, _recipes_invoked_by
 from ..workflow_delegation import calls_local_workflow
 from ..workflow_run_text import executed_lines
 

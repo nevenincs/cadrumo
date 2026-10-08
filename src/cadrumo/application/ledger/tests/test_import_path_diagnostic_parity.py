@@ -62,6 +62,7 @@ class _ParsedLedgerRowFake:
 
     raw: RawTransaction
     direction: TransactionDirection
+    own_account_id: str | None = None
 
 
 def _parsed(raw: RawTransaction) -> ParsedLedgerRowProtocol:

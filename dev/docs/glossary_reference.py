@@ -52,9 +52,11 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev._paths import UTF_8
 
-from ._locale_chrome import docs_chrome
+from ._locale_chrome import chrome_anchor, docs_chrome
 from .build import docs_build_language
-from .legal_reference import LEGAL_CATALOGUE_RELPATH, legal_citation
+from .compile_slots import active, language_text
+from .legal_catalogue import LEGAL_CATALOGUE_RELPATH
+from .legal_reference_routing import legal_citation
 from .terminology_handbook.enums import TermStatus
 from .terminology_handbook.loader import TerminologyHandbook, load_bundled_terminology_handbook
 from .terminology_handbook.schema import ConceptRecord, LanguageSection
@@ -69,9 +71,13 @@ _UTF_8 = UTF_8
 #: is in the read set before paying for the projection, and a second literal copy
 #: of the path there could drift from this one silently. The sibling generated
 #: surfaces publish theirs for the same reason
-#: (:data:`~dev.docs.legal_reference.LEGAL_REFERENCE_DIR`,
+#: (:data:`~dev.docs.legal_reference_routing.LEGAL_REFERENCE_DIR`,
 #: :data:`~dev.docs.terminology.casilla_anchor.CASILLA_REFERENCE_DIR`).
 GLOSSARY_REFERENCE_RELPATH: Final[str] = "_generated/glossary.rst"
+
+
+class GlossaryDefinitionError(RuntimeError):
+    """One concept's definition cannot be carried by one compile of every language."""
 
 
 @dataclass(frozen=True)
@@ -141,20 +147,7 @@ def _legal_permalinks(repo_root: Path) -> dict[str, LegalGrounding]:
             continue
         legal_tables = cast(dict[object, object], legal)
         for ref_id, body in legal_tables.items():
-            if not isinstance(ref_id, str) or not isinstance(body, dict):
-                continue
-            table = cast(dict[str, object], body)
-            permalink = table.get("permalink")
-            kind = table.get("kind")
-            article = table.get("article")
-            section = table.get("section")
-            if isinstance(permalink, str) and permalink:
-                grounding[ref_id] = LegalGrounding(
-                    permalink=permalink,
-                    kind=kind if isinstance(kind, str) else "",
-                    article=article if isinstance(article, str) else None,
-                    section=section if isinstance(section, str) else None,
-                )
+            _catalogue_legal_grounding(ref_id, body, grounding)
     return grounding
 
 
@@ -230,6 +223,53 @@ def _body_text(concept: ConceptRecord, language: OutputLanguage) -> str:
     return section.definition or section.short_description
 
 
+def _carried_body(concept: ConceptRecord, language: OutputLanguage) -> str:
+    """Return the entry body for every language one compile carries, as a mark.
+
+    A definition is curated prose rather than a catalogue string, so it is the
+    one piece of a glossary entry that the one multilingual compile
+    (:mod:`dev.docs.compile_slots`) has to record per language itself. It is
+    plain text -- no inline markup, no role, no line break -- so what each
+    language reads is a string a docutils writer escapes and the smart-quotes
+    transform educates in that language, which is exactly what a mark carries.
+
+    A concept authored in some of the carried languages and not the others is
+    refused: the page is one structure for every language, and those two
+    languages need two (:func:`_render_entry` renders a body it has and a
+    plainly stated absence with the compiled record it does not). Outside the
+    one compile this is :func:`_body_text` and nothing else.
+
+    Args:
+        concept: The concept whose entry is being rendered.
+        language: The language a single-language build renders.
+
+    Returns:
+        The body in *language*, the mark carrying every language's, or empty
+        where no carried language has one authored.
+
+    Raises:
+        GlossaryDefinitionError: If some carried languages have a body and the
+            rest do not.
+    """
+    slots = active()
+    if slots is None:
+        return _body_text(concept, language)
+    authored = {tag: _body_text(concept, OutputLanguage(tag)) for tag in slots.languages}
+    unauthored = sorted(tag for tag, body in authored.items() if not body)
+    if not unauthored:
+        return language_text(lambda tag: authored[tag], language.value)
+    if len(unauthored) < len(authored):
+        raise GlossaryDefinitionError(
+            f"the concept {concept.concept_id!r} has a definition in "
+            f"{', '.join(sorted(set(authored) - set(unauthored)))} and none in {', '.join(unauthored)}; "
+            "one compile writes one page for every language, so author the missing definition "
+            "or withdraw the concept from the approved lifecycle"
+        )
+    # No language has one, which is one structure again: the entry says so and
+    # leans on the compiled record.
+    return ""
+
+
 def _related_lines(
     concept: ConceptRecord,
     headwords: dict[str, str],
@@ -294,7 +334,7 @@ def _render_entry(
         term_lines.append(term)
     body_indent = "      "
     lines = [f"   {term}" for term in term_lines]
-    body = _body_text(concept, language)
+    body = _carried_body(concept, language)
     # A Sphinx glossary entry must carry a body, so an unauthored definition
     # cannot simply be omitted. It says so plainly and then leans on the
     # compiled record, which is language-safe: the domain, the legal grounding
@@ -358,6 +398,7 @@ def render_glossary(
         "..\n"
         "   Generated by dev/docs/glossary_reference.py from the approved\n"
         "   Terminology Handbook concepts. Do not edit by hand; regenerate.\n\n"
+        f"{chrome_anchor('docs.glossary.title')}"
         f"{title}\n"
         f"{'=' * max(len(title), 3)}\n\n"
         f"{docs_chrome('docs.glossary.intro', resolved_language)}\n\n"
@@ -429,3 +470,21 @@ def generate_glossary_reference(
         # CheckCarriageReturn (D004) then flags on every regeneration.
         output_path.write_text(rst, encoding=_UTF_8, newline="\n")
     return result
+
+
+def _catalogue_legal_grounding(ref_id: object, body: object, grounding: dict[str, LegalGrounding]) -> None:
+    """Catalogue legal grounding."""
+    if not isinstance(ref_id, str) or not isinstance(body, dict):
+        return
+    table = cast(dict[str, object], body)
+    permalink = table.get("permalink")
+    kind = table.get("kind")
+    article = table.get("article")
+    section = table.get("section")
+    if isinstance(permalink, str) and permalink:
+        grounding[ref_id] = LegalGrounding(
+            permalink=permalink,
+            kind=kind if isinstance(kind, str) else "",
+            article=article if isinstance(article, str) else None,
+            section=section if isinstance(section, str) else None,
+        )

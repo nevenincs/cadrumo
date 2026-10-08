@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#modelo-100-legal-attestation-review-batch-b'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7bf25dfdae215574a0771d861d45a20341d5f1901bfcadea02d65ccf0311fdf6'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-14-registry-campaign-sequencing-operator-attestation-ledger-audit]]"
   - "[[2026-08-14-legal-attestation-packet-methodology-audit]]"
 ---

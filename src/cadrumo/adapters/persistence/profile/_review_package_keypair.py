@@ -32,6 +32,7 @@ def ensure_singleton_keypair[KeypairT: BaseModel](
     expected_bucket_id: str,
     mismatch_error: Callable[[], Exception],
     write_provenance: str,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> KeypairT:
     """Return a bucket singleton, minting once and returning a race winner.
 
@@ -55,17 +56,25 @@ def ensure_singleton_keypair[KeypairT: BaseModel](
         return _validated(existing.payload)
 
     keypair = generate()
-    try:
+    payload = keypair.model_dump_json().encode(UTF_8_ENCODING)
+
+    def save() -> None:
         repository.save(
             namespace=namespace.namespace,
             object_key=object_key,
             classification=namespace.sensitivity,
             schema_version=namespace.schema_version,
             written_at=created_at_of(keypair),
-            payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
+            payload=payload,
             write_provenance=write_provenance,
             expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
         )
+
+    try:
+        if mutation_writer is None:
+            save()
+        else:
+            mutation_writer(save)
     except SecureObjectRevisionConflictError:
         winner = repository.load(
             namespace.namespace,

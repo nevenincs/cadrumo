@@ -176,7 +176,7 @@ def _save_source_observation(
     if ObservationSourceKind(source_kind).is_official_aeat:
         source_headers = (
             ObservedHeaderFact(
-                header_key="declaration_type",
+                header_key="filing.result_disposition",
                 value="I",
                 source_artefact_kind="submitted_file",
                 source_locator=f"test:cross-period-clean-state:{period}:declaration-type",

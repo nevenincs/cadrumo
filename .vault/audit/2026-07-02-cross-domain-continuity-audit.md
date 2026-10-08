@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cross-domain-continuity'
 date: '2026-07-02'
-modified: '2026-08-15'
-body_hash: 'sha256:ec973e36c0405ccfb148117b6d8c1b913db4acca71e1d23443cdd41890b5acf0'
+modified: '2026-10-05'
+body_hash: 'sha256:c873198af01a5861e1724fe53d3ee5f23ca87d54f8d4b0cb338a2f9686509946'
 related: []
 ---
 
@@ -38,7 +38,7 @@ No findings for the royalty guidance fix. The `--irpf-category` help text now po
 
 ### w09-p45-s219 | low | no findings
 
-No findings for the no-pending-obligation localization fix. `NO_PENDING_OBLIGATION` now resolves its human refusal text through the active output language while preserving the raw `abort_code`, `stage`, workflow result summary for telemetry, and non-`NO_PENDING_OBLIGATION` workflow summaries.
+No findings for the no-pending-obligation localization fix. `NO_PENDING_OBLIGATION` now resolves its human refusal text through the active output language while preserving the raw `abort_code`, `stage`, workflow result summary, and non-`NO_PENDING_OBLIGATION` workflow summaries.
 
 ### w09-p45-s331 | low | accepted locale serializer churn
 

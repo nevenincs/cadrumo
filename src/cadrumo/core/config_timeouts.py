@@ -7,12 +7,10 @@ unchanged at runtime.
 
 The browser cleanup and Cl@ve approval budgets are consumed by
 :class:`~adapters.outbound.aeat.auth.clave_movil.ClaveMovilAuthProvider`.
-The live IVA surface, filed-register, cancellation-drain, and CLI watchdog
-budgets are consumed by :mod:`application.live.iva_remote_state`,
-:mod:`application.live.filed_data_capture`, and the
-:func:`~entrypoints.cli._app_live._run_live_iva_evidence_pull_command`
-watchdog. The exchange-rate lookup budget is consumed by
-:class:`~adapters.outbound.fx.ecb_provider.EcbReferenceRateProvider`.
+The live IVA surface, filed-register, and cancellation-drain budgets are
+consumed by :mod:`application.live.iva_remote_state` and
+:mod:`application.live.filed_data_capture`. The exchange-rate lookup budget is
+consumed by :class:`~adapters.outbound.fx.ecb_provider.EcbReferenceRateProvider`.
 """
 
 from __future__ import annotations
@@ -97,15 +95,6 @@ class CadrumoTimeoutSettings(BaseSettings):
         description=(
             "Drain delay (ms) after a bounded live IVA read surface is cancelled, giving Playwright "
             "browser tasks time to report cancellation-only errors before the loop handler is restored."
-        ),
-    )
-    cadrumo_live_iva_cli_watchdog_timeout_ms: int = Field(
-        default=240_000,
-        gt=0,
-        description=(
-            "Top-level CLI watchdog timeout (ms) for the combined read-only IVA remote-state command. "
-            "This must exceed the normal auth and surface budgets but remain below operator shell/tool "
-            "timeouts so the CLI can cancel and clean up inside its own process."
         ),
     )
     cadrumo_fx_rate_lookup_timeout_s: int = Field(

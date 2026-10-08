@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:437f7277322d550e3ca1158dc30c1b3d193da825498ea71e17b532ad41851ef8'
 related:
-  - '[[2026-08-05-ci-lane-deconflation-plan]]'
   - '[[2026-07-21-ci-discipline-adr]]'
 ---
 

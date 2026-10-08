@@ -277,12 +277,12 @@ record_identity = "Pág. 1"
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
-aeat_type = "Num"
+aeat_type = "N"
 semantic_kind = "decimal"
 value_policy = "implied-decimal"
 integer_digits = 13
 decimal_digits = 2
-sign_policy = "unsigned"
+sign_policy = "n-prefix-negative-blank-nonnegative"
 allowed_values = []
 
 [singleton_rules.anchor]
@@ -294,8 +294,8 @@ record_identity = "Pág. 1"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m360-2010-pag1-1853-decimal"
-decision_statement = "The field at Pág. 1 @1853+15 renders as an implied-decimal amount with two decimal places."
-justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+decision_statement = "The field at Pág. 1 @1853+15 renders as a signed implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part. The official Tipo column declares N. AEAT's record-design manual defines N as signed numeric: zero-filled digits for nonnegative values, with N displacing the first digit for a negative value; no separate sign byte is reserved."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 1"
@@ -529,12 +529,12 @@ record_identity = "Pág. 2"
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
-aeat_type = "Num"
+aeat_type = "N"
 semantic_kind = "decimal"
 value_policy = "implied-decimal"
 integer_digits = 13
 decimal_digits = 2
-sign_policy = "unsigned"
+sign_policy = "n-prefix-negative-blank-nonnegative"
 allowed_values = []
 
 [singleton_rules.anchor]
@@ -546,8 +546,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m360-2010-pag2-2698-decimal"
-decision_statement = "The field at Pág. 2 @2698+15 renders as an implied-decimal amount with two decimal places."
-justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+decision_statement = "The field at Pág. 2 @2698+15 renders as a signed implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part. The official Tipo column declares N. AEAT's record-design manual defines N as signed numeric: zero-filled digits for nonnegative values, with N displacing the first digit for a negative value; no separate sign byte is reserved."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -557,12 +557,12 @@ record_identity = "Pág. 2"
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
-aeat_type = "Num"
+aeat_type = "N"
 semantic_kind = "decimal"
 value_policy = "implied-decimal"
 integer_digits = 13
 decimal_digits = 2
-sign_policy = "unsigned"
+sign_policy = "n-prefix-negative-blank-nonnegative"
 allowed_values = []
 
 [singleton_rules.anchor]
@@ -574,8 +574,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m360-2010-pag2-2713-decimal"
-decision_statement = "The field at Pág. 2 @2713+15 renders as an implied-decimal amount with two decimal places."
-justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+decision_statement = "The field at Pág. 2 @2713+15 renders as a signed implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part. The official Tipo column declares N. AEAT's record-design manual defines N as signed numeric: zero-filled digits for nonnegative values, with N displacing the first digit for a negative value; no separate sign byte is reserved."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -613,12 +613,12 @@ record_identity = "Pág. 2"
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
-aeat_type = "Num"
+aeat_type = "N"
 semantic_kind = "decimal"
 value_policy = "implied-decimal"
 integer_digits = 13
 decimal_digits = 2
-sign_policy = "unsigned"
+sign_policy = "n-prefix-negative-blank-nonnegative"
 allowed_values = []
 
 [singleton_rules.anchor]
@@ -630,8 +630,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m360-2010-pag2-2733-decimal"
-decision_statement = "The field at Pág. 2 @2733+15 renders as an implied-decimal amount with two decimal places."
-justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+decision_statement = "The field at Pág. 2 @2733+15 renders as a signed implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part. The official Tipo column declares N. AEAT's record-design manual defines N as signed numeric: zero-filled digits for nonnegative values, with N displacing the first digit for a negative value; no separate sign byte is reserved."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -697,12 +697,12 @@ record_identity = "Pág. 2"
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
-aeat_type = "Num"
+aeat_type = "N"
 semantic_kind = "decimal"
 value_policy = "implied-decimal"
 integer_digits = 13
 decimal_digits = 2
-sign_policy = "unsigned"
+sign_policy = "n-prefix-negative-blank-nonnegative"
 allowed_values = []
 
 [singleton_rules.anchor]
@@ -714,8 +714,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m360-2010-pag2-5798-decimal"
-decision_statement = "The field at Pág. 2 @5798+15 renders as an implied-decimal amount with two decimal places."
-justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+decision_statement = "The field at Pág. 2 @5798+15 renders as a signed implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part. The official Tipo column declares N. AEAT's record-design manual defines N as signed numeric: zero-filled digits for nonnegative values, with N displacing the first digit for a negative value; no separate sign byte is reserved."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -725,12 +725,12 @@ record_identity = "Pág. 2"
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
-aeat_type = "Num"
+aeat_type = "N"
 semantic_kind = "decimal"
 value_policy = "implied-decimal"
 integer_digits = 13
 decimal_digits = 2
-sign_policy = "unsigned"
+sign_policy = "n-prefix-negative-blank-nonnegative"
 allowed_values = []
 
 [singleton_rules.anchor]
@@ -742,8 +742,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m360-2010-pag2-5813-decimal"
-decision_statement = "The field at Pág. 2 @5813+15 renders as an implied-decimal amount with two decimal places."
-justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+decision_statement = "The field at Pág. 2 @5813+15 renders as a signed implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part. The official Tipo column declares N. AEAT's record-design manual defines N as signed numeric: zero-filled digits for nonnegative values, with N displacing the first digit for a negative value; no separate sign byte is reserved."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"
@@ -781,12 +781,12 @@ record_identity = "Pág. 2"
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
-aeat_type = "Num"
+aeat_type = "N"
 semantic_kind = "decimal"
 value_policy = "implied-decimal"
 integer_digits = 13
 decimal_digits = 2
-sign_policy = "unsigned"
+sign_policy = "n-prefix-negative-blank-nonnegative"
 allowed_values = []
 
 [singleton_rules.anchor]
@@ -798,8 +798,8 @@ record_identity = "Pág. 2"
 [singleton_rules.evidence]
 authority_kind = "reviewed_policy"
 decision_id = "m360-2010-pag2-5833-decimal"
-decision_statement = "The field at Pág. 2 @5833+15 renders as an implied-decimal amount with two decimal places."
-justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+decision_statement = "The field at Pág. 2 @5833+15 renders as a signed implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part. The official Tipo column declares N. AEAT's record-design manual defines N as signed numeric: zero-filled digits for nonnegative values, with N displacing the first digit for a negative value; no separate sign byte is reserved."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "Pág. 2"

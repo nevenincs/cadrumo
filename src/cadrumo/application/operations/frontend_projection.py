@@ -5,10 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -28,9 +29,8 @@ from .models import (
     OperationReference,
     OperationRevision,
 )
-from .registry import OperationPublicDefinitionContractV1, OperationSchemaIdentityV1
-
-_PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+from .registry import OperationPublicDefinitionContractV1
+from .schema_identity import OperationSchemaIdentityV1
 
 type OperationPublicPendingInteractionV1 = Annotated[
     OperationNoPendingInteractionV1 | OperationReviewAvailableInteractionV1 | OperationUnsupportedInteractionV1,
@@ -41,7 +41,7 @@ type OperationPublicPendingInteractionV1 = Annotated[
 class OperationPublicProgressV1(BaseModel):
     """Renderer-neutral progress state anchored to an operation event."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     completed: NonNegativeInt
     total: Annotated[int, Field(gt=0)]
@@ -60,14 +60,14 @@ class OperationPublicProgressV1(BaseModel):
 class OperationNoPendingInteractionV1(BaseModel):
     """Explicit public marker for an operation with no pending interaction."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     disposition: Literal["none"] = "none"
 
 
 class OperationReviewProjectionReferenceV1(BaseModel):
     """Safe REVIEW identity; deliberately excludes every response credential."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     operation_id: OperationId
     interaction_id: OperationInteractionId
@@ -87,7 +87,7 @@ class OperationReviewProjectionReferenceV1(BaseModel):
 class OperationReviewAvailableInteractionV1(BaseModel):
     """Safe public description of an operation awaiting REVIEW."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     disposition: Literal["review_available"] = "review_available"
     operation_id: OperationId
@@ -117,7 +117,7 @@ class OperationReviewAvailableInteractionV1(BaseModel):
 class OperationUnsupportedInteractionV1(BaseModel):
     """Public marker for a pending interaction the frontend cannot perform."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     disposition: Literal["unsupported"] = "unsupported"
     interaction_kind: Literal[OperationInteractionKind.INPUT, OperationInteractionKind.CHOICE]
@@ -138,7 +138,7 @@ class OperationUnsupportedInteractionV1(BaseModel):
 class OperationPublicProjectionV1(BaseModel):
     """Current anchored operation state with no persistence or frontend types."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     observation_version: Literal[1] = 1
     operation_id: OperationId
@@ -158,6 +158,8 @@ class OperationPublicProjectionV1(BaseModel):
     close_policy: OperationClosePolicy
     cancellation: OperationCancellation
     cancellable_now: bool
+    financial_operand_pending: bool = False
+    financial_operand_cancelled_before_delivery: bool = False
     cancellation_requested: bool
     cancellation_acknowledged: bool
     execution_deadline_at: datetime | None
@@ -269,7 +271,25 @@ def _validate_projection_progress(projection: OperationPublicProjectionV1) -> No
 
 
 def _validate_projection_cancellation_availability(projection: OperationPublicProjectionV1) -> None:
-    if projection.cancellation is OperationCancellation.UNSUPPORTED and projection.cancellable_now:
+    if projection.financial_operand_pending and (
+        projection.definition_contract.transient_financial_operand is None
+        or projection.lifecycle is not OperationLifecycle.CREATED
+        or projection.terminal_condition is not None
+        or projection.effect is not OperationEffect.NONE
+    ):
+        raise ValueError("financial pending custody requires a created, uneffected typed invocation")
+    if projection.financial_operand_cancelled_before_delivery and (
+        projection.definition_contract.transient_financial_operand is None
+        or projection.lifecycle is not OperationLifecycle.TERMINAL
+        or projection.terminal_condition is not OperationTerminalCondition.CANCELLED
+        or projection.effect is not OperationEffect.NONE
+    ):
+        raise ValueError("pre-delivery financial cancellation requires its exact none-effect terminal")
+    if (
+        projection.cancellation is OperationCancellation.UNSUPPORTED
+        and projection.cancellable_now
+        and not projection.financial_operand_pending
+    ):
         raise ValueError("unsupported cancellation cannot be currently available")
     if projection.cancellable_now and (projection.cancellation_requested or projection.cancellation_acknowledged):
         raise ValueError("public cancellation cannot remain currently available after it is requested")

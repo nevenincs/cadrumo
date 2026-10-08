@@ -451,7 +451,7 @@ family = "constructs"
 selector = {revision = "2024", id = "modelo-390-iva-resumen-anual"}
 sequence_additions = {deadline_windows = ["modelo-390-2025-0a"], export_layouts = ["generated-modelo-390-2025-fichero"], source_refs = ["aeat-dr-390-2025"]}
 sequence_removals = {deadline_windows = [0], export_layouts = [0], legal_refs = [11], source_refs = [2]}
-sequence_order = {source_refs = [0, 1, 4, 2, 3]}
+sequence_order = {source_refs = [0, 1, 4, 2, 3, 5]}
 
 [[revisions."2025".family_overrides]]
 family = "deadline_windows"
@@ -520,6 +520,62 @@ family = "bindings"
 selector = {revision = "2024", id = "modelo-390-iva-repercutido-tipo-7-5-cuota"}
 sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
 sequence_removals = {legal_refs = [3], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-aic-bienes-tipo-2-base"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-aic-bienes-tipo-2-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-aic-bienes-tipo-7-5-base"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-aic-bienes-tipo-7-5-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-aic-servicios-tipo-2-base"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-aic-servicios-tipo-2-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-aic-servicios-tipo-7-5-base"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-aic-servicios-tipo-7-5-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
 
 [[revisions."2025".family_overrides]]
@@ -595,3 +651,8 @@ selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplific
 [[revisions."2025".family_removals]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total"}
+
+# Replace the earlier source-scoped disclosure owner.
+[[revisions."2025".family_removals]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-390-printed-disclosure-arithmetic-2024"}

@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.corpus_text import corpus_redaction_marks
 from cadrumo.core.hashing import blake2b_hex
+from dev.corpus.text import corpus_redaction_marks
 
 from ..legal_grounding import (
     _corpus_file_digest,

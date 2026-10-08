@@ -33,10 +33,12 @@ at the write, far from its cause.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
+from ...tests.env_scope import derived_storage_settings
 from ..config import Settings, load_settings, override_settings
 from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..storage_materialization import ensure_storage_tree
@@ -49,6 +51,13 @@ from ..storage_taxonomy import (
 from ..storage_taxonomy_locations import STORAGE_TAXONOMY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
+
+
+@pytest.fixture(autouse=True)
+def derived_storage_baseline(tmp_path: Path) -> Iterator[None]:
+    """Derive every category from the root under test, not from the runner's explicit paths."""
+    with derived_storage_settings(tmp_path / "ambient-storage"):
+        yield
 
 
 def _materialisable_members() -> tuple[StorageLocation, ...]:

@@ -20,11 +20,17 @@ and the assertions together.
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
+from typing import cast
 
 import pytest
 
+from ......application.auth.protocols import BrowserContextPort, BrowserPagePort
 from ......core.config import Settings
+from ......tests.aeat_literal_fixtures import (
+    DOTTED_AEAT_HOST_SUFFIX_FIXTURE,
+)
 from ..clave_movil import ClaveMovilAuthProvider
 from ._clave_movil_support import _CLAVE_SURFACE, _DOMAINS, _aeat_url, _settings_for
 
@@ -114,3 +120,40 @@ def test_no_observed_url_records_nothing(tmp_path: Path, observed: str | None) -
     """A page that never reported a URL leaves the landing unset, not empty-stringed."""
 
     assert _provider(tmp_path)._salvageable_landing_url(observed, target_path=_TARGET_PATH) is None
+
+
+class _FailedLoginContext:
+    async def storage_state(self) -> dict[str, object]:
+        return {
+            "cookies": [{"name": "synthetic", "value": "x", "domain": DOTTED_AEAT_HOST_SUFFIX_FIXTURE}],
+            "origins": [],
+        }
+
+
+class _WaitingPage:
+    url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
+
+
+def test_an_unapproved_login_is_not_logged_as_an_authenticated_session(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A login left on the Cl@ve waiting page keeps its state for the reuse probe, never as authenticated."""
+    provider = _provider(tmp_path)
+    persisted: list[object] = []
+    monkeypatch.setattr(provider, "_persist_session", lambda _path, **kwargs: persisted.append(kwargs["metadata"]))
+
+    with caplog.at_level("INFO"):
+        asyncio.run(
+            provider._salvage_session_before_teardown(
+                cast(BrowserContextPort, _FailedLoginContext()),
+                storage_state_path=tmp_path / "session",
+                dni_nie="12345678Z",
+                page=cast(BrowserPagePort, _WaitingPage()),
+                target_path=_TARGET_PATH,
+            )
+        )
+
+    assert len(persisted) == 1
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("authenticated_landing_observed=False" in message for message in messages)
+    assert not any("authenticated session" in message for message in messages)

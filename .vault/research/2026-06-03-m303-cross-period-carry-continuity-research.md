@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:151344d33bed91356f0057b5d20bad0a8ac7183cccc480898afe4dd41943143c'
+modified: '2026-10-03'
+body_hash: 'sha256:cbec65cfa2a4c88a489a5afd35f9e9d385c7d8c99dc29a9481905d12bc994013'
 related:
   - '[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]'
   - '[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]'
@@ -16,7 +16,7 @@ related:
 
 ## Why this research
 
-Three tests in `src/aeat/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py`
+Three tests
 are red on HEAD after `6e5a316a6 fix(m303): wire primitive cuota leaves into
 synthetic fixtures and extractor` landed: `test_year_n_4t_credit_produces_carry_forward_saldo`,
 `test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t`, and
@@ -95,13 +95,13 @@ casilla 110 resolution:
     relation it identifies the source period (1T offset by -1 = prior 4T,
     revision-selector `filing_year_delta = 0` plus `period_alignment.mode
     = "previous_quarter"` wraps the year back by one — verified in
-    `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml`
+
     lines 558-577), and resolves the value via
     `_resolve_requirement_value` → `_observed_requirement_values`. The
     requirement's `source_output` is `iva.compensacion-disponible-fin-periodo`;
     the resolver reads
     `observation.casilla_values.get("iva.compensacion-disponible-fin-periodo")`
-    (verified in `src/aeat/application/calculations/_relation_prefill.py`
+    (verified
     line 240). Match → returns the value.
 
 12. **Year N+1 1T computation.** `materialize_relation_binding_values`
@@ -120,7 +120,7 @@ local `.vault/exec/` edit on `2026-05-27-schema-hardening-placeholder-eradicatio
 - `iva.compensacion-pendiente-periodos-anteriores` (casilla 110) is the
   binding-side casilla whose binding `modelo-303-compensacion-pendiente-anteriores`
   is the `target_binding` of the carry relation. Verified at
-  `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`
+
   lines 200, 209.
 - `iva.compensacion-disponible-fin-periodo` is the relation's
   `source_output`. Verified at the same `revision.toml` line 563.
@@ -264,11 +264,6 @@ based on which row diverged.
 
 ## Source artefacts read
 
-- `src/aeat/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py`
-- `src/aeat/application/calculations/_relation_prefill.py`
-- `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml`
-- `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`
-- `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/revision.toml`
 - `.vault/adr/2026-06-03-m303-synthetic-generator-primitive-spec-adr.md`
 - `.vault/adr/2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr.md`
 - `.vault/adr/2026-06-02-m303-parser-engine-totals-impedance-adr.md`

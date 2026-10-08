@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:2a25dece55cd2f3690d9d4bbec62568be7462ae1db0863ac3fc48991ece918cf'
+modified: '2026-10-03'
+body_hash: 'sha256:b3100d49ccc69a0570f236dfe5e76344c628303f8e50bb5af3b0c1b91b9273fc'
 related:
-  - '[[2026-06-04-m100-marriage-date-axis-adr]]'
   - '[[2026-06-19-m100-dependent-modelo-applicability-adr]]'
 ---
 
@@ -18,13 +17,13 @@ Grounds issue #550 (P1, systemic): no Modelo-100 autonomic-deducción box is aut
 
 ### F1 — Current state: madrid_res deducción boxes are pure manual input
 
-In revision `2025`, `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/casillas/1041-1039.toml` declares casilla `1039` "Por nacimiento o adopción de hijos" (`section = ["resultados", "deduccion_autonomica_res", "madrid_res"]`, `semantic_role = "irpf_deduccion_madrid_nacimiento_adopcion"`), and `1042-1040.toml` declares `1040` "Por adopción internacional de niños". Neither carries a `binding` or a `formula` `target_casilla_id` — they are operator-typed inputs. `legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]` (art-77 framework grounding, per the `casilla-grounding-corrects-actividades-default-by-section` rule for autonomic deductions).
+In revision `2025`, the former source file declares casilla `1039` "Por nacimiento o adopción de hijos" (`section = ["resultados", "deduccion_autonomica_res", "madrid_res"]`, `semantic_role = "irpf_deduccion_madrid_nacimiento_adopcion"`), and `1042-1040.toml` declares `1040` "Por adopción internacional de niños". Neither carries a `binding` or a `formula` `target_casilla_id` — they are operator-typed inputs. `legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]` (art-77 framework grounding, per the `casilla-grounding-corrects-actividades-default-by-section` rule for autonomic deductions).
 
 The autonomic-deducción formulas that DO exist in `2025/formulas/` (`0002-renta-2025-deduccion-cultural-autonomica-50-porciento` targeting casilla `0551`, plus ceuta/melilla and alquiler) are the art-68-shared 50 % state/autonomic split deductions, NOT the comunidad-specific deducciones. The comunidad-specific set (`madrid_res`, `andalucia_res`, ...) is entirely manual. #550's assertion holds: zero comunidad-specific autonomic-deducción boxes are auto-computed.
 
 ### F2 — The canonical compute mechanism already exists: profile-derived-fact injection plus registry formula/binding
 
-`src/aeat/application/modelo/_profile_binding.py` is the load-bearing precedent. It walks every `source = "profile"` registry binding the revision declares and projects the matching profile fact into one of three engine channels (`date_binding_values`, `enum_binding_values`, Decimal `binding_values`). Crucially, it injects **derived** facts that no raw profile fact holds, as synthetic keys the same channel resolver then picks up:
+the former source file is the load-bearing precedent. It walks every `source = "profile"` registry binding the revision declares and projects the matching profile fact into one of three engine channels (`date_binding_values`, `enum_binding_values`, Decimal `binding_values`). Crucially, it injects **derived** facts that no raw profile fact holds, as synthetic keys the same channel resolver then picks up:
 
 - `_inject_derived_marriage_facts(fact_index, filing_year)` computes `marriage_full_year` / `marriage_month_start` / `marriage_month_end` from `renta_taxpayer.marriage_date` plus the snapshot's `filing_year` (the matrimonio-sobrevenido date-axis).
 - `_inject_derived_family_facts(fact_index, filing_year)` reconstructs per-descendant birth dates from `renta_family.descendiente.{n}.birth_date` facts and writes `renta_family.descendientes_menores_3_2024` (a count) — the Art. 58.3 menores-3 supplement.
@@ -34,9 +33,9 @@ This is exactly the shape an autonomic-deducción auto-trigger needs: the per-de
 
 ### F3 — The family/descendant model already carries every signal the Madrid deducción needs
 
-`src/aeat/domain/contribuyente/family.py` `DescendantInfo` carries `birth_date`, `adoption_date` (validated ≥ birth_date and ≤ today), `convive_con_contribuyente`, `custodia_compartida`, `nif`. `_entry_date()` already returns `adoption_date if present else birth_date` — the exact "fecha de nacimiento o adopción" the deducción window keys on. `RentaFamilyProfile` exposes derived helpers per filing year (`descendientes_menores_3_year_end`, `descendientes_eligible_minimum`, `deduccion_maternidad_0611`, `incremento_guarderia_0613`) — the natural home for a `madrid_nacimiento_adopcion_count(filing_year)` companion.
+the former source file `DescendantInfo` carries `birth_date`, `adoption_date` (validated ≥ birth_date and ≤ today), `convive_con_contribuyente`, `custodia_compartida`, `nif`. `_entry_date()` already returns `adoption_date if present else birth_date` — the exact "fecha de nacimiento o adopción" the deducción window keys on. `RentaFamilyProfile` exposes derived helpers per filing year (`descendientes_menores_3_year_end`, `descendientes_eligible_minimum`, `deduccion_maternidad_0611`, `incremento_guarderia_0613`) — the natural home for a `madrid_nacimiento_adopcion_count(filing_year)` companion.
 
-Persistence is already wired: `src/aeat/domain/contribuyente/_descendant_facts.py` stores `renta_family.descendiente.{n}.adoption_date` (ISO-8601) and `.convivencia` facts and reconstructs them. The CLI capture flag `--descendiente NACIMIENTO=...,ADOPCION=...,CONVIVENCIA=...` (`parse_descendiente_flag`) exists. No new profile-capture axis is required for the Madrid adopción slice — the audit-noted "adoption date absent" gap (`2026-05-27-ines-cli-testimonial-audit`) was closed by the DescendantInfo/adoption_date work; what is missing is only the trigger that consumes it.
+Persistence is already wired: the former source file stores `renta_family.descendiente.{n}.adoption_date` (ISO-8601) and `.convivencia` facts and reconstructs them. The CLI capture flag `--descendiente NACIMIENTO=...,ADOPCION=...,CONVIVENCIA=...` (`parse_descendiente_flag`) exists. No new profile-capture axis is required for the Madrid adopción slice — the audit-noted "adoption date absent" gap (`2026-05-27-ines-cli-testimonial-audit`) was closed by the DescendantInfo/adoption_date work; what is missing is only the trigger that consumes it.
 
 ### F4 — CCAA residence is already a typed dispatch key
 
@@ -44,7 +43,7 @@ Persistence is already wired: `src/aeat/domain/contribuyente/_descendant_facts.p
 
 ### F5 — Regulatory shape of the Madrid nacimiento/adopción deducción (current, bundled 2025 manual)
 
-Source: `src/aeat/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf.extracted.json`, Comunidad de Madrid, "Por nacimiento o adopción de hijos", Normativa Arts. 4 y 18.1 del Texto Refundido DL 1/2010 de 21 octubre:
+Source: the former source file, Comunidad de Madrid, "Por nacimiento o adopción de hijos", Normativa Arts. 4 y 18.1 del Texto Refundido DL 1/2010 de 21 octubre:
 
 - **Cuantía: 721,70 € por cada hijo nacido o adoptado** (regulación vigente desde 1-1-2023). **For births/adoptions before 1-1-2023 the amount is 600 €** — #550's audit €600 is the pre-2023 figure and is STALE for a 2023+ event.
 - **Partos/adopciones múltiples:** the first period's amount is increased by 721,70 € per child.
@@ -75,7 +74,7 @@ The 2025 M100 formulas already use `if_then_else`, `greater_than`, `greater_equa
 
 ### F8 — Prior art for the mechanism decision
 
-`2026-06-04-m100-marriage-date-axis` is the closest date-axis precedent, but its ADR is a curation-only alignment record; the real implementation is the `_inject_derived_marriage_facts` path in F2. `2026-06-19-m100-dependent-modelo-applicability-adr` establishes that M100 applicability signals are registry/profile-grounded with a fail-closed default and are registry-authoritative, not schedule-derived — the same discipline applies to a deducción-eligibility gate (fail-closed: absent adoption/convivencia data → deducción not auto-applied). `2026-05-08-renta-cuota-integra-autonomic-scale-adr` establishes the CCAA-scoped parameter + `lookup_bracket_by_ccaa` dispatch the amount/limit parameters reuse.
+No accepted ADR establishing marriage-date derivation was found. The 2026-06-04 marriage-date record is curation-only and provides no decision precedent; the implementation evidence is the `_inject_derived_marriage_facts` path in F2. `2026-06-19-m100-dependent-modelo-applicability-adr` establishes that M100 applicability signals are registry/profile-grounded with a fail-closed default and are registry-authoritative, not schedule-derived — the same discipline applies to a deducción-eligibility gate (fail-closed: absent adoption/convivencia data → deducción not auto-applied). `2026-05-08-renta-cuota-integra-autonomic-scale-adr` establishes the CCAA-scoped parameter + `lookup_bracket_by_ccaa` dispatch the amount/limit parameters reuse.
 
 ### F9 — What is NOT yet verified (bounded honesty)
 

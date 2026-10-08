@@ -1,0 +1,455 @@
+---
+tags:
+  - '#exec'
+  - '#runtime-lifecycle-diagnostics'
+date: '2026-10-07'
+modified: '2026-10-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:f8389d5101f0335d29a7d81a5109d7e9bd95551f070d68b24ae940c9a173aed1'
+related:
+  - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
+---
+
+# `runtime-lifecycle-diagnostics` ledger
+
+## Changes
+
+- `S04` `A` `native/desktop/src-tauri/src/manager.rs`
+- `S04` `A` `native/desktop/src-tauri/src/python/manager_dispatch.py`
+- `S04` `M` `native/desktop/src-tauri/src/app.rs`
+- `S04` `M` `native/desktop/src-tauri/src/main.rs`
+- `S04` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S04` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S04` `verify:` `native/desktop/tests/run-backend.ps1 Unit (before final close test)` -> `pass`
+- `S04` `verify:` `native/desktop/tests/run-backend.ps1 Clippy (before final close test)` -> `pass`
+- `S02` `M` `native/application/src/diagnostics/mod.rs`
+- `S02` `M` `native/application/src/error/application.rs`
+- `S02` `M` `native/application/src/error/mod.rs`
+- `S02` `M` `native/application/src/process/mod.rs`
+- `S02` `M` `native/application/src/process/status.rs`
+- `S02` `M` `native/application/tests/diagnostics.rs`
+- `S02` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S02` `M` `native/desktop/src-tauri/src/terminal/mod.rs`
+- `S02` `M` `native/desktop/src-tauri/src/terminal/session.rs`
+- `S02` `M` `native/desktop/src-tauri/src/terminal/tests.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S02` `M` `native/desktop/src-tauri/src/main.rs`
+- `S02` `A` `native/desktop/src-tauri/src/startup_logging.rs`
+- `S02` `verify:` `native application isolated cargo test --lib --test diagnostics (20 tests)` -> `pass`
+- `S02` `verify:` `native application isolated clippy -D warnings` -> `pass`
+- `S02` `verify:` `native/desktop/tests/run-backend.ps1 Unit (172 tests)` -> `pass`
+- `S02` `verify:` `native/desktop/tests/run-backend.ps1 -Mode Clippy` -> `pass`
+- `S03` `M` `native/desktop/src-tauri/src/logs/format.rs`
+- `S03` `M` `native/desktop/src-tauri/src/logs/host.rs`
+- `S03` `M` `native/desktop/src-tauri/src/logs/mod.rs`
+- `S03` `M` `native/desktop/src-tauri/src/logs/record.rs`
+- `S03` `M` `native/desktop/src-tauri/src/logs/tail.rs`
+- `S03` `M` `native/desktop/src-tauri/src/logs/tests.rs`
+- `S03` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/records.ts`
+- `S03` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S03` `M` `native/desktop/frontend/src/dev/fixtures/logs.ts`
+- `S03` `M` `native/CONTRACT.md`
+- `S03` `A` `native/desktop/src-tauri/src/logs/timestamp.rs`
+- `S03` `A` `native/desktop/frontend/tests/scenarios/logs.spec.ts`
+- `S03` `verify:` `native backend Unit 172 tests including multiline header context` -> `pass`
+- `S03` `verify:` `native backend Clippy` -> `pass`
+- `S03` `verify:` `frontend tsc eslint prettier scoped log files` -> `pass`
+- `S03` `verify:` `Playwright new logs scenarios (3) and existing log/window/navigation regressions (6)` -> `pass`
+- `S01` `M` `src/cadrumo/core/logging.py`
+- `S01` `M` `src/cadrumo/core/startup_phase_log.py`
+- `S01` `M` `src/cadrumo/core/tests/test_logging_first_record.py`
+- `S01` `M` `src/cadrumo/core/tests/test_logging_rotation.py`
+- `S01` `M` `src/cadrumo/core/tests/test_startup_phase_log.py`
+- `S01` `M` `src/cadrumo/adapters/local_runtime/startup.py`
+- `S01` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S01` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door_cleanup.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_attempt.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/secret/registration.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S01` `A` `src/cadrumo/core/diagnostic_log.py`
+- `S01` `A` `src/cadrumo/core/tests/test_diagnostic_log.py`
+- `S01` `A` `src/cadrumo/adapters/local_runtime/tests/test_server_diagnostics.py`
+- `S01` `A` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login_diagnostics.py`
+- `S01` `verify:` `focused Python logging/runtime/TUI pytest (146 passed)` -> `pass`
+- `S01` `verify:` `final formatter cleanup privacy fault pytest (20 passed)` -> `pass`
+- `S01` `verify:` `launcher authority release pytest (3 passed)` -> `pass`
+- `S01` `verify:` `native launch-door integration pytest (3 passed)` -> `pass`
+- `S01` `verify:` `ruff check and format scoped19files` -> `pass`
+- `S01` `verify:` `ty check scoped19files and basedpyright diagnostic_log` -> `pass`
+- `S04` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S04` `M` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S04` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S04` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S04` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/fixtures/account.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S04` `M` `src/cadrumo/locales/en/common.yml`
+- `S04` `M` `src/cadrumo/locales/es/common.yml`
+- `S04` `M` `src/cadrumo/locales/ca/common.yml`
+- `S04` `M` `src/cadrumo/locales/hu/common.yml`
+- `S04` `A` `native/desktop/frontend/tests/scenarios/manager.spec.ts`
+- `S04` `verify:` `native backend Unit172 including private helper close and attempt fence` -> `pass`
+- `S04` `verify:` `native backend Clippy final` -> `pass`
+- `S04` `verify:` `frontend tsc eslint prettier and6manager Playwright scenarios` -> `pass`
+- `S04` `verify:` `manager_dispatch.py Ruff check and format` -> `pass`
+- `S01` `M` `dev/quality/metadata/import_load_targets.json`
+- `S01` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S01` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S01` `verify:` `dev.quality.import_load_probe --compile-targets` -> `pass`
+- `S01` `verify:` `explicit .venv/Scripts/lint-imports.exe (15 contracts kept)` -> `pass`
+- `S01` `verify:` `import gate loadability (4519 modules loaded)` -> `pass`
+- `S01` `verify:` `dev.quality.import_gate aggregate` -> `fail`
+- `S05` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S05` `A` `native/desktop/src-tauri/src/manager/tests.rs`
+- `S05` `A` `native/desktop/src-tauri/src/manager/package_tests.rs`
+- `S05` `M` `native/application/src/binary.rs`
+- `S05` `M` `native/application/tests/binary.rs`
+- `S05` `M` `native/application/src/diagnostics/mod.rs`
+- `S05` `M` `native/application/tests/diagnostics.rs`
+- `S05` `M` `src/cadrumo/core/diagnostic_log.py`
+- `S05` `M` `src/cadrumo/core/tests/test_diagnostic_log.py`
+- `S05` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/manager.spec.ts`
+- `S05` `verify:` `native backend Unit179 and Clippy` -> `pass`
+- `S05` `verify:` `manager fixture supervision34 and platform storage8` -> `pass`
+- `S05` `verify:` `application binary3 and Clippy` -> `pass`
+- `S05` `verify:` `native diagnostics25 and Clippy` -> `pass`
+- `S05` `verify:` `Python logging49 final diagnostics14 and scoped lint types` -> `pass`
+- `S05` `verify:` `Playwright manager10 and three strengthened cases` -> `pass`
+- `S05` `verify:` `root rustfmt and scoped diff check` -> `pass`
+- `S05` `verify:` `helper churn psutil no surviving child processes` -> `pass`
+- `S05` `by:` `root`
+- `S06` `M` `dev/packaging/native/generate.py`
+- `S06` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S06` `M` `native/application/src/diagnostics/logging.rs`
+- `S06` `M` `native/application/src/diagnostics/mod.rs`
+- `S06` `M` `native/application/src/error/application.rs`
+- `S06` `M` `native/application/src/process/status.rs`
+- `S06` `M` `native/application/tests/diagnostics.rs`
+- `S06` `M` `native/manager/src/background.rs`
+- `S06` `M` `native/manager/src/installed.rs`
+- `S06` `M` `native/manager/src/lib.rs`
+- `S06` `M` `native/manager/src/main.rs`
+- `S06` `M` `native/manager/src/startup.rs`
+- `S06` `M` `native/manager/src/supervision/supervisor.rs`
+- `S06` `M` `native/manager/tests/fixture/runtime.rs`
+- `S06` `M` `native/manager/tests/startup_cases/mod.rs`
+- `S06` `M` `native/manager/tests/supervision.rs`
+- `S06` `A` `native/application/src/diagnostics/lifecycle.rs`
+- `S06` `A` `native/manager/src/diagnostics.rs`
+- `S06` `A` `native/manager/tests/diagnostics.rs`
+- `S06` `verify:` `manager65lib3diagnostics37supervision` -> `pass`
+- `S06` `verify:` `manager all-target Clippy and fmt` -> `pass`
+- `S06` `verify:` `application11lib17diagnostics and Clippy` -> `pass`
+- `S06` `verify:` `canonical projection6tests Ruff ty` -> `pass`
+- `S06` `verify:` `root integrated architectural review` -> `pass`
+- `S06` `by:` `root`
+- `S07` `M` `dev/locales/desktop_chrome.py`
+- `S07` `M` `native/desktop/frontend/src/App.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/RecordList.stories.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/fixtures/logs.ts`
+- `S07` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S07` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S07` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/logs.spec.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S07` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/host.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/record.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/tail.rs`
+- `S07` `M` `native/desktop/src-tauri/src/logs/tests.rs`
+- `S07` `M` `native/desktop/src-tauri/src/python/environment.py`
+- `S07` `M` `native/desktop/src-tauri/src/terminal/tests.rs`
+- `S07` `M` `native/desktop/tests/packaged-harness.test.mjs`
+- `S07` `M` `native/desktop/tests/packaged/runtime_fixture.py`
+- `S07` `M` `native/desktop/tests/packaged/sign-in.mjs`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `A` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S07` `verify:` `desktop backend187 and Clippy` -> `pass`
+- `S07` `verify:` `browser20 distinct log manager scenarios` -> `pass`
+- `S07` `verify:` `frontend TypeScript ESLint formatting` -> `pass`
+- `S07` `verify:` `locales16tests` -> `pass`
+- `S07` `verify:` `packaged fixture9Node tests Ruff Prettier syntax` -> `pass`
+- `S07` `by:` `root`
+- `S07` `M` `native/desktop/tests/packaged/os.mjs`
+- `S07` `verify:` `desktop input3tests mixed-case LIB LIBPATH regression` -> `pass`
+- `S07` `verify:` `Session1 first acceptance helper bootstrap` -> `fail`
+- `S07` `verify:` `new manager with old package runtime_identity and observed cleanup` -> `pass`
+- `S07` `M` `native/desktop/tests/packaged.test.mjs`
+- `S07` `M` `native/desktop/tests/packaged/session.mjs`
+- `S07` `M` `native/desktop/tests/packaged/standin.mjs`
+- `S07` `M` `native/desktop/tests/packaged/docs-ui.mjs`
+- `S07` `M` `native/desktop/tests/packaged/verdicts.mjs`
+- `S07` `verify:` `full packaged harness33tests syntax format diff` -> `pass`
+- `S07` `verify:` `Session1 old-package r2 full acceptance13pass10fail4info` -> `fail`
+- `S07` `verify:` `real Unicode space relocation runtime identity Ready SessionEnd cleanup` -> `pass`
+- `S07` `verify:` `Session1 packaged 20261007-092557: 10 PASS 1 INFO 7 FAIL` -> `fail`
+- `S07` `verify:` `r3 recorded PID and birth survivor check: 28 absent` -> `pass`
+- `S07` `verify:` `just build-native-package Release: removed configured Python input` -> `fail`
+- `S07` `M` `native/manager/tests/runtime_identity.rs`
+- `S07` `M` `native/desktop/tests/packaged/results.mjs`
+- `S07` `verify:` `runtime identity measured phases against old package` -> `pass`
+- `S09` `M` `native/desktop/tests/packaged.test.mjs`
+- `S09` `M` `native/desktop/tests/packaged/results.mjs`
+- `S09` `A` `native/desktop/tests/packaged/results.test.mjs`
+- `S09` `verify:` `node --test native/desktop/tests/packaged/results.test.mjs: 1 passed 167.9 ms` -> `pass`
+- `S07` `verify:` `three simultaneous isolated real-runtime fixture invocations: 3 passed` -> `pass`
+- `S07` `verify:` `concurrent recorded process identity survivor check: 13 absent` -> `pass`
+- `S07` `M` `native/desktop/tests/packaged/browser.mjs`
+- `S07` `A` `native/desktop/tests/packaged/terminal-observer.mjs`
+- `S07` `A` `native/desktop/tests/terminal-observer.test.mjs`
+- `S07` `verify:` `bounded VT observer and owning harness: 47 tests 27.53s` -> `pass`
+- `S09` `M` `native/platform/src/desktop.rs`
+- `S09` `A` `native/platform/src/desktop/webview_process.rs`
+- `S09` `A` `native/platform/src/desktop/webview_process/tests.rs`
+- `S09` `M` `native/application/src/diagnostics/mod.rs`
+- `S09` `A` `native/application/src/diagnostics/webview.rs`
+- `S09` `M` `native/application/src/error/application.rs`
+- `S09` `M` `native/application/tests/diagnostics.rs`
+- `S09` `A` `native/application/tests/webview_diagnostics.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/webview.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S09` `M` `native/desktop/src-tauri/src/logs/host.rs`
+- `S09` `M` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S09` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S09` `verify:` `WebView focused checks: application32 COM4 shell6 host5; app and desktop Clippy; frontend and formatting` -> `pass`
+- `S09` `verify:` `integrated desktop backend: 189 tests 44.61s` -> `pass`
+- `S09` `verify:` `standalone platform Clippy: six unrelated findings` -> `fail`
+- `S07` `verify:` `idle observer and owning harness: 48 tests 27.83s` -> `pass`
+- `S07` `verify:` `Session1 packaged 20261007-100942: 12 PASS 4 INFO 10 FAIL 1 SKIP` -> `fail`
+- `S07` `verify:` `r4 cleanup clipboard restoration and 106 observed process identities absent` -> `pass`
+- `S10` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S10` `A` `native/desktop/src-tauri/src/shell/sign_in/process/admission_tests.rs`
+- `S10` `M` `native/application/src/error/application.rs`
+- `S10` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S10` `verify:` `sign-in process tests 15/15` -> `pass`
+- `S10` `verify:` `desktop Clippy` -> `pass`
+- `S10` `verify:` `frontend contract type lint format` -> `pass`
+- `S09` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S09` `verify:` `Session1 controlled renderer crash durable callback and normal close` -> `pass`
+- `S09` `verify:` `observed crash probe process survivors zero` -> `pass`
+- `S10` `verify:` `integrated desktop backend 197 tests` -> `pass`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S11` `M` `src/cadrumo/core/diagnostic_log.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/tests/test_exit_reasons.py`
+- `S11` `M` `src/cadrumo/core/tests/test_diagnostic_log.py`
+- `S11` `verify:` `diagnostic and exit reason unit tests30` -> `pass`
+- `S11` `verify:` `Ruff check and format` -> `pass`
+- `S11` `verify:` `scoped ty Linux Windows Darwin` -> `pass`
+- `S11` `verify:` `formatter BasedPyright and Pyrefly` -> `pass`
+- `S10` `verify:` `Session1 real wrong-password then valid-password form sign-in` -> `pass`
+- `S10` `verify:` `Session1 canonical profile-list` -> `pass`
+- `S07` `verify:` `fixture phase timing14tests` -> `pass`
+- `S07` `verify:` `real PowerShell console path7cases` -> `pass`
+- `S07` `verify:` `production packaged console resolution PTY` -> `pass`
+- `S12` `M` `dev/packaging/native/platforms/windows.py`
+- `S12` `A` `dev/packaging/native/platforms/tests/test_windows.py`
+- `S12` `verify:` `Windows SDK provisioning5tests` -> `pass`
+- `S12` `verify:` `scoped Ruff lint format diff` -> `pass`
+- `S12` `verify:` `cmake build python_sdk Release` -> `pass`
+- `S14` `M` `src/cadrumo/application/operations/registry.py`
+- `S14` `A` `src/cadrumo/application/operations/tests/test_schema_binding.py`
+- `S14` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S14` `verify:` `schema binding and registry regressions 172 tests` -> `pass`
+- `S14` `verify:` `desktop held-read browser scenarios 15 tests` -> `pass`
+- `S14` `verify:` `canonical sign-in wire projection 17 tests` -> `pass`
+- `S14` `verify:` `real helper lanes process suite 18 tests` -> `pass`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/process/admission_tests.rs`
+- `S14` `M` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S14` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S14` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S14` `verify:` `current standalone desktop full203 unit suite` -> `pass`
+- `S14` `verify:` `desktop all-target Clippy warnings denied` -> `pass`
+- `S14` `verify:` `scoped frontend types ESLint formatting and Rustfmt` -> `pass`
+- `S14` `by:` `root architectural review; Sol6.1 coding workers`
+- `S13` `A` `native/application/src/diagnostics/helper.rs`
+- `S13` `A` `native/application/tests/helper_diagnostics.rs`
+- `S13` `M` `native/application/src/diagnostics/mod.rs`
+- `S13` `M` `native/application/tests/diagnostics.rs`
+- `S13` `M` `native/desktop/src-tauri/src/logs/host.rs`
+- `S13` `M` `native/manager/tests/runtime_identity.rs`
+- `S13` `M` `native/desktop/tests/packaged/sign-in.mjs`
+- `S13` `M` `native/desktop/tests/packaged-harness.test.mjs`
+- `S13` `verify:` `safe helper timing application tests and Clippy` -> `pass`
+- `S13` `verify:` `bounded submission timing harness 13 tests` -> `pass`
+- `S13` `verify:` `real oldpayload manager shutdown disposition` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S15` `M` `src/cadrumo/entrypoints/google_review_operation_composition.py`
+- `S15` `A` `src/cadrumo/entrypoints/tests/test_google_effect_imports.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_google_review_composition.py`
+- `S15` `verify:` `Google effect boundary and real review loading 20 tests` -> `pass`
+- `S15` `verify:` `scoped Ruff formatting ty and diff checks` -> `pass`
+- `S15` `verify:` `guarded alternating 3x before and after fresh import comparison` -> `pass`
+- `S15` `by:` `root architectural review; Sol6.1 implementation`
+- `S17` `M` `native/application/src/package.rs`
+- `S17` `M` `native/application/src/filesystem.rs`
+- `S17` `A` `native/application/tests/package_inspection.rs`
+- `S17` `verify:` `S17 guarded cargo integrity suites 44 distinct tests` -> `pass`
+- `S17` `verify:` `S17 scoped cargo clippy rustfmt and git diff checks` -> `pass`
+- `S17` `verify:` `S17 optimized paired and final same-package probes` -> `pass`
+- `S17` `verify:` `S17 two concurrent optimized package inspections` -> `pass`
+- `S17` `by:` `root architectural review; Sol6.1 implementation`
+- `S18` `M` `native/application/src/installation.rs`
+- `S18` `M` `native/application/tests/installation.rs`
+- `S18` `verify:` `S18 installation discovery 10 tests` -> `pass`
+- `S18` `verify:` `S18 all-target Clippy scoped Rustfmt and whitespace` -> `pass`
+- `S18` `verify:` `S18 seven-case before-after verification counts and refusals` -> `pass`
+- `S18` `by:` `root architectural review; Sol6.1 implementation`
+- `S19` `M` `native/manager/src/installation.rs`
+- `S19` `M` `native/manager/src/installed.rs`
+- `S19` `M` `native/manager/src/main.rs`
+- `S19` `M` `native/manager/src/supervision/environment.rs`
+- `S19` `M` `native/manager/Cargo.toml`
+- `S19` `M` `native/manager/Cargo.lock`
+- `S19` `verify:` `S19 manager library 69 tests` -> `pass`
+- `S19` `verify:` `S19 locked all-target Clippy fixture feature` -> `pass`
+- `S19` `verify:` `S19 final S20 integrated guarded library and Clippy` -> `pass`
+- `S19` `verify:` `S19 pinned Rustfmt and whitespace` -> `pass`
+- `S19` `by:` `root architectural review; Sol6.1 implementation`
+- `S20` `M` `native/application/src/filesystem.rs`
+- `S20` `M` `native/application/src/package.rs`
+- `S20` `M` `native/application/src/installation.rs`
+- `S20` `M` `native/application/tests/package_inspection.rs`
+- `S20` `M` `native/application/tests/installation.rs`
+- `S20` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S20` `M` `native/desktop/src-tauri/src/manager/tests.rs`
+- `S20` `M` `native/desktop/src-tauri/src/manager/package_tests.rs`
+- `S20` `verify:` `S20 guarded application 65 and production desktop 210 tests` -> `pass`
+- `S20` `verify:` `S20 application and desktop all-target Clippy` -> `pass`
+- `S20` `verify:` `S20 six equivalent fresh-process package scans and 94 stability guards` -> `pass`
+- `S20` `verify:` `S20 current distribution integration 58 focused tests and 14 matching source-test-lock hashes` -> `pass`
+- `S20` `by:` `root architectural review`
+- `S21` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/tests/test_installed_session.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S21` `verify:` `S21 current 31 owning tests run 20261007T190359.161431Z-pytest-89200-aaf44cf4` -> `pass`
+- `S21` `verify:` `S21 current scoped ty Ruff formatting and whitespace` -> `pass`
+- `S21` `verify:` `S21 fresh empty-inventory self-test zero registry builds` -> `pass`
+- `S21` `verify:` `S21 three direct-owned current startup samples with stable guards and settled children` -> `pass`
+- `S21` `by:` `root architectural review`
+- `S22` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`
+- `S22` `M` `src/cadrumo/core/diagnostic_log.py`
+- `S22` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_worker_diagnostics.py`
+- `S22` `M` `src/cadrumo/core/tests/test_diagnostic_log.py`
+- `S22` `verify:` `focused unit 70 tests` -> `pass`
+- `S22` `verify:` `owning wire integration 97 tests` -> `pass`
+- `S22` `verify:` `configured platform type checks` -> `pass`
+- `S22` `verify:` `Ruff and format` -> `pass`
+- `S22` `verify:` `configured logger overhead and guard checks` -> `pass`
+- `S22` `verify:` `root integrated review` -> `pass`
+- `S22` `by:` `root`
+- `S23` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`
+- `S23` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_worker_startup_ownership.py`
+- `S23` `verify:` `focused custody tests 54 including eight real descriptor regressions` -> `pass`
+- `S23` `verify:` `configured platform ty Ruff and format` -> `pass`
+- `S23` `verify:` `root ownership review` -> `pass`
+- `S23` `by:` `root`
+- `S24` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`
+- `S24` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_worker_exit.py`
+- `S24` `verify:` `64 distinct focused cases across retained corrected runs` -> `pass`
+- `S24` `verify:` `real nonzero-exit regressions` -> `pass`
+- `S24` `verify:` `configured platform ty Ruff format and whitespace` -> `pass`
+- `S24` `verify:` `root integrated admission and diagnostic review` -> `pass`
+- `S24` `by:` `root`
+- `S26` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`
+- `S26` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_worker_cleanup.py`
+- `S26` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S26` `verify:` `70 focused custody cases in27.30s` -> `pass`
+- `S26` `verify:` `exact original close regression requires rescue and fails admission assertion` -> `pass`
+- `S26` `verify:` `Ruff format ty Linux Windows Darwin and diff checks` -> `pass`
+- `S26` `by:` `root`
+- `S25` `A` `src/cadrumo/adapters/persistence/profile/guarded_calculation_revision_migration.py`
+- `S25` `M` `src/cadrumo/adapters/persistence/profile/calculation_revision_override_migration.py`
+- `S25` `M` `src/cadrumo/application/modelo/projection_migration_ports.py`
+- `S25` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S25` `A` `src/cadrumo/adapters/persistence/profile/tests/test_guarded_calculation_revision_migration.py`
+- `S25` `A` `src/cadrumo/entrypoints/tests/test_guarded_calculation_revision_migration_imports.py`
+- `S25` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S25` `M` `dev/quality/metadata/import_load_targets.json`
+- `S25` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S25` `verify:` `23 distinct behavior cases with original fresh-child bounds` -> `pass`
+- `S25` `verify:` `Ruff format ty and final six source hashes` -> `pass`
+- `S25` `verify:` `complete frozen import gate:15 contracts and4526 loaded modules` -> `pass`
+- `S25` `verify:` `three paired source measurements with twelve exact public identities` -> `pass`
+- `S25` `by:` `root`
+- `S27` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S27` `A` `src/cadrumo/entrypoints/tests/test_operation_execution_imports.py`
+- `S27` `verify:` `31 distinct functional and offline integration cases` -> `pass`
+- `S27` `verify:` `Ruff format and ty three platforms` -> `pass`
+- `S27` `verify:` `Root reviewed unchanged production import edges with prior complete stable graph evidence` -> `pass`
+- `S27` `verify:` `Six guarded source children twelve identical public registry observations and five fewer model constructions` -> `pass`
+- `S27` `by:` `root`
+- `S28` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S28` `M` `.vault/plan/2026-10-07-runtime-lifecycle-diagnostics-plan.md`
+- `S28` `verify:` `168 candidate correctness cases and configured static scopes` -> `pass`
+- `S28` `verify:` `Six timing children and two separate count children with exact public identity and source guards` -> `pass`
+- `S28` `verify:` `Performance acceptance` -> `fail`
+- `S28` `verify:` `Candidate archived and exact before source restored with empty source diff` -> `pass`
+- `S28` `by:` `root`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_calibration_search.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_calibration_search.py`
+- `S29` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_calibration_scheduling.py`
+- `S29` `verify:` `56 distinct focused search and supervision cases` -> `pass`
+- `S29` `verify:` `Scoped Ruff and format; ty Linux Windows Darwin` -> `pass`
+- `S29` `by:` `root`
+- `S29` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S29` `verify:` `Root single before-after fixed-package calibration guards and settlement` -> `pass`
+- `S29` `verify:` `Root integrated algorithm review with 56-case evidence` -> `pass`
+
+## Notes
+
+- `S04` S04 OPEN: canonical stable launcher discovery and installed upgrade acceptance remain prerequisites; current package target not approved for shipping. Final helper-close regression awaits shared checks.
+- `S02` Only owned logging hunks in environment/main/sign-in are checkpointed; concurrent desktop projection and console changes remain outside ownership. Early sink defers member overrides to canonical Settings.
+- `S03` Live packaged-Python regression requires refreshed package; source tests prove header/continuation attribution. Standard preview port occupied; scenario-only temporary config used and removed.
+- `S01` Focused suite deselects integration by configured marker; native launch-door integration separately passed. Broad types had unrelated findings after scoped fixes; import metadata regenerated at root shared gate. Test autopilot viewport made explicit140x60 for custody button reachability without changing UI.
+- `S04` User clarified bounded desktop integration plus flagged launcher dependency. Runtime supervisor source belongs other session; no live manager dispatch, installer registration, packaged rebuild or upgrade acceptance performed. Shared index lock prevented checkpoint commits.
+- `S01` Final aggregate import gate could not resolve lint-imports from bare PATH and detected concurrent source changes; direct venv executable subsequently passed all15 graph contracts. Subordinate checker reports15 authority findings in shared tree; no source-wide clean claim. Source loadability4519/4519passed. Generated target metadata includes concurrent owners' source census; not selectively hand-edited.
+- `S05` Root owns architectural review; Sol6.1 workers only narrow coding and tests. Measurements are fixture-local; no rebuilt executable or live installed acceptance. S04 remains open for stable launcher. Checkpoint commits remain pending shared index lock.
+- `S07` Session1 first run stopped before app launch because inherited VS LIB named an absent optional directory. Child-only helper sanitization fixes this; root wrapper restored clipboard and removed one-shot task. Interactive rerun and fresh package build remain in flight.
+- `S07` WebGL DOM readback defect and actual WebView Target crashed remain separate open findings; retry and bounded performance observation running
+- `S07` Per-check and launch milestones added; phase evidence runtime-phases; CPU observer covered only final 6.31 seconds
+- `S09` Root preserves bounded redacted log evidence in finally and per-check timing; callback implementation delegated under root-defined contract
+- `S07` Independent roots; old package; 20.40-20.62 s Ready and 1.50-1.74 s settlement; resource sampler final 8.35 s only
+- `S07` Root-reviewed parsing ACK race and stale document epoch guards; exact source hashes in terminal-observer.json
+- `S09` Root reviewed lifetime partial getters safe projection; s09-webview-verification.json records commands and limitations; actual callback acceptance pending
+- `S07` Runtime fixture passed; explicit sign-in queue refusal drives S10; per-stage performance and bounded failure evidence preserved
+- `S10` Focused runtime16.23s; command36.79s including17.10s compile. Root admission review passed; interactive r5 pending.
+- `S09` Same current test host with old package; crash-to-record1187ms, close133ms exit0. Preliminary close failures traced to optional HWND harness bug, corrected and independently tested.
+- `S10` 44.95s tests;49.09s wrapper. 48 samples: peak summedRSS472014848 bytes,2106handles,12.20 observedCPU seconds inclwrapper. r5 pre-GUI fixture failed after old runtime witness-loss shutdown; S10 interactive acceptance remains pending.
+- `S11` Root reviewed behavior preservation and private-data refusal; suite6.61s,3existing integration deselected. Exact evidence s11-login-witness-verification.json.
+- `S10` r6 current host with old payload; wrong-password23.93s,valid-password18.98s; noautomaticretry. Whole run13PASS1INFO4FAIL from Console comparison and docs failures; runtime/profile cleanup passed and89observed identities absent.
+- `S07` Timing evidence survives failures; normalized full paths prevent mixed-separator false refusal. r6 whole acceptance remains failed on old-package docs navigation/crash; fresh build pending.
+- `S12` Real target8.63s including configure and pinned download/extraction; root verified output and unchanged origin/hash/path checks. Full package still refused by documentation reference gate.
+- `S14` No deadline increases. Binding-only paired wall/CPU reduced49.5/46.9percent; no full-registry warm CPU improvement established. Browser21s,wire0.10s,process15.80s bodies exclude compilation. Root integrated review and full backend final checks pending; no fresh package latency acceptance.
+- `S14` Final source review PASS. Full203 bodies45.52s incremental compile0.54s; prior pending shared-check note resolved. Runtime startup, calibration and packaged latency remain open.
+- `S13` Closed phase facts omit arguments output passwords and identifiers; helper completed means native output returned only. Measured oldpayload startup, registry, KDF calibration and current binding CPU; empty-root CLI attribution remains in flight. Exact sources/logs archived in s14-helper-lanes-verification.json and sign-in-submission-timings-verification.json.
+- `S15` Structural exclusion established, no measured speedup. Preexisting review fixture owner/filing/rendering drift repaired without assertion or production changes. Performance remains open.
+- `S17` No timeout changes. Final median verification27.054 to3.256seconds;44 distinct tests. Concurrent proof precedes only empty-directory compatibility correction. Full metrics/source/log evidence in s17-package-inspection-verification.json; whole desktop and installed acceptance remain open.
+- `S18` Newest stable 3 to1 full verifications; older stable and damaged newest3 to2; all seven outcomes preserved. Synthetic probe time is not installed latency. Evidence s18-installation-selection/verification.json.
+- `S19` Private consumed current-installation proof avoids second package inspection; no cross-process cache or timeout changes. Integrated final input guards stable; build/s19-admission-proof/integrated-final/verification.json.
+- `S20` Implementation already included in shared checkpoint 3b063e7d50. Current registration-hint integration evidence reused from distribution owner; no duplicate Cargo run. Timings are finite loaded-host observations, not production SLO or hard OS-I/O cancellation bounds.
+- `S21` Implementation already checkpointed in 3b063e7d50. Before comparison remains censored at unchanged30s bound. Current direct-base interpreter baseline differs from native packaged launch and does not establish a speedup or production latency target. Foreign filing-test edit during owning tests did not change production or owned inputs.
+- `S24` Initial startup outlier remains open under S13; corrected original module entrypoint cases pass without deadline change.
+- `S26` Existing outer and termination-helper waits unchanged; root reviewed real child/thread settlement. Startup stall and broader native handle/launch ownership remain open.
+- `S25` Live-tree full gate failed solely on source mutation and is retained. Frozen complete gate passed with unchanged budgets. Instrumented source medians are not packaged SLO evidence. Only generated canonical-module enrollment is owned; foreign dev target rows remain unstaged.
+- `S27` Measured source variants only; shared-host stall retained; packaged startup and enrollment targets remain unresolved.
+- `S28` Evaluated and rejected: 65.16 percent fewer `get_args` calls did not produce a CPU improvement. No production optimization retained and no timeout changed.
+- `S29` Root reviewed full search/caller and independent oracle; guarded fixed-package source-algorithm comparison pending. No timeout, resource, grid, strength-floor or supervision changes.
+- `S29` Calibration12.475006s before vs13.155735s after; same256MiB/t8/p4 winner, five confirmations each, extra after near-miss retry. No measured host speedup. Deterministic superseded-candidate20-to10 probe reduction supports scheduling change; application performance remains open. Evidence s29-kdf-search/verification.json SHA256 d322a0d89eea9a70fa41a04151fe56a09c1441b49f6802524285c7c51947f775.

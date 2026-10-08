@@ -10,12 +10,13 @@ import pytest
 from ....core.hashing import content_hash_hex
 from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
 from ....domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
-from ....domain.calculations.registry.iva_schema_vocabulary import (
+from ....domain.calculations.registry.iva_regime_vocabulary import (
     default_iva_regime,
     iva_regime_exento_token,
     iva_regime_no_aplica_token,
 )
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
+from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -396,3 +397,40 @@ def test_the_two_projections_agree_on_which_fact_is_effective() -> None:
     assert record_to_effective_facts(record)["contact.postcode"].value == "28001", (
         "the value projection and the effective-fact projection must name the same fact"
     )
+
+
+_THRESHOLD_PATH = "obligations.third_party_transactions_above_347_threshold"
+
+
+def _year_windowed_threshold_record() -> UserProfileRecord:
+    return _record(
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path=_THRESHOLD_PATH, value=True, valid_from=date(2025, 1, 1)),
+            UserProfileFact(
+                path=_THRESHOLD_PATH, value=False, valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)
+            ),
+        ),
+    )
+
+
+def test_as_of_projection_reads_the_fact_in_force_on_that_date() -> None:
+    """An effective-dated answer is read for the year asked about, not the latest one for every year."""
+    record = _year_windowed_threshold_record()
+
+    by_year = {
+        year: projection_for_taxpayer(record, schema=_SCHEMA, as_of=date(year, 12, 31)) for year in (2023, 2024, 2025)
+    }
+
+    assert by_year[2024].third_party_transactions_above_347_threshold is False
+    assert by_year[2025].third_party_transactions_above_347_threshold is True
+    # No fact is in force before 2024: the answer is unanswered, not borrowed from a later year.
+    assert by_year[2023].third_party_transactions_above_347_threshold is None
+    # Without an as-of date the latest window still wins, as every undated reader resolves it.
+    assert projection_for_taxpayer(record, schema=_SCHEMA).third_party_transactions_above_347_threshold is True
+    assert record_to_path_values(record, as_of=date(2024, 6, 30))[_THRESHOLD_PATH] == "false"
+
+
+def test_as_of_projection_refuses_a_mapping_that_carries_no_windows() -> None:
+    with pytest.raises(UserProfileValidationError):
+        projection_for_taxpayer({"tax.id": "12345678Z"}, schema=_SCHEMA, as_of=date(2025, 12, 31))

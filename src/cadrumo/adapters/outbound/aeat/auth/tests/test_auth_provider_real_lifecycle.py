@@ -27,6 +27,7 @@ from ......core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
+from ...tests.process_support import wait_for_task_readiness
 from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL
 from ..clave_movil import ClaveMovilAuthProvider
@@ -191,13 +192,25 @@ async def test_public_close_waits_for_real_inflight_verification(
             ) / 1000 + 5.0
             boundary.configure("blocking")
             verify_task = asyncio.create_task(provider.verify(active))
-            await boundary.wait_until_blocked()
-            close_task = asyncio.create_task(provider.close())
-            await asyncio.sleep(0.1)
-            assert not close_task.done()
-            boundary.release_request.set()
-            assertion = await asyncio.wait_for(verify_task, timeout=completion_budget_s)
-            await asyncio.wait_for(close_task, timeout=completion_budget_s)
+            pending_tasks: list[asyncio.Task[object]] = [verify_task]
+            try:
+                await wait_for_task_readiness(
+                    boundary.wait_until_blocked(), verify_task, after="blocked provider verification"
+                )
+                close_task = asyncio.create_task(provider.close())
+                pending_tasks.append(close_task)
+                await asyncio.sleep(0.1)
+                assert not close_task.done()
+                boundary.release_request.set()
+                assertion = await asyncio.wait_for(verify_task, timeout=completion_budget_s)
+                await asyncio.wait_for(close_task, timeout=completion_budget_s)
+            finally:
+                boundary.release_request.set()
+                for task in pending_tasks:
+                    if not task.done():
+                        task.cancel()
+                await asyncio.gather(*pending_tasks, return_exceptions=True)
+                await provider.close()
 
     assert assertion.is_valid is True
 
@@ -283,8 +296,14 @@ async def test_clave_movil_public_verify_drives_real_own_name_representation_gat
 @pytest.mark.asyncio
 async def test_authenticated_representation_landing_records_phone_acceptance_without_operator_report(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A real browser transition after Cl@ve is the phone-state authority."""
+    from cadrumo.adapters.outbound.aeat.auth import clave_movil
+
+    # The real HTTP/browser fixture renders QR pages headlessly in CI; desktop
+    # refusal is exercised separately at the presentation boundary.
+    monkeypatch.setattr(clave_movil, "interactive_desktop_available", lambda: True)
     bucket_id = "1f6b0000-0000-4000-8000-00000000a040"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
@@ -303,7 +322,7 @@ async def test_authenticated_representation_landing_records_phone_acceptance_wit
             external = Settings.external_constants()
             target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
             try:
-                with pytest.raises(ClaveMovilApprovalTimeoutError) as raised:
+                with pytest.raises(AeatLoginAssertionError) as raised:
                     assert isinstance(provider, ClaveMovilAuthProvider)
                     await provider.authenticate_for_target(target_url=target_url)
             finally:

@@ -25,7 +25,7 @@ from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
 from ...logging import get_logger
 from ...storage_taxonomy import StorageCategory
-from ..context import run_context
+from .run_scope import run_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -119,8 +119,8 @@ class TestStderrRunEventFilter:
     ) -> None:
         """The filter must NOT accidentally drop events from the sink."""
         from ..models import GenericPayload, RunEventKind, RunEventPayload
-        from ..recorder import record_event
         from ..store import iter_events
+        from .recorder import record_event
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with run_context(entrypoint="cadrumo test stderr-filter", arguments=()) as info:

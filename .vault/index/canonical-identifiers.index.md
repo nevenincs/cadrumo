@@ -4,14 +4,11 @@ tags:
   - '#index'
   - '#canonical-identifiers'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:da8de0b8c97b85709fc55faab049fa9e5d3c268ecf9b8602ae35079637100406'
+body_hash: 'sha256:f1ae9bd26c66010a468c9f498fd154ae1330d6a04ebb42c70cb58033c9973289'
 related:
-  - '[[2026-08-07-canonical-identifiers-W08-P12-summary]]'
   - '[[2026-08-07-canonical-identifiers-adr]]'
-  - '[[2026-08-07-canonical-identifiers-ledger]]'
-  - '[[2026-08-07-canonical-identifiers-plan]]'
   - '[[2026-08-07-canonical-identifiers-reference]]'
   - '[[2026-08-10-canonical-identifiers-expediente-provenance-adr]]'
   - '[[2026-08-10-canonical-identifiers-expediente-provenance-reference]]'
@@ -43,15 +40,6 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 - `2026-08-13-canonical-identifiers-s13-csv-closure-audit` - `canonical-identifiers` audit: `s13 csv closure`
 - `2026-08-13-canonical-identifiers-s14-storage-key-audit` - `canonical-identifiers` audit: `S14 storage-key audit`
 - `2026-08-13-canonical-identifiers-s15-canonical-csv-audit` - `canonical-identifiers` audit: `S15 canonical CSV review`
-
-### exec
-
-- `2026-08-07-canonical-identifiers-ledger` - `canonical-identifiers` ledger
-- `2026-08-07-canonical-identifiers-W08-P12-summary` - `canonical-identifiers` `W08.P12` summary
-
-### plan
-
-- `2026-08-07-canonical-identifiers-plan` - `canonical-identifiers` plan
 
 ### reference
 

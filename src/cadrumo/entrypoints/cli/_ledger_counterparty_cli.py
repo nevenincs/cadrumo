@@ -42,13 +42,21 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import cast
+from uuid import UUID
 
 import typer
 
+from ...application.ledger.counterparty_operation import (
+    CounterpartyFactProjection,
+    CounterpartyResolutionProjection,
+    LedgerCounterpartyRequest,
+)
+from ...core.classifier_input_source import ClassifierInputSource
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.iva.classification import IvaTerritorialScope
+from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ...domain.iva.classification import IvaTerritorialScope, require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState
 from ._ledger_counterparty_payloads import (
     CounterpartyConfirmResult,
@@ -58,16 +66,11 @@ from ._ledger_counterparty_payloads import (
 )
 from .common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from .common import bad, emit_envelope
-from .state_projection_support import counterparty_establishment_repository_factory
-
-if TYPE_CHECKING:
-    from ...application.ledger.counterparty_establishment import (
-        ConfirmedCounterpartyFacts,
-        ConfirmedCounterpartyResolution,
-    )
+from .runtime_counterparty import run_counterparty
+from .state_projection_support import authority_operation
 
 
-def _confirmed_answers(fact: ConfirmedCounterpartyFacts) -> str:
+def _confirmed_answers(fact: CounterpartyFactProjection) -> str:
     """Name the answers actually stored, skipping the axis left unanswered.
 
     Establishment and IVA-identification are independent axes and either may
@@ -79,20 +82,28 @@ def _confirmed_answers(fact: ConfirmedCounterpartyFacts) -> str:
     return ", ".join(
         part
         for part in (
-            fact.territorial_scope.value if fact.territorial_scope is not None else None,
-            fact.identification_state.value if fact.identification_state is not None else None,
+            fact.territorial_scope,
+            fact.identification_state,
         )
         if part is not None
     )
 
 
-def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPayload:
+def _payload(ctx: typer.Context, fact: CounterpartyFactProjection) -> CounterpartyEstablishmentPayload:
     """Project the persisted fact onto its wire shape."""
     return CounterpartyEstablishmentPayload(
         counterparty_key=fact.counterparty_key,
         canonical_tax_identifier=fact.canonical_tax_identifier,
-        territorial_scope=fact.territorial_scope,
-        identification_state=fact.identification_state,
+        territorial_scope=(
+            require_iva_territorial_scope(fact.territorial_scope, operation=authority_operation(ctx))
+            if fact.territorial_scope is not None
+            else None
+        ),
+        identification_state=(
+            require_eu_member_state(fact.identification_state, authority=authority_operation(ctx))
+            if fact.identification_state is not None
+            else None
+        ),
         asserted_by=fact.asserted_by,
         asserted_at=fact.asserted_at,
         note=fact.note,
@@ -119,64 +130,42 @@ def counterparty_confirm(
     actor: str | None = None,
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
-    from ...application.ledger.counterparty_establishment import (
-        ConfirmedCounterpartyFactsInputError,
-        confirm_counterparty_establishment,
-    )
-
     bucket_id = _counterparty_bucket_id()
-    repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
     asserted_by = actor or bucket_id or "operator"
-    try:
-        outcome = confirm_counterparty_establishment(
-            bucket_id=bucket_id,
-            tax_identifier=tax_identifier,
-            asserted_by=asserted_by,
-            territorial_scope=scope,
-            identification_state=identification_state,
-            country_code=country_code,
-            note=note,
-            repository=repository,
-        )
-    except ConfirmedCounterpartyFactsInputError as exc:
+    if scope is None and identification_state is None:
         raise bad(
             tr("cli.ledger.counterparty.errors.nothing_asserted", identifier=tax_identifier),
-        ) from exc
-    fact = outcome.facts
-    recorded = outcome.recorded
+        )
+    completed = run_counterparty(
+        ctx,
+        request=LedgerCounterpartyRequest(
+            profile_id=UUID(bucket_id),
+            action="confirm",
+            tax_identifier=tax_identifier,
+            asserted_by=asserted_by,
+            territorial_scope=scope.value if scope is not None else None,
+            identification_state=identification_state.value if identification_state is not None else None,
+            country_code=country_code,
+            note=note,
+        ),
+    )
+    if completed.projection.conflict_context is not None:
+        from ...application.ledger.counterparty_establishment import CounterpartyEstablishmentConflictError
+
+        raise CounterpartyEstablishmentConflictError(
+            translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",
+            context=dict(completed.projection.conflict_context),
+        )
+    fact = cast("CounterpartyFactProjection", completed.projection.facts)
+    recorded = cast("bool", completed.projection.recorded)
     notices: list[Notice] = []
     if not recorded:
-        answered = _confirmed_answers(fact)
-        # Each axis appears in the context only when it was actually answered:
-        # the notice reports what is stored, and a key carrying an empty string
-        # for an unanswered axis would read as a stored blank answer.
-        context = {
-            "canonical_tax_identifier": fact.canonical_tax_identifier,
-            "stored_asserted_by": fact.asserted_by,
-            "supplied_asserted_by": asserted_by,
-        }
-        if fact.territorial_scope is not None:
-            context["territorial_scope"] = fact.territorial_scope.value
-        if fact.identification_state is not None:
-            context["identification_state"] = fact.identification_state.value
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="ledger.counterparty.already_confirmed",
-                message=tr(
-                    "cli.ledger.counterparty.notices.already_confirmed",
-                    identifier=fact.canonical_tax_identifier,
-                    answered=answered,
-                    asserted_by=fact.asserted_by,
-                ),
-                context=context,
-            ),
-        )
+        _append_counterparty_already_confirmed_notice(fact, asserted_by, notices)
 
     emit_envelope(
         ctx,
         command="ledger.counterparty.confirm",
-        result=CounterpartyConfirmResult(counterparty=_payload(fact), recorded=recorded),
+        result=CounterpartyConfirmResult(counterparty=_payload(ctx, fact), recorded=recorded),
         # Both facts are optional and either may stand alone, so the line names
         # what was answered rather than assuming a territory is present.
         lines=[
@@ -194,7 +183,6 @@ def counterparty_withdraw(
     """Remove a confirmed fact so a corrected one can be confirmed."""
     from ...application.ledger.counterparty_establishment import (
         confirmed_counterparty_facts_key,
-        forget_confirmed_counterparty_facts,
     )
 
     bucket_id = _counterparty_bucket_id()
@@ -202,13 +190,16 @@ def counterparty_withdraw(
         raise bad(
             tr("cli.ledger.counterparty.errors.unverifiable_identifier", identifier=tax_identifier),
         )
-    repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
-    withdrawn = forget_confirmed_counterparty_facts(
-        bucket_id=bucket_id,
-        tax_identifier=tax_identifier,
-        country_code=country_code,
-        repository=repository,
+    completed = run_counterparty(
+        ctx,
+        request=LedgerCounterpartyRequest(
+            profile_id=UUID(bucket_id),
+            action="withdraw",
+            tax_identifier=tax_identifier,
+            country_code=country_code,
+        ),
     )
+    withdrawn = cast("bool", completed.projection.withdrawn)
     notices: list[Notice] = []
     if not withdrawn:
         notices.append(
@@ -234,13 +225,11 @@ def counterparty_withdraw(
     )
 
 
-def _counterparty_view_notices(
-    tax_identifier: str,
-    resolution: ConfirmedCounterpartyResolution,
-) -> list[Notice]:
+def _counterparty_view_notices(tax_identifier: str, resolution: CounterpartyResolutionProjection) -> list[Notice]:
     """Project contradiction or absence into the shared notice channel."""
-    contradiction = resolution.contradiction
-    if contradiction is not None:
+    if resolution.contradiction_detail is not None:
+        confirmed = cast("str", resolution.confirmed_scope)
+        evidenced = cast("str", resolution.evidenced_scope)
         return [
             Notice(
                 severity=NoticeSeverity.WARNING,
@@ -248,17 +237,17 @@ def _counterparty_view_notices(
                 message=tr(
                     "cli.ledger.counterparty.notices.evidence_contradicts_confirmation",
                     identifier=tax_identifier,
-                    confirmed=contradiction.confirmed_scope.value,
-                    evidenced=contradiction.evidenced_scope.value,
+                    confirmed=confirmed,
+                    evidenced=evidenced,
                 ),
                 context={
                     "tax_identifier": tax_identifier,
-                    "confirmed_scope": contradiction.confirmed_scope.value,
-                    "evidenced_scope": contradiction.evidenced_scope.value,
+                    "confirmed_scope": confirmed,
+                    "evidenced_scope": evidenced,
                 },
             ),
         ]
-    if resolution.fact is None:
+    if resolution.territorial_scope is None:
         return [
             Notice(
                 severity=NoticeSeverity.INFO,
@@ -274,48 +263,64 @@ def _counterparty_view_notices(
 
 
 def _counterparty_view_result(
+    ctx: typer.Context,
     tax_identifier: str,
     evidenced_scope: IvaTerritorialScope | None,
-    resolution: ConfirmedCounterpartyResolution,
+    resolution: CounterpartyResolutionProjection,
 ) -> CounterpartyViewResult:
     """Project the resolver's three-state answer onto the backend-owned payload."""
-    fact = resolution.fact
-    identification = resolution.identification
-    contradiction = resolution.contradiction
+    operation = authority_operation(ctx)
     return CounterpartyViewResult(
         tax_identifier=tax_identifier,
-        confirmed=fact is not None,
-        territorial_scope=fact.value if fact is not None else None,
-        source=fact.source if fact is not None else None,
+        confirmed=resolution.territorial_scope is not None,
+        territorial_scope=(
+            require_iva_territorial_scope(resolution.territorial_scope, operation=operation)
+            if resolution.territorial_scope is not None
+            else None
+        ),
+        source=(
+            ClassifierInputSource(resolution.territorial_source) if resolution.territorial_source is not None else None
+        ),
         # Read from the resolution rather than from the stored record, so
         # what an operator is shown and what a later document consumes
         # cannot drift: the resolver withholds a fact the evidence
         # contradicts, and a payload read straight from the repository would
         # show a value no document will actually use.
-        identification_state=identification.value if identification is not None else None,
-        identification_source=identification.source if identification is not None else None,
+        identification_state=(
+            require_eu_member_state(resolution.identification_state, authority=operation)
+            if resolution.identification_state is not None
+            else None
+        ),
+        identification_source=(
+            ClassifierInputSource(resolution.identification_source)
+            if resolution.identification_source is not None
+            else None
+        ),
         evidenced_scope=evidenced_scope,
-        contradicted=contradiction is not None,
+        contradicted=resolution.contradiction_detail is not None,
         # Carried only here and deliberately NOT in `territorial_scope`:
         # that field is what the rung will answer, and on a contradiction it
         # answers nothing.
-        confirmed_scope=contradiction.confirmed_scope if contradiction is not None else None,
-        contradiction_detail=contradiction.detail if contradiction is not None else None,
+        confirmed_scope=(
+            require_iva_territorial_scope(resolution.confirmed_scope, operation=operation)
+            if resolution.confirmed_scope is not None
+            else None
+        ),
+        contradiction_detail=resolution.contradiction_detail,
     )
 
 
 def _counterparty_view_line(
     tax_identifier: str,
-    resolution: ConfirmedCounterpartyResolution,
+    resolution: CounterpartyResolutionProjection,
 ) -> str:
     """Render the text line from the same three states as the result payload."""
-    contradiction = resolution.contradiction
+    contradiction = resolution.contradiction_detail is not None
     return f"{tax_identifier}: " + (
-        f"contradicted (confirmed {contradiction.confirmed_scope.value}, "
-        f"evidence {contradiction.evidenced_scope.value})"
-        if contradiction is not None
-        else resolution.fact.value.value
-        if resolution.fact is not None
+        f"contradicted (confirmed {resolution.confirmed_scope}, evidence {resolution.evidenced_scope})"
+        if contradiction
+        else resolution.territorial_scope
+        if resolution.territorial_scope is not None
         else "not confirmed"
     )
 
@@ -347,22 +352,55 @@ def counterparty_view(
     nothing indicating that a confirm would refuse to use it -- the two surfaces
     diverging in exactly the case the verb exists for, invisibly.
     """
-    from ...application.ledger.counterparty_establishment import resolve_confirmed_counterparty_facts
-
     bucket_id = _counterparty_bucket_id()
-    repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
-    resolution = resolve_confirmed_counterparty_facts(
-        bucket_id=bucket_id,
-        tax_identifier=tax_identifier,
-        country_code=country_code,
-        evidenced_scope=evidenced_scope,
-        repository=repository,
+    completed = run_counterparty(
+        ctx,
+        request=LedgerCounterpartyRequest(
+            profile_id=UUID(bucket_id),
+            action="view",
+            tax_identifier=tax_identifier,
+            country_code=country_code,
+            evidenced_scope=evidenced_scope.value if evidenced_scope is not None else None,
+        ),
     )
+    resolution = cast("CounterpartyResolutionProjection", completed.projection.resolution)
     notices = _counterparty_view_notices(tax_identifier, resolution)
     emit_envelope(
         ctx,
         command="ledger.counterparty.show",
-        result=_counterparty_view_result(tax_identifier, evidenced_scope, resolution),
+        result=_counterparty_view_result(ctx, tax_identifier, evidenced_scope, resolution),
         lines=[_counterparty_view_line(tax_identifier, resolution)],
         notices=notices,
+    )
+
+
+def _append_counterparty_already_confirmed_notice(
+    fact: CounterpartyFactProjection, asserted_by: str, notices: list[Notice]
+) -> None:
+    """Report only the axes already answered by the stored counterparty fact."""
+    answered = _confirmed_answers(fact)
+    # Each axis appears in the context only when it was actually answered:
+    # the notice reports what is stored, and a key carrying an empty string
+    # for an unanswered axis would read as a stored blank answer.
+    context = {
+        "canonical_tax_identifier": fact.canonical_tax_identifier,
+        "stored_asserted_by": fact.asserted_by,
+        "supplied_asserted_by": asserted_by,
+    }
+    if fact.territorial_scope is not None:
+        context["territorial_scope"] = fact.territorial_scope
+    if fact.identification_state is not None:
+        context["identification_state"] = fact.identification_state
+    notices.append(
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="ledger.counterparty.already_confirmed",
+            message=tr(
+                "cli.ledger.counterparty.notices.already_confirmed",
+                identifier=fact.canonical_tax_identifier,
+                answered=answered,
+                asserted_by=fact.asserted_by,
+            ),
+            context=context,
+        ),
     )

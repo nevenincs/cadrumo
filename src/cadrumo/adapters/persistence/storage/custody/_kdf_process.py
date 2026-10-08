@@ -10,6 +10,8 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast
 
+from .....core.child_console import child_console_creation_flags
+from .....core.storage_environment import ChildEnvironmentProfile, child_environment
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
 from ._kdf_worker_limits import (
@@ -99,6 +101,9 @@ def worker_command(
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.lpAttributeList = {"handle_list": [request_handle, result_handle]}
         common["startupinfo"] = startupinfo
+        # A supervised runtime's stop is a console Ctrl+C; its own console keeps
+        # the worker out of that event so the runtime alone decides its end.
+        common["creationflags"] = child_console_creation_flags()
         command.extend(("--request-handle", str(request_handle), "--result-handle", str(result_handle)))
     else:
         descriptor_bound = os.sysconf("SC_OPEN_MAX")
@@ -119,14 +124,16 @@ def worker_command(
 
 
 def worker_environment(*, neutral_root: Path) -> dict[str, str]:
-    environment = {
-        "CADRUMO_LOG_DIR": str(neutral_root / "logs"),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(neutral_root / "state"),
-        "HOME": str(neutral_root),
-        "PYTHONDONTWRITEBYTECODE": "1",
-        "PYTHONHASHSEED": "0",
-        "PYTHONNOUSERSITE": "1",
-    }
+    # The strict profile pins a neutral root and carries no operator override.
+    environment = child_environment(ChildEnvironmentProfile.STRICT, neutral_root / "state", base={})
+    environment.update(
+        {
+            "HOME": str(neutral_root),
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONHASHSEED": "0",
+            "PYTHONNOUSERSITE": "1",
+        }
+    )
     if sys.platform == "win32":
         system_root = os.environ.get("SYSTEMROOT")
         if system_root is None:
@@ -146,7 +153,11 @@ def apply_posix_worker_limits() -> None:
     import resource
 
     resource_module = cast(Any, resource)
-    resource_module.setrlimit(resource_module.RLIMIT_AS, (PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,) * 2)
+    # Darwin rejects every finite address-space limit. Its ready attestation
+    # omits that limit; the closed Argon2 grid, validated before allocation,
+    # bounds the worker's memory there.
+    if sys.platform != "darwin":
+        resource_module.setrlimit(resource_module.RLIMIT_AS, (PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,) * 2)
     resource_module.setrlimit(resource_module.RLIMIT_CPU, (PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS,) * 2)
     resource_module.setrlimit(resource_module.RLIMIT_CORE, (0, 0))
     resource_module.setrlimit(resource_module.RLIMIT_FSIZE, (0, 0))

@@ -4,12 +4,30 @@
    visible brand loads normally; speculative logo requests add only failures. #}
 {% block logo_prefetch_links %}{% endblock logo_prefetch_links %}
 
-{# The interaction layer writes text into the DOM (search status, result
-   categories, the sequence widget's controls, copy feedback). Those strings
-   cannot come from gettext, which only substitutes page content, so this root's
-   resolved chrome rides along as one inline JSON payload and cadrumo-docs.js
-   reads its labels from it. Emitted here rather than in page.html so every
-   rendered template inherits it, the search page included. #}
+{# The theme declares its colour and font variables in a style element on every
+   page. They are the same on every page of a root, so the build writes them
+   once to cadrumo-theme-variables.css, linked after every other stylesheet. #}
+{% block theme_styles %}{% endblock theme_styles %}
+
+{# This root's own path inside the served site, empty when the root IS the site.
+   The site carries one search index for every language, at the apex above the
+   language roots, so the search controller needs to know how far back the apex
+   is and which root a shared result must be opened inside. It is declared here,
+   in the head of every page, because the search page does not extend this
+   project's page template and so carries none of the header this would
+   otherwise ride on. The theme already declares the path from a page to its own
+   root as data-content_root on <html>; this is the one further fact. #}
 {% block extrahead %}
-    <script type="application/json" id="cadrumo-chrome-strings">{{ cadrumo_chrome | tojson }}</script>
+  {{ super() }}
+  <meta name="cadrumo-docs-site-prefix" content="{{ cadrumo_docs_site_prefix | default('', true) }}">
 {% endblock extrahead %}
+
+{# Sphinx loads its own interface strings from _static/translations.js and adds
+   that script only for a language whose strings it ships. The one compile has
+   no one language, so the tag is written here instead, once per script and for
+   no script but the one it follows (dev.docs.translations_js). The loop is the
+   theme's own; a build that is not that compile gets the empty string back and
+   writes the bytes it writes today. #}
+{% block regular_scripts %}{% for path in script_files -%}
+      {{ js_tag(path) }}{{ cadrumo_translations_js_tag(path.filename) }}
+    {% endfor -%}{% endblock regular_scripts %}

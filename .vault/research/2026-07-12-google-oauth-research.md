@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#google-oauth'
 date: '2026-07-12'
-modified: '2026-07-17'
-body_hash: 'sha256:ddec8b7fa3279ae7f12264dd9fc76b953e0b0a9ccc19a016946c9f574310b5dd'
+modified: '2026-10-03'
+body_hash: 'sha256:1dcbff04d9f198fa2a45f218c5cbe81d5e06bbd3514663a636f881fec14bcb79'
 related:
   - "[[2026-06-05-secure-storage-production-hardening-w12-p26-s379-review-audit]]"
   - "[[2026-07-12-google-oauth-audit]]"
@@ -34,23 +34,23 @@ registry, or local sync-state repository. An exact source search on 2026-07-12 f
 none of those symbols under `src/` or `migrations/`. Instead,
 `SecureObjectRepository.iter_all_records_raw()` yields encrypted on-wire payloads
 together with revision lineage, without decrypting them:
-`file:src/aeat/adapters/persistence/storage/sql/secure_objects.py:291-365`.
+`file:the former source file`.
 
 For each namespace, the current mirror builds a remote manifest in `_sync-state` from
 that raw ciphertext state. The manifest records HMAC-keyed object identity, ciphertext
 hash, storage revision, predecessor revision, ancestry, and write times; it does not
 carry decrypted domain payloads. It compares local and remote manifests for missing
 objects, stale ancestry, and divergent revisions:
-`file:src/aeat/adapters/outbound/storage/_mirror_manifest.py:34-59`,
-`file:src/aeat/adapters/outbound/storage/_mirror_manifest.py:115-212`, and
-`file:src/aeat/adapters/outbound/storage/_mirror_manifest.py:248-340`.
+`file:the former source file`,
+`file:the former source file`, and
+`file:the former source file`.
 
 `google_sync_push` calculates the expected manifest from the active secure-object
 repository, blocks a namespace on a revision conflict, uploads ciphertext only, and
 withholds its manifest when an object upload fails. It then verifies upload and
 download integrity before reporting the outcome:
-`file:src/aeat/entrypoints/cli/_config/_google.py:537-750` and
-`file:src/aeat/entrypoints/cli/_config/_google.py:797-911`. This keeps Drive off the
+`file:the former source file` and
+`file:the former source file`. This keeps Drive off the
 local write path, consistent with the accepted storage-provider ADR:
 `file:.vault/adr/2026-05-12-google-oauth-adr.md:51-72`.
 
@@ -123,8 +123,8 @@ The ADR should bind these points:
 - `file:.vault/plan/2026-05-13-google-oauth-plan.md:136-159`
 - `file:.vault/adr/2026-05-12-google-oauth-adr.md:51-72`
 - `file:.vault/adr/2026-05-13-google-oauth-adr.md:126-257`
-- `file:src/aeat/adapters/persistence/storage/sql/secure_objects.py:291-365`
-- `file:src/aeat/adapters/outbound/storage/_mirror_manifest.py:34-340`
-- `file:src/aeat/entrypoints/cli/_config/_google.py:537-911`
+- `file:the former source file`
+- `file:the former source file`
+- `file:the former source file`
 - `file:.vault/audit/2026-06-05-secure-storage-production-hardening-w12-p26-s379-review-audit.md:14-80`
 - `file:.vault/audit/2026-07-12-google-oauth-audit.md:17-50`

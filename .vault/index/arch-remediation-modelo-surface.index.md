@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#arch-remediation-modelo-surface'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:110e505c437aa304ed6a0f2969972930818de8cffadc79f3a580b34651e60af7'
+body_hash: 'sha256:50aa34b6fa2037c1bfcd514ae6453fd1c2aa94974c6f5eb8d0acf9a04ae3f0d6'
 related:
   - '[[2026-07-02-arch-remediation-modelo-surface-adr]]'
-  - '[[2026-07-02-arch-remediation-modelo-surface-ledger]]'
-  - '[[2026-07-02-arch-remediation-modelo-surface-plan]]'
   - '[[2026-07-04-arch-remediation-modelo-surface-audit]]'
   - '[[2026-07-06-arch-remediation-modelo-surface-research]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#arch-remediation-modelo-surf
 ### audit
 
 - `2026-07-04-arch-remediation-modelo-surface-audit` - `arch-remediation-modelo-surface` audit: `campaign close honesty review`
-
-### exec
-
-- `2026-07-02-arch-remediation-modelo-surface-ledger` - `arch-remediation-modelo-surface` ledger
-
-### plan
-
-- `2026-07-02-arch-remediation-modelo-surface-plan` - `arch-remediation-modelo-surface` plan
 
 ### research
 

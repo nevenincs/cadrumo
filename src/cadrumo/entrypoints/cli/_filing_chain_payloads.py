@@ -15,9 +15,6 @@ from datetime import datetime
 from typing import Literal
 
 from ...application.calculations.observations_repository import (
-    ObservationEnvelopePayload,
-    ObservationLayers,
-    ObservationOverride,
     ObservationSourceKind,
 )
 from ...application.modelo.filing_chain_reconciliation import (
@@ -53,6 +50,9 @@ _RECONCILIATION_NOTICE_LOCALE_KEYS: Mapping[FilingReconciliationNoticeCode, str]
     ),
     FilingReconciliationNoticeCode.DECLARATION_KIND_UNDETERMINED: (
         "cli.app.modelo.filing_record.reconciliation_notice.declaration_kind_undetermined"
+    ),
+    FilingReconciliationNoticeCode.FILING_INSTANCE_EVIDENCE_UNAVAILABLE: (
+        "cli.app.modelo.filing_record.reconciliation_notice.filing_instance_evidence_unavailable"
     ),
     FilingReconciliationNoticeCode.CORRECTION_WITHOUT_CONFIRMED_BASELINE: (
         "cli.app.modelo.filing_record.reconciliation_notice.correction_without_confirmed_baseline"
@@ -135,7 +135,7 @@ def aeat_register_payload(register: AeatRegisterRef | None) -> AeatRegisterRefPa
     )
 
 
-def aeat_register_lines(register: AeatRegisterRef | None) -> list[str]:
+def aeat_register_lines(register: AeatRegisterRef | AeatRegisterRefPayload | None) -> list[str]:
     """Render an optional register reference as ``aeat_register.*`` lines."""
     if register is None:
         return []
@@ -169,7 +169,9 @@ def filing_reconciliation_payload(result: FilingReconciliationResult) -> FilingR
     )
 
 
-def filing_reconciliation_lines(results: Sequence[FilingReconciliationResult]) -> list[str]:
+def filing_reconciliation_lines(
+    results: Sequence[FilingReconciliationResult | FilingReconciliationPayload],
+) -> list[str]:
     """Render reconciliation outcomes as one tab-separated row per period."""
     lines = [
         f"reconciliation_count\t{len(results)}",
@@ -196,7 +198,10 @@ def filing_reconciliation_lines(results: Sequence[FilingReconciliationResult]) -
     return lines
 
 
-def _reconciliation_notice(result: FilingReconciliationResult, notice: FilingReconciliationNotice) -> Notice:
+def _reconciliation_notice(
+    result: FilingReconciliationResult | FilingReconciliationPayload,
+    notice: FilingReconciliationNotice | FilingReconciliationNoticePayload,
+) -> Notice:
     context = {
         "outcome": result.outcome.value,
         "modelo": result.modelo,
@@ -219,7 +224,7 @@ def _reconciliation_notice(result: FilingReconciliationResult, notice: FilingRec
     )
 
 
-def _contradiction_notice(result: FilingReconciliationResult) -> Notice:
+def _contradiction_notice(result: FilingReconciliationResult | FilingReconciliationPayload) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.filing_chain.contradicted",
@@ -241,7 +246,9 @@ def _contradiction_notice(result: FilingReconciliationResult) -> Notice:
     )
 
 
-def filing_reconciliation_notices(results: Iterable[FilingReconciliationResult]) -> list[Notice]:
+def filing_reconciliation_notices(
+    results: Iterable[FilingReconciliationResult | FilingReconciliationPayload],
+) -> list[Notice]:
     """Project reconciliation conditions onto the envelope notices channel.
 
     A contradiction is always a warning: the operator's pending entry lost to
@@ -253,44 +260,6 @@ def filing_reconciliation_notices(results: Iterable[FilingReconciliationResult])
             notices.append(_contradiction_notice(result))
         notices.extend(_reconciliation_notice(result, notice) for notice in result.notices)
     return notices
-
-
-def _layer_payload(envelope: ObservationEnvelopePayload | None) -> ObservationLayerPayload | None:
-    if envelope is None:
-        return None
-    return ObservationLayerPayload(
-        source_kind=envelope.source_kind,
-        official_evidence=envelope.source_kind.is_official_aeat,
-        captured_at=envelope.captured_at,
-        stamped_revision_id=envelope.stamped_revision_id,
-        casilla_values={
-            casilla_id: str(value) for casilla_id, value in sorted(envelope.observation.casilla_values.items())
-        },
-    )
-
-
-def _override_payload(override: ObservationOverride | None) -> ObservationOverridePayload | None:
-    if override is None:
-        return None
-    return ObservationOverridePayload(
-        actor=override.actor,
-        reason=override.reason,
-        recorded_at=override.recorded_at,
-        replaced_source_kind=override.replaced_source_kind,
-        replaced_values={casilla_id: str(value) for casilla_id, value in sorted(override.replaced_values.items())},
-    )
-
-
-def observation_layers_payload(layers: ObservationLayers) -> ObservationLayersPayload:
-    """Project both observation layers and the pending layer's override audit."""
-    pending = layers.pending_local
-    effective = layers.effective
-    return ObservationLayersPayload(
-        official=_layer_payload(layers.official),
-        pending_local=_layer_payload(pending),
-        effective_source_kind=effective.source_kind if effective is not None else None,
-        override=_override_payload(pending.override if pending is not None else None),
-    )
 
 
 def _layer_lines(name: str, layer: ObservationLayerPayload | None) -> list[str]:

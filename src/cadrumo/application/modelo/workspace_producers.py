@@ -33,11 +33,18 @@ from .workspace_manifest import ModeloWorkspaceFieldManifestV1
 from .workspace_models import ModeloWorkspaceContributorIdentityV1
 
 if TYPE_CHECKING:
+    from ...core.identity.bucket import BucketId
     from ...core.identity.hex_ids import CalculationRevisionId
+    from ...core.period import Period
     from ...domain.calculations.registry.authority import (
         PinnedAuthorityOperation,
         RegistryAuthorityCapture,
         RegistryAuthorityCurrentCoordinate,
+    )
+    from ...domain.modelos.codes import ModeloCode
+    from ...domain.modelos.protocols import (
+        CalculationRevisionCatalogueRepositoryProtocol,
+        VerificationReportCatalogueRepositoryProtocol,
     )
     from .calculation_action_ports import CalculationActionPorts
 
@@ -458,6 +465,11 @@ class ModeloWorkspaceRegistryPortV1:
             generation=capture.generation,
         )
 
+    def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
+        """Read the registry authority's current coordinate as this contributor's epoch."""
+        current = self._authority.read_current_coordinate()
+        return _current_epoch(self.producer_contract, current.comparison_domain, current.generation)
+
 
 class ModeloWorkspaceWorkPortV1:
     """Application-owned port realization delegating to the sole WORK capture."""
@@ -495,6 +507,81 @@ class ModeloWorkspaceWorkPortV1:
             generation=capture.generation,
         )
 
+    def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
+        """Read the work catalogue's current coordinate as this contributor's epoch."""
+        from .work_addressing import read_modelo_work_current_coordinate
+
+        current = read_modelo_work_current_coordinate(self._request, catalogue_repository=self._catalogue_repository)
+        return _current_epoch(self.producer_contract, current.comparison_domain, current.generation)
+
+
+class ModeloWorkspaceBoundedReviewPortV1:
+    """Application-owned port realization delegating to the sole BOUNDED_REVIEW capture."""
+
+    def __init__(
+        self,
+        *,
+        bucket_id: BucketId,
+        modelo: ModeloCode,
+        filing_year: int,
+        period: Period,
+        operation: PinnedAuthorityOperation,
+        work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+        calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+        verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    ) -> None:
+        """Bind the reviewed target and the authorities its review is assembled from."""
+        self._bucket_id = bucket_id
+        self._modelo = modelo
+        self._filing_year = filing_year
+        self._period = period
+        self._operation = operation
+        self._work_unit_repository = work_unit_repository
+        self._calculation_repository = calculation_repository
+        self._verification_repository = verification_repository
+
+    @property
+    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
+        """Return the frozen BOUNDED_REVIEW contributor contract."""
+        return MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1
+
+    def capture_projection_with_epoch(self) -> ModeloWorkspaceContributingProjectionV1[ModeloWorkReview]:
+        """Atomically capture one work review and stamp it with its epoch."""
+        from .work_review import capture_modelo_work_review
+
+        capture = capture_modelo_work_review(
+            self._bucket_id,
+            self._modelo,
+            self._filing_year,
+            self._period,
+            operation=self._operation,
+            work_unit_repository=self._work_unit_repository,
+            calculation_repository=self._calculation_repository,
+            verification_repository=self._verification_repository,
+        )
+        return _contributing_projection(
+            self.producer_contract,
+            projection=capture.value,
+            comparison_domain=capture.comparison_domain,
+            generation=capture.generation,
+        )
+
+    def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
+        """Read the work review's current coordinate as this contributor's epoch."""
+        from .work_review import read_modelo_work_review_current_coordinate
+
+        current = read_modelo_work_review_current_coordinate(
+            self._bucket_id,
+            self._modelo,
+            self._filing_year,
+            self._period,
+            operation=self._operation,
+            work_unit_repository=self._work_unit_repository,
+            calculation_repository=self._calculation_repository,
+            verification_repository=self._verification_repository,
+        )
+        return _current_epoch(self.producer_contract, current.comparison_domain, current.generation)
+
 
 class ModeloWorkspaceCalculationPortV1:
     """Application-owned port realization delegating to the sole CALCULATION capture."""
@@ -525,6 +612,13 @@ class ModeloWorkspaceCalculationPortV1:
             comparison_domain=capture.comparison_domain,
             generation=capture.generation,
         )
+
+    def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
+        """Read the calculation catalogue's current coordinate as this contributor's epoch."""
+        from .calculation import read_modelo_calculation_current_coordinate
+
+        current = read_modelo_calculation_current_coordinate(self._calculation_revision_id, ports=self._ports)
+        return _current_epoch(self.producer_contract, current.comparison_domain, current.generation)
 
 
 class ModeloWorkspaceReadinessPortV1:
@@ -568,6 +662,17 @@ class ModeloWorkspaceReadinessPortV1:
             generation=capture.generation,
         )
 
+    def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
+        """Read the readiness owner's current coordinate as this contributor's epoch."""
+        from ..state_projection import read_modelo_readiness_current_coordinate
+
+        current = read_modelo_readiness_current_coordinate(
+            self._requests,
+            active_profile_id=self._active_profile_id,
+            operation=self._operation,
+        )
+        return _current_epoch(self.producer_contract, current.comparison_domain, current.generation)
+
 
 class ModeloWorkspaceLocaleCataloguePortV1:
     """Application-owned port realization delegating to the sole LOCALE_CATALOGUE capture."""
@@ -601,6 +706,13 @@ class ModeloWorkspaceLocaleCataloguePortV1:
             comparison_domain=capture.comparison_domain,
             generation=capture.generation,
         )
+
+    def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
+        """Read the locale catalogue's current coordinate as this contributor's epoch."""
+        from ...core.i18n.locale_catalogue import read_locale_catalogue_current_coordinate
+
+        current = read_locale_catalogue_current_coordinate(locale=self._locale)
+        return _current_epoch(self.producer_contract, current.comparison_domain, current.generation)
 
 
 class ModeloWorkspaceLocaleCatalogueBatchPortV1:
@@ -676,6 +788,33 @@ class ModeloWorkspaceFieldManifestPortV1:
             generation=capture.generation,
         )
 
+    def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
+        """Read the field manifest's current coordinate as this contributor's epoch."""
+        from .workspace_manifest import read_modelo_workspace_manifest_current_coordinate
+
+        current = read_modelo_workspace_manifest_current_coordinate(self._authority)
+        return _current_epoch(self.producer_contract, current.comparison_domain, current.generation)
+
+
+class ModeloWorkspaceCurrentEpochPortV1(Protocol):
+    """A contributor port that can re-read its owner's current coordinate."""
+
+    def read_current_epoch(self) -> ModeloWorkspaceEpochV1:
+        """Return the owner's current coordinate as an epoch comparable with a capture's."""
+        ...
+
+
+def _current_epoch(
+    contract: ModeloWorkspaceProducerContractV1,
+    comparison_domain: str,
+    generation: int,
+) -> ModeloWorkspaceEpochV1:
+    return ModeloWorkspaceEpochV1(
+        owner=contract.contributor.owner,
+        comparison_domain=comparison_domain,
+        generation=generation,
+    )
+
 
 def _contributing_projection[ProjectionT: BaseModel](
     contract: ModeloWorkspaceProducerContractV1,
@@ -703,9 +842,11 @@ __all__ = [
     "MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1",
+    "ModeloWorkspaceBoundedReviewPortV1",
     "ModeloWorkspaceCalculationPortV1",
     "ModeloWorkspaceContributingProjectionV1",
     "ModeloWorkspaceContributorKindV1",
+    "ModeloWorkspaceCurrentEpochPortV1",
     "ModeloWorkspaceEpochKindV1",
     "ModeloWorkspaceEpochV1",
     "ModeloWorkspaceFieldManifestPortV1",

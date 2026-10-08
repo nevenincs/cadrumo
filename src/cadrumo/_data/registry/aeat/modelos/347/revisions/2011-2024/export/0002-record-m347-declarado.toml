@@ -167,8 +167,8 @@ source_refs = ['aeat-dr-347-2011']
 id = 'm347-2011.declarado.f009a'
 offset = 77
 length = 2
-kind = 'casilla'
-casilla_id = 'contraparte.provincia-codigo'
+kind = 'binding'
+binding = 'modelo-347-contraparte-row-provincia-codigo'
 data_type = 'text'
 required = false
 padding = 'none'
@@ -245,11 +245,12 @@ offset = 83
 length = 16
 kind = 'binding'
 binding = 'modelo-347-contraparte-row-importe'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -281,8 +282,8 @@ source_refs = ['aeat-dr-347-2011']
 id = 'm347-2011.declarado.f014'
 offset = 100
 length = 1
-kind = 'casilla'
-casilla_id = 'contraparte.arrendamiento-local-negocio'
+kind = 'binding'
+binding = 'modelo-347-contraparte-row-arrendamiento-local-negocio'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -342,11 +343,12 @@ offset = 116
 length = 16
 kind = 'casilla'
 casilla_id = 'contraparte.importe-transmisiones-inmuebles'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -381,11 +383,12 @@ offset = 136
 length = 16
 kind = 'binding'
 binding = 'modelo-347-contraparte-row-importe-q1'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -400,11 +403,12 @@ offset = 152
 length = 16
 kind = 'casilla'
 casilla_id = 'contraparte.importe-transmisiones-Q1'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -419,11 +423,12 @@ offset = 168
 length = 16
 kind = 'binding'
 binding = 'modelo-347-contraparte-row-importe-q2'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -438,11 +443,12 @@ offset = 184
 length = 16
 kind = 'casilla'
 casilla_id = 'contraparte.importe-transmisiones-Q2'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -457,11 +463,12 @@ offset = 200
 length = 16
 kind = 'binding'
 binding = 'modelo-347-contraparte-row-importe-q3'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -476,11 +483,12 @@ offset = 216
 length = 16
 kind = 'casilla'
 casilla_id = 'contraparte.importe-transmisiones-Q3'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -495,11 +503,12 @@ offset = 232
 length = 16
 kind = 'binding'
 binding = 'modelo-347-contraparte-row-importe-q4'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -514,11 +523,12 @@ offset = 248
 length = 16
 kind = 'casilla'
 casilla_id = 'contraparte.importe-transmisiones-Q4'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'orden-eha-3012-2008:art-1',
     'orden-eha-3012-2008:art-10',
@@ -546,12 +556,14 @@ legal_refs = [
 source_refs = ['aeat-dr-347-2011']
 
 [revisions.2011-2024.export_layouts.records.row_field_casilla_ids]
+business_premises_lease_mark = 'contraparte.arrendamiento-local-negocio'
 clave = 'contraparte.clave-operacion'
-country_code = 'contraparte.pais-codigo'
+declarado_tax_id = 'contraparte.nif'
 importe_q1 = 'contraparte.importe-Q1'
 importe_q2 = 'contraparte.importe-Q2'
 importe_q3 = 'contraparte.importe-Q3'
 importe_q4 = 'contraparte.importe-Q4'
 importe_total = 'contraparte.importe-anual'
 party_legal_name = 'contraparte.nombre'
-party_tax_id = 'contraparte.nif'
+provincia_code = 'contraparte.provincia-codigo'
+residence_country_code = 'contraparte.pais-codigo'

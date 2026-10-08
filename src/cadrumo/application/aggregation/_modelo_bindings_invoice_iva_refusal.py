@@ -139,6 +139,7 @@ def raise_if_invoice_iva_would_be_silent(
         period=period,
         ledger_observations=ledger_observations,
         ports=ports,
+        operation=operation,
     )
     return _raise_if_screened_invoice_iva_would_be_silent(
         context=context,

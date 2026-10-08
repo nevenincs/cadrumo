@@ -3,11 +3,11 @@ profile:
     foral_regime: 'Los residentes en {tax_region} tributan ante la Hacienda Foral
       correspondiente, no ante la AEAT: los territorios vascos en virtud del Concierto
       Económico (Ley 12/2002) y Navarra en virtud del Convenio Económico (Ley 28/1990).
-      Este CLI no modela declaraciones forales. Consulte sede.bizkaia.eus (Bizkaia),
+      Este CLI no modela declaraciones forales. Consulta sede.bizkaia.eus (Bizkaia),
       gipuzkoa.eus/ogasuna (Gipuzkoa), araba.eus/ogasun (Álava) o hacienda.navarra.es
-      (Navarra) según su territorio.'
+      (Navarra) según tu territorio.'
     not_configured: No hay ningún perfil de residencia fiscal configurado para RENTA.
-      Ejecute `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` para configurarlo.
+      Ejecuta `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` para configurarlo.
   journey:
     source:
       censal_review:
@@ -60,12 +60,12 @@ profile:
       special_regime: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
       special_regime_start_date: Fecha de inicio del régimen especial (AAAA-MM-DD)
     iva:
-      cash_accounting_regime_enrolled: ¿Está inscrito en el régimen especial del criterio
-        de caja?
+      cash_accounting_regime_enrolled: ¿Estás inscrito en el régimen especial del
+        criterio de caja?
       does_intracomunitario: Realiza operaciones intracomunitarias
       group_dominant_entity_enrolled: Alta como entidad dominante de un grupo de IVA
       group_member_enrolled: Alta como entidad miembro de un grupo de IVA
-      hydrocarbon_deposit_advance_payment_deduction_entitled: ¿Tiene derecho a deducir
+      hydrocarbon_deposit_advance_payment_deduction_entitled: ¿Tienes derecho a deducir
         pagos anticipados del régimen de depósitos fiscales de hidrocarburos?
       intracommunity_operations_exceed_50000_eur: Operaciones intracomunitarias superan
         50.000 EUR
@@ -75,7 +75,7 @@ profile:
       regime: ¿Qué régimen de IVA aplica?
       roi_enrolled: Alta en ROI
       sii_enrolled: Inscrito en el SII (Suministro Inmediato de Información)
-      voluntary_sii_enrolled: ¿Está inscrito voluntariamente en el SII?
+      voluntary_sii_enrolled: ¿Estás inscrito voluntariamente en el SII?
     obligations:
       bienes_extranjero_above_threshold: Bienes en el extranjero superan el umbral
         del Modelo 720
@@ -87,8 +87,10 @@ profile:
       premio_loteria_gravamen_especial_trimestres: Trimestres en que se cobró ese
         premio de loterías o apuestas (Modelo 136), como tokens AAAA-nT separados
         por |
-      third_party_transactions_above_347_threshold: Operaciones con terceros superan
-        el umbral del Modelo 347
+      third_party_transactions_above_347_threshold: En el año natural que cubre el
+        Modelo 347, ¿tus operaciones con una misma persona o entidad superaron 3.005,06
+        € (300,51 € en los cobros que hagas por cuenta de terceros), contando por
+        separado las ventas y las compras?
     preferences:
       output_language: Idioma de salida de la CLI para este perfil
     renta_family:
@@ -487,7 +489,8 @@ profile:
         premio_loteria_gravamen_especial_trimestres:
           label: Trimestres del premio (Modelo 136)
         third_party_transactions_above_347_threshold:
-          label: Umbral del Modelo 347 superado
+          label: 'Umbral del Modelo 347 superado: 3.005,06 € por persona o entidad
+            en el año natural (300,51 € en cobros por cuenta de terceros)'
       preferences:
         output_language:
           label: Idioma de salida

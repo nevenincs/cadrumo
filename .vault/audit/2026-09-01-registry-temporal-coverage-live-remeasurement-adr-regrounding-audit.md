@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-09-01'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:86fa6c22f58a8e7602854917969a027ea660a3ae33ad8ac0f99b85913e922f1d'
+body_hash: 'sha256:7878f8138966dbf8852090377c259573a67d8303e1764d0d33288176f7fbd9ad'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -1705,10 +1705,7 @@ asserts the declaration rather than a consumer, so it is unaffected.
 
 ### an-in-flight-rename-left-a-stale-consumer-in-the-packaging-tooling | medium | Not this campaign's work, reported rather than edited
 
-Two tests in `dev/packaging/tests/test_dependency_surface.py` fail with
-`FileNotFoundError` for `src/cadrumo/core/_optional_extras.py`. That module was
-renamed to `optional_extras.py` by the import-centralisation refactor, and
-`dev/packaging/dependency_surface.py` still names the underscore form.
+That module was renamed to `optional_extras.py` by the import-centralisation refactor, and `dev/packaging/dependency_surface.py` still names the underscore form.
 
 This is the atomic-relocation obligation in the architecture rule: a symbol moves
 together with every consumer, and a rename that updates the definition and leaves
@@ -6060,10 +6057,7 @@ no mechanism here that would add one.
 
 ### vacuity-screen-tests-broken-since-august-in-a-lane-ci-runs | critical | Sixteen tests fail on git exit 128 because a fix added a repository dependency their fixtures cannot satisfy
 
-The crashed CI-selection run reported sixteen failures in `dev/audit/tests/test_vacuity_screen.py`.
-A crashed run loses tests rather than inventing failures, so anything it reported is real, and
-running that file alone confirms it: sixteen failed in 1.5 seconds, every one on
-`CalledProcessError: git ls-files ... returned non-zero exit status 128`.
+A crashed run loses tests rather than inventing failures, so anything it reported is real, and running that file alone confirms it: sixteen failed in 1.5 seconds, every one on `CalledProcessError: git ls-files ... returned non-zero exit status 128`.
 
 The cause is a commit from 27 August titled "screen only tracked test modules for vacuity". It
 added `_tracked_test_paths`, which shells out to `git ls-files` with `cwd=root` and deliberately
@@ -6087,10 +6081,7 @@ about whether the git dependency belongs in the unit boundary at all.
 
 ### tui-boundary-proofs-fail-while-the-boundaries-hold | high | Seven tests that prove the import contracts bite are broken, and import-linter itself passes eleven contracts cleanly
 
-The crashed run's second-largest failure group is seven tests in
-`dev/tests/test_importlinter_tui_boundaries.py`. Run directly they fail in about a second, and
-the contracts they guard are fine: `lint-imports` against the real configuration reports eleven
-kept, zero broken, exit zero, over 5,749 files.
+Run directly they fail in about a second, and the contracts they guard are fine: `lint-imports` against the real configuration reports eleven kept, zero broken, exit zero, over 5,749 files.
 
 So the boundaries hold and the proofs that they bite do not. Those tests write a contract config
 and a synthetic topology into a temp tree, call `lint_imports(no_cache=True)` with the working
@@ -6854,22 +6845,9 @@ failure a contributor can be handed.
 
 ### a-deleted-gate-left-its-pattern-table-orphaned-and-its-violations-standing | high | The marker-integrity gate was deleted with 1770 lines; its declarative half survives with no consumer, and two test names it forbade are back
 
-Two failing test names carrying plan Step identifiers -
-`test_s115_freezes_reviewed_s112_helper_set_by_secondary_count` and
-`test_s44_runner_observes_every_live_no_recovery_outcome` - raised the question
-of which gate should have refused them. One did.
-`dev/tests/test_marker_integrity.py` walked every test module's comments,
-docstrings and durable symbol names for exactly this leak, and it was deleted in
-`23eadb3884`, a private-to-public promotion sweep that removed two hundred and
-five files.
+Two failing test names carrying plan Step identifiers - `test_s115_freezes_reviewed_s112_helper_set_by_secondary_count` and `test_s44_runner_observes_every_live_no_recovery_outcome` - raised the question of which gate should have refused them.
 
-Its declarative half was not deleted with it. `dev/tests/_marker_metadata_patterns.py`
-still ships the pattern/target/near-miss triples, including a `W01.P02.S03`
-firing fixture and a "the W3C standard" near-miss, and its module docstring
-still names `test_marker_integrity` as the walk that consumes it. Nothing in the
-live tree imports it: the only other copies are snapshots under `var/`. The
-declaration survived its consumer, which is this campaign's subject exactly,
-and the two Step-id test names are what the absence costs.
+Nothing in the live tree imports it: the only other copies are snapshots under `var/`. The declaration survived its consumer, which is this campaign's subject exactly, and the two Step-id test names are what the absence costs.
 
 The pattern table being intact is the opportunity. A restored gate does not need
 the deleted eighteen hundred lines, only the walk over test-module names and
@@ -6889,11 +6867,7 @@ Read together those facts say a `dev/` path literal in a shipped module is
 caught by nothing, and a probe confirmed the governance scan is silent on one
 while catching a `.vault/` literal in the same file.
 
-It is caught. `dev/quality/import_hygiene_scan.py` declares itself the single
-authority for the one-way boundary and carries three families for it, and
-`find_dev_path_reach_violations` returns the planted literal when asked
-directly. The rule moved to a better home during the sweep; only the sibling
-gate's prose stayed behind, still crediting a module that no longer exists.
+The rule moved to a better home during the sweep; only the sibling gate's prose stayed behind, still crediting a module that no longer exists.
 
 That prose is the defect, and it is worth recording for what it nearly caused:
 three hypotheses in two iterations have now been killed by probing rather than
@@ -9841,10 +9815,7 @@ zero casillas out of 3,173.
 
 ## The restatement measurement, made durable and corrected
 
-The ad-hoc query behind the previous section is now a module,
-`dev/locales/revision_label_restatement.py`, and running it corrected two of its
-figures. Recorded as a correction rather than an update, because the earlier
-numbers were published in this audit and in the plan's Description.
+Recorded as a correction rather than an update, because the earlier numbers were published in this audit and in the plan's Description.
 
 The Spanish catalogue carries **27,569 casilla label strings, of which 10,586
 are the surplus of a label restated under a further revision** - not the 29,522
@@ -9917,11 +9888,7 @@ anything.
 
 ## The derivation is lossless, and it removes 30,049 of 87,298 strings
 
-`dev/locales/casilla_label_derivation.py` builds the form the previous sections
-argued for - a label keyed by casilla with a per-revision override only where
-the text genuinely differs - and expands it back over the revisions each casilla
-is labelled under. The expansion reproduces the shipped mapping byte-for-byte in
-every locale:
+The expansion reproduces the shipped mapping byte-for-byte in every locale:
 
 | locale | stored | derived | removed | override casillas | lossless |
 | ------ | ------ | ------- | ------- | ----------------- | -------- |
@@ -12719,13 +12686,7 @@ Three of the four numbers here count different things - a name the facade binds,
 a name a consumer asks for, and a statement that must be rewritten - and the
 report now prints them separately for that reason.
 
-`dev/quality/facade_retirement.py` does the retirement rather than describing
-it. The mapping from each exported name to the module that defines it is already
-written in the facade's own import statements, so it is read from there and
-never restated; a written inventory would go stale the first time a symbol
-moved. Statements are replaced by AST line span, because a parenthesised
-multi-line import defeats a line-oriented rewrite in both directions, which this
-repository has already paid for once.
+The mapping from each exported name to the module that defines it is already written in the facade's own import statements, so it is read from there and never restated; a written inventory would go stale the first time a symbol moved. Statements are replaced by AST line span, because a parenthesised multi-line import defeats a line-oriented rewrite in both directions, which this repository has already paid for once.
 
 It refuses rather than guesses in three cases: a name the facade does not
 forward, a submodule traversal - `from ..package import errors` names a module
@@ -12991,10 +12952,7 @@ bound names and 40 consumer sites.
 
 ## The promoter earns its place by failing its own tests
 
-Three packages and fifteen private modules remained, so the throwaway rename
-script became `dev/quality/module_promotion.py` with tests. Writing those tests
-found two defects in it, and one of them was the defect it was written to
-prevent.
+Writing those tests found two defects in it, and one of them was the defect it was written to prevent.
 
 A module is referenced four ways that do not look alike: an absolute import, a
 relative import from inside the package, a relative import from OUTSIDE it, and
@@ -13260,11 +13218,7 @@ next attempt does not begin by rediscovering that the obvious fix is inert.
 
 ## The sweep becomes a command
 
-Establishing that this session's two set comparisons were untainted meant
-remembering to grep for a banner. That is the shape of defect this whole
-campaign is about - a fact everyone must remember rather than an instrument that
-holds it - so `dev/quality/run_integrity.py` now judges a saved run and exits
-non-zero when it is unusable.
+Establishing that this session's two set comparisons were untainted meant remembering to grep for a banner.
 
 Four shapes are recognised and each cost this campaign a wrong conclusion
 before the banners existed to name them: a run that lost a worker, a run that
@@ -13564,13 +13518,7 @@ reads its measured side through `rtoml.loads(capsys.readouterr().out)`, a chain
 of calls that all take arguments. A detector that cannot find the defect it was
 built for is not a detector.
 
-**The second flagged correct tests, including this session's own.** Relaxing to
-any comparison against an integer literal of ten or more found 111 sites, and any
-comparison against a dict of integer literals found twelve - among them
-`dev/quality/tests/test_run_integrity.py:46`, which asserts
-`result.counts == {"failed": 23, "passed": 294}` about a constructed fixture
-string written three lines above it. That assertion is exactly right and a
-frozen-count gate must never flag it.
+That assertion is exactly right and a frozen-count gate must never flag it.
 
 The discriminator is not syntactic. What makes `185` a frozen corpus count and
 `23` a correct expectation is where the measured value comes from - a corpus that
@@ -13586,10 +13534,6 @@ flagged the correct tests beside the incorrect ones would have made the rule
 harder to follow rather than easier.
 
 ## The detector was right to be broad, and I was about to narrow it
-
-One of the five residual failures had a dev-side share: four modules compile a
-regulatory-prose pattern without being declared in the channel ledger, and one of
-them is `dev/registry/analysis/m200_2024_full_reconciliation.py`.
 
 It is a false positive, and the reason is exact. The module matches on the word
 `casillas` inside a TOML table header of the form
@@ -14127,14 +14071,7 @@ leaves the list entirely.
 The distribution: 8 in `dev/quality`, 5 each in `dev/docs/terminology` and
 `dev/packaging`, 4 in `dev/audit`, and a tail of ones and twos.
 
-Two of the eight are worth naming because of what they do rather than where they
-are. `dev/quality/import_centralization_codemod.py` and
-`dev/quality/namespace_retirement_sweep.py` both take `--apply` and both write to
-source files - six write sites between them - and neither has a test. A codemod
-that rewrites the tree with nothing asserting its behaviour is the highest-cost
-untested module a repository can hold, and this campaign has just spent several
-iterations demonstrating why: the two codemods written here had three silent
-defects between them, every one found by their own tests.
+A codemod that rewrites the tree with nothing asserting its behaviour is the highest-cost untested module a repository can hold, and this campaign has just spent several iterations demonstrating why: the two codemods written here had three silent defects between them, every one found by their own tests.
 
 Recorded rather than fixed. Writing tests for another campaign's codemods is
 work with an owner, and the useful contribution is the corrected number and the
@@ -14173,9 +14110,7 @@ durable way this stops happening.
 
 ## The untested count, made an instrument and ranked by what it can do
 
-The forty-two was a probe in a scratch file. It is now
-`dev/quality/module_test_reach.py`, and the reason to build it rather than quote
-it again is that the count was never the useful part.
+The forty-two was a probe in a scratch file.
 
 Each unreached module is reported with what running it can do, read from its
 syntax rather than by importing it - importing a module to ask what it does is
@@ -14188,19 +14123,11 @@ Live: **42 unreached, of which 16 write to the tree, 3 declare `--apply`, and 20
 have a `main`.** Three do all of the first two together, and those three are the
 report's whole point:
 
-- `dev/quality/import_centralization_codemod.py`
-- `dev/quality/namespace_retirement_sweep.py`
-- `dev/registry/result_disposition_fragment_generator.py`
-
 Untested code that rewrites source files, with a flag whose purpose is to do it
 for real. Ranking by capability puts them first; a count of forty-two puts them
 nowhere.
 
-The tool counted itself. Its first run reported **43**, including
-`dev/quality/module_test_reach.py`, because a report that measures the tree it
-lives in is subject to what it measures. Writing its tests took the figure to 42,
-which is the honest way to leave that list, and one of those tests asserts
-exactly that - the module must not appear in its own output.
+The tool counted itself. Writing its tests took the figure to 42, which is the honest way to leave that list, and one of those tests asserts exactly that - the module must not appear in its own output.
 
 Reach comes from `imported_modules` rather than a walk written here, which is
 the only reason this module can be trusted about its own subject: the last
@@ -14208,10 +14135,7 @@ hand-written version of this exact measurement was wrong by eighteen modules.
 
 ## Testing the first module the reach report ranked
 
-`dev/registry/result_disposition_fragment_generator.py` was one of three modules
-the reach report put first: it writes registry declarations, takes `--apply`, and
-had no tests. It is also the only one of the three inside this plan's own
-subject, so it is the one to do rather than to name.
+It is also the only one of the three inside this plan's own subject, so it is the one to do rather than to name.
 
 Eight tests now hold it, and the first is the point of the exercise:
 **`write_fragments(root, apply=False)` plans a full run over the live registry
@@ -14323,11 +14247,8 @@ of method, and it does not scale past the modules a reader happens to know.
 So every surviving attribution was checked against the call that produced it.
 All nine are genuine - eight `write_text` and one `mkdir`, each at a named line:
 
-- `dev/audit/checkout_drift.py`, `dev/audit/size_budget.py`,
   `dev/docs/terminology/_sweep_cli.py`, `coverage.py` and `miss_rate.py`,
-  `dev/quality/import_centralization_codemod.py`, and
   `dev/release/alerting.py` all call `write_text`.
-- `dev/quality/namespace_retirement_sweep.py` calls it five times.
 - `dev/packaging/oracle_emit_cohort.py` is ranked on `work.mkdir` alone.
 
 The exhaustive check is now a test rather than an afternoon's grep: a module
@@ -14640,12 +14561,7 @@ The suite that holds it remains unreachable by any lane, which is why a live
 `S526` asked for tests on the two untested modules that rewrite source files
 behind `--apply`. Writing them found that one of them does not run.
 
-`dev/quality/import_centralization_codemod.py` inserted its own directory on
-`sys.path` and imported its sibling by bare name. That loads
-`import_hygiene_scan` as a TOP-LEVEL module, so its own
-`from .._paths import ...` has no parent package and raises. The codemod was
-unimportable by every route including `python -m`, and had been for as long as
-nothing imported it - which is precisely as long as it had no tests.
+That loads `import_hygiene_scan` as a TOP-LEVEL module, so its own `from .._paths import ...` has no parent package and raises. The codemod was unimportable by every route including `python -m`, and had been for as long as nothing imported it - which is precisely as long as it had no tests.
 
 One line fixes it: `from . import import_hygiene_scan as scan`. It now imports
 and runs, reporting zero rewritable statements in dry run.
@@ -14787,12 +14703,7 @@ docs/_build/html; this preflight reads a real artefact, so it needs a real
 build to read`. A precondition stated in its own message is not a defect, and
 it is exactly what the composition errors were not.
 
-Then a fix from the ranked list. `dev/audit/size_budget.py` writes to the tree
-and no test reached it, and unlike the two codemods in `dev/quality` its writer
-TAKES its destination - so the write is exercised on a constructed file rather
-than reasoned about. That difference is worth naming, because it is the whole
-reason two modules could only be tested for their refusals and this one can be
-tested for its behaviour.
+That difference is worth naming, because it is the whole reason two modules could only be tested for their refusals and this one can be tested for its behaviour.
 
 Eight tests hold it. The reader must stay empty whatever path it is handed,
 since the committed limit table was retired and a reader that quietly resumed

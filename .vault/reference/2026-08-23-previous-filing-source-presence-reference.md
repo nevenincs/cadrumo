@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#previous-filing-source-presence'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9fc147c14e5d93aaace536c9f0e58b81fbd5cb46d50752badece3875c76908c8'
+body_hash: 'sha256:46c1eb62758ed54c8b95eb982347f468350bb56005ffb8a9a333ca17ad911b66'
 related: []
 ---
 
@@ -17,19 +17,9 @@ selector, resolver behavior, and focused calculation tests.
 
 ## Summary
 
-The Modelo 100 registry already defines casillas 0224, 1479, 1553, and 1577.
-The Modelo 130 binding in
-`src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0002-bindings.toml:4`
-selects those canonical casillas, while its official source citation says
-"0224, 1479, 1553 y/o 1577". The schema is complete; parser fixtures are sample
-documents and must not define Modelo completeness.
+The Modelo 100 registry already defines casillas 0224, 1479, 1553, and 1577. The schema is complete; parser fixtures are sample documents and must not define Modelo completeness.
 
-The divergence is in
-`src/cadrumo/domain/calculations/registry/_bindings_previous_filing.py:161`.
-`_optional_source_casilla_ids` infers presence policy from the aggregation op
-and tuple position, making the second `prior_pagos_fraccionados` source optional
-while treating every other plural source as mandatory. That is registry
-functionality re-declared in Python.
+That is registry functionality re-declared in Python.
 
 The canonical repair is one typed selector field:
 `required_source_casilla_ids`. When omitted, every candidate source casilla is
@@ -47,10 +37,4 @@ weakening it to "at least one from the union". The canonical
 `source_presence_gaps` primitive enforces the derived groups for live capture
 and cross-period clean-state evaluation.
 
-All candidate ids remain in `source_casilla_ids` and continue through registry
-cross-model validation and observation requirements. Fixtures and tests do not
-own or mirror completeness. The incorrect test in
-`src/cadrumo/application/calculations/tests/test_previous_filing_absence_versus_malformed.py:85`
-must be replaced by separate proofs that one applicable M100 casilla resolves
-and that zero applicable casillas refuse. The existing hard-coded optionality
-helper must be deleted rather than supplemented.
+All candidate ids remain in `source_casilla_ids` and continue through registry cross-model validation and observation requirements. Fixtures and tests do not own or mirror completeness. The existing hard-coded optionality helper must be deleted rather than supplemented.

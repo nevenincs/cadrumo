@@ -1,6 +1,11 @@
 modelo:
   schema:
     '180':
+      binding:
+        modelo-180-115-base-anual:
+          label: Éves adólevonási és adóelőleg-alap · 115-ös nyomtatvány, 02. mező
+        modelo-180-115-retenciones-anual:
+          label: Éves adólevonások és adóelőlegek · 115-ös nyomtatvány, 03. mező
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
@@ -54,7 +59,7 @@ modelo:
           payee-name:
             label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
           payee-nif:
-            label: A kedvezményezett adóazonosító száma (NIF)
+            label: A jövedelemszerző NIF-azonosítója
           payee-province:
             label: A kedvezményezett lakóhelye szerinti tartomány kódja
           payee-representative-nif:
@@ -72,13 +77,20 @@ modelo:
       construct:
         modelo-180-annual-summary:
           field:
-            title: A 180-as nyomtatvány éves összesítője a 115-ös nyomtatvány negyedéves
-              bevallásai alapján
+            title: A Modelo 180 nyomtatvány éves összesítője a 115-ös nyomtatvány
+              negyedéves bevallásai alapján
       field:
         official_name: Modelo 180. Adatszolgáltatási bevallás. Adóelőleg-levonások
           és -befizetések. Városi ingatlanok bérbeadásából származó jövedelmek. Éves
           összesítő.
         title: Városi ingatlanok bérbeadására vonatkozó adóelőleg-levonások éves összesítője
+      form:
+        context:
+          ejercicio:
+            heading: Adóév
+        section:
+          ejercicio:
+            heading: Adóév
       revision:
         2019-2022:
           field:

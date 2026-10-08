@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:76cb8e387a7ba6f228efa0e9d6984f91d7749e241d87c5a7861cc31f9a9331d2'
+body_hash: 'sha256:a2d376eecaaf5996760cea3c147ac74c540ba15f330c0ce4ae834a69eb139fd5'
 related: []
 ---
 
@@ -24,7 +24,7 @@ unrelated facts in filing, export, locale, completeness, and review obligations.
 `ModeloRevision` marks 19 collections with `SCHEMA_FAMILY` at
 `src/cadrumo/domain/calculations/registry/schema.py:775`. The exhaustive
 denominator is derived at `src/cadrumo/domain/calculations/registry/schema.py:977`,
-and `src/cadrumo/domain/calculations/registry/tests/test_schema_family_coverage.py:115`
+and the former source file
 requires collection fields and enrolled families to remain equal. A separate
 fact-provider registry can reuse this self-enrollment pattern without changing
 revision coverage.
@@ -40,7 +40,7 @@ same principles through their own provider and variant denominator.
 ### Regulatory-literal detection has material blind spots
 
 The build enrolls the existing detector through `dev/quality/suite.py:40`.
-`dev/registry/analysis/modelo_regulatory_literal_scan.py:49` only identifies
+the former source file only identifies
 nontrivial numeric literals in branches that name a `Modelo`, and excludes the
 calculation-registry package. It misses named constants, `Decimal` and date
 strings, computed enum values, mappings, returns, defaults, legal text, custom
@@ -54,7 +54,7 @@ opening of governed folders, and no operative fact result without provenance.
 
 The conformance manager iterates modelos and revisions at
 `dev/registry/conformance/manager.py:699`; stamping locates revision manifests
-at `dev/registry/conformance/_stamp.py:386`; closure is revision-denominated at
+; closure is revision-denominated at
 `dev/registry/conformance/closure.py:329`. Export generation derives fixed-width
 records from designs, maps, and render profiles at `dev/registry/README.md:11`.
 None should be repurposed for global facts.
@@ -73,13 +73,13 @@ provider ownership, not a universal fact generator.
 
 - `src/cadrumo/domain/calculations/registry/schema.py:775`
 - `src/cadrumo/domain/calculations/registry/schema.py:977`
-- `src/cadrumo/domain/calculations/registry/tests/test_schema_family_coverage.py:115`
+
 - `dev/registry/README.md:11`
 - `dev/registry/README.md:47`
 - `dev/registry/analysis/provenance_consistency.py:105`
 - `dev/quality/suite.py:40`
-- `dev/registry/analysis/modelo_regulatory_literal_scan.py:49`
+
 - `dev/registry/conformance/manager.py:699`
-- `dev/registry/conformance/_stamp.py:386`
+
 - `dev/registry/conformance/closure.py:329`
 - `dev/registry/analysis/m303_orden_anual.py:28`

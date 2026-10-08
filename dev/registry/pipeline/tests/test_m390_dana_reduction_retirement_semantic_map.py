@@ -138,7 +138,7 @@ def test_m390_dana_reduction_retirement_bijects_every_parser_anchor_to_the_revie
     assert predecessor_fields.keys() - fields.keys() == _REMOVED_PAGE_5_ANCHORS
     assert not fields.keys() - predecessor_fields.keys()
     assert len(set(predecessor_fields) & set(fields) - delta) == 523
-    assert sum(len(header.fields) for header in design.auxiliary_envelope_headers) == 13
+    assert sum(len(envelope.prefix_fields) for envelope in design.variable_envelopes) == 13
 
     predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_PREDECESSOR_EXERCISE}"))
     semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_DESIGN_EXERCISE}"))

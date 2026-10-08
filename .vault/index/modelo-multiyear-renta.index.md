@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#modelo-multiyear-renta'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:44d7d71f6d9c30e9d862e3aa2a91fcdeb139076fcb72b8f86e2d7e87d2799328'
+body_hash: 'sha256:ab8fb33ea3d27d327a7a10cebed60e703701607b4fd0045aaeb81c2ef036a280'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-audit]]'
-  - '[[2026-06-02-modelo-multiyear-renta-ledger]]'
-  - '[[2026-06-02-modelo-multiyear-renta-plan]]'
   - '[[2026-06-04-modelo-multiyear-renta-research]]'
   - '[[2026-07-06-modelo-multiyear-renta-audit]]'
 ---
@@ -30,14 +28,6 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 
 - `2026-06-02-modelo-multiyear-renta-audit` - `modelo-multiyear-renta` audit: `multi-year-renta campaign-close honesty review`
 - `2026-07-06-modelo-multiyear-renta-audit` - `modelo-multiyear-renta` audit: `Modelo 145 fleet drift and post-S89 closeout review`
-
-### exec
-
-- `2026-06-02-modelo-multiyear-renta-ledger` - `modelo-multiyear-renta` ledger
-
-### plan
-
-- `2026-06-02-modelo-multiyear-renta-plan` - `modelo-multiyear-renta` `multi-year-renta modelo authorization campaign` plan
 
 ### research
 

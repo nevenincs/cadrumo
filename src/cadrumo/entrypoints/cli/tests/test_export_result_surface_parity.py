@@ -24,13 +24,13 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend_context
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
+from cadrumo.application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
-    ModeloExportPublicResultV2,
-    ModeloExportRequest,
+    ModeloExportPublicResultV3,
 )
+from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
@@ -64,10 +64,10 @@ def _operation_result(
     output_path: Path,
     operation: PinnedAuthorityOperation,
     artefact: ModeloExportArtefact,
-) -> ModeloExportPublicResultV2:
+) -> ModeloExportPublicResultV3:
     """Export through the registered operation and resolve its public result as the TUI does."""
 
-    async def run() -> ModeloExportPublicResultV2:
+    async def run() -> ModeloExportPublicResultV3:
         services = compose_operation_dependencies(authority_operation=operation)
         try:
             submitted = await services.submission.submit(
@@ -104,10 +104,10 @@ def _operation_result(
                     definition_contract_digest=projection.definition_contract.definition_contract_digest,
                     result_schema=schema,
                 ),
-                ModeloExportPublicResultV2,
+                ModeloExportPublicResultV3,
             )
             assert isinstance(resolved, OperationResultProjectionSuccessV1), resolved
-            assert isinstance(resolved.projection, ModeloExportPublicResultV2)
+            assert isinstance(resolved.projection, ModeloExportPublicResultV3)
             return resolved.projection
         finally:
             await services.shutdown()

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:3e35843edb19142ce64b197d0d927ac4a1d15566ded9c790df5c2ab15562a06b'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `s38 fixed width codec`
 

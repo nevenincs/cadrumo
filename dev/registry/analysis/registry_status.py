@@ -12,10 +12,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority_descriptor_path,
-)
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.validate_below_floor_export_refs import declared_supported_filing_years_floor
@@ -26,7 +24,7 @@ from ..compiler.validate_export_field_placement import (
     record_placed_spans,
     validate_export_record_field_placement,
 )
-from ..conformance.cli import load_bundled_runtime_authority, validate_registry
+from ..conformance.cli import validate_registry
 from ..maintenance_support import OracleEnvironment
 from ..parity.maintenance import audit_registry_oracles
 from ..pipeline.authority_publication import AuthorityDatabaseCurrencyStatus, authority_database_currency
@@ -209,7 +207,29 @@ def explain_target_drift(
     if state.state not in _EXPLAINABLE_TREE_STATES:
         return None
     subject = f"{state.modelo}/{state.revision}"
-    row = next(
+    row = _target_explanation_row(subject, dispositions)
+    if row is None:
+        return None
+    pin_refusal = _source_pin_refusal(state, row, subject)
+    if pin_refusal is not None:
+        return pin_refusal
+    if isinstance(row, GeneratedTreeBelowSupportedFilingYearsDisposition):
+        return _explain_below_floor_row(
+            state,
+            row,
+            subject,
+            declared_floor=declared_floor,
+            revision_filing_years=revision_filing_years,
+        )
+    return _explain_record_drift_row(state, row, subject)
+
+
+def _target_explanation_row(
+    subject: str,
+    dispositions: Iterable[GeneratedTreeDispositionRow],
+) -> GeneratedTreeBelowSupportedFilingYearsDisposition | GeneratedTreeRecordDriftDisposition | None:
+    """Find the supported disposition row keyed to one target."""
+    return next(
         (
             item
             for item in dispositions
@@ -220,48 +240,79 @@ def explain_target_drift(
         ),
         None,
     )
-    if row is None:
-        return None
 
-    def refused(reason: str) -> TargetDriftExplanation:
-        return TargetDriftExplanation(subject=subject, kind=row.kind, honoured=False, detail=reason)
 
+def _source_pin_refusal(
+    state: GeneratedTreeState,
+    row: GeneratedTreeBelowSupportedFilingYearsDisposition | GeneratedTreeRecordDriftDisposition,
+    subject: str,
+) -> TargetDriftExplanation | None:
+    """Refuse a disposition whose design pin no longer describes the target."""
     pin = (row.source_ref, row.source_sha256)
     if state.committed_source != pin:
         attested = "no loadable manifest" if state.committed_source is None else "@".join(state.committed_source)
-        return refused(f"{row.kind} row pins design {'@'.join(pin)}, the committed tree attests {attested}")
-    moved_pin = sorted(_SOURCE_PIN_MANIFEST_FIELDS.intersection(state.provenance_fields))
-    if moved_pin:
-        return refused(f"{row.kind} row pins design {row.source_ref}, the fresh render moved {', '.join(moved_pin)}")
-
-    if isinstance(row, GeneratedTreeBelowSupportedFilingYearsDisposition):
-        if row.supported_filing_years_floor != declared_floor:
-            return refused(
-                f"below_floor row pins floor {row.supported_filing_years_floor}, "
-                f"the registry declares {declared_floor}",
-            )
-        newest = max(revision_filing_years, default=None)
-        if newest is None or newest != row.revision_last_filing_year or newest >= declared_floor:
-            return refused(
-                f"below_floor row pins newest filing year {row.revision_last_filing_year}, the revision declares "
-                f"{list(revision_filing_years)} against floor {declared_floor}",
-            )
         return TargetDriftExplanation(
             subject=subject,
             kind=row.kind,
-            honoured=True,
-            detail=(
-                f"explained by below_floor disposition: filing years through {newest} lie below the "
-                f"supported floor {declared_floor}; {state.detail}"
-            ),
+            honoured=False,
+            detail=f"{row.kind} row pins design {'@'.join(pin)}, the committed tree attests {attested}",
         )
+    moved_pin = sorted(_SOURCE_PIN_MANIFEST_FIELDS.intersection(state.provenance_fields))
+    if moved_pin:
+        return TargetDriftExplanation(
+            subject=subject,
+            kind=row.kind,
+            honoured=False,
+            detail=f"{row.kind} row pins design {row.source_ref}, the fresh render moved {', '.join(moved_pin)}",
+        )
+    return None
 
+
+def _explain_below_floor_row(
+    state: GeneratedTreeState,
+    row: GeneratedTreeBelowSupportedFilingYearsDisposition,
+    subject: str,
+    *,
+    declared_floor: int,
+    revision_filing_years: tuple[int, ...],
+) -> TargetDriftExplanation:
+    """Check the recorded support floor and revision years against the live target."""
+    if row.supported_filing_years_floor != declared_floor:
+        reason = (
+            f"below_floor row pins floor {row.supported_filing_years_floor}, the registry declares {declared_floor}"
+        )
+        return TargetDriftExplanation(subject, row.kind, False, reason)
+    newest = max(revision_filing_years, default=None)
+    if newest is None or newest != row.revision_last_filing_year or newest >= declared_floor:
+        reason = (
+            f"below_floor row pins newest filing year {row.revision_last_filing_year}, the revision declares "
+            f"{list(revision_filing_years)} against floor {declared_floor}"
+        )
+        return TargetDriftExplanation(subject, row.kind, False, reason)
+    detail = (
+        f"explained by below_floor disposition: filing years through {newest} lie below the "
+        f"supported floor {declared_floor}; {state.detail}"
+    )
+    return TargetDriftExplanation(subject, row.kind, True, detail)
+
+
+def _explain_record_drift_row(
+    state: GeneratedTreeState,
+    row: GeneratedTreeRecordDriftDisposition,
+    subject: str,
+) -> TargetDriftExplanation:
+    """Check that a record-drift disposition still describes the observed count."""
     if state.state != "record_drift":
-        return refused("record_drift row stands but only the generation manifest differs")
+        return TargetDriftExplanation(
+            subject, row.kind, False, "record_drift row stands but only the generation manifest differs"
+        )
     observed = len(state.record_differing)
     if observed != row.differing_records:
-        return refused(
-            f"record_drift row explains {row.differing_records} record(s), the comparison reports {observed}"
+        return TargetDriftExplanation(
+            subject,
+            row.kind,
+            False,
+            f"record_drift row explains {row.differing_records} record(s), the comparison reports {observed}",
         )
     return TargetDriftExplanation(
         subject=subject,
@@ -321,32 +372,55 @@ def project_target_states(
     details: list[str] = []
     floor: int | None = None
     for item in states:
-        bucket = _REPORTED_TREE_STATES[item.state]
-        detail = item.detail
-        if any(row.subject == f"{item.modelo}/{item.revision}" for row in dispositions):
-            if floor is None:
-                floor = declared_floor()
-            explanation = explain_target_drift(
-                item,
-                dispositions,
-                declared_floor=floor,
-                revision_filing_years=revision_filing_years(item.modelo, item.revision),
-            )
-            if explanation is not None and explanation.honoured:
-                bucket = "explained"
-                detail = explanation.detail
-            elif explanation is not None:
-                detail = f"{item.detail}; disposition not honoured: {explanation.detail}"
-                details.append(f"TARGETS: {explanation.subject}: disposition not honoured: {explanation.detail}")
+        bucket, detail, floor, explanation_detail = _project_target(
+            item,
+            dispositions,
+            floor,
+            declared_floor,
+            revision_filing_years,
+        )
         counts[bucket] += 1
         if bucket in grouped:
             grouped[bucket].append((item.modelo, item.revision, detail))
+        if explanation_detail is not None:
+            details.append(explanation_detail)
     counts["unreadable"] = excluded_count
     return ProjectedTargets(
         counts=tuple((state, counts[state]) for state in _TARGET_STATE_NAMES),
         findings=tuple((state, tuple(findings)) for state, findings in grouped.items()),
         details=tuple(details),
     )
+
+
+def _project_target(
+    item: GeneratedTreeState,
+    dispositions: tuple[GeneratedTreeDispositionRow, ...],
+    floor: int | None,
+    declared_floor: Callable[[], int],
+    revision_filing_years: Callable[[str, str], tuple[int, ...]],
+) -> tuple[str, str, int | None, str | None]:
+    """Project one classified target and return its possibly loaded floor."""
+    bucket = _REPORTED_TREE_STATES[item.state]
+    detail = item.detail
+    subject = f"{item.modelo}/{item.revision}"
+    has_disposition = any(row.subject == subject for row in dispositions)
+    if not has_disposition:
+        return bucket, detail, floor, None
+    if floor is None:
+        floor = declared_floor()
+    explanation = explain_target_drift(
+        item,
+        dispositions,
+        declared_floor=floor,
+        revision_filing_years=revision_filing_years(item.modelo, item.revision),
+    )
+    if explanation is None:
+        return bucket, detail, floor, None
+    if explanation.honoured:
+        return "explained", explanation.detail, floor, None
+    detail = f"{item.detail}; disposition not honoured: {explanation.detail}"
+    message = f"TARGETS: {explanation.subject}: disposition not honoured: {explanation.detail}"
+    return bucket, detail, floor, message
 
 
 def collect_registry_status(
@@ -361,134 +435,24 @@ def collect_registry_status(
     resolved_source_root = source_root or bundled_path()
     resolved_descriptor = authority_descriptor or bundled_authority_descriptor_path()
     details: list[str] = []
-
-    authority = None
-    try:
-        authority = validate_registry(registry_root=resolved_registry_root, source_root=resolved_source_root)
-        valid = True
-    except Exception as error:
-        valid = False
-        details.append(f"VALID: {type(error).__name__}: {error}")
-
-    try:
-        oracle_report = audit_registry_oracles(
-            resolved_registry_root,
-            environment=OracleEnvironment.PRODUCTION,
-        )
-        oracles = not oracle_report.failures
-        if not oracles:
-            details.append(f"ORACLES: {', '.join(oracle_report.failures)}")
-    except Exception as error:
-        oracles = False
-        details.append(f"ORACLES: {type(error).__name__}: {error}")
-
-    target_census_failed = False
-    if authority is None:
-        target_census_failed = True
-        targets = Counter({"unreadable": 1})
-        target_findings = (("unreadable", (("unknown", "unknown", "whole-registry validity failed"),)),)
-        details.append("TARGETS: unavailable because whole-registry validity failed")
-    else:
-        try:
-            from .generated_tree_state import generated_state_inventory
-
-            # Walked one modelo at a time so a single unrenderable one cannot
-            # blind the census of every other. Asking for the whole corpus in
-            # one call meant modelo 360's literal-field defect aborted all 58,
-            # and the caller then could not say whether the defect was one
-            # field or the first of thousands. A modelo that raises is recorded
-            # and blocks; the rest are still counted.
-            states = []
-            excluded = []
-            unrenderable: list[str] = []
-            for modelo in authority.modelos:
-                try:
-                    modelo_states, modelo_excluded = generated_state_inventory(authority, (str(modelo.id),))
-                except Exception as modelo_error:
-                    unrenderable.append(str(modelo.id))
-                    details.append(f"TARGETS: modelo {modelo.id}: {type(modelo_error).__name__}: {modelo_error}")
-                    continue
-                states.extend(modelo_states)
-                excluded.extend(modelo_excluded)
-            if unrenderable:
-                target_census_failed = True
-                joined = ", ".join(unrenderable)
-                details.append(f"TARGETS: {len(unrenderable)} modelo(s) could not be censused: {joined}")
-            expected_target_count = sum(len(modelo.revisions) for modelo in authority.modelos)
-            excluded_target_count = max(0, expected_target_count - len(states))
-            if excluded_target_count:
-                details.append(f"TARGETS: {excluded_target_count} target(s) were excluded by the generated-state owner")
-            validated_authority = authority
-            projected = project_target_states(
-                states,
-                excluded,
-                dispositions=_explaining_dispositions(disposition_ledger),
-                declared_floor=lambda: declared_supported_filing_years_floor(registry_root=resolved_registry_root),
-                revision_filing_years=lambda modelo_id, revision_id: next(
-                    tuple(revision.period_selector.years)
-                    for candidate_id, revision in validated_authority.modelo(modelo_id).revisions.items()
-                    if str(candidate_id) == revision_id
-                ),
-                excluded_count=excluded_target_count,
-            )
-            details.extend(projected.details)
-            targets = Counter(dict(projected.counts))
-            target_findings = projected.findings
-        except Exception as error:
-            target_census_failed = True
-            targets = Counter({"unreadable": 1})
-            target_findings = (("unreadable", (("unknown", "unknown", str(error)),)),)
-            details.append(f"TARGETS: {type(error).__name__}: {error}")
-
-    recorded_digest: str | None = None
-    candidate_digest: str | None = None
-    try:
-        currency = authority_database_currency(
-            resolved_descriptor,
-            registry_root=resolved_registry_root,
-            source_root=resolved_source_root,
-        )
-        authority_status = currency.status.value
-        recorded_digest = currency.recorded_identity_digest
-        candidate_digest = currency.candidate_identity_digest
-        if currency.status is not AuthorityDatabaseCurrencyStatus.CURRENT:
-            details.append(f"AUTHORITY: {currency.detail}")
-    except Exception as error:
-        authority_status = AuthorityDatabaseCurrencyStatus.UNREADABLE.value
-        details.append(f"AUTHORITY: {type(error).__name__}: {error}")
-
-    try:
-        runtime_authority = load_bundled_runtime_authority()
-        runtime_authority.close()
-        loadable = True
-    except Exception as error:
-        loadable = False
-        details.append(f"LOADABLE: {type(error).__name__}: {error}")
-
-    unreferenced_bindings = _unreferenced_binding_counts(authority)
-    if unreferenced_bindings:
-        total = sum(count for _, count in unreferenced_bindings)
-        modelos = ", ".join(f"{modelo}={count}" for modelo, count in unreferenced_bindings)
-        details.append(f"UNREFERENCED-BINDINGS: {total} binding(s) named by no typed consumer ({modelos})")
-
-    informational_bindings = _informational_binding_counts(authority)
-    if informational_bindings:
-        informational_total = sum(count for _, count in informational_bindings)
-        informational_modelos = ", ".join(f"{modelo}={count}" for modelo, count in informational_bindings)
-        details.append(
-            f"INFORMATIONAL-BINDINGS: {informational_total} binding(s) declaring a non-calculation "
-            f"disposition ({informational_modelos})"
-        )
-
-    export_placement = _export_placement_census(authority)
-    if export_placement.overlaps or export_placement.gaps:
-        placement_modelos = ", ".join(f"{modelo}={count}" for modelo, count in export_placement.by_modelo)
-        details.append(
-            f"EXPORT-PLACEMENT ({EXPORT_PLACEMENT_POPULATION}): {export_placement.overlaps} overlap(s) and "
-            f"{export_placement.gaps} gap(s) across {export_placement.records} record(s) and "
-            f"{export_placement.fields} placed field(s) "
-            f"({placement_modelos})"
-        )
+    authority, valid = _collect_registry_validity(resolved_registry_root, resolved_source_root, details)
+    oracles = _collect_oracle_status(resolved_registry_root, details)
+    target_census_failed, targets, target_findings = _collect_target_axis(
+        authority,
+        resolved_registry_root,
+        disposition_ledger,
+        details,
+        resolved_source_root,
+    )
+    authority_status, recorded_digest, candidate_digest = _collect_authority_currency(
+        resolved_descriptor,
+        resolved_registry_root,
+        resolved_source_root,
+        details,
+    )
+    loadable = _runtime_authority_loadable(resolved_descriptor, details)
+    unreferenced_bindings, informational_bindings = _record_binding_counts(authority, details)
+    export_placement = _record_export_placement(authority, details)
 
     return RegistryStatus(
         valid=valid,
@@ -505,6 +469,179 @@ def collect_registry_status(
         details=tuple(details),
         export_placement=export_placement,
     )
+
+
+def _collect_registry_validity(
+    registry_root: Path,
+    source_root: Path,
+    details: list[str],
+) -> tuple[ValidatedRegistryAuthority | None, bool]:
+    """Run whole-registry validation and retain its original refusal detail."""
+    try:
+        return validate_registry(registry_root=registry_root, source_root=source_root), True
+    except Exception as error:
+        details.append(f"VALID: {type(error).__name__}: {error}")
+        return None, False
+
+
+def _collect_oracle_status(registry_root: Path, details: list[str]) -> bool:
+    """Audit source oracles independently from the registry validity axis."""
+    try:
+        oracle_report = audit_registry_oracles(registry_root, environment=OracleEnvironment.PRODUCTION)
+        if not oracle_report.failures:
+            return True
+        details.append(f"ORACLES: {', '.join(oracle_report.failures)}")
+        return False
+    except Exception as error:
+        details.append(f"ORACLES: {type(error).__name__}: {error}")
+        return False
+
+
+def _collect_target_axis(
+    authority: ValidatedRegistryAuthority | None,
+    registry_root: Path,
+    disposition_ledger: Path | None,
+    details: list[str],
+    source_root: Path,
+) -> tuple[bool, Counter[str], tuple[tuple[str, tuple[tuple[str, str, str], ...]], ...]]:
+    """Collect target state where validation succeeded; a failed census blocks currentness."""
+    if authority is None:
+        details.append("TARGETS: unavailable because whole-registry validity failed")
+        findings = (("unreadable", (("unknown", "unknown", "whole-registry validity failed"),)),)
+        return True, Counter({"unreadable": 1}), findings
+    try:
+        states, excluded, excluded_count, inventory_failed = _generated_target_inventory(
+            authority, details, registry_root=registry_root, source_root=source_root
+        )
+        projected = _project_generated_targets(
+            authority, registry_root, disposition_ledger, states, excluded, excluded_count
+        )
+        details.extend(projected.details)
+        return inventory_failed, Counter(dict(projected.counts)), projected.findings
+    except Exception as error:
+        details.append(f"TARGETS: {type(error).__name__}: {error}")
+        findings = (("unreadable", (("unknown", "unknown", str(error)),)),)
+        return True, Counter({"unreadable": 1}), findings
+
+
+def _generated_target_inventory(
+    authority: ValidatedRegistryAuthority,
+    details: list[str],
+    *,
+    registry_root: Path,
+    source_root: Path,
+) -> tuple[list[GeneratedTreeState], list[tuple[str, str, str]], int, bool]:
+    """Measure each modelo separately so one render failure cannot hide the rest."""
+    from .generated_tree_state import generated_state_inventory
+
+    states: list[GeneratedTreeState] = []
+    excluded: list[tuple[str, str, str]] = []
+    unrenderable: list[str] = []
+    for modelo in authority.modelos:
+        try:
+            modelo_states, modelo_excluded = generated_state_inventory(
+                authority, (str(modelo.id),), registry_root=registry_root, source_root=source_root
+            )
+        except Exception as modelo_error:
+            unrenderable.append(str(modelo.id))
+            details.append(f"TARGETS: modelo {modelo.id}: {type(modelo_error).__name__}: {modelo_error}")
+            continue
+        states.extend(modelo_states)
+        excluded.extend(modelo_excluded)
+    if unrenderable:
+        joined = ", ".join(unrenderable)
+        details.append(f"TARGETS: {len(unrenderable)} modelo(s) could not be censused: {joined}")
+    expected_target_count = sum(len(modelo.revisions) for modelo in authority.modelos)
+    excluded_count = max(0, expected_target_count - len(states))
+    if excluded_count:
+        details.append(f"TARGETS: {excluded_count} target(s) were excluded by the generated-state owner")
+    return states, excluded, excluded_count, bool(unrenderable)
+
+
+def _project_generated_targets(
+    authority: ValidatedRegistryAuthority,
+    registry_root: Path,
+    disposition_ledger: Path | None,
+    states: list[GeneratedTreeState],
+    excluded: list[tuple[str, str, str]],
+    excluded_count: int,
+) -> ProjectedTargets:
+    """Project classified states using the live floor, years, and disposition evidence."""
+    return project_target_states(
+        states,
+        excluded,
+        dispositions=_explaining_dispositions(disposition_ledger),
+        declared_floor=lambda: declared_supported_filing_years_floor(registry_root=registry_root),
+        revision_filing_years=lambda modelo_id, revision_id: next(
+            tuple(revision.period_selector.years)
+            for candidate_id, revision in authority.modelo(modelo_id).revisions.items()
+            if str(candidate_id) == revision_id
+        ),
+        excluded_count=excluded_count,
+    )
+
+
+def _collect_authority_currency(
+    descriptor: Path,
+    registry_root: Path,
+    source_root: Path,
+    details: list[str],
+) -> tuple[str, str | None, str | None]:
+    """Read the published authority currency without changing either artifact."""
+    try:
+        currency = authority_database_currency(descriptor, registry_root=registry_root, source_root=source_root)
+    except Exception as error:
+        details.append(f"AUTHORITY: {type(error).__name__}: {error}")
+        return AuthorityDatabaseCurrencyStatus.UNREADABLE.value, None, None
+    if currency.status is not AuthorityDatabaseCurrencyStatus.CURRENT:
+        details.append(f"AUTHORITY: {currency.detail}")
+    return currency.status.value, currency.recorded_identity_digest, currency.candidate_identity_digest
+
+
+def _runtime_authority_loadable(descriptor: Path, details: list[str]) -> bool:
+    """Check the selected artifact with the runtime reader, independently of source validation."""
+    try:
+        runtime_authority = IndexedRegistryAuthority(descriptor)
+        runtime_authority.close()
+        return True
+    except Exception as error:
+        details.append(f"LOADABLE: {type(error).__name__}: {error}")
+        return False
+
+
+def _record_binding_counts(
+    authority: ValidatedRegistryAuthority | None,
+    details: list[str],
+) -> tuple[tuple[tuple[str, int], ...], tuple[tuple[str, int], ...]]:
+    """Collect and describe both compiler-owned binding populations."""
+    unreferenced = _unreferenced_binding_counts(authority)
+    if unreferenced:
+        total = sum(count for _, count in unreferenced)
+        modelos = ", ".join(f"{modelo}={count}" for modelo, count in unreferenced)
+        details.append(f"UNREFERENCED-BINDINGS: {total} binding(s) named by no typed consumer ({modelos})")
+    informational = _informational_binding_counts(authority)
+    if informational:
+        total = sum(count for _, count in informational)
+        modelos = ", ".join(f"{modelo}={count}" for modelo, count in informational)
+        details.append(
+            f"INFORMATIONAL-BINDINGS: {total} binding(s) declaring a non-calculation disposition ({modelos})"
+        )
+    return unreferenced, informational
+
+
+def _record_export_placement(
+    authority: ValidatedRegistryAuthority | None,
+    details: list[str],
+) -> ExportPlacementCensus:
+    """Collect placement findings and add the operator-facing detail when needed."""
+    census = _export_placement_census(authority)
+    if census.overlaps or census.gaps:
+        modelos = ", ".join(f"{modelo}={count}" for modelo, count in census.by_modelo)
+        details.append(
+            f"EXPORT-PLACEMENT ({EXPORT_PLACEMENT_POPULATION}): {census.overlaps} overlap(s) and "
+            f"{census.gaps} gap(s) across {census.records} record(s) and {census.fields} placed field(s) ({modelos})"
+        )
+    return census
 
 
 def _export_placement_census(authority: ValidatedRegistryAuthority | None) -> ExportPlacementCensus:
@@ -630,49 +767,166 @@ def _export_placement_lane(census: ExportPlacementCensus) -> str:
 
 
 def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
+    """Build the stable status envelope from independently projected report sections."""
     target_counts = dict(status.targets)
-    blocking_target_count = sum(target_counts[state] for state in ("stale", "drifted", "never-committed"))
-    lanes = {
+    lanes = _status_lanes(status, target_counts)
+    failed_lanes, partial_lanes = _lane_findings(lanes)
+    return {
+        "schema_version": 1,
+        **_report_posture(blocking, failed_lanes, lanes, partial_lanes, status.details),
+        "lanes": dict(sorted(lanes.items())),
+        "failed_lanes": failed_lanes,
+        "partial_lanes": partial_lanes,
+        "targets": target_counts,
+        "target_findings": _target_overview(status.target_findings),
+        "authority": _authority_payload(status),
+        "unreferenced_bindings": _binding_payload(status.unreferenced_bindings),
+        "informational_bindings": _binding_payload(status.informational_bindings),
+        "export_placement": _export_placement_payload(status.export_placement),
+        "details": list(status.details),
+        "actions": _actions(status),
+    }
+
+
+def _status_lanes(status: RegistryStatus, target_counts: dict[str, int]) -> dict[str, str]:
+    """Project each independent lifecycle observation onto its lane state."""
+    blocking_targets = sum(target_counts[state] for state in ("stale", "drifted", "never-committed"))
+    return {
+        **_authority_lanes(status),
+        **_target_lanes(status, target_counts, blocking_targets),
+        "binding_reference_coverage": _coverage_lane(bool(status.unreferenced_bindings)),
+        "export_placement_coverage": _export_placement_lane(status.export_placement),
+    }
+
+
+def _authority_lanes(status: RegistryStatus) -> dict[str, str]:
+    """Project validation, oracle, authority currency, and runtime loadability."""
+    return {
         "authority_currency": (
             "passed" if status.authority == AuthorityDatabaseCurrencyStatus.CURRENT.value else "failed"
         ),
         "oracle_bindings": "passed" if status.oracles else "failed",
         "registry_validity": "passed" if status.valid else "failed",
         "runtime_loadability": "passed" if status.loadable else "failed",
-        "target_currentness": "failed" if status.target_census_failed or blocking_target_count else "passed",
-        "target_coverage": "partial" if target_counts["unreadable"] else "passed",
-        "binding_reference_coverage": "partial" if status.unreferenced_bindings else "passed",
-        "export_placement_coverage": _export_placement_lane(status.export_placement),
     }
-    failed_lanes = sorted(lane for lane, state in lanes.items() if state == "failed")
-    partial_lanes = sorted(lane for lane, state in lanes.items() if state == "partial")
-    target_overview: dict[str, object] = {}
-    for state, findings in status.target_findings:
-        if not findings:
-            continue
-        sample_limit = 5 if state == "unreadable" else 10
-        reason_counts: dict[str, int] = {}
-        if state == "unreadable":
-            for _, _, detail in findings:
-                if "declares no export layout" in detail:
-                    reason = "no_export_layout"
-                elif "cites no record-design source" in detail:
-                    reason = "no_record_design_source"
-                elif "has no authored inputs" in detail:
-                    reason = "missing_authored_inputs"
-                else:
-                    reason = "other"
-                reason_counts[reason] = reason_counts.get(reason, 0) + 1
-        target_overview[state] = {
-            "count": len(findings),
-            "affected_modelos": sorted({modelo for modelo, _, _ in findings}),
-            "sample_targets": [
-                {"modelo": modelo, "revision": revision, "detail": detail}
-                for modelo, revision, detail in findings[:sample_limit]
-            ],
-            "targets_omitted": max(0, len(findings) - sample_limit),
-            **({"reason_counts": dict(sorted(reason_counts.items()))} if reason_counts else {}),
-        }
+
+
+def _target_lanes(
+    status: RegistryStatus,
+    target_counts: dict[str, int],
+    blocking_targets: int,
+) -> dict[str, str]:
+    """Project target currentness separately from target census coverage."""
+    return {
+        "target_currentness": _target_currentness(status.target_census_failed, blocking_targets),
+        "target_coverage": _coverage_lane(bool(target_counts["unreadable"])),
+    }
+
+
+def _target_currentness(census_failed: bool, blocking_targets: int) -> str:
+    """Fail currentness when the census failed or found blocking target states."""
+    return "failed" if census_failed or blocking_targets else "passed"
+
+
+def _coverage_lane(has_findings: bool) -> str:
+    """Mark advisory coverage as partial only when its named residue exists."""
+    return "partial" if has_findings else "passed"
+
+
+def _lane_findings(lanes: dict[str, str]) -> tuple[list[str], list[str]]:
+    """Return the failed and partial lane names in stable order."""
+    return (
+        sorted(lane for lane, state in lanes.items() if state == "failed"),
+        sorted(lane for lane, state in lanes.items() if state == "partial"),
+    )
+
+
+def _report_posture(
+    blocking: bool,
+    failed_lanes: list[str],
+    lanes: dict[str, str],
+    partial_lanes: list[str],
+    details: tuple[str, ...],
+) -> dict[str, object]:
+    """Build the command, classification, headline, and lane-count envelope."""
+    clean = not failed_lanes
+    headline = _report_headline(failed_lanes)
+    return {
+        "command": "check-registry" if blocking else "report-registry-status",
+        "posture": "blocking" if blocking else "advisory",
+        "result": "passed" if clean else "failed",
+        "classification": "clean" if clean else "registry_findings",
+        "headline": headline,
+        "summary": {
+            "lanes_total": len(lanes),
+            "lanes_passed": len(lanes) - len(failed_lanes) - len(partial_lanes),
+            "lanes_failed": len(failed_lanes),
+            "lanes_partial": len(partial_lanes),
+            "details_total": len(details),
+        },
+    }
+
+
+def _report_headline(failed_lanes: list[str]) -> str:
+    """Describe whether the report found a failing lifecycle lane."""
+    if not failed_lanes:
+        return "Registry health passed across all lifecycle lanes."
+    return f"Registry health found {len(failed_lanes)} failing lifecycle lane(s)."
+
+
+def _target_overview(
+    target_findings: tuple[tuple[str, tuple[tuple[str, str, str], ...]], ...],
+) -> dict[str, object]:
+    """Describe each non-empty target bucket with bounded examples and any reason counts."""
+    return {
+        state: overview
+        for state, findings in target_findings
+        if findings
+        if (overview := _target_state_overview(state, findings)) is not None
+    }
+
+
+def _target_state_overview(
+    state: str,
+    findings: tuple[tuple[str, str, str], ...],
+) -> dict[str, object] | None:
+    """Build the bounded target samples for one report bucket."""
+    if not findings:
+        return None
+    sample_limit = 5 if state == "unreadable" else 10
+    result: dict[str, object] = {
+        "count": len(findings),
+        "affected_modelos": sorted({modelo for modelo, _, _ in findings}),
+        "sample_targets": [
+            {"modelo": modelo, "revision": revision, "detail": detail}
+            for modelo, revision, detail in findings[:sample_limit]
+        ],
+        "targets_omitted": max(0, len(findings) - sample_limit),
+    }
+    if state == "unreadable":
+        result["reason_counts"] = _unreadable_reason_counts(findings)
+    return result
+
+
+def _unreadable_reason_counts(findings: tuple[tuple[str, str, str], ...]) -> dict[str, int]:
+    """Group unreadable targets by the compiler-owned reason signal in their detail."""
+    reason_counts: Counter[str] = Counter(_unreadable_reason(detail) for _, _, detail in findings)
+    return dict(sorted(reason_counts.items()))
+
+
+def _unreadable_reason(detail: str) -> str:
+    """Map a target refusal detail onto the stable summary reason vocabulary."""
+    if "declares no export layout" in detail:
+        return "no_export_layout"
+    if "cites no record-design source" in detail:
+        return "no_record_design_source"
+    if "has no authored inputs" in detail:
+        return "missing_authored_inputs"
+    return "other"
+
+
+def _actions(status: RegistryStatus) -> list[dict[str, object]]:
+    """Build the existing operator follow-up advice from current failing axes."""
     actions: list[dict[str, object]] = []
     if status.authority != AuthorityDatabaseCurrencyStatus.CURRENT.value:
         actions.append(
@@ -682,63 +936,54 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
                 "detail": "Publish the validated authority after reviewing the authored registry changes.",
             }
         )
+    actions.extend(_target_actions(status.target_findings))
+    return actions
+
+
+def _target_actions(
+    target_findings: tuple[tuple[str, tuple[tuple[str, str, str], ...]], ...],
+) -> list[dict[str, object]]:
+    """Build target-specific publication and investigation actions."""
     action_by_state = {
         "stale": ("review_then_republish_target", "Review the generated diff, then use registry-republish-target."),
         "drifted": ("investigate_record_drift", "Investigate record-byte drift; do not republish blindly."),
         "never-committed": ("publish_target", "Review and publish the missing generated target."),
     }
-    for state, findings in status.target_findings:
-        if state not in action_by_state:
+    actions: list[dict[str, object]] = []
+    for state, findings in target_findings:
+        action = action_by_state.get(state)
+        if action is None:
             continue
-        code, detail = action_by_state[state]
-        for modelo, revision, _ in findings:
-            actions.append({"code": code, "modelo": modelo, "revision": revision, "detail": detail})
+        code, detail = action
+        actions.extend(
+            {"code": code, "modelo": modelo, "revision": revision, "detail": detail} for modelo, revision, _ in findings
+        )
+    return actions
+
+
+def _authority_payload(status: RegistryStatus) -> dict[str, str | None]:
+    """Serialize authority currency evidence."""
     return {
-        "schema_version": 1,
-        "command": "check-registry" if blocking else "report-registry-status",
-        "posture": "blocking" if blocking else "advisory",
-        "result": "passed" if not failed_lanes else "failed",
-        "classification": "clean" if not failed_lanes else "registry_findings",
-        "headline": (
-            "Registry health passed across all lifecycle lanes."
-            if not failed_lanes
-            else f"Registry health found {len(failed_lanes)} failing lifecycle lane(s)."
-        ),
-        "summary": {
-            "lanes_total": len(lanes),
-            "lanes_passed": len(lanes) - len(failed_lanes) - len(partial_lanes),
-            "lanes_failed": len(failed_lanes),
-            "lanes_partial": len(partial_lanes),
-            "details_total": len(status.details),
-        },
-        "lanes": dict(sorted(lanes.items())),
-        "failed_lanes": failed_lanes,
-        "partial_lanes": partial_lanes,
-        "targets": target_counts,
-        "target_findings": target_overview,
-        "authority": {
-            "status": status.authority,
-            "recorded_identity_digest": status.authority_recorded_digest,
-            "candidate_identity_digest": status.authority_candidate_digest,
-        },
-        "unreferenced_bindings": {
-            "total": sum(count for _, count in status.unreferenced_bindings),
-            "by_modelo": dict(status.unreferenced_bindings),
-        },
-        "informational_bindings": {
-            "total": sum(count for _, count in status.informational_bindings),
-            "by_modelo": dict(status.informational_bindings),
-        },
-        "export_placement": {
-            "population": EXPORT_PLACEMENT_POPULATION,
-            "overlaps": status.export_placement.overlaps,
-            "gaps": status.export_placement.gaps,
-            "records": status.export_placement.records,
-            "fields": status.export_placement.fields,
-            "by_modelo": dict(status.export_placement.by_modelo),
-        },
-        "details": list(status.details),
-        "actions": actions,
+        "status": status.authority,
+        "recorded_identity_digest": status.authority_recorded_digest,
+        "candidate_identity_digest": status.authority_candidate_digest,
+    }
+
+
+def _binding_payload(bindings: tuple[tuple[str, int], ...]) -> dict[str, object]:
+    """Serialize one binding count with its per-modelo denominator."""
+    return {"total": sum(count for _, count in bindings), "by_modelo": dict(bindings)}
+
+
+def _export_placement_payload(census: ExportPlacementCensus) -> dict[str, object]:
+    """Serialize fixed-width placement counts and their measured population."""
+    return {
+        "population": EXPORT_PLACEMENT_POPULATION,
+        "overlaps": census.overlaps,
+        "gaps": census.gaps,
+        "records": census.records,
+        "fields": census.fields,
+        "by_modelo": dict(census.by_modelo),
     }
 
 
@@ -755,19 +1000,36 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="emit the status payload as JSON")
     parser.add_argument("--check", action="store_true", help="exit non-zero when any lifecycle lane fails")
+    parser.add_argument("--registry-root", type=Path, help="registry source cohort to assess")
+    parser.add_argument("--source-root", type=Path, help="source evidence root for that cohort")
+    parser.add_argument("--authority-descriptor", type=Path, help="explicit authority artifact to assess")
     args = parser.parse_args(argv)
-    status = collect_registry_status()
+    status = collect_registry_status(
+        registry_root=args.registry_root,
+        source_root=args.source_root,
+        authority_descriptor=args.authority_descriptor,
+    )
     payload = _payload(status, blocking=args.check)
     if args.json:
-        for state, findings in status.target_findings:
-            for modelo, revision, detail in findings:
-                print(
-                    f"TARGET_DETAIL\tstate={state}\tmodelo={modelo}\trevision={revision}\tdetail={detail}",
-                    file=sys.stderr,
-                )
-        print(json.dumps(payload, sort_keys=True, separators=(",", ":")))
-        return 1 if args.check and payload["result"] == "failed" else 0
+        _print_json_status(status, payload)
+    else:
+        _print_text_status(status)
+    return int(args.check and payload["result"] == "failed")
 
+
+def _print_json_status(status: RegistryStatus, payload: dict[str, object]) -> None:
+    """Emit target detail rows to stderr and the compact status payload to stdout."""
+    for state, findings in status.target_findings:
+        for modelo, revision, detail in findings:
+            print(
+                f"TARGET_DETAIL\tstate={state}\tmodelo={modelo}\trevision={revision}\tdetail={detail}",
+                file=sys.stderr,
+            )
+    print(json.dumps(payload, sort_keys=True, separators=(",", ":")))
+
+
+def _print_text_status(status: RegistryStatus) -> None:
+    """Emit the report-only lifecycle summary in its established line format."""
     print("report-registry-status\tposture=report-only; exit_status=0")
     print(f"VALID\t{'pass' if status.valid else 'fail'}")
     print(f"ORACLES\t{'pass' if status.oracles else 'fail'}")
@@ -778,7 +1040,6 @@ def main(argv: list[str] | None = None) -> int:
     _render_export_placement(status.export_placement)
     for detail in status.details:
         print(f"DETAIL\t{detail}")
-    return 1 if args.check and payload["result"] == "failed" else 0
 
 
 if __name__ == "__main__":

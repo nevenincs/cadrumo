@@ -29,9 +29,9 @@ from ....core.operator_action_enums import (
 from ..common import (
     _action_text_lines,
     _powershell_action_token,
-    _resolve_notice_actions,
     resolve_cli_precondition_action,
     resolve_notice_action,
+    resolve_notice_actions,
 )
 from ..operator_surface_reconciliation import (
     _OPERATOR_SURFACE_RECONCILIATION_META_KEY,
@@ -109,7 +109,7 @@ def _render_action_line(
         message="Continue with the resolved action.",
         action=action,
     )
-    resolved_notice = _resolve_notice_actions((notice,))[0]
+    resolved_notice = resolve_notice_actions((notice,))[0]
     return _action_text_lines((resolved_notice,))[0], resolved_notice
 
 

@@ -7,15 +7,18 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from contextlib import AbstractContextManager
 from datetime import date
 from pathlib import Path
 from typing import Protocol
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
+from ...core.identity.profile import canonical_profile_bucket_id
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.operations import (
     OperationCancellation,
@@ -23,7 +26,7 @@ from ...core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
-    OperationInteractionKind,
+    profile_operation_subject,
 )
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...core.time.clock import now
@@ -32,33 +35,28 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
+    OperationOwnedResource,
     OperationReplayPolicy,
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..operations.owner import OperationEventEmitter, OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.operation_definition import OperationDefinition
+from ..operations.owner import OperationEventEmitter, OperationExecutorContext, retain_failed_operation_resources
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from ..operator_actions.models import ActionReference
 from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
-from .filed_data_capture import (
-    FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
-    FILED_HISTORY_DECLARATION_REFUSAL_CODE,
-    FILED_HISTORY_DISCOVERY_REFUSAL_CODE,
-    FILED_HISTORY_IVA_WALLET_REFUSAL_CODE,
-    FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE,
-    FILED_HISTORY_PAIR_PROGRESS_UNIT,
-    FILED_HISTORY_PAIR_REFUSAL_CODE,
+from ..user_profile.access_contracts import AccessDenialCode
+from ..user_profile.access_errors import ProfileAccessRefusedError
+from .filed_data_ports import FiledDataCapturePort, FiledEffectGuard
+from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
+from .filed_history_events import (
     FILED_HISTORY_PHASE_DECLARATION_CAPTURE,
     FILED_HISTORY_PHASE_DISCOVERY,
     FILED_HISTORY_PHASE_FINALIZATION,
@@ -68,16 +66,14 @@ from .filed_data_capture import (
     FILED_HISTORY_PHASE_PERSISTENCE,
     FILED_HISTORY_PHASE_PROVENANCE,
     FILED_HISTORY_PHASE_REGISTER_ACCESS,
-    FILED_HISTORY_STAGE_REFUSAL_CODE,
     FiledHistoryEventSink,
-    FiledHistoryOnboardingRun,
-    FiledHistoryPairOutcome,
-    pull_filed_history,
 )
-from .filed_data_ports import FiledDataCapturePort
+from .filed_history_pull import pull_filed_history
 from .filed_observation_ports import FiledObservationPersistencePorts
 from .iva_remote_state_ports import IvaRemoteStatePort
+from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
 from .notification_ports import NotificationsPorts
+from .session import LiveSessionWriteReceipt, SessionWriteReporter
 
 FILED_HISTORY_OPERATION_DEFINITION_ID = "live.filed-history.pull"
 FILED_HISTORY_PHASE_PREFLIGHT = "filed-history.preflight"
@@ -108,6 +104,7 @@ class FiledHistoryOperationRequest(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
+    profile_id: UUID
     output_root: Path
     today: date | None = None
     limit: int | None = Field(default=None, ge=1)
@@ -166,6 +163,8 @@ type FiledHistoryPull = Callable[
         CertificateSecretBackendFactory,
         BrowserSessionFactoryPort,
         OperatorScopePorts,
+        FiledEffectGuard,
+        SessionWriteReporter,
     ],
     Awaitable[FiledHistoryOnboardingRun],
 ]
@@ -192,6 +191,8 @@ class SharedFiledHistoryPull(Protocol):
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
+        effect_guard: FiledEffectGuard,
+        on_session_write: SessionWriteReporter,
         /,
     ) -> Awaitable[object]:
         """Run one filed-history pull with the supplied composed dependencies."""
@@ -218,6 +219,8 @@ def bind_shared_filed_history_pull(shared_pull: SharedFiledHistoryPull) -> Filed
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
+        effect_guard: FiledEffectGuard,
+        on_session_write: SessionWriteReporter,
     ) -> FiledHistoryOnboardingRun:
         result = await shared_pull(
             payload,
@@ -231,6 +234,8 @@ def bind_shared_filed_history_pull(shared_pull: SharedFiledHistoryPull) -> Filed
             certificate_secret_backend_factory,
             browser_session_factory,
             operator_scope_ports,
+            effect_guard,
+            on_session_write,
         )
         if not isinstance(result, FiledHistoryOnboardingRun):
             raise TypeError("shared filed-history composition returned an invalid result")
@@ -241,7 +246,37 @@ def bind_shared_filed_history_pull(shared_pull: SharedFiledHistoryPull) -> Filed
 
 type FiledHistoryProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
 type FiledHistorySyncRunRepositoryFactory = Callable[[], SyncRunRecordRepositoryProtocol]
-type FiledHistoryCompositionFactory = Callable[[Path], FiledHistoryComposition]
+
+
+class FiledHistoryCompositionFactory(Protocol):
+    """Compose one live-state bundle under the operation's held authority pin."""
+
+    def __call__(self, output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
+        """Return all filed-history persistence and live-state ports for this operation."""
+        ...
+
+
+type FiledHistoryProviderPreflight = Callable[[UUID, PinnedAuthorityOperation], None]
+
+
+class FiledHistoryBrowserResources(Protocol):
+    """Operation-owned browser subprocess cleanup with a scoped launch context."""
+
+    def activate(self) -> AbstractContextManager[None]:
+        """Attribute Playwright runtimes created in this execution to the owner."""
+        ...
+
+    async def close(self) -> None:
+        """Settle every browser process before the operation becomes terminal."""
+        ...
+
+
+type FiledHistoryBrowserResourcesFactory = Callable[[], FiledHistoryBrowserResources]
+
+
+def _unconfigured_provider_preflight(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
+    del profile_id, operation
+    raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
 
 
 def _resolve_active_filed_history_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile | None:
@@ -269,6 +304,8 @@ async def _pull_recorded_filed_history(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
+    effect_guard: FiledEffectGuard,
+    on_session_write: SessionWriteReporter,
 ) -> FiledHistoryOnboardingRun:
     """Delegate every domain stage and write to the existing composition."""
     return await pull_filed_history(
@@ -286,6 +323,8 @@ async def _pull_recorded_filed_history(
         dry_run=payload.dry_run,
         sync_run_repository=repository,
         events=events,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
     )
 
 
@@ -319,7 +358,8 @@ async def _settlement_reference(
     (``sync_run_ref``) is preserved -- it travels as a field on
     :class:`FiledHistoryPublicResultV1`, not as the top-level reference.
     """
-    return await context.operands.put(run, written_at=now())
+    async with context.cancellation.irreversible_section():
+        return await context.operands.put(run, written_at=now())
 
 
 class FiledHistoryEvidenceNoticeV1(BaseModel):
@@ -365,7 +405,10 @@ class FiledHistoryPairOutcomePublicV1(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
+    walk_attempted: bool
+    walk_completed: bool
     row_count: NonNegativeInt
+    reached_count: NonNegativeInt
     captured_count: NonNegativeInt
     refused: bool
     failure_type: str | None = Field(default=None, min_length=1, max_length=128)
@@ -373,11 +416,15 @@ class FiledHistoryPairOutcomePublicV1(BaseModel):
 
 
 def _project_pair_outcome(pair: FiledHistoryPairOutcome) -> FiledHistoryPairOutcomePublicV1:
+    pair.require_consistent()
     return FiledHistoryPairOutcomePublicV1(
         modelo=pair.modelo,
         ejercicio=pair.ejercicio,
         signals=pair.signals,
+        walk_attempted=pair.walk_attempted,
+        walk_completed=pair.walk_completed,
         row_count=pair.row_count,
+        reached_count=pair.reached_count,
         captured_count=pair.captured_count,
         refused=pair.refused,
         failure_type=pair.failure_type,
@@ -449,14 +496,18 @@ class FiledHistoryOperationExecutor:
         *,
         sync_run_repository: SyncRunRecordRepositoryProtocol,
         composition_factory: FiledHistoryCompositionFactory,
+        browser_resources_factory: FiledHistoryBrowserResourcesFactory,
         pull: FiledHistoryPull = _pull_recorded_filed_history,
         profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
+        provider_preflight: FiledHistoryProviderPreflight = _unconfigured_provider_preflight,
     ) -> None:
         """Initialize this public contract."""
         self._sync_run_repository = sync_run_repository
         self._composition_factory = composition_factory
+        self._browser_resources_factory = browser_resources_factory
         self._pull = pull
         self._profile_resolver = profile_resolver
+        self._provider_preflight = provider_preflight
 
     async def execute(
         self,
@@ -464,33 +515,44 @@ class FiledHistoryOperationExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         """Execute this public contract operation."""
-        if require_active_bucket_id() != request.subject_ref:
+        profile_id = canonical_profile_bucket_id(request.payload.profile_id)
+        if require_active_bucket_id() != profile_id or request.subject_ref != profile_operation_subject(profile_id):
             raise ValueError("filed-history operation subject must identify the active profile")
-        profile = self._profile_resolver(context.authority_operation)
         await context.events.phase(FILED_HISTORY_PHASE_PREFLIGHT)
+        self._provider_preflight(request.payload.profile_id, context.authority_operation)
+        profile = self._profile_resolver(context.authority_operation)
         await context.events.phase(FILED_HISTORY_PHASE_EXECUTION)
         # The delegated service contains several atomic secure writes. Until it
         # returns its typed accounting, an unexpected interruption cannot prove
         # whether none or some of those writes committed.
         if not request.payload.dry_run:
             await context.events.effect(OperationEffect.UNKNOWN)
-        composition = self._composition_factory(request.payload.output_root)
-        run = await self._pull(
-            request.payload,
-            profile,
-            self._sync_run_repository,
-            context.events,
-            composition.ports,
-            composition.filed_data_port,
-            composition.iva_remote_state_port,
-            composition.notifications_ports,
-            composition.certificate_secret_backend_factory,
-            composition.browser_session_factory,
-            composition.operator_scope_ports,
-        )
+        composition = self._composition_factory(request.payload.output_root, operation=context.authority_operation)
+        browser_resources = self._browser_resources_factory()
+        context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
+        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        with (
+            retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
+            browser_resources.activate(),
+        ):
+            run = await self._pull(
+                request.payload,
+                profile,
+                self._sync_run_repository,
+                context.events,
+                composition.ports,
+                composition.filed_data_port,
+                composition.iva_remote_state_port,
+                composition.notifications_ports,
+                composition.certificate_secret_backend_factory,
+                composition.browser_session_factory,
+                composition.operator_scope_ports,
+                context.cancellation.irreversible_section,
+                session_receipt,
+            )
         await context.events.phase(FILED_HISTORY_PHASE_RESULT)
         await context.events.phase(FILED_HISTORY_PHASE_CLEANUP)
-        await context.events.effect(settled_filed_history_effect(run))
+        await context.events.effect(session_receipt.combine(settled_filed_history_effect(run)))
         await context.events.phase(FILED_HISTORY_PHASE_SETTLEMENT)
         return await _settlement_reference(run, context)
 
@@ -499,8 +561,10 @@ def build_filed_history_operation_definition(
     *,
     sync_run_repository_factory: FiledHistorySyncRunRepositoryFactory,
     composition_factory: FiledHistoryCompositionFactory,
+    browser_resources_factory: FiledHistoryBrowserResourcesFactory,
     pull: FiledHistoryPull = _pull_recorded_filed_history,
     profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
+    provider_preflight: FiledHistoryProviderPreflight = _unconfigured_provider_preflight,
 ) -> OperationDefinition:
     """Bind entrypoint-owned persistence to the canonical operation contract."""
 
@@ -508,21 +572,22 @@ def build_filed_history_operation_definition(
         return FiledHistoryOperationExecutor(
             sync_run_repository=sync_run_repository_factory(),
             composition_factory=composition_factory,
+            browser_resources_factory=browser_resources_factory,
             pull=pull,
             profile_resolver=profile_resolver,
+            provider_preflight=provider_preflight,
         )
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=FILED_HISTORY_OPERATION_DEFINITION_ID,
         request_type=FiledHistoryOperationRequest,
         result_type=FiledHistoryOnboardingRun,
-        executor_factory=OperationExecutorFactory(
-            request_type=FiledHistoryOperationRequest,
-            executor_type=FiledHistoryOperationExecutor,
-            build=build,
-        ),
+        executor_type=FiledHistoryOperationExecutor,
+        build=build,
         phase_codes=_FILED_HISTORY_PHASES,
-        interaction_kinds=frozenset[OperationInteractionKind](),
+        action_reference=ActionReference(
+            action_id=OPERATOR_ACTION_CATALOGUE.lookup("operator.live.filed.pull_all").action_id
+        ),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -532,7 +597,7 @@ def build_filed_history_operation_definition(
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
+            owned_resources=frozenset({OperationOwnedResource.PROCESS}),
             permitted_effects=frozenset(
                 {
                     OperationEffect.NONE,
@@ -543,10 +608,22 @@ def build_filed_history_operation_definition(
             ),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
-        ),
+    )
+
+
+def resolve_filed_history_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Require exact-profile, all-period discovery and a fresh local commit fence.
+
+    Provider readiness is checked by the bound worker before browser I/O; the
+    runtime's access policy cannot infer it from an agent request.
+    """
+    return resolve_whole_profile_capture_access(
+        request,
+        context,
+        definition_id=FILED_HISTORY_OPERATION_DEFINITION_ID,
+        payload_type=FiledHistoryOperationRequest,
     )
 
 
@@ -559,52 +636,28 @@ def build_filed_history_operation_registration(
     distinct projection resolved through the registered result projector --
     never the private :class:`FiledHistoryOnboardingRun` itself.
     """
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id="live.filed-history.pull.request",
-            schema_version=1,
-            model_type=definition.request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id="live.filed-history.pull.result",
-            schema_version=1,
-            model_type=FiledHistoryPublicResultV1,
-        ),
+        public_result_type=FiledHistoryPublicResultV1,
         result_projector=_project_filed_history_result,
+        access_resolver=resolve_filed_history_access,
     )
 
 
 __all__ = [
-    "FILED_HISTORY_DECLARATION_PROGRESS_UNIT",
-    "FILED_HISTORY_DECLARATION_REFUSAL_CODE",
-    "FILED_HISTORY_DISCOVERY_REFUSAL_CODE",
-    "FILED_HISTORY_IVA_WALLET_REFUSAL_CODE",
-    "FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE",
     "FILED_HISTORY_OPERATION_DEFINITION_ID",
-    "FILED_HISTORY_PAIR_PROGRESS_UNIT",
-    "FILED_HISTORY_PAIR_REFUSAL_CODE",
     "FILED_HISTORY_PHASE_CLEANUP",
-    "FILED_HISTORY_PHASE_DECLARATION_CAPTURE",
-    "FILED_HISTORY_PHASE_DISCOVERY",
     "FILED_HISTORY_PHASE_EXECUTION",
-    "FILED_HISTORY_PHASE_FINALIZATION",
-    "FILED_HISTORY_PHASE_IVA_WALLET",
-    "FILED_HISTORY_PHASE_NOTIFICATIONS",
-    "FILED_HISTORY_PHASE_PAIR_WALK",
-    "FILED_HISTORY_PHASE_PERSISTENCE",
     "FILED_HISTORY_PHASE_PREFLIGHT",
-    "FILED_HISTORY_PHASE_PROVENANCE",
-    "FILED_HISTORY_PHASE_REGISTER_ACCESS",
     "FILED_HISTORY_PHASE_RESULT",
     "FILED_HISTORY_PHASE_SETTLEMENT",
-    "FILED_HISTORY_STAGE_REFUSAL_CODE",
     "FiledHistoryComposition",
     "FiledHistoryCompositionFactory",
     "FiledHistoryEvidenceNoticeV1",
     "FiledHistoryOperationExecutor",
     "FiledHistoryOperationRequest",
     "FiledHistoryPairOutcomePublicV1",
+    "FiledHistoryProviderPreflight",
     "FiledHistoryPublicResultV1",
     "FiledHistoryPull",
     "FiledHistorySyncRunRepositoryFactory",
@@ -612,4 +665,5 @@ __all__ = [
     "bind_shared_filed_history_pull",
     "build_filed_history_operation_definition",
     "build_filed_history_operation_registration",
+    "resolve_filed_history_access",
 ]

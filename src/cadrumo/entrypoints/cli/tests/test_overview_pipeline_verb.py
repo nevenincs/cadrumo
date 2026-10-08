@@ -17,20 +17,22 @@ cross-domain pipeline-health dashboard's operator contract from #238:
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Iterator
+from contextvars import ContextVar
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
-)
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.overview.pipeline_health import ModeloReadinessState
-from ....core.bucket_pointer import resolve_active_bucket_id
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
+from ....core.config import override_settings
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.verification_report import (
     VerificationCompletenessStatus,
@@ -41,39 +43,75 @@ from ....domain.modelos.verification_repository import upsert_verification_repor
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._overview_payloads import OverviewPipelineModeloPayload
-from ._modelo_work_ux_support import _create_profile, _invoke
-
-__all__ = ["_isolated_cli_backend"]
+from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_NATIVE_FIXTURE: ContextVar[NativeCliProfileFixture] = ContextVar("pipeline_native_fixture")
+_AUTHORITY_PIN: ContextVar[PinnedAuthorityOperation] = ContextVar("pipeline_authority_pin")
+_LABEL = "Native pipeline operator"
+
+
+@pytest.fixture
+def _native_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Iterator[None]:
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture_token = _NATIVE_FIXTURE.set(fixture)
+        pin_token = _AUTHORITY_PIN.set(authority_operation)
+        try:
+            yield
+        finally:
+            _AUTHORITY_PIN.reset(pin_token)
+            _NATIVE_FIXTURE.reset(fixture_token)
+
+
+def _facts(*, activity_start_date: str | None = None) -> dict[str, str]:
+    return {
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.tax_id": "12345678Z",
+        "identity.name": "Native",
+        "identity.surnames": "Pipeline",
+        "activities.description": "design",
+        "censo.activity_start_date": activity_start_date or "2025-01-01",
+        "taxpayer_type.irpf_income_categories": "actividad_economica",
+        "irpf.estimation_regime": "directa_normal",
+        "taxpayer_type.fiscal_residency": "resident_irpf",
+        "tax_residence.ccaa": "madrid",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    }
+
+
+def _create_profile(*, activity_start_date: str | None = None) -> None:
+    _NATIVE_FIXTURE.get().register(label=_LABEL, facts=_facts(activity_start_date=activity_start_date))
+    close_active_bucket_session()
+
+
+def _invoke(arguments: list[str]):
+    fixture = _NATIVE_FIXTURE.get()
+    assert fixture.label == _LABEL
+    close_active_bucket_session()
+    with override_settings(cadrumo_cli_reveal_identifiers=False):
+        result = invoke_cached_cli(
+            ["--language", "en", "--profile", fixture.label, "--profile-secrets-stdin", *arguments],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
+        )
+    assert fixture.passphrase not in result.output
+    return result
+
 
 def _create_complete_pipeline_profile() -> None:
-    register_cli_profile(
-        label="operator",
-        facts={
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.tax_id": "12345678Z",
-            "identity.name": "Operator",
-            "identity.surnames": "Pipeline Parity",
-            "activities.description": "design",
-            "censo.activity_start_date": "2025-10-01",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-            "irpf.estimation_regime": "directa_normal",
-            "taxpayer_type.fiscal_residency": "resident_irpf",
-            "tax_residence.ccaa": "madrid",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-        },
-        log_in=False,
-    )
+    _create_profile(activity_start_date="2025-10-01")
 
 
+@pytest.mark.usefixtures("_native_backend")
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos() -> None:
     """A brand-new profile with no ledger data and no work units for the
     period: zero ledger rows, an empty modelo list, and an honest
@@ -84,7 +122,7 @@ def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos() -> None:
     result = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
     )
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 0
     payload = _payload(result.output)
 
     assert payload["filing_year"] == 2025
@@ -96,6 +134,9 @@ def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos() -> None:
     assert payload["ready"] is False
 
 
+@pytest.mark.usefixtures("_native_backend")
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_pipeline_surfaces_unclassified_ledger_pending_count() -> None:
     """A manually-added transaction with no classification shows up as a
     pending-review row in the ledger section and keeps the period unready."""
@@ -108,12 +149,12 @@ def test_pipeline_surfaces_unclassified_ledger_pending_count() -> None:
             "--direction", "INCOMING", "--description", "Factura cliente A",
         ],
     )  # fmt: skip
-    assert added.exit_code == 0, added.output
+    assert added.exit_code == 0
 
     result = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
     )
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 0
     payload = _payload(result.output)
 
     assert payload["ledger"]["total_count"] == 1
@@ -121,6 +162,9 @@ def test_pipeline_surfaces_unclassified_ledger_pending_count() -> None:
     assert payload["ready"] is False
 
 
+@pytest.mark.usefixtures("_native_backend")
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
     """A Modelo 130 work unit driven through calculate/verify/file for the
     period reports a ``filed`` readiness row with zero outstanding
@@ -136,7 +180,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
             "--revision", "2019-y-siguientes",
         ],
     )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    assert created.exit_code == 0
     work_unit_id = _payload(created.output)["work_unit_id"]
 
     calculated = _invoke(
@@ -149,7 +193,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],
     )  # fmt: skip
-    assert calculated.exit_code == 0, calculated.output
+    assert calculated.exit_code == 0
 
     verified = _invoke(
         [
@@ -158,7 +202,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
             "--modelo", "130", "--year", "2025", "--period", "4T",
         ],
     )  # fmt: skip
-    assert verified.exit_code == 0, verified.output
+    assert verified.exit_code == 0
     assert _payload(verified.output)["granted_verificado_completo"] is True
 
     filed = _invoke(
@@ -168,12 +212,12 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
             "--modelo", "130", "--year", "2025", "--period", "4T",
         ],
     )  # fmt: skip
-    assert filed.exit_code == 0, filed.output
+    assert filed.exit_code == 0
 
     result = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
     )
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 0
     payload = _payload(result.output)
 
     assert payload["ledger"]["total_count"] == 0
@@ -189,6 +233,9 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
     assert payload["ready"] is True
 
 
+@pytest.mark.usefixtures("_native_backend")
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     """A modelo whose current revision is calculated but not yet verified
     reports the ``calculated`` state and keeps the pipeline unready."""
@@ -202,7 +249,7 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
             "--revision", "2019-y-siguientes",
         ],
     )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    assert created.exit_code == 0
     work_unit_id = _payload(created.output)["work_unit_id"]
 
     calculated = _invoke(
@@ -215,12 +262,12 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],
     )  # fmt: skip
-    assert calculated.exit_code == 0, calculated.output
+    assert calculated.exit_code == 0
 
     result = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
     )
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 0
     payload = _payload(result.output)
 
     matching = [row for row in payload["modelos"] if row["modelo"] == "130"]
@@ -254,6 +301,9 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     )
 
 
+@pytest.mark.usefixtures("_native_backend")
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> None:
     """The latest persisted completeness outcome, not findings or revision state,
     decides readiness.
@@ -273,7 +323,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
             "--revision", "2019-y-siguientes",
         ],
     )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    assert created.exit_code == 0
     work_unit_id = _payload(created.output)["work_unit_id"]
 
     calculated = _invoke(
@@ -286,16 +336,16 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],
     )  # fmt: skip
-    assert calculated.exit_code == 0, calculated.output
+    assert calculated.exit_code == 0
     calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
 
     before = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
     )
-    assert before.exit_code == 0, before.output
+    assert before.exit_code == 0
     before_row = next(row for row in _payload(before.output)["modelos"] if row["modelo"] == "130")
     assert before_row["state"] == ModeloReadinessState.CALCULATED.value
-    assert before_row["summary"] != "Modelo 130: verification incomplete."
+    assert before_row["summary"] != "Modelo 130: check incomplete."
 
     run_at = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
     report_id = derive_verification_report_id(
@@ -320,25 +370,44 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
         verified_by="pipeline-parity-test",
         granted_verificado_completo=False,
     )
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
-    with open_test_profile_session(bucket_id):
+    bucket_id = resolve_login_target(_LABEL).bucket_id
+    fixture = _NATIVE_FIXTURE.get()
+    operation = _AUTHORITY_PIN.get()
+    close_active_bucket_session()
+    login = authenticate_profile_for_invocation(
+        name=_LABEL,
+        passphrase_callback=lambda: fixture.passphrase,
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    assert login.bucket_id == bucket_id
+    try:
+        revision = (
+            CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
+            .load(operation=operation)
+            .get(calculation_revision_id)
+        )
+        assert revision is not None and revision.work_unit_id == work_unit_id
         repository = VerificationReportCatalogueRepository(bucket_id=bucket_id)
-        repository.save(upsert_verification_report(repository.load(), report))
+        repository.save(upsert_verification_report(repository.load(operation=operation), report), operation=operation)
+    finally:
+        close_active_bucket_session()
 
     after = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
     )
-    assert after.exit_code == 0, after.output
+    assert after.exit_code == 0
     payload = _payload(after.output)
     after_row = next(row for row in payload["modelos"] if row["modelo"] == "130")
     assert after_row["state"] == ModeloReadinessState.INCOMPLETO.value
     assert after_row["blocking_finding_count"] == 0
-    assert after_row["summary"] == "Modelo 130: verification incomplete."
+    assert after_row["summary"] == "Modelo 130: check incomplete."
     assert payload["ready"] is False
     assert any(notice["code"] == "overview.pipeline.modelo.incomplete" for notice in _notices(after.output))
 
 
+@pytest.mark.usefixtures("_native_backend")
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_pipeline_is_read_only_and_safe_to_run_repeatedly() -> None:
     """Running the report twice in a row must be a pure read: the second
     invocation reports identical state, proving no mutation occurred."""
@@ -351,8 +420,8 @@ def test_pipeline_is_read_only_and_safe_to_run_repeatedly() -> None:
     second = _invoke(
         ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
     )
-    assert first.exit_code == 0, first.output
-    assert second.exit_code == 0, second.output
+    assert first.exit_code == 0
+    assert second.exit_code == 0
     assert _payload(first.output) == _payload(second.output)
 
 

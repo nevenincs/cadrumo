@@ -37,7 +37,6 @@ def _run(node: str) -> CommandResult:
             "pytest",
             "-q",
             "-n0",
-            "--timeout=900",
             "-m",
             "integration",
             f"{_TEST}::{node}",

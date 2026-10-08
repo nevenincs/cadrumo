@@ -39,6 +39,7 @@ from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataR
 from .....core.resources.bundled_data import bundled_path
 from .....core.result_disposition import ResultDisposition
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.binding_targets import sole_bound_casilla
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
@@ -395,3 +396,28 @@ def test_resolver_marks_binding_unresolved_when_current_year_values_are_missing(
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
     assert diagnostic.binding_id == _M303_BINDING_ID
     assert str(_PORCENTAJE_ID) in diagnostic.message
+
+
+def test_an_unresolved_modelo_390_regularisation_names_the_box_it_fills(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """With no provisional source the annual regularisation is reported against its box, not as a bare binding."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        register_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        observation_repository = CalculationObservationRepository(objects=profile.repository)
+        snapshot = _snapshot(Modelo("390").value, "0A")
+
+        resolution = ProrrataRegularizacionSourceResolver(
+            current_year_values=_current_year_values(),
+            prorrata_register_repository=register_repository,
+            observation_repository=observation_repository,
+            registry_snapshot=snapshot,
+            operation=authority_operation,
+        ).resolve(_context(snapshot, modelo=Modelo("390").value, period="0A"))
+
+    box = sole_bound_casilla(snapshot.revision, _M390_BINDING_ID)
+    assert box is not None, "the annual regularisation fills one box of the Modelo 390"
+    assert [(item.reason, item.binding_id, item.casilla_id) for item in resolution.diagnostics] == [
+        ("unresolved_binding", _M390_BINDING_ID, box)
+    ]

@@ -78,11 +78,14 @@ _SUPPORTED_OPS: Final[frozenset[str]] = frozenset(
         "previous_period_sum",
         "cross_model_sum",
         "if_then_else",
+        "require_condition",
         "less_than",
         "less_equal",
         "greater_than",
         "greater_equal",
         "equal",
+        "text_equal",
+        "record_row_unused",
     },
 )
 
@@ -144,11 +147,52 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
         return _translate_lookup_parameter_by_entity_type(expression, layout=layout)
     if op == "age_at_year_end":
         return _translate_age_at_year_end(expression, layout=layout)
+    if op == "record_row_unused":
+        return _translate_record_row_unused(expression, layout=layout)
+    if op == "text_equal":
+        args = [
+            '"' + arg.text_literal.replace('"', '""') + '"'
+            if arg.text_literal is not None
+            else _translate_leaf(arg, layout=layout)
+            for arg in expression.args
+        ]
+        return _ARG_OP_BUILDERS[op](op, args)
     args = [_translate(arg, layout=layout) for arg in expression.args]
     builder = _ARG_OP_BUILDERS.get(op)
     if builder is None:
         raise TranslationError(op=op)
     return builder(op, args)
+
+
+def _translate_record_row_unused(expression: FormulaExpression, *, layout: SheetLayout) -> str:
+    """Preserve source membership while allowing subsequent scenario edits.
+
+    An occupied row stays occupied when required cells are cleared. A proven
+    unused row becomes occupied when any of its fields is filled, including
+    zero or false. Without evidence a blank is unknown, never proof of absence.
+    """
+    binding = expression.args[0].binding
+    if binding is None:
+        raise TranslationError(op="record_row_unused")
+    row = layout.record_rows.get(binding)
+    if row is None:
+        reference = (
+            layout.address_for_date_binding(binding)
+            if binding in layout.date_binding_cells
+            else layout.address_for_binding(binding)
+        ).qualified()
+        return f'IF(LEN({reference}&"")=0,NA(),0)'
+    if row.occupied:
+        return "0"
+    conditions: list[str] = []
+    for member in row.binding_ids:
+        address = (
+            layout.address_for_date_binding(member)
+            if member in layout.date_binding_cells
+            else layout.address_for_binding(member)
+        )
+        conditions.append(f'LEN({address.qualified()}&"")=0')
+    return f"IF(AND({','.join(conditions)}),1,0)"
 
 
 def _build_variadic_join(joiner: str, identity: str) -> Callable[[str, list[str]], str]:
@@ -213,15 +257,22 @@ _ARG_OP_BUILDERS: Mapping[str, Callable[[str, list[str]], str]] = {
     # Local runtime: args[1] if args[0] != 0 else args[2].
     # Sheets equivalent: IF(<>0, then, else).
     "if_then_else": _build_fixed_arity(3, "IF(({0})<>0,{1},{2})"),
+    "require_condition": _build_fixed_arity(2, "IF(({0})<>0,{1},NA())"),
     "less_than": _build_fixed_arity(2, "IF({0}<{1},1,0)"),
     "less_equal": _build_fixed_arity(2, "IF({0}<={1},1,0)"),
     "greater_than": _build_fixed_arity(2, "IF({0}>{1},1,0)"),
     "greater_equal": _build_fixed_arity(2, "IF({0}>={1},1,0)"),
     "equal": _build_fixed_arity(2, "IF({0}={1},1,0)"),
+    "text_equal": _build_fixed_arity(
+        2,
+        "IF(AND(ISTEXT({0}),ISTEXT({1}),LEN({0})>0,LEN({1})>0),IF(EXACT({0},{1}),1,0),NA())",
+    ),
 }
 
 
 def _translate_leaf(expression: FormulaExpression, *, layout: SheetLayout) -> str:
+    if expression.text_literal is not None:
+        raise TranslationError(hint="text_literal may only be an operand of text_equal")
     if expression.literal is not None:
         return format_decimal(expression.literal)
     if expression.casilla_id is not None:

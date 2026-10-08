@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#corpus-evidence-integrity'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6cac0888df78a4c08cb56e21f8eb68cce4529dfea6f5c76288da96dcbe2de949'
+body_hash: 'sha256:4019e879976517e46c0664f055b9038afd2399eb5f2b7ac3fde795ded6d50f79'
 related:
   - "[[2026-08-28-registry-legal-grounding-windows-m200-pyme-rate-citation-omission-audit]]"
 ---
@@ -13,13 +13,6 @@ related:
 # `corpus-evidence-integrity` audit: `Corpus anchors: 332 resolve, 315 are cosmetic, 55 are false precision`
 
 ## Scope
-
-## Findings
-
-## Recommendations
-
-## What this refines
-
 An earlier audit recorded that 226 catalogue entries resolve to a whole
 consolidated law, that every one writes an article anchor, and that
 `corpus_catalogue.py` says the model "has no anchored dispositive-content reader".
@@ -29,8 +22,7 @@ and the expensive one".
 That framing assumed the anchors would work once a reader existed. They largely
 would not, and the number that matters is far smaller than 226.
 
-## Every entry is anchored; less than half resolve
-
+## Findings
 All **702** catalogue entries carrying a `corpus_ref` write an anchor. Checking
 each against its bundled file for a matching `id=` or `name=`:
 
@@ -55,6 +47,13 @@ The 55 are the real set, spread over **16 documents**:
 | 1.470.202 | `ley-27-2014.html` | `ley-27-2014:da-18` |
 | ~470–514 K | six módulos/annual ordenes | `orden-hac-1347-2024:instruccion-2-3-b-3` |
 
+## Recommendations
+The cosmetic/false-precision split depends on the size floor that separates the
+tiers, and a re-captured corpus would move entries between bands legitimately. A
+gate on "every anchor resolves" would red the 315 cosmetic entries for no benefit.
+The 55-entry list is the deliverable.
+
+No production code, registry data or test was changed by this audit.
 ## Why the anchors do not resolve
 
 The bundled BOE captures carry no structural ids. `orden-hac-1347-2024.html` has
@@ -82,12 +81,3 @@ The largest offender is the renta-2022 Madrid mínimos entry, already open in th
 campaign for pointing one `corpus_ref` at a manual serving six years. It also
 carries a non-resolving anchor over a 3,5 MB extracted PDF. Two independent
 characterisations of the same row, reached by different routes.
-
-## Not gated
-
-The cosmetic/false-precision split depends on the size floor that separates the
-tiers, and a re-captured corpus would move entries between bands legitimately. A
-gate on "every anchor resolves" would red the 315 cosmetic entries for no benefit.
-The 55-entry list is the deliverable.
-
-No production code, registry data or test was changed by this audit.

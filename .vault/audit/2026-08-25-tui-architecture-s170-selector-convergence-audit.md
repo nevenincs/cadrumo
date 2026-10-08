@@ -3,14 +3,14 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:af10ad0588f804b9edff8d114e0f339a62a96848ee0f2f8b619bb1d7f613e5ed'
+body_hash: 'sha256:d9f1120f8b170b2ff9f107085b20f514cefb156e7df109b698114d051e40fc55'
 related:
-  - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-25-tui-architecture-s170-plan-review-audit]]'
 ---
+
 # `tui-architecture` audit: `S170 selector convergence code review`
 
 ## Scope
@@ -23,7 +23,7 @@ The exact census found the sole `ModeloWorkSelectorRequest`, `ModeloWorkResoluti
 
 The canonical selector is pure over the supplied `WorkUnitCatalogue` and resolved bucket: its AST contains no repository load, revisioned load, or active-bucket resolution. Visible all-state selection returns ABSENT for zero, resolves an active or discarded singleton, and rejects every multiple set before the revision assertion. Strict full-id selection is all-state and refuses absence. Operator lookup accepts only the typed 12-hex token, matches prefix or suffix, sorts by full id, and rejects ambiguity. Active-natural mode filters lifecycle state before applying the same zero/one/many policy. Exact target-coordinate assertions and natural revision assertion do not narrow a candidate set and run only after singleton cardinality. The remaining lifecycle list and aggregate scans are constraint-divergent, not substitutable target selectors.
 
-Boundary parity is preserved: history translates malformed strict ids to its established `WorkUnitNotFoundError`; reconciliation retains its explicit cross-bucket refusal and translates scoped strict-id absence to the established not-found boundary. The real encrypted-SQL regression at `src/cadrumo/application/modelo/tests/test_work_addressing.py:170` captures with `load_revisioned`, mutates persisted catalogue state, instruments `secure_objects` SELECT statements around selection, and asserts zero post-capture SELECTs while returning the captured singleton.
+Boundary parity is preserved: history translates malformed strict ids to its established `WorkUnitNotFoundError`; reconciliation retains its explicit cross-bucket refusal and translates scoped strict-id absence to the established not-found boundary.
 
 The fixed-point proof is meaningful rather than a count ceiling: it parses current source, requires exactly one pure selector owner, rejects the retired definitions and files, checks direct imports for the explicit consumer census, rejects either retired module name across every Python import AST, and verifies the known substitutable scan consumers call the canonical selector without retaining their former loops.
 

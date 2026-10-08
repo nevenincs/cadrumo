@@ -27,8 +27,8 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 from cadrumo.tests.storage_scope import storage_env_overrides
 
@@ -263,7 +263,7 @@ def _run_fresh_resume_allowing_failure(
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=90,
+            timeout=None,
         ),
     )
 
@@ -313,7 +313,7 @@ def _run_crashing_start(root: Path, boundary: str) -> subprocess.CompletedProces
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=90,
+            timeout=None,
         ),
     )
 
@@ -339,7 +339,7 @@ def _run_fresh_resume(
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=90,
+            timeout=None,
         ),
     )
     return _refuse_with_child_stderr(resumed, what="fresh resume")

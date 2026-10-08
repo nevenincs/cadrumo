@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#import-centralization'
 date: '2026-08-30'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef1ef4e00d1e83b86e6252683c23a7bb8d21906e39c7e8cfa5614441f0f20913'
+body_hash: 'sha256:dff2d6d9ff2b65028d7e1c9091897b4c6208dd5af352eb74910b45942019c36d'
 related:
   - "[[2026-07-01-import-centralization-adr]]"
 ---
@@ -17,8 +17,11 @@ lines and resolves part of its surface through a PEP 562 `__getattr__`, the expo
 shape `aeat-architecture-boundaries` prohibits outright. This records what
 dismantling it actually costs, because the cost is not where it looks.
 
-## The headline: it is promotion-bound, not rewrite-bound
+## Scope
 
+Inventory the remaining core-facade import sites, their promotion constraints, and the safe sequence for dismantling the facade.
+
+## Findings
     365 exported names
   5,812 symbol-import sites
   5,110 sites blocked behind a module PROMOTION   (88%)
@@ -32,6 +35,18 @@ prohibited facade with roughly five thousand cross-package private imports, whic
 the same rule forbids. The order is forced: promote the module to a public name,
 then repoint consumers, then remove the facade line. Each promotion is one atomic
 relocation commit.
+
+## Recommendations
+1. **Public slice first (702 sites, no prerequisite).** Repoint every symbol whose
+   defining module is already public. Lands independently, proves the mechanics,
+   and shrinks the facade before any rename.
+2. **Promote by descending site count.** `_casilla_id`, `_period`, `_models`,
+   `_operator_action_enums`, `_modelo`. One module per atomic commit: rename,
+   sweep consumers, update the facade, re-run `apidocs scaffold` for the stub
+   rename, and confirm clean collection immediately before and after.
+3. **Tail.** The remaining 80 private modules, most under 30 sites each.
+4. **Remove the facade and the `__getattr__`** only once nothing imports through
+   it, and prove it with a zero-consumer measurement rather than a passing suite.
 
 ## Cost concentration
 
@@ -53,19 +68,6 @@ The largest already-public homes are `core.aggregation` (250 sites),
 `core.operations` (168), `core.external_constants` (50) and
 `core.source_connectivity` (42). Those, plus the rest of the public tail, are the
 702 sites that need no promotion and could land as a first, self-contained slice.
-
-## Sequencing this campaign
-
-1. **Public slice first (702 sites, no prerequisite).** Repoint every symbol whose
-   defining module is already public. Lands independently, proves the mechanics,
-   and shrinks the facade before any rename.
-2. **Promote by descending site count.** `_casilla_id`, `_period`, `_models`,
-   `_operator_action_enums`, `_modelo`. One module per atomic commit: rename,
-   sweep consumers, update the facade, re-run `apidocs scaffold` for the stub
-   rename, and confirm clean collection immediately before and after.
-3. **Tail.** The remaining 80 private modules, most under 30 sites each.
-4. **Remove the facade and the `__getattr__`** only once nothing imports through
-   it, and prove it with a zero-consumer measurement rather than a passing suite.
 
 ## Two hazards this campaign must respect
 

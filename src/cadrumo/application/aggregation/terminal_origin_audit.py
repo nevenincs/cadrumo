@@ -167,6 +167,56 @@ def _fingerprint_diagnostics(
     ]
 
 
+def _expectation_diagnostics(
+    binding: BindingDefinition,
+    primaries: Sequence[CalculationSourceProvenance],
+    expectations: Sequence[TerminalOriginExpectation],
+    *,
+    empty_fold: bool,
+) -> list[CalculationSourceDiagnostic]:
+    """Check only resolved alternatives, then report a missing alternative set once."""
+    admitted = frozenset(expectation.source_class for expectation in expectations)
+    diagnostics = _class_diagnostics(binding, primaries, admitted)
+    produced = {row.terminal_origin for row in primaries if row.terminal_origin is not None}
+    for expectation in expectations:
+        if len(expectations) > 1 and expectation.source_class not in produced:
+            continue
+        diagnostics.extend(_cardinality_diagnostics(binding, primaries, expectation, empty_fold=empty_fold))
+        diagnostics.extend(_fingerprint_diagnostics(binding, primaries, expectation))
+    missing_alternative = len(expectations) > 1 and not produced and not empty_fold
+    if missing_alternative:
+        diagnostics.append(_missing_terminal_origin_diagnostic(binding, admitted))
+    return diagnostics
+
+
+def _missing_terminal_origin_diagnostic(
+    binding: BindingDefinition, admitted: frozenset[TerminalOriginClass]
+) -> CalculationSourceDiagnostic:
+    admitted_text = ", ".join(sorted(member.value for member in admitted))
+    return _diagnostic(
+        binding,
+        f"binding {binding.id!r} resolved a value with no terminal origin at all; "
+        f"its declaration requires one of {admitted_text}",
+    )
+
+
+def _binding_diagnostics(
+    binding: BindingDefinition,
+    *,
+    primaries: dict[BindingSourceKind, tuple[CalculationSourceProvenance, ...]],
+    resolution: CalculationSourceResolution,
+) -> list[CalculationSourceDiagnostic]:
+    registration = BINDING_PROVIDER_REGISTRATIONS.get(binding.source)
+    if registration is None or registration.disposition != "filing_grade":
+        return []
+    expectations = effective_terminal_origins(binding)
+    if not expectations:
+        return []
+    binding_primaries = primaries.get(binding.source, ())
+    empty_fold = not binding_primaries and resolution.binding_values.get(binding.id) == Decimal("0")
+    return _expectation_diagnostics(binding, binding_primaries, expectations, empty_fold=empty_fold)
+
+
 def collect_terminal_origin_diagnostics(
     revision: ModeloRevision,
     resolution: CalculationSourceResolution,
@@ -185,34 +235,5 @@ def collect_terminal_origin_diagnostics(
     for binding in revision.bindings:
         if binding.id not in resolved:
             continue
-        registration = BINDING_PROVIDER_REGISTRATIONS.get(binding.source)
-        if registration is None or registration.disposition != "filing_grade":
-            continue
-        expectations = effective_terminal_origins(binding)
-        if not expectations:
-            continue
-        binding_primaries = primaries.get(binding.source, ())
-        empty_fold = not binding_primaries and resolution.binding_values.get(binding.id) == Decimal("0")
-        admitted = frozenset(expectation.source_class for expectation in expectations)
-        diagnostics.extend(_class_diagnostics(binding, binding_primaries, admitted))
-        produced = {row.terminal_origin for row in binding_primaries if row.terminal_origin is not None}
-        for expectation in expectations:
-            # A declaration admitting several classes is satisfied by any one of
-            # them: demanding every admitted class at once would refuse the
-            # families whose value legitimately rests on one alternative. The
-            # per-class checks therefore run against the class that resolved,
-            # and the "none of them resolved" case is reported once, below.
-            if len(expectations) > 1 and expectation.source_class not in produced:
-                continue
-            diagnostics.extend(_cardinality_diagnostics(binding, binding_primaries, expectation, empty_fold=empty_fold))
-            diagnostics.extend(_fingerprint_diagnostics(binding, binding_primaries, expectation))
-        if len(expectations) > 1 and not produced and not empty_fold:
-            admitted_text = ", ".join(sorted(member.value for member in admitted))
-            diagnostics.append(
-                _diagnostic(
-                    binding,
-                    f"binding {binding.id!r} resolved a value with no terminal origin at all; "
-                    f"its declaration requires one of {admitted_text}",
-                ),
-            )
+        diagnostics.extend(_binding_diagnostics(binding, primaries=primaries, resolution=resolution))
     return tuple(diagnostics)

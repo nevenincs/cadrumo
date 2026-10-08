@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:b8d1e34fc96fb2ae3bda411d0e97d17e235db0a26cc0abd0ec8ee1fc9c972602'
+modified: '2026-10-03'
+body_hash: 'sha256:e74bd5fb816848da692e9b6c704d845d24410288b9b82f092191345c903929ad'
 related: []
 ---
 
@@ -39,8 +39,8 @@ operator-facing warning behavior.
 
 ## S382-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_ratios_cli.py src/aeat/entrypoints/cli/tests/test_ratios_verbs.py src/aeat/entrypoints/cli/tests/test_ledger_ratios_verbs.py` passed.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ratios_verbs.py src/aeat/entrypoints/cli/tests/test_ledger_ratios_verbs.py` passed with 24 tests.
+- the historical check passed.
+- the historical check passed with 24 tests.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S382 slice.

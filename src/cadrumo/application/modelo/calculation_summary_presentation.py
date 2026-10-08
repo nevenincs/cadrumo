@@ -25,7 +25,6 @@ See Also:
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
@@ -36,11 +35,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.filing.software_identity import (
-    DEVELOPMENT_MOCK_DEVELOPER_TAX_ID,
-    DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER,
-    AeatSoftwareIdentityGrade,
-)
+from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from .calculation_report import (
@@ -49,6 +44,7 @@ from .calculation_report import (
     ModeloCalculationReport,
     ModeloCalculationReportRow,
 )
+from .value_presentation import group_decimal_text
 
 TITLE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.title"
 SUBTITLE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.subtitle"
@@ -123,28 +119,6 @@ SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS: Final[Mapping[AeatSoftwareIdentityGrade, st
 """The short label each software-identity grade is shown with in the trace section."""
 
 
-class CalculationSummaryNumberFormat(BaseModel):
-    """How one language writes a decimal figure: its grouping and decimal marks."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    group_separator: str = Field(min_length=1, max_length=1)
-    decimal_separator: str = Field(min_length=1, max_length=1)
-
-
-NUMBER_FORMATS: Final[Mapping[OutputLanguage, CalculationSummaryNumberFormat]] = MappingProxyType(
-    {
-        OutputLanguage.ES: CalculationSummaryNumberFormat(group_separator=".", decimal_separator=","),
-        OutputLanguage.CA: CalculationSummaryNumberFormat(group_separator=".", decimal_separator=","),
-        OutputLanguage.EN: CalculationSummaryNumberFormat(group_separator=",", decimal_separator="."),
-        # Hungarian groups thousands with a space; a no-break space keeps a figure
-        # on one line and extracts as a plain space.
-        OutputLanguage.HU: CalculationSummaryNumberFormat(group_separator="\u00a0", decimal_separator=","),
-    },
-)
-"""Figure formatting per report language; total over the language axis."""
-
-_DECIMAL_TOKEN: Final[re.Pattern[str]] = re.compile(r"^(?P<sign>-?)(?P<integer>\d+)(?:\.(?P<fraction>\d+))?$")
 _SECTION_SEPARATOR: Final[str] = " \u203a "
 _REVISION_PREFIX_LENGTH: Final[int] = 16
 
@@ -256,25 +230,8 @@ def format_summary_value(value: object, *, language: OutputLanguage, true_text: 
     """
     if isinstance(value, bool):
         return true_text if value else false_text
-    number_format = NUMBER_FORMATS[language]
-    if isinstance(value, int):
-        return _grouped(str(abs(value)), number_format.group_separator, negative=value < 0)
     text = str(value)
-    match = _DECIMAL_TOKEN.match(text)
-    if match is None:
-        return text
-    grouped = _grouped(match["integer"], number_format.group_separator, negative=bool(match["sign"]))
-    fraction = match["fraction"]
-    return grouped if fraction is None else f"{grouped}{number_format.decimal_separator}{fraction}"
-
-
-def _grouped(digits: str, separator: str, *, negative: bool) -> str:
-    groups: list[str] = []
-    while len(digits) > 3:
-        groups.insert(0, digits[-3:])
-        digits = digits[:-3]
-    groups.insert(0, digits)
-    return ("-" if negative else "") + separator.join(groups)
+    return group_decimal_text(text, language) or text
 
 
 def _section_heading(section_path: tuple[str, ...], chrome: _Chrome) -> str:
@@ -328,11 +285,9 @@ def _sections(report: ModeloCalculationReport, *, chrome: _Chrome) -> tuple[Calc
 
 def _software_identity_notice(grade: AeatSoftwareIdentityGrade | None, *, chrome: _Chrome) -> str:
     if grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
-        return chrome.text(
-            IDENTITY_DEVELOPMENT_MOCK_LOCALE_KEY,
-            program=DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER,
-            developer_tax_id=DEVELOPMENT_MOCK_DEVELOPER_TAX_ID,
-        )
+        # The embedded report certifies the grade, not current registry identity
+        # values. Standalone verification must reconstruct only those facts.
+        return chrome.raw(IDENTITY_DEVELOPMENT_MOCK_LOCALE_KEY)
     if grade is AeatSoftwareIdentityGrade.REVIEWED:
         return chrome.raw(IDENTITY_REVIEWED_LOCALE_KEY)
     return chrome.raw(IDENTITY_NONE_LOCALE_KEY)
@@ -444,13 +399,11 @@ def build_calculation_summary_presentation(
 
 
 __all__ = [
-    "NUMBER_FORMATS",
     "REVISION_STATE_LOCALE_KEYS",
     "SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS",
     "VERIFICATION_OUTCOME_LOCALE_KEYS",
     "CalculationSummaryChromeUnavailableError",
     "CalculationSummaryFact",
-    "CalculationSummaryNumberFormat",
     "CalculationSummaryPresentation",
     "CalculationSummaryRow",
     "CalculationSummarySection",

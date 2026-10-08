@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-frontend-launch'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:967afc717688d62f0674b29149a99b403b179ccd2866b6e01e635c3920d282c6'
+body_hash: 'sha256:7494c882b564b308b65100fd9b3e1d416560c0a95c04f72a49c90f61fd1a88d2'
 related:
   - "[[2026-07-12-cadrumo-frontend-launch-audit]]"
 ---
@@ -22,7 +22,7 @@ overall project page.
 
 This audit treats that as a claim to verify rather than a premise to act on. It
 covers the `frontend/` tree at the repository root, the two publishers
-`dev/deploy/frontend_static_site.py` and `dev/deploy/docs_static_site.py`, their
+The retired module and `dev/deploy/docs_static_site.py`, their
 justfile recipes, the deploy test surface, and the external repository inventory
 on the publishing account. Analysis only: nothing was deleted, moved, or
 published.
@@ -96,7 +96,7 @@ repository's situation.
 
 ### deploy-boundary | medium | The docs-versus-landing guard is real code in both directions, not merely an asserted comment
 
-The comment in `dev/deploy/frontend_static_site.py` claiming the landing sync
+The comment in the retired module claiming the landing sync
 must never touch the documentation prefix was checked against the mechanism, in
 line with the recurring defect where prose asserts a property the code lacks.
 Here the code backs the prose, and it does so on both sides.
@@ -120,7 +120,7 @@ exclusion, and the exclusion side is additionally asserted at dry-run time.
 
 The `2026-07-12` close-honesty review recorded that this publisher had zero
 tests while writing to the shared bucket with `--delete`. That finding is closed:
-`dev/deploy/tests/test_frontend_static_site.py` now exists and includes
+The retired test now exists and includes
 `test_docs_prefix_is_always_excluded_from_the_root_sync`, which asserts `"docs/*"
 in _PROTECTED_PREFIX_EXCLUDES`. The test pins the constant rather than exercising
 a sync, so it would catch the constant being emptied but not a call site that
@@ -145,7 +145,7 @@ labelling and the code structure, not in the destinations or the ownership.
 First, `justfile` groups the landing recipe under documentation: the recipe
 `frontend-deploy` carries `[group('docs')]`, filing the product-page publish
 under the docs menu alongside `docs-deploy` and `docs-stack-deploy`. Second, and
-more substantively, `dev/deploy/frontend_static_site.py` imports thirteen private
+more substantively, the retired module imported thirteen private
 underscore-prefixed symbols from `dev.deploy.docs_static_site` — among them
 `_aws_base_command`, `_stack_target`, `_run`, `_repo_root`, `_published_body`,
 and `_verify_distribution_alias` — plus the shared constants. The product-page
@@ -167,8 +167,8 @@ reading. The tree is 64 tracked files (build output is gitignored via
 minimum: the `frontend/` tree itself including `index.html`, `src/`, the
 self-hosted font set and `public/` artefacts, `copy/`, `package.json`,
 `package-lock.json`, `vite.config.ts`, `tsconfig.json`, and
-`THIRD_PARTY_NOTICES.md`; the 335-line publisher `dev/deploy/frontend_static_site.py`;
-the `frontend-deploy` justfile recipe; `dev/deploy/tests/test_frontend_static_site.py`
+`THIRD_PARTY_NOTICES.md`; the 335-line publisher the retired module;
+the `frontend-deploy` justfile recipe; the retired test
 in full, plus the frontend-touching portions of `test_published_delivery_content.py`
 and `test_publish_authority.py`; the six gitignore entries; and the npm toolchain
 dependency in the developer environment.

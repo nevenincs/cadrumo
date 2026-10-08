@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:85d90218f0bcbc9d9daf0a60eb21eb9ac748af5ba62266ad6ee7bfffc5c93e17'
+modified: '2026-10-03'
+body_hash: 'sha256:89383b75cc63607314cab786758d738e6b155bd008d0746b3858acc7410318fd'
 related: []
 ---
 
@@ -24,8 +24,8 @@ Best-effort create rollback directory deletion no longer uses silent `ignore_err
 
 ## S269-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/user_profile/_profile_repository.py src/aeat/application/user_profile/test_profile_repository.py`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_profile_repository.py`
+- the historical check
+- the historical check
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
 
 Disposition: close `AFR-167`.

@@ -3,13 +3,9 @@ tags:
   - '#audit'
   - '#ledger-hardening-close'
 date: '2026-06-12'
-modified: '2026-07-17'
-body_hash: 'sha256:015f1838f509161ada199fdf8e9ab88deaac7f60f580d28f1093a7d7938d192c'
+modified: '2026-10-03'
+body_hash: 'sha256:8f434f61b77eae5efbedbbd2651e788c7c1bb20bdbd6b76c0fd1226eab043171'
 related:
-  - '[[2026-06-10-ledger-amount-direction-plan]]'
-  - '[[2026-06-10-ledger-evidence-enforcement-plan]]'
-  - '[[2026-06-10-ledger-interface-contract-plan]]'
-  - '[[2026-06-10-ledger-invoice-unification-plan]]'
   - '[[2026-06-11-ledger-hardening-close-pass-2-audit]]'
 ---
 
@@ -38,8 +34,8 @@ Resolved by commits:
 
 Verification:
 
-- `uv run --no-sync pytest src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py src/aeat/application/modelo/tests/test_export.py -q` -> `39 passed`.
-- `uv run --no-sync pytest src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_file_flow_events.py -q` -> `15 passed`.
+- the historical check -> `39 passed`.
+- the historical check -> `15 passed`.
 - `uv run --no-sync pytest src/aeat/application/modelo/tests -m "integration or not integration" -q -x` -> `467 passed`.
 - `uv run --no-sync pytest src/aeat/application/modelo/tests -q -x` -> `467 passed`.
 
@@ -56,8 +52,8 @@ Resolved by commit:
 
 Verification:
 
-- `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py -m "integration or not integration" -q` -> `133 passed`.
-- `uv run --no-sync pytest src/aeat/tests/test_docstring_core_struct_links.py src/aeat/tests/test_docstring_return_type_links.py -q` -> green.
+- the historical check -> `133 passed`.
+- the historical check -> green.
 
 ### RESOLVED - Size ratchets reflect current active peer surfaces
 
@@ -74,7 +70,7 @@ Resolved by commits:
 
 Verification:
 
-- `uv run --no-sync pytest src/aeat/tests/test_codebase_size_budgets.py -q` -> `2 passed`.
+- the historical check -> `2 passed`.
 
 ### VERIFIED - Split closeout gates are green
 

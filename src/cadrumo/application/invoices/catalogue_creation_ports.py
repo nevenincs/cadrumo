@@ -12,12 +12,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
 from typing import Protocol
 
 from ...core.errors.hierarchy import CadrumoError
 from ...domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.currency.models import EurRateLookup
 from ...domain.invoices.models import InvoiceCatalogue
 
 
@@ -100,8 +100,8 @@ class CatalogueInvoiceRateProviderPort(Protocol):
         """Return the authority identifier stamped on converted invoices."""
         ...
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-        """Return the currency-to-EUR rate, or no rate for that date."""
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        """Return the currency-to-EUR lookup for that date, naming the observation used."""
         ...
 
 

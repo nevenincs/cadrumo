@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-07-13'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:21b0c191dda0c3ccb6002514df6ed33ac4f72c44b46f142a890ae2cc843c2229'
+body_hash: 'sha256:f0c793f802fd48f9c66a84574a385a0748e9a836bc556b9d2c32e0f15b8293de'
 related:
   - "[[2026-07-13-docs-terminology-search-plan]]"
 ---
@@ -26,17 +26,14 @@ related:
 - `S06` `T` `dev/docs/preprocess/tests/`
 - `S07` `T` `the sidecar tree stays (it is the wheel's corpus payload and the shipped search's index source)`
 - `S07` `T` `.vaultragignore`
-- `S07` `T` `dev/docs/terminology/_resolution.py`
 - `S07` `T` `dev/docs/preprocess/__init__.py`
 - `S07` `T` `dev/docs/preprocess/tests/test_hook.py`
 - `S08` `T` `src/cadrumo/_data/terminology/`
-- `S09` `T` `src/cadrumo/_data/terminology/relevance/relevance.json`
+- `S09` `T`
 - `S10` `T` `dev/docs/terminology/`
 - `S10` `T` `.vault/audit/`
-- `S11` `T` `dev/docs/terminology/_unified_record.py`
 - `S11` `T` `dev/docs/terminology/tests/test_unified_record.py`
 - `S12` `T` `dev/docs/pagefind_inject.py`
-- `S12` `T` `dev/docs/terminology/_unified_record.py`
 - `S13` `T` `dev/docs/terminology/tests/test_unified_record.py`
 - `S14` `T` `docs/_static/cadrumo-docs.js`
 - `S14` `T` `docs/_static/cadrumo-docs.css`

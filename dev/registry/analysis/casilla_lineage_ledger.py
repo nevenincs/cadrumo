@@ -27,7 +27,7 @@ from typing import TypedDict
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import CasillaRowKey
 
-from .casilla_lineage_seed import LEDGER_PATH
+from .casilla_lineage_seed_paths import LEDGER_PATH
 
 __all__ = ["LedgerRefusal", "load_ledger_refusals"]
 

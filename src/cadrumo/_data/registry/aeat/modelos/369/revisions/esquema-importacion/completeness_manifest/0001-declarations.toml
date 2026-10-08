@@ -32,3 +32,679 @@ number = "iva.importacion.cuota-total"
 [[revisions."esquema-importacion".completeness_manifest.casillas]]
 casilla_id = "iva.importacion.de.low-value-cuota"
 number = "iva.importacion.de.low-value-cuota"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.at.importaciones"
+number = "iva.importacion.resultado.at.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.at.correcciones-positivas"
+number = "iva.importacion.resultado.at.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.at.correcciones-negativas"
+number = "iva.importacion.resultado.at.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.at.resultado"
+number = "iva.importacion.resultado.at.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.at.ingresar"
+number = "iva.importacion.resultado.at.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.at.devolver"
+number = "iva.importacion.resultado.at.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.be.importaciones"
+number = "iva.importacion.resultado.be.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.be.correcciones-positivas"
+number = "iva.importacion.resultado.be.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.be.correcciones-negativas"
+number = "iva.importacion.resultado.be.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.be.resultado"
+number = "iva.importacion.resultado.be.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.be.ingresar"
+number = "iva.importacion.resultado.be.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.be.devolver"
+number = "iva.importacion.resultado.be.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.bg.importaciones"
+number = "iva.importacion.resultado.bg.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.bg.correcciones-positivas"
+number = "iva.importacion.resultado.bg.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.bg.correcciones-negativas"
+number = "iva.importacion.resultado.bg.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.bg.resultado"
+number = "iva.importacion.resultado.bg.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.bg.ingresar"
+number = "iva.importacion.resultado.bg.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.bg.devolver"
+number = "iva.importacion.resultado.bg.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cy.importaciones"
+number = "iva.importacion.resultado.cy.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cy.correcciones-positivas"
+number = "iva.importacion.resultado.cy.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cy.correcciones-negativas"
+number = "iva.importacion.resultado.cy.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cy.resultado"
+number = "iva.importacion.resultado.cy.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cy.ingresar"
+number = "iva.importacion.resultado.cy.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cy.devolver"
+number = "iva.importacion.resultado.cy.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cz.importaciones"
+number = "iva.importacion.resultado.cz.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cz.correcciones-positivas"
+number = "iva.importacion.resultado.cz.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cz.correcciones-negativas"
+number = "iva.importacion.resultado.cz.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cz.resultado"
+number = "iva.importacion.resultado.cz.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cz.ingresar"
+number = "iva.importacion.resultado.cz.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.cz.devolver"
+number = "iva.importacion.resultado.cz.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.de.importaciones"
+number = "iva.importacion.resultado.de.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.de.correcciones-positivas"
+number = "iva.importacion.resultado.de.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.de.correcciones-negativas"
+number = "iva.importacion.resultado.de.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.de.resultado"
+number = "iva.importacion.resultado.de.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.de.ingresar"
+number = "iva.importacion.resultado.de.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.de.devolver"
+number = "iva.importacion.resultado.de.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.dk.importaciones"
+number = "iva.importacion.resultado.dk.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.dk.correcciones-positivas"
+number = "iva.importacion.resultado.dk.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.dk.correcciones-negativas"
+number = "iva.importacion.resultado.dk.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.dk.resultado"
+number = "iva.importacion.resultado.dk.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.dk.ingresar"
+number = "iva.importacion.resultado.dk.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.dk.devolver"
+number = "iva.importacion.resultado.dk.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ee.importaciones"
+number = "iva.importacion.resultado.ee.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ee.correcciones-positivas"
+number = "iva.importacion.resultado.ee.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ee.correcciones-negativas"
+number = "iva.importacion.resultado.ee.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ee.resultado"
+number = "iva.importacion.resultado.ee.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ee.ingresar"
+number = "iva.importacion.resultado.ee.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ee.devolver"
+number = "iva.importacion.resultado.ee.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.es.importaciones"
+number = "iva.importacion.resultado.es.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.es.correcciones-positivas"
+number = "iva.importacion.resultado.es.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.es.correcciones-negativas"
+number = "iva.importacion.resultado.es.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.es.resultado"
+number = "iva.importacion.resultado.es.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.es.ingresar"
+number = "iva.importacion.resultado.es.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.es.devolver"
+number = "iva.importacion.resultado.es.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fi.importaciones"
+number = "iva.importacion.resultado.fi.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fi.correcciones-positivas"
+number = "iva.importacion.resultado.fi.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fi.correcciones-negativas"
+number = "iva.importacion.resultado.fi.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fi.resultado"
+number = "iva.importacion.resultado.fi.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fi.ingresar"
+number = "iva.importacion.resultado.fi.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fi.devolver"
+number = "iva.importacion.resultado.fi.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fr.importaciones"
+number = "iva.importacion.resultado.fr.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fr.correcciones-positivas"
+number = "iva.importacion.resultado.fr.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fr.correcciones-negativas"
+number = "iva.importacion.resultado.fr.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fr.resultado"
+number = "iva.importacion.resultado.fr.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fr.ingresar"
+number = "iva.importacion.resultado.fr.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.fr.devolver"
+number = "iva.importacion.resultado.fr.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.gr.importaciones"
+number = "iva.importacion.resultado.gr.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.gr.correcciones-positivas"
+number = "iva.importacion.resultado.gr.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.gr.correcciones-negativas"
+number = "iva.importacion.resultado.gr.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.gr.resultado"
+number = "iva.importacion.resultado.gr.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.gr.ingresar"
+number = "iva.importacion.resultado.gr.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.gr.devolver"
+number = "iva.importacion.resultado.gr.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hr.importaciones"
+number = "iva.importacion.resultado.hr.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hr.correcciones-positivas"
+number = "iva.importacion.resultado.hr.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hr.correcciones-negativas"
+number = "iva.importacion.resultado.hr.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hr.resultado"
+number = "iva.importacion.resultado.hr.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hr.ingresar"
+number = "iva.importacion.resultado.hr.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hr.devolver"
+number = "iva.importacion.resultado.hr.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hu.importaciones"
+number = "iva.importacion.resultado.hu.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hu.correcciones-positivas"
+number = "iva.importacion.resultado.hu.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hu.correcciones-negativas"
+number = "iva.importacion.resultado.hu.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hu.resultado"
+number = "iva.importacion.resultado.hu.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hu.ingresar"
+number = "iva.importacion.resultado.hu.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.hu.devolver"
+number = "iva.importacion.resultado.hu.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ie.importaciones"
+number = "iva.importacion.resultado.ie.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ie.correcciones-positivas"
+number = "iva.importacion.resultado.ie.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ie.correcciones-negativas"
+number = "iva.importacion.resultado.ie.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ie.resultado"
+number = "iva.importacion.resultado.ie.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ie.ingresar"
+number = "iva.importacion.resultado.ie.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ie.devolver"
+number = "iva.importacion.resultado.ie.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.it.importaciones"
+number = "iva.importacion.resultado.it.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.it.correcciones-positivas"
+number = "iva.importacion.resultado.it.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.it.correcciones-negativas"
+number = "iva.importacion.resultado.it.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.it.resultado"
+number = "iva.importacion.resultado.it.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.it.ingresar"
+number = "iva.importacion.resultado.it.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.it.devolver"
+number = "iva.importacion.resultado.it.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lt.importaciones"
+number = "iva.importacion.resultado.lt.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lt.correcciones-positivas"
+number = "iva.importacion.resultado.lt.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lt.correcciones-negativas"
+number = "iva.importacion.resultado.lt.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lt.resultado"
+number = "iva.importacion.resultado.lt.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lt.ingresar"
+number = "iva.importacion.resultado.lt.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lt.devolver"
+number = "iva.importacion.resultado.lt.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lu.importaciones"
+number = "iva.importacion.resultado.lu.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lu.correcciones-positivas"
+number = "iva.importacion.resultado.lu.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lu.correcciones-negativas"
+number = "iva.importacion.resultado.lu.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lu.resultado"
+number = "iva.importacion.resultado.lu.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lu.ingresar"
+number = "iva.importacion.resultado.lu.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lu.devolver"
+number = "iva.importacion.resultado.lu.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lv.importaciones"
+number = "iva.importacion.resultado.lv.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lv.correcciones-positivas"
+number = "iva.importacion.resultado.lv.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lv.correcciones-negativas"
+number = "iva.importacion.resultado.lv.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lv.resultado"
+number = "iva.importacion.resultado.lv.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lv.ingresar"
+number = "iva.importacion.resultado.lv.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.lv.devolver"
+number = "iva.importacion.resultado.lv.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.mt.importaciones"
+number = "iva.importacion.resultado.mt.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.mt.correcciones-positivas"
+number = "iva.importacion.resultado.mt.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.mt.correcciones-negativas"
+number = "iva.importacion.resultado.mt.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.mt.resultado"
+number = "iva.importacion.resultado.mt.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.mt.ingresar"
+number = "iva.importacion.resultado.mt.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.mt.devolver"
+number = "iva.importacion.resultado.mt.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.nl.importaciones"
+number = "iva.importacion.resultado.nl.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.nl.correcciones-positivas"
+number = "iva.importacion.resultado.nl.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.nl.correcciones-negativas"
+number = "iva.importacion.resultado.nl.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.nl.resultado"
+number = "iva.importacion.resultado.nl.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.nl.ingresar"
+number = "iva.importacion.resultado.nl.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.nl.devolver"
+number = "iva.importacion.resultado.nl.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pl.importaciones"
+number = "iva.importacion.resultado.pl.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pl.correcciones-positivas"
+number = "iva.importacion.resultado.pl.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pl.correcciones-negativas"
+number = "iva.importacion.resultado.pl.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pl.resultado"
+number = "iva.importacion.resultado.pl.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pl.ingresar"
+number = "iva.importacion.resultado.pl.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pl.devolver"
+number = "iva.importacion.resultado.pl.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pt.importaciones"
+number = "iva.importacion.resultado.pt.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pt.correcciones-positivas"
+number = "iva.importacion.resultado.pt.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pt.correcciones-negativas"
+number = "iva.importacion.resultado.pt.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pt.resultado"
+number = "iva.importacion.resultado.pt.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pt.ingresar"
+number = "iva.importacion.resultado.pt.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.pt.devolver"
+number = "iva.importacion.resultado.pt.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ro.importaciones"
+number = "iva.importacion.resultado.ro.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ro.correcciones-positivas"
+number = "iva.importacion.resultado.ro.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ro.correcciones-negativas"
+number = "iva.importacion.resultado.ro.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ro.resultado"
+number = "iva.importacion.resultado.ro.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ro.ingresar"
+number = "iva.importacion.resultado.ro.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.ro.devolver"
+number = "iva.importacion.resultado.ro.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.se.importaciones"
+number = "iva.importacion.resultado.se.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.se.correcciones-positivas"
+number = "iva.importacion.resultado.se.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.se.correcciones-negativas"
+number = "iva.importacion.resultado.se.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.se.resultado"
+number = "iva.importacion.resultado.se.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.se.ingresar"
+number = "iva.importacion.resultado.se.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.se.devolver"
+number = "iva.importacion.resultado.se.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.si.importaciones"
+number = "iva.importacion.resultado.si.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.si.correcciones-positivas"
+number = "iva.importacion.resultado.si.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.si.correcciones-negativas"
+number = "iva.importacion.resultado.si.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.si.resultado"
+number = "iva.importacion.resultado.si.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.si.ingresar"
+number = "iva.importacion.resultado.si.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.si.devolver"
+number = "iva.importacion.resultado.si.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.sk.importaciones"
+number = "iva.importacion.resultado.sk.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.sk.correcciones-positivas"
+number = "iva.importacion.resultado.sk.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.sk.correcciones-negativas"
+number = "iva.importacion.resultado.sk.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.sk.resultado"
+number = "iva.importacion.resultado.sk.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.sk.ingresar"
+number = "iva.importacion.resultado.sk.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.sk.devolver"
+number = "iva.importacion.resultado.sk.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.xi.importaciones"
+number = "iva.importacion.resultado.xi.importaciones"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.xi.correcciones-positivas"
+number = "iva.importacion.resultado.xi.correcciones-positivas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.xi.correcciones-negativas"
+number = "iva.importacion.resultado.xi.correcciones-negativas"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.xi.resultado"
+number = "iva.importacion.resultado.xi.resultado"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.xi.ingresar"
+number = "iva.importacion.resultado.xi.ingresar"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.xi.devolver"
+number = "iva.importacion.resultado.xi.devolver"
+
+[[revisions.esquema-importacion.completeness_manifest.casillas]]
+casilla_id = "iva.importacion.resultado.saldo-ingresar-espana"
+number = "iva.importacion.resultado.saldo-ingresar-espana"

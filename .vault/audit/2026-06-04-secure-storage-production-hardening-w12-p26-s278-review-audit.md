@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:cd1af9befcadf597779ebc140b0d8d9bbb18406ff75a7cc6aa71123f94820417'
+modified: '2026-10-03'
+body_hash: 'sha256:9809233f967faf143c4d7ec81d45aafa109fa739e7ffee9d0457b0e663ce0814'
 related: []
 ---
 
@@ -34,8 +34,8 @@ four catalogues clean.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_widgets.py src/aeat/application/wizard/test_widgets.py src/aeat/application/wizard/_errors.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_widgets.py src/aeat/application/wizard/test_setup_compiles.py src/aeat/test_locale_coverage_hardened_errors.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "wizard widgets validation localized errors no storage plaintext exception" --type code --port 8766 --max-results 8`
 

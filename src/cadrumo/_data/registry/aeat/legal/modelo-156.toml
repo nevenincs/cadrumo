@@ -87,3 +87,15 @@ retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/156_HAC_3580_2003.pdf"
 review_status = "pending_review"
 
+
+[sources."boe-modelo-156-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2003-23509.pdf"
+sha256 = "725580675df1b483d5cd270e804c1e00038977b673270104049123a3fe728313"
+bytes = 1295300
+retrieved_at = 2026-10-06
+published_at = 2003-12-23
+source_url = "https://www.boe.es/boe/dias/2003/12/23/pdfs/A45645-45665.pdf"
+review_status = "pending_review"

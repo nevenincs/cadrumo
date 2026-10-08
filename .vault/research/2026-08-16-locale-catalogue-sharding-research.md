@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#locale-catalogue-sharding'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:af323ed3b8ef836272eef816d229d8c70255dbb1deb9ca1dad27edb9e3e1b8ca'
+body_hash: 'sha256:07cb039f4a2b45c476b13b6afca511760435e0d71b1be7c38b9837c4b25e0e27'
 related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
   - '[[2026-08-07-dev-harness-bleed-adr]]'
@@ -90,17 +90,17 @@ A verification pass in `tmp/test_lazy_loader.py` executed across all 46,900 keys
 
 The sharded architecture fits into the existing layers:
 - `dev/locales/manager.py`: `LocaleManager` loads sharded directory trees, addresses specific shards during `set_locale_value` / `remove_locale_value`, performs shard-level atomic rewrites under `catalogue_write_guard`, and preserves the global `get_codebase_keys()` discovery mesh (`_ast_scanner`, `_fstring_registry`, `_registry_scanner`).
-- `dev/locales/_write_guard.py`: The lockfile `.catalogue-write.lock` remains at the root of `locales_dir`, while `CatalogueWriteGuard` records per-file content digests for observed shards.
-- `src/cadrumo/locales/_intentional_identical.json`: Remains at `src/cadrumo/locales/_intentional_identical.json` as the unified cross-locale translation honesty allowlist.
-- `src/cadrumo/core/i18n/_render.py`: `LazyLocaleCatalogue` resolves translations lazily, parsing only requested shards, and maintains the fast on-disk digest cache `read_catalogue_cache`.
+- the former source file: The lockfile `.catalogue-write.lock` remains at the root of `locales_dir`, while `CatalogueWriteGuard` records per-file content digests for observed shards.
+- the former source file: Remains  as the unified cross-locale translation honesty allowlist.
+- the former source file: `LazyLocaleCatalogue` resolves translations lazily, parsing only requested shards, and maintains the fast on-disk digest cache `read_catalogue_cache`.
 
 ## Sources
 
-- Monolithic catalogue inventory: `src/cadrumo/locales/es.yml:1`, `src/cadrumo/locales/en.yml:1`, `src/cadrumo/locales/ca.yml:1`, `src/cadrumo/locales/hu.yml:1`
-- Translation-honesty allowlist: `src/cadrumo/locales/_intentional_identical.json:1`
-- Locale manager and write guard: `dev/locales/manager.py:190`, `dev/locales/_write_guard.py:88`, `dev/locales/_registry_scanner.py:63`
-- Runtime renderer and catalogue cache: `src/cadrumo/core/i18n/_render.py:484`, `src/cadrumo/core/i18n/_catalogue_cache.py:1`
-- Parity test suite: `src/cadrumo/tests/test_parity.py:1158`, `src/cadrumo/tests/test_locale_translation_honesty.py:287`
+- Monolithic catalogue inventory: the former source file, the former source file, the former source file, the former source file
+- Translation-honesty allowlist: the former source file
+- Locale manager and write guard: `dev/locales/manager.py:190`, the former source file, `dev/locales/_registry_scanner.py:63`
+- Runtime renderer and catalogue cache: the former source file, the former source file
+- Parity test suite: the former source file, the former source file
 - Governing ADRs: `2026-08-04-modelo-localization-cascade-adr`, `2026-08-07-dev-harness-bleed-adr`, `2026-07-21-locale-key-resolution-adr`
 - Sharding verification smoke tests: `tmp/smoke_test_sharding.py`, `tmp/smoke_test_prototype.py`, `tmp/test_lazy_loader.py`
 - Online i18n large-scale YAML sharding patterns: https://phrase.com/blog/posts/yaml-i18n-best-practices/ and https://github.com/fnando/i18n-tasks

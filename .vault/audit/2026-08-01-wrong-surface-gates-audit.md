@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#wrong-surface-gates'
 date: '2026-08-01'
-modified: '2026-08-01'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f28aea5bcca0e36c866b9b1c963cdffd53cb6311b68b0da6c2f3f41e6d277c3'
+body_hash: 'sha256:b32be6327bced5ef8d4a7d62d4a6732bd972929dfd8e8e8768160c71fae79eb8'
 related:
   - "[[2026-07-25-test-harness-honesty-adr]]"
   - "[[2026-07-25-test-harness-honesty-false-green-gates-audit]]"
@@ -47,14 +47,14 @@ If you have just had this idea again: it is a good idea that does not work, and 
 
 ### c2-a-demonstrated-subclaim-carried-a-false-conclusion | retraction | the claim was wrong; the mechanism is the lesson
 
-**Retracted claim:** that `dev/audit/vacuity_screen.py`'s `proves_it_scanned()` returning `True` for a bare `assert index_chunks` meant the screen read the non-emptiness defect shape as EVIDENCE OF RIGOUR, and could credit it module-wide to exempt sibling scans. This was reported, believed, authorised for repair in strong terms, and is false.
+**Retracted claim:** that the retired module's `proves_it_scanned()` returning `True` for a bare `assert index_chunks` meant the screen read the non-emptiness defect shape as EVIDENCE OF RIGOUR, and could credit it module-wide to exempt sibling scans. This was reported, believed, authorised for repair in strong terms, and is false.
 
 Two independent reasons, either fatal:
 
 1. **Domain.** The screen walks `test_*.py` under `src/cadrumo/tests` and `dev` only. The defect it was accused of mishandling lived in `dev/deploy/docs_static_site.py` — production code the screen never scans. No predicate could have flagged it.
 2. **Inside a test, that credit is CORRECT.** A bare `assert <corpus>` fails when the walk returns nothing, which is precisely the property the screen exists to require.
 
-The candidate discriminator dissolved on measurement too. Of 526 emptiness-asserting functions: 174 cleared by module-proof, 106 flagged, 106 by a real lower bound, 73 by a truthy assert whose names are DISJOINT from the emptiness assert, 47 shared-name, 20 literal-control. The 73 "disjoint" cases were the proposed hole — but corpus and result are *necessarily different variables*, so disjointness identifies the LEGITIMATE shape. Spot-checks confirmed it: `dev/docs/tests/test_api_stubs.py` and `dev/docs/tests/test_cli_reference_conformance.py` both carry author comments written expressly to satisfy that screen, and the auditor's own new test landed in the same bucket with an entirely valid proof-of-scan.
+The candidate discriminator dissolved on measurement too. Of 526 emptiness-asserting functions: 174 cleared by module-proof, 106 flagged, 106 by a real lower bound, 73 by a truthy assert whose names are DISJOINT from the emptiness assert, 47 shared-name, 20 literal-control. The 73 "disjoint" cases were the proposed hole — but corpus and result are *necessarily different variables*, so disjointness identifies the LEGITIMATE shape. Spot-checks confirmed it: `dev/docs/tests/test_api_stubs.py` and the retired test both carry author comments written expressly to satisfy that screen, and the auditor's own new test landed in the same bucket with an entirely valid proof-of-scan.
 
 **The generalisable error:** a predicate's output was observed IN ISOLATION and described as a property of the INSTRUMENT, without checking the instrument's domain. Transplanting a production-code shape into a test-only screen's predicate yields a true observation about the predicate and a false claim about the screen.
 
@@ -66,8 +66,8 @@ No change was made. `vacuity_screen.py` is untouched and its worklist stands at 
 
 Running the real predicates from both existing screens against the six defect shapes: `test_no_tautology.py` classifies **zero of six**. The three instruments the project already has occupy three different axes, and none is the surface axis:
 
-- `src/cadrumo/tests/test_no_tautology.py` — assertions that CANNOT FAIL (syntactic).
-- `dev/audit/vacuity_screen.py` — assertions over a possibly-EMPTY corpus. Axis: *did you measure anything*.
+- the retired test — assertions that CANNOT FAIL (syntactic).
+- the retired module — assertions over a possibly-EMPTY corpus. Axis: *did you measure anything*.
 - ADR `2026-07-25-test-harness-honesty` — instruments that cannot DISCRIMINATE. Remedy: positive controls.
 
 All three ask **"is the instrument working?"** Every one of these defects had a perfectly working instrument. Nothing asks **"is it pointed at the shipped surface?"** The harness-honesty ADR states its own axis in a line that reads as the exact complement: *"Neither could be caught by reading the assertion, because the assertion was correct in both cases. What was missing was any evidence that the instrument still worked."* Here the assertion was correct, the instrument demonstrably worked, and what was missing was evidence that the surface it read was the surface that ships.
@@ -90,7 +90,7 @@ Observed in three separate files, each containing one check that binds provenanc
 
 - `dev/deploy/docs_static_site.py` — the sitemap validated by CONTENT (canonical root present, no non-canonical URL) ten lines above an index validated by SIZE.
 - `dev/release/readiness.py` — `check_latest_packaging_smoke_evidence` takes the newest manifest by mtime and reads `ok` without binding it to a commit, beside `check_distribution_evidence_set`, which binds cohort commit to checked-out commit and tag to version. (Advisory, never blocking: recorded, not fixed.)
-- `dev/deploy/frontend_static_site.py` — a required-artifact check naming specific files beside an assets check asserting only that *some* `.js` and *some* `.css` exist.
+- the retired module — a required-artifact check naming specific files beside an assets check asserting only that *some* `.js` and *some* `.css` exist.
 
 The useful form is predictive rather than moralising: **authors demonstrably know how to write the stronger check and write the weaker one when the subject is a different KIND of artefact** — a file versus a directory, a status versus a body, a count versus a manifest. That tells you where to look next.
 

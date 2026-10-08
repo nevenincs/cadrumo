@@ -19,7 +19,6 @@ results stay authoritative while these classes expose JSON-safe
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from datetime import date, datetime
 from typing import TYPE_CHECKING, ClassVar, Literal
 
@@ -27,14 +26,11 @@ from pydantic import ConfigDict, Field, NonNegativeInt, computed_field, field_va
 
 from ...application.aggregation.service import (
     PerModeloAggregationContributor,
-    PerModeloAggregationResult,
 )
 from ...application.aggregation.withholding_observation_service import (
-    WithholdingGenerationAudit,
     WithholdingGenerationId,
     WithholdingMutationMode,
     WithholdingScopeToken,
-    WithholdingWindowState,
 )
 from ...application.calculations.observations_repository import (
     ObservationSourceKind,
@@ -48,6 +44,8 @@ from ...application.modelo.calculation_report_verification import (
     CalculationSummaryVerificationOutcome,
     CalculationSummaryVerificationReason,
 )
+from ...application.modelo.export_projection import ModeloIvaWalletDecisionPublicProvenance
+from ...application.modelo.historical_filing_projection import ModeloHistoricalFilingContentProjection
 from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.work_plazo import validate_modelo_work_deadline_posture
 from ...application.modelo.work_review import (
@@ -62,6 +60,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ...core.identity.profile import ProfileId
 from ...core.identity.transaction_ids import TransactionId
@@ -93,7 +92,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -208,13 +207,18 @@ class WorkDeadlinePosturePayload(OutputSchema):
     """Filing-deadline (plazo voluntario) state for the work unit.
 
     Structured result data the calculate verb exists to surface: the
-    voluntary-filing close date and in-time / overdue posture. When overdue,
-    it can carry an explicitly unassessed conditional Article 27 rate preview.
-    It never asserts surcharge or interest liability. Distinct from the
-    non-blocking advisory prose, which rides the envelope ``notices`` channel.
+    effective voluntary-filing close date (after the business-day shift), the
+    nominal close date the deadline window declares, which holidays the
+    effective date accounts for, and the in-time / overdue posture counted
+    against the effective date. When overdue, it can carry an explicitly
+    unassessed conditional Article 27 rate preview. It never asserts surcharge
+    or interest liability. Distinct from the non-blocking advisory prose, which
+    rides the envelope ``notices`` channel.
     """
 
     closes_on: date
+    nominal_closes_on: date
+    holiday_coverage: DeadlineHolidayCoverage
     days_remaining: int | None = None
     days_overdue: int | None = None
     conditional_recargo_preview: WorkConditionalRecargoPreviewPayload | None = None
@@ -225,6 +229,7 @@ class WorkDeadlinePosturePayload(OutputSchema):
         """Reuse the application deadline state invariant at the JSON boundary."""
         validate_modelo_work_deadline_posture(
             closes_on=self.closes_on,
+            nominal_closes_on=self.nominal_closes_on,
             days_remaining=self.days_remaining,
             days_overdue=self.days_overdue,
         )
@@ -235,7 +240,7 @@ class CalculationRevisionPayload(OutputSchema):
     """Shared JSON projection of a persisted :class:`CalculationRevision`.
 
     Built by
-    :func:`calculation_revision_payload`.
+    :func:`~cadrumo.entrypoints.cli.runtime_modelo_calculation.calculation_snapshot_payload`.
     ``casilla_values`` is the flat convenience table keyed by
     :obj:`CasillaId`, while
     ``observations`` carries joinable :class:`ObservationPayload` rows projected
@@ -715,7 +720,7 @@ class WorkVerifyResult(OutputSchema):
     """Verification report returned by ``aeat app modelo work verify``.
 
     The command delegates to
-    :func:`verify_modelo_revision` and returns the
+    :func:`verify_modelo_revision_with_preconditions` and returns the
     resulting
     :class:`VerificationReportPayload`.
     On a successful
@@ -991,6 +996,7 @@ class ModeloRecordShowResult(ModeloRecordPayload):
 
     operation: str = "modelo.filing_record.show"
     observation_layers: ObservationLayersPayload
+    historical_content: ModeloHistoricalFilingContentProjection
 
 
 class VerificationReportListResult(OutputSchema):
@@ -1262,6 +1268,7 @@ class ModeloRequiresResult(OutputSchema):
     """
 
     operation: str = "modelo.requires"
+    authority_generation: ContentDigest
     modelo: str
     revision: str
     filing_year: int
@@ -1307,11 +1314,12 @@ class ModeloExportPayload(OutputSchema):
     file_sha256: str
     format: str
     bucket_event_id: str
-    resolved_result_disposition: ResultDisposition
+    resolved_result_disposition: ResultDisposition | None
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
     prior_domiciliation_election: PriorDomiciliationElectionProjection
     software_identity_grade: AeatSoftwareIdentityGrade | None = None
+    iva_wallet_decision_provenance: ModeloIvaWalletDecisionPublicProvenance | None = None
 
     @classmethod
     def from_result(cls, result: _AppModeloExportResult) -> ModeloExportPayload:
@@ -1340,6 +1348,11 @@ class ModeloExportPayload(OutputSchema):
             refund_election=result.refund_election,
             prior_domiciliation_election=result.prior_domiciliation_election,
             software_identity_grade=result.software_identity_grade,
+            iva_wallet_decision_provenance=(
+                ModeloIvaWalletDecisionPublicProvenance.from_provenance(result.iva_wallet_decision_provenance)
+                if result.iva_wallet_decision_provenance is not None
+                else None
+            ),
         )
 
 
@@ -1518,6 +1531,7 @@ class ModeloReadinessResult(OutputSchema):
     """Active-profile modelo readiness report."""
 
     operation: str = "modelo.readiness"
+    authority_generation: ContentDigest
     profile_id: ProfileId
     modelo: str
     revision_id: RevisionId
@@ -1599,31 +1613,6 @@ class WithholdingWindowReadbackPayload(OutputSchema):
     generation: NonNegativeInt
     generation_audit: WithholdingGenerationAuditPayload | None = None
 
-    @classmethod
-    def from_window_state(
-        cls,
-        state: WithholdingWindowState,
-        *,
-        generation_audit: WithholdingGenerationAudit | None,
-    ) -> WithholdingWindowReadbackPayload:
-        """Project an existing service read without interpreting its entries."""
-        return cls(
-            baseline=WithholdingWindowBaselinePayload(
-                scope_token=state.baseline.scope_token,
-                generation_id=state.baseline.generation_id,
-            ),
-            generation=state.generation,
-            generation_audit=(
-                None
-                if generation_audit is None
-                else WithholdingGenerationAuditPayload(
-                    parent_generation_id=generation_audit.parent_generation_id,
-                    mode=generation_audit.mode,
-                    supersedes_generation_id=generation_audit.supersedes_generation_id,
-                )
-            ),
-        )
-
 
 class ModeloAggregateResult(OutputSchema):
     """Per-modelo aggregation result, projected from the canonical service result.
@@ -1636,8 +1625,8 @@ class ModeloAggregateResult(OutputSchema):
     counters. Redeclaring them as bare strings and unbounded integers made this
     transport shell strictly more permissive than the result it renders, so an
     empty modelo, an unknown provider, a bogus source kind, or a negative count
-    could be emitted as a valid envelope. Build it through
-    :meth:`from_aggregation_result` rather than field-by-field.
+    could be emitted as a valid envelope. Project the actual operation result
+    through these bounded field types.
 
     ``clave_breakdown`` carries per-clave rows of the stored per-perceptor-clave
     withholding detail the modelo's calculation reads (empty when it reads
@@ -1697,48 +1686,6 @@ class ModeloAggregateResult(OutputSchema):
         if len(value) != len(set(value)):
             raise ValueError("source_kinds must be unique")
         return value
-
-    @classmethod
-    def from_aggregation_result(
-        cls,
-        result: PerModeloAggregationResult,
-        *,
-        clave_breakdown: Sequence[WithholdingClaveBreakdown] = (),
-        withholding_window: WithholdingWindowReadbackPayload | None = None,
-    ) -> ModeloAggregateResult:
-        """Project the canonical service result onto the CLI transport shape.
-
-        The one construction path, so the envelope cannot carry a modelo,
-        period, provider, source-kind set, or counter the service did not
-        produce. Counters come from the result's own
-        :class:`~application.aggregation.service.PerModeloAggregationLogFields`, which
-        already bounds them.
-
-        Args:
-            result: The canonical per-modelo aggregation result.
-            clave_breakdown: Per-clave rows of the per-perceptor-clave detail
-                the calculation reads, empty when it reads none.
-            withholding_window: Current baseline and generation metadata for an
-                invoice-backed withholding scope, absent for other modelos.
-        """
-        return cls(
-            modelo=result.modelo,
-            period=result.period,
-            provider=result.provider,
-            observation_count=result.log_fields.observation_count,
-            source_kinds=list(result.source_kinds),
-            result_row_count=result.log_fields.result_row_count,
-            withholding_window=withholding_window,
-            clave_breakdown=[
-                WithholdingClaveBreakdownPayload(
-                    clave=row.clave,
-                    percepcion_count=row.percepcion_count,
-                    percibido_total=str(row.percibido_total),
-                    retencion_total=str(row.retencion_total),
-                )
-                for row in clave_breakdown
-            ],
-        )
 
 
 class WorkPreviewMaritimeExemptionResult(OutputSchema):

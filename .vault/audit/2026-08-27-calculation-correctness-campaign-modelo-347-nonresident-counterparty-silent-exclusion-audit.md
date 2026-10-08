@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:51c360b829c45d4ae021de171fdb893333810c5aec9bca1e0a9b9a136d564123'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+related: []
 ---
 
 # `calculation-correctness-campaign` audit: `modelo 347 nonresident counterparty silent exclusion`

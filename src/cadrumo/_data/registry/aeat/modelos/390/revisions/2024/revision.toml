@@ -345,10 +345,9 @@ sequence_order = {source_refs = [0, 3, 1, 2]}
 [[revisions."2024".family_overrides]]
 family = "constructs"
 selector = {revision = "2023", id = "modelo-390-iva-resumen-anual"}
-sequence_additions = {casilla_ids = ["iva.anual.repercutido.tipo-7-5.base", "iva.anual.repercutido.tipo-7-5.cuota", "iva.anual.repercutido.tipo-2.base", "iva.anual.repercutido.tipo-2.cuota", "iva.anual.repercutido.recargo.tipo-1.cuota", "iva.anual.repercutido.recargo.tipo-0-26.cuota", "iva.anual.aic.bienes.tipo-2.base", "iva.anual.aic.bienes.tipo-2.cuota", "iva.anual.aic.bienes.tipo-7-5.base", "iva.anual.aic.bienes.tipo-7-5.cuota", "iva.anual.aic.servicios.tipo-2.base", "iva.anual.aic.servicios.tipo-2.cuota", "iva.anual.aic.servicios.tipo-7-5.base", "iva.anual.aic.servicios.tipo-7-5.cuota"], deadline_windows = ["modelo-390-2024-0a"], export_layouts = ["generated-modelo-390-2024-fichero"], legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
-sequence_removals = {deadline_windows = [0], export_layouts = [0], legal_refs = [61]}
-sequence_order = {casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 81, 82, 11, 12, 13, 14, 83, 84, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 85, 28, 29, 86, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 87, 88, 53, 54, 55, 56, 89, 90, 57, 58, 59, 60, 61, 62, 91, 92, 63, 64, 65, 66, 93, 94, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80], legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 61, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60], source_refs = [0, 1, 4, 2, 3]}
-
+sequence_additions = { bindings = ["modelo-390-iva-aic-bienes-tipo-2-base", "modelo-390-iva-aic-bienes-tipo-2-cuota", "modelo-390-iva-aic-bienes-tipo-7-5-base", "modelo-390-iva-aic-bienes-tipo-7-5-cuota", "modelo-390-iva-aic-servicios-tipo-2-base", "modelo-390-iva-aic-servicios-tipo-2-cuota", "modelo-390-iva-aic-servicios-tipo-7-5-base", "modelo-390-iva-aic-servicios-tipo-7-5-cuota", "modelo-390-iva-repercutido-tipo-2-base", "modelo-390-iva-repercutido-tipo-2-cuota", "modelo-390-iva-repercutido-tipo-7-5-base", "modelo-390-iva-repercutido-tipo-7-5-cuota"], casilla_ids = ["iva.anual.repercutido.tipo-7-5.base", "iva.anual.repercutido.tipo-7-5.cuota", "iva.anual.repercutido.tipo-2.base", "iva.anual.repercutido.tipo-2.cuota", "iva.anual.repercutido.recargo.tipo-1.cuota", "iva.anual.repercutido.recargo.tipo-0-26.cuota", "iva.anual.aic.bienes.tipo-2.base", "iva.anual.aic.bienes.tipo-2.cuota", "iva.anual.aic.bienes.tipo-7-5.base", "iva.anual.aic.bienes.tipo-7-5.cuota", "iva.anual.aic.servicios.tipo-2.base", "iva.anual.aic.servicios.tipo-2.cuota", "iva.anual.aic.servicios.tipo-7-5.base", "iva.anual.aic.servicios.tipo-7-5.cuota"], deadline_windows = ["modelo-390-2024-0a"], export_layouts = ["generated-modelo-390-2024-fichero"], legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { deadline_windows = [0], export_layouts = [0], legal_refs = [61], source_refs = [4, 5] }
+sequence_order = { casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 81, 82, 11, 12, 13, 14, 83, 84, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 85, 28, 29, 86, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 87, 88, 53, 54, 55, 56, 89, 90, 57, 58, 59, 60, 61, 62, 91, 92, 63, 64, 65, 66, 93, 94, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80], legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 61, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60], source_refs = [0, 1, 4, 2, 3, 5] }
 [[revisions."2024".family_overrides]]
 family = "deadline_windows"
 selector = {revision = "2023", id = "modelo-390-2023-0a"}
@@ -357,38 +356,10 @@ fields = {closes_on = 2025-01-30, filing_year = 2024, opens_on = 2025-01-01, per
 
 [[revisions."2024".family_overrides]]
 family = "bindings"
-selector = {revision = "2023", id = "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota"}
-sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [2, 0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "bindings"
 selector = {revision = "2023", id = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"}
 sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [2, 0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-390-iva-recargo-equivalencia-tipo-1-cuota"}
-sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [2, 0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-390-iva-repercutido-tipo-2-base"}
-sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4], source_refs = [2, 0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-390-iva-repercutido-tipo-2-cuota"}
-sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4], source_refs = [2, 0, 1]}
 
 [[revisions."2024".family_overrides]]
 family = "bindings"
@@ -400,20 +371,6 @@ sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4], source_refs = [2, 0, 1]}
 [[revisions."2024".family_overrides]]
 family = "bindings"
 selector = {revision = "2023", id = "modelo-390-iva-repercutido-tipo-5-cuota"}
-sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4], source_refs = [2, 0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-390-iva-repercutido-tipo-7-5-base"}
-sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4], source_refs = [2, 0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-390-iva-repercutido-tipo-7-5-cuota"}
 sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4], source_refs = [2, 0, 1]}
@@ -444,10 +401,276 @@ sequence_order = {source_refs = [1, 0]}
 family = "completeness_manifest"
 selector = {revision = "2023", id = "aeat-dr-390-2023"}
 replacement_id = "aeat-dr-390-2024"
-sequence_additions = {casillas = [{casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota", number = "694"}, {casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota", number = "692"}, {casilla_id = "iva.anual.repercutido.tipo-7-5.base", number = "669"}, {casilla_id = "iva.anual.repercutido.tipo-7-5.cuota", number = "670"}, {casilla_id = "iva.anual.repercutido.tipo-2.base", number = "667"}, {casilla_id = "iva.anual.repercutido.tipo-2.cuota", number = "668"}, {casilla_id = "iva.anual.aic.bienes.tipo-2.base", number = "683"}, {casilla_id = "iva.anual.aic.bienes.tipo-2.cuota", number = "684"}, {casilla_id = "iva.anual.aic.bienes.tipo-7-5.base", number = "685"}, {casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota", number = "686"}, {casilla_id = "iva.anual.aic.servicios.tipo-2.base", number = "687"}, {casilla_id = "iva.anual.aic.servicios.tipo-2.cuota", number = "688"}, {casilla_id = "iva.anual.aic.servicios.tipo-7-5.base", number = "689"}, {casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota", number = "690"}, {casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.base", number = "765"}, {casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota", number = "766"}, {casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base", number = "767"}, {casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota", number = "768"}, {casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.base", number = "769"}, {casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.cuota", number = "770"}, {casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.base", number = "771"}, {casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota", number = "772"}, {casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.base", number = "773"}, {casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.cuota", number = "774"}, {casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.base", number = "775"}, {casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota", number = "776"}], legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 146, 33, 34, 147, 35, 36, 37, 38, 39, 40, 41, 42, 148, 149, 43, 44, 45, 46, 150, 151, 47, 48, 49, 50, 51, 52, 152, 153, 53, 54, 55, 56, 154, 155, 57, 58, 59, 60, 61, 62, 156, 157, 63, 64, 65, 66, 158, 159, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171], legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 32, 28, 29, 30, 31], source_refs = [2, 0, 1]}
+sequence_additions = { casillas = [{ casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota", number = "694" }, { casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota", number = "692" }, { casilla_id = "iva.anual.repercutido.tipo-7-5.base", number = "669" }, { casilla_id = "iva.anual.repercutido.tipo-7-5.cuota", number = "670" }, { casilla_id = "iva.anual.repercutido.tipo-2.base", number = "667" }, { casilla_id = "iva.anual.repercutido.tipo-2.cuota", number = "668" }, { casilla_id = "iva.anual.aic.bienes.tipo-2.base", number = "683" }, { casilla_id = "iva.anual.aic.bienes.tipo-2.cuota", number = "684" }, { casilla_id = "iva.anual.aic.bienes.tipo-7-5.base", number = "685" }, { casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota", number = "686" }, { casilla_id = "iva.anual.aic.servicios.tipo-2.base", number = "687" }, { casilla_id = "iva.anual.aic.servicios.tipo-2.cuota", number = "688" }, { casilla_id = "iva.anual.aic.servicios.tipo-7-5.base", number = "689" }, { casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota", number = "690" }, { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.base", number = "765" }, { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota", number = "766" }, { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base", number = "767" }, { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota", number = "768" }, { casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.base", number = "769" }, { casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.cuota", number = "770" }, { casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.base", number = "771" }, { casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota", number = "772" }, { casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.base", number = "773" }, { casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.cuota", number = "774" }, { casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.base", number = "775" }, { casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota", number = "776" }, { casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.base", number = "671" }, { casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.base", number = "673" }, { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.base", number = "675" }, { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base", number = "677" }, { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.base", number = "679" }, { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base", number = "681" }, { casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.cuota", number = "672" }, { casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota", number = "674" }, { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota", number = "676" }, { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota", number = "678" }, { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota", number = "680" }, { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota", number = "682" }], legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 243, 33, 34, 244, 35, 36, 37, 38, 39, 40, 41, 42, 245, 246, 43, 44, 45, 46, 247, 248, 47, 48, 49, 50, 51, 52, 249, 250, 53, 54, 55, 56, 251, 252, 57, 58, 59, 60, 61, 62, 253, 254, 63, 64, 65, 66, 255, 256, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 197, 198, 195, 196, 192, 193, 194, 199, 200, 201, 207, 208, 205, 206, 202, 203, 204, 209, 210, 211, 217, 218, 215, 216, 212, 213, 214, 219, 220, 221, 223, 225, 222, 224, 240, 230, 231, 235, 234, 236, 237, 233, 241, 238, 239, 229, 227, 232, 228, 242, 171, 172, 154, 153, 146, 147, 149, 148, 187, 269, 190, 191, 270, 188, 189, 182, 271, 185, 186, 272, 183, 184, 177, 273, 180, 181, 274, 178, 179, 176, 174, 173, 175, 166, 275, 169, 170, 276, 167, 168, 161, 277, 164, 165, 278, 162, 163, 156, 279, 159, 160, 280, 157, 158, 155, 151, 150, 152, 226], legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 32, 28, 29, 30, 31], source_refs = [2, 0, 1] }
+[[revisions."2024".family_overrides]]
+family = "formulas"
 
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-iva-anual-cuota-devengada-total"
+
+[revisions."2024".family_overrides.fields]
+source_refs = ["aeat-modelo-390-2024-printed-calculations"]
+
+[revisions."2024".family_overrides.fields.expression]
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.total-bases-cuotas-iva"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.recargo.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.recargo-concurso.cuota"
+
+[[revisions."2024".family_overrides.fields.source_citations]]
+source_ref = "aeat-modelo-390-2024-printed-calculations"
+required_text = ["34 + 664 + 692 + 36 + 666 + 694 + 600 + 602 + 42 + 44 + 46"]
+[[revisions."2024".family_overrides]]
+family = "formulas"
+
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-iva-anual-cuota-deducible-total"
+
+[revisions."2024".family_overrides.fields]
+source_refs = ["aeat-modelo-390-2024-printed-calculations"]
+
+[[revisions."2024".family_overrides.fields.source_citations]]
+source_ref = "aeat-modelo-390-2024-printed-calculations"
+required_text = ["49 + 513 + 51 + 521 + 53 + 55 + 57 + 59 + 598 + 61 + 661 + 62 + 652 + 63 + 522"]
+[[revisions."2024".family_overrides]]
+family = "formulas"
+
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-iva-anual-total-bases-cuotas-iva"
+
+[revisions."2024".family_overrides.fields]
+source_refs = ["aeat-modelo-390-2024-printed-calculations"]
+
+[revisions."2024".family_overrides.fields.expression]
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.autorepercutido.interior.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.bases-cuotas.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.concurso-acreedores.cuota"
+
+[[revisions."2024".family_overrides.fields.source_citations]]
+source_ref = "aeat-modelo-390-2024-printed-calculations"
+required_text = ["Total bases y cuotas IVA"]
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Suma de deducciones", "140 + 142"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-deduction-group-1"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Suma de deducciones", "157 + 159"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-deduction-group-2"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Suma de deducciones", "174 + 176"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-deduction-group-3"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Resultado atribuible a territorio"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-territorial-allocation"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["92 + 659 - 93"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-territorial-settlement"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Total volumen de operaciones"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-annual-volume"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = {  source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Total bases y cuotas IVA"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"], "expression.args" = [{casilla_id = "iva.anual.repercutido.tipo-2.base"}, {casilla_id = "iva.anual.repercutido.tipo-7-5.base"}, {casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.base"}, {casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.base"}, {casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.base"}, {casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base"}, {casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.base"}, {casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base"}, {casilla_id = "iva.anual.aic.bienes.tipo-2.base"}, {casilla_id = "iva.anual.aic.bienes.tipo-7-5.base"}, {casilla_id = "iva.anual.aic.servicios.tipo-2.base"}, {casilla_id = "iva.anual.aic.servicios.tipo-7-5.base"}]}
+sequence_removals = { source_citations = [0], source_refs = [0] }
+sequence_order = {  "expression.args" = [0, 35, 1, 2, 36, 3, 4, 5, 37, 6, 7, 38, 8, 9, 10, 39, 11, 12, 40, 13, 14, 15, 41, 16, 17, 42, 18, 19, 20, 21, 43, 22, 23, 44, 24, 25, 26, 45, 27, 28, 46, 29, 30, 31, 32, 33, 34]}
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-iva-anual-total-bases-iva"
 [[revisions."2024".family_removals]]
 family = "bindings"
 selector = {revision = "2023", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-lorca"}
@@ -455,3 +678,8 @@ selector = {revision = "2023", id = "modelo-390.page_5.operaciones-reg-simplific
 [[revisions."2024".family_removals]]
 family = "bindings"
 selector = {revision = "2023", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-lorca"}
+
+# Replace the earlier source-scoped disclosure owner.
+[[revisions."2024".family_removals]]
+family = "constructs"
+selector = {revision = "2023", id = "modelo-390-printed-disclosure-arithmetic-2023"}

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:a2fefbb610de99c5af5da1b8f9785543c4c870a4b079a5cd7a37b0c7941ad1d6'
+modified: '2026-10-03'
+body_hash: 'sha256:c57bd71b7ca6d6844c1be13f5e539a3858f9e0fc8b05bdc7927d90a0c02f0b36'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S171-001 | PASS | Master-key package facade does not acquire custody
 
-`src/aeat/adapters/persistence/storage/master_key/__init__.py` re-exports the master-key provider hierarchy, active-session entry point, KDF parameter model, secure atomic write helper, and recovery primitives. The facade does not call `get_master_key_provider`, `get_master_key`, `provision_master_key`, `activate_master_key_provider`, `atomic_write_secure_bytes`, or any recovery unwrap/write helper at import time.
+The retired module re-exports the master-key provider hierarchy, active-session entry point, KDF parameter model, secure atomic write helper, and recovery primitives. The facade does not call `get_master_key_provider`, `get_master_key`, `provision_master_key`, `activate_master_key_provider`, `atomic_write_secure_bytes`, or any recovery unwrap/write helper at import time.
 
 The `bootstrap-custody` classification remains accurate because the exported objects include custody-bearing provider and recovery APIs. The implementation risk is owned by later rows for `_active_session.py`, `_bucket_session.py`, `_dek_wrap.py`, `_kdf.py`, `_master_key.py`, `_recovery.py`, and `_recovery_facade.py`.
 
@@ -26,8 +26,8 @@ The scoped tests exercise real `EphemeralMasterKeyProvider` re-entrant behavior,
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_master_key_errors.py src/aeat/adapters/persistence/storage/master_key/test_cluster_envelopes.py` passed with 12 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/__init__.py src/aeat/adapters/persistence/storage/master_key/test_master_key_errors.py src/aeat/adapters/persistence/storage/master_key/test_cluster_envelopes.py` passed.
+- the historical check passed with 12 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Touched-surface hygiene scan found no direct environment access, settings construction, key acquisition calls, keyring calls, file I/O calls, broad exception suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, or direct output.
 

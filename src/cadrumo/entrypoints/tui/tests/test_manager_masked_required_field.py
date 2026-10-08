@@ -27,7 +27,7 @@ flag on the view is what a schema author has not yet declared.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Input
+from textual.widgets import Input, Static
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -35,7 +35,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import (
     MASKED_PLACEHOLDER,
     ProfileFieldView,
@@ -49,7 +49,8 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..profile.overview import FieldEditScreen, ProfileManagerScreen
+from ..profile.edit_screens import FieldEditScreen
+from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -78,7 +79,7 @@ def _ensure_logged_in() -> None:
     session. Logging in derives the same DEK the capsule was sealed under.
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    login_profile(
+    authenticate_profile_for_invocation(
         name=_LABEL,
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,
@@ -285,7 +286,7 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=False), "")
-            assert _notice(app), "the operator must be told why saving an empty required field did nothing"
+            assert str(app.app.screen.query_one("#edit-refusal", Static).content)
             pilot.app.exit(None)
 
         assert _MASKED_PATH not in _stored()
@@ -309,7 +310,7 @@ async def test_whitespace_in_an_empty_required_masked_field_refuses_too(tmp_path
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=False), "   ")
-            assert _notice(app), "a whitespace-only submission must be refused like any other blank"
+            assert str(app.app.screen.query_one("#edit-refusal", Static).content)
             pilot.app.exit(None)
 
         assert _MASKED_PATH not in _stored()

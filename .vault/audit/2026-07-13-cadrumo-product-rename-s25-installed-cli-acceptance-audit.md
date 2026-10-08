@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s25-installed-cli-acceptance'
 date: '2026-07-13'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:c935b9b41a8fe8e28a82867c6aad2c60e7f3e0c7fa2f6429df1a1c30760631fe'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s25-installed-cli-acceptance` audit: `Cadrumo product rename S25 installed CLI acceptance audit`

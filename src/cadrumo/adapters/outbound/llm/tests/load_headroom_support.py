@@ -100,7 +100,7 @@ def admitting_client(
     """A client carrying ``caller``/``prompt_id`` under a measurement that admits ``model``.
 
     Each reader stamps its own caller and prompt identity on the request it
-    builds, and usage and run telemetry are keyed on them. A test that injects a
+    builds, and usage and run record are keyed on them. A test that injects a
     client must therefore repeat the identity the reader would have set, or it
     moves the very records some of these cases assert on.
     """
@@ -267,7 +267,7 @@ def extract_invoice_text_under_admitted_load(
     """Read an invoice's text on the LOCAL route the evidence router pins, under an admitting measurement.
 
     The client carries the reader's own caller and prompt identity, so usage
-    and run telemetry are recorded exactly as the router's read records them.
+    and run record are recorded exactly as the router's read records them.
     """
     return TextInvoiceFieldExtractor(
         provider=LLMProvider.LOCAL,

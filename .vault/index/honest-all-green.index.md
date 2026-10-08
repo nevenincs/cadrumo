@@ -4,12 +4,11 @@ tags:
   - '#index'
   - '#honest-all-green'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:85c0370b2efac444d6b06171c844433fda2348b8fc382a4ea624b29c23a48bc7'
+body_hash: 'sha256:8425ee2b4e1a442befc877c423199e164785ba0131a0571f460ddb970bf4bc8f'
 related:
   - '[[2026-07-14-honest-all-green-adr]]'
-  - '[[2026-07-14-honest-all-green-ledger]]'
   - '[[2026-08-11-honest-all-green-p06-import-boundary-audit]]'
 ---
 
@@ -26,7 +25,3 @@ Auto-generated index of all documents tagged with `#honest-all-green`.
 ### audit
 
 - `2026-08-11-honest-all-green-p06-import-boundary-audit` - `honest-all-green` audit: `P06 import-boundary review`
-
-### exec
-
-- `2026-07-14-honest-all-green-ledger` - `honest-all-green` ledger

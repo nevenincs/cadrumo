@@ -94,9 +94,10 @@ class TestS01CreationGate:
         M303 has three revisions:
         - ``2022`` covers 2022
            - 2023, two 2024 epochs, and 2025 have distinct filing windows
-        - ``2026-y-siguientes`` covers 2026-onwards
+        - ``2026-hasta-01-y-1t`` covers January and 1T 2026
+        - ``2026-y-siguientes`` covers February and 2T 2026 onwards
 
-        For year 2026, period 1T the law-determined revision is ``2026-y-siguientes``.
+        For year 2026, period 1T the law-determined revision is ``2026-hasta-01-y-1t``.
         Supplying ``2022`` (a real revision that does NOT cover 2026)
         must be refused.
         """
@@ -116,9 +117,42 @@ class TestS01CreationGate:
         # Must name the requested revision
         assert "2022" in msg
         # Must name the law-determined revision
-        assert "2026-y-siguientes" in msg
+        assert "2026-hasta-01-y-1t" in msg
         # Must state the binding is fixed by law
         assert "law" in msg.lower() or "fixed by" in msg.lower()
+
+    @pytest.mark.parametrize("axis", ["requested", "stored"])
+    def test_mismatch_retains_public_captured_coordinates(
+        self, *, axis: str, operation: PinnedAuthorityOperation
+    ) -> None:
+        """Both assertion axes carry finite facts through the recorded error boundary."""
+        from cadrumo.application.operations.error_detail import build_operation_error_detail
+
+        with pytest.raises(ModeloWorkRegistryYearMismatchError) as raised:
+            law_selected_revision_for_work_target(
+                modelo="303",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                requested_revision_id="2022" if axis == "requested" else None,
+                stored_revision_id="2022" if axis == "stored" else None,
+                operation=operation,
+            )
+        expected = {
+            "axis": axis,
+            "requested_revision": "2022",
+            "law_revision": "2026-hasta-01-y-1t",
+            "modelo": "303",
+            "year": 2026,
+            "period": "1T",
+        }
+        assert raised.value.context == expected
+        detail = build_operation_error_detail(raised.value)
+        assert detail is not None
+        assert detail.error_code == "REFUSED_MODELO_WORK_REGISTRY_YEAR_MISMATCH"
+        assert {entry.key: entry.value for entry in detail.context} == {
+            key: str(value) for key, value in expected.items()
+        }
+        assert "law-determined" not in detail.model_dump_json()
 
     def test_refusal_message_is_instructive_and_names_both_revisions(
         self, *, operation: PinnedAuthorityOperation
@@ -142,20 +176,20 @@ class TestS01CreationGate:
         with override_settings(cadrumo_output_language="en"):
             msg = resolve_error_message(exc_info.value)
         assert "2022" in msg, "message must name the requested revision"
-        assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
+        assert "2026-hasta-01-y-1t" in msg, "message must name the law-determined revision"
         # Should direct operator to re-create without --revision
         assert "re-create" in msg.lower() or "--revision" in msg.lower() or "without" in msg.lower()
 
     def test_returns_correct_law_determined_revision_for_the_open_ended_m303_design(
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
-        """Smoke test: the open-ended design's first 1T resolves to its own revision."""
+        """Smoke test: the open-ended design's first 4T resolves to its own revision."""
         # The first exercise of the open-ended Modelo 303 revision the registry authors.
         design_exercise = open_ended_revision("303").valid_from.year
         result = law_selected_revision_for_work_target(
             modelo="303",
             filing_year=design_exercise,
-            period=Period.from_year_and_code(design_exercise, "1T"),
+            period=Period.from_year_and_code(design_exercise, "4T"),
             requested_revision_id=None,
             operation=operation,
         )
@@ -311,7 +345,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
         with override_settings(cadrumo_output_language="en"):
             msg = resolve_error_message(exc_info.value)
         assert "2022" in msg
-        assert "2026-y-siguientes" in msg
+        assert "2026-hasta-01-y-1t" in msg
 
         # No work unit was persisted for the refused key.
         stray_id = derive_work_unit_id(
@@ -340,7 +374,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2026-y-siguientes",
+            revision_id="2026-hasta-01-y-1t",
             ports=WorkLifecyclePorts(
                 work_unit_repository=repo,
                 bucket_event_repository=BucketEventHistoryRepository(),
@@ -348,5 +382,5 @@ class TestS03CreateWorkUnitDoorReconfirmation:
             clock=_T0,
             operation=operation,
         )
-        assert unit.revision_id == "2026-y-siguientes"
+        assert unit.revision_id == "2026-hasta-01-y-1t"
         assert repo.load().get(unit.work_unit_id) is not None

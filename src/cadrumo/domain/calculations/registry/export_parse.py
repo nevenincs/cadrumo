@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from xml.etree.ElementTree import Element
 
@@ -13,10 +14,12 @@ from defusedxml import ElementTree
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.decimal.coercion import normalize_decimal_separators
 from ....core.export_layout_format import ExportLayoutFormat
+from ....core.filing_producer_key import FilingProducerKey
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
-from .export_value_policy import ParsedExportPolicyValue
-from .fixed_width_codec import parse_fixed_width_export_field
+from .export_value_policy import ExportValuePolicy, ParsedExportPolicyValue
+from .fixed_width_codec import render_empty_block_slot
+from .fixed_width_parser import parse_fixed_width_export_field
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId
 from .schema_base import RegistryModel
 from .schema_exports import (
@@ -83,10 +86,40 @@ def parse_export_payload(
     sources: Mapping[str, SourceReference] | None = None,
     source_payloads: Mapping[str, bytes] | None = None,
 ) -> ParsedExportPayload:
-    """Parse a complete AEAT payload and return a :class:`ParsedExportPayload`."""
+    """Validate exported bytes, including blank filler and declared record terminators."""
+    return _parse_payload(layout, payload, sources=sources, source_payloads=source_payloads, filed=False)
+
+
+def parse_filed_payload(
+    layout: ExportLayoutDefinition,
+    payload: bytes,
+    *,
+    sources: Mapping[str, SourceReference] | None = None,
+    source_payloads: Mapping[str, bytes] | None = None,
+) -> ParsedExportPayload:
+    """Read downloaded filing evidence without treating AEAT annotations as export inputs.
+
+    AEAT can return a compact envelope and populate its reserved filler slots.
+    Preserve those slots' raw bytes but give them no semantic value. Compact
+    framing is admitted only for a declared envelope without any CR or LF;
+    mixed framing still has to satisfy every declared record terminator.
+    Geometry, literal, numeric and envelope validation remain shared with export.
+    """
+    return _parse_payload(layout, payload, sources=sources, source_payloads=source_payloads, filed=True)
+
+
+def _parse_payload(
+    layout: ExportLayoutDefinition,
+    payload: bytes,
+    *,
+    sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
+    filed: bool,
+) -> ParsedExportPayload:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return _parse_xml_dictionary_payload(layout, payload, sources=sources, source_payloads=source_payloads)
 
+    compact = filed and layout.filing_envelope is not None and b"\r" not in payload and b"\n" not in payload
     cursor = 0
     if layout.filing_envelope is not None:
         cursor, payload = _filing_envelope_body(layout.filing_envelope, payload)
@@ -109,8 +142,12 @@ def parse_export_payload(
             payload=payload,
             cursor=cursor,
             parsed=parsed,
+            filed=filed,
+            compact=compact,
         )
     trailing = payload[cursor:]
+    if layout.filing_envelope is not None and trailing:
+        raise RegistryValidationError(f"filing envelope has {len(trailing)} undeclared body byte(s) after its records")
     if trailing and trailing.strip(b"\r\n"):
         raise RegistryValidationError(f"payload has {len(payload) - cursor} trailing byte(s) after export layout")
     casillas = tuple(value for value in parsed if value.casilla_id is not None)
@@ -131,7 +168,18 @@ def _filing_envelope_body(envelope: FilingEnvelopeDefinition, payload: bytes) ->
             f"{envelope.prefix_extent}-byte prefix"
         )
     closer = envelope.closer_for(payload[: envelope.opening_tag_extent])
-    body_end = len(payload.rstrip(b"\r\n"))
+    if envelope.record_terminator == "crlf":
+        if not payload.endswith(b"\r\n"):
+            raise RegistryValidationError(
+                f"filing envelope {envelope.record_identity!r} requires its source-declared CRLF terminator"
+            )
+        body_end = len(payload) - 2
+    else:
+        if payload.endswith((b"\r", b"\n")):
+            raise RegistryValidationError(
+                f"filing envelope {envelope.record_identity!r} has an undeclared trailing record terminator"
+            )
+        body_end = len(payload)
     if payload[body_end - len(closer) : body_end] != closer:
         raise RegistryValidationError(
             f"filing envelope {envelope.record_identity!r} payload does not end with its relative closer"
@@ -147,6 +195,8 @@ def _consume_record_block(
     payload: bytes,
     cursor: int,
     parsed: list[ParsedExportFieldValue],
+    filed: bool,
+    compact: bool,
 ) -> int:
     """Consume zero or more instances of ``record`` from ``payload`` at ``cursor``.
 
@@ -163,12 +213,12 @@ def _consume_record_block(
     """
     if record.repeat == "binding_rows":
         while cursor < len(payload) and not _matches_record_start(next_record, payload, cursor):
-            record_values, cursor = _read_record(layout_id, record, payload, cursor)
+            record_values, cursor = _read_record(layout_id, record, payload, cursor, filed=filed, compact=compact)
             parsed.extend(record_values)
         return cursor
     if not _matches_record_start(record, payload, cursor) and not record.required:
         return cursor
-    record_values, cursor = _read_record(layout_id, record, payload, cursor)
+    record_values, cursor = _read_record(layout_id, record, payload, cursor, filed=filed, compact=compact)
     parsed.extend(record_values)
     return cursor
 
@@ -188,8 +238,8 @@ def _parse_xml_dictionary_payload(
 
     parsed: list[ParsedExportFieldValue] = []
     for entry in entries:
-        for index, element in enumerate(_find_xml_path(root, entry.path), start=1):
-            raw = (element.text or "").strip()
+        for index, text in enumerate(_xml_dictionary_path_values(root, entry.path), start=1):
+            raw = text.strip()
             if not raw:
                 continue
             parsed.append(
@@ -348,6 +398,16 @@ def _find_xml_path(root: Element[str], absolute_path: str) -> tuple[Element[str]
     return current
 
 
+def _xml_dictionary_path_values(root: Element[str], absolute_path: str) -> tuple[str, ...]:
+    """Read element text or the final attribute explicitly named by a dictionary row."""
+    parts = _xml_path_parts(absolute_path)
+    if parts and parts[-1].startswith("@"):
+        attribute = parts[-1][1:]
+        parents = _find_xml_path(root, "/".join(parts[:-1]))
+        return tuple(element.attrib[attribute] for element in parents if attribute in element.attrib)
+    return tuple(element.text or "" for element in _find_xml_path(root, absolute_path))
+
+
 def _xml_path_parts(absolute_path: str) -> tuple[str, ...]:
     """Return non-empty local-name segments from an absolute XML path."""
     return tuple(part for part in absolute_path.strip("/").split("/") if part)
@@ -407,6 +467,9 @@ def _read_record(
     record: ExportRecordDefinition,
     payload: bytes,
     cursor: int,
+    *,
+    filed: bool,
+    compact: bool,
 ) -> tuple[tuple[ParsedExportFieldValue, ...], int]:
     record_length = _record_length(record.fields)
     record_bytes = payload[cursor : cursor + record_length]
@@ -419,9 +482,9 @@ def _read_record(
         record_text = record_bytes.decode(record.encoding)
     except UnicodeDecodeError as exc:
         raise RegistryValidationError(f"export record {record.id!r} is not {record.encoding!r}") from exc
-    parsed = _parse_record_fields(layout_id, record.id, record_text, record.fields)
+    parsed = _parse_record_fields(layout_id, record.id, record_text, record.fields, filed=filed)
     cursor += record_length
-    line_ending = _line_ending_bytes(record.line_ending)
+    line_ending = b"" if compact else _line_ending_bytes(record.line_ending)
     if line_ending:
         ending = payload[cursor : cursor + len(line_ending)]
         if ending != line_ending:
@@ -512,9 +575,13 @@ def _parse_record_fields(
     record_id: str,
     record_text: str,
     fields: tuple[ExportFieldDefinition, ...],
+    *,
+    filed: bool,
 ) -> tuple[ParsedExportFieldValue, ...]:
     parsed: list[ParsedExportFieldValue] = []
-    for field in sorted(fields, key=lambda item: item.offset or 0):
+    ordered_fields = tuple(sorted(fields, key=lambda item: item.offset or 0))
+    empty_blocks = _empty_occurrence_blocks(record_text, ordered_fields)
+    for field in ordered_fields:
         if field.offset is None or field.length is None:
             raise RegistryValidationError(f"export field {field.id!r} must declare offset and length")
         start = field.offset - 1
@@ -522,7 +589,17 @@ def _parse_record_fields(
         raw = record_text[start:end]
         if len(raw) != field.length:
             raise RegistryValidationError(f"export field {field.id!r} ended before declared length")
-        value = _parse_field_value(field, raw)
+        value: ParsedExportPolicyValue
+        if filed and field.kind == CasillaFieldKind.FILLER:
+            value = None
+        elif field.required_with is not None and field.required_with in empty_blocks:
+            if raw != render_empty_block_slot(field):
+                raise RegistryValidationError(
+                    f"export field {field.id!r} carries data inside an occurrence block with no anchor",
+                )
+            value = None
+        else:
+            value = _parse_field_value(field, raw)
         if field.kind == CasillaFieldKind.LITERAL and value != field.literal:
             raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
         parsed.append(
@@ -536,13 +613,134 @@ def _parse_record_fields(
                 source_locator=f"{layout_id}:{record_id}:{field.id}:{field.offset}:{field.length}",
             ),
         )
+    _reconstruct_component_values(ordered_fields, parsed)
     return tuple(parsed)
+
+
+def _empty_occurrence_blocks(
+    record_text: str,
+    fields: tuple[ExportFieldDefinition, ...],
+) -> frozenset[CasillaId]:
+    """Return the anchors of the record's occurrence blocks whose anchor holds its blank fill.
+
+    An empty block carries no occurrence, so its campos are read as absent rather
+    than parsed against the requirement the design states for an occurrence.
+    """
+    anchors = {field.required_with for field in fields if field.required_with is not None}
+    empty: set[CasillaId] = set()
+    for field in fields:
+        if field.casilla_id not in anchors or field.offset is None or field.length is None:
+            continue
+        raw = record_text[field.offset - 1 : field.offset - 1 + field.length]
+        if raw == render_empty_block_slot(field):
+            empty.add(field.casilla_id)
+    return frozenset(empty)
+
+
+def _reconstruct_component_values(
+    fields: tuple[ExportFieldDefinition, ...], parsed: list[ParsedExportFieldValue]
+) -> None:
+    """Recombine complete source-ordered components without discarding their raw bytes."""
+    for index, field in enumerate(fields):
+        if field.value_policy is ExportValuePolicy.INTEGER_PART:
+            _reconstruct_unsigned_component_pair(fields, parsed, index)
+        if field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_SIGN:
+            if (
+                index + 1 < len(fields)
+                and fields[index + 1].value_policy is ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE
+            ):
+                _reconstruct_signed_component_pair(parsed, index)
+            else:
+                _reconstruct_signed_component_triplet(fields, parsed, index)
+        if field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN:
+            _reconstruct_signed_component_triplet(fields, parsed, index)
+        if field.value_policy is ExportValuePolicy.YYYYMMDD_TEXT_YEAR:
+            _reconstruct_text_date_components(fields, parsed, index)
+
+
+def _reconstruct_unsigned_component_pair(
+    fields: tuple[ExportFieldDefinition, ...], parsed: list[ParsedExportFieldValue], index: int
+) -> None:
+    """Recover a complete contiguous amount only from components of one declared target."""
+    if index + 1 >= len(fields):
+        return
+    integer_field, fraction_field = fields[index : index + 2]
+    if fraction_field.value_policy is not ExportValuePolicy.FRACTIONAL_DIGITS:
+        return
+    integer_target = (
+        integer_field.kind,
+        integer_field.casilla_id,
+        integer_field.binding,
+        integer_field.producer_key,
+        integer_field.projection_ref,
+        integer_field.draft_attribute,
+        integer_field.computed_key,
+    )
+    fraction_target = (
+        fraction_field.kind,
+        fraction_field.casilla_id,
+        fraction_field.binding,
+        fraction_field.producer_key,
+        fraction_field.projection_ref,
+        fraction_field.draft_attribute,
+        fraction_field.computed_key,
+    )
+    if integer_target != fraction_target or not any(item is not None for item in integer_target[1:]):
+        return
+    if (
+        integer_field.offset is None
+        or integer_field.length is None
+        or fraction_field.offset != integer_field.offset + integer_field.length
+    ):
+        return
+    integer, fraction = parsed[index : index + 2]
+    if integer.value is None or fraction.value is None:
+        return
+    if not all(part.raw.isascii() and part.raw.isdigit() for part in (integer, fraction)):
+        raise RegistryValidationError("unsigned source amount has malformed component bytes")
+    amount = Decimal(f"{integer.raw}.{fraction.raw}")
+    parsed[index] = integer.model_copy(update={"value": amount})
+    parsed[index + 1] = fraction.model_copy(update={"value": amount})
+
+
+def _reconstruct_signed_component_triplet(
+    fields: tuple[ExportFieldDefinition, ...], parsed: list[ParsedExportFieldValue], index: int
+) -> None:
+    group = fields[index : index + 3]
+    if (
+        tuple(part.value_policy for part in group)
+        != (
+            fields[index].value_policy,
+            ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
+            ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+        )
+        or len(group) != 3
+    ):
+        raise RegistryValidationError("signed source amount has incomplete sign/integer/fraction components")
+    sign, integer, fraction = parsed[index : index + 3]
+    allowed_signs = (
+        {"0", "N"} if fields[index].value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN else {" ", "N"}
+    )
+    _require_signed_component_bytes(sign, integer, fraction, allowed_signs)
+    magnitude = Decimal(f"{integer.raw}.{fraction.raw}")
+    if _impossible_signed_magnitude(sign.raw, magnitude):
+        raise RegistryValidationError("signed source amount has impossible sign/magnitude combination")
+    amount = -magnitude if sign.raw == "N" else magnitude
+    for part_index in range(index, index + 3):
+        parsed[part_index] = parsed[part_index].model_copy(update={"value": amount})
 
 
 def _parse_field_value(
     field: ExportFieldDefinition,
     raw: str,
 ) -> ParsedExportPolicyValue:
+    if field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA and "aeat-dr-369-2021" in field.source_refs:
+        # DR369 v1.1 declares this mandatory byte as [blank | constant "C"].
+        # Preserve the ordinary-return blank as its actual text token rather
+        # than converting it to None, which would fail required-slot replay.
+        if field.data_type != "text" or field.length != 1 or raw not in {" ", "C"}:
+            raise RegistryValidationError("Modelo 369 complementaria must contain exactly C or one ASCII space")
+        return raw
     return parse_fixed_width_export_field(field, raw)
 
 
@@ -586,5 +784,66 @@ __all__ = [
     "XmlDictionaryEntry",
     "decode_dictionary_text",
     "parse_export_payload",
+    "parse_filed_payload",
     "xml_dictionary_entries",
 ]
+
+
+def _reconstruct_signed_component_pair(parsed: list[ParsedExportFieldValue], index: int) -> None:
+    """Recombine a sign/magnitude pair while preserving both raw source slots."""
+    sign, magnitude = parsed[index : index + 2]
+    if sign.raw not in {" ", "N"} or not magnitude.raw.isascii() or not magnitude.raw.isdigit():
+        raise RegistryValidationError("signed component pair has invalid sign or magnitude")
+    magnitude_amount = Decimal(magnitude.raw).scaleb(-2)
+    if sign.raw == "N" and magnitude_amount == 0:
+        raise RegistryValidationError("signed component pair cannot encode negative zero")
+    amount = -magnitude_amount if sign.raw == "N" else magnitude_amount
+    parsed[index] = sign.model_copy(update={"value": amount})
+    parsed[index + 1] = magnitude.model_copy(update={"value": amount})
+
+
+def _reconstruct_text_date_components(
+    fields: tuple[ExportFieldDefinition, ...], parsed: list[ParsedExportFieldValue], index: int
+) -> None:
+    """Reconstruct absence or a real calendar date from all three adjacent raw slots."""
+    group = fields[index : index + 3]
+    if tuple(part.value_policy for part in group) != (
+        ExportValuePolicy.YYYYMMDD_TEXT_YEAR,
+        ExportValuePolicy.YYYYMMDD_TEXT_MONTH,
+        ExportValuePolicy.YYYYMMDD_TEXT_DAY,
+    ):
+        raise RegistryValidationError("text YYYYMMDD date has incomplete adjacent components")
+    parts = parsed[index : index + 3]
+    raw = "".join(part.raw for part in parts)
+    if raw == "00000000":
+        if any(part.required for part in group):
+            raise RegistryValidationError("required text YYYYMMDD date is absent from all three source slots")
+        for part_index in range(index, index + 3):
+            parsed[part_index] = parsed[part_index].model_copy(update={"value": None})
+        return
+    try:
+        date(int(raw[:4]), int(raw[4:6]), int(raw[6:8]))
+    except ValueError as exc:
+        raise RegistryValidationError("text YYYYMMDD components do not form a real calendar date") from exc
+    for part_index in range(index, index + 3):
+        parsed[part_index] = parsed[part_index].model_copy(update={"value": raw})
+
+
+def _require_signed_component_bytes(
+    sign: ParsedExportFieldValue,
+    integer: ParsedExportFieldValue,
+    fraction: ParsedExportFieldValue,
+    allowed_signs: set[str],
+) -> None:
+    if (
+        sign.raw not in allowed_signs
+        or not integer.raw.isascii()
+        or not integer.raw.isdigit()
+        or not fraction.raw.isascii()
+        or not fraction.raw.isdigit()
+    ):
+        raise RegistryValidationError("signed source amount has malformed component bytes")
+
+
+def _impossible_signed_magnitude(sign: str, magnitude: Decimal) -> bool:
+    return (sign == "N" and magnitude == 0) or (sign == "0" and magnitude != 0)

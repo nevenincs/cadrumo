@@ -27,7 +27,7 @@ from __future__ import annotations
 import pytest
 
 from ..compiler.record_design import extract_record_design
-from ..compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix
+from ..compiler.record_design_pdf_coordinate_repairs import collapse_stuttered_row_prefix
 from ..compiler.record_design_pdf_rows import parse_pdf_row
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-filter-period'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:7fb8c319e562806ab509425f0292b6dc690bf404ddd229d75296412d9c3111a7'
+modified: '2026-10-03'
+body_hash: 'sha256:1e3035c50187ca59238b7d4ce4742af06b4afa42e13617ce02a715e5433a79d1'
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
@@ -26,7 +26,7 @@ be single and proven.
 ### The strict `year.period` grammar already landed
 
 Commit `7c150c749` (2026-06-10) installed the canonical grammar at the CLI ledger
-period surface. Three boundary helpers in `src/aeat/entrypoints/cli/_common.py` own it:
+period surface. Three boundary helpers  own it:
 
 - `_canonical_period(period, *, year)` (`_common.py:247`) backs `--period` / `--year`.
   It accepts only the bare AEAT modelo tokens — `0A` (annual), `1T`-`4T` (quarters),
@@ -49,7 +49,7 @@ period surface. Three boundary helpers in `src/aeat/entrypoints/cli/_common.py` 
   a date span) and the extended-union members (`EXT-*`, `AD-HOC`, `EVENT-N`) correctly
   return `None`, so the filter refuses them with the instructive message.
 
-`StandardPeriodCode` in `src/aeat/core/_period.py:25` is the authoritative closed set:
+`StandardPeriodCode`  is the authoritative closed set:
 its values are exactly `1T`-`4T`, `1P`-`4P`, `0A`, `01`-`12`. The ledger-filterable
 subset is the span-shaped members (quarters, annual, months); the instalment claves are
 in the enum but are payment events with no ledger date span.
@@ -58,7 +58,7 @@ in the enum but are payment events with no ledger date span.
 
 The CLI ledger filter and the modelo calculation snapshot converge on a single boundary
 authority: `Period.model_validate(internal_calendar_str)` plus `Period.contains(date)`
-in `src/aeat/application/aggregation/_models.py`. There is no parallel boundary
+. There is no parallel boundary
 implementation.
 
 - `Period` (`_models.py:80`) is a strict frozen pydantic model. Its `start`
@@ -70,7 +70,7 @@ implementation.
 - CLI path: `--filter period=2024-1T` → `_filter_canonical_period` → `"2024Q1"` →
   `Period.model_validate` → `Period.contains`.
 - Calc-engine path: an AEAT token → `aggregation_period_for_modelo`
-  (`src/aeat/application/aggregation/_modelo_bindings.py:442`) → `"2024Q1"` → `Period`.
+   → `"2024Q1"` → `Period`.
 
 Both transports land on the identical `(start, end, contains)` computation. The boundary
 is single-authority by construction.

@@ -2,22 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
-    MappingFactQuery,
-    ResolvedMappingFact,
     required_mapping_entry,
     unique_mapping_tokens,
 )
-from ..calculations.registry.facts.schema import FactSelector
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from ..calculations.registry.facts.variants import FactSelector
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .profile import IvaDeductibilityHint
 
@@ -57,16 +58,11 @@ class IvaDeductibilityHintCatalogue:
         return token
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    """Narrow a resolved mapping payload to a unique string-to-string map."""
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("IVA deductibility hint entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate IVA deductibility hint key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
+
+_ENTRIES_FACT = StringMappingFact(
+    fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY, selectors=(_SCOPE_SELECTOR,)
+)
 
 
 def resolve_iva_deductibility_hint_catalogue(
@@ -75,22 +71,8 @@ def resolve_iva_deductibility_hint_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IvaDeductibilityHintCatalogue:
     """Resolve the dated IVA hint vocabulary through the facts authority."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError(
-            "IVA deductibility hint catalogue requires an explicit authority operation or scope"
-        )
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or today_madrid(),
-            selectors=(_SCOPE_SELECTOR,),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("categories.profile IVA hint vocabulary must resolve as a mapping fact")
-    entries = _mapping_entries(resolved)
+    selected_authority = require_governed_fact_authority(authority, subject="IVA deductibility hint catalogue")
+    entries = _ENTRIES_FACT.resolve_entries(selected_authority, effective_date=effective_date or today_madrid())
     values = tuple(
         IvaDeductibilityHint(token)
         for token in unique_mapping_tokens(

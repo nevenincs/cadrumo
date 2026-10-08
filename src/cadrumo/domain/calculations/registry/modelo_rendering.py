@@ -6,9 +6,8 @@ from collections.abc import Mapping
 from datetime import date
 
 from ....core.time.clock import today_madrid
-from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 _MODELO_RENDERING_FACT_ID = "modelo-rendering-tax-notice-catalogue"
@@ -20,9 +19,7 @@ def modelo_rendering_declarations(
     authority: GovernedFactSource | None = None,
 ) -> Mapping[str, str]:
     """Resolve the selected Modelo rendering mapping from registry authority."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("Modelo rendering declarations require an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="Modelo rendering catalogue")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_MODELO_RENDERING_FACT_ID,

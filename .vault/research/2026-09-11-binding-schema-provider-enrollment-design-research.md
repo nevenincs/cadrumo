@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#binding-schema'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:67f5e78b62126bd04716c6cd877004ab314e658515116ef91a743a3020a3c7ed'
+body_hash: 'sha256:5ae09254fec7d5e45c20af6dd2e145339644e0898db82ca35218908df7b7807f'
 related:
   - "[[2026-09-11-binding-schema-research]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"
@@ -19,7 +19,7 @@ The question is what a revision-local binding declaration must contain so that i
 
 ### Current registry shape: the fragment loader is generic, the inline-binding refusal is fragment-mode only
 
-Section directories are discovered generically (every subdirectory except `locales/`) and section fields are derived from `ModeloRevision.model_fields`, so `bindings/` is a section by derivation, not by name. `dev/registry/compiler/_loader_internals.py:1137`; `dev/registry/compiler/loader_grammar.py:17-34`. The refusal of inline `bindings` in `revision.toml` lives only in the directory branch. `dev/registry/compiler/_loader_revision_fragments.py:107-115`. The flat `revisions/*.toml` and single-file modelo branches still pass inline bindings through untouched. `dev/registry/compiler/_loader_internals.py:1104`; `dev/registry/compiler/loader.py:60`. The corpus uses neither branch, so these are removable under the no-legacy-compatibility policy, not a migration concern.
+Section directories are discovered generically (every subdirectory except `locales/`) and section fields are derived from `ModeloRevision.model_fields`, so `bindings/` is a section by derivation, not by name. the former source file; `dev/registry/compiler/loader_grammar.py:17-34`. The refusal of inline `bindings` in `revision.toml` lives only in the directory branch. `dev/registry/compiler/_loader_revision_fragments.py:107-115`. The flat `revisions/*.toml` and single-file modelo branches still pass inline bindings through untouched. the former source file; `dev/registry/compiler/loader.py:60`. The corpus uses neither branch, so these are removable under the no-legacy-compatibility policy, not a migration concern.
 
 Publication serializes each binding's selector by `model_dump` of the hydrated model with `exclude={"source"}`, so `authority.json` carries the authored mapping without a tag. `src/cadrumo/domain/calculations/registry/schema.py:350`; `src/cadrumo/domain/calculations/registry/authority_artifact.py:407`. Runtime re-hydrates through the same before-validator, so the artifact is readable only because the sibling `source` field survives beside it.
 
@@ -103,11 +103,11 @@ The seven `missing` kinds share one root cause: the enum comment says a calculat
 
 ### Runtime resolvers re-read selector fields in fourteen places
 
-A closed provider type only pays off if resolvers consume it as typed members. Today resolvers re-read fields by dict key, `getattr`, or `isinstance`, several with a Mapping-or-model dual path that exists only because the field type admits both. `src/cadrumo/application/modelo/binding_prefill.py:109-141,711-714`; `src/cadrumo/application/calculations/bienes_inversion_regularizacion.py:104-109`; `src/cadrumo/application/calculations/prorrata_regularizacion.py:176,544,559`; `src/cadrumo/application/aggregation/inventory.py:36-38,81`; `src/cadrumo/application/aggregation/foreign_assets.py:81-83`; `src/cadrumo/application/calculations/foreign_asset_redeclaration.py:141`; `src/cadrumo/application/aggregation/oss_ioss.py:347-350`; `src/cadrumo/application/aggregation/modelo_bindings.py:1040`; `src/cadrumo/application/aggregation/iva_ledger.py:1344`; `src/cadrumo/application/aggregation/service.py:278`; `src/cadrumo/application/modelo/profile_binding.py:1344-1349`; `src/cadrumo/application/filing/runtime.py:834`; `src/cadrumo/application/filing/draft_construction.py:848-854`; `src/cadrumo/application/aggregation/_per_grupo_member_keys.py:69-71`. Each is a migration worklist item: replace with a typed narrow on the provider member.
+A closed provider type only pays off if resolvers consume it as typed members. Today resolvers re-read fields by dict key, `getattr`, or `isinstance`, several with a Mapping-or-model dual path that exists only because the field type admits both. the former source file; `src/cadrumo/application/calculations/bienes_inversion_regularizacion.py:104-109`; `src/cadrumo/application/calculations/prorrata_regularizacion.py:176,544,559`; `src/cadrumo/application/aggregation/inventory.py:36-38,81`; `src/cadrumo/application/aggregation/foreign_assets.py:81-83`; `src/cadrumo/application/calculations/foreign_asset_redeclaration.py:141`; `src/cadrumo/application/aggregation/oss_ioss.py:347-350`; `src/cadrumo/application/aggregation/modelo_bindings.py:1040`; `src/cadrumo/application/aggregation/iva_ledger.py:1344`; `src/cadrumo/application/aggregation/service.py:278`; `src/cadrumo/application/modelo/profile_binding.py:1344-1349`; `src/cadrumo/application/filing/runtime.py:834`; `src/cadrumo/application/filing/draft_construction.py:848-854`; the former source file. Each is a migration worklist item: replace with a typed narrow on the provider member.
 
 ### Temporal-resolution model: one grammar exists, it is owned by the wrong type, and it is declared three times
 
-`PreviousModeloSelector` already carries the full relative grammar with mutual-exclusion validation: `filing_year_delta`, `max_year_delta`, `period`, `source_periods`, `source_period_offset_from_target`, `prior_quarter_expanding_span`. `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py:457-462,552-599`. Coordinate derivation is `expected_year = filing_year + filing_year_delta + period_year_delta` with anchors from `required_period_anchors_for_target`. `bindings_previous_filing.py:157,352,485-504,756-785`. Source revision selection is separate and law-determined: the carry gate re-confirms each observation's stamped revision against `ValidatedRegistryAuthority.inspect_revision`. `src/cadrumo/application/calculations/revision_carry_gate.py:41-60`; `src/cadrumo/application/modelo/binding_prefill.py:150-160`.
+`PreviousModeloSelector` already carries the full relative grammar with mutual-exclusion validation: `filing_year_delta`, `max_year_delta`, `period`, `source_periods`, `source_period_offset_from_target`, `prior_quarter_expanding_span`. `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py:457-462,552-599`. Coordinate derivation is `expected_year = filing_year + filing_year_delta + period_year_delta` with anchors from `required_period_anchors_for_target`. `bindings_previous_filing.py:157,352,485-504,756-785`. Source revision selection is separate and law-determined: the carry gate re-confirms each observation's stamped revision against `ValidatedRegistryAuthority.inspect_revision`. `src/cadrumo/application/calculations/revision_carry_gate.py:41-60`; the former source file.
 
 The same axes are declared again in `RelationRevisionSelector` (`filing_year_delta` or absolute `year`/`year_from`/`year_to`) and again in `RelationPeriodAlignment` (which has its own `filing_year_delta`). `src/cadrumo/domain/calculations/registry/schema_surfaces.py:768-786,855-885`. The relation therefore carries the delta twice within itself and a third time when the prefill binding restates `source_periods`. The absolute `year` shape on `RelationRevisionSelector` is the one authored surface that admits a concrete source year; the proposed schema refuses it. The inventory selector hard-codes `filing_year = 2025` as an authored field, which is an absolute coordinate in a provider template. `src/cadrumo/domain/calculations/registry/inventory_bindings.py:54`.
 
@@ -218,7 +218,7 @@ Authored: everything in the TOML above plus `binding_evolutions` rows. Compiler-
 
 ### Authoring and generation tools
 
-`dev/registry/newmodelo` scaffolds `bindings/` and instructs edition-free ids but synthesizes no rows. `dev/registry/newmodelo/manager.py:79,280-283`; `dev/registry/newmodelo/checklist.py:78-83`. `edition_delta_migration.py` is casilla-only and duplicates the reference-section map held by the loader. `dev/registry/edition_delta_migration.py:85,162-165`; `dev/registry/compiler/_loader_internals.py:102-106`. `rename_formula_binding_identifiers.py` is the only in-place binding rewriter and carves out modelos 185, 222, 347 and 390. `dev/registry/rename_formula_binding_identifiers.py:1-60`. No generator writes `bindings/*.toml` and no generated-lineage marker exists on bindings; only the export tree carries `_generation.provenance.json`. `dev/registry/compiler/loader_cache.py:89,386`. The `authorship` member is therefore currently always `authored`; the ADR should decide whether `generated` ships now or the union stays single-member.
+`dev/registry/newmodelo` scaffolds `bindings/` and instructs edition-free ids but synthesizes no rows. `dev/registry/newmodelo/manager.py:79,280-283`; `dev/registry/newmodelo/checklist.py:78-83`. `edition_delta_migration.py` is casilla-only and duplicates the reference-section map held by the loader. `dev/registry/edition_delta_migration.py:85,162-165`; the former source file. `rename_formula_binding_identifiers.py` is the only in-place binding rewriter and carves out modelos 185, 222, 347 and 390. the former source file. No generator writes `bindings/*.toml` and no generated-lineage marker exists on bindings; only the export tree carries `_generation.provenance.json`. `dev/registry/compiler/loader_cache.py:89,386`. The `authorship` member is therefore currently always `authored`; the ADR should decide whether `generated` ships now or the union stays single-member.
 
 ### Temporally coupled ids: 756 audit candidates, zero period tokens
 
@@ -250,7 +250,6 @@ Compiled-authority enumeration of binding rows per kind was not run because the 
 
 ## Sources
 
-- `dev/registry/compiler/_loader_internals.py:102-106,712-825,1104,1137`
 - `dev/registry/compiler/loader_grammar.py:17-34`
 - `dev/registry/compiler/_loader_revision_fragments.py:107-127`
 - `dev/registry/compiler/loader.py:60`
@@ -262,7 +261,7 @@ Compiled-authority enumeration of binding rows per kind was not run because the 
 - `dev/registry/compiler/_validate_dependency_sections.py:70-71`
 - `dev/registry/compiler/_validate_export_exemption.py:161`
 - `dev/registry/edition_delta_migration.py:85,162-165`
-- `dev/registry/rename_formula_binding_identifiers.py:1-60`
+
 - `dev/registry/newmodelo/manager.py:79,280-283`
 - `dev/registry/newmodelo/checklist.py:78-83`
 - `dev/docs/casilla_reference.py:606`
@@ -278,14 +277,14 @@ Compiled-authority enumeration of binding rows per kind was not run because the 
 - `src/cadrumo/domain/calculations/registry/inventory_bindings.py:54`
 - `src/cadrumo/domain/calculations/registry/query_reports.py:155-263`
 - `src/cadrumo/domain/calculations/registry/queries.py:769,966-1010`
-- `src/cadrumo/domain/calculations/registry/identifier_lineage.py:27-46`
+
 - `src/cadrumo/domain/calculations/registry/facts/schema.py:376-384`
 - `src/cadrumo/domain/calculations/registry/facts/resolution.py:121,216`
 - `src/cadrumo/domain/calculations/registry/authority_artifact.py:407`
 - `src/cadrumo/core/aggregation.py:220-227,348-420`
 - `src/cadrumo/application/modelo/calculation_route.py:107-141,265-295`
 - `src/cadrumo/application/modelo/calculation_actions.py:1781-1792`
-- `src/cadrumo/application/modelo/binding_prefill.py:109-160,601-714`
+
 - `src/cadrumo/application/modelo/profile_binding.py:1344-1349`
 - `src/cadrumo/application/aggregation/source_mesh.py:281-356,618-646,748-765`
 - `src/cadrumo/application/aggregation/source_resolution_operations.py:311-362`
@@ -297,7 +296,7 @@ Compiled-authority enumeration of binding rows per kind was not run because the 
 - `src/cadrumo/application/aggregation/inventory.py:36-38,81,206`
 - `src/cadrumo/application/aggregation/oss_ioss.py:347-350`
 - `src/cadrumo/application/aggregation/service.py:278`
-- `src/cadrumo/application/aggregation/_per_grupo_member_keys.py:69-71`
+
 - `src/cadrumo/application/invoices/source_resolver.py:248`
 - `src/cadrumo/application/calculations/relation_prefill.py:810,921`
 - `src/cadrumo/application/calculations/revision_carry_gate.py:41-60`

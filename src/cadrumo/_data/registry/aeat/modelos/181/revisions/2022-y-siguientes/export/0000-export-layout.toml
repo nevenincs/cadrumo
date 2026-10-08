@@ -1,0 +1,9 @@
+[[revisions.2022-y-siguientes.export_layouts]]
+id = 'modelo-181-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-181-2022']
+legal_refs = [
+    'ley-58-2003:art-93',
+    'orden-eha-3514-2009:art-1',
+]
+dictionary_path_overrides = []

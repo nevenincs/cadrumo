@@ -17,26 +17,29 @@ Resolution order, for every cache alike:
 2. :data:`DEV_CACHE_ROOT_ENV`, the shared root override, which relocates every
    cache at once. A runner placing derived output on another volume, or a
    developer keeping it off the checkout's filesystem, sets this one variable.
-3. ``<repository root>/.cache``, the default, which ``.gitignore`` excludes.
+3. ``<Cadrumo storage root>/development/cache``, the default, which is inside
+   the checkout's ignored ``var/storage`` tree unless the operator relocates it.
 
-The fallback is the checkout's own directory and nothing else. The user's home
-directory is where an EXTERNAL tool keeps its state; it is never where this
-project keeps output whose only reader is one worktree. A cache that outlives
-its inputs' only reader is not a cache, it is litter.
+The checkout's configured storage root is the fallback and nothing else. The
+user's home directory is where an EXTERNAL tool keeps its state; it is never
+where this project keeps output whose only reader is one worktree. A cache that
+outlives its inputs' only reader is not a cache, it is litter.
 """
 
 from __future__ import annotations
 
-import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Final
 
-from ._paths import REPO_ROOT
+from cadrumo.core.storage_environment import configured_storage_root, storage_directory
+from dev._paths import REPO_ROOT
 
 DEV_CACHE_ROOT_ENV: Final[str] = "CADRUMO_DEV_CACHE_ROOT"
 """Environment variable relocating every development cache at once."""
 
-DEFAULT_DEV_CACHE_ROOT: Final[Path] = REPO_ROOT / ".cache"
+DEFAULT_DEV_CACHE_ROOT: Final[Path] = storage_directory(
+    DEV_CACHE_ROOT_ENV, "development/cache", root=configured_storage_root(repository_root=REPO_ROOT)
+)
 """Where the caches land when :data:`DEV_CACHE_ROOT_ENV` is unset or blank."""
 
 
@@ -49,12 +52,11 @@ def dev_cache_root() -> Path:
     working directory.
 
     Returns:
-        The configured root, or ``<repository root>/.cache`` when none is set.
+        The configured root, or ``<Cadrumo storage root>/development/cache``.
     """
-    override = os.environ.get(DEV_CACHE_ROOT_ENV, "").strip()
-    if override:
-        return Path(override)
-    return DEFAULT_DEV_CACHE_ROOT
+    return storage_directory(
+        DEV_CACHE_ROOT_ENV, "development/cache", root=configured_storage_root(repository_root=REPO_ROOT)
+    )
 
 
 def dev_cache_dir(name: str) -> Path:

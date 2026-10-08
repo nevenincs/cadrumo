@@ -3,15 +3,11 @@ id = "modelo-347-informative-summary-verification"
 computed_casilla_ids = [
     "decl.ejercicio",
     "decl.tipo-declaracion",
-    "decl.total-personas-entidades",
-    "decl.importe-total-anual",
     "contraparte.nif",
     "contraparte.clave-operacion",
     "contraparte.importe-anual",
 ]
 reconcile_when_present_casilla_ids = [
-    "decl.total-inmuebles",
-    "decl.importe-total-arrendamiento-locales",
     "inmueble.arrendatario-nif",
     "inmueble.importe-operacion",
 ]

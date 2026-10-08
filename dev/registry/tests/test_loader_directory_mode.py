@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistryLoadError,
@@ -41,12 +42,6 @@ from ..conformance.loader_directory_mode_support import (
 )
 from ..conformance.loader_directory_mode_support import (
     committed_registry_modelos as _committed_registry_modelos,
-)
-from ..conformance.loader_directory_mode_support import (
-    committed_toml_paths_by_fragment_revision as _committed_toml_paths_by_fragment_revision,
-)
-from ..conformance.loader_directory_mode_support import (
-    committed_toml_paths_by_modelo_id as _committed_toml_paths_by_modelo_id,
 )
 from ..conformance.loader_directory_mode_support import (
     minimal_fragment_revision_layout as _minimal_fragment_revision_layout,
@@ -427,22 +422,67 @@ def test_fragmented_revision_directories_are_schema_owned() -> None:
 
 
 def test_committed_directory_source_inventory_lists_every_revision_fragment_toml() -> None:
-    """Discovery exposes all TOML fragments that participate in a directory revision."""
+    """Discovery exposes each current revision manifest and direct section TOML fragment."""
 
     checked: list[str] = []
-    paths_by_modelo_id = _committed_toml_paths_by_modelo_id()
-    paths_by_fragment_revision = _committed_toml_paths_by_fragment_revision()
-    for source in _committed_modelo_sources():
-        expected_paths = set(paths_by_modelo_id.get(source.modelo_id, ()))
-        discovered_paths: set[Path] = set()
-        for revision_source in source.revision_sources:
-            expected_revision_paths = paths_by_fragment_revision[(source.modelo_id, revision_source.revision_id)]
-            assert tuple(sorted(revision_source.fragment_paths)) == expected_revision_paths
-            discovered_paths.update(revision_source.fragment_paths)
+    sources = discover_modelo_sources(_committed_modelos_dir())
+    for source in sources:
+        revision_dirs = scan_directory(
+            source.path / "revisions",
+            select=DirectoryEntryKind.DIRECTORIES,
+            require_root=True,
+        )
+        discovered_by_id = {revision.revision_id: revision for revision in source.revision_sources}
+        assert set(discovered_by_id) == {directory.name for directory in revision_dirs}
+        for revision_dir in revision_dirs:
+            expected_paths = _live_revision_fragment_paths(revision_dir)
+            revision_source = discovered_by_id[revision_dir.name]
+            assert set(revision_source.fragment_paths) == expected_paths
             checked.append(f"{source.modelo_id}/{revision_source.revision_id}")
-        assert discovered_paths == expected_paths
 
     assert checked, "at least one committed directory revision must be discovered"
+
+
+def _live_revision_fragment_paths(revision_dir: Path) -> set[Path]:
+    """Enumerate the live manifest and direct TOML section fragments, excluding locale catalogues."""
+    paths = {revision_dir / "revision.toml"}
+    section_dirs = scan_directory(
+        revision_dir,
+        select=DirectoryEntryKind.DIRECTORIES,
+        require_root=True,
+    )
+    for section_dir in section_dirs:
+        if section_dir.name == "locales":
+            continue
+        paths.update(
+            scan_directory(
+                section_dir,
+                pattern="*.toml",
+                select=DirectoryEntryKind.FILES,
+                require_root=True,
+            )
+        )
+    return paths
+
+
+def test_revision_fragment_inventory_uses_live_sections_and_excludes_locales(tmp_path: Path) -> None:
+    modelos_dir = tmp_path / "modelos"
+    modelo_dir = modelos_dir / "999"
+    revision_dir = _minimal_fragment_revision_layout(
+        modelo_dir,
+        fragment_dirs=("casillas", "export", "locales"),
+    )
+    casilla_fragment = revision_dir / "casillas" / "0001-declarations.toml"
+    export_fragment = revision_dir / "export" / "0001-layout.toml"
+    locale_catalogue = revision_dir / "locales" / "ca.toml"
+    casilla_fragment.write_text("", encoding="utf-8")
+    export_fragment.write_text("", encoding="utf-8")
+    locale_catalogue.write_text("", encoding="utf-8")
+
+    (source,) = discover_modelo_sources(modelos_dir)
+    (revision_source,) = source.revision_sources
+
+    assert set(revision_source.fragment_paths) == {revision_dir / "revision.toml", casilla_fragment, export_fragment}
 
 
 def test_committed_authored_sections_are_consolidated() -> None:

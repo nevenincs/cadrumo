@@ -4,43 +4,22 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo.action_errors import (
-    WorkUnitAlreadyDiscardedError,
-    WorkUnitMutationRefusedError,
-    WorkUnitNotFoundError,
-)
-from ...application.modelo.profile_readiness_gate import (
-    load_modelo_work_profile,
-    require_existing_profile_baseline_ready_for_modelo_work,
-    require_profile_ready_for_modelo_work,
-)
 from ...application.modelo.work_addressing import (
     ModeloWorkRegistryYearMismatchError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkSelectorContradictionError,
-    ModeloWorkUnitNotFoundError,
-    ModeloWorkVisibleTargetAmbiguousError,
-    ensure_modelo_work_unit_for_active_target,
     law_selected_revision_for_work_target,
 )
 from ...application.modelo.work_create_policy import (
-    guard_active_profile_foral_ccaa,
-    modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
 )
 from ...application.modelo.work_lifecycle import (
-    discard_work_unit,
     lifecycle_continuation_for_work_list,
     lifecycle_continuation_for_work_status,
-    list_work_units,
-    rename_work_unit,
 )
-from ...application.modelo.work_profile import ModeloWorkProfile
+from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice
-from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
@@ -48,15 +27,10 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.modelos.work_unit import WorkUnit
 from ._modelo_behavior_support import (
-    require_active_profile,
-    resolve_work_unit_for_cli,
     resolve_year_period,
 )
 from ._modelo_cli_support import (
-    bad_parameter_from_error,
     resolve_default_actor,
-    resolve_explicit_or_active_bucket_id,
-    selector_bad_parameter,
 )
 from ._modelo_payloads import WorkCreateResult, WorkDiscardResult, WorkListResult, WorkRenameResult, WorkStatusResult
 from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
@@ -66,7 +40,11 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
-from .state_projection_support import authority_operation, work_lifecycle_ports_factory
+from .registered_operation_errors import submitted_operation_error
+from .runtime_modelo_metadata import discard_modelo_work, read_modelo_work_unit, rename_modelo_work
+from .runtime_modelo_work_create import create_modelo_work
+from .runtime_modelo_work_inventory import read_modelo_work_inventory
+from .state_projection_support import authority_operation
 
 
 def _validate_filing_year(year: int) -> None:
@@ -74,27 +52,6 @@ def _validate_filing_year(year: int) -> None:
         raise typer.BadParameter(
             tr("cli.app.modelo.work.year_out_of_range", year=year, minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX)
         )
-
-
-def _guard_modelo_applicability(
-    modelo: str,
-    *,
-    allow_not_applicable: bool,
-    profile: ModeloWorkProfile | None,
-) -> None:
-    from .errors import CliRefusedBoundaryError
-
-    refusal = modelo_work_create_applicability_refusal(
-        modelo,
-        allow_not_applicable=allow_not_applicable,
-        record=profile.record if profile is not None else None,
-    )
-    if refusal is None:
-        return
-    raise CliRefusedBoundaryError(
-        translated_message="cli.app.modelo.work.create_not_applicable_refused",
-        context={"modelo": refusal.modelo, "reason": refusal.reason},
-    )
 
 
 def guard_unsupported_work_modelo(modelo: str) -> None:
@@ -139,8 +96,7 @@ def _emit_work_create_result(
     name: str | None,
     name_applied: str | None,
     allow_not_applicable: bool,
-    authority_operation: PinnedAuthorityOperation,
-    profile: ModeloWorkProfile | None,
+    advisory_keys: tuple[str, ...] = (),
     quiet: bool = False,
 ) -> None:
     status = "reused" if reused else "created"
@@ -159,11 +115,7 @@ def _emit_work_create_result(
             **work_unit_payload(unit).model_dump(mode="python"),
         }
     )
-    obligation_notices, obligation_lines = _modelo_100_obligation_advisory_output(
-        unit,
-        operation=authority_operation,
-        profile=profile,
-    )
+    obligation_notices, obligation_lines = _work_create_advisory_output(advisory_keys)
     if quiet:
         lines = list(obligation_lines)
     else:
@@ -185,30 +137,11 @@ def _reused_work_status_message(*, name: str | None, name_applied: str | None) -
     return (tr("cli.app.modelo.work.create_reused"), "modelo.work.reuse")
 
 
-def _modelo_100_obligation_advisory_output(
-    unit: WorkUnit,
-    *,
-    operation: PinnedAuthorityOperation,
-    profile: ModeloWorkProfile | None,
-) -> tuple[list[Notice], list[str]]:
-    """Project M100 filing-obligation advisories onto notices and text lines.
-
-    The advisory rides on the envelope ``notices`` channel (warning
-    severity) so JSON consumers receive the same filing-obligation
-    guidance the text surface already showed; the text lines are
-    rebuilt from the same advisory messages so the two cannot drift.
-    """
-    if unit.modelo != Modelo("100") or profile is None:
-        return ([], [])
-    from ...application.overview.status_report import build_filing_obligation_advisories
-    from ...application.user_profile.projections import record_to_values
-
-    raw = record_to_values(profile.record, schema=operation.profile_schema())
-    messages = [
-        tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw, filing_year=unit.filing_year)
-    ]
+def _work_create_advisory_output(advisory_keys: tuple[str, ...]) -> tuple[list[Notice], list[str]]:
+    """Localize only the advisory identities released by the profile worker."""
+    messages = [tr(key) for key in advisory_keys]
     notices = [advisory_notice("modelo.work.create.filing_obligation", message) for message in messages]
-    return (notices, messages)
+    return notices, messages
 
 
 __all__ = ["guard_unsupported_work_modelo", "work_create", "work_discard", "work_list", "work_rename", "work_status"]
@@ -244,79 +177,36 @@ def work_create(
         registry_revision_id=requested_revision,
         operation=operation,
     )
-    require_active_profile()
-    resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
-    profile_decode_context = operation.profile_decode_context()
-    # One decrypted record serves every guard, gate and advisory this command runs.
-    profile = load_modelo_work_profile(bucket_id=resolved_bucket, profile_decode_context=profile_decode_context)
-    guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
-    _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable, profile=profile)
-    resolved_actor = actor or resolve_default_actor()
-    lifecycle_ports = work_lifecycle_ports_factory(ctx)(bucket_id=resolved_bucket)
-    require_existing_profile_baseline_ready_for_modelo_work(
-        bucket_id=resolved_bucket,
-        modelo=modelo,
-        filing_year=resolved_year,
-        period=resolved_period,
-        enforce_applicability=not allow_not_applicable,
-        profile_decode_context=profile_decode_context,
-        operation=operation,
-        profile=profile,
-    )
-    resolved_revision_id = law_selected_revision_for_work_target(
-        modelo=modelo,
-        filing_year=resolved_year,
-        period=resolved_period,
-        requested_revision_id=requested_revision,
-        operation=operation,
-    )
-    require_profile_ready_for_modelo_work(
-        bucket_id=resolved_bucket,
-        modelo=modelo,
-        revision_id=resolved_revision_id,
-        filing_year=resolved_year,
-        period=resolved_period,
-        enforce_applicability=not allow_not_applicable,
-        profile_decode_context=profile_decode_context,
-        operation=operation,
-        profile=profile,
-    )
-    try:
-        ensure_result = ensure_modelo_work_unit_for_active_target(
-            bucket_id=resolved_bucket,
-            modelo=modelo,
-            filing_year=resolved_year,
-            period=resolved_period,
-            registry_revision_id=requested_revision,
-            name=name,
-            actor=resolved_actor,
-            causante_ccaa=causante_ccaa,
-            enforce_applicability=not allow_not_applicable,
-            catalogue=lifecycle_ports.work_unit_repository.load(),
-            ports=lifecycle_ports,
-            operation=operation,
-            profile=profile,
-        )
-    except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
-        raise typer.BadParameter(str(exc)) from exc
-    except (
-        ModeloWorkSelectorContradictionError,
-        ModeloWorkUnitNotFoundError,
-        ModeloWorkVisibleTargetAmbiguousError,
-        ModeloWorkRevisionConflictError,
-    ) as exc:
-        raise selector_bad_parameter(exc) from exc
-    _emit_work_create_result(
+    creation = create_modelo_work(
         ctx,
-        unit=ensure_result.work_unit,
-        reused=ensure_result.reused,
+        modelo=modelo,
+        period=resolved_period,
+        revision_id=requested_revision,
+        bucket_id=bucket_id,
         name=name,
-        name_applied=ensure_result.name_applied,
+        actor=actor or resolve_default_actor(),
+        causante_ccaa=causante_ccaa.value if causante_ccaa is not None else None,
         allow_not_applicable=allow_not_applicable,
-        authority_operation=operation,
-        profile=profile,
-        quiet=quiet,
     )
+    outcome = creation.result
+    try:
+        _emit_work_create_result(
+            ctx,
+            unit=outcome.unit.to_work_unit(),
+            reused=outcome.reused,
+            name=name,
+            name_applied=outcome.name_applied,
+            allow_not_applicable=outcome.applicability_guard_bypassed,
+            advisory_keys=outcome.advisory_keys,
+            quiet=quiet,
+        )
+    except Exception:
+        raise submitted_operation_error(
+            creation.completion.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=creation.completion.terminal_condition,
+            effect=creation.completion.effect,
+        ) from None
 
 
 def work_list(
@@ -327,12 +217,10 @@ def work_list(
 ) -> None:
     """List modelo work units. Discarded units are excluded unless asked."""
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
-    units = list_work_units(
+    units = read_modelo_work_inventory(
+        ctx,
         bucket_id=bucket_id,
         include_discarded=include_discarded,
-        ports=work_lifecycle_ports_factory(ctx)(bucket_id=resolved_bucket),
     )
     result = WorkListResult.model_validate(
         {
@@ -362,9 +250,8 @@ def work_status(
 ) -> None:
     """View one work unit's metadata."""
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    unit = resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    unit = read_modelo_work_unit(
+        ctx, work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
     result = WorkStatusResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
     lines = [
@@ -388,23 +275,19 @@ def work_rename(
     actor: str | None = None,
 ) -> None:
     """Update one work unit's display name."""
-    require_active_profile()
     if name is None or not name.strip():
         raise typer.BadParameter(tr("cli.app.modelo.work.name_required"))
-    unit = resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    unit = rename_modelo_work(
+        ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        name=name,
+        actor=actor,
     )
-    try:
-        unit = rename_work_unit(
-            unit.work_unit_id,
-            name,
-            actor=actor or resolve_default_actor(),
-            ports=work_lifecycle_ports_factory(ctx)(bucket_id=unit.bucket_id),
-        )
-    except WorkUnitMutationRefusedError:
-        raise
-    except WorkUnitNotFoundError as exc:
-        raise bad_parameter_from_error(exc) from exc
     result = WorkRenameResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.rename", *work_unit_lines(unit)]
     emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
@@ -426,21 +309,17 @@ def work_discard(
     target_label = work_unit_id or f"{modelo or '?'} {year or '?'} {period or '?'}"
     if not confirmed:
         raise typer.BadParameter(tr("cli.app.modelo.work.discard_requires_yes", work_unit_id=target_label))
-    require_active_profile()
-    unit = resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    unit = discard_modelo_work(
+        ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        actor=actor,
+        reason=reason,
     )
-    try:
-        unit = discard_work_unit(
-            unit.work_unit_id,
-            actor=actor or resolve_default_actor(),
-            reason=reason,
-            ports=work_lifecycle_ports_factory(ctx)(bucket_id=unit.bucket_id),
-        )
-    except WorkUnitAlreadyDiscardedError:
-        raise
-    except WorkUnitNotFoundError as exc:
-        raise bad_parameter_from_error(exc) from exc
     result = WorkDiscardResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.discard", *work_unit_lines(unit)]
     emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)

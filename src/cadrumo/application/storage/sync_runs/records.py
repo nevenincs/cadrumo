@@ -10,7 +10,7 @@ unavailable at all when the run fails partway.
 
 Why a second run-record store rather than an existing one
 ---------------------------------------------------------
-:class:`~adapters.persistence.llm.run_telemetry.LLMRunRecord` is a shipped local encrypted
+:class:`~adapters.persistence.llm.run_records.LLMRunRecord` is a shipped local encrypted
 run-record store, and it is deliberately not extended here. Its fields are
 provider-call accounting -- caller, provider, model, duration, succeeded,
 error kind -- and not one of them carries a SUBJECT. It cannot express what was
@@ -46,17 +46,15 @@ that are identical in every other field and mean entirely different things.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import datetime
 from typing import Annotated, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
-from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hex import HEX_PATTERN_64
 from ....core.identity.bucket import BucketId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.sync_surface import SyncSurface
-from ....core.time.utc import validate_utc_aware
+from ....core.time.utc import UtcInstant
 from ....domain.buckets.event import BucketEvent, BucketEventId
 
 __all__ = [
@@ -224,20 +222,7 @@ class SyncRunRecord(BaseModel):
     succeeded: bool
     unit_count: int = Field(default=0, ge=0)
     divergence_count: int = Field(default=0, ge=0)
-    completed_at: datetime
-
-    @field_validator("completed_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _completed_at_is_utc(cls, value: datetime) -> datetime:
-        """Hold the persisted instant to the canonical UTC-aware contract.
-
-        A bare ``datetime`` accepts a naive or ``+01:00`` value, which would
-        make two runs over the same surface unorderable against each other and
-        would read a Madrid-local instant back as if it were UTC -- in a store
-        whose entire purpose is answering "when did this last happen".
-        """
-        return validate_utc_aware(value)
+    completed_at: UtcInstant
 
     @field_validator("divergence_count")
     @classmethod

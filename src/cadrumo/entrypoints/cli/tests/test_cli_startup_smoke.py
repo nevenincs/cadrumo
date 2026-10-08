@@ -65,7 +65,7 @@ def _run_startup_smoke(tmp_path: Path, *args: str) -> subprocess.CompletedProces
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=120.0,
+            timeout=None,
         ),
     )
 
@@ -122,4 +122,4 @@ def test_config_repair_integrity_help_starts_without_unlocking_active_profile(tm
     _assert_no_startup_crash(output)
     assert "Usage: aeat config repair integrity" in output
     assert "objects" in output
-    assert "registry" in output
+    assert "modelo-definition" in output

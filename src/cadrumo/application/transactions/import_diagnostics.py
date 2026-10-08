@@ -63,6 +63,7 @@ def import_ledger_with_diagnostics(
     existing_catalogue: TransactionCatalogue,
     import_fingerprints: Iterable[str],
     original_source_path: Path | None = None,
+    own_account_ids: Iterable[str | None] | None = None,
 ) -> LedgerImportResult:
     """Evaluate an imported stream against the four diagnostic checks.
 
@@ -81,6 +82,9 @@ def import_ledger_with_diagnostics(
             Dedup would then fail open and read every row as new.
         original_source_path: Optional original file path to record when it is
             present on disk.
+        own_account_ids: The own account each row is bound to, in row order;
+            omitted when no row is bound. It enters each row's transaction id
+            exactly as the persisting import path derives it.
 
     Returns:
         An immutable :class:`~cadrumo.application.transactions.import_diagnostics.LedgerImportResult`
@@ -94,6 +98,9 @@ def import_ledger_with_diagnostics(
     row_fingerprints = tuple(import_fingerprints)
     if len(row_fingerprints) != len(rows):
         raise ValueError("import_fingerprints must contain one fingerprint per raw transaction")
+    row_accounts = (None,) * len(rows) if own_account_ids is None else tuple(own_account_ids)
+    if len(row_accounts) != len(rows):
+        raise ValueError("own_account_ids must contain one entry per raw transaction")
     # The duplicate check keys on the stable import fingerprint — the
     # same identity the persisting import path deduplicates on — so a
     # verify run's preview agrees with what a real import would do,
@@ -114,6 +121,7 @@ def import_ledger_with_diagnostics(
     imported_count, skipped_count, row_diagnostics, dates = _process_import_rows(
         rows,
         row_fingerprints,
+        row_accounts,
         source_path=source_path,
         existing_fingerprints=existing_fingerprints,
     )
@@ -131,8 +139,8 @@ def import_ledger_with_diagnostics(
         diagnostics=tuple(diagnostics),
     )
     _logger.info(
-        "ledger import complete path=%s imported=%d skipped=%d diagnostics=%d",
-        source_path,
+        "ledger import complete file=%s imported=%d skipped=%d diagnostics=%d",
+        source_path.name,
         imported_count,
         skipped_count,
         len(result.diagnostics),
@@ -151,6 +159,7 @@ def _existing_import_fingerprints(existing_catalogue: TransactionCatalogue) -> s
 def _process_import_rows(
     rows: tuple[RawTransaction, ...],
     row_fingerprints: tuple[str, ...],
+    row_accounts: tuple[str | None, ...],
     *,
     source_path: Path,
     existing_fingerprints: set[str],
@@ -161,8 +170,8 @@ def _process_import_rows(
     dates: list[_datetime.date] = []
     seen_fingerprints: set[str] = set()
     seen_transaction_ids: set[str] = set()
-    for raw, fingerprint in zip(rows, row_fingerprints, strict=True):
-        tx_id = derive_transaction_id(raw)
+    for raw, fingerprint, own_account_id in zip(rows, row_fingerprints, row_accounts, strict=True):
+        tx_id = derive_transaction_id(raw, own_account_id=own_account_id)
         verdict = classify_import_row(
             fingerprint=fingerprint,
             transaction_id=tx_id,

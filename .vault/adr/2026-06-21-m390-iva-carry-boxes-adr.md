@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m390-iva-carry-boxes'
 date: '2026-06-21'
-modified: '2026-07-17'
-body_hash: 'sha256:78da23afa3e341a89975a12f0e906b24b3ccf44f1e13343e6cf8ec355504af3e'
+modified: '2026-10-03'
+body_hash: 'sha256:74f0785a9ba82b622b24eb9c0e231e778f77408af0268898c96294a9d47b82c6'
 related:
   - "[[2026-06-21-m303-carry-reconciliation-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
@@ -122,7 +122,7 @@ discipline, and reuses verified infrastructure.
   independent per-period 303-casilla sums; the AEAT identity
   `[86]=[84]−[85]=[95]−[97]−[98]−[662]` is the regression oracle.
 
-## Status
+## Original proposal and carry relationship
 
 `proposed`. The FIFO carry partition this ADR decides is a child of the canonical
 compensación-carry direction set by the PHASE ADRs (not a central apex doc): the

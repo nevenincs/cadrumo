@@ -8,16 +8,14 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.convenio import CONVENIO_OVERRIDE_FACT_ID
+from cadrumo.domain.calculations.registry.facts.payloads import OverrideFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import (
     OverrideFactQuery,
     ResolvedOverrideFact,
     resolve_governed_fact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import (
-    FactSelector,
-    GovernedFactCatalogue,
-    OverrideFactPayload,
-)
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue

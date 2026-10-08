@@ -3,10 +3,13 @@ tags:
   - '#adr'
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
-modified: '2026-08-07'
-body_hash: 'sha256:ecfa56304c8b895a6445c598a53562ca181ee60bac6b2d62ddf72936bbaaae0f'
+modified: '2026-10-03'
+body_hash: 'sha256:87d6f5be04f117dc4c04765b5b0db7f642df4d587a7845f090bbf81bc8866ee6'
 related:
   - "[[2026-06-09-modelo-iva-routing-carry-research]]"
+  - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
+  - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
+  - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 ---
 
 # `modelo-iva-routing-carry` adr: `M303 reverse-charge routing, #64 advisory refinement, and cross-period local carry` | (**status:** `accepted`)
@@ -117,14 +120,29 @@ unevidenced local chain past the filing gate.
   cross-period clean-state gate; auto-carry may feed calculate/draft but never substitute
   for external filing evidence.
 
-## Status
+## Relationship to carry authorities and later phases
 
-Accepted and in force. The IVA routing + cross-period carry-enrollment + `app_filing`
-non-official-evidence decisions in this ADR stand and align to the canonical direction
-in the PHASE ADRs (not a central apex doc): source-kind under the phase-2.1
-`binding-source-kind-taxonomy-unification` ADR; the carry mechanism under the
-foundational `live-iva-compensation-wallet-adr` anchor + the future phase-2.3 ADR.
+The accepted decisions on reverse-charge routing, the #64 advisory, local carry, and
+non-official evidence remain. Their source-kind context is the accepted phase 2.1
+`2026-06-26-binding-source-kind-taxonomy-unification-adr`. D3 in the accepted
+`2026-06-10-calculation-aggregation-taxonomy-adr` assigns the M303 compensation binding
+to the IVA wallet decision. The accepted phase 2.3
+`2026-06-26-binding-fold-in-carry-unification-adr` now governs fold-in and carry
+implementation unification. The former “future phase-2.3” wording was accurate when
+this relationship note was recorded; this curation update records phase 2.3's accepted
+status as of 2026-10-03.
 
+The earlier Problem Statement that `PreviousFilingSourceResolver` had no production
+caller records the 2026-06-09 code state. Current code registers that resolver in the
+live mesh at `src/cadrumo/application/modelo/calculation_route.py`, and the resolver
+declares `PREVIOUS_FILING` ownership in
+`src/cadrumo/application/calculations/multi_year.py`. Relation aggregation now has its
+separate typed `RelationAggregationOp` and `RegistryFoldRequirement.aggregation_op` in
+`src/cadrumo/core/aggregation.py` and
+`src/cadrumo/domain/calculations/registry/relations.py`. These code observations do not
+establish that the separate local-file observation-persistence proposal in this ADR has
+shipped; locally entered observations remain non-official evidence. This update does
+not reopen the 2026-08-07 AIC routing amendment.
 ## 2026-08-07 amendment — Tier 2 AIC official-box parity is a re-route, not an addition
 
 Tier 2 above defers "AIC official-box parity" without saying which official box

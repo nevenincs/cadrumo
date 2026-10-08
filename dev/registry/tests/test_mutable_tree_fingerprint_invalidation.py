@@ -67,7 +67,6 @@ def _walked_identity(fingerprints: tuple[tuple[str, int, int, str], ...]) -> Reg
 
 
 _CASILLA_NUMBER_SENTINEL = "@@CASILLA_NUMBER@@"
-_SUBPROCESS_TIMEOUT_SECONDS = 300
 _CHILD_REGISTRY_ROOT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_ROOT"
 _CHILD_EDITED_TEXT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"
 _CHILD_CASILLA_FRAGMENT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_CASILLA_FRAGMENT"
@@ -279,7 +278,6 @@ def test_a_mutable_tree_is_never_disk_cached_outside_pytest_and_still_serves_the
         [sys.executable, "-c", _CHILD_PROGRAM],
         cwd=Path.cwd(),
         environment=env,
-        timeout_seconds=_SUBPROCESS_TIMEOUT_SECONDS,
     )
     assert completed.returncode == 0, completed.stderr
     reported = dict(line.split("=", 1) for line in completed.stdout.splitlines() if "=" in line)

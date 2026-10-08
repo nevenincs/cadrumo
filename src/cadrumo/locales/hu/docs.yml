@@ -1,67 +1,68 @@
 docs:
   casilla:
     binding_source:
+      afiliado_cotizacion: az általad megadott tagi befizetési naptárból
       atribucion_member: az atribución de rentas tagjaiból
       bienes_inversion_regularizacion: a beruházási javak korrekciójából
-      borrador: az AEAT borrador tervezetéből
+      borrador: az AEAT-adatokból (borrador)
       collectible_invoice: a kiállított számláiból
       design_constant: az AEAT rekordtervében rögzített állandóból
-      donativo_donor: a nyilvántartott adományozóiból
       foreign_asset: a külföldi vagyonelemeiből
       gasto193_contributor: az adózónkénti kezelési és letéti költségekből
       inventory: a készletnyilvántartásából
       iva_compensation_annual_partition: az adóév IVA-kompenzációjából
       iva_wallet_decision: az IVA-kompenzációs döntéséből
-      ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételeiből
-      ledger_irnr_income_aggregation: az IRNR-bevételeiből
-      ledger_iva_aggregation: az IVA-tételeiből
-      ledger_oss_aggregation: az OSS-tételeiből
+      ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételi
+        nyilvántartásaiból
+      ledger_irnr_income_aggregation: az IRNR-bevételi nyilvántartásaiból
+      ledger_iva_aggregation: az áfanyilvántartásaiból
+      ledger_oss_aggregation: az OSS-értékesítési nyilvántartásaiból
       ledger_renta_gastos_estimacion_directa_aggregation: a közvetlen megállapítás
-        szerinti költségeiből
-      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado költségeiből
-      ledger_renta_income_aggregation: a nyilvántartott bevételeiből
-      ledger_transaction: a nyilvántartott tételeiből
-      m303_regimen_simplificado_annual_summary: a 303-es nyomtatvány egyszerűsített
-        rendszerének éves összesítéséből
-      m347_third_party_operation: az Ön harmadik felekkel folytatott ügyleteiből
-      manual_input: az Ön által megadott értékből
-      payable_invoice: a befogadott számláiból
+        szerinti kiadási nyilvántartásaiból
+      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado kiadási
+        nyilvántartásaiból
+      ledger_renta_income_aggregation: a bevételi nyilvántartásaiból
+      ledger_transaction: a nyilvántartásaiból
+      m303_regimen_simplificado_annual_summary: a Modelo 303 egyszerűsített rendszerének
+        éves összesítéséből
+      m347_third_party_operation: a harmadik felekkel folytatott ügyleteidből
+      m349_intracommunity_operation: a Közösségen belüli ügyleteidből
+      manual_input: az általad megadott értékből
+      payable_invoice: a beérkezett számláiból
       previous_filing: a korábbi bevallásából
       profile: az adózói profiljából
       prorrata_regularizacion: az arányosítás korrekciójából
-      purchase_invoice_evidence: a beszerzési számlák bizonylataiból
-      refund_operation: a visszatérítési ügyleteiből
-      related_party_operation: a kapcsolt ügyleteiből
+      purchase_invoice_evidence: a beérkezett számlák bizonylataiból
       relation_prefill: egy kapcsolódó nyomtatvány eredményéből
       retenciones_aggregation: a nyilvántartott retenciones tételekből
       withholding: a levont forrásadókból
-      withholding296: a 296-os nyomtatvány kedvezményezettenkénti levonásaiból
+      withholding296: a Modelo 296 kedvezményezettenkénti levonásaiból
     cadence:
       ad_hoc: Az esemény bekövetkezésekor benyújtandó
       annual: Évente benyújtandó
       monthly: Havonta benyújtandó
-      profile_based: A profilja szerint benyújtandó
+      profile_based: A profilod szerint benyújtandó
       quarterly: Negyedévente benyújtandó
     chrome:
       alternative_join: ', vagy'
-      binding: Adatkötés
+      binding: Kitöltés forrása
       casilla_count: '{casillas} rovat {sections} szakaszban'
       casilla_id: Rovat-azonosító
       casilla_index: Az összes rovat
-      casilla_index_hint: Válasszon egy casillát az odaugráshoz.
+      casilla_index_hint: Válassz egy casillát az odaugráshoz.
       derived_from: 'ebből:'
       established_by: Jogszabályi alapja
       formula: Képlet
       general_section: Általános
       index_intro: Nyomtatványonként egy oldal. Minden rovat megadja, hogyan töltődik
-        ki (Ön adja meg, más rovatokból számítjuk, vagy a nyilvántartásaiból töltjük
+        ki (te adod meg, más rovatokból számítjuk, vagy a nyilvántartásaidból töltjük
         ki), hol szerepel a hivatalos nyomtatványon, és melyik jogszabály állapítja
         meg.
       index_title: Rovat-referencia
       legal_basis: Jogalap
       list_and: és
       not_on_official_form: Nem szerepel a hivatalos nyomtatványon
-      page_heading: '{modelo}. nyomtatvány: {title}'
+      page_heading: 'Modelo {modelo}: {title}'
       record_design_number: Rekordterv szerinti szám
       registry_identifiers: Nyilvántartási azonosítók
       registry_section: Nyilvántartási szakasz
@@ -95,13 +96,13 @@ docs:
       bound: Automatikusan kitöltve
       computed: Automatikusan számítjuk
       informational: Csak tájékoztató
-      manual: Ön adja meg
+      manual: Te adod meg
       projection_only: A forrássorából kitöltve
     input_kind_count:
       bound: a nyilvántartásaiból kitöltve
       computed: számított
       informational: csak tájékoztató
-      manual: amelyet Ön ad meg
+      manual: amelyet te adsz meg
       projection_only: a forrássorából kitöltve
     length:
       at_least: Legalább {min} karakter
@@ -128,7 +129,7 @@ docs:
       exit_unavailable: A külső szolgáltatás nem érhető el.
       exit_usage: Érvénytelen CLI-használat (hibás kapcsoló, hiányzó argumentum).
       exit_validation: Érvényesítési hiba a felhasználó által megadott adatokban.
-      intro: 'Ezt az oldalt akkor használja, ha ``aeat`` hívásokat szkriptel: a folyamat
+      intro: 'Ezt az oldalt akkor használd, ha ``aeat`` hívásokat szkriptelsz: a folyamat
         kilépési kódjait és a minden parancsra érvényes TTY/JSON kimeneti viselkedést
         írja le.'
       output_contract_body: Ha a kimenet TTY-ra megy, a CLI ember által olvasható,
@@ -150,34 +151,34 @@ docs:
         jelöléssel szerepelnek. A `(derived)` jelölésű alapértelmezések futásidőben,
         a tárolási gyökérből vagy a projekt helyéből számítódnak.
     family:
-      choose_group_heading: Válasszon parancscsoportot
+      choose_group_heading: Válassz parancscsoportot
       direct_commands_heading: Közvetlen parancsok
       direct_commands_intro: Ezek a parancsok közvetlenül az ``aeat {family}`` alá
         tartoznak, közbeiktatott igecsoport nélkül.
-      group_link_line: Nyissa meg a :doc:`{target}` oldalt az ``aeat {family} {group}``
+      group_link_line: Nyisd meg a :doc:`{target}` oldalt az ``aeat {family} {group}``
         parancshoz.
-      index_link_line: Nyissa meg a :doc:`/cli/index` oldalt a CLI-referencia nyitóoldalához.
+      index_link_line: Nyisd meg a :doc:`/cli/index` oldalt a CLI-referencia nyitóoldalához.
       intro: Az ``aeat {family}`` fő igecsoportok szerint rendeződik. Minden csoport
         saját oldala a csoport valódi ``--help`` kimenetével kezdődik, majd az összes
         hozzá tartozó végponti parancs következik.
       title: '{command}: parancsreferencia'
     index:
-      app_card: 'Operatív munkafolyamat-parancsok: főkönyvi munka, modelók, bevallási
-        határidőnaptárak, registry-ellenőrzések, élő lekérések és felülvizsgálati
+      app_card: 'Operatív munkafolyamat-parancsok: főkönyvi munka, bevallások, bevallási
+        határidőnaptárak, nyomtatványdefiníciók ellenőrzése, élő lekérések és felülvizsgálati
         sorok.'
-      choose_family_heading: Válasszon parancscsaládot
+      choose_family_heading: Válassz parancscsaládot
       config_card: 'Helyi beállítási és karbantartási parancsok: profilok, hitelesítés,
         Google-integráció, javító ellenőrzések és visszaállítási felületek.'
       english_help_note: A súgószövegek angolul jelennek meg. Futásidőben a CLI a
         beállított kimeneti nyelvet használja (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
-      flag_debug: Bekapcsolja a hibakeresési szintű naplózást.
+      flag_debug: Kapcsold be a hibakeresési szintű naplózást.
       flag_detail: Bővített verzióinformációt ír ki, a registry összegzésével együtt.
       flag_format: Kimeneti formátum (``text`` vagy ``json``).
       flag_help: Kiírja a szerkesztett súgódokumentumot, majd kilép.
-      flag_language: Felülírja a kimeneti nyelvet (``es``, ``en``, ``ca``, ``hu``).
+      flag_language: Írd felül a kimeneti nyelvet (``es``, ``en``, ``ca``, ``hu``).
       flag_profile: Megadott nevű profilt aktivál erre a hívásra.
       flag_quiet: Elnyomja a tájékoztató kimenetet.
-      flag_verbose: Bekapcsolja a részletes kimenetet.
+      flag_verbose: Kapcsold be a részletes kimenetet.
       flag_version: Kiírja a csomag verzióját, majd kilép.
       global_flags_heading: Globális kapcsolók
       global_flags_intro: Ezeket a kapcsolókat az ``aeat`` gyökérparancs fogadja el,
@@ -185,16 +186,16 @@ docs:
       intro: 'Az ``aeat`` CLI két felső szintű parancscsaládot tesz elérhetővé: ``config``
         (helyi beállítás, profil-életciklus, diagnosztika) és ``app`` (operatív adózási
         munkafolyamat). Ez a referencia mind a(z) {count} végponti parancsot dokumentálja.'
-      next_app: Nyissa meg a :doc:`app` oldalt az operatív munkafolyamat-parancsokhoz.
-      next_automation: Nyissa meg a :doc:`automation` oldalt a kilépési kódokhoz és
+      next_app: Nyisd meg a :doc:`app` oldalt az operatív munkafolyamat-parancsokhoz.
+      next_automation: Nyisd meg a :doc:`automation` oldalt a kilépési kódokhoz és
         a TTY/JSON kimeneti szerződéshez.
-      next_config: Nyissa meg a :doc:`config` oldalt a helyi beállítási és karbantartási
+      next_config: Nyisd meg a :doc:`config` oldalt a helyi beállítási és karbantartási
         parancsokhoz.
-      next_howto: Nyissa meg a :doc:`/how-to/index` oldalt a bevezető végigjátszásokhoz
+      next_howto: Nyisd meg a :doc:`/how-to/index` oldalt a bevezető végigjátszásokhoz
         és a feladatútmutatókhoz.
-      next_schemas: Nyissa meg a :doc:`schemas` oldalt a JSON kimeneti sémák nyilvántartásához.
+      next_schemas: Nyisd meg a :doc:`schemas` oldalt a JSON kimeneti sémák nyilvántartásához.
       open_family_link: Az ``aeat {family}`` referenciájának megnyitása
-      start_here: Kezdje az alábbi család-hivatkozásokkal. A pontos kapcsolók, argumentumok,
+      start_here: Kezdd az alábbi család-hivatkozásokkal. A pontos kapcsolók, argumentumok,
         registry-kulcsok és kimeneti sémák a generált parancscsalád-oldalakon találhatók;
         ez az oldal a minden parancsra érvényes gyökérszintű viselkedést írja le.
       title: CLI-referencia

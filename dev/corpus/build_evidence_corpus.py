@@ -30,6 +30,59 @@ _COMMONS_API_HOST = "commons.wikimedia.org"
 _COMMONS_DOWNLOAD_HOSTS = frozenset({_COMMONS_API_HOST, "upload.wikimedia.org"})
 
 
+def _source_invoice_images() -> int:
+    """Source invoice images."""
+    images = _search("invoice OR receipt OR factura filetype:bitmap", ("image/png", "image/jpeg"))
+    saved_images = 0
+    for hit in images:
+        if saved_images >= 2:
+            break
+        try:
+            data = _download(hit["url"])
+        except Exception as exc:
+            print(f"skip {hit['title']}: {exc}")
+            continue
+        if len(data) > _MAX_BYTES or len(data) < 1000:
+            continue
+        ext = ".png" if hit["mime"] == "image/png" else ".jpg"
+        _save(
+            f"commons_invoice_{saved_images + 1}{ext}",
+            data,
+            source_url=hit["url"],
+            licence=hit["licence"],
+            title=hit["title"],
+            kind="image_invoice",
+        )
+        saved_images += 1
+    return saved_images
+
+
+def _source_invoice_pdfs() -> int:
+    """Source invoice pdfs."""
+    pdfs = _search("invoice OR factura filetype:office OR rechnung", ("application/pdf",), limit=25)
+    saved_pdf = 0
+    for hit in pdfs:
+        if saved_pdf >= 1:
+            break
+        try:
+            data = _download(hit["url"])
+        except Exception as exc:
+            print(f"skip {hit['title']}: {exc}")
+            continue
+        if len(data) > _MAX_BYTES or len(data) < 1000:
+            continue
+        _save(
+            f"commons_invoice_doc_{saved_pdf + 1}.pdf",
+            data,
+            source_url=hit["url"],
+            licence=hit["licence"],
+            title=hit["title"],
+            kind="pdf_invoice",
+        )
+        saved_pdf += 1
+    return saved_pdf
+
+
 def _validated_https_target(url: str, *, allowed_hosts: frozenset[str]) -> tuple[str, str]:
     parsed = urllib.parse.urlsplit(url)
     hostname = parsed.hostname
@@ -209,51 +262,10 @@ def _save(name: str, data: bytes, *, source_url: str, licence: str, title: str, 
 def main() -> None:
     """Download licensed evidence images and write their provenance sidecars."""
     # Image invoices (png/jpeg) -> exercise the on-host image/vision evidence path.
-    images = _search("invoice OR receipt OR factura filetype:bitmap", ("image/png", "image/jpeg"))
-    saved_images = 0
-    for hit in images:
-        if saved_images >= 2:
-            break
-        try:
-            data = _download(hit["url"])
-        except Exception as exc:
-            print(f"skip {hit['title']}: {exc}")
-            continue
-        if len(data) > _MAX_BYTES or len(data) < 1000:
-            continue
-        ext = ".png" if hit["mime"] == "image/png" else ".jpg"
-        _save(
-            f"commons_invoice_{saved_images + 1}{ext}",
-            data,
-            source_url=hit["url"],
-            licence=hit["licence"],
-            title=hit["title"],
-            kind="image_invoice",
-        )
-        saved_images += 1
+    saved_images = _source_invoice_images()
 
     # Text-layer PDF invoices -> exercise the pdfplumber text-extraction path.
-    pdfs = _search("invoice OR factura filetype:office OR rechnung", ("application/pdf",), limit=25)
-    saved_pdf = 0
-    for hit in pdfs:
-        if saved_pdf >= 1:
-            break
-        try:
-            data = _download(hit["url"])
-        except Exception as exc:
-            print(f"skip {hit['title']}: {exc}")
-            continue
-        if len(data) > _MAX_BYTES or len(data) < 1000:
-            continue
-        _save(
-            f"commons_invoice_doc_{saved_pdf + 1}.pdf",
-            data,
-            source_url=hit["url"],
-            licence=hit["licence"],
-            title=hit["title"],
-            kind="pdf_invoice",
-        )
-        saved_pdf += 1
+    saved_pdf = _source_invoice_pdfs()
 
     print(f"\nsourced: {saved_images} image(s), {saved_pdf} pdf(s)")
 

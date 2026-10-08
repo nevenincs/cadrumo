@@ -3,10 +3,12 @@ tags:
   - '#adr'
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-10'
-modified: '2026-09-07'
-body_hash: 'sha256:47ef3798c3b02ad2f5af0a6b89595165a47a89c7d1035799cdde80be265c7308'
+modified: '2026-10-03'
+body_hash: 'sha256:a85027a5a5348d666ddda6b1282bd29766ba84836df17a9b76647d349d874dfe'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-research]]"
+  - '[[2026-06-10-calculation-engine-foundations-adr]]'
+  - '[[2026-06-10-period-revision-resolution-adr]]'
 ---
 
 # `calculation-aggregation-taxonomy` adr: `Canonical aggregation mechanism per calculation type` | (**status:** `accepted`)
@@ -425,9 +427,9 @@ it and refuses to pretend otherwise by decomposition. The relation schema's miss
 plural source-casilla axis remains an open capability gap, and it is the thing that
 would close this exemption for real.
 
-## Status
+## Later phase relationship
 
-Accepted and FOUNDATIONAL — not reopened. This ADR's mechanism-ownership table
+This ADR's mechanism-ownership table
 (relation = cross-modelo fold-in; `previous_filing` = same-modelo carry;
 `per_grupo_member` = fan-in; IVA wallet = compensación) is a foundation of the
 bindings-architecture-unification sweep. The sweep EXTENDS it in one respect, recorded

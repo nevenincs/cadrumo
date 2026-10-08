@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from importlib import import_module
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Never, Protocol
 
 import typer
 
@@ -98,26 +98,26 @@ def normalize_ambient_profile(ctx: typer.Context) -> None:
         ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
 
 
-def _enforce_write_policy(
+def _inspect_write_policy(
     *,
-    common: Any,
-    leaf: RequestedCliLeaf,
     spec: CommandSpec,
     target_bucket_id: str | None,
     inspect_storage_write_policy: Callable[..., Any],
-) -> None:
-    """Refuse a disallowed profile-bound write before session activation."""
+) -> Any:
+    """Return the write-policy decision for a profile-bound leaf, or ``None``."""
     policy = spec.policy
     if policy.write_route != "profile-bound":
-        return
+        return None
     from ...core.config import load_settings, settings_for_active_profile_bucket
 
     settings = load_settings()
     if target_bucket_id is not None and "cadrumo_database_url" not in settings.model_fields_set:
         settings = settings_for_active_profile_bucket(target_bucket_id, settings)
-    write_policy = inspect_storage_write_policy(policy.write_route, settings=settings)
-    if write_policy.allowed:
-        return
+    return inspect_storage_write_policy(policy.write_route, settings=settings)
+
+
+def _write_policy_refusal(*, common: Any, leaf: RequestedCliLeaf, write_policy: Any) -> Exception:
+    """Build the boundary error carrying one refusing write-policy verdict."""
     if write_policy.verdict is None:
         raise InternalInvariantError("root write-policy refusal is missing its verdict")
     projection = common.project_cli_policy_refusal(requested_leaf=leaf, verdict=write_policy.verdict)
@@ -127,13 +127,72 @@ def _enforce_write_policy(
         for key, value in evidence.values.items()
         if key.endswith("_setting")
     }
-    raise common.attach_cli_policy_refusal_projection(
+    refusal = common.attach_cli_policy_refusal_projection(
         CliRefusedBoundaryError(
             write_policy.render_refusal_message(),
             context=context or None,
         ),
         projection=projection,
     )
+    if not isinstance(refusal, Exception):
+        raise InternalInvariantError("write-policy refusal projection did not return a raisable error")
+    return refusal
+
+
+def _enforce_write_policy(
+    *,
+    common: Any,
+    leaf: RequestedCliLeaf,
+    spec: CommandSpec,
+    target_bucket_id: str | None,
+    inspect_storage_write_policy: Callable[..., Any],
+) -> None:
+    """Refuse a disallowed profile-bound write before session activation."""
+    write_policy = _inspect_write_policy(
+        spec=spec,
+        target_bucket_id=target_bucket_id,
+        inspect_storage_write_policy=inspect_storage_write_policy,
+    )
+    if write_policy is None or write_policy.allowed:
+        return
+    raise _write_policy_refusal(common=common, leaf=leaf, write_policy=write_policy)
+
+
+def enforce_explicit_database_route(
+    *,
+    spec: CommandSpec,
+    command_path: tuple[str, ...],
+    target_bucket_id: str | None,
+) -> None:
+    """Refuse an operator-pinned database URL before a runtime leaf admits a profile.
+
+    The runtime admission path owns its own no-active-profile refusal, and that
+    one is the better answer for a cold start: it separates an operator who has
+    registered nothing from one who is merely logged out. It has no equivalent
+    for an explicitly pinned ``cadrumo_database_url``. Creating or selecting a
+    profile does not move that route, so answering a pinned route with "create
+    a profile" sends the operator down a recovery that cannot succeed. The
+    write policy's closed outcome is the honest one, and it is reached here so
+    the runtime and local routes refuse the same pinned route the same way.
+
+    Only that one decision is applied. The write policy's root-fallback branch
+    is deliberately left to the runtime path's richer refusal.
+    """
+    from ...application.storage_write_policy import StorageWritePolicyCode, inspect_storage_write_policy
+
+    write_policy = _inspect_write_policy(
+        spec=spec,
+        target_bucket_id=target_bucket_id,
+        inspect_storage_write_policy=inspect_storage_write_policy,
+    )
+    if write_policy is None or write_policy.code is not StorageWritePolicyCode.REFUSED_EXPLICIT_DATABASE_URL:
+        return
+    common = _common()
+    leaf = common.RequestedCliLeaf(
+        subject_leaf_key=spec.result_schema.identity or spec.key,
+        canonical_cli_path=command_path,
+    )
+    raise _write_policy_refusal(common=common, leaf=leaf, write_policy=write_policy)
 
 
 def _posture_skips_session(posture: ProfileAuthenticationPosture) -> bool:
@@ -272,8 +331,6 @@ def _resume_or_authenticate(
     target_profile_label: str | None,
     requested_leaf: RequestedCliLeaf,
 ) -> None:
-    from ...adapters.persistence.storage.errors import KeyringUnavailableError
-    from ...application.profile_preconditions import profile_session_failure_verdict
     from ...application.user_profile.session_admission import (
         ProfileSessionAdmissionState,
         admit_profile_session,
@@ -305,39 +362,28 @@ def _resume_or_authenticate(
         return
     refusal = admission.resume_refusal
     if refusal is None:
-        raise InternalInvariantError("a refused profile admission carries no typed reason")
+        if _interactive_authentication(ctx, bucket_id=bucket_id, refusal=None):
+            return
+        from ...application.user_profile.custody_ports import refuse_profile_login_without_password_channel
+
+        refuse_profile_login_without_password_channel()
     if _interactive_authentication(ctx, bucket_id=bucket_id, refusal=refusal):
         return
-    if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
-        raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
-    common = _common()
-    verdict = profile_session_failure_verdict(
-        refusal,
-        profile_name=target_profile_label or common.active_profile_label() or bucket_id,
-    )
-    key = session_refusal_translation_key(refusal)
-    raise common.attach_cli_policy_verdict(
-        CliRefusedBoundaryError(translated_message=key, context={"reason": refusal.value}),
-        verdict=verdict,
-        requested_leaf=requested_leaf,
-    )
+    _raise_profile_resume_refusal(refusal, target_profile_label, bucket_id, requested_leaf)
 
 
 def _interactive_authentication(
     ctx: typer.Context,
     *,
     bucket_id: str,
-    refusal: ProfileSessionRefusalReason,
+    refusal: ProfileSessionRefusalReason | None,
 ) -> bool:
-    """Prompt for the passphrase only where no session could ever be resumed.
+    """Offer explicit local credentials only at an interactive terminal.
 
-    A parsed invocation otherwise stays non-interactive: an absent or expired
-    session is answered with the login action. A host without a usable keychain
-    can never hold a resumable session, so refusing there would leave an
-    operator at a terminal no way forward short of piping the passphrase; the
-    prompt authenticates this invocation only, as the root secret channel does.
+    No receipt observation is inferred from missing local custody. Runtime
+    clients perform automatic proof presentation through their own admission.
     """
-    if refusal is not ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+    if refusal not in {None, ProfileSessionRefusalReason.KEYRING_UNAVAILABLE}:
         return False
     from .config.secure_input import terminal_can_prompt_for_secrets
 
@@ -355,3 +401,28 @@ __all__ = [
     "normalize_ambient_profile",
     "session_refusal_translation_key",
 ]
+
+
+def _raise_profile_resume_refusal(
+    refusal: ProfileSessionRefusalReason,
+    target_profile_label: str | None,
+    bucket_id: str,
+    requested_leaf: RequestedCliLeaf,
+) -> Never:
+    """Attach the existing typed policy verdict after interactive authentication is exhausted."""
+    from ...adapters.persistence.storage.errors import KeyringUnavailableError
+    from ...application.profile_preconditions import profile_session_failure_verdict
+
+    if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+        raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
+    common = _common()
+    verdict = profile_session_failure_verdict(
+        refusal,
+        profile_name=target_profile_label or common.active_profile_label() or bucket_id,
+    )
+    key = session_refusal_translation_key(refusal)
+    raise common.attach_cli_policy_verdict(
+        CliRefusedBoundaryError(translated_message=key, context={"reason": refusal.value}),
+        verdict=verdict,
+        requested_leaf=requested_leaf,
+    )

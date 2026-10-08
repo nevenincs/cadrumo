@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#ledger-filter-period'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd22fb2cde9471ef443cd188ea0a8e4cbd2582a0f982741f721103a7a2cb26ef'
+body_hash: 'sha256:dc04aa19176e0dd7e07ee038b04c21e1f63b55b586958fe6e55bfa3387a2c690'
 related:
   - '[[2026-06-10-ledger-filter-period-adr]]'
-  - '[[2026-06-10-ledger-filter-period-ledger]]'
-  - '[[2026-06-10-ledger-filter-period-plan]]'
   - '[[2026-06-10-ledger-filter-period-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#ledger-filter-period`.
 ### adr
 
 - `2026-06-10-ledger-filter-period-adr` - `ledger-filter-period` adr: `Single shared year.period filter; delete residual notation; continuity gate` | (**status:** `accepted`)
-
-### exec
-
-- `2026-06-10-ledger-filter-period-ledger` - `ledger-filter-period` ledger
-
-### plan
-
-- `2026-06-10-ledger-filter-period-plan` - `ledger-filter-period` `Ledger shared period filter: ratify, delete residual notation, continuity gate` plan
 
 ### research
 

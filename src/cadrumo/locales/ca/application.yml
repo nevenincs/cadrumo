@@ -25,8 +25,7 @@ application:
       health:
         identity_unset: No s'ha configurat cap DNI/NIE per a Cl@ve Mòbil. Configura'n
           un abans de continuar.
-        operator_completion_required: Preparat; requereix finalització de Cl@ve mediada
-          per l'operador.
+        operator_completion_required: Preparat; has de completar tu el pas de Cl@ve.
     errors:
       session_field_not_datetime: El camp {field} de la sessió persistent ha de ser
         una data-hora o cadena ISO-8601.
@@ -57,7 +56,7 @@ application:
           del secret de certificat per a aquest perfil. Torna a provar la mateixa
           ordre de secret abans de canviar la configuració d'autenticació.
         certificate_source_not_found: L'origen de certificat '%{name}' no està registrat.
-          Executeu `aeat config auth certificate list` per veure els orígens registrats,
+          Executa `aeat config auth certificate list` per veure els orígens registrats,
           o `aeat config auth certificate register --name %{name} --file RUTA` per
           registrar-lo.
         cleanup_in_progress: Encara s'està recuperant un tancament o reinici d'autenticació
@@ -70,15 +69,15 @@ application:
         no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
           create NAME` abans de configurar l'autenticació.
         provider_not_configured: No hi ha cap proveïdor d'autenticació configurat;
-          indiqueu --provider o configureu-ne un primer.
+          indica --provider o configura-ne un primer.
         requires_custody_session: L'operació d'autenticació apunta al perfil '%{bucket_id}'
           a %{storage_root}, però aquest perfil no té cap sessió de custòdia oberta.
-          Executeu aeat config login per a aquest perfil i torneu-ho a provar.
+          Executa aeat config login per a aquest perfil i torna-ho a provar.
         revoke_requires_custody_session: La sessió de l'AEAT del perfil '%{bucket_id}'
           NO s'ha revocat i continua activa. Està desada xifrada dins d'aquest perfil,
           de manera que només desbloquejar aquest perfil, amb aeat config login, la
           revoca.
-        scope_conflict: Trieu --provider o --all, però no tots dos.
+        scope_conflict: Tria --provider o --all, però no tots dos.
         unreadable_active_profile: 'El perfil actiu ''%{active_profile}'' té un manifest
           de bucket però cap registre de perfil llegible (status=%{status}). Següent
           acció: %{next_action}.'
@@ -93,7 +92,7 @@ application:
           Mòbil: encara no s''ha configurat cap DNI/NIE. Configura''n un abans de
           continuar.'
         refused_live_tests_disabled: 'L''inici de sessió en directe està desactivat
-          per seguretat: l''eina només construeix i verifica localment. Activa les
+          per seguretat: l''eina només construeix i comprova localment. Activa les
           proves en directe si realment vols connectar amb l''AEAT i torna a executar
           aquesta ordre. Proveïdor sol·licitat: %{provider}.'
       probe:
@@ -124,23 +123,24 @@ application:
         session_live: Hi ha un testimoni de sessió AEAT persistit al disc i dins del
           seu límit d'inactivitat.
     provider_impact:
-      certificate_ready: L'autenticació amb certificat està a punt. L'operador manté
-        el mateix flux de presentació a la CLI per a lectures recolzades per l'AEAT;
-        tots els proveïdors utilitzen el mateix flux d'ordres.
-      generic_ready: '%{label} està a punt. L''operador manté el mateix flux de presentació
-        a la CLI mentre aquest proveïdor es connecta al protocol d''autenticació compartit.'
-      unavailable: '%{label} està configurat/da però encara no està a punt. L''operador
-        encara pot generar, verificar i exportar presentacions localment, però les
-        lectures recolzades per l''AEAT romandran no disponibles fins que se solucioni
-        l''autenticació.'
-      unconfigured: L'operador encara pot generar, verificar i exportar presentacions
-        localment, però les lectures recolzades per l'AEAT romandran no disponibles
-        fins que es configuri un proveïdor d'autenticació.
+      certificate_ready: L'accés amb certificat està a punt. Mantens el mateix flux
+        d'ordres per a les lectures de l'AEAT; tots els proveïdors fan servir les
+        mateixes ordres.
+      generic_ready: '%{label} està a punt. Mantens el mateix flux d''ordres mentre
+        aquest proveïdor fa servir el protocol d''accés compartit.'
+      unavailable: '%{label} està configurat però encara no està a punt. Encara pots
+        preparar, comprovar i exportar declaracions localment, però les lectures de
+        l''AEAT continuaran sense estar disponibles fins que se solucioni l''accés.'
+      unconfigured: Encara pots preparar, comprovar i exportar declaracions localment,
+        però les lectures de l'AEAT continuaran sense estar disponibles fins que configuris
+        un proveïdor d'accés.
     sessions:
       errors:
-        clave_contraste_missing: La ruta Cl@ve Móvil sense QR necessita el contrast
-          imprès al teu document. Registra %{nie_field} al perfil actiu si és un NIE,
-          o %{dni_field} si és un DNI, abans d'utilitzar cap sessió amb l'AEAT.
+        clave_contraste_missing: Cl@ve Móvil inicia la sessió per defecte amb una
+          sol·licitud d'aprovació a l'app Cl@ve, que necessita el contrast imprès
+          al teu document. Registra %{nie_field} al perfil actiu si és un NIE, o %{dni_field}
+          si és un DNI. Per escanejar un codi QR en un navegador visible, executa
+          `aeat config auth configure --provider clave_movil --clave-movil-route qr`.
         clave_identity_malformed: La identitat de Cl@ve no és un NIF, NIE o CIF vàlid,
           per la qual cosa no es pot confirmar que pertanyi a aquest perfil.
         clave_identity_missing: L'autenticació en directe amb Cl@ve exigeix un DNI/NIE.
@@ -150,10 +150,7 @@ application:
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
-        clave_route_missing: L'autenticació en directe amb Cl@ve Mòbil requereix %{route_field}.
-          Obriu Identificació al gestor del perfil, trieu Codi QR o Sol·licitud a
-          l'aplicació, deseu-ho i torneu a provar la sincronització.
-        corrupt_session: La sessió d autenticació desada està malmesa i no es pot
+        corrupt_session: La sessió d'autenticació desada està malmesa i no es pot
           llegir. Executa `aeat config auth logout` i després `aeat config auth test`.
         no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
           de llegir dades AEAT.
@@ -165,8 +162,6 @@ application:
           li pertanyi.
         profile_tax_id_missing: L'autenticació en directe amb Cl@ve Móvil exigeix
           que el perfil actiu inclogui %{requirements}.
-        provider_close_failed: No s'ha pogut tancar de manera segura la sessió del
-          navegador AEAT; repeteix l'autenticació abans de llegir dades AEAT.
         session_identity_profile_mismatch: La identitat de la sessió AEAT no coincideix
           amb la identitat fiscal del perfil actiu; esborra les sessions d'autenticació
           i autentica el perfil que coincideixi abans de les lectures AEAT en directe.
@@ -175,10 +170,10 @@ application:
       register_advisory: '%{count} bé(ns) d''inversió en període de regularització
         (LIVA arts. 107-110) per a %{year}: %{computed} computat(s), %{pending} pendent(s)
         de prorrata definitiva. Regularització proposada per a la casella %{casilla}:
-        %{value}. Confirmeu el valor abans de presentar.'
+        %{value}. Confirma el valor abans de presentar.'
       transmision_advisory: '%{count} bé(ns) d''inversió transmès(os) el %{year} requereixen
         la regularització única d''entregues (LIVA art. 110). Regularització proposada
-        per a la casella %{casilla}: %{value}. Confirmeu el valor abans de presentar.'
+        per a la casella %{casilla}: %{value}. Confirma el valor abans de presentar.'
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'No es poden fusionar observacions amb clau
@@ -193,11 +188,11 @@ application:
           %{filing_year}/%{period}; la correcció sobreescriu una sembra existent,
           no la crea.
         history_casilla_undeclared: La casella {casilla_id} no està declarada al model
-          {modelo} revisió {revision_id}, de manera que no s'hi pot adjuntar cap referència
-          legal. Corregiu la referència de la casella.
+          {modelo} versió {revision_id}, de manera que no s'hi pot adjuntar cap referència
+          legal. Corregeix la referència de la casella.
         history_operand_ref_value_arity: La casella {casilla_id} aporta {operand_ref_count}
           referències d'operand i {operand_value_count} valors d'operand, de manera
-          que la seva procedència de fórmula quedaria incompleta.
+          que la traçabilitat de la seva fórmula quedaria incompleta.
         history_operand_refs_diverge_from_formula: La casella {casilla_id} aporta
           les referències d'operand {supplied_operand_refs}, però la fórmula {formula_id}
           projecta {formula_operand_refs}.
@@ -218,8 +213,8 @@ application:
     iva_wallet:
       errors:
         decision_blocks_calculation: La decisió de la cartera d'IVA per a {target_year}
-          {target_period} està bloquejada per la divergència {divergence}. Resoleu
-          la divergència abans de calcular.
+          {target_period} està bloquejada per la divergència {divergence}. Resol la
+          divergència abans de calcular.
         decision_no_selected_amount: La decisió de la cartera d'IVA per a {target_year}
           {target_period} no conté cap import seleccionat, de manera que no es pot
           vincular cap valor de compensació.
@@ -227,8 +222,8 @@ application:
           d'IVA i el d'observacions de càlcul han de compartir un únic backend xifrat
           quan la decisió es persisteix.
         decision_target_mismatch: La decisió emmagatzemada de la cartera d'IVA apunta
-          a {decision_target_year} {decision_target_period}, però la unitat de treball
-          és {context_filing_year} {context_period}.
+          a {decision_target_year} {decision_target_period}, però la declaració és
+          {context_filing_year} {context_period}.
         modelo_303_only: La conciliació de la cartera de compensació d'IVA només s'aplica
           al Model 303; s'ha indicat el model {modelo}.
     m303_carry:
@@ -239,24 +234,24 @@ application:
           cap fórmula per a la casella {target_casilla_id}, de manera que la compensació
           disponible amb base en la generada no en pot citar cap.
         carry_operands_disagree_with_formula: Els operands d'arrossegament {derivation_operands}
-          no coincideixen amb els operands de la fórmula del registre {registry_operands}.
-          Només una correcció del registre pot resoldre-ho; no hi ha recuperació automàtica
-          segura.
-        casilla_id_invalid: El registre declara una casella no vàlida per a la clau
-          de correspondència {mapping_key} del traspàs del Model 303.
+          no coincideixen amb els operands de la fórmula de la definició del model
+          {registry_operands}. Només una correcció de les definicions dels models
+          pot resoldre-ho; no hi ha recuperació automàtica segura.
+        casilla_id_invalid: Les definicions dels models declaren una casella no vàlida
+          per a la clau de correspondència {mapping_key} del traspàs del Model 303.
         disposition_code_not_admitted: El codi de destinació del resultat {code} no
           és admès per al traspàs del Model 303.
-        disposition_code_undeclared: El registre no declara cap codi per a la destinació
-          del resultat {disposition}.
+        disposition_code_undeclared: Les definicions dels models no declaren cap codi
+          per a la destinació del resultat {disposition}.
         disposition_result_sign_incompatible: La disposició declarada {disposition}
-          no s'hauria pogut seleccionar per a un resultat presentat de {resultado}.
+          no s'hauria pogut seleccionar per a un resultat registrat de {resultado}.
           Només el contribuent pot decidir quina és correcta; no hi ha recuperació
           automàtica segura.
         duplicate_header_facts: L'evidència d'arrossegament del Model 303 porta {header_count}
           capçaleres d'origen {header_key}; se'n requereix exactament una.
         envelope_not_normalized: L'historial d'arrossegament del Model 303 requereix
           un parell disponible i generada ja normalitzat i conscient de la disposició.
-          Torneu a ingerir l'observació presentada.
+          Torna a importar les dades de la presentació registrada.
         formula_mapping_required: La revisió {revision_id} no declara la correspondència
           de traspàs del Model 303 necessària per citar la fórmula de la compensació
           disponible.
@@ -270,16 +265,16 @@ application:
           303 no pot derivar la compensació disponible a partir de les caselles presents:
           {casilla_ids}.'
         invalid_registry_observation: L'entrada d'arrossegament del Model 303 requereix
-          una observació de model del registre; ha rebut {observed_type}.
-        local_disposition_header_disagreement: La disposició de resultat presentada
-          localment {typed_disposition} no coincideix amb la capçalera de tipus de
-          declaració {header_disposition}. Només el contribuent pot decidir quina
+          una observació llegida de les definicions del model; ha rebut {observed_type}.
+        local_disposition_header_disagreement: La disposició de resultat registrada
+          com a presentada {typed_disposition} no coincideix amb la capçalera de tipus
+          de declaració {header_disposition}. Només el contribuent pot decidir quina
           es va presentar; no hi ha recuperació automàtica segura.
         local_filing_disposition_required: L'evidència d'arrossegament d'una presentació
           local del Model 303 ha de portar la disposició de resultat determinada en
           el moment de la presentació; l'evidència {source_kind} no en porta cap.
-        local_filing_provenance_required: La disposició d'una presentació local del
-          Model 303 ha de conservar la seva procedència app_filing; porta {provenance_kind}.
+        local_filing_provenance_required: La disposició d'un Model 303 registrat com
+          a presentat ha de conservar el seu origen app_filing; porta {provenance_kind}.
         non_target_modelo_envelope: L'historial d'arrossegament del Model 303 només
           admet observacions del Model 303; s'ha indicat el model {modelo}.
         official_disposition_header_disagreement: La disposició de resultat tipada
@@ -289,12 +284,13 @@ application:
         official_header_required: L'evidència oficial d'arrossegament del Model 303
           ha de portar exactament una capçalera d'origen {header_key}; l'evidència
           {source_kind} no en porta cap.
-        registry_resolution_unavailable: El registre no ha pogut resoldre la correspondència
-          de traspàs del Model {modelo} per a l'exercici {filing_year}, període {period}.
+        registry_resolution_unavailable: Les definicions dels models no han pogut
+          resoldre la correspondència de traspàs del Model {modelo} per a l'exercici
+          {filing_year}, període {period}.
         registry_scope_invalid: El traspàs del Model 303 necessita un model i un període;
           s'ha rebut el model {modelo}, exercici {filing_year}, període {period}.
         result_casilla_required: La normalització de l'arrossegament del Model 303
-          requereix la casella de resultat presentada {casilla_id}, que l'observació
+          requereix la casella de resultat registrada {casilla_id}, que l'observació
           no porta.
         supplied_available_contradicts_derivation: La compensació disponible aportada
           {supplied_available} contradiu la derivació {basis} {derived_available}.
@@ -312,10 +308,10 @@ application:
     maritime_exemption:
       errors:
         art_7p_inputs_required: S'aplica l'exempció de l'art. 7.p), de manera que
-          calen tant el salari anual com els dies amb dret. Aporteu els imports que
+          calen tant el salari anual com els dies amb dret. Aporta els imports que
           falten.
         rebeca_input_required: S'aplica l'elegibilitat REBECA, de manera que cal el
-          rendiment brut de navegació. Aporteu l'import que falta.
+          rendiment brut de navegació. Aporta l'import que falta.
     observations:
       errors:
         casilla_ids_noncanonical: Les observacions de càlcul han d'usar els identificadors
@@ -332,7 +328,7 @@ application:
         period_type_invalid: La clau d'observació requereix un valor de període; ha
           rebut {observed_type}.
         registry_snapshot_missing: No es poden validar els identificadors de casella
-          perquè no es resol cap revisió del registre per al model {modelo}, exercici
+          perquè no es resol cap versió de les definicions del model {modelo}, exercici
           {filing_year}, període {period}.
         taxpayer_nif_blank: El NIF del contribuent no pot estar en blanc quan forma
           la clau de decisió de la cartera d'IVA.
@@ -340,66 +336,47 @@ application:
       advisory: 'Regularització de prorrata per percentatge definitiu (LIVA arts.
         104-105) per a %{year}: prorrata provisional %{provisional}% → definitiva
         %{definitiva}% (%{sentido}). Regularització proposada per a %{target}: %{value}.
-        Confirmeu el valor abans de presentar.'
+        Confirma el valor abans de presentar.'
       sentido_deduccion: deducció complementària
       sentido_ingreso: ingrés
       target_casilla: casella %{number}
       target_declared: la casella de regularització declarada
-    row_set:
-      errors:
-        grouping_dispatch_fell_through: 'L''agrupació de conjunt de files {grouping}
-          s''ha resolt a un assemblador que no s''ha executat. Comuniqueu-ho: la taula
-          de despatx és inconsistent.'
-        grouping_has_no_assembler: L'agrupació de conjunt de files {grouping} no té
-          assemblador en aquesta aplicació; les agrupacions sense un són {unassemblable_groupings}.
-        percepcion_clave_missing: La fila {row_index} no declara cap clave. Una percepción
-          ha d'indicar la seva clave de l'AEAT, segons el disseny de registres dels
-          Models 190 i 193, registre de tipus 2. Aporteu la clave.
-        percepcion_clave_unsupported: La fila {row_index} declara la clave de l'AEAT
-          {clave}, que aquesta aplicació no admet.
-        row_assembly_failed: 'No s''ha pogut assemblar la fila {row_index}: {validation_error_detail}.
-          Corregiu la fila i torneu a fer el pull.'
-        row_index_not_positive: L'índex de fila de la cel·la del conjunt de files
-          ha de ser un nombre enter positiu; conté {row_index}.
   filing:
     build_draft:
       errors:
-        binding_data_type_unsupported: El binding del registre declara un tipus de
-          dada que cap canal d'entrada admet.
-        binding_family_has_no_input_channel: La família de valors del binding del
-          registre no té canal d'entrada.
-        binding_provenance_missing: El binding del registre no declara el seu fonament
-          legal ni les seves fonts.
-        binding_row_key_not_positive_integer: La clau de fila d'una entrada de binding
+        binding_data_type_unsupported: L'origen del valor d'aquesta casella declara
+          un tipus de dada que cap entrada admet.
+        binding_family_has_no_input_channel: La família de valors de l'origen d'aquesta
+          casella no té entrada de dades.
+        binding_provenance_missing: L'origen del valor d'aquesta casella no declara
+          el seu fonament legal ni les seves fonts.
+        binding_row_key_not_positive_integer: La clau de fila d'un valor d'entrada
           ha de ser un enter positiu.
-        binding_text_value_invalid: El valor de text del binding no correspon al tipus
-          de dada declarat al registre.
-        binding_value_not_boolean: El valor d'entrada del binding no és un sí o no
-          reconegut.
-        binding_value_not_integer: El valor d'entrada del binding ha de ser un nombre
-          enter.
-        date_binding_not_iso: El valor del binding de data no és una data ISO 8601.
-        findings_under_fail_on_warning: La validació de l'esborrany ha produït avisos
+        binding_text_value_invalid: El valor de text no correspon al tipus de dada
+          declarat per a la casella.
+        binding_value_not_boolean: El valor d'entrada no és un sí o no reconegut.
+        binding_value_not_integer: El valor d'entrada ha de ser un nombre enter.
+        date_binding_not_iso: El valor de data no és una data ISO 8601.
+        findings_under_fail_on_warning: La validació de l'esborrany ha produït incidències
           i els avisos es tracten com a bloquejants.
         input_key_noncanonical_casilla: Una clau d'entrada fa servir una referència
           de casella no canònica.
-        input_key_not_string: Les claus d'entrada han de ser identificadors de registre
-          en text.
+        input_key_not_string: Les claus d'entrada han de ser identificadors de text
+          de les definicions del model.
         input_key_padded: Les claus d'entrada no han de portar espais al principi
           ni al final.
-        input_key_unknown: Una clau d'entrada no està declarada per la revisió del
-          registre.
+        input_key_unknown: Una clau d'entrada no està declarada per aquesta versió
+          de les definicions del model.
         input_not_decimal: El valor d'entrada ha de ser un import decimal.
         period_type_invalid: El període de declaració ha de ser un valor de període
           tipat.
-        registry_calculation_failed: El càlcul del registre ha fallat per a aquest
-          esborrany.
-        registry_snapshot_unavailable: No hi ha snapshot de registre disponible per
-          a aquest model i període.
+        registry_calculation_failed: El càlcul ha fallat per a aquest esborrany.
+        registry_snapshot_unavailable: No hi ha definicions disponibles per a aquest
+          model i període.
         schema_version_snapshot_mismatch: La versió del proveïdor d'esquema no coincideix
-          amb el snapshot del registre.
+          amb les definicions del model en ús.
         text_casilla_invalid: El valor de text de la casella no correspon al tipus
-          de dada declarat al registre.
+          de dada declarat per a la casella.
         text_casilla_not_string: L'entrada de text de la casella ha de ser un valor
           de text.
     errors:
@@ -408,11 +385,11 @@ application:
     export:
       errors:
         draft_not_approved: L'exportació requereix un esborrany aprovat.
-        draft_snapshot_stale: L'exportació requereix un esborrany construït amb el
-          snapshot de registre actiu.
+        draft_snapshot_stale: L'exportació requereix un esborrany construït amb les
+          definicions del model en ús.
         layout_not_renderable: Aquest model no pot produir un fitxer local d'exportació
           de la declaració.
-        post_write_verification_refused: La verificació posterior a l'escriptura ha
+        post_write_verification_refused: La comprovació posterior a l'escriptura ha
           rebutjat el fitxer de declaració exportat.
         receipt_artefact_unreadable: El rebut d'exportació anomena un fitxer que no
           es pot llegir.
@@ -422,18 +399,18 @@ application:
           rebut d'exportació.
         rendered_payload_empty: El disseny d'exportació ha produït un contingut de
           declaració buit.
-        verify_draft_snapshot_stale: La verificació requereix un esborrany construït
-          amb el snapshot de registre actiu.
+        verify_draft_snapshot_stale: La comprovació requereix un esborrany construït
+          amb les definicions del model en ús.
     export_parity:
       errors:
         aux_block_undeclared: El disseny d'exportació no pot escriure el bloc Aux
           obligatori de la declaració.
         casilla_metadata_drift: La numeració o el segment de casella es desvia del
-          disseny de registre del registre.
-        rate_boxes_understate_total: Les casilles per tipus no cobreixen el seu propi
-          total declarat.
-        record_emit_order_drift: L'exportació emetria els registres fora de l'ordre
-          declarat al registre.
+          disseny de registre oficial de les definicions del model.
+        rate_boxes_understate_total: Les caselles per tipus no inclouen tots els imports
+          registrats.
+        record_emit_order_drift: L'exportació escriuria els registres fora de l'ordre
+          declarat a les definicions del model.
         record_emit_order_duplicated: Diversos registres d'exportació comparteixen
           ordre d'emissió, així que la seqüència és ambigua.
         required_casillas_omitted: L'exportació ometria casilles obligatòries que
@@ -458,7 +435,7 @@ application:
           303.
         regularisation_result_not_canonical: El resultat de regularització del model
           303 no és la projecció canònica.
-        snapshot_period_mismatch: El snapshot de registre del model 303 no coincideix
+        snapshot_period_mismatch: Les definicions del Model 303 en ús no coincideixen
           amb el període d'exportació.
     m303_prorrata_activity_rows:
       errors:
@@ -468,8 +445,8 @@ application:
       errors:
         approved_by_blank: L'identificador de l'aprovador no pot estar buit.
         draft_not_ready: Només es poden aprovar esborranys llestos per presentar.
-        registry_review_mismatch: 'L''esborrany no coincideix amb la superfície de
-          revisió del registre: %{codes}.'
+        registry_review_mismatch: 'L''esborrany no coincideix amb la comprovació de
+          les definicions del model: %{codes}.'
       stale_reasons:
         approval_basis_version_changed: la versió de base d'aprovació ha canviat
         category_profiles_changed: els perfils de categoria han canviat
@@ -481,7 +458,7 @@ application:
         profile_activity_changed: l'activitat del perfil del contribuent ha canviat
         review_checksum_mismatch: La suma de verificació de l'aprovació no coincideix
           amb la seva base d'aprovació
-        schema_formula_changed: la procedència de l'esquema o la fórmula ha canviat
+        schema_formula_changed: l'origen de l'esquema o de la fórmula ha canviat
         transaction_catalogue_changed: el catàleg de transaccions ha canviat
         unknown: '%{reason}'
     runtime:
@@ -492,18 +469,17 @@ application:
           identificadors buits.
         filing_year_period_mismatch: 'Error intern: l''exercici de declaració {filing_year}
           no coincideix amb el període indicat {period}.'
-        modelo_not_in_registry: El model %{modelo} no està present al registre de
-          càlcul.
+        modelo_not_in_registry: El model %{modelo} no està present a les definicions
+          de model usades per al càlcul.
         period_type: 'Error intern: es requereix un objecte Period per al proveïdor
           d''esquema en temps d''execució; s''ha rebut {period_type}.'
-        registry_empty: L arrel del registre %{registry_root_name} no té definicions
-          de model.
-        registry_empty_for_period: L arrel del registre no té definicions de model
-          per a l exercici %{filing_year} període %{period}.
-        registry_missing_requested_modelos: 'L arrel del registre no conté les definicions
-          de model sol.licitades: %{modelos}.'
-        unsupported_casilla_data_type: 'Tipus de dada de casella del registre no admès:
-          %{data_type}.'
+        registry_empty: La carpeta %{registry_root_name} no té definicions de model.
+        registry_empty_for_period: Les definicions de model no tenen res per a l'exercici
+          %{filing_year} període %{period}.
+        registry_missing_requested_modelos: 'Falten a les definicions de model els
+          models sol·licitats: %{modelos}.'
+        unsupported_casilla_data_type: 'Tipus de dada de casella no admès a les definicions
+          del model: %{data_type}.'
   flows:
     errors:
       answer_target_not_visible: 'El flux {flow_id} no pot registrar cap resposta
@@ -533,7 +509,7 @@ application:
       scripted_queue_underflow: L'execució programada s'ha quedat sense respostes
         a la pregunta obligatòria {page_key}, després de {consumed_count} respostes.
       submit_blocked: 'El flux {flow_id} no es pot enviar: queden {blocking_count}
-        troballes bloquejants i {required_remaining} preguntes obligatòries sense
+        incidències bloquejants i {required_remaining} preguntes obligatòries sense
         respondre.'
       validator_id_blank: Un validador de flux s'ha de registrar amb un identificador
         no buit.
@@ -544,24 +520,24 @@ application:
   inventory:
     service:
       errors:
-        actividad_conflict: Ja existeix un llibre d'inventari per a l'activitat %{actividad_id}
-          i l'exercici %{year}. Executeu `aeat app ledger inventory list` per veure
-          els llibres existents.
-        actividad_not_found: No existeix cap llibre d'inventari per a l'activitat
-          %{actividad_id} i l'exercici %{year}. Executeu `aeat app ledger inventory
-          list` per veure els llibres existents.
+        actividad_conflict: Ja existeix un registre d'inventari per a l'activitat
+          %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory
+          list` per veure els existents.
+        actividad_not_found: No existeix cap registre d'inventari per a l'activitat
+          %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory
+          list` per veure els existents.
         closing_authority_conflict: Ja existeix un registre diferent d'autoritat de
           tancament per a aquesta activitat i any.
-        duplicate_movement_id: El llibre d'inventari ja conté el moviment %{movement_id}.
-          Executeu `aeat app ledger inventory list` per veure els moviments registrats.
-        invalid_valuation_method: 'El mètode de valoració d inventari no està admès:
+        duplicate_movement_id: El registre d'inventari ja conté el moviment %{movement_id}.
+          Executa `aeat app ledger inventory list` per veure els moviments registrats.
+        invalid_valuation_method: 'El mètode de valoració d''inventari no està admès:
           %{valuation_method}.'
   invoices:
     bulk_import:
       errors:
         country_unanswerable: 'El fitxer d''importació no té columna de país de la
-          contrapart i no s''ha indicat cap país per a la importació. Afegiu una columna
-          country_code o indiqueu un país per a tot el fitxer. Columnes no reconegudes:
+          contrapart i no s''ha indicat cap país per a la importació. Afegeix una
+          columna country_code o indica un país per a tot el fitxer. Columnes no reconegudes:
           {unmapped_columns}'
         file_read_failed: No s'ha pogut llegir el fitxer d'importació massiva de factures.
         formula_cell: El fitxer d'importació massiva de factures conté una cel·la
@@ -581,7 +557,7 @@ application:
           la seva clau d''operació del Model 349: la categoria per si sola no distingeix
           un lliurament intracomunitari ordinari (clau E) d''un lliurament posterior
           a una importació exempta (clau M, o H mitjançant representant fiscal).'
-        unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; useu un
+        unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; usa un
           de: %{accepted}.'
     lifecycle:
       errors:
@@ -593,13 +569,13 @@ application:
         invoice_not_found: 'Factura del catàleg no trobada: %{invoice_id}.'
         remove_linked_invoice: 'No es pot eliminar la factura %{invoice_id} mentre
           continuï vinculada a transaccions: %{linked_transaction_ids}. No hi ha cap
-          comanda de desvinculació: elimineu aquestes transaccions amb `aeat app ledger
-          remove`, cosa que allibera el vincle, i elimineu després la factura.'
+          ordre de desvinculació: elimina aquestes transaccions amb `aeat app ledger
+          remove`, cosa que allibera el vincle, i elimina després la factura.'
     linking:
       errors:
-        linked_invoice_not_found: No s ha trobat la factura %{invoice_id} després
-          d aplicar l enllaç.
-        transaction_not_found: No s ha trobat la transacció %{transaction_id} al catàleg
+        linked_invoice_not_found: No s'ha trobat la factura %{invoice_id} després
+          d'aplicar l'enllaç.
+        transaction_not_found: No s'ha trobat la transacció %{transaction_id} al catàleg
           de transaccions.
     wizard:
       errors:
@@ -615,13 +591,13 @@ application:
       caller_zero_matches_local_authority: El zero proporcionat per qui fa la crida
         coincideix amb l'autoritat local de zero persistida.
       filed_history_requires_override: No hi ha prova de la cartera de l'AEAT; la
-        recurrència de l'historial presentat requereix una anul·lació expressa del
-        contribuent abans de generar el resultat automàtic.
-      filed_history_zero: La prova registrada de l'historial presentat del Model 303
-        estableix una compensació a traslladar de zero.
+        recurrència de les teves presentacions registrades requereix una anul·lació
+        expressa per part teva abans de generar el resultat automàtic.
+      filed_history_zero: Les teves presentacions registrades del Model 303 estableixen
+        una compensació a traslladar de zero.
       first_period_zero_activity_start_uncontrasted: 'SENSE CONTRASTAR: El zero del
-        primer període es basa en la data d''inici d''activitat declarada per l''operador;
-        Cadrumo no pot verificar aquesta data amb la informació censal actual de l''AEAT.'
+        primer període es basa en la data d''inici d''activitat que has indicat; Cadrumo
+        no pot comprovar aquesta data amb la informació censal actual de l''AEAT.'
       first_period_zero_aeat_wallet: La cartera de l'AEAT confirma que la compensació
         anterior és zero en el primer període d'IVA registrat.
       first_period_zero_local_recurrence: Un zero local inicial estableix que no existeix
@@ -642,28 +618,28 @@ application:
       stale_wallet_no_local_recurrence: L'observació de la cartera de l'AEAT està
         desactualitzada i no hi ha recurrència local alternativa disponible.
       taxpayer_override: S'ha seleccionat l'anul·lació expressa del contribuent; l'explicació
-        de l'operador registrada per separat n'indica el fonament probatori.
+        que has registrat per separat n'indica el fonament.
       wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
         difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
     errors:
-      evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
-        evidència de compra o identificadors d'adjunt.
-      evidence_detachment_requires_ids: La separació d'evidència del llibre requereix
-        almenys un id d'adjunt.
-      evidence_detachment_unknown_attachment: La transacció del llibre no porta els
-        adjunts %{attachment_ids}.
+      evidence_attachment_requires_ids: Adjuntar un justificant als teus registres
+        requereix evidència de compra o identificadors d'adjunt.
+      evidence_detachment_requires_ids: Separar un justificant dels teus registres
+        requereix almenys un id d'adjunt.
+      evidence_detachment_unknown_attachment: La transacció dels teus registres no
+        porta els adjunts %{attachment_ids}.
       idempotency_key_conflict: La clau d'idempotència ja identifica una transacció
-        emmagatzemada amb dades diferents. Useu una clau d'idempotència nova per a
-        un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.
-      purchase_evidence_already_set: L'evidència de la factura de compra és immutable
-        un cop adjuntada. Elimineu la transacció del llibre i torneu a afegir-la amb
-        l'evidència correcta.
+        emmagatzemada amb dades diferents. Usa una clau d'idempotència nova per a
+        un moviment diferent, o omet la clau per afegir un duplicat deliberat.
+      purchase_evidence_already_set: El justificant d'una factura de compra no es
+        pot canviar un cop adjuntat. Elimina la transacció dels teus registres i torna
+        a afegir-la amb el justificant correcte.
       split_requires_image_evidence: El lector on-host només pot proposar una divisió
         per a la transacció %{transaction_id} a partir d'evidència escanejada o en
-        imatge, i aquesta transacció no en té cap que pugui llegir. Adjunteu una factura
-        escanejada o en imatge i torneu a executar amb --read-evidence, o indiqueu
-        vós mateix la divisió amb --child-amount i --child-description.
+        imatge, i aquesta transacció no en té cap que pugui llegir. Adjunta una factura
+        escanejada o en imatge i torna a executar amb --read-evidence, o indica tu
+        mateix la divisió amb --child-amount i --child-description.
       transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix
         amb %{count} transaccions: %{matches}'
       transaction_id_prefix_empty: el prefix d'id de transacció és buit
@@ -677,13 +653,13 @@ application:
     evidence:
       errors:
         document_already_confirmed: 'Aquest document ja va generar la factura %{stored_invoice_id},
-          i aquesta confirmació difereix en: %{divergent_fields}. Corregiu o elimineu
+          i aquesta confirmació difereix en: %{divergent_fields}. Corregeix o elimina
           la factura emmagatzemada en lloc de confirmar dues vegades el mateix document.'
   live:
     borrador:
       errors:
-        binding_value_key_blank: Les claus dels valors de vinculació de l'esborrany
-          no poden estar buides.
+        binding_value_key_blank: Les claus dels valors de l'esborrany no poden estar
+          buides.
         bucket_id_blank: L'identificador del bucket de l'esborrany no pot estar buit.
         snapshot_id_blank: L'identificador del snapshot de l'esborrany no pot estar
           buit.
@@ -696,17 +672,17 @@ application:
         bucket_id_blank: L'identificador del bucket d'expedients no pot estar buit.
         snapshot_id_blank: L'identificador de la instantània d'expedients no pot estar
           buit.
-        snapshot_not_found: No hi ha cap instantània d expedients que coincideixi
-          amb l identificador sol·licitat.
-        snapshot_prefix_ambiguous: El prefix de la instantània d expedients coincideix
+        snapshot_not_found: No hi ha cap instantània d'expedients que coincideixi
+          amb l'identificador sol·licitat.
+        snapshot_prefix_ambiguous: El prefix de la instantània d'expedients coincideix
           amb diverses instantànies.
     filed_data:
       errors:
-        sync_run_repository_required: Una captura persistida de dades presentades
-          requereix un repositori de persistència d'execucions de sincronització.
+        sync_run_repository_required: Desar les dades presentades capturades requereix
+          un magatzem d'execucions de sincronització.
     filed_observations:
       errors:
-        duplicate_casilla: L'observació presentada repeteix una mateixa casella més
+        duplicate_casilla: La presentació observada repeteix una mateixa casella més
           d'una vegada. Cada casella pot aparèixer una sola vegada en una observació
           registrada.
         iva_history_promotion_failed: La declaració presentada del Model 303 no s'ha
@@ -714,11 +690,11 @@ application:
         iva_history_reload_missing: L'històric segur de compensació d'IVA no s'ha
           recarregat després de desar el període del Model 303.
         observation_not_active: L'AEAT no informa aquesta declaració presentada com
-          a activa, per la qual cosa no es desa com a evidència de càlcul.
-        quarter_ordinal_missing: El període trimestral de l'històric presentat no
-          té ordinal de trimestre.
-        registry_enrollment_failed: L'observació presentada no s'ha pogut inscriure
-          com a evidència de càlcul fonamentada en el registre.
+          a activa, per la qual cosa no es desa per usar-la en els càlculs.
+        quarter_ordinal_missing: El període trimestral de l'històric de presentacions
+          no té número de trimestre.
+        registry_enrollment_failed: La presentació observada no s'ha pogut afegir
+          com a dada de càlcul recolzada per les definicions del model.
     iva_wallet:
       errors:
         decision_reload_diverged: La decisió de conciliació de la cartera d'IVA no
@@ -737,15 +713,13 @@ application:
           l'AEAT, que l'evidència de captura en viu no sobreescriurà.
         evidence_snapshot_not_active: Només un snapshot de captura en viu actiu es
           pot segellar com a evidència de presentació.
-        expediente_not_in_tree: La declaració presentada referencia un expedient que
-          no és a l'arbre d'expedients.
         filing_identity_unresolved: No s'ha pogut resoldre la identitat fiscal del
           perfil de presentació, per la qual cosa no se segella l'evidència de captura
           en viu.
         filing_record_mismatch: El justificant capturat no coincideix amb el registre
           de presentació actual.
         filing_record_missing: No hi ha cap registre de presentació actual per a aquest
-          model i període. Presenteu el període primer.
+          model i període. Presenta el període primer.
         filing_record_unconfirmed: El justificant capturat no ha confirmat el registre
           de presentació %{filing_record_id} (resultat %{outcome}; %{notices}).
         metadata_snapshot_not_active: Només un snapshot de captura en viu actiu pot
@@ -775,13 +749,13 @@ application:
         certificado_id_blank: L'identificador de certificat de la notificació no pot
           estar buit.
         certificado_not_in_any_snapshot: Cap llista de notificacions capturada esmenta
-          aquest certificat. Descarregueu abans la llista de notificacions.
+          aquest certificat. Descarrega abans la llista de notificacions.
         document_conflict: 'Ja hi ha desat un document diferent per a aquesta notificació;
           no s''ha sobreescrit res. Discrepen: {diverging_fields}.'
-        document_not_found: Cap document desat correspon a aquesta notificació. Descarregueu-lo
+        document_not_found: Cap document desat correspon a aquesta notificació. Descarrega'l
           primer.
         document_prefix_ambiguous: Aquest prefix de certificat correspon a diversos
-          documents desats. Indiqueu l'identificador complet.
+          documents desats. Indica l'identificador complet.
         document_row_mismatch: Aquest document pertany a una altra notificació i no
           s'ha desat.
         snapshot_id_blank: L'identificador de la instantània de notificacions no pot
@@ -812,34 +786,34 @@ application:
           del snapshot que el substitueix.
     verify:
       errors:
-        bucket_id_blank: L identificador del bucket de verificació no pot estar buit.
-        observation_bucket_mismatch: El bucket de l observació de verificació no coincideix
-          amb el bucket del repositori.
-        observation_id_blank: L identificador de l observació de verificació no pot
+        bucket_id_blank: L'identificador del bucket de la comprovació no pot estar
+          buit.
+        observation_bucket_mismatch: El bucket de l'observació que es comprova no
+          coincideix amb el bucket del magatzem.
+        observation_id_blank: L'identificador de l'observació que es comprova no pot
           estar buit.
-        observation_id_mismatch: L identificador de l observació de verificació no
-          coincideix amb l observació sol.licitada.
-        observation_key_mismatch: L'observació de verificació està emmagatzemada sota
-          la clau d'una altra observació.
-        observation_not_found: No hi ha cap observació de verificació que coincideixi
-          amb l identificador sol.licitat.
-        observation_prefix_ambiguous: El prefix de l observació de verificació coincideix
+        observation_id_mismatch: L'identificador de l'observació que es comprova no
+          coincideix amb l'observació sol·licitada.
+        observation_key_mismatch: L'observació que es comprova està emmagatzemada
+          sota la clau d'una altra observació.
+        observation_not_found: No hi ha cap observació que coincideixi amb l'identificador
+          sol·licitat.
+        observation_prefix_ambiguous: El prefix de l'identificador d'observació coincideix
           amb diverses observacions.
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Les claus de binding aportades no poden estar en
+        caller_binding_keys_blank: Les claus dels valors aportats no poden estar en
           blanc.
-        decimal_value_invalid: El valor d'esborrany per al binding numèric %{binding_id}
+        decimal_value_invalid: El valor d'esborrany per a l'origen numèric %{binding_id}
           ha de ser compatible amb decimal.
-        forbidden_bindings: 'L''snapshot d''esborrany conté valors que el registre
-          no ha marcat com a AEAT-prefilled: %{bindings}.'
-        registry_snapshot_axis_mismatch: 'L''eix de l''snapshot de registre no coincideix
-          amb l''ordre de binding d''esborrany: any de l''snapshot=%{snapshot_year}
+        forbidden_bindings: 'L''esborrany conté valors que les definicions del model
+          no han marcat com a emplenats prèviament per l''AEAT: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'L''any i el període de les definicions del
+          model no coincideixen amb l''ordre: any de les definicions=%{snapshot_year}
           període=%{snapshot_period}; any de l''ordre=%{filing_year} període=%{period}.'
-        registry_snapshot_modelo_mismatch: 'El model de l''snapshot de registre no
-          coincideix amb l''ordre de binding d''esborrany: model de l''snapshot=%{snapshot_modelo};
-          model de l''ordre=%{command_modelo}.'
+        registry_snapshot_modelo_mismatch: 'El model de les definicions no coincideix
+          amb l''ordre: model de les definicions=%{snapshot_modelo}; model de l''ordre=%{command_modelo}.'
         snapshot_axis_mismatch: 'L''snapshot d''esborrany no coincideix amb l''eix
           del càlcul: any de l''snapshot=%{snapshot_year} període=%{snapshot_period};
           any del càlcul=%{filing_year} període=%{period}.'
@@ -848,8 +822,267 @@ application:
           llista els snapshots actius amb aeat app live borrador 100 list.
         snapshot_not_active: L'snapshot d'esborrany no està actiu; llista els snapshots
           actius amb `aeat app live borrador 100 list`.
-        unsupported_modelo: El binding d'esborrany no està suportat per al model %{modelo};
-          el manifest del registre ha de declarar la capacitat d'esborrany.
+        unsupported_modelo: Llegir els valors de l'esborrany no està suportat per
+          al model %{modelo}; les definicions del model han de declarar la capacitat
+          d'esborrany.
+    calc_diagnostic:
+      administrador_retencion_rate_mismatch:
+        what: El tipus de retenció d'un registre d'administrador no coincideix amb
+          el que correspon.
+        what_to_do: Compara aquest tipus amb les instruccions oficials i corregeix
+          el registre si cal.
+      advisory_retencion_credit_grade:
+        what: 'La deducció per retencions de les teves factures emeses no està del
+          tot confirmada: Cadrumo encara no ha confirmat a quin exercici correspon.'
+        what_to_do: Compara l'import amb el certificat de retencions de cada client
+          per a aquest exercici abans de presentar.
+      aggregation_activity_undeclared:
+        what: La casella {box} mostra zero, tot i que tens ingressos en aquest període
+          sense tipus d'activitat.
+        what_to_do: Indica el tipus d'activitat en aquests registres d'ingressos i
+          torna a calcular.
+      deferred_binding_source:
+        what: Cadrumo encara no emplena automàticament una xifra d'aquesta declaració.
+        what_to_do: No has de fer res, tret que aquesta xifra t'afecti. Si t'afecta,
+          escriu-la tu.
+      devengo_date_proxy_attribution:
+        what: Algunes factures no tenen la data en què es va fer l'operació, així
+          que s'ha fet servir la d'emissió per triar el període.
+        what_to_do: Afegeix la data de l'operació a les factures de final de període
+          i torna a calcular.
+      dt12_parcial_rescate_guidance:
+        what: Els cobraments parcials del mateix pla de pensions comparteixen un únic
+          termini per a la reducció de la casella {box}, que es compta una sola vegada.
+        what_to_do: Comprova que cada cobrament cau dins d'aquest termini.
+      dt12_regime_window_closed:
+        what: La reducció del 40 % de la casella {box} no s'ha aplicat, perquè el
+          termini per a aquest cobrament d'un sol cop ja ha passat.
+        what_to_do: No has de fer res. Si l'any del fet no és correcte, corregeix-lo
+          al teu perfil i torna a calcular.
+      dt12_regime_window_unverified:
+        what: La reducció del 40 % per una pensió cobrada d'un sol cop s'ha aplicat
+          a la casella {box}, però no se n'ha comprovat el termini.
+        what_to_do: Indica a Cadrumo l'any del fet que va originar la pensió i torna
+          a calcular.
+      duplicate_binding_owner:
+        what: Cadrumo ha trobat una errada en com està muntada aquesta declaració,
+          no en les teves dades.
+        what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
+          de les xifres.
+      duplicate_bound_casilla_owner:
+        what: Cadrumo ha trobat una errada en com està muntada aquesta declaració,
+          no en les teves dades.
+        what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
+          de les xifres.
+      duplicate_relation_owner:
+        what: Cadrumo ha trobat una errada en com està muntada aquesta declaració,
+          no en les teves dades.
+        what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
+          de les xifres.
+      inferred_retencion_excluded_from_credit:
+        what: Part de la retenció de les teves factures emeses s'ha calculat a partir
+          del que va pagar el client, així que s'ha deixat fora de la teva deducció
+          i podries pagar més del necessari.
+        what_to_do: Registra la retenció que et va aplicar el client en cada factura
+          emesa, o aconsegueix-ne el certificat, i torna a calcular.
+      inferred_retencion_rate_unmatched:
+        what: Cadrumo ha estimat una retenció a partir del que faltava en un cobrament,
+          i no coincideix amb cap tipus oficial.
+        what_to_do: Si la diferència va ser una comissió del banc o un descompte,
+          corregeix el registre per no reclamar retenció.
+      inferred_retencion_sectoral_rate_unconfirmed:
+        what: Cadrumo ha estimat una retenció de l'1 % o del 2 % a partir del que
+          faltava en un cobrament, i podria ser una comissió o un descompte.
+        what_to_do: Revisa la retenció amb la factura o el certificat del teu client
+          als teus registres, corregeix el registre si és diferent i torna a calcular.
+      invoice_category_counterparty_mismatch:
+        what: El tractament d'IVA d'una factura no encaixa amb el país del client,
+          així que s'ha deixat fora.
+        what_to_do: Revisa la categoria d'IVA o el país d'aquesta factura als teus
+          registres.
+      invoice_recargo_departs_from_published_rate:
+        what: El recàrrec d'equivalència anotat en una factura no coincideix amb el
+          tipus oficial.
+        what_to_do: Revisa el recàrrec d'aquesta factura als teus registres.
+      invoice_recargo_not_attributable_to_a_tier:
+        what: Un únic recàrrec cobreix línies amb diversos tipus d'IVA, així que no
+          s'ha pogut comparar amb els tipus oficials.
+        what_to_do: Revisa el recàrrec pel teu compte, o divideix la factura per tipus
+          d'IVA als teus registres.
+      invoice_reverse_charge_cuota_not_derivable:
+        what: Una factura rebuda amb inversió del subjecte passiu no té tipus d'IVA,
+          així que no s'ha calculat l'IVA que en deus.
+        what_to_do: Indica el tipus d'IVA d'aquesta factura als teus registres i torna
+          a calcular.
+      iva_compensation_annual_source_evidence_failure:
+        what: L'IVA anual a compensar o arrossegar es basa en registres que no tenen
+          justificant.
+        what_to_do: Revisa els registres d'IVA de tot l'any, afegeix el justificant
+          que falti i torna a calcular.
+      iva_selected_scope_evidence_failure:
+        what: Els registres que sustenten l'IVA d'aquesta declaració no tenen justificant
+          o no quadren.
+        what_to_do: Obre els teus registres d'aquest període, corregeix els que estiguin
+          marcats i torna a calcular.
+      m193_settled_row_amounts_unresolved_authority:
+        what: Alguns imports d'un registre d'un pagament fet en un any posterior no
+          tenen una font oficial que els confirmi.
+        what_to_do: Comprova aquests imports amb les instruccions oficials abans de
+          presentar.
+      m349_clave_inferred_from_category:
+        what: Cadrumo ha triat el tipus d'operació d'una línia del llistat d'operacions
+          amb la UE segons la categoria d'IVA de la factura, i podria ser un altre.
+        what_to_do: Revisa el tipus d'operació d'aquestes factures als teus registres
+          i canvia'l si és diferent.
+      missing_transaction_evidence:
+        what: Un apunt amb IVA no té factura ni document adjunt.
+        what_to_do: Adjunta la factura o el justificant a aquest apunt als teus registres.
+      official_box_unpopulated:
+        what: El total de la casella {box} està calculat, però les caselles oficials
+          que el formen estan totes buides.
+        what_to_do: Copia els imports a mà a les caselles oficials i torna a comprovar
+          la declaració.
+      operator_override_diverges_from_computed:
+        what: El valor de la casella {box} és el que vas escriure tu, no el que ha
+          calculat Cadrumo.
+        what_to_do: Mantén-lo només si n'estàs segur. Per fer servir el valor calculat,
+          torna a calcular sense escriure-hi cap valor.
+      orphaned_override:
+        what: Un valor que vas escriure abans ja no correspon a cap casella d'aquesta
+          declaració, així que no s'ha fet servir.
+        what_to_do: Mira si encara el necessites i, si és així, torna a escriure'l
+          a la casella correcta.
+      oss_no_live_source:
+        what: No s'ha trobat cap factura de finestreta única (OSS) en aquest període,
+          així que Cadrumo no ha calculat aquest impost.
+        what_to_do: No has de fer res si no vas fer aquest tipus de vendes. Si en
+          vas fer, escriu tu els imports.
+      prior_payment_minoracion_not_captured:
+        what: La minoració que ve de pagaments anteriors no està anotada a la casella
+          {box}.
+        what_to_do: Escriu aquesta minoració a la casella {box} si et correspon.
+      prior_payment_not_deducted:
+        what: Vas registrar un trimestre anterior com a presentat, però la casella
+          {box} no descompta el que vas pagar llavors.
+        what_to_do: Escriu a la casella {box} el que vas pagar en els trimestres anteriors.
+      prorrata_especial_check_unavailable:
+        what: Cadrumo no ha pogut comprovar si la prorrata especial d'IVA és obligatòria
+          per a tu.
+        what_to_do: Comprova-ho tu amb les regles oficials o amb el teu assessor.
+      prorrata_especial_obligatoria:
+        what: La prorrata especial d'IVA pot ser obligatòria per a tu, per la teva
+          barreja d'activitat exempta i subjecta.
+        what_to_do: Consulta les regles de la prorrata de l'IVA o el teu assessor,
+          i aplica la prorrata especial si és obligatòria.
+      prorrata_volume_check_unavailable:
+        what: La comparació anual amb el llibre és incompleta.
+        what_to_do: Classifiqueu les operacions de sortida i reviseu les exclusions
+          de prorrata.
+      prorrata_volume_declaration_missing:
+        what: El llibre conté operacions de sortida per comparar amb els volums anuals
+          de prorrata.
+        what_to_do: Declareu els volums anuals; el llibre no els substitueix.
+      prorrata_volume_divergence:
+        what: Els volums anuals de prorrata declarats difereixen del llibre classificat.
+        what_to_do: Reviseu els volums i les exclusions. Les xifres declarades continuen
+          sent l’autoritat.
+      rate_boxes_underaccount_total:
+        what: Una part del total d'IVA de la casella {box} no és a cap casella per
+          tipus.
+        what_to_do: Revisa el tipus d'IVA de les teves factures i registres i torna
+          a calcular. No es podrà exportar la declaració fins que es corregeixi.
+      register_owned_capital_acquisition:
+        what: Una compra d'equipament es deixa fora de les teves despeses, perquè
+          es dedueix mitjançant la seva amortització anual.
+        what_to_do: No has de fer res.
+      reopen_hint: Torna a calcular per veure les notes del càlcul.
+      settlement_not_computed:
+        what: La casella {box} recull la liquidació final i Cadrumo no la calcula.
+        what_to_do: Escriu l'import a la casella {box} i compara'l amb les instruccions
+          oficials.
+      source_domain_not_ready:
+        what: Els registres dels quals depèn aquesta xifra encara no estan llestos
+          per llegir-se.
+        what_to_do: Acaba de preparar o importar aquests registres i torna a calcular.
+      source_issue:
+        what: Falta informació de la qual depèn aquesta xifra, o no s'ha pogut fer
+          servir.
+        what_to_do: Revisa els teus registres i el teu perfil per si falta alguna
+          cosa i torna a calcular.
+      stale: De l'últim càlcul. Torna a calcular per actualitzar.
+      storage_degraded:
+        what: Cadrumo no ha pogut llegir una part dels teus registres desats, així
+          que algunes xifres poden estar incompletes.
+        what_to_do: Torna a calcular. Si continua passant, comprova que les teves
+          dades són accessibles i avisa'ns.
+      structurally_unroutable_base_category:
+        what: Aquesta declaració no té casella per als imports d'una categoria dels
+          teus registres.
+        what_to_do: Consulta a les instruccions oficials on es declaren aquests imports;
+          sovint van en un altre lloc.
+      terminal_origin_mismatch:
+        what: Una xifra ha arribat a la declaració per un camí del qual Cadrumo no
+          pot respondre, així que no és fiable tal com està.
+        what_to_do: Mira d'on surt aquesta xifra als teus registres i torna a calcular.
+          Avisa'ns si continua igual.
+      unclassified_declarant_role_fact:
+        what: Una factura no diu si és aliena a la teva activitat o si és una subvenció,
+          i això decideix com es declara.
+        what_to_do: Respon aquesta pregunta a la factura, als teus registres, i torna
+          a calcular.
+      unconverted_foreign_currency:
+        what: Una factura en moneda estrangera no té tipus de canvi a euros, així
+          que queda fora del llistat.
+        what_to_do: Afegeix el tipus de canvi a aquesta factura als teus registres
+          i torna a calcular.
+      ungrounded_income_substrate:
+        what: Alguns registres d'ingressos no tenen factura amb base imposable, així
+          que s'ha fet servir l'import del banc i es deixa fora la retenció.
+        what_to_do: Vincula una factura emesa a cada registre d'ingressos, o indica'n
+          la base imposable, i torna a calcular.
+      unhandled_binding_source:
+        what: Cadrumo encara no sap emplenar una xifra d'aquesta declaració a partir
+          de les teves dades.
+        what_to_do: No presentis aquesta xifra tal com està. Escriu-la tu si la coneixes
+          i avisa'ns de la mancança.
+      unresolved_binding:
+        what: Cadrumo no ha pogut treure una xifra de les teves dades i hauria mostrat
+          un zero sense avisar.
+        what_to_do: Afegeix els registres o les dades de perfil que faltin, o escriu
+          tu el valor, i torna a calcular.
+      unresolved_derived_binding:
+        what: No s'ha pogut calcular una xifra que Cadrumo treu a partir d'altres.
+        what_to_do: Comprova que les xifres de les quals depèn estan emplenades i
+          torna a calcular.
+      unresolved_retencion_substrate:
+        what: En algunes factures emeses Cadrumo no pot saber quant es va retenir,
+          així que a la teva deducció per retencions li pot faltar un import desconegut
+          i podries pagar més del necessari.
+        what_to_do: Indica als teus registres la base i la retenció de cadascuna d'aquestes
+          factures i torna a calcular.
+      unrouted_declarable_quantity:
+        what: Una part d'un registre, com una retenció o una base imposable, no arriba
+          a cap casella d'aquesta declaració.
+        what_to_do: Revisa la classificació i els imports d'aquest registre i torna
+          a calcular.
+      unrouted_observation:
+        what: Un import dels teus registres no s'ha col·locat a cap casella d'aquesta
+          declaració.
+        what_to_do: Revisa com està classificat aquest registre i torna a calcular.
+      unsettled_legal_reading:
+        what: Una xifra declarada segueix una lectura d'una norma que no està resolta
+          per a aquest exercici, i l'AEAT podria llegir-la d'una altra manera.
+        what_to_do: Revisa aquestes operacions amb els criteris actuals de l'AEAT
+          abans de presentar.
+      unusable_sales_invoice_evidence:
+        what: Un registre d'ingressos està vinculat a una factura emesa que no és
+          fiable, així que es declara l'import del banc i es perd la retenció.
+        what_to_do: Arregla el vincle amb la factura als teus registres, o indica
+          directament la base imposable, i torna a calcular.
+      withholding_detail_absent:
+        what: No hi ha detall de retencions per perceptor durant l'any, així que es
+          mostra un zero sense suport.
+        what_to_do: Afegeix als teus registres el detall de l'any i torna a calcular.
     calculation_report:
       local_calculation_notice: 'Informe de càlcul local de Cadrumo. No és evidència
         oficial de presentació davant l''AEAT. L''evidència oficial l''emet l''AEAT
@@ -863,56 +1096,56 @@ application:
       fact_filing: Presentació
       fact_revision_state: Estat de la revisió
       fact_taxpayer: Contribuent
-      fact_verification: Verificació
-      filing_none: No presentat
+      fact_verification: Comprovació
+      filing_none: No registrat com a presentat
       filing_recorded: Presentació registrada a Cadrumo; la prova oficial és el justificant
         de l'AEAT
       footer_notice: 'Càlcul local de Cadrumo: no és evidència oficial de l''AEAT'
       grade_development_mock: desenvolupament (no presentable)
       grade_reviewed: revisada
-      identity_development_mock: 'Identitat de programari de desenvolupament (programa
-        {program}, NIF del desenvolupador {developer_tax_id}): el fitxer de presentació
-        d''aquest model no es pot presentar a l''AEAT.'
+      identity_development_mock: 'Identitat de programari de desenvolupament: el fitxer
+        de presentació d''aquest model no es pot presentar a l''AEAT.'
       identity_none: El disseny de registre d'aquest model no reserva cap identitat
         de programari.
       identity_reviewed: 'Identitat de programari revisada: el fitxer de presentació
         d''aquest model porta una identitat de programari registrada.'
       legend: 'Valors: una xifra, inclòs un zero, és un valor calculat; «sense dada»
-        indica que la revisió no va registrar cap valor per a la casella; «n/a · no
-        aplicable» indica que el registre demostra que la casella no s''aplica a aquest
-        període.'
+        indica que aquest càlcul no va registrar cap valor per a la casella; «n/a
+        · no aplicable» indica que les regles oficials mostren que la casella no s''aplica
+        a aquest període.'
       notice_title: 'Càlcul local: no és un justificant de l''AEAT'
       page_counter: Pàgina {page} de {pages}
       section_unnamed: Caselles
       signature_meaning: La signatura d'integritat de Cadrumo adjunta a aquest PDF
         acredita que la clau d'aquest perfil va declarar que, en l'instant d'exportació
-        segons el rellotge d'aquesta instal·lació, la revisió, l'informe de verificació,
-        la instantània del registre i la generació de l'autoritat indicats van produir
-        exactament aquest informe, aquest CSV i aquestes pàgines. No acredita l'acceptació
-        ni la presentació davant l'AEAT, la correcció jurídica, la veracitat de les
-        dades, la identitat ni el consentiment del contribuent, una hora de confiança
-        ni que la clau pertanyi a una persona concreta. Compareu l'empremta de la
-        clau amb una rebuda per un altre canal abans de confiar-hi.
+        segons el rellotge d'aquesta instal·lació, el càlcul desat, l'informe de comprovació,
+        les definicions del model i la versió de les regles indicats van produir exactament
+        aquest informe, aquest CSV i aquestes pàgines. No acredita l'acceptació ni
+        la presentació davant l'AEAT, la correcció jurídica, la veracitat de les dades,
+        la identitat ni el consentiment del contribuent, una hora de confiança ni
+        que la clau pertanyi a una persona concreta. Compara l'empremta de la clau
+        amb una rebuda per un altre canal abans de confiar-hi.
       state_borrador: Esborrany
       state_descartado: Descartat
-      state_presentado: Presentat
-      state_presentado_supersedido: Presentat i substituït
-      state_verificado_completo: Verificat complet
-      subtitle: Exercici {year} · Període {period} · Revisió del registre {registry_revision}
+      state_presentado: Registrat com a presentat
+      state_presentado_supersedido: Registrat com a presentat i substituït
+      state_verificado_completo: Comprovació completa
+      subtitle: Exercici {year} · Període {period} · Versió de les definicions del
+        model {registry_revision}
       title: Resum del càlcul · Model {modelo}
-      trace_authority_generation: Generació lògica de l'autoritat del registre
+      trace_authority_generation: Generació de les regles
       trace_calculation_revision: Revisió del càlcul
       trace_csv_sha256: SHA-256 del CSV adjunt
       trace_filing_record: Registre de presentació
-      trace_heading: Traçabilitat i integritat
-      trace_ledger_snapshot: Empremta de la instantània del llibre registre
+      trace_heading: Detalls tècnics
+      trace_ledger_snapshot: Empremta de la instantània dels teus registres
       trace_none: cap
-      trace_registry_snapshot: Instantània del registre (model · revisió · any · període)
+      trace_registry_snapshot: Definicions del model (model · versió · any · període)
       trace_report_sha256: SHA-256 de l'informe (JSON adjunt)
       trace_signing_key: Empremta de la clau de signatura (SHA-256)
       trace_software_identity: Grau d'identitat de programari
-      trace_verification_report: Informe de verificació
-      trace_work_unit: Unitat de treball
+      trace_verification_report: Informe de comprovació
+      trace_work_unit: Declaració
       value_absent: sense dada
       value_false: 'No'
       value_not_applicable: n/a · no aplicable
@@ -920,38 +1153,70 @@ application:
       verification_blocked: Bloquejada
       verification_complete: Completa
       verification_incomplete: Incompleta
-      verification_none: Sense verificació registrada
+      verification_none: Sense comprovació registrada
+    edit:
+      parse:
+        above_maximum: El valor màxim és {bound}.
+        address_not_writable: Aquesta casella no es pot canviar així.
+        ambiguous_separator_readings: 'Això es pot llegir de dues maneres: {as_thousands}
+          o {as_decimal}. Escriu-ho com una d''aquestes.'
+        bad_grouping: Els separadors de milers no estan ben col·locats; escriu, per
+          exemple, 1.234.567,89.
+        below_minimum: El valor mínim és {bound}.
+        channel_unavailable: Aquest valor encara no es pot introduir aquí.
+        empty: Escriu un valor.
+        explicit_plus: Escriu el nombre sense el signe +.
+        iban_checksum: Els dígits de control d'aquest IBAN no són correctes.
+        iban_shape: Aquest IBAN no té la forma correcta.
+        invalid_code: Aquest codi no és vàlid per a aquesta casella.
+        negative_not_allowed: Aquesta casella no admet imports negatius.
+        nif_checksum: La lletra de control d'aquest NIF no és correcta.
+        nif_leader: Aquest NIF no comença com un de vàlid.
+        nif_length: Un NIF té 9 caràcters.
+        non_finite: Escriu un nombre real.
+        not_a_boolean: Respon sí o no.
+        not_a_number: Escriu un nombre, per exemple 1.234,56.
+        not_an_integer: Escriu un nombre enter, sense decimals.
+        not_in_choices: Tria una de les {count} opcions permeses.
+        not_text: Escriu un text.
+        out_of_operand_range: L'import no pot superar {bound}.
+        pattern_mismatch: El text no té el format que demana l'imprès.
+        positive_not_allowed: Aquesta casella només admet imports negatius o zero.
+        scientific_notation: Escriu el nombre complet, sense notació científica.
+        too_long: Escriu com a màxim {length} caràcters.
+        too_many_decimals: Fes servir com a màxim {digits} decimals; no s'arrodoneix.
+        too_short: Escriu almenys {length} caràcters.
     errors:
       amendment_complementaria_liability_decrease: Una complementària per al model
         {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat
         declarat de {baseline_result} a {corrected_result}. Abans de la unificació
-        de l'autoliquidació rectificativa, una complementària presentada pel mateix
-        obligat no pot disminuir legalment el deute; utilitzeu el procediment de sol·licitud
+        de l'autoliquidació rectificativa, una complementària presentada per tu mateix
+        no pot disminuir legalment el deute; utilitza el procediment de sol·licitud
         de rectificació.
       amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind}
         no està legalment disponible per al model {modelo}, exercici {filing_year},
         període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
       amendment_registry_root_missing: La generació publicada de l'autoritat %{missing_path}
         no existeix; no es poden validar les sobreescriptures de la rectificació.
-      amendment_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
-        del registre per al model %{modelo}, exercici %{filing_year}, període %{period};
-        no es poden validar les sobreescriptures de la rectificació.
+      amendment_registry_snapshot_unresolved: No s'han pogut resoldre les definicions
+        del model %{modelo}, exercici %{filing_year}, període %{period}; no es poden
+        comprovar les sobreescriptures de la rectificació.
       amendment_unknown_casillas: 'Les sobreescriptures de la rectificació apunten
-        a ids de casella no declarats al model de registre %{modelo}, exercici %{filing_year},
-        període %{period}: %{casillas}.'
+        a ids de casella que les definicions del model %{modelo} no declaren per a
+        l''exercici %{filing_year}, període %{period}: %{casillas}.'
       amendment_verification_refused_missing_casillas: 'L''esmena és incompleta: falten
         identificadors de casella requerits al mapa corregit.'
-      amendment_verification_refused_no_snapshot: El registre no té una instantània
-        per al model, any i període sol·licitats.
-      calculate_binding_is_date_sourced: --binding %{key} és un binding de tipus data
-        que s'obté del perfil actiu (una dada de data del contribuent, com la data
-        de naixement); no es pot aportar mitjançant --binding, que només admet valors
-        decimals i d'enumeració. Defineix-lo com a dada del perfil i torna a calcular.
-      calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
-        revisió. Bindings acceptats: %{accepted}.'
-      calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} és
-        un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}.
-        S''ha rebut %{value}. Codificació acceptada: %{mapping}.'
+      amendment_verification_refused_no_snapshot: Les definicions dels models no tenen
+        res per al model, any i període sol·licitats.
+      calculate_binding_is_date_sourced: --binding %{key} és un valor de tipus data
+        que es pren del teu perfil actiu (una dada de data teva, com la data de naixement);
+        no es pot aportar mitjançant --binding, que només admet valors decimals i
+        d'enumeració. Desa'l al teu perfil i torna a calcular.
+      calculate_binding_unknown: '--binding %{key} no coincideix amb cap id d''origen
+        de valor d''aquesta versió del model. Ids acceptats: %{accepted}.'
+      calculate_boolean_binding_encoding_invalid: 'El valor de %{key} és un indicador
+        sí o no codificat com a decimal i ha de ser un de: %{accepted}. S''ha rebut
+        %{value}. Codificació acceptada: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id
         canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id
         canònic exacte'
@@ -966,15 +1231,14 @@ application:
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
       calculate_m210_tipo_renta_fetch_gated: 'El codi de tipus de renda %{value} del
-        Model 210 està pendent de fonamentació: el seu tipus de gravamen encara no
-        està fonamentat en el corpus inclòs, per la qual cosa encara no es pot presentar.
+        Model 210 encara no està disponible: el seu tipus de gravamen encara no està
+        fonamentat en les fonts incloses, per la qual cosa encara no es pot presentar.
         Codis acceptats: %{accepted}.'
       calculate_m210_tipo_renta_unknown: '%{value} no és un codi de tipus de renda
         vàlid del Model 210. Codis acceptats: %{accepted}. Codis pendents de fonamentació
         (encara no presentables): %{fetch_gated}.'
-      calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
-        que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
-        31.1.
+      calculate_m349_invalid_nif: El NIF-IVA {nif} no coincideix amb el format esperat
+        per al país {pais}.
       calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions
         s'han d'indicar juntes.
       calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation
@@ -997,62 +1261,62 @@ application:
         tipus declarat d'aquesta casella.
       calculation_registry_root_missing: La generació publicada de l'autoritat %{missing_path}
         no existeix; el càlcul del model no pot continuar.
-      calculation_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
-        del registre per al model %{modelo}, exercici %{filing_year}, període %{period}.
+      calculation_registry_snapshot_unresolved: No s'han pogut resoldre les definicions
+        del model %{modelo}, exercici %{filing_year}, període %{period}.
       calculation_report_notice_unavailable: No hi ha declaració de càlcul local disponible
         per a l'idioma d'informe {report_language} (clau de catàleg {translation_key});
         es rebutja l'informe de càlcul en lloc de produir-lo sense ella.
       calculation_report_taxpayer_unknown: El perfil actiu no declara NIF ni nom del
-        contribuent. Completeu la identitat del perfil abans d'escriure un informe
+        contribuent. Completa la identitat del perfil abans d'escriure un informe
         de càlcul; un informe ha de dir de qui és la declaració que recull.
       calculation_revision_id_is_discarded_work_unit: L'identificador %{calculation_revision_id}
-        és una unitat de treball descartada, no una revisió de càlcul.
+        és una declaració descartada, no un càlcul desat.
       calculation_revision_id_is_work_unit: L'identificador %{calculation_revision_id}
-        és una unitat de treball, no una revisió de càlcul; feu servir --work-unit-id
-        %{work_unit_id}.
+        és una declaració, no un càlcul desat; fes servir --work-unit-id %{work_unit_id}.
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
-      calculation_revision_parent_work_unit_discarded: La revisió de càlcul %{calculation_revision_id}
-        pertany a la unitat de treball descartada %{work_unit_id}.
+      calculation_revision_parent_work_unit_discarded: El càlcul desat %{calculation_revision_id}
+        pertany a la declaració descartada %{work_unit_id}.
       calculation_summary_chrome_unavailable: Falta el text {translation_key} del
         resum del càlcul en l'idioma {report_language}; el resum es rebutja en lloc
         de produir-se sense aquest text.
       calculation_summary_pdf_unavailable: El resum del càlcul en PDF necessita el
-        complement opcional «{extra}», que aquesta instal·lació no té. Instal·leu-lo
-        amb pip install cadrumo[{extra}] i torneu-ho a provar; verificar un resum
-        no el necessita.
+        complement opcional «{extra}», que aquesta instal·lació no té. Instal·la'l
+        amb pip install cadrumo[{extra}] i torna-ho a provar; comprovar un resum no
+        el necessita.
       calculation_summary_pdf_unreadable: El fitxer no és un PDF llegible ({error_type}).
-      caller_casilla_source_binding_conflict: 'Les entrades de casella aportades no
-        poden sobreescriure caselles vinculades a una font derivada del dipòsit (caselles
-        vinculades a font): %{casillas}.'
-      computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
-        a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
+      caller_casilla_source_binding_conflict: 'Els valors que introdueixes a les caselles
+        no poden sobreescriure caselles el valor de les quals prové dels teus registres:
+        %{casillas}.'
+      computed_casilla_binding_conflict: 'Els valors presos dels teus registres apunten
+        a caselles calculades i no es poden sobreescriure amb un valor extern. Caselles
         afectades: %{computed}.'
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
         incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
-        troballa(es).
-      deductible_iva_evidence_missing: 'Les línies del llibre amb IVA deduïble requereixen
-        una factura de compra vinculada. Vincula la factura a la línia i torna a executar
-        work verify: la verificació no es completa mentre una línia deduïble no tingui
-        factura, de manera que l''esborrany continua obert i recull l''evidencia.'
+        incidència(es).
+      deductible_iva_evidence_missing: 'Els apunts amb IVA deduïble dels teus registres
+        requereixen una factura de compra vinculada. Vincula la factura a l''apunt
+        i torna a executar work verify: la comprovació no es completa mentre un apunt
+        deduïble no tingui factura, de manera que l''esborrany continua obert i recull
+        el justificant.'
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió
         de càlcul %{calculation_revision_id}.
       export_draft_write_failed: No s'ha pogut escriure el fitxer d'exportació per
         a la revisió de càlcul %{calculation_revision_id}.
-      export_ledger_evidence_missing: La revisió de càlcul %{calculation_revision_id}
-        derivada del llibre major no inclou evidència del llibre major ni una referència
-        resoluble a l'snapshot; verifica la revisió de nou abans d'exportar.
+      export_ledger_evidence_missing: El càlcul desat %{calculation_revision_id} construït
+        a partir dels teus registres no inclou els seus justificants ni una referència
+        resoluble a ells; torna a comprovar el càlcul abans d'exportar.
       export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
         create NAME` abans d'exportar una revisió de model.
       export_output_path_invalid: 'El camí de sortida de l''exportació no és vàlid:
         {output_path} ({reason}).'
-      export_period_unmappable: La unitat de treball %{work_unit_id} conté el període
-        %{period}, que no es pot assignar a un període de registre.
-      export_revision_state_refused: La revisió de càlcul %{calculation_revision_id}
-        no està verificada-completa ni presentada i no es pot exportar.
+      export_period_unmappable: La declaració %{work_unit_id} conté el període %{period},
+        que no es pot assignar a un període de presentació del model.
+      export_revision_state_refused: El càlcul desat %{calculation_revision_id} no
+        està comprovat i complet, ni registrat com a presentat, i no es pot exportar.
       export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE perquè
-        %{reason}. El càlcul, la verificació i els registres locals de presentació
+        %{reason}. El càlcul, la comprovació i els registres de presentació que deses
         poden existir, però aquesta ordre no pot produir un fitxer per pujar a l'AEAT
         per a aquest model ni certifica la correcció BOE/export.
       external_filing_evidence_reference_blank: La importació de declaració externa
@@ -1064,47 +1328,48 @@ application:
       external_import_justificante_mismatch: L'evidència d'importació externa %{evidence_reference_id}
         no coincideix amb el model %{modelo}, exercici %{filing_year}, període %{period}.
       external_import_justificante_missing: L'evidència d'importació externa %{evidence_reference_id}
-        (%{evidence_kind}) no està registrada com a artefacte de justificant persistent.
+        (%{evidence_kind}) no està desada com a registre de justificant.
       external_import_m303_filing_evidence_required: La importació externa del model
         303 requereix evidència tipada completa de la instància de declaració i no
         la pot inferir dels valors de caselles.
       external_import_registry_root_missing: La generació publicada de l'autoritat
         %{missing_path} no existeix; no es poden validar els ids de casella importats.
-      external_import_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
-        del registre per al model %{modelo}, exercici %{filing_year}, període %{period};
-        no es poden validar els ids de casella importats.
-      external_import_source_actor_blank: La importació d'una autoliquidació externa
-        ha d'indicar qui la va presentar. L'actor declarat és buit.
+      external_import_registry_snapshot_unresolved: No s'han pogut resoldre les definicions
+        del model %{modelo}, exercici %{filing_year}, període %{period}; no es poden
+        comprovar els ids de casella importats.
       external_import_source_casilla_mismatch: Les caselles amb text original no coincideixen
         amb les caselles el valor de les quals s'importa. Tots dos conjunts han de
         descriure exactament les mateixes caselles.
-      external_import_source_incomplete: 'L''autoliquidació externa no aporta totes
-        les caselles numèriques obligatòries d''aquesta revisió. Falten: {missing_casilla_ids}.'
+      external_import_source_incomplete: 'L''autoliquidació presentada fora de Cadrumo
+        no aporta totes les caselles numèriques obligatòries d''aquesta versió. Falten:
+        {missing_casilla_ids}.'
       external_import_source_lexical_blank: La casella {casilla_id} s'importa amb
         un text original buit. El text presentat s'ha de conservar literalment.
       external_import_source_lexical_non_numeric: El text original de la casella {casilla_id}
-        no es pot llegir com un import. Reviseu el valor presentat abans d'importar-lo.
+        no es pot llegir com un import. Revisa el valor presentat abans d'importar-lo.
       external_import_source_lexical_value_mismatch: L'import llegit del text original
         de la casella {casilla_id} no coincideix amb el valor importat per a aquesta
         casella.
       external_import_source_period_mismatch: El període declarat pertany a un exercici
         diferent de l'exercici de presentació indicat. Tots dos s'han de referir al
         mateix exercici.
-      external_import_source_revision_mismatch: La revisió indicada a l'autoliquidació
-        externa no és la que la unitat de treball existent té assignada per a aquest
-        model i període.
-      external_import_source_work_unit_ambiguous: Hi ha més d'una unitat de treball
-        activa per a aquest model, exercici i període, de manera que no es pot determinar
+      external_import_source_revision_mismatch: La versió indicada a l'autoliquidació
+        presentada fora de Cadrumo no és la que la teva declaració existent té assignada
+        per a aquest model i període.
+      external_import_source_work_unit_ambiguous: Hi ha més d'una declaració activa
+        per a aquest model, exercici i període, de manera que no es pot determinar
         a quina correspon la importació.
+      external_import_target_mismatch: L'evidència presentada no correspon al perfil,
+        declaració o període seleccionat.
       external_import_tax_id_missing: L'evidència d'importació externa %{evidence_reference_id}
-        (%{evidence_kind}) requereix el NIF del contribuent abans de vincular-se a
-        un artefacte de justificant.
-      external_import_unknown_casillas: 'La importació de presentació externa conté
-        ids de casella no declarats al model de registre %{modelo}, exercici %{filing_year},
-        període %{period}: %{casillas}.'
-      external_import_unverifiable: La declaració importada per a la unitat de treball
-        %{work_unit_id} no s'ha pogut conciliar amb l'historial de presentacions del
-        període (%{notices}); no s'ha registrat res.
+        (%{evidence_kind}) requereix el NIF del contribuent abans d'associar-se a
+        un registre de justificant.
+      external_import_unknown_casillas: 'La importació d''una declaració presentada
+        fora de Cadrumo conté ids de casella que les definicions del model %{modelo}
+        no declaren per a l''exercici %{filing_year}, període %{period}: %{casillas}.'
+      external_import_unverifiable: La declaració importada per a la declaració %{work_unit_id}
+        no s'ha pogut conciliar amb l'historial de presentacions del període (%{notices});
+        no s'ha registrat res.
       filed_observation_split_storage_context: El magatzem de l'historial de compensació
         d'IVA és una base de dades diferent de la d'observacions de càlcul
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
@@ -1117,12 +1382,12 @@ application:
         de la cartera de compensació d'IVA.
       iva_wallet_blocked: 'La conciliació de la cartera de compensació d''IVA està
         bloquejada per al Model 303 (%{divergence}): %{reason}'
-      iva_wallet_caller_binding_conflict: El binding aportat per a la compensació
+      iva_wallet_caller_binding_conflict: El valor que has aportat per a la compensació
         prèvia del Model 303 entra en conflicte amb la decisió de conciliació de la
         cartera de compensació d'IVA.
-      iva_wallet_caller_casilla_conflict: L'entrada de casella aportada per a la compensació
-        prèvia del Model 303 entra en conflicte amb la decisió de conciliació de la
-        cartera de compensació d'IVA.
+      iva_wallet_caller_casilla_conflict: El valor de casella que has aportat per
+        a la compensació prèvia del Model 303 entra en conflicte amb la decisió de
+        conciliació de la cartera de compensació d'IVA.
       iva_wallet_first_period_zero_ungrounded: 'La conciliació de la cartera de compensació
         d''IVA està bloquejada per al Model 303: és el primer període i una compensació
         anterior de zero no té cap evidència al darrere. Inicialitza el saldo d''obertura
@@ -1132,10 +1397,10 @@ application:
         IVA inicialitzat. Per a la primera declaració d'un perfil nou, inicialitza
         amb import zero el saldo d'obertura de la compensació IVA del període i confirma'l.
       iva_wallet_registry_snapshot_unavailable: 'La conciliació de la cartera de compensació
-        d''IVA està bloquejada per al Model 303: no s''ha pogut resoldre la instantània
-        del registre per a aquest exercici i període, de manera que no es pot provar
+        d''IVA està bloquejada per al Model 303: no s''han pogut resoldre les definicions
+        del model per a aquest exercici i període, de manera que no es pot provar
         un zero de primer període. Comprova que el model, l''exercici i el període
-        estiguin admesos pel registre i torna-ho a provar.'
+        estiguin admesos i torna-ho a provar.'
       iva_wallet_revision_amount_missing: 'La conciliació de la cartera de compensació
         d''IVA està bloquejada per al Model 303: la decisió emmagatzemada no conté
         cap import per a aquesta revisió. Torna a inicialitzar l''historial de compensació
@@ -1145,55 +1410,52 @@ application:
       iva_wallet_supplied_decision_mismatch: La decisió de conciliació de la cartera
         de compensació d'IVA aportada no coincideix amb la decisió persistida.
       iva_wallet_target_mismatch: El destí %{target_year}/%{target_period} de la decisió
-        de la cartera de compensació d'IVA no coincideix amb la unitat de treball
-        %{filing_year}/%{period}.
+        de la cartera de compensació d'IVA no coincideix amb la declaració %{filing_year}/%{period}.
       iva_wallet_taxpayer_identity_missing: La conciliació de la cartera de compensació
-        d'IVA no pot continuar sense la identitat del contribuent de la unitat de
-        treball.
+        d'IVA no pot continuar sense la identitat del contribuent de la declaració.
       iva_wallet_taxpayer_mismatch: El contribuent de la conciliació de la cartera
-        de compensació d'IVA no coincideix amb el de la unitat de treball del Model
-        303.
+        de compensació d'IVA no coincideix amb el de la declaració del Model 303.
       iva_wallet_unsupported_decision_type: 'Tipus de decisió de la cartera de compensació
         d''IVA no admès: %{decision_type}.'
-      ledger_preflight_blocked: 'la comprovació prèvia del llibre bloqueja el càlcul
-        del model: transacció %{transaction_id} %{reason}: %{detail}. Executa la comprovació
-        prèvia del llibre per al període %{period} i resol-ne les incidències abans
-        de calcular.'
+      ledger_preflight_blocked: 'la comprovació prèvia dels teus registres bloqueja
+        el càlcul del model: transacció %{transaction_id} %{reason}: %{detail}. Executa
+        la comprovació prèvia dels teus registres per al període %{period} i resol-ne
+        les incidències abans de calcular.'
       local_observation_actor_blank: Una correcció manual d'una observació ha d'indicar
-        l'operador que la registra.
+        qui la registra.
       local_observation_override_missing: El model %{modelo} %{filing_year} %{period}
-        no té cap correcció manual de l'operador per eliminar.
+        no té cap correcció manual teva per eliminar.
       local_observation_reason_blank: Una correcció manual d'una observació n'ha d'indicar
         el motiu.
       local_observation_spreadsheet_malformed_rows: 'El full de càlcul té %{malformed_row_count}
         files inutilitzables: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: La declaració del model 036 indica
         un perfil diferent del bucket on es registraria
-      m210_ledger_manual_agrupacion_rows: El mode de font de llibre major del Model
-        210 deriva les files anuals d'agrupació de rendes de les classificacions del
-        llibre; no proporcioneu files manuals d'agrupació de rendes.
-      m210_ledger_source_requires_modelo_210: El mode de font de llibre major del
-        Model 210 només es pot utilitzar en unitats de treball del Model 210.
-      m210_ledger_source_selection_required: El mode de font de llibre major del Model
-        210 requereix una selecció de codi oficial de tipus de renda sense projectar.
+      m210_ledger_manual_agrupacion_rows: El Model 210 en mode registres deriva les
+        files anuals d'agrupació de rendes de les classificacions dels teus registres;
+        no aportis files manuals d'agrupació de rendes.
+      m210_ledger_source_requires_modelo_210: El mode registres del Model 210 només
+        es pot utilitzar en declaracions del Model 210.
+      m210_ledger_source_selection_required: El mode registres del Model 210 requereix
+        triar un codi oficial de tipus de renda tal qual, sense projectar.
       m210_official_tipo_renta_selection_mismatch: El codi oficial de tipus de renda
         %{official_tipo_renta_code} del Model 210 requereix el valor de fórmula %{expected_tipo_renta};
         s'ha rebut %{tipo_renta}.
       m303_filing_evidence_exonerado_390_missing: 'L''evidència de la instància de
         declaració del model 303 no ha superat la validació: el període %{period}
         de l''exercici %{filing_year} és l''últim període de liquidació de l''any
-        i requereix l''atestació d''aplicabilitat del model 390. Executeu `aeat app
+        i requereix la confirmació d''aplicabilitat del model 390. Executa `aeat app
         modelo work attest-m303-exonerado-390 --year %{filing_year} --period %{period}
-        --observed-at MARCA_TEMPORAL` per registrar-la i després torneu a intentar
+        --observed-at MARCA_TEMPORAL` per registrar-la i després torna a intentar
         el càlcul.'
       m303_filing_evidence_invalid: L'evidència de la instància de declaració del
         model 303 no ha superat la validació.
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
-        a la revisió %{revision_id}: el registre declara un origen de vinculació que
-        cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com
-        a ajornat abans de calcular.'
+        a la versió %{revision_id}: les definicions del model declaren un origen de
+        valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
+        com a ajornat abans de calcular.'
       profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{filing_year}
-        %{period}; completa abans aquestes dades de perfil: %{missing}.'
+        %{period}; completa abans aquestes dades de perfil: %{profile_requirements}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
       profile_readiness_setup_incomplete: La configuració del perfil encara no s'ha
@@ -1201,17 +1463,17 @@ application:
         amb models.
       profile_readiness_setup_incomplete_missing: 'La configuració del perfil està
         incompleta; acaba l''assistent de configuració abans de treballar amb models.
-        Camps pendents: %{missing}.'
+        Camps pendents: %{profile_requirements}.'
       recipient_decryption_failed: No s'ha pogut desxifrar el paquet xifrat per al
         destinatari; la clau no coincideix o el paquet ha estat manipulat.
       recipient_encryption_invalid_key: La clau pública del destinatari no és una
         clau pública X25519 vàlida.
       recipient_registry_already_exists: El destinatari %{recipient_id} ja està registrat.
-      recipient_registry_generic: S'ha produït un error en el registre d'empremtes
-        digitals de destinataris.
+      recipient_registry_generic: S'ha produït un error en la llista d'empremtes digitals
+        de destinataris.
       recipient_registry_invalid_public_key: La clau pública proporcionada no és una
         clau X25519 vàlida de 32 bytes (s'han rebut %{length} bytes).
-      recipient_registry_load_failed: No s'ha pogut carregar el registre d'empremtes
+      recipient_registry_load_failed: No s'ha pogut carregar la llista d'empremtes
         digitals de destinataris.
       recipient_registry_not_found: No hi ha cap destinatari registrat amb l'id %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliació per casella des de PDF de
@@ -1219,13 +1481,13 @@ application:
         descarregat amb aeat app modelo reconcile import, o espera que aquest model
         estigui habilitat.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
-        profile create NAME` abans de reconciliar una unitat de treball.
+        profile create NAME` abans de reconciliar una declaració.
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}
         %{period}, però la devolució només està disponible en l'últim període de declaració
         de l'any. Arrossega el crèdit (compensar) o tria la devolució en l'últim període.
       review_package_generic: S'ha produït un error en construir el paquet de revisió.
       review_package_integrity: 'El paquet de revisió %{package_path} no ha superat
-        la verificació d''integritat: %{detail}.'
+        la comprovació de la suma de verificació: %{detail}.'
       review_package_revision_state: 'La revisió de càlcul %{calculation_revision_id}
         és en estat %{state} i no es pot empaquetar per a revisió; estats admesos:
         %{eligible_states}.'
@@ -1233,237 +1495,410 @@ application:
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id només és
         vàlid amb el selector de revisió explícita.
-      verification_report_not_found: No s'ha trobat cap informe de verificació amb
+      verification_report_not_found: No s'ha trobat cap informe de comprovació amb
         id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' no és un token de període
         vàlid per al model %{modelo}. Indica --year %{year} per separat i usa un de:
         %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' no es reconeix. Indica --year
         %{year} per separat i usa un token de període com 0A, 1T o 01.
-      work_unit_already_discarded: La unitat de treball ja està descartada.
+      work_unit_already_discarded: La declaració ja està descartada.
       work_unit_create_discarded: Aquest objectiu de declaració es va descartar. Tornar
-        a crear-lo retorna la mateixa unitat de treball descartada, de manera que
-        no es pot reprendre.
+        a crear-lo retorna la mateixa declaració descartada, de manera que no es pot
+        reprendre.
       work_unit_create_superseded_modelo: El model %{modelo} ha estat substituït pel
         model %{superseded_by} i ja no admet presentacions. No s'ha creat res; obre
         la declaració amb el model %{superseded_by}.
-      work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} és
-        a l'estat %{work_unit_state} i no es pot calcular.
-      work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} és a
-        l'estat %{work_unit_state} i no es pot importar.
+      work_unit_discarded_cannot_calculate: La declaració %{work_unit_id} és a l'estat
+        %{work_unit_state} i no es pot calcular.
+      work_unit_discarded_cannot_import: La declaració %{work_unit_id} és a l'estat
+        %{work_unit_state} i no es pot importar.
       work_unit_filing_year_period_mismatch: L'exercici %{filing_year} no coincideix
         amb l'exercici %{period_year} del període %{period}.
-      work_unit_mutation_refused: La unitat de treball està descartada, i tornar a
-        crear el mateix objectiu de declaració es rebutja en lloc de retornar una
-        unitat nova.
-      work_unit_not_found: No s'ha trobat cap unitat de treball de model amb id=%{work_unit_id}.
-      work_unit_revision_divergence: La unitat de treball %{work_unit_id} es va crear
-        amb la revisió de registre %{work_unit_revision}, però la revisió determinada
-        per llei per al model %{modelo} %{filing_year} %{period} ara és %{law_revision}.
-        Torneu a crear la unitat de treball per vincular-la a la revisió actual.
+      work_unit_mutation_refused: La declaració està descartada, i tornar a crear
+        el mateix objectiu de declaració es rebutja en lloc de retornar una declaració
+        nova.
+      work_unit_not_found: No s'ha trobat cap declaració de model amb id=%{work_unit_id}.
+      work_unit_revision_divergence: La declaració %{work_unit_id} es va crear amb
+        la versió %{work_unit_revision} de les definicions del model, però la versió
+        que s'aplica per llei al model %{modelo} %{filing_year} %{period} ara és %{law_revision}.
+        Torna a crear la declaració per usar la versió actual.
       workflow_gate_no_pending_obligation: 'No hi ha cap obligació de presentació
         pendent per a aquest model/període en la data actual (la finestra d''obligació
         de presentació de l''AEAT no és oberta). La presentació a fitxer no requereix
-        aquest pas: exporteu la revisió verificada-completa amb ''aeat app modelo
-        export''; aquest és el punt final local. ''work file'' és el pas intern opcional
-        per marcar com a presentat quan la finestra d''obligació sigui oberta.'
+        aquest pas: exporta el càlcul comprovat i complet amb ''aeat app modelo export'';
+        aquest és el punt final local. ''work file'' és el pas opcional que registra
+        la declaració com a presentada, per a quan la finestra d''obligació sigui
+        oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+    finding_fact:
+      box_unnumbered: sense número
+      date_unknown: una data no registrada
+      modelo_unknown: desconegut
+      period:
+        annual: anual
+        instalment_1: 1r pagament fraccionat
+        instalment_2: 2n pagament fraccionat
+        instalment_3: 3r pagament fraccionat
+        instalment_4: 4t pagament fraccionat
+        month_01: gener
+        month_02: febrer
+        month_03: març
+        month_04: abril
+        month_05: maig
+        month_06: juny
+        month_07: juliol
+        month_08: agost
+        month_09: setembre
+        month_10: octubre
+        month_11: novembre
+        month_12: desembre
+        other: fora del calendari habitual
+        quarter_1: 1r trimestre
+        quarter_2: 2n trimestre
+        quarter_3: 3r trimestre
+        quarter_4: 4t trimestre
+      value_absent: un valor buit
     findings:
-      art20_reduccion_possible: La casella %{rnt_id} declara %{rnt_value} EUR de rendiment
-        net del treball dins del límit de l'art. 20 LIRPF, de manera que la casella
-        %{reduccion_id} pot optar a una reducció que ara mateix declara a zero.
-      art52_reduccion_individual_sublimit_possible: La casella %{reduccion_id} declara
-        %{reduccion_value} EUR de reducció per previsió social per sobre del sublímit
-        individual de %{sublimit} EUR de l'art. 52 LIRPF, sense desglossament d'aportacions
-        amb contribució empresarial; confirmeu que s'ha aplicat el sublímit individual.
-      attribution_received_uncaptured: La casella %{casilla_id} de %{filing_year}
-        conté %{casilla_value} EUR de renda atribuïda sense registrar.
-      attribution_received_unfolded: La renda atribuïda de %{filing_year} per %{total_base}
-        EUR no s'integra a la casella %{casilla_id}.
-      cross_casilla_invariant_violated: S'incompleix l'invariant entre caselles %{predicate_id}
-        declarat pel registre en aquesta revisió.
-      cross_period_activity_start_missing: El model %{target_modelo} %{target_filing_year}
-        %{target_period} necessita una data d'inici d'activitat declarada.
-      cross_period_dependency_unclean: 'El model d''origen %{source_modelo} %{source_filing_year}
-        %{source_period} no està net per a %{origin_ids}: %{blocker_codes}.'
-      cross_period_first_year_fractional_suppression: 'El model %{source_modelo} %{source_filing_year}
-        %{source_period} queda fora d''abast: l''activitat va començar el %{activity_start_date}.'
-      cross_period_m111_no_retenciones: El model %{source_modelo} %{source_filing_year}
-        %{source_period} no declara retencions per a %{target_modelo} %{target_filing_year}
-        %{target_period}.
+      art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
+        rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
+        casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
+        Comprova si et correspon.
+      art52_reduccion_individual_sublimit_possible: La casella [%{reduccion_id}] recull
+        %{reduccion_value} EUR de reducció per previsió social, per sobre del sublímit
+        individual de %{sublimit} EUR de l'art. 52 LIRPF, i no has declarat aportacions
+        amb contribució empresarial. Comprova que s'ha aplicat el sublímit individual.
+      attribution_received_uncaptured: La casella [%{casilla_id}] de %{filing_year}
+        recull %{casilla_value} EUR de renda atribuïda, però el teu perfil no indica
+        d'on surt. Afegeix-la al teu perfil.
+      attribution_received_unfolded: El teu perfil recull %{total_base} EUR de renda
+        atribuïda el %{filing_year}, però la casella [%{casilla_id}] no la inclou.
+      cross_casilla_invariant_violated: Dues o més caselles d'aquest model no concorden
+        entre si com exigeixen les normes oficials.
+      cross_model_reconciliation_incomplete: 'La comparació entre el Model %{modelo}
+        i el Model %{sibling_modelo} per a %{period_code}/%{filing_year} és incompleta:
+        falten %{own_missing_count} valors locals i %{sibling_missing_count} de la
+        declaració relacionada.'
+      cross_period_activity_start_missing: El model %{target_modelo} de %{target_filing_year},
+        període %{target_period}, necessita la data en què va començar la teva activitat.
+      cross_period_dependency_unclean: Aquesta declaració fa servir dades del model
+        %{source_modelo} de %{source_filing_year}, període %{source_period}, i aquella
+        declaració encara té incidències pendents. Resol-les allà primer.
+      cross_period_first_year_fractional_suppression: El model %{source_modelo} de
+        %{source_filing_year}, període %{source_period}, no et correspon perquè la
+        teva activitat va començar el %{activity_start_date}.
+      cross_period_m111_no_retenciones: El model %{source_modelo} de %{source_filing_year},
+        període %{source_period}, no declara retencions per traslladar al model %{target_modelo}
+        de %{target_filing_year}, període %{target_period}.
       cross_period_modelo_not_applicable:
-        message: '%{source_modelo_count} model(s) origen no són aplicables a aquest
-          contribuent: %{source_modelos}.'
+        message: No s'han fet servir %{source_modelo_count} models perquè no et corresponen.
       cross_period_non_official_local_chain:
-        message: El model %{source_modelo} %{source_filing_year} %{source_period}
-          es basa en una cadena local (%{origin_code}), no en evidència oficial de
-          l'AEAT.
-      cross_period_operator_declared_suppression: El model %{source_modelo} %{source_filing_year}
-        %{source_period} se suprimeix per declaració del contribuent (%{origin_code}),
-        amb data d'inici d'activitat %{activity_start_date}.
-      cross_period_zero_value_previous_filing: El model %{source_modelo} %{source_filing_year}
-        %{source_period} aporta un valor zero a %{target_modelo} %{target_filing_year}
-        %{target_period}.
-      cuota_less_ledger_row_base_missing: La transacció %{transaction_id} de la categoria
-        d'IVA %{iva_category_code} no té base declarable.
-      dt12a_reduccion_antiquity_possible: La casella %{reduccion_id} declara %{reduccion_value}
-        EUR de reducció de la DT 12a; confirmeu que es compleix la condició d'antiguitat
+        message: Les dades del model %{source_modelo} de %{source_filing_year}, període
+          %{source_period}, surten d'una declaració registrada només en aquest equip,
+          no d'una confirmada per l'AEAT.
+      cross_period_operator_declared_suppression: El model %{source_modelo} de %{source_filing_year},
+        període %{source_period}, no es fa servir aquí perquè vas indicar que la teva
+        activitat va començar el %{activity_start_date}.
+      cross_period_zero_value_previous_filing: El model %{source_modelo} de %{source_filing_year},
+        període %{source_period}, ha traslladat un zero a aquesta declaració (model
+        %{target_modelo} de %{target_filing_year}, període %{target_period}). Comprova
+        que el zero és correcte.
+      cuota_less_ledger_row_base_missing: Un apunt dels teus registres no té base
+        imposable per declarar.
+      dt12a_reduccion_antiquity_possible: La casella [%{reduccion_id}] recull %{reduccion_value}
+        EUR de reducció de la DT 12a. Comprova que compleixes la condició d'antiguitat
         que exigeix.
-      dt12a_reduccion_possible: La casella %{ingreso_id} declara %{ingreso_value}
-        EUR de rendiments del treball per sobre del llindar de la DT 12a, de manera
-        que la casella %{reduccion_id} pot optar a una reducció que ara mateix declara
-        a zero.
-      foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el bé a l''estranger
-        %{position_key} del grup %{group_code} va passar de %{prior_value_eur} EUR
-        a %{current_value_eur} EUR, un increment de %{delta_value_eur} EUR per sobre
-        del llindar de redeclaració de %{redeclaration_increase_threshold_eur} EUR.'
-      iva_compensation_annual_source_evidence_failure: L'evidència d'origen anual
-        obligatòria del Model 303 per al Model 390 no està resolta (%{source_issue_count}
-        incidència(es)); la finalització queda bloquejada.
-      iva_selected_scope_evidence_failure: 'L''evidència d''IVA de l''àmbit seleccionat
-        és incompleta (%{source_ref_count} referències d''origen; %{unidentified_source_count}
-        sense identificar), per tant la verificació queda bloquejada. Identificadors
-        de referències d''origen, no valors financers: %{source_ref_ids}.'
-      iva_wallet_precondition_failed: No es compleix la condició prèvia %{condition_id}
-        de la cartera de compensació d'IVA per a aquesta revisió (escenari %{scenario_id}).
-      ledger_snapshot_drift: 'El model %{modelo} %{filing_year} %{period} s''ha desviat
-        de la seva instantània de llibre ancorada: %{changed_count} modificades, %{removed_count}
-        eliminades.'
+      dt12a_reduccion_possible: La casella [%{ingreso_id}] recull %{ingreso_value}
+        EUR de rendiments del treball, per sobre del llindar de la DT 12a, així que
+        la casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
+        Comprova si et correspon.
+      foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el valor
+        d''un dels teus béns a l''estranger ha passat de %{prior_value_eur} EUR a
+        %{current_value_eur} EUR. L''augment de %{delta_value_eur} EUR supera els
+        %{redeclaration_increase_threshold_eur} EUR a partir dels quals l''has de
+        tornar a declarar.'
+      iva_compensation_annual_source_evidence_failure: El model 390 necessita les
+        dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
+        incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració
+        no es pot completar.
+      iva_import_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
+        %{transaction_currency} necessita la declaració duanera de la importació.
+        Cadrumo encara no pot registrar-la, de manera que aquesta declaració no pot
+        superar la comprovació. Presenta aquesta declaració per una altra via.
+      iva_intra_eu_self_assessment_unrecordable: L'apunt del %{transaction_date} per
+        %{transaction_amount} %{transaction_currency} necessita el justificant d'autoliquidació
+        de l'adquisició intracomunitària. Cadrumo encara no pot registrar-lo, de manera
+        que aquesta declaració no pot superar la comprovació. Presenta aquesta declaració
+        per una altra via.
+      iva_reagp_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
+        %{transaction_currency} necessita el rebut del règim especial de l'agricultura,
+        la ramaderia i la pesca (REAGP). Cadrumo encara no pot registrar-lo, de manera
+        que aquesta declaració no pot superar la comprovació. Presenta aquesta declaració
+        per una altra via.
+      iva_rectification_document_unrecordable: L'apunt del %{transaction_date} per
+        %{transaction_amount} %{transaction_currency} necessita el justificant de
+        la rectificació de deduccions. Cadrumo encara no pot registrar-lo, de manera
+        que aquesta declaració no pot superar la comprovació. Presenta aquesta declaració
+        per una altra via.
+      iva_selected_scope_evidence_failure: Alguns apunts d'IVA d'aquesta declaració
+        tenen dades o justificants absents o no vàlids (%{source_ref_count} amb referència
+        i %{unidentified_source_count} sense). Corregeix els teus registres i torna
+        a calcular abans de comprovar aquesta declaració.
+      iva_wallet_precondition_failed: No es compleix una condició per compensar IVA
+        de períodes anteriors.
+      ledger_snapshot_drift: 'Els teus registres han canviat des que es va calcular
+        el model %{modelo} de %{filing_year}, període %{period}: %{changed_count}
+        apunts modificats i %{removed_count} eliminats. Torna a calcular-lo.'
+      ledger_snapshot_drift_added: Els teus registres contenen %{added_count} apunts
+        que no s'han tingut en compte en el càlcul del Modelo %{modelo} %{filing_year},
+        període %{period}. Torna a calcular aquesta declaració.
+      ledger_snapshot_drift_changed: 'Els teus registres han canviat des que es va
+        calcular el model %{modelo} de %{filing_year}, període %{period} (apunts modificats:
+        %{changed_count}). Torna a calcular-lo.'
+      ledger_snapshot_drift_removed: 'Els teus registres han canviat des que es va
+        calcular el model %{modelo} de %{filing_year}, període %{period} (apunts eliminats:
+        %{removed_count}). Torna a calcular-lo.'
+      ledger_snapshot_drift_with_added: 'Els teus registres ja no coincideixen amb
+        el càlcul del Modelo %{modelo} %{filing_year}, període %{period}: %{added_count}
+        apunts no s''han tingut en compte, %{changed_count} han canviat i %{removed_count}
+        s''han eliminat. Torna a calcular aquesta declaració.'
+      ledger_snapshot_membership_unavailable: Cadrumo no ha pogut comparar els teus
+        registres actuals amb el càlcul del Modelo %{modelo} %{filing_year}, període
+        %{period}. La presentació queda bloquejada fins que aquesta comparació es
+        completi. Torna-ho a provar quan els registres estiguin disponibles i torna
+        a calcular si han canviat.
       m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
-        inclou %{settled_prior_accrual_rows} registre(s) que paguen rendiments meritats
-        en un exercici anterior, i cap font oficial no determina la base i la retenció
-        que declaren; la presentació i l'exportació rebutjaran aquesta revisió.
-      m210_agrupacion_renta_invalid: El model %{modelo_id} període %{period_code}
-        té una agrupació de rendes no vàlida (%{error_type}).
-      m210_convenio_lob_advisory: El país %{country_code} i el tipus de renda %{tipo_renta_code}
-        poden estar subjectes a una clàusula de limitació de beneficis (%{document_id}).
-      m210_rate_unavailable: No s'ha pogut resoldre el tipus del model 210 per al
-        tipus de renda %{tipo_renta_code} de l'exercici %{filing_year} (%{reason_code}).
-      m303_m349_intracom_reconciliation_mismatch: El total intracomunitari del Model
-        303 de %{m303_total} EUR i el total del Model 349 de %{m349_total} EUR divergeixen
-        en %{gap} EUR per al període %{period_code} %{filing_year}.
-      madrid_nacimiento_adopcion_eligibility_advisory: La casella %{casilla_id} amb
-        recompte ponderat %{weighted_count} pot optar a la deducció madrilenya per
-        naixement o adopció.
-      missing_required_casilla: La casella obligatòria %{casilla_id} no té valor.
+        inclou %{settled_prior_accrual_rows} pagament(s) de rendiments meritats en
+        un exercici anterior. Les normes oficials no indiquen com declarar-ne la base
+        i la retenció, així que encara no pots registrar aquesta declaració com a
+        presentada ni exportar-la.
+      m210_agrupacion_renta_invalid: 'Model %{modelo_id}, període %{period_code}:
+        algunes rendes estan agrupades d''una manera que el model no admet.'
+      m210_convenio_lob_advisory: Les rendes del tipus %{tipo_renta_code} del país
+        %{country_code} poden estar subjectes a una clàusula de limitació de beneficis
+        del conveni.
+      m210_rate_unavailable: No s'ha pogut determinar el tipus de gravamen del model
+        210 per al tipus de renda %{tipo_renta_code} el %{filing_year}.
+      m303_m349_intracom_reconciliation_mismatch: En el període %{period_code} de
+        %{filing_year}, el total intracomunitari del model 303 (%{m303_total} EUR)
+        i el total del model 349 (%{m349_total} EUR) difereixen en %{gap} EUR.
+      madrid_nacimiento_adopcion_eligibility_advisory: La casella [%{casilla_id}],
+        amb un recompte ponderat de %{weighted_count}, et pot donar dret a la deducció
+        de la Comunitat de Madrid per naixement o adopció.
+      missing_required_casilla: La casella obligatòria [%{casilla_id}] és buida.
       objective_estimation_exclusion_threshold_exceeded: 'Model %{modelo_id} %{filing_year}:
-        %{profile_field_id} declarat %{declared} supera el llindar %{fact_id} de %{threshold}.'
-      oss_evidence_missing: Aquesta revisió declara activitat de finestreta única
-        però no conserva evidència de l'OSS.
-      oss_source_unrouted: 'Cap vinculació d''agregació no consumeix aquestes fonts
-        de finestreta única (referències: %{source_ref_ids}).'
-      pulled_filing_casilla_mismatch: La casella %{casilla_number} de %{period_code}
-        %{filing_year} va calcular %{computed_value} davant el declarat %{filed_value}
-        (%{mismatch_kind}).
-      registry_advisory_predicate_fired: S'ha activat el predicat consultiu del registre
-        %{predicate_id} per a aquesta revisió.
-      registry_authority_grade_insufficient: La revisió del registre per al model
-        %{modelo} %{filing_year} %{period} declara autoritat %{declared_grade} i la
-        presentació exigeix autoritat %{requested_grade}.
-      registry_snapshot_unresolved: No s'ha pogut resoldre la instantània del registre
-        per al model %{modelo} %{filing_year} %{period}.
-      suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració consigna
-        rendiments del capital mobiliari de l'estalvi però no acredita cap retenció
-        suportada (%{predicate_id}). Introdueixi l'import del certificat de retencions
-        i ingressos a compte del pagador; el contribuent mai va presentar el Model
-        123 que ho declara, de manera que aquest valor no es pot emplenar automàticament.
-      suffered_retencion_trabajo_uncredited: Aquesta declaració consigna rendiments
-        del treball però no acredita cap retenció suportada (%{predicate_id}). Introdueixi
-        l'import del certificat de retencions i ingressos a compte del pagador; el
-        contribuent mai va presentar el Model 111 que ho declara, de manera que aquest
+        el valor %{declared} que vas indicar al teu perfil supera el límit de %{threshold}
+        de l''estimació objectiva (mòduls).'
+      oss_evidence_missing: Aquesta declaració inclou operacions de finestreta única
+        (OSS), però no hi ha justificants desats d'aquestes operacions.
+      oss_source_unrouted: Algunes operacions de finestreta única (OSS) no es compten
+        a cap casella d'aquest model.
+      printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
+        línies impreses que la componen (%{printed_sum}), així que el fitxer no quadraria
+        i l'AEAT podria rebutjar-lo.
+      pulled_filing_casilla_mismatch: 'Casella [%{casilla_number}] del període %{period_code}
+        de %{filing_year}: el càlcul dona %{computed_value}, però la declaració presentada
+        a l''AEAT mostra %{filed_value}.'
+      registry_advisory_predicate_fired: Una comprovació integrada ha marcat aquesta
+        declaració perquè la revisis.
+      registry_authority_grade_insufficient: Les regles del model %{modelo} de %{filing_year},
+        període %{period}, encara no estan prou contrastades amb les fonts oficials
+        per presentar-lo.
+      registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
+        de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
+      selected_option_requires_nonzero: L’opció seleccionada exigeix un valor diferent
+        de zero en aquest camp.
+      selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit
+        en aquest camp.
+      suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració recull
+        rendiments del capital mobiliari de l'estalvi, però no hi consta cap retenció
+        suportada. Introdueix l'import del certificat de retencions i ingressos a
+        compte del teu pagador. El model 123 que la declara el va presentar el teu
+        pagador, no tu, així que aquest valor no es pot emplenar automàticament.
+      suffered_retencion_trabajo_uncredited: Aquesta declaració recull rendiments
+        del treball, però no hi consta cap retenció suportada. Introdueix l'import
+        del certificat de retencions i ingressos a compte del teu pagador. El model
+        111 que la declara el va presentar el teu pagador, no tu, així que aquest
         valor no es pot emplenar automàticament.
-      transaction_evidence_missing_deductible: Una transacció deduïble no té evidència
-        justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
-      transaction_evidence_missing_output: Una transacció repercutida no té evidència
-        justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
-      withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} %{filing_year}
-        no declara cap percepció per a cap perceptor, però el llibre registre recull
-        rendes sotmeses a retenció satisfetes en aquest exercici: %{contradicting_invoice_count}
-        factura o factures rebudes que declaren una retenció que el contribuent deu
-        com a retenidor i %{contradicting_ledger_row_count} apunt o apunts de pagament
-        en una categoria IRPF de retenció. El detall %{source_family} del model %{source_modelo}
-        és buit, per la qual cosa res no les declara. Registreu-les mitjançant la
-        superfície d''agregació del model abans de verificar.'
-      withholding_detail_absent_attested: 'El model %{modelo} %{filing_year} no declara
-        cap percepció per a cap perceptor, i el període o períodes %{attested_periods}
-        consten atestats mitjançant la dada de perfil %{attestation_profile_path}
-        com a no haver satisfet cap renda sotmesa a retenció. No escau presentar resum
-        anual en un exercici en què no es va satisfer cap de les rendes que declara.
-        Reviseu l''exercici si es va abonar alguna renda exempta o inferior al llindar
-        de retenció: aquestes es declaren encara que no s''hagi practicat cap retenció.
-        Aquesta preparació local no és una presentació davant l''AEAT.'
-      withholding_detail_absent_unproven: 'El model %{modelo} %{filing_year} no declara
-        cap percepció per a cap perceptor i res no prova aquesta absència: el detall
-        %{source_family} del model %{source_modelo} és buit i el període o períodes
-        %{unattested_periods} no consten declarats sense retencions. Registreu els
-        registres per perceptor mitjançant la superfície d''agregació del model, o
-        declareu cada període mitjançant la dada de perfil %{attestation_profile_path}.'
+      transaction_evidence_missing_deductible: Una despesa deduïble no té cap factura
+        ni justificant adjunt. Adjunta'l a l'apunt dels teus registres.
+      transaction_evidence_missing_output: Una factura emesa amb IVA repercutit no
+        té justificant. Adjunta'l a l'apunt dels teus registres.
+      withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} de %{filing_year}
+        no declara cap percepció per a cap perceptor, però els teus registres recullen
+        rendes sotmeses a retenció pagades aquell any: %{contradicting_invoice_count}
+        factura(es) rebuda(es) amb una retenció que has d''ingressar com a retenidor
+        i %{contradicting_ledger_row_count} pagament(s) en una categoria de retenció
+        d''IRPF. El detall de retencions del model %{source_modelo} és buit, així
+        que res no les declara. Registra-les al detall per perceptor d''aquest model
+        abans de comprovar-lo.'
+      withholding_detail_absent_attested: 'El model %{modelo} de %{filing_year} no
+        declara cap percepció per a cap perceptor, i el teu perfil indica que en els
+        períodes que vas confirmar no vas pagar cap renda sotmesa a retenció. No cal
+        presentar resum anual d''un exercici en què no vas pagar cap de les rendes
+        que declara. Revisa l''exercici si vas pagar alguna renda exempta o inferior
+        al llindar de retenció: aquestes es declaren encara que no s''hagi practicat
+        cap retenció. Aquesta preparació és local i no és una presentació davant l''AEAT.'
+      withholding_detail_absent_unproven: 'El model %{modelo} de %{filing_year} no
+        declara cap percepció per a cap perceptor i res no ho confirma: el detall
+        de retencions del model %{source_modelo} és buit i no has confirmat per a
+        tots els períodes que no hi va haver retencions. Registra les percepcions
+        de cada perceptor al detall d''aquest model, o confirma cada període al teu
+        perfil.'
+    help:
+      constraint:
+        at_least: Com a mínim {minimum}.
+        at_most: Com a màxim {maximum}.
+        choices: 'Un d''aquests valors: {choices}.'
+        exact_length: Exactament {length} caràcters.
+        format: Ha de seguir el format oficial.
+        length: Entre {minimum} i {maximum} caràcters.
+        max_length: Com a màxim {maximum} caràcters.
+        min_length: Com a mínim {minimum} caràcters.
+        non_negative: No pot ser negatiu.
+        range: Entre {minimum} i {maximum}.
+      formula:
+        clamp: '{value} entre {minimum} i {maximum}'
+        if_then_else: si {condition}, {then}; si no, {otherwise}
+        max: màx({items})
+        min: mín({items})
+        other_modelos: import traslladat des de models relacionats
+        percent_of: '{rate} % de {amount}'
+        previous_period: '{value} del període anterior'
+        recorded_values: 'Valors utilitzats: {values}. Resultat: {result}.'
+        rule: regla de càlcul pròpia d'aquest model
+        table: valor de la taula oficial
+        working_figure: xifra intermèdia
+      source_kind:
+        dictionary: Diccionari de dades de l'AEAT
+        form_spec: Especificació del formulari de l'AEAT
+        instructions: Instruccions del model de l'AEAT
+        manual_pdf: Manual pràctic de l'AEAT
+        record_design: Disseny de registre de l'AEAT
+        suppression_notice: Avís de supressió de l'AEAT
+        xsd: Esquema XML de l'AEAT
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
         una sembra existent.
-      correct_sealed_blocked: 'Correcció rebutjada: un Model 303 ja presentat (%{blocking_filing_year}/%{blocking_period})
-        ha consumit aquesta base de compensació sembrada. Canviar-la alteraria una
-        declaració presentada.'
+      correct_sealed_blocked: 'Correcció rebutjada: un Model 303 ja registrat com
+        a presentat (%{blocking_filing_year}/%{blocking_period}) ha usat aquesta base
+        de compensació inicial. Canviar-la alteraria una declaració registrada com
+        a presentada.'
       override_fresh_wallet_blocked: 'Anul·lació rebutjada: una lectura actual de
         la cartera d''AEAT ja resol el Model 303 %{filing_year}/%{period}. L''evidència
         recent d''AEAT és l''autoritat i una anul·lació no l''ha de substituir.'
-      override_sealed_blocked: 'Anul·lació rebutjada: un Model 303 ja presentat (%{blocking_filing_year}/%{blocking_period})
-        ha consumit la base de compensació d''aquest període. Registrar una anul·lació
-        alteraria una declaració ja presentada.'
+      override_sealed_blocked: 'Anul·lació rebutjada: un Model 303 ja registrat com
+        a presentat (%{blocking_filing_year}/%{blocking_period}) ha usat la base de
+        compensació d''aquest període. Registrar una anul·lació alteraria una declaració
+        registrada com a presentada.'
       seed_negative_amount: L'import inicial no pot ser negatiu.
-      seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
+      seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associa'l
         al perfil actiu.
     lifecycle:
       calculate: Calcula
       export: Exporta
       export_destination_placeholder: Camí de destinació de l'exportació
-      file: Registra la presentació local
-      file_cancelled: La presentació local s'ha cancel·lat; no s'ha registrat res.
-      file_confirm_accept: Registra la presentació local
+      file_cancelled: Cancel·lat. No s'ha registrat res.
+      file_confirm_accept: Registrar presentació
       file_confirm_cancel: Cancel·la
-      file_confirm_message: Això registra la declaració verificada a l'historial local
-        d'aquesta aplicació. No presenta res a l'AEAT.
-      file_confirm_title: Voleu registrar una presentació local?
+      file_confirm_message: Això registra la declaració comprovada com a presentada
+        a Cadrumo. No presenta res a l'AEAT.
+      file_confirm_title: Vols registrar la presentació?
       refusal:
-        calculation_required: Calculeu aquesta declaració abans de continuar.
+        calculation_required: Calcula aquesta declaració abans de continuar.
         edit_unavailable: Aquesta declaració no ofereix valors editables ara mateix;
-          torneu-la a calcular o torneu-la a obrir abans d'editar.
-        export_destination_required: Introduïu un camí de destinació per a l'exportació.
-        verification_required: Verifiqueu aquest càlcul abans de registrar una presentació
-          local.
-      verify: Verifica
+          torna-la a calcular o torna-la a obrir abans d'editar.
+        export_destination_required: Introdueix un camí de destinació per a l'exportació.
+        verification_required: Comprova aquest càlcul abans de registrar la presentació.
     profile_binding:
       errors:
-        boolean_value_channel_mismatch: El fet del perfil per al vincle {binding_id}
-          és booleà, però el vincle declara el canal de valor {declared_channel}.
-        boolean_value_type_invalid: El fet del perfil per al vincle booleà {binding_id}
-          no és booleà; s'ha rebut el tipus {value_type}.
-        channel_declaration_conflict: El vincle {binding_id} declara el canal {declared_channel},
-          incompatible amb el canal consumidor {consumer_channel}.
-        date_value_type_invalid: La dada de perfil per al binding de data %{binding_id}
-          ha de ser una data; s'ha rebut %{value_type}.
-        decimal_value_type_invalid: 'La dada de perfil per al binding de canal decimal
-          %{binding_id} té un tipus no suportat: %{value_type}.'
-        enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
+        boolean_value_channel_mismatch: La dada del perfil per a l'origen de valor
+          {binding_id} és booleana, però l'origen declara el canal de valor {declared_channel}.
+        boolean_value_type_invalid: La dada del perfil per a l'origen de valor booleà
+          {binding_id} no és booleana; s'ha rebut el tipus {value_type}.
+        channel_declaration_conflict: L'origen de valor {binding_id} declara el canal
+          {declared_channel}, incompatible amb el canal consumidor {consumer_channel}.
+        date_value_type_invalid: La dada de perfil per a l'origen de valor de data
+          %{binding_id} ha de ser una data; s'ha rebut %{value_type}.
+        decimal_value_type_invalid: 'La dada de perfil per a l''origen de valor de
+          canal decimal %{binding_id} té un tipus no suportat: %{value_type}.'
+        enum_boolean_invalid: La dada de perfil per a l'origen de valor enum %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides de dispatch enum.
     quickfile:
       stage_incomplete: L'etapa %{stage} de quickfile ha acabat amb l'estat %{status}.
       stage_refused: 'Quickfile s''ha aturat a l''etapa %{stage}: l''etapa s''ha rebutjat
         amb %{error_code}.'
+    work_form:
+      additional_data_for_box: Dada addicional de la casella {box}
+      box_locator_help:
+        one_year: Casella {box} del model {modelo}, exercici {years}.
+        onwards: Casella {box} del model {modelo}, exercicis {years} i posteriors.
+        year_span: Casella {box} del model {modelo}, exercicis {years}.
+      finding_action:
+        add_activity_start: Afegeix al teu perfil la data en què va començar la teva
+          activitat i torna a calcular.
+        add_attribution_to_profile: Registra al teu perfil d'on surt la renda atribuïda
+          i torna a calcular.
+        add_base_to_entry: Afegeix la base imposable a l'apunt dels teus registres
+          i torna a calcular.
+        attach_document: Adjunta el justificant a l'apunt dels teus registres.
+        await_update: Encara no es pot resoldre aquí. Actualitza l'aplicació quan
+          hi hagi una versió que ho cobreixi.
+        calculate_again: Torna a calcular la declaració.
+        check_carried_zero: Comprova que la declaració anterior va declarar realment
+          zero. Si no, corregeix-la allà i torna a calcular.
+        check_condition: Comprova que es compleix la condició que indica. Si no, corregeix
+          la casella i torna a calcular.
+        check_earlier_figures: Comprova'n les xifres amb la declaració que vas presentar
+          a l'AEAT abans de registrar aquesta com a presentada.
+        check_possible_reduction: Comprova si et correspon. Si és així, escriu-la
+          a la seva casella i torna a calcular.
+        check_profile_value: Revisa aquest valor al teu perfil, corregeix-lo si és
+          incorrecte i torna a calcular.
+        compare_figures: Compara les xifres, corregeix la que estigui malament i torna
+          a calcular.
+        correct_and_recalculate: Corregeix el que indica i torna a calcular i comprovar.
+        declare_asset_again: Torna a declarar aquest bé en aquesta declaració.
+        enter_box_value: Escriu el valor a la casella i torna a calcular.
+        enter_or_confirm_payments: Introdueix les percepcions de cada perceptor al
+          detall d'aquest model, o confirma cada període al teu perfil.
+        enter_payee_payments: Introdueix les percepcions de cada perceptor al detall
+          d'aquest model i torna a comprovar.
+        enter_withholding_certificate: Introdueix la retenció que figura al certificat
+          de retencions i ingressos a compte del teu pagador i torna a calcular.
+        file_another_way: Cadrumo encara no pot preparar aquesta declaració per presentar-la.
+          Presenta-la per una altra via, per exemple al web de l'AEAT.
+        nothing_to_do: No has de fer res. Explica el que va fer el càlcul.
+        read_and_decide: Llegeix-ho i decideix si t'afecta. No t'impedeix presentar.
+        regroup_income_lines: Corregeix com estan agrupades les línies de renda i
+          torna a calcular.
+        resolve_303_returns: Resol les incidències pendents dels models 303 d'aquell
+          any i torna a calcular.
+        retry_or_update: Torna-ho a provar o actualitza l'aplicació.
+        review_attested_year: No has de fer res, tret que aquell any paguessis rendes
+          exemptes o per sota del llindar de retenció.
+        settle_earlier_declaration: Resol primer la declaració del període anterior
+          i torna a calcular.
+      inspection_heading: Totes les caselles, per número de casella
+      unnamed_box: Casella sense nom
   overview:
     calendar:
       holiday_coverage:
-        calendar_unavailable: calendari de festius no disponible; la data de tancament
-          original no està verificada
+        calendar_unavailable: calendari de festius no disponible; el termini original
+          no s'ha comprovat
         national_and_territory: festius nacionals i de %{territory} comprovats; festius
           locals sense comprovar
+        national_and_territory_without_name: festius nacionals i autonòmics aplicables
+          comprovats; festius locals sense comprovar
         national_only: només festius nacionals; festius autonòmics i locals sense
           comprovar
         not_shifted: el termini d'aquest model no es trasllada per dies inhàbils
         territory_unverified: només festius nacionals; els festius autonòmics de %{territory}
-          d'aquest any no estan verificats i els locals no es comproven
+          d'aquest any no s'han comprovat i els locals no es comproven
+        territory_unverified_without_name: només festius nacionals; el calendari autonòmic
+          aplicable no està verificat; els festius locals no es comproven
       shift:
         business_day: Dia hàbil
         calendar_unavailable: Calendari no disponible
@@ -1475,6 +1910,43 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de model no pot estar en blanc.
+  reconciliation_export:
+    actor: Responsable
+    advisory: Avís
+    advisory_code: Codi d'avís
+    advisory_count: Avisos
+    calculation_revision: Càlcul desat
+    context: Context
+    date: Data
+    difference_count: Diferències
+    difference_kind: Tipus de diferència
+    difference_kind_casilla: Valor de casella
+    difference_kind_header_field: Identitat del justificant
+    difference_kind_total: Total presentat
+    difference_reason: Motiu de la diferència
+    evidence_kind: Tipus d'evidència
+    evidence_kind_declaration: Declaració presentada
+    evidence_kind_justificante: Justificant
+    evidence_reference: Referència d'evidència
+    evidence_value: Valor de l'evidència
+    field: Camp o casella
+    legal_refs: Referències legals
+    modelo: Model
+    period: Període
+    record: Reconciliació
+    record_identity: Identitat completa del registre
+    registry_revision: Revisió normativa desada
+    saved_comparison_notice: Les comparacions desades conserven els valors i les referències
+      originals. Un valor buit és desconegut. Els avisos delimiten què s'ha comprovat;
+      una referència no demostra que es conservin els bytes del document.
+    saved_value: Valor del càlcul desat
+    source_refs: Fonts oficials
+    title: Reconciliacions desades
+    verdict: Resultat de la comparació
+    verdict_matches: Els valors coincideixen
+    verdict_mismatches: Hi ha diferències
+    work_unit: Treball
+    year: Exercici
   storage:
     calc_sheets:
       engine:
@@ -1485,15 +1957,15 @@ application:
           parameter_no_dated_value: El motor d'exportació de fulls de càlcul no ha
             trobat cap valor de paràmetre vigent per a la data de meritació.
           unsupported_rounding: El motor d'exportació de fulls de càlcul ha trobat
-            una regla d'arrodoniment del registre no admesa.
+            una regla d'arrodoniment de les definicions del model que no admet.
         guide:
-          editable_cells: 'Editeu només les cel·les de la pestanya ''Entradas''. La
+          editable_cells: 'Edita només les cel·les de la pestanya ''Entradas''. La
             resta de pestanyes estan protegides: ''Cálculos'' conté les caselles derivades
             amb fórmules, ''Procedència'' audita cada casella calculada i ''Tarifas''
             reflecteix els paràmetres vigents consultats per les fórmules.'
           period: '%{modelo_title} - període %{period} / %{filing_year}.'
-          pull_command: Per incorporar les vostres edicions a l'emmagatzematge local,
-            executeu 'aeat app modelo spreadsheet pull' des de la CLI.
+          pull_command: Per incorporar les teves edicions a l'emmagatzematge local,
+            executa 'aeat app modelo spreadsheet pull' des de la CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casella
@@ -1515,20 +1987,20 @@ application:
           calculos: Càlculs derivats - protegit per preservar la paritat
           evidencia: 'Evidencia generada: només lectura'
           guide: Guia - protegit
-          provenance: Procedència / audit trail - protegit
+          provenance: Origen / pista d'auditoria - protegit
           tariffs: Tarifes / paràmetres vigents - protegit
+      form:
+        communication_caption: Formulari de dades · canvia les entrades als fulls
+          d’origen
+        communication_guide: Canvia les dades a Entradas. Modelo mostra la comunicació;
+          no calcula retencions.
+        reported_data_caption: Dades declarades · edita les entrades als fulls d’origen
       layout:
         errors:
           undeclared_reference: El disseny del full de càlcul referència un element
             no declarat per la revisió.
           unresolved_reference: El disseny del full de càlcul no conté cap cel·la
             per a un element referenciat.
-      parity:
-        errors:
-          seed_anchor_missing: L'entrada de l'escenari de paritat no té cap cel·la
-            del full de càlcul on sembrar-se.
-          unknown_casilla_ids: L'escenari de paritat referència casilla.id que no
-            són a la instantània del registre.
       records:
         errors:
           address_mismatch: La direcció de cel·la del full de càlcul no coincideix
@@ -1544,36 +2016,201 @@ application:
           range_malformed: Els límits de l'interval del full de càlcul no són vàlids.
           tariff_shape_invalid: La forma de la taula de tarifes del full de càlcul
             no és vàlida.
+      review:
+        labels:
+          aeat_confirmation: Confirmació de l’AEAT
+          aeat_confirmation_confirmada: Confirmada per evidència desada de l’AEAT
+          aeat_confirmation_descartada: Descartada abans de la confirmació de l’AEAT
+          aeat_confirmation_discrepante: Discrepància amb l’evidència de l’AEAT
+          aeat_confirmation_pendiente: 'Pendent: sense acceptació observada de l’AEAT'
+          amount: Import (visualització numèrica)
+          amount_id: Identificador del resultat
+          art_104_tres_exclusion: Exclusió de l'article 104.Tres
+          attachments: Identificadors d'adjunts
+          attribution_notice: Només l'atribució capturada connecta les fonts amb els
+            resultats desats. La proximitat entre files no acredita una contribució.
+          authority: Generació de l'autoritat normativa
+          availability: Selecció i disponibilitat d'evidència
+          baseline_notice: Dades locals desades. Aquesta còpia serveix per revisar;
+            no certifica una presentació ni una verificació.
+          booked_date: Data comptable
+          business_pct: Proporció empresarial registrada
+          byte_length: Mida original en bytes
+          calculation_revision: Revisió del càlcul
+          calculation_state: Estat del càlcul desat
+          calculation_state_borrador: 'Esborrany: provisional'
+          calculation_state_descartado: Càlcul descartat
+          calculation_state_presentado: Presentat localment
+          calculation_state_presentado_supersedido: 'Presentació local històrica:
+            substituïda'
+          calculation_state_verificado_completo: Càlcul local verificat
+          casilla: Casella
+          category_id: Identificador de categoria
+          classification: Classificació empresarial
+          contribution: Identificador de contribució
+          contribution_count: Nombre de contribucions capturades
+          counterparty: Contrapart
+          counterparty_country: País de la contrapart
+          currency: Moneda
+          current_calculation: Càlcul actual en exportar
+          current_filing: Presentació local actual en exportar
+          deduction_fact_kind: Tipus de dada de deducció
+          description: Descripció capturada
+          detail: Detall d'atribució capturat
+          digest: Empremta registrada
+          direction: Sentit del moviment registrat
+          disposition: Codi de selecció d'evidència registrat
+          document_links: Identificadors de vincles documentals
+          eur_value: Valor en EUR (visualització numèrica)
+          evidence: Índex d'evidències
+          evidence_count: Nombre d'evidències inventariades
+          evidence_excluded: Exclosa de la selecció de fitxers
+          evidence_id: Identificador d'evidència
+          evidence_included: Seleccionada per al paquet separat de fitxers
+          evidence_missing: Fitxer històric absent
+          evidence_scope: Abast de les evidències
+          evidence_unavailable: Fitxer històric no disponible
+          exact_amount: Import exacte (text)
+          exact_business_pct: Proporció empresarial exacta (text)
+          exact_decimal_notice: Les cel·les numèriques són valors de visualització.
+            El text decimal exacte conserva el valor desat i la seva escala; aquí
+            no s'arrodoneix ni es recalcula.
+          exact_eur_value: Valor exacte en EUR (text)
+          exact_fx_rate: Tipus de canvi exacte (text)
+          exact_iva_amount: Quota exacta d'IVA (text)
+          exact_iva_rate: Tipus exacte d'IVA (text)
+          exact_m210_applicable_rate: Tipus exacte del Modelo 210 (text)
+          exact_m210_gross_income_amount: Ingressos íntegres exactes del Modelo 210
+            (text)
+          exact_recargo_amount: Quota exacta de recàrrec (text)
+          exact_taxable_base: Base imposable exacta (text)
+          exact_value: Valor decimal exacte (text)
+          exported_at: Data d'exportació
+          external_notes_notice: Escriu aquí les teves troballes i escenaris. Cadrumo
+            no importa mai els teus canvis. Les dades locals desades es mantenen a
+            part.
+          field: Camp
+          filing_record: Registre de presentació seleccionat
+          filing_status: Estat del registre de presentació desat
+          filing_status_supersedido: 'Substituït: històric'
+          filing_status_vigente: Vigent
+          finding: Troballa
+          finding_count: Nombre de troballes
+          formula: Referència de fórmula registrada
+          fx_rate: Tipus de canvi registrat
+          index_only_notice: Aquest índex no conté fitxers originals. Els fitxers
+            seleccionats requereixen un paquet separat. Els fitxers històrics absents
+            continuen absents.
+          input_classification: Classificació de l'entrada
+          invoice: Identificador de factura vinculada
+          irpf_category: Categoria d'IRPF registrada
+          iva_amount: Quota d'IVA (visualització numèrica)
+          iva_category: Categoria d'IVA registrada
+          iva_rate: Tipus d'IVA registrat
+          kind: Codi de tipus de font registrat
+          ledger: Llibre capturat
+          ledger_notice: Files del llibre capturades. Els imports són magnituds; el
+            sentit es registra a part. El text decimal exacte acompanya la visualització
+            numèrica. Les columnes addicionals conserven les dades fiscals capturades.
+          ledger_row_count: Nombre de files del llibre capturades
+          ledger_scope_notice: Instantània explícita del llibre. No implica que les
+            files contribueixin a un càlcul.
+          ledger_snapshot: Instantània del llibre
+          legal_refs: Referències legals
+          lifecycle_state: Estat del cicle de vida registrat
+          m210_applicable_rate: Tipus aplicable del Modelo 210
+          m210_asset_or_right_id: Identificador de bé o dret del Modelo 210
+          m210_gross_income_amount: Ingressos íntegres del Modelo 210
+          m210_official_tipo_renta_code: Codi de tipus de renda del Modelo 210
+          m210_payer_id: Identificador de pagador del Modelo 210
+          m210_payer_mode: Modalitat de pagador del Modelo 210
+          media_type: Tipus de fitxer
+          missing_data: Dades absents
+          modelo: Modelo
+          'no': 'No'
+          no_captured_rows: Aquesta instantània no conté files per a aquesta secció.
+          no_inventory_reference: Sense referència d'inventari capturada
+          not_captured: No capturat
+          not_captured_notice: No capturat vol dir que la instantània seleccionada
+            no té un valor per a aquesta dada. No vol dir zero ni no aplicable.
+          not_ledger_source: La font no és una fila del llibre
+          numeric_notice: Visualització numèrica
+          overview: Resum de la revisió
+          period: Any i període
+          prorrata_reference: Referència de prorrata
+          prorrata_sector_id: Identificador de sector de prorrata
+          publication: Identificador de publicació
+          purchase_invoice_evidence: Identificador d'evidència de factura de compra
+          reason: Motiu de disponibilitat capturat
+          recargo_amount: Quota de recàrrec d'equivalència
+          reference: Referència de dades desades / coordenada de cel·la
+          registry_digest: Empremta del registre normatiu
+          registry_revision: Revisió del registre normatiu
+          result_count: Nombre de resultats desats
+          results: Resultats desats
+          review: Les teves notes de revisió
+          review_date: Data de revisió
+          review_quality: Estat de la revisió
+          review_status: Estat de la teva revisió
+          reviewer: Revisor
+          rounding: Regla d'arrodoniment registrada
+          row_id: Coordenada de fila
+          scenario: El teu escenari
+          scope: Abast de la selecció
+          snapshot: Empremta de la instantània
+          source_id: Identificador de font
+          source_jurisdiction: Jurisdicció d'origen
+          source_kind: Tipus de font
+          source_kind_adjustment: Ajust
+          source_kind_invoice: Factura
+          source_kind_ledger_row: Fila del llibre
+          source_kind_manual_input: Entrada manual
+          source_kind_unavailable: Font històrica no disponible
+          source_refs: Referències de fonts
+          source_revision: Revisió de la font
+          sources: Atribució de fonts
+          status: Codi d'estat registrat
+          status_incomplete: Incomplet
+          status_provisional: Provisional
+          status_verified: Dades locals verificades
+          taxable_base: Base imposable (visualització numèrica)
+          transaction: Identificador del moviment
+          unattributed: Sense atribució de càlcul capturada
+          unit: Unitat registrada
+          usage_ratio_id: Identificador de proporció d'ús
+          value: Valor desat / visualització numèrica
+          value_date: Data valor
+          work_unit: Unitat de treball
+          'yes': Sí
       translator:
         errors:
-          translation_failed: La fórmula del registre no es pot traduir a una fórmula
-            de full de càlcul.
+          translation_failed: La fórmula de les definicions del model no es pot traduir
+            a una fórmula de full de càlcul.
   user_profile:
     errors:
       censal_read_identity_absent: La lectura censal no inclou cap NIF, de manera
         que no es pot confirmar que correspongui a aquest perfil.
       censal_read_identity_cleared: El NIF d'aquest perfil s'ha buidat, de manera
-        que no es pot confirmar que la lectura censal li correspongui. Restaureu el
-        NIF i torneu a executar la consulta.
+        que no es pot confirmar que la lectura censal li correspongui. Restaura el
+        NIF i torna a executar la consulta.
       censal_read_identity_mismatch: La lectura censal correspon a un contribuent
         diferent del d'aquest perfil; no s'ha aplicat.
       censal_read_identity_profile_malformed: El NIF d'aquest perfil no és un identificador
         fiscal espanyol vàlid, de manera que no es pot confirmar que la lectura censal
-        li correspongui. Corregiu el NIF i torneu a executar la consulta.
+        li correspongui. Corregeix el NIF i torna a executar la consulta.
       censal_read_identity_read_malformed: El NIF de la lectura censal no és un identificador
         fiscal espanyol vàlid, de manera que no es pot confirmar que correspongui
         a aquest perfil.
-      censal_read_identity_unset: 'Registreu el vostre NIF abans de consultar el vostre
-        cens: aquest perfil encara no en té cap, de manera que la consulta no pot
-        confirmar que el registre que retorna l''AEAT sigui vostre. Executeu aeat
-        config profile edit per afegir-lo.'
+      censal_read_identity_unset: 'Registra el teu NIF abans de consultar el teu cens:
+        aquest perfil encara no en té cap, de manera que la consulta no pot confirmar
+        que el registre que retorna l''AEAT sigui teu. Executa aeat config profile
+        edit per afegir-lo.'
       custody_profile_already_present: Aquest magatzem ja conté el perfil que desa
         l'arxiu. Una càpsula conserva la seva identitat en restaurar-se, així que
         una còpia de seguretat només es pot restaurar en un magatzem que encara no
         la tingui, o després d'eliminar el perfil original.
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
-      no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       passphrase_confirmation_mismatch: La nova contrasenya i la seva confirmació
         no coincideixen.
       passphrase_current_rejected: La contrasenya actual no és correcta; la contrasenya
@@ -1635,8 +2272,8 @@ application:
         de pregunta desconegut.
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
         defecte 'default' implícit).
-      profile_label_taken: Ja existeix un perfil anomenat %{label}. Trieu un altre
-        nom o executeu el flux d'edició per modificar aquest perfil.
+      profile_label_taken: Ja existeix un perfil anomenat %{label}. Tria un altre
+        nom o executa el flux d'edició per modificar aquest perfil.
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
         Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
@@ -1645,13 +2282,12 @@ application:
     notices:
       ccaa_defaulted: No es va triar cap comunitat autònoma, així que es va assumir
         %{ccaa} per a aquest perfil. Les deduccions autonòmiques i el tram autonòmic
-        de l'escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per
+        de l'escala es calculen per a %{ccaa}. Fes servir --tax-residence-ccaa per
         triar una altra comunitat.
       modify_descendants_via_door: Els descendents no formen part de l'edició del
         perfil. Gestiona'ls amb el comandament de descendents.
-      modify_no_resume: 'Els canvis en mode edició només queden preparats: sortir
-        sense enviar els descarta; desar i reprendre només està disponible en crear
-        el perfil.'
+      modify_no_resume: 'Els canvis en mode edició encara no s''apliquen: sortir sense
+        enviar els descarta; desar i reprendre només està disponible en crear el perfil.'
       setup_saved_resume_later: 'Desat. Reprèn quan vulguis amb: aeat config profile
         create %{name}'
     output_labels:
@@ -1670,7 +2306,7 @@ application:
     errors:
       no_active_profile_bucket: No hi ha cap perfil actiu.
       no_run_for_period: No s'ha trobat cap execució de flux de treball per al model
-        {modelo} període {period}. Executeu el flux almenys una vegada abans de reprendre.
+        {modelo} període {period}. Executa el flux almenys una vegada abans de reprendre.
       profile_label_ambiguous: 'L''etiqueta de perfil {label} és ambigua: {count}
         dipòsits actius la comparteixen.'
       resume_refused_no_aborted_reason: L'execució {run_id} és ABORTED sense raó registrada;
@@ -1681,18 +2317,19 @@ application:
         en estat {final_stage}, no ABORTED.'
       resume_refused_terminal_reason: L'execució {run_id} es va avortar per {reason},
         que és terminal per disseny i no es pot reprendre.
-      resume_revision_selector_invalid: 'Selector de revisió no reconegut per a resume:
-        {selector}; tria current, latest-draft, latest-verified, filed o explícit.'
+      resume_revision_selector_invalid: 'Selector no reconegut per al càlcul desat
+        que es reprèn: {selector}; tria current, latest-draft, latest-verified, filed
+        o explicit.'
       resume_run_ambiguous: Més d'una execució de flux de treball coincideix amb el
-        model {modelo} període {period}. Trieu un id d'execució exacte. {candidates}
+        model {modelo} període {period}. Tria un id d'execució exacte. {candidates}
       resume_run_id_invalid: workflow_run_id ha de ser un id hexadecimal en minúscules
         de 16 caràcters; s'ha rebut {run_id}.
-      resume_target_contradiction: 'Indica només un destí de resume: id d''execució
-        de flux, id d''unitat de treball, id de revisió de càlcul, o model/any/període.'
+      resume_target_contradiction: 'Indica només un destí per reprendre: id d''execució
+        de flux, id de declaració, id de càlcul desat, o model/any/període.'
       resume_target_invalid: Destí de resume {target} invàlid. Usa --modelo --year
         --period o executa `aeat app modelo work runs`.
       resume_target_required: Indica --modelo --year --period, un id d'execució de
-        flux, un id d'unitat de treball o un id de revisió de càlcul per reprendre.
+        flux, un id de declaració o un id de càlcul desat per reprendre.
       resume_visible_target_incomplete: Resume per clau natural requereix --modelo,
         --year i --period junts; rebut model={modelo}, year={year}, period={period}.
       run_id_invalid_blank: L'identificador d'execució no pot estar en blanc.

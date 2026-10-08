@@ -85,3 +85,18 @@ retrieved_at = 2026-07-21
 applies_from = 2016-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_18/dr122e18v13.xlsx"
 review_status = "pending_review"
+
+# Annex II of this same enrolled BOE document contains the revised 122 form.
+# Reuse the original bytes; their existing corpus location names annex III.
+[sources."boe-modelo-122-form-2018"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_136/files/BOE-A-2018-10064-modelo-136-current-form.pdf"
+sha256 = "f289b0072c5cdc71b91f82bee9535abbdcd68c720e6b4cc051e0f228e83036ad"
+bytes = 424777
+retrieved_at = 2026-07-01
+published_at = 2018-07-18
+applies_from = 2018-07-19
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064"
+review_status = "pending_review"

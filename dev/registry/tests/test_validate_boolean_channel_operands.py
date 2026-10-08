@@ -103,7 +103,7 @@ def test_a_bare_boolean_leaf_as_the_whole_expression_is_accepted(tmp_path: Path)
 
 @pytest.mark.parametrize(
     ("operator", "argument_index"),
-    [("equal", 0), ("equal", 1), ("if_then_else", 0)],
+    [("equal", 0), ("equal", 1), ("if_then_else", 0), ("require_condition", 0)],
 )
 def test_predicate_positions_are_accepted(tmp_path: Path, operator: str, argument_index: int) -> None:
     """The two positions that ask a yes/no question of the binding stay legal."""
@@ -116,7 +116,7 @@ def test_predicate_positions_are_accepted(tmp_path: Path, operator: str, argumen
     assert _failures(tree) == []
 
 
-@pytest.mark.parametrize("operator", ["add", "multiply", "subtract", "min"])
+@pytest.mark.parametrize("operator", ["add", "multiply", "subtract", "min", "require_condition"])
 def test_an_arithmetic_operand_is_refused(tmp_path: Path, operator: str) -> None:
     """A truth value summed, multiplied or subtracted is refused by name.
 

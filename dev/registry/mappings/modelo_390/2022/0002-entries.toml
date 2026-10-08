@@ -1978,7 +1978,7 @@ export_field_id = "modelo-390-page-02-casilla-repercutido-recargo-super-reducido
 kind = "casilla"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
-casilla_id = "iva.anual.repercutido.recargo.super-reducido"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota"
 [entries.anchor]
 sheet = "Pág. 2"
 source_row = 84
@@ -2004,7 +2004,7 @@ export_field_id = "modelo-390-page-02-casilla-repercutido-recargo-reducido"
 kind = "casilla"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
-casilla_id = "iva.anual.repercutido.recargo.reducido"
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota"
 [entries.anchor]
 sheet = "Pág. 2"
 source_row = 86
@@ -2030,7 +2030,7 @@ export_field_id = "modelo-390-page-02-casilla-repercutido-recargo-general"
 kind = "casilla"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
-casilla_id = "iva.anual.repercutido.recargo.general"
+casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota"
 [entries.anchor]
 sheet = "Pág. 2"
 source_row = 88

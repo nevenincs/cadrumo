@@ -1,7 +1,7 @@
 """Packaging gate for the Apache §4(d) attribution chain.
 
 Every distribution this repository publishes — the root ``cadrumo`` runtime
-wheel and the two ``cadrumo-data-*`` corpus companions — must ship the Apache
+wheel and the three ``cadrumo-data-*`` corpus companions — must ship the Apache
 LICENSE text and the project ``NOTICE`` attribution file inside its artifacts
 (``.dist-info/licenses/`` in wheels, the root of the sdist). The mechanism is
 the explicit PEP 639 ``license-files`` declaration in each ``pyproject.toml``;
@@ -9,7 +9,7 @@ this gate pins the declaration, and reads the referenced files, so a future edit
 cannot silently drop the attribution chain back to hatchling's implicit glob
 defaults. Presence is not the claim: an empty or placeholder LICENSE satisfies
 existence while shipping no licence at all, so the Apache text is compared
-byte-for-byte across the three distributions and its operative clauses are
+byte-for-byte across the four distributions and its operative clauses are
 pinned, and every NOTICE is read for the attribution it must carry.
 
 The companion NOTICE files additionally scope the Apache-2.0 licence to the
@@ -32,6 +32,7 @@ _PROJECT_DIRS = {
     "cadrumo": _REPO_ROOT,
     "cadrumo-data-manuals": _REPO_ROOT / "packaging" / "cadrumo_data_manuals",
     "cadrumo-data-official": _REPO_ROOT / "packaging" / "cadrumo_data_official",
+    "cadrumo-data-normatives": _REPO_ROOT / "packaging" / "cadrumo_data_normatives",
 }
 
 
@@ -52,7 +53,7 @@ def test_distribution_declares_and_carries_the_attribution_chain(distribution: s
 
 @pytest.mark.parametrize(
     "companion",
-    ("cadrumo_data_manuals", "cadrumo_data_official"),
+    ("cadrumo_data_manuals", "cadrumo_data_official", "cadrumo_data_normatives"),
 )
 def test_companion_notice_scopes_the_licence_off_official_documents(companion: str) -> None:
     """The corpus companions' NOTICE must scope Apache-2.0 to packaging, never the official texts."""

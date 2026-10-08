@@ -4,22 +4,54 @@ modelo:
       construct:
         modelo-128-calculation-construct:
           field:
-            title: '128-as nyomtatvány: az önadózás számítása'
+            title: 'Modelo 128 nyomtatvány: az önadózás számítása'
       field:
         official_name: Modelo 128. Adóelőleg-levonások és -befizetések. Tőkésítési
           műveletekből, valamint élet- vagy rokkantsági biztosítási szerződésekből
           származó tőkejövedelmek.
         title: Adóelőleg-levonások és -befizetések - tőkésítési műveletekből és biztosítási
           szerződésekből származó tőkejövedelmek
+      form:
+        column:
+          adicional: Mezők 04–05
+          ordinario: Mezők 01–03
+        context:
+          apellidos: Vezetéknév vagy cégnév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző önadózási bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          periodo: Időszak
+        page:
+          modelo-128-page-01:
+            heading: Tőkésítési ügyletekből és élet- vagy rokkantsági biztosításból
+              levont adó
+        row:
+          base: A levont adó és az adóelőleg alapja
+          perceptores: Kedvezményezettek száma
+          retenciones: Levont adó és adóelőleg
+        section:
+          complementaria:
+            heading: Kiegészítő bevallás (6)
+          devengo:
+            heading: Adómegállapítási időszak (2)
+          identificacion:
+            heading: Azonosítás (1)
+          ingreso:
+            heading: Befizetés (4)
+          liquidacion:
+            heading: Adóelszámolás (3)
       revision:
         2019-y-siguientes:
           casilla:
             '01':
               label: Kedvezményezettek száma
             '02':
-              label: Visszatartások és előlegfizetések alapja
+              label: A levonások és adóelőlegek alapja
             '03':
-              label: Forrásadó és részletfizetés
+              label: Levonások és adóelőlegek
             '04':
               label: Kedvezményezettek száma (kiegészítő blokk)
             '05':

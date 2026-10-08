@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#cli-runtime-resource-architecture-convergence'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:766b92694e2fbceba3c9b6915fb5a01e8ad74c8d26209b4559bd7ce02a323499'
+body_hash: 'sha256:e509728d36d00f755868fb2a89ef54ba4c378b357d7533b54b78ca09058bc47a'
 related:
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
 ---
@@ -30,9 +30,7 @@ its build and runtime invariants, and an atomic cutover.
 
 The S11 runtime loader names `command_registration_metadata.v1.json` and reads
 it from package resources; the S14 worktree loader does the same for
-`app_lazy_manifest.v1.json`. `src/cadrumo/entrypoints/cli/_command_schema.py:226`
-`src/cadrumo/entrypoints/cli/_command_schema.py:282`
-`src/cadrumo/entrypoints/cli/_app_lazy_registration.py:66`
+`app_lazy_manifest.v1.json`. the former source file
 
 Both resources are ignored rather than tracked. `git ls-files` returns neither,
 while `git status --ignored` identifies both as ignored. The ignore comments
@@ -50,8 +48,8 @@ and loader references inside the demand-loaded production design.
 ### AGREE — repository build and shipping lanes cannot supply the resources
 
 The generators live under `dev/quality`, and their default outputs point into
-`src/cadrumo/entrypoints/cli`. `dev/quality/generate_command_registration_metadata.py:20`
-`dev/quality/generate_app_lazy_manifest.py:129` The sdist explicitly excludes
+`src/cadrumo/entrypoints/cli`. the former source file
+the former source file The sdist explicitly excludes
 `dev` and all descendants. `pyproject.toml:246` The immutable Python cohort
 rejects source drift, archives one commit, and builds both wheel and sdist from
 that archive; ignored files cannot enter this lane.
@@ -70,11 +68,8 @@ on materializing the production tree it is trying to describe.
 
 The first review described S14 as a direct generator/bootstrap cycle. Exact
 source narrows that claim. S14 imports and manually composes nine application
-families, supplemental telemetry, review, and participation registrars, then
+families, supplemental, review, and participation registrars, then
 walks the reconstructed Typer tree; it does not call `full_command_tree`.
-`dev/quality/generate_app_lazy_manifest.py:19`
-`dev/quality/generate_app_lazy_manifest.py:31`
-`dev/quality/generate_app_lazy_manifest.py:39`
 
 That correction does not make the design independent. The manual composition is
 a second structural authority that can omit or miscompose a family. S11 does
@@ -90,8 +85,6 @@ production Typer declarations
     -> production schema/operator discovery
 ```
 
-`dev/quality/generate_command_registration_metadata.py:74`
-`dev/quality/generate_command_registration_metadata.py:131`
 This is an ordered generated-resource cycle across production and development
 lanes, not a single recursive function call.
 
@@ -141,19 +134,10 @@ campaign plan; this research did not benchmark a prototype `CommandSpec`.
 
 ## Sources
 
-- `src/cadrumo/entrypoints/cli/_command_schema.py:226`
-- `src/cadrumo/entrypoints/cli/_command_schema.py:282`
-- `src/cadrumo/entrypoints/cli/_app_lazy_registration.py:66`
 - `.gitignore:489`
 - `.vault/adr/2026-08-22-secure-storage-performance-hardening-adr.md:29`
 - `.vault/adr/2026-08-22-secure-storage-performance-hardening-adr.md:66`
-- `dev/quality/generate_command_registration_metadata.py:20`
-- `dev/quality/generate_command_registration_metadata.py:74`
-- `dev/quality/generate_command_registration_metadata.py:131`
-- `dev/quality/generate_app_lazy_manifest.py:19`
-- `dev/quality/generate_app_lazy_manifest.py:31`
-- `dev/quality/generate_app_lazy_manifest.py:39`
-- `dev/quality/generate_app_lazy_manifest.py:129`
+
 - `pyproject.toml:246`
 - `dev/packaging/python_cohort.py:343`
 - `dev/packaging/python_cohort.py:366`

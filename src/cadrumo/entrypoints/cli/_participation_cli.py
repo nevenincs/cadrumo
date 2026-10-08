@@ -7,7 +7,7 @@ transaction. ``participation <transaction-id>`` emits a typed
 ``participation rebuild`` calls
 :func:`rebuild_participation_index` to regenerate the
 derived :class:`TransactionRevisionParticipationIndex`.
-Lookup ids are resolved against a :class:`TransactionCatalogueRepository`.
+Lookup and rebuild execute inside the exact-profile runtime worker.
 """
 
 from __future__ import annotations
@@ -16,17 +16,9 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.ledger.participation_read import get_transaction_participation
-from ._ledger_read_cli import resolve_ledger_transaction_id
-from .common import (
-    ResolveTransactionId,
-    active_bucket_id_or_bad,
-    current_workflow_state,
-    emit_envelope,
-    emit_help_text,
-    transaction_catalogue_repo,
-)
-from .state_projection_support import participation_index_rebuild_ports_factory
+from .common import emit_envelope, emit_help_text
+from .runtime_ledger_participation import read_ledger_participation_for_cli
+from .runtime_ledger_participation_rebuild import rebuild_ledger_participation_for_cli
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
@@ -42,14 +34,13 @@ def participation_lookup(ctx: typer.Context, transaction_id: str | None = None) 
     if transaction_id == "rebuild":
         participation_rebuild(ctx)
         return
-    _emit_participation_lookup(ctx, transaction_id=transaction_id, resolve_transaction_id=resolve_ledger_transaction_id)
+    _emit_participation_lookup(ctx, transaction_id=transaction_id)
 
 
 def _emit_participation_lookup(
     ctx: typer.Context,
     *,
     transaction_id: str,
-    resolve_transaction_id: ResolveTransactionId,
 ) -> None:
     """Read and emit one :class:`TransactionRevisionParticipationIndex`."""
     from ._ledger_payloads import (
@@ -57,26 +48,22 @@ def _emit_participation_lookup(
         LedgerTransactionParticipationPayload,
     )
 
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    resolved_id = resolve_transaction_id(transaction_repository, transaction_id)
-    index = get_transaction_participation(
-        transaction_id=resolved_id,
-        bucket_id=transaction_repository.bucket_id,
-    )
+    projection = read_ledger_participation_for_cli(ctx, transaction_id=transaction_id)
+    resolved_id = projection.transaction_id
     entries = [
         LedgerTransactionParticipationEntryPayload.model_validate(
             {
                 "calculation_revision_id": participation.calculation_revision_id,
                 "work_unit_id": participation.work_unit_id,
-                "modelo": str(participation.modelo),
+                "modelo": participation.modelo,
                 "filing_year": participation.filing_year,
-                "period": participation.period,
+                "period": participation.period.to_period(),
                 "revision_state": participation.revision_state,
                 "filing_record_id": participation.filing_record_id,
                 "justificante_reference": participation.justificante_reference,
             },
         )
-        for participation in index.participations
+        for participation in projection.participations
     ]
     emit_envelope(
         ctx,
@@ -112,13 +99,9 @@ def _participation_lines(
 
 def participation_rebuild(ctx: typer.Context) -> None:
     """Run :func:`rebuild_participation_index` for the active bucket."""
-    from ...application.modelo.participation_index_rebuild import rebuild_participation_index
     from ._ledger_payloads import LedgerParticipationRebuildResult
 
-    bucket_id = active_bucket_id_or_bad(current_workflow_state())
-    stats = rebuild_participation_index(
-        ports=participation_index_rebuild_ports_factory(ctx)(bucket_id=bucket_id),
-    )
+    stats = rebuild_ledger_participation_for_cli(ctx)
     emit_envelope(
         ctx,
         command="ledger.participation.rebuild",

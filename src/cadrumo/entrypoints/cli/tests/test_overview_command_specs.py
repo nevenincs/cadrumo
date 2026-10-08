@@ -5,11 +5,12 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
-from .._command_runtime import build_command_subtree
 from .._command_target import resolve_deferred_target
 from .._overview_command_specs import OVERVIEW_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import CommandSpecGraph, SchemaState
+from ..command_graph import CommandSpecGraph
+from ..command_shared_contracts import SchemaState
+from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ..core.config import Settings
+from ..core.config_live_tests import strict_live_test_opt_in
 
 
 def requires_live_enabled() -> None:
@@ -37,11 +38,11 @@ def requires_live_google_enabled() -> None:
     """Fail unless ``CADRUMO_LIVE_TESTS_GOOGLE`` is exactly ``"1"``.
 
     Companion to :func:`requires_live_enabled` for the Google (OAuth / Drive)
-    live tests, routed through ``Settings.live_tests_google_enabled`` so
-    the Google opt-in is centralised on the same Settings-derived surface.
+    live tests. The fixture applies the shared strict predicate to the
+    Settings-derived Google opt-in.
     """
 
-    if not Settings().live_tests_google_enabled:
+    if not strict_live_test_opt_in(Settings().cadrumo_live_tests_google):
         pytest.fail(
             "selected Google live test requires CADRUMO_LIVE_TESTS_GOOGLE=1 (set it in env/.env or the process environment)"
         )

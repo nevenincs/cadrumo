@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-export-layout-coverage'
 date: '2026-08-19'
-modified: '2026-08-19'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d620e037ab173bcd2b1df6e60b42c08038393c9f5201ed522c27f8ad01360f70'
+body_hash: 'sha256:fab686dd8f530fcb02f07b4d71007b1ef3e8a93749c80b8747aa39549faea232'
 related:
   - "[[2026-08-19-registry-export-layout-coverage-research]]"
 ---
@@ -36,6 +36,12 @@ This matters beyond tidiness. A `filing`-grade revision is admitted to filing su
 runtime `_check_snapshot_filing_capability` then refuses any filing-grade snapshot lacking an
 export layout. The two claims guarantee a refusal at the point of use, which is the worst place
 to discover it — the operator has already done the work.
+
+## Considerations
+
+- The filing rung promises both a filing draft and export, but the runtime already refuses filing-grade snapshots without an export layout.
+- AEAT's record-design index establishes that models 136 and 721 have no positional record design; 721's BOE annex is a printable form and does not supply byte positions or widths.
+- The survey does not establish whether another AEAT file route exists, so the open follow-up bounds the claim.
 
 ## Decision
 
@@ -76,6 +82,20 @@ with it instead of contradicting it.
   forbids; a demotion driven by an external, permanent fact about what AEAT publishes is a
   different thing, and the difference has to be written down or the next reader cannot tell them
   apart.
+
+## Constraints
+
+- Do not invent positional offsets, lengths, field order, or padding from a printed BOE form.
+- The decision is limited to absence in the surveyed AEAT record-design index; another submission route would require reconsideration.
+- Keep the filing grade tied to export capability rather than present implementation completeness.
+
+## Implementation
+
+If adopted, move 136/2026 and 721/2023-y-siguientes from filing to applicability. Give each an export_layouts not-applicable disposition that cites the record-design survey. Retain the existing modelo_publishes_a_record_design predicate as the basis for the grade check.
+
+## Rationale
+
+A filing-grade claim for a format AEAT does not define cannot be fulfilled through the sanctioned positional exporter. Keeping that grade guarantees a late refusal and leaves impossible backlog items open. Applicability preserves the fact that the modelos exist and are due, while the explicit disposition records why no positional export can be authored.
 
 ## Consequences
 

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#profile-portability'
 date: '2026-08-20'
-modified: '2026-08-20'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5ec17de64a4f09e86d4ac143c779666d0db4f40bb9a5e536df98a7f25de2bb8a'
+body_hash: 'sha256:ba5f6094469ff65e3b49ed594c8c959b82d27d91e71db2cdb9b0d9ce862dc621'
 related: []
 ---
-
 # `profile-portability` audit: `bundle surface inventory`
 
 ## Scope
@@ -22,7 +21,7 @@ reviewer refuted several claims the first pass made.
 
 ### The export half is live and reachable; the import half is not
 
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py` registers an export action that
+The code registers an export action that
 calls the live bundle export service with portable-transfer purpose and
 passphrase-encrypted transport. It is reachable from a bare interactive
 `aeat config profile edit`. On the read side, `decrypt_profile_bundle_with_passphrase`
@@ -45,7 +44,7 @@ code is not self-executing; this wants implementing rows, not further analysis.
 ### Orphaned surfaces left by the cutover
 
 Three result schemas remain registered with no producing verb: the export, import and
-subject-access results in `src/cadrumo/entrypoints/cli/_config_payloads.py`. The
+subject-access results. The
 `SUBJECT_ACCESS` member of the export-purpose enum has zero references tree-wide - a dead
 branch of a closed taxonomy. The census disposition data in `dev/quality` carries roughly
 two dozen rows whose path is a module the cutover deleted, each quoting a locator that no
@@ -65,8 +64,7 @@ All four locale catalogues carried an operator-facing string advertising a
 right-of-access archive, and a second describing its category disclosure, for a verb the
 tree no longer exposes. Both keys had zero code references. They are removed.
 
-## Remediation
-
+## Recommendations
 Done: the declaration entry and its gate docstring now state the missing capability - the
 data-category disclosure - rather than asserting a legal duty the repository cannot
 ground; the two orphaned locale strings are removed from all four catalogues; the

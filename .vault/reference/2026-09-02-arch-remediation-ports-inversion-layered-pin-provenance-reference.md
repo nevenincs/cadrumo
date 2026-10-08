@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#arch-remediation-ports-inversion'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:857c29e79af3087c8916e5bac44ba315b0a467ee30f32175fd2937b9e8f57be0'
+body_hash: 'sha256:861712bd8c2a97c253e756b6c1991c068e5947dc438d0e863709bf9f483832d5'
 related: []
 ---
 
@@ -104,8 +104,7 @@ purpose of the `application.live` and `application.auth` packages. Targets:
 `outbound.aeat.sede.{censal_datos,declarations,declarations_capture,walker}`,
 `outbound.aeat.auth.clave_movil_support`.
 
-Outbound inference telemetry. Targets: `outbound.llm.usage`,
-`outbound.llm.run_telemetry`.
+Outbound inference usage records. Targets: `outbound.llm.usage`.
 
 Peer-tier inference consumption. `cadrumo.llm` is declared a sibling of
 `cadrumo.adapters` on the adapter tier, so an application reach into it is an

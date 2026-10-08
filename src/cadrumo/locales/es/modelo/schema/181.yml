@@ -10,6 +10,42 @@ modelo:
           y operaciones financieras relacionadas con bienes inmuebles.
         title: Préstamos, créditos y operaciones financieras sobre inmuebles (informativa
           anual)
+      form:
+        context:
+          contacto:
+            heading: Persona de contacto
+          nif:
+            heading: NIF del declarante
+          telefono:
+            heading: Teléfono de contacto
+        page:
+          inmueble:
+            heading: Inmueble y devolución de intereses
+          operacion:
+            heading: Persona declarada y operación financiera
+          resumen:
+            heading: Hoja resumen
+        section:
+          declaracion:
+            heading: Declaración complementaria o sustitutiva
+          declarado:
+            heading: Identificación de la persona declarada
+          direccion:
+            heading: Dirección del inmueble
+          garantia:
+            heading: Datos del inmueble y financiación
+          identificacion:
+            heading: Declarante y ejercicio
+          importes:
+            heading: Importes de la operación y del ejercicio
+          prestamista:
+            heading: Intervención y datos del prestamista
+          prestamo:
+            heading: Identificación del préstamo, crédito u otra operación
+          reintegro:
+            heading: Reintegro de intereses y otras cantidades
+          totales:
+            heading: Resumen de los datos incluidos en la declaración
       revision:
         2022-y-siguientes:
           casilla:
@@ -35,6 +71,10 @@ modelo:
               label: Duración de la operación en meses
             fecha-operacion:
               label: Fecha de la operación
+            iban-codigo-pais:
+              label: Código de país del IBAN de la operación
+            iban-digitos-control:
+              label: Dígitos de control del IBAN de la operación
             identificacion-operacion:
               label: Identificación del préstamo, crédito u otra operación financiera
             importe-amortizacion-capital:
@@ -58,6 +98,38 @@ modelo:
               label: Importe total de los intereses abonados en el ejercicio
             importe-total-saldos-pendientes:
               label: Importe total de los saldos pendientes a 31 de diciembre
+            inmueble-bloque:
+              label: Bloque del inmueble
+            inmueble-calificador-numero:
+              label: Calificador del número del inmueble
+            inmueble-codigo-municipio:
+              label: Código de municipio del inmueble
+            inmueble-codigo-postal:
+              label: Código postal del inmueble
+            inmueble-codigo-provincia:
+              label: Código de provincia del inmueble
+            inmueble-complemento:
+              label: Complemento de la dirección del inmueble
+            inmueble-escalera:
+              label: Escalera del inmueble
+            inmueble-localidad:
+              label: Localidad o población del inmueble
+            inmueble-municipio:
+              label: Municipio del inmueble
+            inmueble-nombre-via:
+              label: Nombre de la vía pública del inmueble
+            inmueble-numero-casa:
+              label: Número de casa del inmueble
+            inmueble-planta:
+              label: Planta o piso del inmueble
+            inmueble-portal:
+              label: Portal del inmueble
+            inmueble-puerta:
+              label: Puerta del inmueble
+            inmueble-tipo-numeracion:
+              label: Tipo de numeración del inmueble
+            inmueble-tipo-via:
+              label: Tipo de vía del inmueble
             intereses-indemnizatorios:
               label: Intereses indemnizatorios
             numero-identificativo-anterior:
@@ -96,8 +168,12 @@ modelo:
               label: Tipo de operación
             valor-tasacion-inmueble:
               label: Valor de tasación del inmueble objeto de garantía
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Declaración complementaria
             x-chim6r1ecll6asj3d5hmiro:
               label: Ejercicio al que se refiere la declaración
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: Declaración sustitutiva
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:

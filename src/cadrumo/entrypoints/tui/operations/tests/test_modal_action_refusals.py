@@ -24,6 +24,7 @@ import yaml
 
 from .....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
+    OperationDetachRefusalCode,
     OperationResponseControlRefusalCode,
 )
 
@@ -38,6 +39,7 @@ def _refusal_codes() -> tuple[str, ...]:
     return tuple(
         sorted(
             {member.value for member in OperationCancellationRefusalCode}
+            | {member.value for member in OperationDetachRefusalCode}
             | {member.value for member in OperationResponseControlRefusalCode},
         ),
     )

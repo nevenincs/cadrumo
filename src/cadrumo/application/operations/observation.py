@@ -5,14 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.operations import OperationCancellation, OperationInteractionKind, OperationLifecycle
-from .frontend_contracts import (
-    OperationObservationResultV1,
-    OperationPublicEventV1,
-    OperationPublicPendingInteractionV1,
+from ...core.operations import (
+    OperationCancellation,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
 )
 from .frontend_projection import (
     OperationNoPendingInteractionV1,
+    OperationPublicPendingInteractionV1,
     OperationPublicProgressV1,
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
@@ -23,11 +24,13 @@ from .frontend_requests import (
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
     OperationObservationRequestV1,
+    OperationObservationResultV1,
     OperationObservationSuccessV1,
     OperationObservationVersionHeader,
     OperationPublicDiagnosticEventV1,
     OperationPublicEffectEventV1,
     OperationPublicEventPageV1,
+    OperationPublicEventV1,
     OperationPublicInteractionEventV1,
     OperationPublicLogEventV1,
     OperationPublicNoticeEventV1,
@@ -183,6 +186,11 @@ def _project_operation_projection(
 ) -> OperationPublicProjectionV1:
     """Project the anchored snapshot into its renderer-neutral public state."""
     receipt = snapshot.terminal_receipt
+    financial_pending = (
+        snapshot.financial_requirement is not None
+        and snapshot.executor_entered_at is None
+        and snapshot.lifecycle is OperationLifecycle.CREATED
+    )
     return OperationPublicProjectionV1(
         operation_id=snapshot.operation_id,
         definition_id=snapshot.identity.definition_id,
@@ -201,10 +209,21 @@ def _project_operation_projection(
         close_policy=contract.close_policy,
         cancellation=contract.cancellation,
         cancellable_now=(
-            contract.cancellation is not OperationCancellation.UNSUPPORTED
-            and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
+            (
+                financial_pending
+                or (
+                    contract.cancellation is not OperationCancellation.UNSUPPORTED
+                    and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
+                )
+            )
             and snapshot.cancellation_requested_at is None
             and not snapshot.cancellation_deferred
+        ),
+        financial_operand_pending=financial_pending,
+        financial_operand_cancelled_before_delivery=(
+            snapshot.financial_requirement is not None
+            and snapshot.executor_entered_at is None
+            and snapshot.terminal_condition is OperationTerminalCondition.CANCELLED
         ),
         cancellation_requested=snapshot.cancellation_requested_at is not None,
         cancellation_acknowledged=snapshot.cancellation_acknowledged_at is not None,
@@ -352,6 +371,7 @@ def _project_event(event: OperationEvent) -> OperationPublicEventV1:
             timestamp=event.timestamp,
             code=event.code,
             notice_code=event.notice_code,
+            display_code=event.display_code,
         )
     if isinstance(event, OperationReconciliationEvent):
         return OperationPublicReconciliationEventV1(

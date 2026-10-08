@@ -43,3 +43,323 @@ number = "05"
 section = ["resumen"]
 semantic_role = "capitalizacion_seguros_resumen_base_negativa"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
+
+# Historical semantic fields: archived AEAT 2017 design, as amended in December 2017.
+
+[[revisions."2022".casillas]]
+id = "perceptor.nif"
+continuidad_id = "capitalizacion-seguros-perceptor-nif"
+number = "18-26"
+segmento = "188-2-perceptor"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "capitalizacion_seguros_perceptor_nif"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "perceptor.representante-nif"
+continuidad_id = "capitalizacion-seguros-perceptor-representante-nif"
+number = "27-35"
+segmento = "188-2-perceptor"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "capitalizacion_seguros_perceptor_representante_nif"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "perceptor.nombre"
+continuidad_id = "capitalizacion-seguros-perceptor-nombre"
+number = "36-75"
+segmento = "188-2-perceptor"
+section = ["perceptor", "identificacion"]
+data_type = "name"
+semantic_role = "capitalizacion_seguros_perceptor_nombre"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "perceptor.provincia"
+continuidad_id = "capitalizacion-seguros-perceptor-provincia"
+number = "76-77"
+segmento = "188-2-perceptor"
+section = ["perceptor", "identificacion"]
+data_type = "province_code"
+semantic_role = "capitalizacion_seguros_perceptor_provincia"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+constraints = { enum = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52"], legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.modalidad"
+continuidad_id = "capitalizacion-seguros-perceptor-modalidad"
+number = "78"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_perceptor_modalidad"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { enum = ["1", "2"], legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.rentas"
+continuidad_id = "capitalizacion-seguros-perceptor-rentas"
+number = "79-91"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_perceptor_rentas"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "perceptor.informacion-adicional"
+continuidad_id = "capitalizacion-seguros-perceptor-informacion-adicional"
+number = "92-104"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_perceptor_informacion_adicional"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "perceptor.reducciones"
+continuidad_id = "capitalizacion-seguros-perceptor-reducciones"
+number = "105-117"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_perceptor_reducciones"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { sign = "non_negative", legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.base-retenciones"
+continuidad_id = "capitalizacion-seguros-perceptor-base-retenciones"
+number = "118-130"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_perceptor_base_retenciones"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "perceptor.porcentaje-retencion"
+continuidad_id = "capitalizacion-seguros-perceptor-porcentaje-retencion"
+number = "131-134"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "decimal"
+semantic_role = "capitalizacion_seguros_perceptor_porcentaje_retencion"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { min_value = "0", max_value = "99.99", legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.retenciones"
+continuidad_id = "capitalizacion-seguros-perceptor-retenciones"
+number = "135-147"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_perceptor_retenciones"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { sign = "non_negative", legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.ejercicio-devengo"
+continuidad_id = "capitalizacion-seguros-perceptor-ejercicio-devengo"
+number = "148-151"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "year"
+semantic_role = "capitalizacion_seguros_perceptor_ejercicio_devengo"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "perceptor.clave"
+continuidad_id = "capitalizacion-seguros-perceptor-clave"
+number = "152"
+segmento = "188-2-perceptor"
+section = ["perceptor", "rendimientos"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_perceptor_clave"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { enum = ["B"], legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.renta-vitalicia-clave"
+continuidad_id = "capitalizacion-seguros-perceptor-renta-vitalicia-clave"
+number = "153"
+segmento = "188-2-perceptor"
+section = ["perceptor", "renta_vitalicia"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_perceptor_renta_vitalicia_clave"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { enum = ["A", "B"], legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.renta-vitalicia-fecha"
+continuidad_id = "capitalizacion-seguros-perceptor-renta-vitalicia-fecha"
+number = "154-161"
+segmento = "188-2-perceptor"
+section = ["perceptor", "renta_vitalicia"]
+data_type = "date"
+semantic_role = "capitalizacion_seguros_perceptor_renta_vitalicia_fecha"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "perceptor.renta-vitalicia-identificacion"
+continuidad_id = "capitalizacion-seguros-perceptor-renta-vitalicia-identificacion"
+number = "162-185"
+segmento = "188-2-perceptor"
+section = ["perceptor", "renta_vitalicia"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_perceptor_renta_vitalicia_identificacion"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { max_length = 24, legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.prima"
+continuidad_id = "capitalizacion-seguros-perceptor-prima"
+number = "186-195"
+segmento = "188-2-perceptor"
+section = ["perceptor", "renta_vitalicia"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_perceptor_prima"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { sign = "non_negative", legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "perceptor.rendimiento-acreedor-hipotecario"
+continuidad_id = "capitalizacion-seguros-perceptor-rendimiento-acreedor-hipotecario"
+number = "196-210"
+segmento = "188-2-perceptor"
+section = ["perceptor", "otros"]
+data_type = "money"
+semantic_role = "capitalizacion_seguros_perceptor_rendimiento_acreedor_hipotecario"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { sign = "non_negative", legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+# Declarant fields grounded in AEAT 2023 tipo 1 pages 2-5.
+# Manual semantic values; no fixed-width export or automatic profile binding is claimed.
+
+[[revisions."2022".casillas]]
+id = "decl.ejercicio"
+continuidad_id = "capitalizacion-seguros-declarante-ejercicio"
+number = "5-8"
+segmento = "188-1-declarante"
+section = ["declaracion", "declaracion"]
+data_type = "year"
+semantic_role = "capitalizacion_seguros_declarante_ejercicio"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "decl.nif"
+continuidad_id = "capitalizacion-seguros-declarante-nif"
+number = "9-17"
+segmento = "188-1-declarante"
+section = ["declaracion", "declarante"]
+data_type = "nif"
+semantic_role = "capitalizacion_seguros_declarante_nif"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+
+[[revisions."2022".casillas]]
+id = "decl.nombre"
+continuidad_id = "capitalizacion-seguros-declarante-nombre"
+number = "18-57"
+segmento = "188-1-declarante"
+section = ["declaracion", "declarante"]
+data_type = "name"
+semantic_role = "capitalizacion_seguros_declarante_nombre"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { max_length = 40, legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "decl.telefono"
+continuidad_id = "capitalizacion-seguros-declarante-telefono"
+number = "59-67"
+segmento = "188-1-declarante"
+section = ["declaracion", "declarante"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_declarante_telefono"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { min_length = 9, max_length = 9, pattern = "[0-9]{9}", legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "decl.contacto"
+continuidad_id = "capitalizacion-seguros-declarante-contacto"
+number = "68-107"
+segmento = "188-1-declarante"
+section = ["declaracion", "declarante"]
+data_type = "name"
+semantic_role = "capitalizacion_seguros_declarante_contacto"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { max_length = 40, legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "decl.numero-justificante"
+continuidad_id = "capitalizacion-seguros-declarante-numero-justificante"
+number = "108-120"
+segmento = "188-1-declarante"
+section = ["declaracion", "declaracion"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_declarante_numero_justificante"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { min_length = 13, max_length = 13, pattern = "188[0-9]{10}", legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "decl.complementaria"
+continuidad_id = "capitalizacion-seguros-declarante-complementaria"
+number = "121"
+segmento = "188-1-declarante"
+section = ["declaracion", "declaracion"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_declarante_complementaria"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { enum = ["C"], legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "decl.sustitutiva"
+continuidad_id = "capitalizacion-seguros-declarante-sustitutiva"
+number = "122"
+segmento = "188-1-declarante"
+section = ["declaracion", "declaracion"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_declarante_sustitutiva"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { enum = ["S"], legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }
+
+[[revisions."2022".casillas]]
+id = "decl.justificante-anterior"
+continuidad_id = "capitalizacion-seguros-declarante-justificante-anterior"
+number = "123-135"
+segmento = "188-1-declarante"
+section = ["declaracion", "declaracion"]
+data_type = "text"
+semantic_role = "capitalizacion_seguros_declarante_justificante_anterior"
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017"]
+constraints = { min_length = 13, max_length = 13, pattern = "[0-9]{13}", legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"], source_refs = ["aeat-dr-188-2017"] }

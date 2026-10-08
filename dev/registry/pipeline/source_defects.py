@@ -46,7 +46,10 @@ if TYPE_CHECKING:
 __all__ = [
     "NoteGovernedAmountDeclaration",
     "NoteStatedApplicabilityDeclaration",
+    "PrintedPartitionDefectDeclaration",
     "SourceDefectDeclaration",
+    "SupplementalBlankRunDeclaration",
+    "adjudicated_integer_range_for",
     "adjudicated_literal_for",
     "note_governed_amount_for",
     "note_governed_amounts_for",
@@ -54,10 +57,63 @@ __all__ = [
     "note_stated_applicability_reading_for",
     "note_states_only_applicability",
     "source_defects_for",
+    "supplemental_blank_run_for",
     "validate_note_governed_amount_declarations",
     "validate_note_stated_applicability_declarations",
     "validate_source_defect_declarations",
 ]
+
+
+class SupplementalBlankRunDeclaration(BaseModel):
+    """One BOE table row corroborating a collapsed AEAT PDF text-layer row."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=False)
+
+    source_ref: str = Field(min_length=1)
+    pdf_filename: str = Field(min_length=1)
+    pdf_byte_count: int = Field(gt=0)
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    sheet: str = Field(min_length=1)
+    pdf_last_source_row: int = Field(gt=0)
+    pdf_last_offset: int = Field(gt=0)
+    pdf_last_length: int = Field(gt=0)
+    pdf_embedded_position_text: str = Field(min_length=1)
+    pdf_embedded_role_text: str = Field(min_length=1)
+    boe_legal_ref: str = Field(min_length=1)
+    boe_corpus_path: str = Field(min_length=1)
+    boe_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    boe_html_line: int = Field(gt=0)
+    offset: int = Field(gt=0)
+    length: int = Field(gt=0)
+    description: Literal["Blancos"]
+
+
+_SUPPLEMENTAL_BLANK_RUNS_BY_REF: dict[str, SupplementalBlankRunDeclaration] = {
+    "aeat-dr-349-2020-current": SupplementalBlankRunDeclaration(
+        source_ref="aeat-dr-349-2020-current",
+        pdf_filename="01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf",
+        pdf_byte_count=915219,
+        source_sha256="874db49c9aff4d9c024bdee52f869123a9815c09272a0066cf81421ace1a8335",
+        sheet="Tipo 2 - Registro De Operador Intracomunitario",
+        pdf_last_source_row=433,
+        pdf_last_offset=196,
+        pdf_last_length=40,
+        pdf_embedded_position_text="236 500",
+        pdf_embedded_role_text="BLANCOS",
+        boe_legal_ref="orden-hac-174-2020:art-1",
+        boe_corpus_path="corpus/normatives/html/orden-hac-174-2020.html",
+        boe_sha256="913b06641e2abed6ae4d5c089c2f68fc2474b16a2d606a79cdc138b75264d058",
+        boe_html_line=964,
+        offset=236,
+        length=265,
+        description="Blancos",
+    ),
+}
+
+
+def supplemental_blank_run_for(source_ref: str) -> SupplementalBlankRunDeclaration | None:
+    """Return only the exact dual-source blank-run adjudication, if one exists."""
+    return _SUPPLEMENTAL_BLANK_RUNS_BY_REF.get(source_ref)
 
 
 class SourceDefectDeclaration(BaseModel):
@@ -194,6 +250,88 @@ def adjudicated_literal_for(
             return None
         return declaration.adjudicated_literal
     return None
+
+
+class PrintedPartitionDefectDeclaration(BaseModel):
+    """One printed integer-part range of a signed amount that overlaps its own decimal part.
+
+    A signed monetary composite prints its magnitude range and then tiles it
+    with an integer part and a decimal part. When the PDF prints an integer part
+    that runs into the decimal part, no partition satisfies every printed range,
+    and the composite grammar refuses. The declaration records which range the
+    document's surviving ranges determine, pinned to one file, one row and the
+    exact printed range, and the adjudicated range is put through the same
+    partition check as any printed one, so it can only resolve the overlap in
+    the direction the magnitude and decimal ranges already fix.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=False)
+
+    source_ref: str = Field(min_length=1)
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    sheet: str = Field(min_length=1)
+    source_row: int = Field(gt=0)
+    published_integer_range: tuple[int, int]
+    adjudicated_integer_range: tuple[int, int]
+    evidence: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_same_start_shorter_end(self) -> PrintedPartitionDefectDeclaration:
+        published_start, published_end = self.published_integer_range
+        adjudicated_start, adjudicated_end = self.adjudicated_integer_range
+        if adjudicated_start != published_start or not adjudicated_start <= adjudicated_end < published_end:
+            raise ValueError("an adjudicated integer range keeps the printed start and only withdraws the overlap")
+        return self
+
+
+_M180_DECLARANTE_TOTAL_OVERLAP_EVIDENCE: Final = (
+    "The declarante total prints '146-160 IMPORTE', then '146-159 Parte entera' and '159-160 Parte decimal', "
+    "so position 159 is claimed by both parts. The @145+16 parent, the 146-160 magnitude and the two-position "
+    "decimal part leave exactly one tiling, 146-158 and 159-160, a 13+2 partition; the perceptor amounts it "
+    "totals print the same two decimal positions. No PDF cell is rewritten."
+)
+
+_PRINTED_PARTITION_DEFECTS: Final[tuple[PrintedPartitionDefectDeclaration, ...]] = (
+    PrintedPartitionDefectDeclaration(
+        source_ref="aeat-dr-180-2014",
+        source_sha256="281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741",
+        sheet="Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos",
+        source_row=116,
+        published_integer_range=(146, 159),
+        adjudicated_integer_range=(146, 158),
+        evidence=_M180_DECLARANTE_TOTAL_OVERLAP_EVIDENCE,
+    ),
+    PrintedPartitionDefectDeclaration(
+        source_ref="aeat-dr-180-2023",
+        source_sha256="f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda",
+        sheet="Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos",
+        source_row=109,
+        published_integer_range=(146, 159),
+        adjudicated_integer_range=(146, 158),
+        evidence=_M180_DECLARANTE_TOTAL_OVERLAP_EVIDENCE,
+    ),
+)
+
+
+def adjudicated_integer_range_for(
+    *,
+    source_ref: str,
+    source_sha256: str,
+    sheet: str,
+    source_row: int,
+    published_integer_range: tuple[int, int],
+) -> tuple[int, int]:
+    """Return the integer range to check: the adjudicated one only for an exact declared misprint."""
+    for declaration in _PRINTED_PARTITION_DEFECTS:
+        if (
+            declaration.source_ref,
+            declaration.source_sha256,
+            declaration.sheet,
+            declaration.source_row,
+            declaration.published_integer_range,
+        ) == (source_ref, source_sha256, sheet, source_row, published_integer_range):
+            return declaration.adjudicated_integer_range
+    return published_integer_range
 
 
 #: The two sign policies an adjudicated amount run can carry, named exactly as

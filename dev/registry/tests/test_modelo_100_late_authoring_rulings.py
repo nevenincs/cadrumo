@@ -23,7 +23,7 @@ from functools import cache
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.facts.schema import ScalarFactPayload
+from cadrumo.domain.calculations.registry.facts.payloads import ScalarFactPayload
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.schema import (
     BindingDefinition,

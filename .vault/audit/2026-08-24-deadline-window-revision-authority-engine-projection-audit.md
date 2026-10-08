@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:6f55c898f6ed4aa58241c319090852a09a8737327c524189d6865a1256c8e961'
 related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
   - "[[2026-08-24-deadline-window-revision-authority-adr]]"
 ---
 # `deadline-window-revision-authority` audit: `engine projection`

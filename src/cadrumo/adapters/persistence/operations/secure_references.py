@@ -12,8 +12,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, ValidationError
 
+from ....application.operations.persistence.journal import serialize_operation_operand
+from ....core.async_cleanup import await_cancellation_complete
 from ....core.classification.policies import AtRestTreatment, SensitivityClass, default_policy_for
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.time.utc import validate_utc_aware
@@ -73,23 +74,13 @@ class OperationSecureReferenceRepository:
         if default_policy_for(namespace.sensitivity).at_rest is not AtRestTreatment.CIPHERTEXT_REQUIRED:
             raise ValueError("operation secure-reference namespace must require ciphertext at rest")
 
-    @staticmethod
-    def _serialized_operand(operand: BaseModel) -> bytes:
-        """Return the exact typed JSON bytes addressed by the content digest."""
-        return operand.model_dump_json(
-            by_alias=True,
-            exclude_defaults=False,
-            exclude_none=False,
-            exclude_unset=False,
-        ).encode(UTF_8_ENCODING)
-
     async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
         """Encrypt ``operand`` under its exact typed-content digest, off the awaiting loop."""
         validate_utc_aware(written_at)
         return await asyncio.to_thread(self._put, operand, written_at)
 
     def _put(self, operand: BaseModel, written_at: datetime) -> ContentDigest:
-        payload = self._serialized_operand(operand)
+        payload = serialize_operation_operand(operand)
         reference = sha256_hex(payload)
         objects = self._repository()
         existing = objects.load(
@@ -117,7 +108,18 @@ class OperationSecureReferenceRepository:
         operand_type: type[OperandT],
     ) -> OperandT:
         """Load, re-hash, and strictly hydrate one typed secure operand, off the awaiting loop."""
-        payload = await asyncio.to_thread(self._verified_payload, reference)
+
+        def resolve_operand() -> OperandT:
+            return self._resolve(reference, operand_type)
+
+        return await await_cancellation_complete(
+            asyncio.to_thread(resolve_operand),
+            task_name="operation-secure-reference-resolve",
+        )
+
+    def _resolve[OperandT: BaseModel](self, reference: ContentDigest, operand_type: type[OperandT]) -> OperandT:
+        """Finish the fresh read and strict hydration before its caller releases custody."""
+        payload = self._verified_payload(reference)
         try:
             return operand_type.model_validate_json(payload, strict=True)
         except ValidationError as exc:

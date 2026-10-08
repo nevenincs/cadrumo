@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:cd1cd64da4653ed3fa33efc13f10e9f2a48ddc08364c87469357d8be9b4ddec7'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:7dcd5efb1a675fdadb932192000e1cb66f56f42486677d63ced7cee6803d4d46'
+related: []
 ---
 
 # `source-casilla-integration` research: `Modelo 193 contributor-expense row source grounding`
@@ -58,9 +57,6 @@ it must remain distinct from a claim that an upstream contributor observation
 has been acquired, authenticated, or persisted. The fixed-width layout also
 maps those four casillas to a repeating `modelo-193-gastos` record, so the
 existence of an export grammar does not create an upstream source owner.
-`src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/bindings/0002-bindings.toml:89`
-`src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cgasto.nif__cgasto.importe.toml:3`
-`src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/export_layouts/0003-modelo-193-gastos.toml:4`
 
 Reclassifying `gasto193_contributor` itself as `manual_input` would erase that
 boundary and incorrectly let a direct-entry surface stand in for source
@@ -73,9 +69,7 @@ The worksheet assembler builds `Gasto193Observation` values only from Detalle
 cells. It synthesises `source_id` from the worksheet row number and assigns a
 filing-year-end transaction date; neither value is carried by the worksheet as
 a durable capture identity or event date. The binding helper then aggregates
-the values by contributor NIF. `src/cadrumo/application/calculations/_row_set_assembly.py:950`
-`src/cadrumo/domain/calculations/registry/_gasto193_bindings.py:48`
-`src/cadrumo/domain/calculations/registry/_gasto193_bindings.py:130`
+the values by contributor NIF. the former source file
 
 The canonical source mesh deliberately includes
 `GASTO193_CONTRIBUTOR` among deferred kinds. The current census makes the same
@@ -86,17 +80,12 @@ bounded follow-up a 2026-11-30 deadline. The focused exact scan found no
 Gasto193 observation repository, persistence, revision, or replay reference;
 the two binding resolver functions have definitions and re-exports but no
 production caller. This is a scoped codebase finding, not a claim about an
-external fact source. `src/cadrumo/application/aggregation/_source_mesh.py:302`
-`src/cadrumo/_data/source_connectivity/census.toml:301`
-`src/cadrumo/_data/source_connectivity/census.toml:326`
-`src/cadrumo/domain/calculations/registry/_gasto193_bindings.py:111`
+external fact source. the former source file
 
 The separate `RetencionObservationRepository` is encrypted and has a live
 withholding purpose, but it owns perceptor/withholding observations rather than
 the Article-26.1.a contributor-expense record. Reusing it as proof of a gastos
 owner would conflate distinct official rows and source kinds.
-`src/cadrumo/application/aggregation/_retencion_observations_repository.py:133`
-`src/cadrumo/application/aggregation/_retencion_observations_repository.py:301`
 
 ### S105 must establish an owner before enrollment
 
@@ -109,9 +98,7 @@ first select a secure non-lossy contributor-row owner, preserve durable
 identity/fingerprint plus capture/document provenance, resolve exactly the
 declared source kind, and prove encrypted persistence, revision replay,
 diagnostics/operator reachability, and repeated-record export across both
-scoped revisions. `src/cadrumo/domain/calculations/registry/_gasto193_bindings.py:111`
-`src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/bindings/0002-bindings.toml:89`
-`src/cadrumo/_data/source_connectivity/census.toml:327`
+scoped revisions. the former source file
 
 Connecting now, repurposing the withholding store, and relabelling the source
 as manual input were considered and rejected by the evidence above. Selection
@@ -129,11 +116,3 @@ this discovery and belongs to a separately authorized implementation decision.
 - `src/cadrumo/_data/registry/aeat/legal/irpf.toml:2701`
 - `src/cadrumo/_data/registry/aeat/legal/irpf.toml:2725`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf.extracted.md:1713`
-- `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/bindings/0002-bindings.toml:89`
-- `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cgasto.nif__cgasto.importe.toml:3`
-- `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/export_layouts/0003-modelo-193-gastos.toml:4`
-- `src/cadrumo/application/calculations/_row_set_assembly.py:950`
-- `src/cadrumo/domain/calculations/registry/_gasto193_bindings.py:111`
-- `src/cadrumo/application/aggregation/_source_mesh.py:302`
-- `src/cadrumo/_data/source_connectivity/census.toml:301`
-- `src/cadrumo/application/aggregation/_retencion_observations_repository.py:133`

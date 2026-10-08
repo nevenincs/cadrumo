@@ -18,6 +18,11 @@ from ..models import (
     OperationSnapshot,
     OperationTerminalReceipt,
     new_operation_id,
+    refused_receipt_references_hold,
+    require_succeeded_receipt_references,
+    require_succeeded_terminal_receipt,
+    require_terminal_receipt_match,
+    terminal_receipt_matches,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -278,6 +283,296 @@ def test_terminal_receipt_enforces_result_and_refusal_meaning() -> None:
             settled_at=_NOW,
             diagnostic_ref="C:/Users/operator/private.log",
         )
+
+
+def test_terminal_receipt_match_requires_identity_condition_effect_and_no_diagnostic() -> None:
+    settled = OperationTerminalReceipt(
+        identity=_identity(),
+        revision=1,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        settled_at=_NOW,
+        result_ref="result:report",
+    )
+
+    def matches(
+        receipt: OperationTerminalReceipt,
+        *,
+        definition_id: str = "profile.censo.pull",
+        subject_ref: str = "profile:active",
+        condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
+        effect: OperationEffect = OperationEffect.UPDATED,
+    ) -> bool:
+        return terminal_receipt_matches(
+            receipt, definition_id=definition_id, subject_ref=subject_ref, condition=condition, effect=effect
+        )
+
+    assert matches(settled)
+    assert not matches(settled, definition_id="profile.censo.import")
+    assert not matches(settled, subject_ref="profile:other")
+    assert not matches(settled, condition=OperationTerminalCondition.REFUSED)
+    assert not matches(settled, effect=OperationEffect.NONE)
+
+    diagnosed = OperationTerminalReceipt.model_validate(
+        {**settled.model_dump(), "diagnostic_ref": "sha256:0123456789ab"}
+    )
+    assert not matches(diagnosed)
+
+
+def _settled_receipt() -> OperationTerminalReceipt:
+    return OperationTerminalReceipt(
+        identity=_identity(),
+        revision=1,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        settled_at=_NOW,
+        result_ref="result:report",
+    )
+
+
+def test_require_terminal_receipt_match_accepts_the_exact_settled_target() -> None:
+    receipt = _settled_receipt()
+
+    assert (
+        require_terminal_receipt_match(
+            receipt,
+            definition_id="profile.censo.pull",
+            subject_ref="profile:active",
+            condition=OperationTerminalCondition.SUCCEEDED,
+            effect=OperationEffect.UPDATED,
+            message="censo result contradicts its terminal receipt",
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    ("definition_id", "subject_ref", "condition", "effect"),
+    [
+        ("profile.censo.import", "profile:active", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED),
+        ("profile.censo.pull", "profile:other", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED),
+        ("profile.censo.pull", "profile:active", OperationTerminalCondition.REFUSED, OperationEffect.UPDATED),
+        ("profile.censo.pull", "profile:active", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
+    ],
+    ids=["definition", "subject", "condition", "effect"],
+)
+def test_require_terminal_receipt_match_raises_the_callers_message_on_any_mismatch(
+    definition_id: str,
+    subject_ref: str,
+    condition: OperationTerminalCondition,
+    effect: OperationEffect,
+) -> None:
+    message = "censo result contradicts its terminal receipt (exact)"
+
+    with pytest.raises(ValueError) as raised:
+        require_terminal_receipt_match(
+            _settled_receipt(),
+            definition_id=definition_id,
+            subject_ref=subject_ref,
+            condition=condition,
+            effect=effect,
+            message=message,
+        )
+
+    assert type(raised.value) is ValueError
+    assert str(raised.value) == message
+
+
+def test_require_terminal_receipt_match_refuses_a_diagnosed_receipt() -> None:
+    diagnosed = OperationTerminalReceipt.model_validate(
+        {**_settled_receipt().model_dump(), "diagnostic_ref": "sha256:0123456789ab"}
+    )
+
+    with pytest.raises(ValueError, match=r"^diagnosed result contradicts its terminal receipt$"):
+        require_terminal_receipt_match(
+            diagnosed,
+            definition_id="profile.censo.pull",
+            subject_ref="profile:active",
+            condition=OperationTerminalCondition.SUCCEEDED,
+            effect=OperationEffect.UPDATED,
+            message="diagnosed result contradicts its terminal receipt",
+        )
+
+
+def test_succeeded_receipt_references_accept_a_validated_succeeded_receipt() -> None:
+    assert require_succeeded_receipt_references(_settled_receipt(), message="unused") is None
+
+
+def test_succeeded_receipt_references_refuse_a_validated_refused_receipt() -> None:
+    refused = OperationTerminalReceipt(
+        identity=_identity(),
+        revision=1,
+        condition=OperationTerminalCondition.REFUSED,
+        effect=OperationEffect.NONE,
+        settled_at=_NOW,
+        refusal_ref="REFUSED_CENSO_PULL",
+    )
+
+    with pytest.raises(ValueError, match=r"^censo result names no result$"):
+        require_succeeded_receipt_references(refused, message="censo result names no result")
+
+
+@pytest.mark.parametrize(
+    "update",
+    [
+        {"result_ref": None},
+        {"refusal_ref": "REFUSED_CENSO_PULL"},
+        {"refusal_detail_ref": "sha256:0123456789ab"},
+        {"failure_error_code": "E_CENSO"},
+    ],
+    ids=["no-result", "refusal", "refusal-detail", "failure-code"],
+)
+def test_succeeded_receipt_references_refuse_a_receipt_copied_without_validation(update: dict[str, object]) -> None:
+    copied = _settled_receipt().model_copy(update=update)
+
+    with pytest.raises(ValueError) as raised:
+        require_succeeded_receipt_references(copied, message="censo result contradicts its terminal receipt")
+
+    assert type(raised.value) is ValueError
+    assert str(raised.value) == "censo result contradicts its terminal receipt"
+
+
+_SUCCEEDED_MESSAGE = "censo result contradicts its terminal receipt (succeeded)"
+
+
+def _require_settled_censo_pull(
+    receipt: OperationTerminalReceipt,
+    *,
+    definition_id: str = "profile.censo.pull",
+    subject_ref: str = "profile:active",
+    effect: OperationEffect = OperationEffect.UPDATED,
+) -> None:
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=definition_id,
+        subject_ref=subject_ref,
+        effect=effect,
+        message=_SUCCEEDED_MESSAGE,
+    )
+
+
+def test_require_succeeded_terminal_receipt_accepts_the_exact_succeeded_settlement() -> None:
+    assert _require_settled_censo_pull(_settled_receipt()) is None
+
+
+@pytest.mark.parametrize(
+    ("definition_id", "subject_ref", "effect"),
+    [
+        ("profile.censo.import", "profile:active", OperationEffect.UPDATED),
+        ("profile.censo.pull", "profile:other", OperationEffect.UPDATED),
+        ("profile.censo.pull", "profile:active", OperationEffect.NONE),
+    ],
+    ids=["definition", "subject", "effect"],
+)
+def test_require_succeeded_terminal_receipt_refuses_another_target_or_effect(
+    definition_id: str, subject_ref: str, effect: OperationEffect
+) -> None:
+    with pytest.raises(ValueError) as raised:
+        _require_settled_censo_pull(
+            _settled_receipt(), definition_id=definition_id, subject_ref=subject_ref, effect=effect
+        )
+
+    assert type(raised.value) is ValueError
+    assert str(raised.value) == _SUCCEEDED_MESSAGE
+
+
+def test_require_succeeded_terminal_receipt_refuses_a_diagnosed_receipt() -> None:
+    diagnosed = OperationTerminalReceipt.model_validate(
+        {**_settled_receipt().model_dump(), "diagnostic_ref": "sha256:0123456789ab"}
+    )
+
+    with pytest.raises(ValueError) as raised:
+        _require_settled_censo_pull(diagnosed)
+
+    assert type(raised.value) is ValueError
+    assert str(raised.value) == _SUCCEEDED_MESSAGE
+
+
+def test_require_succeeded_terminal_receipt_refuses_a_refused_receipt() -> None:
+    refused = OperationTerminalReceipt(
+        identity=_identity(),
+        revision=1,
+        condition=OperationTerminalCondition.REFUSED,
+        effect=OperationEffect.NONE,
+        settled_at=_NOW,
+        refusal_ref="REFUSED_CENSO_PULL",
+    )
+
+    with pytest.raises(ValueError) as raised:
+        _require_settled_censo_pull(refused, effect=OperationEffect.NONE)
+
+    assert type(raised.value) is ValueError
+    assert str(raised.value) == _SUCCEEDED_MESSAGE
+
+
+@pytest.mark.parametrize(
+    "update",
+    [
+        {"result_ref": None},
+        {"refusal_ref": "REFUSED_CENSO_PULL"},
+        {"refusal_detail_ref": "sha256:0123456789ab"},
+        {"failure_error_code": "E_CENSO"},
+    ],
+    ids=["no-result", "refusal", "refusal-detail", "failure-code"],
+)
+def test_require_succeeded_terminal_receipt_refuses_a_receipt_copied_without_validation(
+    update: dict[str, object],
+) -> None:
+    copied = _settled_receipt().model_copy(update=update)
+
+    with pytest.raises(ValueError) as raised:
+        _require_settled_censo_pull(copied)
+
+    assert type(raised.value) is ValueError
+    assert str(raised.value) == _SUCCEEDED_MESSAGE
+
+
+def _refused_receipt(**references: str) -> OperationTerminalReceipt:
+    return OperationTerminalReceipt(
+        identity=_identity(),
+        revision=1,
+        condition=OperationTerminalCondition.REFUSED,
+        effect=OperationEffect.NONE,
+        settled_at=_NOW,
+        refusal_ref="REFUSED_CENSO_PULL",
+        **references,
+    )
+
+
+@pytest.mark.parametrize(
+    "references",
+    [{}, {"refusal_detail_ref": "b" * 64}, {"error_detail_ref": "c" * 64}],
+    ids=["bare", "refusal-detail", "error-detail"],
+)
+def test_refused_receipt_references_hold_for_a_validated_refused_receipt(references: dict[str, str]) -> None:
+    assert refused_receipt_references_hold(_refused_receipt(**references)) is True
+
+
+def test_refused_receipt_references_do_not_hold_for_a_validated_succeeded_receipt() -> None:
+    assert refused_receipt_references_hold(_settled_receipt()) is False
+
+
+@pytest.mark.parametrize(
+    ("references", "update"),
+    [
+        ({}, {"refusal_ref": None}),
+        ({}, {"result_ref": "result:report"}),
+        ({}, {"failure_error_code": "E_CENSO"}),
+        ({"refusal_detail_ref": "b" * 64}, {"error_detail_ref": "c" * 64}),
+    ],
+    ids=["no-refusal", "result", "failure-code", "refusal-and-error-detail"],
+)
+def test_refused_receipt_references_do_not_hold_for_a_receipt_copied_without_validation(
+    references: dict[str, str], update: dict[str, object]
+) -> None:
+    validated = _refused_receipt(**references)
+    copied = validated.model_copy(update=update)
+
+    # The copy bypasses validation, so only the reference check can refuse it.
+    with pytest.raises(ValidationError):
+        OperationTerminalReceipt.model_validate(copied.model_dump())
+    assert refused_receipt_references_hold(validated) is True
+    assert refused_receipt_references_hold(copied) is False
 
 
 def test_operation_identity_is_random_hex64_and_definition_ids_are_closed_by_shape() -> None:

@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-test-signal'
 date: '2026-09-11'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:40fd32247891aba7833a733b2eb1660777411cb62970909ec137b3f61893a215'
+body_hash: 'sha256:ed890eb9f850bcb060a36b2f73eb978ff0040d297c3eb0456e1c0b81340b95af'
 related: []
 ---
 
@@ -46,13 +46,7 @@ object although the runner now emits start and finish envelopes.
 
 ### Population ownership gap
 
-The private registry conformance lane at `Justfile:928-929`, used by `test-registry` at
-`Justfile:934-935`, does not select `dev/registry/analysis/tests`,
-`dev/registry/compiler/tests`, or the test modules directly under `dev/registry/pipeline`.
-That leaves 22 modules and 332 test functions outside the registry aggregate. In particular,
-all 57 tests in `dev/registry/analysis/tests/test_edition_delta_status.py` and the delta
-publication/generator tests are absent from the signal whose migration behavior they protect.
-The public `test-registry-conformance` recipe duplicates the same omission.
+The private registry conformance lane at `Justfile:928-929`, used by `test-registry` at `Justfile:934-935`, does not select `dev/registry/analysis/tests`, `dev/registry/compiler/tests`, or the test modules directly under `dev/registry/pipeline`. That leaves 22 modules and 332 test functions outside the registry aggregate. The public `test-registry-conformance` recipe duplicates the same omission.
 
 `dev/tests/test_lane_reachability.py:176` and line 465 detect this gap, but those checks belong to
 the tooling population rather than direct `just test-registry`. Their current live run names
@@ -66,10 +60,7 @@ the live unlineaged-successor count to remain above zero. Both are campaign-stat
 constructed minimal-delta, planted-restatement, and parity assertions around them provide the
 durable detector teeth without preserving debt.
 
-`dev/registry/tests/test_materialisation_excludes_non_casilla_families.py:1-5` states the old
-casilla-only materialisation rule, and lines 182-217 require an omitted successor formula to stay
-absent. The completeness-manifest exclusion remains valid, as does an exclusion for a family that
-cannot prove stable identity. The blanket non-casilla exclusion and formula assertion do not.
+The completeness-manifest exclusion remains valid, as does an exclusion for a family that cannot prove stable identity. The blanket non-casilla exclusion and formula assertion do not.
 
 `dev/registry/tests/test_revision_inherited_reference_resolution.py:1-8` assumes every successor
 redeclares formulas and bindings. Lines 213-244 refuse inherited casilla references unless the
@@ -83,14 +74,7 @@ The report's deterministic, constructed-input, delta-aware tests are shaped corr
 frozen live counts and distinguish coverage from authoring work. They are not currently owned by
 `test-registry`, so they do not protect the operator signal.
 
-The in-flight family restatement extension has one unsafe comparison. At
-`dev/registry/analysis/edition_delta_status.py:262` and lines 481-482 it removes
-`source_refs`, `legal_refs`, and `additional_source_refs` wholesale before declaring two
-members identical. Its test at `dev/registry/analysis/tests/test_edition_delta_status.py:579`
-codifies that any binding differing only in references is restated. References are ignorable only
-after subtracting each edition's declared family defaults. A genuine member-specific authority or
-source change must remain a difference; otherwise the report can recommend inheritance that loses
-grounding.
+The in-flight family restatement extension has one unsafe comparison. References are ignorable only after subtracting each edition's declared family defaults. A genuine member-specific authority or source change must remain a difference; otherwise the report can recommend inheritance that loses grounding.
 
 ### Live verification on 2026-09-12
 

@@ -1,4 +1,4 @@
-"""End-to-end redaction tests for :class:`cadrumo.core.observability.sink.JsonlRunSink`.
+"""End-to-end redaction tests for :class:`cadrumo.core.observability.tests.sink.JsonlRunSink`.
 
 The sink writes :class:`cadrumo.core.observability.RunEvent` records that
 may carry casilla form-fill values, AEAT navigation URLs, and free-form
@@ -25,7 +25,7 @@ import pytest
 
 from ....tests.aeat_literal_fixtures import REDACTION_PATH_CANARY, aeat_url
 from ..models import ErrorPayload, FormFillPayload, NavigationPayload, RunEvent, RunEventKind, RunEventPayload
-from ..sink import JsonlRunSink
+from .sink import JsonlRunSink
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -148,7 +148,8 @@ def test_run_scoped_records_scrubbed_before_reaching_jsonl_via_attach_run_sink(
     """
     import logging
 
-    from ...logging import SecretScrubbingFilter, attach_run_sink
+    from ...logging import SecretScrubbingFilter
+    from .sink_scope import attach_run_sink
 
     target = tmp_path / "run_events.jsonl"
     sink = JsonlRunSink(target, run_id=_RUN_ID)

@@ -28,6 +28,7 @@ from ._kdf_records import (
     KdfParallelism,
     KdfVersion,
     canonical_b64,
+    canonical_dek_epoch,
 )
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
@@ -43,7 +44,6 @@ PROFILE_CUSTODY_ENVELOPE_FILENAME: Final = "envelope.v1.json"
 PROFILE_CUSTODY_ENVELOPE_MAX_BYTES: Final = 704
 PROFILE_CUSTODY_PASSWORD_GENERATION_MAX: Final = 2_147_483_647
 
-_DEK_EPOCH_BYTES: Final = 16
 _KEY_SCHEDULE: Final = "profile-password-dek-wrap/v1"
 
 
@@ -136,7 +136,7 @@ class _ProfileCustodyEnvelopePayload(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _validate_dek_epoch(cls, value: str) -> str:
-        return canonical_b64(value, field_name="dek_epoch", expected_bytes=_DEK_EPOCH_BYTES)
+        return canonical_dek_epoch(value)
 
     @field_validator("previous_envelope_digest")
     @classmethod

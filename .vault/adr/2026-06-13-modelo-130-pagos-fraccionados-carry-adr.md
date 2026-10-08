@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-08-15'
-body_hash: 'sha256:f2ccf9b71b43d9fe7319d271a5daf4cb75f471e77a32bcac4743e0abe3d8a01d'
+modified: '2026-10-03'
+body_hash: 'sha256:488fbf212b78d5c0d665a67074880967346012184113ab835de89abe0ab8e299'
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-research]]'
-  - "[[2026-06-04-m130-casilla-15-override-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
 ---
@@ -30,12 +29,11 @@ defaults. The open questions are resolved as follows:
   must encode this filed-zero-vs-not-captured distinction explicitly and prove
   the advisory fires only on the not-captured case.
 
-- Operator-overridability of casilla 05. Casilla 05 is carry-only / bound
-  initially; it is NOT operator-overridable in this work. The casilla-15
-  override affordance is NOT replicated here. If a manual override is needed
-  later (e.g. to reconcile against an AEAT Pre130 figure), it is the subject of
-  a future ADR and is explicitly out of scope; do not build it now. The S3
-  manual-override reconciliation paragraph is resolved as carry-only.
+- Operator-overridability of casilla 05 — historical ruling (2026-06-13). The
+  original ruling said that casilla 05 was carry-only and not operator-overridable
+  in this work, with any override deferred to a future ADR. That history is
+  preserved; the dated current-code reconciliation below records that the
+  implementation does not enforce this M130-specific restriction.
 
 - Mid-year-alta boundary. The alta-CONTAINING quarter is the first owed
   quarter (the first obligation). The expanding prior-quarter span starts
@@ -63,6 +61,17 @@ defaults. The open questions are resolved as follows:
   capture of an auto-filled casilla 05 is added later under the live-test gate
   once that surface is functional; it is the stronger oracle but is not a
   blocker for landing Stage 2.
+
+## 2026-10-03 current-code reconciliation: caller overrides
+
+This dated reconciliation preserves the 2026-06-13 carry-only ruling as decision
+history and records the behavior established by the current code. It does not
+claim that AEAT or tax law authorizes replacing a calculated tax value.
+
+Casilla 05 is a bound `previous_filing` carry in the M130 registry
+(`src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0001-declarations.toml`, binding `modelo-130-pagos-fraccionados-anteriores`). The shared calculation-aggregation taxonomy permits caller overrides for `previous_filing` carries and refuses them for ledger-owned sources (`2026-06-10-calculation-aggregation-taxonomy-adr`). Live code follows that contract: `src/cadrumo/application/modelo/calculation_actions.py` sends the prior-filing value through the backend-binding channel and documents that caller `--binding` overrides it (lines 979–984); `src/cadrumo/application/modelo/binding_resolution.py` lifts a caller `--casilla` value into the bound input only when no resolver-produced binding value exists (lines 199–219 and 388–406).
+
+Therefore current M130 behavior is: the prior-filing carry supplies casilla 05 by default; caller `--binding` may override a resolved carry; caller `--casilla` supplies the bound value only when the resolver produced no value; if the carry resolved and a caller casilla differs, `src/cadrumo/domain/calculations/registry/formula_initial_values.py` rejects the inconsistent projection (lines 351–382). Only `--binding` can override an already-resolved carry. No M130-specific guard enforces carry-only behavior. The 2026-06-13 restriction was not implemented and is superseded here as a description of current behavior. This clarification records implementation, not a separate tax-law ruling; a policy requiring carry-only behavior would need an explicit decision and enforcement in code.
 
 ## Problem Statement
 
@@ -252,12 +261,12 @@ not a re-litigation of the mechanism.
 
 Casilla 07 = 04 - 05 - 06 (modelo-130-resultado-apartado-i) is already correct
 and AEAT-cited; it does not change. Stage 2 only makes casilla 05 a populated
-input to it. Casilla 05 flips from input_kind manual to input_kind bound (with
-the new span binding) - mirroring how casilla 15 is bound. Manual-filing
-operators who supply casilla 05 directly retain that ability only if the binding
-is modelled as overridable in the same manner the casilla-15 override ADR
-established; the plan must reconcile the manual-override affordance with the new
-binding (the casilla-15 override ADR is the precedent).
+input to it. Casilla 05 flips from input_kind manual to input_kind bound (with the new span
+binding). It inherits the generic caller-override channel for direct
+`previous_filing` bindings in the calculation-aggregation taxonomy. As recorded
+above, caller `--binding` may replace a resolved carry and caller `--casilla` is
+a fallback only when no resolver value exists. The 2026-06-04 M130 casilla-15
+record is a curation-only stub, not an override decision or precedent.
 
 ### S4 - First-filer / alta-quarter null-not-error
 
@@ -336,9 +345,9 @@ Difficulties / pitfalls.
   sum; a quarter with negative 07 next to a quarter with positive 07 must
   contribute 0 plus positive, not the net. The oracle must include a negative
   prior 07.
-- Manual-override reconciliation (S3) inherits the casilla-15 override ADR
-  complexity; if not handled, a binding that always overwrites a hand-entered
-  casilla 05 would regress operators who legitimately adjust it.
+- Caller-override behavior follows the shared `previous_filing` precedence
+  contract described above; M130 has no source-specific override prohibition in
+  current code.
 
 Test oracle (externally grounded, not hand-computed from this formula). The
 folleto and the BOE orden carry no worked numeric example, and the AEAT Pre130
@@ -375,11 +384,12 @@ live surface is functional.
   if a prior filing can lack a casilla-16 observation, the carry must treat
   absence as 0 - but that conflates filed-zero with not-captured, which the plan
   should make explicit.
-- Manual override of casilla 05. Should an operator be allowed to override the
-  computed casilla 05 (e.g. to reconcile against an AEAT Pre130 figure that
-  differs)? The casilla-15 override ADR established an override affordance for a
-  bound carry; the plan must decide whether casilla 05 mirrors it or is
-  carry-only.
+- Tax/product status of manually supplied casilla 05 values. Current code permits
+  the generic caller override described above. Whether that behavior is an
+  intended tax workflow or should be blocked under a new product rule remains a
+  separate policy question; this code reconciliation does not provide legal
+  authority for a substituted value. The 2026-06-04 M130 casilla-15 record is a
+  curation-only stub and provides no precedent.
 - Mid-year alta candidate-quarter set. S4 asserts the span must intersect with
   quarters for which a filing obligation actually existed (post-alta). The exact
   authority binding which prior quarters were owed to the deadline-engine

@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
+from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -19,11 +20,8 @@ from ...domain.calculations.registry.inventory_anexo_d_applicability import reso
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.row_source_identity import RowSourceIdentity
-from ...domain.contribuyente.inventory.records import (
-    InventoryLedger,
-    InventoryLedgerDocument,
-    InventoryLedgerError,
-)
+from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
 from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from .source_mesh import (
     CalculationSourceContext,
@@ -58,6 +56,25 @@ def _inventory_bindings(context: CalculationSourceContext) -> tuple[BindingDefin
     return tuple(binding for binding in context.revision.bindings if binding.source is _SOURCE)
 
 
+def _profile_declares_no_activity_income(context: CalculationSourceContext) -> bool:
+    """Whether the filer's profile declares income categories that exclude an economic activity.
+
+    The Anexo D inventory rows belong to the rendimientos de actividades
+    economicas a filer carries on (LIRPF arts. 27 and 30): a filer who declares
+    only employment, capital or other non-activity income holds no activity
+    ledger because there is no activity to hold one for. Only that typed
+    declaration counts. A profile that declares no income category at all, or
+    a context with no profile, is unknown rather than inapplicable, and a
+    missing ledger is then still reported.
+    """
+    if context.profile is None:
+        return False
+    from ..user_profile.projections import projection_for_taxpayer
+
+    taxpayer = projection_for_taxpayer(context.profile.record, schema=context.profile.profile_decode_context.schema)
+    return derive_taxpayer_files_economic_activity(taxpayer) is False
+
+
 def _diagnostic(
     *, reason: CalculationSourceDiagnosticReason, state: str, message: str, remedy: str | None = None
 ) -> CalculationSourceDiagnostic:
@@ -86,23 +103,68 @@ def _resolve_inventory_binding_template(
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> _InventoryBindingTemplate | CalculationSourceResolution:
     """Validate selector shape, filing coordinate, and the complete operation cohort."""
+    typed_bindings = _typed_inventory_bindings(
+        bindings,
+        binding_ids=binding_ids,
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
+    if isinstance(typed_bindings, CalculationSourceResolution):
+        return typed_bindings
+    coordinate_refusal = _inventory_coordinate_refusal(
+        typed_bindings,
+        binding_ids=binding_ids,
+        filing_year=filing_year,
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
+    if coordinate_refusal is not None:
+        return coordinate_refusal
+    bindings_by_operation = _inventory_bindings_by_operation(
+        typed_bindings,
+        binding_ids=binding_ids,
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
+    if isinstance(bindings_by_operation, CalculationSourceResolution):
+        return bindings_by_operation
+    return _InventoryBindingTemplate(by_operation=bindings_by_operation)
+
+
+def _typed_inventory_bindings(
+    bindings: tuple[BindingDefinition, ...],
+    *,
+    binding_ids: tuple[str, ...],
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> list[tuple[BindingDefinition, InventoryProvider]] | CalculationSourceResolution:
     typed_bindings = [
         (binding, binding.provider) for binding in bindings if isinstance(binding.provider, InventoryProvider)
     ]
-    if len(typed_bindings) != len(bindings):
-        return CalculationSourceResolution(
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-            unresolved_binding_ids=binding_ids,
-            diagnostics=(
-                _diagnostic(
-                    reason="unresolved_derived_binding",
-                    state="selector_unreadable",
-                    message="one or more bindings do not carry the canonical inventory row template",
-                ),
+    if len(typed_bindings) == len(bindings):
+        return typed_bindings
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        unresolved_binding_ids=binding_ids,
+        diagnostics=(
+            _diagnostic(
+                reason="unresolved_derived_binding",
+                state="selector_unreadable",
+                message="one or more bindings do not carry the canonical inventory row template",
             ),
-        )
+        ),
+    )
 
+
+def _inventory_coordinate_refusal(
+    typed_bindings: list[tuple[BindingDefinition, InventoryProvider]],
+    *,
+    binding_ids: tuple[str, ...],
+    filing_year: int,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution | None:
     # The declaration carries no authored year: it states timeless intent and the
     # filing context supplies the coordinate. The year guard is therefore a guard
     # on the temporal selector -- an inventory row template must rest on the
@@ -121,14 +183,23 @@ def _resolve_inventory_binding_template(
         applicable_filing_year = resolve_inventory_anexo_d_filing_year(filing_year=filing_year)
     except RegistryValidationError:
         applicable_filing_year = None
-    if applicable_filing_year != filing_year:
-        return _template_refusal_resolution(
-            binding_ids,
-            "inventory row template is not applicable for the filing year",
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-        )
+    if applicable_filing_year == filing_year:
+        return None
+    return _template_refusal_resolution(
+        binding_ids,
+        "inventory row template is not applicable for the filing year",
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
 
+
+def _inventory_bindings_by_operation(
+    typed_bindings: list[tuple[BindingDefinition, InventoryProvider]],
+    *,
+    binding_ids: tuple[str, ...],
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> dict[str, BindingDefinition] | CalculationSourceResolution:
     bindings_by_operation: dict[str, BindingDefinition] = {}
     for binding, selector in typed_bindings:
         operation = selector.row_field
@@ -140,14 +211,16 @@ def _resolve_inventory_binding_template(
                 owned_sources=owned_sources,
             )
         bindings_by_operation[operation] = binding
-    if set(bindings_by_operation) != set(_CANONICAL_OPERATIONS) or len(bindings) != len(_CANONICAL_OPERATIONS):
-        return _template_refusal_resolution(
-            binding_ids,
-            "inventory row-template cohort must contain each operation once",
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-        )
-    return _InventoryBindingTemplate(by_operation=bindings_by_operation)
+    if set(bindings_by_operation) == set(_CANONICAL_OPERATIONS) and len(bindings_by_operation) == len(
+        _CANONICAL_OPERATIONS
+    ):
+        return bindings_by_operation
+    return _template_refusal_resolution(
+        binding_ids,
+        "inventory row-template cohort must contain each operation once",
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+    )
 
 
 def _load_inventory_ledgers(
@@ -363,6 +436,13 @@ class InventorySourceResolver:
         )
         if isinstance(template, CalculationSourceResolution):
             return template
+        if _profile_declares_no_activity_income(context):
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=binding_ids,
+                inapplicable_binding_ids=binding_ids,
+            )
         if self._inventory_repository is None:
             return self._storage_refusal(binding_ids)
         ledgers = _load_inventory_ledgers(

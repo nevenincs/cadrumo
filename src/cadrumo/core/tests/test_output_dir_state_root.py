@@ -1,8 +1,7 @@
 """Where each generated output lands, pinned against an independent oracle.
 
-Durable state must not default under the checkout on an installed run: every
-output directory derives its default from ``cadrumo_local_storage_root``, and
-an explicit per-field override still wins.
+Every output derives its default from the configured storage root, which
+defaults to the repository. Explicit per-field overrides still win.
 
 This module owns the on-disk-name oracle, and owning it is the point. These
 subpaths exist on operators' disks right now, so the names are the property
@@ -42,13 +41,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
+    "cadrumo_temp_dir": "tmp",
+    "cadrumo_runtime_socket_dir": "runtime",
+    "cadrumo_playwright_browsers_dir": "components/playwright",
+    "cadrumo_ollama_models_dir": "models/ollama",
+    "cadrumo_ollama_home_dir": "components/ollama/home",
+    "cadrumo_gnome_extensions_dir": "integrations/gnome/extensions",
+    "cadrumo_chromium_data_root": "chromium-data",
+    "cadrumo_webview_dir": "webview",
     "cadrumo_token_dir": "tokens",
     "cadrumo_secret_store_dir": "secrets",
     "cadrumo_blob_store_dir": "blobs",
     "cadrumo_live_state_dir": "live-state",
     "cadrumo_log_dir": "logs",
     "cadrumo_llm_usage_dir": "llm-usage",
-    "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
+    "cadrumo_llm_run_record_dir": "llm-run-telemetry",
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_corpus_search_cache_dir": "cache/corpus-search",
     "cadrumo_submissions_dir": "submissions",
@@ -127,20 +134,14 @@ def test_every_derived_output_dir_roots_under_storage_root(tmp_path: Path) -> No
         assert getattr(settings, field_name) == expected, field_name
 
 
-def test_no_derived_output_dir_defaults_under_project_root_var(tmp_path: Path) -> None:
-    """With the root pointed away from the checkout, no derived dir escapes to
-    ``REPO_ROOT/var`` — proving the effective default is root-derived, not
-    the ``REPO_ROOT/var/...`` placeholder each field still carries."""
-    storage_root = tmp_path / "state"
-
-    settings = _settings_from_env(CADRUMO_LOCAL_STORAGE_ROOT=str(storage_root))
-
-    project_var = REPO_ROOT / "var"
-    for field_name in DERIVED_OUTPUT_SUBPATHS:
-        value = getattr(settings, field_name)
-        assert value is not None, field_name
-        assert storage_root in value.parents or value == storage_root, field_name
-        assert project_var not in value.parents, field_name
+def test_default_outputs_follow_repository_storage_root() -> None:
+    """Undefined root and category settings keep every default inside this checkout."""
+    with isolated_aeat_env():
+        settings = Settings()
+    root = REPO_ROOT / "var" / "storage"
+    assert settings.cadrumo_local_storage_root == root
+    for field_name, subpath in DERIVED_OUTPUT_SUBPATHS.items():
+        assert getattr(settings, field_name) == root / subpath, field_name
 
 
 def test_explicit_output_dir_override_wins_over_derivation(tmp_path: Path) -> None:

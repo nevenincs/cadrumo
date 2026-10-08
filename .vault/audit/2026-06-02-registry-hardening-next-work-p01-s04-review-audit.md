@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:dd679b1debb9ce8111ce299832b584bc2179efed8315bdf78d9b120b1d6451af'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S04]]'
+modified: '2026-10-03'
+body_hash: 'sha256:2187981c62ee915df6ebfeda530c2b78bd78a440c8e6742fb787dc042ec7c0f7'
+related: []
 ---
 
 # P01.S04 Review
@@ -27,11 +25,11 @@ tracked by `P01.S05` and `P01.S06`.
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_directory_mode_merges_completeness_manifest_casilla_fragments -q`
+- the historical check
   - Result: 1 passed in 0.38s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_toml_fragments_stay_reviewable -q`
+- the historical check
   - Result: 2 passed in 6.66s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_tree_loads_directory_modelos -q`
+- the historical check
   - Result: 1 passed in 41.94s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_directory_source_inventory_lists_every_revision_fragment_toml -q`
+- the historical check
   - Result: 1 passed in 32.40s.

@@ -19,11 +19,11 @@ def require_strict_frozen_operation_model_graph(
     reject_mutable_annotations: bool = True,
     require_validated_defaults: bool = True,
 ) -> None:
-    """Refuse any lax Pydantic model reachable from ``model_type`` fields."""
+    """Refuse lax reachable models, checking shared nested models once per call."""
     _require_model_graph(
         model_type,
         path=path,
-        visiting=set(),
+        visited=set(),
         reject_mutable_annotations=reject_mutable_annotations,
         require_validated_defaults=require_validated_defaults,
     )
@@ -33,34 +33,31 @@ def _require_model_graph(
     model_type: type[BaseModel],
     *,
     path: str,
-    visiting: set[type[BaseModel]],
+    visited: set[type[BaseModel]],
     reject_mutable_annotations: bool,
     require_validated_defaults: bool,
 ) -> None:
-    if model_type in visiting:
+    if model_type in visited:
         return
     _require_model_config(
         model_type,
         path=path,
         require_validated_defaults=require_validated_defaults,
     )
-    visiting.add(model_type)
-    try:
-        for field_name, field in model_type.model_fields.items():
-            _require_annotation_contract(
-                field.annotation,
+    visited.add(model_type)
+    for field_name, field in model_type.model_fields.items():
+        _require_annotation_contract(
+            field.annotation,
+            path=f"{path}.{field_name}",
+            visited=visited,
+            reject_mutable_annotations=reject_mutable_annotations,
+            require_validated_defaults=require_validated_defaults,
+        )
+        for metadata in field.metadata:
+            _require_no_custom_core_schema_hook(
+                metadata,
                 path=f"{path}.{field_name}",
-                visiting=visiting,
-                reject_mutable_annotations=reject_mutable_annotations,
-                require_validated_defaults=require_validated_defaults,
             )
-            for metadata in field.metadata:
-                _require_no_custom_core_schema_hook(
-                    metadata,
-                    path=f"{path}.{field_name}",
-                )
-    finally:
-        visiting.remove(model_type)
 
 
 def _require_model_config(
@@ -186,14 +183,14 @@ def _require_annotation_contract(
     annotation: object,
     *,
     path: str,
-    visiting: set[type[BaseModel]],
+    visited: set[type[BaseModel]],
     reject_mutable_annotations: bool,
     require_validated_defaults: bool,
 ) -> None:
     if _require_annotation_class_contract(
         annotation,
         path=path,
-        visiting=visiting,
+        visited=visited,
         reject_mutable_annotations=reject_mutable_annotations,
         require_validated_defaults=require_validated_defaults,
     ):
@@ -201,7 +198,7 @@ def _require_annotation_contract(
     if _require_annotation_alias_contract(
         annotation,
         path=path,
-        visiting=visiting,
+        visited=visited,
         reject_mutable_annotations=reject_mutable_annotations,
         require_validated_defaults=require_validated_defaults,
     ):
@@ -218,7 +215,7 @@ def _require_annotation_contract(
     _require_annotation_arguments(
         annotation,
         path=path,
-        visiting=visiting,
+        visited=visited,
         reject_mutable_annotations=reject_mutable_annotations,
         require_validated_defaults=require_validated_defaults,
     )
@@ -228,7 +225,7 @@ def _require_annotation_class_contract(
     annotation: object,
     *,
     path: str,
-    visiting: set[type[BaseModel]],
+    visited: set[type[BaseModel]],
     reject_mutable_annotations: bool,
     require_validated_defaults: bool,
 ) -> bool:
@@ -239,7 +236,7 @@ def _require_annotation_class_contract(
             _require_model_graph(
                 annotation_type,
                 path=path,
-                visiting=visiting,
+                visited=visited,
                 reject_mutable_annotations=reject_mutable_annotations,
                 require_validated_defaults=require_validated_defaults,
             )
@@ -256,7 +253,7 @@ def _require_annotation_alias_contract(
     annotation: object,
     *,
     path: str,
-    visiting: set[type[BaseModel]],
+    visited: set[type[BaseModel]],
     reject_mutable_annotations: bool,
     require_validated_defaults: bool,
 ) -> bool:
@@ -265,7 +262,7 @@ def _require_annotation_alias_contract(
         _require_annotation_contract(
             annotation.__value__,
             path=path,
-            visiting=visiting,
+            visited=visited,
             reject_mutable_annotations=reject_mutable_annotations,
             require_validated_defaults=require_validated_defaults,
         )
@@ -303,7 +300,7 @@ def _require_annotation_arguments(
     annotation: object,
     *,
     path: str,
-    visiting: set[type[BaseModel]],
+    visited: set[type[BaseModel]],
     reject_mutable_annotations: bool,
     require_validated_defaults: bool,
 ) -> None:
@@ -312,7 +309,7 @@ def _require_annotation_arguments(
         _require_annotation_contract(
             argument,
             path=path,
-            visiting=visiting,
+            visited=visited,
             reject_mutable_annotations=reject_mutable_annotations,
             require_validated_defaults=require_validated_defaults,
         )

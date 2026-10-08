@@ -26,18 +26,10 @@ from typer._click.types import ParamType as TyParamType
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ._command_target import resolve_deferred_target
-from .command_spec import (
-    ArgumentSpec,
-    BindingState,
-    Capability,
-    CommandSpec,
-    CommandSpecGraph,
-    DefaultKind,
-    DeferredTarget,
-    ExecutionPolicySpec,
-    OptionSpec,
-    ParameterDefault,
-)
+from .command_graph import CommandSpecGraph
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import BindingState, Capability, DefaultKind, DeferredTarget, ParameterDefault
+from .command_spec import CommandSpec, ExecutionPolicySpec
 from .command_suggestions import CadrumoTyperGroup, LazyFactoryTarget, LazySubcommand
 
 
@@ -165,16 +157,7 @@ def _parameter_value_projection(
         if spec.value.click_type is None
         else resolve_deferred_target(spec.value.click_type)
     )
-    if (
-        click_type is None
-        and isinstance(annotation, type)
-        and annotation is not str
-        and issubclass(annotation, str)
-        and not issubclass(annotation, Enum)
-    ):
-        click_type = _PydanticStringParamType(annotation)
-    if isinstance(click_type, type):
-        click_type = click_type()
+    click_type = _materialize_projected_click_type(click_type, annotation)
     choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
     return annotation, parser, click_type, choice_metavar
 
@@ -247,14 +230,7 @@ def _option_parameter(
     # separately so consumers can enumerate them, therefore join only the
     # canonical ``--x`` / ``--no-x`` shape at this adapter boundary. Passing
     # those tokens separately makes both aliases select ``True``.
-    declarations = spec.declarations
-    if (
-        spec.is_flag
-        and len(declarations) == 2
-        and declarations[0].startswith("--")
-        and declarations[1] == f"--no-{declarations[0][2:]}"
-    ):
-        declarations = (f"{declarations[0]}/{declarations[1]}",)
+    declarations = _option_declarations(spec)
     # Typer derives flag semantics from the boolean annotation and declaration.
     # Its legacy ``is_flag`` / ``flag_value`` parameters are deprecated and
     # ignored, so projecting them would add warnings without preserving facts.
@@ -378,13 +354,8 @@ def _invoke_bound_behavior(
 ) -> object:
     """Apply group short-circuiting, the live-write refusal and terminal preflight."""
     context_parameter = spec.invocation.context_parameter
-    if spec.kind == "group" and context_parameter is not None:
-        structural_context = _invocation_context(bound, context_parameter)
-        if getattr(structural_context, "invoked_subcommand", None) is not None:
-            # Ancestor groups are structural only. Their terminal behavior
-            # must not be imported or executed while Click descends toward
-            # the fully parsed child authority.
-            return None
+    if _group_has_invoked_child(spec, bound):
+        return None
     try:
         refuse_declared_live_write(spec.policy)
     except Exception as error:
@@ -416,7 +387,7 @@ def _invoke_bound_behavior(
         finally:
             clear_staged_machine_secret_payloads()
     if _requires_leaf_preflight(spec):
-        from ...application.provisioning import provision_cli_storage
+        from ...application.cli_provisioning import provision_cli_storage
         from ._profile_authentication_contract import command_needs_state_tree
 
         # A runnable command with no context to preflight is provisioned here;
@@ -567,19 +538,52 @@ def build_command_app(graph: CommandSpecGraph) -> typer.Typer:
     return _node_app(graph, graph.root().key)
 
 
-@cache
-def build_command_subtree(graph: CommandSpecGraph, key: str) -> typer.Typer:
-    """Compile one declared subtree for an atomic family migration."""
-    graph.spec(key)
-    return _node_app(graph, key)
-
-
 __all__ = [
     "GOVERNED_FACT_SCOPE_CAPABILITIES",
     "CommandSpecTyperGroup",
     "build_command_app",
-    "build_command_subtree",
     "refuse_declared_live_write",
     "resolve_deferred_target",
     "runs_in_governed_fact_scope",
 ]
+
+
+def _materialize_projected_click_type(click_type: object | None, annotation: object) -> object | None:
+    """Apply the existing Pydantic string type and deferred type instantiation rules."""
+    if (
+        click_type is None
+        and isinstance(annotation, type)
+        and annotation is not str
+        and issubclass(annotation, str)
+        and not issubclass(annotation, Enum)
+    ):
+        click_type = _PydanticStringParamType(annotation)
+    if isinstance(click_type, type):
+        click_type = click_type()
+    return click_type
+
+
+def _option_declarations(spec: OptionSpec) -> tuple[str, ...]:
+    """Join only the canonical positive and negative boolean option pair."""
+    declarations = spec.declarations
+    if (
+        spec.is_flag
+        and len(declarations) == 2
+        and declarations[0].startswith("--")
+        and declarations[1] == f"--no-{declarations[0][2:]}"
+    ):
+        declarations = (f"{declarations[0]}/{declarations[1]}",)
+    return declarations
+
+
+def _group_has_invoked_child(spec: CommandSpec, bound: inspect.BoundArguments) -> bool:
+    """Keep structural ancestor groups from importing or running their terminal target."""
+    context_parameter = spec.invocation.context_parameter
+    if spec.kind == "group" and context_parameter is not None:
+        structural_context = _invocation_context(bound, context_parameter)
+        if getattr(structural_context, "invoked_subcommand", None) is not None:
+            # Ancestor groups are structural only. Their terminal behavior
+            # must not be imported or executed while Click descends toward
+            # the fully parsed child authority.
+            return True
+    return False

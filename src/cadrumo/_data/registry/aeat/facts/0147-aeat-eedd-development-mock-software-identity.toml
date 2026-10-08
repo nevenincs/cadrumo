@@ -1,0 +1,30 @@
+# The entidad desarrolladora (EEDD) identity Cadrumo stamps into AEAT export
+# envelopes: "Version del Programa" (4 bytes) and "NIF Empresa Desarrollo"
+# (9 bytes), which the record designs' Nota 1 leaves to the software developer.
+#
+# Cadrumo holds no AEAT developer registration, so both values are deliberate
+# PLACEHOLDERS, all zeros so no reader can take them for a real registration:
+# program identifier "0000" and NIE "X0000000T" (the X-series NIE of number zero,
+# whose control letter T is the checksum of 0). A file carrying them is not
+# presentable at AEAT. Replace this fact, and only this fact, once a real
+# registration exists.
+
+[fact]
+fact_id = "aeat-eedd:development-mock-software-identity"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "aeat-eedd:development-mock-software-identity:all-zero"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-111-2019-v18"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-111-2019-v18"
+required_text = ["A cumplimentar por las entidades desarrolladoras", "Debe consignarse el NIF de la ED del SW"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "program_identifier", value = "0000" },
+  { key = "developer_tax_id", value = "X0000000T" },
+]

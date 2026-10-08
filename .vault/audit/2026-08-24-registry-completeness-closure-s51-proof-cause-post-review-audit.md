@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6901975fd1e3e3fd4b15505c3b3e8a80118b62bb44dc7bb2687884e6551fe022'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:f99a7af31e2d4a19027a33082a691f04f912ab648ff5340ee9f6dabfd9a2ee2f'
+related: []
 ---
+
 # `registry-completeness-closure` audit: `S51 proof-cause post review`
 
 ## Scope
@@ -23,12 +23,7 @@ digest-mismatch path remains conflicting evidence.
 
 ### value-error-composer-fallback | medium | Generic validation fallback has no report-boundary proof
 
-`src/cadrumo/core/tests/test_source_connectivity.py` calls
-`from_validation_error_type("value_error")` directly, but no test makes live
-revalidation produce that generic Pydantic error and then passes it through
-`compose_source_connectivity_coverage`. The direct lookup can pass while the
-composer stops consuming the fallback mapping or changes its refusal taxonomy.
-This leaves the Step's promised ValueError-fallback mutation bite unproven.
+The direct lookup can pass while the composer stops consuming the fallback mapping or changes its refusal taxonomy. This leaves the Step's promised ValueError-fallback mutation bite unproven.
 
 ### s51-exec-record | medium | Closed Step lacks execution evidence prose
 

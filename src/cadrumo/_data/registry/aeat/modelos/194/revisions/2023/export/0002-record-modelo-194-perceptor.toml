@@ -1,0 +1,480 @@
+[[revisions.2023.export_layouts]]
+id = 'generated-modelo-194-2023-fichero'
+
+[[revisions.2023.export_layouts.records]]
+id = 'modelo-194-perceptor'
+record_type = 'perceptor'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'crlf'
+required = false
+repeat = 'binding_rows'
+binding_record = 'perceptor'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '194'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-year'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-declarante-nif'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-nif'
+offset = 18
+length = 9
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-nif-representante'
+offset = 27
+length = 9
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-nif-representante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-nombre'
+offset = 36
+length = 40
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-provincia'
+offset = 76
+length = 2
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-origen'
+offset = 78
+length = 1
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-origen'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-clave-codigo'
+offset = 79
+length = 1
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-clave-codigo'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+]
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-codigo-emisor'
+offset = 80
+length = 12
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-codigo-emisor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-tipo-codigo'
+offset = 92
+length = 1
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-tipo-codigo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-codigo-cuenta'
+offset = 93
+length = 20
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-codigo-cuenta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-pendiente'
+offset = 113
+length = 1
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-pendiente'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-ejercicio-devengo'
+offset = 114
+length = 4
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-ejercicio-devengo'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-valor-adquisicion'
+offset = 118
+length = 13
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-valor-transmision'
+offset = 131
+length = 13
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-valor-transmision'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-ceros'
+offset = 144
+length = 13
+kind = 'literal'
+literal = '0000000000000'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-base'
+offset = 157
+length = 13
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-base'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-porcentaje-src-170'
+offset = 170
+length = 2
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-porcentaje'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-porcentaje-src-172'
+offset = 172
+length = 2
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-porcentaje'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-retenciones'
+offset = 174
+length = 13
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-retenciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-vinculacion'
+offset = 187
+length = 1
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-vinculacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-ceuta-melilla'
+offset = 188
+length = 1
+kind = 'binding'
+binding = 'modelo-194-perceptor-row-ceuta-melilla'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+]
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-194-perc-reservado-189'
+offset = 189
+length = 62
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-1999-11-18:apartado-cuarto',
+    'ley-35-2006:art-99',
+]
+source_refs = ['aeat-dr-194-2023']
+
+[revisions.2023.export_layouts.records.row_field_casilla_ids]
+perceptor_tax_id = 'perc.nif'
+representative_tax_id = 'perc.nif-representante'
+perceptor_legal_name = 'perc.nombre'
+province_code = 'perc.provincia'
+financial_asset_origin = 'perc.origen'
+clave_codigo = 'perc.clave-codigo'
+codigo_emisor = 'perc.codigo-emisor'
+tipo_codigo = 'perc.tipo-codigo'
+codigo_cuenta = 'perc.codigo-cuenta'
+pendiente_flag = 'perc.pendiente'
+accrual_year = 'perc.ejercicio-devengo'
+financial_asset_acquisition_value = 'perc.valor-adquisicion'
+financial_asset_disposal_value = 'perc.valor-transmision'
+base_retenciones = 'perc.base'
+porcentaje_retencion = 'perc.porcentaje'
+retencion_practicada = 'perc.retenciones'
+financial_asset_related_entity = 'perc.vinculacion'
+territorial_deduction_clave = 'perc.ceuta-melilla'

@@ -1,20 +1,83 @@
 modelo:
   schema:
     '194':
+      binding:
+        modelo-194-perceptor-row-base:
+          label: Base de retenciones e ingresos a cuenta
+        modelo-194-perceptor-row-ceuta-melilla:
+          label: Deducción territorial aplicable
+        modelo-194-perceptor-row-clave-codigo:
+          label: Tipo de identificación del emisor
+        modelo-194-perceptor-row-codigo-cuenta:
+          label: Cuenta de valores
+        modelo-194-perceptor-row-codigo-emisor:
+          label: Identificación del emisor
+        modelo-194-perceptor-row-ejercicio-devengo:
+          label: Ejercicio de devengo anterior
+        modelo-194-perceptor-row-nif:
+          label: NIF del perceptor
+        modelo-194-perceptor-row-nif-representante:
+          label: NIF del representante legal
+        modelo-194-perceptor-row-nombre:
+          label: Apellidos y nombre o razón social
+        modelo-194-perceptor-row-origen:
+          label: Origen de la operación
+        modelo-194-perceptor-row-pendiente:
+          label: Pendiente de abono
+        modelo-194-perceptor-row-porcentaje:
+          label: Porcentaje de retención
+        modelo-194-perceptor-row-provincia:
+          label: Código de provincia
+        modelo-194-perceptor-row-retenciones:
+          label: Retenciones e ingresos a cuenta
+        modelo-194-perceptor-row-tipo-codigo:
+          label: Tipo de identificación de la cuenta
+        modelo-194-perceptor-row-valor-adquisicion:
+          label: Valor de adquisición o suscripción
+        modelo-194-perceptor-row-valor-transmision:
+          label: Valor de transmisión o reembolso
+        modelo-194-perceptor-row-vinculacion:
+          label: Rendimientos de entidad vinculada
+        modelo-194-resumen-base-negativa:
+          label: Suma de bases negativas, con su signo
+        modelo-194-resumen-base-positiva:
+          label: Suma de bases positivas
+        modelo-194-resumen-perceptores-no-positivos:
+          label: Registros con base negativa o cero
+        modelo-194-resumen-perceptores-positivos:
+          label: Registros con base positiva
+        modelo-194-resumen-retenciones-total:
+          label: Total de retenciones e ingresos a cuenta
       casilla:
         continuidad:
+          activo-financiero-entidad-vinculada:
+            label: Rendimientos de entidad vinculada
+          activo-financiero-origen-operacion:
+            label: Origen de la operación
+          activo-financiero-valor-adquisicion:
+            label: Valor de adquisición o suscripción
+          activo-financiero-valor-transmision:
+            label: Valor de transmisión o reembolso
+          capital-ajeno-perceptor-base-retenciones:
+            label: Base de retenciones e ingresos a cuenta
+          capital-ajeno-perceptor-deduccion-territorial:
+            label: Deducción territorial aplicable
+          capital-ajeno-perceptor-porcentaje-retencion:
+            label: Porcentaje de retención
+          capital-ajeno-perceptor-retenciones:
+            label: Retenciones e ingresos a cuenta
           capital-ajeno-resumen-base-negativa:
-            help: Suma de las bases de retención e ingreso a cuenta de los registros
-              de perceptor con base negativa.
+            help: Suma de las bases negativas expresada como importe positivo; no
+              se compensa con las bases positivas.
             label: Base de retenciones e ingresos a cuenta negativa
           capital-ajeno-resumen-base-positiva:
             help: Suma de las bases de retención e ingreso a cuenta de los registros
               de perceptor con base positiva.
             label: Base de retenciones e ingresos a cuenta
           capital-ajeno-resumen-perceptores-base-negativa:
-            help: Número de perceptores (registros) cuya base de retenciones e ingresos
-              a cuenta es negativa.
-            label: Número total de perceptores con base negativa
+            help: Se cuenta cada operación declarada, aunque varias correspondan al
+              mismo perceptor. Incluye bases negativas y cero.
+            label: Número de registros con base negativa o cero
           capital-ajeno-resumen-perceptores-base-positiva:
             help: Número de perceptores (registros) cuya base de retenciones e ingresos
               a cuenta es positiva.
@@ -23,6 +86,38 @@ modelo:
             help: Suma de las retenciones e ingresos a cuenta practicados sobre las
               rentas declaradas.
             label: Retenciones e ingresos a cuenta
+          cuenta-valores-identificacion:
+            label: Cuenta de valores
+          cuenta-valores-tipo-identificacion:
+            label: Tipo de identificación de la cuenta
+          declaracion-anterior-numero:
+            label: Justificante de la declaración anterior
+          declaracion-complementaria:
+            label: Declaración complementaria
+          declaracion-numero-identificativo:
+            label: Número de justificante
+          declaracion-sustitutiva:
+            label: Declaración sustitutiva
+          declarante-contacto-nombre:
+            label: Apellidos y nombre de contacto
+          declarante-contacto-telefono:
+            label: Teléfono de contacto
+          emisor-clave-identificacion:
+            label: Tipo de identificación del emisor
+          emisor-identificacion:
+            label: Identificación del emisor
+          perceptor-identificacion-fiscal:
+            label: NIF del perceptor
+          perceptor-nombre:
+            label: Apellidos y nombre o razón social
+          perceptor-provincia:
+            label: Código de provincia
+          perceptor-representante-identificacion-fiscal:
+            label: NIF del representante legal
+          rendimiento-ejercicio-devengo:
+            label: Ejercicio de devengo anterior
+          rendimiento-pendiente-abono:
+            label: Pendiente de abono
       construct:
         modelo-194-calculation-construct:
           field:
@@ -36,6 +131,88 @@ modelo:
           canje o conversión de cualquier clase de activos representativos de la captación
           y utilización de capitales ajenos. Resumen anual.
         title: Retenciones capital mobiliario y transmisión de activos - resumen anual
+      form:
+        column:
+          base:
+            heading: Base de retenciones e ingresos a cuenta
+          perc-base:
+            heading: Base de retenciones e ingresos a cuenta
+          perc-ceuta-melilla:
+            heading: Deducción territorial aplicable
+          perc-clave-codigo:
+            heading: Tipo de identificación del emisor
+          perc-codigo-cuenta:
+            heading: Cuenta de valores
+          perc-codigo-emisor:
+            heading: Identificación del emisor
+          perc-ejercicio-devengo:
+            heading: Ejercicio de devengo anterior
+          perc-nif:
+            heading: NIF del perceptor
+          perc-nif-representante:
+            heading: NIF del representante legal
+          perc-nombre:
+            heading: Apellidos y nombre o razón social
+          perc-origen:
+            heading: Origen de la operación
+          perc-pendiente:
+            heading: Pendiente de abono
+          perc-porcentaje:
+            heading: Porcentaje de retención
+          perc-provincia:
+            heading: Código de provincia
+          perc-retenciones:
+            heading: Retenciones e ingresos a cuenta
+          perc-tipo-codigo:
+            heading: Tipo de identificación de la cuenta
+          perc-valor-adquisicion:
+            heading: Valor de adquisición o suscripción
+          perc-valor-transmision:
+            heading: Valor de transmisión o reembolso
+          perc-vinculacion:
+            heading: Rendimientos de entidad vinculada
+          perceptores:
+            heading: Número de perceptores
+          retenciones:
+            heading: Retenciones e ingresos a cuenta
+        context:
+          ejercicio:
+            heading: Ejercicio
+          nif:
+            heading: NIF del declarante
+          nombre:
+            heading: Apellidos y nombre o razón social
+        page:
+          importes:
+            heading: Importes y retenciones
+          perceptores:
+            heading: Relación de perceptores
+          resumen:
+            heading: Hoja resumen · desarrollo parcial
+        row:
+          negativa:
+            heading: Base negativa o cero
+          positiva:
+            heading: Base positiva
+        section:
+          contacto:
+            heading: Persona de contacto
+          cuenta:
+            heading: Cuenta de valores y devengo
+          declaracion:
+            heading: Identificación y tipo de declaración
+          emisor:
+            heading: Operación y emisor
+          identificacion:
+            heading: Identificación del declarante
+          perceptores:
+            heading: Identificación del perceptor
+          resumen:
+            heading: Resumen de los datos incluidos en la declaración
+          retenciones:
+            heading: Base y retenciones
+          valores:
+            heading: Adquisición y transmisión
       revision:
         '2019':
           field:

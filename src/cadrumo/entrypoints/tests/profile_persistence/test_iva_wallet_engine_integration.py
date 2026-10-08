@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -22,7 +22,6 @@ from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     resolve_iva_compensation_decision_for_calculation,
@@ -69,6 +68,8 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _work_unit_repositories_with_modelo_303_work_unit,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+
+from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -546,7 +547,7 @@ def _official_303_envelope(
     """Persist canonical evidence, then inject the requested read-side mutation."""
     source_headers = (
         ObservedHeaderFact(
-            header_key="declaration_type",
+            header_key="filing.result_disposition",
             value=declaration_type.value,
             source_artefact_kind="submitted_file",
             source_locator=(f"modelo-303-fichero-boe:modelo-303-page-01:declaration-type:{declaration_type.value}"),
@@ -980,3 +981,52 @@ def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(
 
         assert decision.selected_authority == "taxpayer_override"
         assert replayed == decision
+
+
+@pytest.mark.parametrize(("age_days", "blocked"), [(31, False), (32, True)])
+def test_persisted_wallet_refresh_uses_the_supplied_evaluation_instant(
+    tmp_path: Path, operation: PinnedAuthorityOperation, age_days: int, blocked: bool
+) -> None:
+    with _secure_backend(tmp_path):
+        _store_operator_profile()
+        snapshot = _snapshot_303()
+        observations = CalculationObservationRepository()
+        decisions = IvaWalletDecisionRepository()
+        reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_NIF,
+            wallet=_wallet_observation(pending=Decimal("1200.00")),
+            repository=observations,
+            decision_repository=decisions,
+            decided_at=_DECIDED_AT,
+            local_recurrence=None,
+            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
+            operation=operation,
+        )
+        work_repo, _, _ = _work_unit_repositories()
+        target = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo, operation=operation)
+        evaluated_at = _DECIDED_AT + timedelta(days=age_days)
+        refreshed = resolve_iva_compensation_decision_for_calculation(
+            target,
+            snapshot=snapshot,
+            operation=operation,
+            supplied_decision=None,
+            repository=decisions,
+            observation_repository=observations,
+            history_repository=IvaCompensationHistoryRepository(),
+            binding_values=None,
+            backend_binding_values=None,
+            casilla_inputs=None,
+            backend_casilla_inputs=None,
+            profile_values=profile_path_values_for_bucket(target.bucket_id),
+            evaluated_at=evaluated_at,
+        )
+        assert isinstance(refreshed, IvaCompensationReconciliationDecision)
+        assert refreshed.blocked is blocked
+        assert refreshed.stale_wallet is blocked
+        assert refreshed.wallet_captured_at == _DECIDED_AT
+        if blocked:
+            assert refreshed.selected_amount is None
+            assert refreshed.reason_identity == "stale_wallet_no_local_recurrence"
+        else:
+            assert refreshed.selected_amount == Decimal("1200.00")

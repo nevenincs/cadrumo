@@ -11,11 +11,44 @@ modelo:
           held at financial institutions.
         title: Withholdings and payments on account - income from movable capital
           on accounts held at financial institutions
+      form:
+        column:
+          base: Withholding and payments-on-account base
+          ingresos-anteriores: Payments from previous tax years
+          regularizacion: Adjustment
+          retenciones: Withholdings and payments on account
+        context:
+          apellidos: Surname or registered business name
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous self-assessment receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          periodo: Period
+        page:
+          modelo-126-page-01:
+            heading: Withholding on income from accounts with financial institutions
+        row:
+          periodificacion-1: Accrual allocation · first line
+          periodificacion-2: Accrual allocation · second line
+          retenciones: Withholdings and payments on account
+        section:
+          complementaria:
+            heading: Supplementary return (6)
+          devengo:
+            heading: Tax period (2)
+          identificacion:
+            heading: Identification (1)
+          ingreso:
+            heading: Payment (4)
+          liquidacion:
+            heading: Tax calculation (3)
       revision:
         2019-y-siguientes:
           casilla:
             '01':
-              label: Base for withholdings and payments on account
+              label: Withholding and payment-on-account base
             '02':
               label: Withholdings and payments on account
             '03':

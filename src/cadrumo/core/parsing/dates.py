@@ -33,8 +33,11 @@ _log = get_logger(__name__)
 # Matches the Spanish day-first wire format: dd-mm-yyyy or dd/mm/yyyy.
 _DATE_DDMMYYYY_RE: Final = re.compile(r"^\s*(\d{2}[-/]\d{2}[-/]\d{4})\s*$")
 
-# Extended-form ISO 8601 (``YYYY-MM-DD``); the compact form is deliberately refused.
-_ISO_8601_EXTENDED_LENGTH: Final[int] = 10
+# Extended-form ISO 8601 calendar date (``YYYY-MM-DD``). The compact form and the
+# ISO week date (``2026-W03-4``, also ten characters) are deliberately refused:
+# ``date.fromisoformat`` admits both, and neither is a shape an operator or an AEAT
+# wire format means by a calendar date.
+_ISO_8601_EXTENDED_RE: Final = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
 #: The separators a date format is defined by. Each is recognised by comparison
 #: and then re-emitted as its own literal below, so nothing from the input is
@@ -133,7 +136,7 @@ def require_iso8601_date(raw: str) -> date:
             propagates into the ``ValidationError`` chain.
     """
     cleaned = raw.strip() if raw else ""
-    if len(cleaned) != _ISO_8601_EXTENDED_LENGTH:
+    if _ISO_8601_EXTENDED_RE.fullmatch(cleaned) is None:
         raise ValueError(
             f"date value {raw!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)",
         )
@@ -143,6 +146,22 @@ def require_iso8601_date(raw: str) -> date:
             f"date value {raw!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)",
         )
     return parsed
+
+
+def require_iso8601_date_unless_blank(raw: str | None) -> date | None:
+    """Parse an optional operator-entered date under the strict extended-form contract.
+
+    A form field the operator left blank is absent and returns ``None``; any
+    other value must satisfy :func:`require_iso8601_date`. This is the optional
+    counterpart for hand-typed entry, where :func:`parse_iso8601_date` would
+    also admit the compact and week-date forms.
+
+    Raises:
+        ValueError: When ``raw`` is present but is not an extended-form calendar date.
+    """
+    if raw is None or not raw.strip():
+        return None
+    return require_iso8601_date(raw)
 
 
 def _iso_date_string(value: str) -> str:

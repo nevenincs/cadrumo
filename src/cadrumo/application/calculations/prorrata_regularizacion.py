@@ -53,7 +53,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.binding_targets import casillas_by_binding, sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -219,18 +219,64 @@ class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    declared_volume_total: Decimal
-    declared_volume_con_derecho: Decimal
-    declared_volume_sin_derecho: Decimal
+    declared_volume_total: Decimal | None
+    declared_volume_con_derecho: Decimal | None
+    declared_volume_sin_derecho: Decimal | None
     ledger_volume_total: Decimal
     ledger_volume_con_derecho: Decimal
     ledger_volume_sin_derecho: Decimal
     included_ledger_ids: tuple[str, ...] = ()
+    unclassified_ledger_ids: tuple[str, ...] = ()
     #: Ledger ids skipped from the rollup because they carry an operator-declared
     #: LIVA art. 104.Tres judgment exclusion (foreign PE, non-habitual
     #: inmobiliario/financiero). Recorded so the exclusion is auditable and the
     #: proposal is never a silent substitution of the declared volumes.
     art_104_tres_excluded_ledger_ids: tuple[str, ...] = ()
+
+
+def build_prorrata_declared_volume_advisory(
+    rollup: ProrrataDeclaredVolumeLedgerRollup, *, ejercicio: int
+) -> CalculationSourceDiagnostic | None:
+    """Disclose incomplete classification separately from an actual volume disagreement."""
+    present = rollup.declared_volume_total is not None and rollup.declared_volume_con_derecho is not None
+    if not rollup.included_ledger_ids and not rollup.unclassified_ledger_ids:
+        return None
+    if rollup.unclassified_ledger_ids:
+        reason = "prorrata_volume_check_unavailable"
+        message = (
+            f"La comparación anual de prorrata de {ejercicio} no es completa: "
+            f"{len(rollup.unclassified_ledger_ids)} operaciones de salida no tienen clasificación suficiente. "
+            "Revise sus hechos de IVA y las exclusiones del art. 104.Tres; no se afirma una divergencia."
+        )
+    elif not present:
+        reason = "prorrata_volume_declaration_missing"
+        message = (
+            f"Declare los volúmenes anuales de prorrata de {ejercicio} para compararlos con "
+            f"{len(rollup.included_ledger_ids)} operaciones de salida clasificadas del libro."
+        )
+    elif (
+        rollup.declared_volume_total == rollup.ledger_volume_total
+        and rollup.declared_volume_con_derecho == rollup.ledger_volume_con_derecho
+        and rollup.declared_volume_sin_derecho == rollup.ledger_volume_sin_derecho
+    ):
+        return None
+    else:
+        reason = "prorrata_volume_divergence"
+        message = (
+            f"Los volúmenes declarados de prorrata de {ejercicio} difieren de las "
+            f"{len(rollup.included_ledger_ids)} operaciones de salida clasificadas del libro: "
+            f"total {rollup.ledger_volume_total}, con derecho {rollup.ledger_volume_con_derecho}, "
+            f"sin derecho {rollup.ledger_volume_sin_derecho}. "
+            f"Se han excluido {len(rollup.art_104_tres_excluded_ledger_ids)} operaciones con declaración "
+            "de exclusión del art. 104.Tres. Revise también las exclusiones que el libro no puede inferir; "
+            "los volúmenes declarados siguen siendo la autoridad y no se sustituyen."
+        )
+    return CalculationSourceDiagnostic(
+        reason=reason,
+        source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
+        message=message,
+        asserted_legal_refs=("ley-37-1992:art-94", "ley-37-1992:art-104"),
+    )
 
 
 class ProrrataApplicabilityProjection(BaseModel):
@@ -467,16 +513,19 @@ def _missing_current_year_casillas(
 
 def _unresolved_binding_diagnostics(
     *,
+    revision: ModeloRevision,
     binding_ids: tuple[BindingId, ...],
     resolver_id: str,
     message: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one."""
     return tuple(
         CalculationSourceDiagnostic(
             reason="unresolved_binding",
             source_kind=_SOURCE_KIND.value,
             resolver_id=resolver_id,
             binding_id=binding_id,
+            casilla_id=sole_bound_casilla(revision, binding_id),
             message=message,
         )
         for binding_id in binding_ids
@@ -802,6 +851,7 @@ def _merge_current_year_values(
 
 def _missing_current_year_resolution(
     *,
+    revision: ModeloRevision,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
     declared_binding_ids: tuple[BindingId, ...],
@@ -818,6 +868,7 @@ def _missing_current_year_resolution(
         owned_sources=owned_sources,
         unresolved_binding_ids=declared_binding_ids,
         diagnostics=_unresolved_binding_diagnostics(
+            revision=revision,
             binding_ids=declared_binding_ids,
             resolver_id=resolver_id,
             message=message,
@@ -867,6 +918,7 @@ def _resolve_prorrata_provisional_source(
 
 def _missing_provisional_resolution(
     *,
+    revision: ModeloRevision,
     context: CalculationSourceContext,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
@@ -882,6 +934,7 @@ def _missing_provisional_resolution(
         owned_sources=owned_sources,
         unresolved_binding_ids=declared_binding_ids,
         diagnostics=_unresolved_binding_diagnostics(
+            revision=revision,
             binding_ids=declared_binding_ids,
             resolver_id=resolver_id,
             message=message,
@@ -931,6 +984,7 @@ def _resolved_prorrata_resolution(
     )
     unresolved = tuple(binding_id for binding_id in declared_binding_ids if binding_id not in binding_values)
     diagnostics = _unresolved_binding_diagnostics(
+        revision=revision,
         binding_ids=unresolved,
         resolver_id=resolver_id,
         message="prorrata_regularizacion binding selector did not map to a resolver output",
@@ -1022,6 +1076,7 @@ class ProrrataRegularizacionSourceResolver:
             unresolved_casilla_ids=self._unresolved_current_year_casilla_ids,
         )
         missing_resolution = _missing_current_year_resolution(
+            revision=revision,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             declared_binding_ids=declared_binding_ids,
@@ -1080,6 +1135,7 @@ class ProrrataRegularizacionSourceResolver:
         )
         if provisional_source.percentage is None:
             return _missing_provisional_resolution(
+                revision=revision,
                 context=context,
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

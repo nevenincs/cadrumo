@@ -11,14 +11,16 @@ from __future__ import annotations
 
 import logging
 import logging.handlers
+import re
 from pathlib import Path
 
 import pytest
 
 from .. import logging as _logging_mod
 from ..config import override_settings
+from ..diagnostic_log import DiagnosticFormatter
 from ..directory_scan import scan_directory
-from ..logging import configure_logging
+from ..logging import LOG_FILE_FORMAT, configure_logging
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -82,3 +84,32 @@ def test_log_rolls_over_and_bounds_backups(tmp_path: Path) -> None:
         _logging_mod._configured = False
         configure_logging()
         _logging_mod._configured = original_configured or True
+
+
+def test_file_records_use_the_published_line_format(tmp_path: Path) -> None:
+    log_dir = tmp_path / "format-logs"
+    original_configured = _logging_mod._configured
+    try:
+        _logging_mod._configured = False
+        with override_settings(cadrumo_log_dir=log_dir):
+            configure_logging()
+            handlers = _rotating_file_handlers(log_dir)
+            assert len(handlers) == 1
+            formatter = handlers[0].formatter
+            assert formatter is not None
+            probe = logging.LogRecord(
+                "cadrumo.tests.format", logging.ERROR, __file__, 1, "rendered %s", ("probe",), None
+            )
+            assert formatter.format(probe) == DiagnosticFormatter(LOG_FILE_FORMAT).format(probe)
+            logging.getLogger("cadrumo.tests.format").warning("format probe")
+            handlers[0].flush()
+            lines = (log_dir / "cadrumo.log").read_text(encoding="utf-8").splitlines()
+    finally:
+        _logging_mod._configured = False
+        configure_logging()
+        _logging_mod._configured = original_configured or True
+    line = re.compile(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[WARNING\] cadrumo\.tests\.format: format probe"
+        r' \| \{"process_id":\d+,"process_role":"python"\}'
+    )
+    assert any(line.fullmatch(entry) for entry in lines), lines

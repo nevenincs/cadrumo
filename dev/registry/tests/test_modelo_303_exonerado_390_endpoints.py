@@ -136,9 +136,15 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
     assert declared_unit == endpoints
     assert frozenset(str(casilla.id) for casilla in endpoints) == _ENDPOINTS
     assert all(casilla.number == str(casilla.id) for casilla in endpoints)
-    assert all(casilla.input_kind == InputKind.MANUAL for casilla in endpoints)
+    assert all(
+        casilla.input_kind == (InputKind.COMPUTED if str(casilla.id) == "88" else InputKind.MANUAL)
+        for casilla in endpoints
+    )
     assert all(casilla.required is False for casilla in endpoints)
-    assert all(casilla.binding is None and casilla.formula is None for casilla in endpoints)
+    assert all(casilla.binding is None for casilla in endpoints)
+    assert {str(casilla.id): str(casilla.formula) for casilla in endpoints if casilla.formula is not None} == {
+        "88": "modelo-303-volumen-operaciones-anual"
+    }
     # Each endpoint exports to exactly one field on DP30304 -- the same sheet
     # this test reads above to build `official_fields`, and whose numbered field
     # set it asserts equals `_ENDPOINTS`. This previously asserted the endpoints
@@ -173,7 +179,12 @@ def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_
         assert Counter(casilla.semantic_role for casilla in endpoint_rows) == Counter(
             {f"m303_exonerado_390_{item}": 1 for item in _ENDPOINTS}
         )
-        assert {str(formula.target_casilla_id) for formula in revision.formulas}.isdisjoint(_ENDPOINTS)
+        endpoint_formulas = tuple(
+            formula for formula in revision.formulas if str(formula.target_casilla_id) in _ENDPOINTS
+        )
+        assert [(str(formula.target_casilla_id), str(formula.id)) for formula in endpoint_formulas] == [
+            ("88", "modelo-303-volumen-operaciones-anual")
+        ]
         assert {
             str(casilla_id)
             for binding in revision.bindings

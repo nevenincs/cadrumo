@@ -21,6 +21,14 @@ requires_snapshot = true
 legal_refs = ["orden-1999-11-18:apartado-cuarto"]
 
 [[revisions."2019".application_links]]
+id = "modelo-194-export"
+surface = "export"
+source_refs = ["aeat-dr-194-2019"]
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-1999-11-18:apartado-cuarto"]
+
+[[revisions."2019".application_links]]
 id = "modelo-194-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"

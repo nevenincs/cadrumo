@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8ed68c6d558f754f88ad867a76ea5178433480ebc00a0e50152144f17c9ae822'
+body_hash: 'sha256:b36adab4012a029832694a2f961e54426cea8cb66338e1bd627dfc2fba4ea89d'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-adr]]"
 ---
 
@@ -25,16 +24,7 @@ taxonomy, and the focused unit and integration gates.
 
 ### proof-failure-taxonomy | medium | Missing proof is reported as conflicting evidence
 
-`_connected_proof_failures` retains only rendered validation prose, and
-`_refused_connected_claim_limb` in
-`src/cadrumo/application/registry/_source_connectivity_coverage.py:296` infers the
-refusal reason by searching that prose for the word `changed`. The core validator at
-`src/cadrumo/core/source_connectivity.py:481` deliberately emits the single message
-`absent or changed` for both a missing executable-evidence file and a digest mismatch.
-Consequently both conditions become `conflicting_evidence`, even though S45 requires
-proof loss to remain distinguishable from digest mismatch. The new composer regression
-covers changed bytes only, so deletion at this boundary is not proven and the
-misclassification remains invisible.
+Consequently both conditions become `conflicting_evidence`, even though S45 requires proof loss to remain distinguishable from digest mismatch. The new composer regression covers changed bytes only, so deletion at this boundary is not proven and the misclassification remains invisible.
 
 ## Recommendations
 

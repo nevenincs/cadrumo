@@ -1,6 +1,12 @@
 modelo:
   schema:
     '180':
+      binding:
+        modelo-180-115-base-anual:
+          label: Base anual de retencions i ingressos a compte · Model 115, casella
+            02
+        modelo-180-115-retenciones-anual:
+          label: Retencions i ingressos a compte de l’any · Model 115, casella 03
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
@@ -77,6 +83,13 @@ modelo:
           a compte. Rendiments procedents de l'arrendament d'immobles urbans. Resum
           anual.
         title: Resum anual de retencions sobre arrendaments urbans
+      form:
+        context:
+          ejercicio:
+            heading: Exercici
+        section:
+          ejercicio:
+            heading: Exercici
       revision:
         2019-2022:
           field:

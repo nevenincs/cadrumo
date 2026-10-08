@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7444c274b93a53fa1437f29ce740b5bb2cbc38b0c8963cd8827d8bb66dfa4086'
+body_hash: 'sha256:a84dff77d63da8822139f00ad808a0f86e8e5206f8d57f016624c67760b8ef97'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
+
 # `tui-architecture` audit: `S118 observation read`
 
 ## Scope
@@ -20,7 +20,7 @@ Formal read-only review of `W02.P19.S118` against the accepted operation-observa
 
 ### root-validation-before-lock | high | Observation creates a lock sidecar before refusing an unsafe journal root
 
-`src/cadrumo/adapters/persistence/operations/_journal.py:124` acquires the journal lock before `super().load` validates the journal root at `src/cadrumo/application/_journal_repository.py:130`. The lock primitive creates its parent and sidecar at `src/cadrumo/core/locks.py:193`, so an unknown-operation read materializes an absent journal directory without the normal hardened-root setup. More seriously, if that root is a symlink or junction, lock creation follows it and creates `.repository.lock` in the link target before `load` refuses the unsafe root. Validate or establish the root through the hardened repository path before opening the sidecar, then retain the same lock for the record read.
+The lock primitive creates its parent and sidecar at `src/cadrumo/core/locks.py:193`, so an unknown-operation read materializes an absent journal directory without the normal hardened-root setup. More seriously, if that root is a symlink or junction, lock creation follows it and creates `.repository.lock` in the link target before `load` refuses the unsafe root. Validate or establish the root through the hardened repository path before opening the sidecar, then retain the same lock for the record read.
 
 ### atomicity-page-witness | low | Interleaving witness does not distinguish a split replay read
 
@@ -38,7 +38,7 @@ Resolve `root-validation-before-lock` before S118 closes. Strengthen both atomic
 
 ## Remediation re-review
 
-Approved. `src/cadrumo/adapters/persistence/operations/_journal.py:124` now validates the existing root before the first lock-sidecar access. `src/cadrumo/adapters/persistence/operations/tests/test_journal.py:488` proves an absent root remains absent after the typed unknown-operation disposition and a symlink or junction root is refused without creating a sidecar in its target.
+`src/cadrumo/adapters/persistence/operations/tests/test_journal.py:488` proves an absent root remains absent after the typed unknown-operation disposition and a symlink or junction root is refused without creating a sidecar in its target.
 
 The interleaving witness now traces entry to the production `exclusive_file_lock` call at `src/cadrumo/adapters/persistence/operations/tests/test_journal.py:237`, waits for that trace while the canonical lock remains held at `src/cadrumo/adapters/persistence/operations/tests/test_journal.py:441`, and uses a replay limit of three. Its accepted shapes at `src/cadrumo/adapters/persistence/operations/tests/test_journal.py:463` bind the replay page and cursor to the same initial or successor anchor. The previously recorded high and low findings are remediated; no remaining findings.
 

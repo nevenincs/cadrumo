@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, TypeAdapter, ValidationError, model_validator
+from pydantic import BaseModel, StringConstraints, ValidationError, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
@@ -40,6 +40,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, Work
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
 from .codes import ModeloCode
 from .errors import ModeloError, ModeloValidationError
 
@@ -51,9 +52,6 @@ _RevisionState = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
-_STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
-    dict[str, object], config=ConfigDict(strict=True)
-)
 
 
 def derive_participation_index_id(transaction_id: str) -> str:
@@ -97,7 +95,7 @@ class TransactionRevisionParticipation(BaseModel):
     @pydantic_validation_boundary
     def _coerce_modelo(cls, data: object) -> object:
         try:
-            mapping = _STRING_KEYED_MAPPING_ADAPTER.validate_python(data)
+            mapping = STRICT_STR_KEYED_MAPPING_ADAPTER.validate_python(data)
         except ValidationError:
             return data
         if "modelo" in mapping:

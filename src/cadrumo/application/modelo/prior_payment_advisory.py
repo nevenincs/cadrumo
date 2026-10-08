@@ -27,6 +27,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -181,9 +182,9 @@ def collect_prior_payment_not_deducted_diagnostics(
     prior_codes = _prior_trimestre_codes(period_token)
     if not prior_codes:
         return ()
-    if casilla_values.get(declaration.cumulative_income, Decimal(0)) <= Decimal(0):
+    if AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, declaration.cumulative_income) <= Decimal(0):
         return ()
-    if casilla_values.get(declaration.prior_payment, Decimal(0)) != Decimal(0):
+    if AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, declaration.prior_payment) != Decimal(0):
         return ()
     prior_filings = _prior_casilla_values(
         observation_repository,

@@ -19,12 +19,16 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-from cadrumo.adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
+from cadrumo.adapters.persistence.storage.master_key.active_session import (
+    ActiveProfileSessionPresenceAdapter,
+    current_active_bucket_session,
+)
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
@@ -34,13 +38,11 @@ from cadrumo.application.auth.operation_definitions import (
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
     AUTH_RESET_OPERATION_DEFINITION_ID,
     AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
-    PROFILE_LOGIN_OPERATION_DEFINITION_ID,
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
     AuthOperationPorts,
     AuthSessionAcquireOperationRequest,
     AuthTeardownOperationRequest,
-    ProfileLoginOperationRequest,
     ProfilePassphraseRotationOperationRequest,
     build_auth_operation_definitions,
     build_auth_operation_registrations,
@@ -50,12 +52,12 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
-from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
+from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -135,7 +137,7 @@ def _run_secret_operation(
     supervisor: OperationSupervisor,
     definition_id: str,
     subject_ref: str,
-    payload: ProfileLoginOperationRequest | ProfilePassphraseRotationOperationRequest,
+    payload: ProfilePassphraseRotationOperationRequest,
     operation_id: str,
     secret: bytes,
 ):
@@ -149,73 +151,10 @@ def _run_secret_operation(
     return asyncio.run(run_to_settlement(supervisor, created_id))
 
 
-def test_profile_login_uses_a_requirement_bound_secret_without_durable_secret_bytes(
-    tmp_path: Path, operation: PinnedAuthorityOperation
-) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        profile_id = _register_profile()
-        login_profile(
-            name=str(profile_id),
-            passphrase_callback=lambda: _CURRENT,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
-        assert logout_active_profile() == str(profile_id)
-        terminal = _run_secret_operation(
-            supervisor=_supervisor(root, operation=operation),
-            definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-            subject_ref=f"profile:{profile_id}",
-            payload=ProfileLoginOperationRequest(profile_id=profile_id),
-            operation_id="3" * 64,
-            secret=_CURRENT.encode("utf-8"),
-        )
-        assert terminal.lifecycle is OperationLifecycle.TERMINAL
-        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert terminal.effect is OperationEffect.UPDATED
-        assert terminal.terminal_receipt is not None
-        assert terminal.terminal_receipt.result_ref == f"profile:{profile_id}"
-        _assert_not_durable(root, _CURRENT.encode("utf-8"))
-
-
-def test_profile_login_secret_wait_rejects_mismatch_and_settles_cancel_or_restart_before_entry(
-    tmp_path: Path, operation: PinnedAuthorityOperation
-) -> None:
-    observed_at = [datetime(2026, 8, 24, 12, tzinfo=UTC)]
-    supervisor = _supervisor(tmp_path, operation=operation, clock=lambda: observed_at[0])
-    profile_id = UUID("11111111-1111-4111-8111-111111111111")
-    request = OperationRequest(
-        definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-        subject_ref=f"profile:{profile_id}",
-        payload=ProfileLoginOperationRequest(profile_id=profile_id),
-    )
-    cancelled_id = asyncio.run(supervisor.submit(request, operation_id="a" * 64))
-    requirement = asyncio.run(supervisor.inspect(cancelled_id)).secret_requirement
-    assert requirement is not None
-    mismatch = requirement.model_copy(
-        update={"identity": requirement.identity.model_copy(update={"subject_ref": "profile:wrong"})}
-    )
-    rejected = bytearray(_CURRENT.encode("utf-8"))
-    with pytest.raises(ValueError, match="does not match"):
-        asyncio.run(supervisor.submit_ephemeral_secret(mismatch, rejected))
-    assert rejected == bytearray(len(rejected))
-    cancelled = asyncio.run(supervisor.request_cancel(cancelled_id))
-    assert cancelled.terminal_condition is OperationTerminalCondition.CANCELLED
-    assert cancelled.effect is OperationEffect.NONE
-
-    restart_id = asyncio.run(supervisor.submit(request, operation_id="b" * 64))
-    asyncio.run(supervisor.shutdown())
-    observed_at[0] += timedelta(minutes=7)
-    replacement = _supervisor(
-        tmp_path,
-        operation=operation,
-        clock=lambda: observed_at[0],
-        owner_id="c" * 64,
-        lease_token="d" * 64,
-    )
-    interrupted = asyncio.run(replacement.reconcile(restart_id))
-    assert interrupted.terminal_condition is OperationTerminalCondition.INTERRUPTED
-    assert interrupted.effect is OperationEffect.NONE
-    _assert_not_durable(tmp_path, _CURRENT.encode("utf-8"))
+def test_legacy_profile_login_is_not_an_operation() -> None:
+    registry = OperationRegistry(definitions=_AUTH_DEFINITIONS)
+    with pytest.raises(KeyError, match="unknown operation"):
+        registry.lookup("auth.profile.login")
 
 
 def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody(
@@ -224,7 +163,7 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _CURRENT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -247,23 +186,29 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
                 operation_id="4" * 64,
                 secret=secret,
             )
+            assert terminal.terminal_receipt is not None
+            reference = terminal.terminal_receipt.result_ref
+            assert reference is not None
+            stored = asyncio.run(
+                operation_secure_reference_repository(objects=objects).resolve(
+                    reference, ProfilePassphraseRotationOutcome
+                )
+            )
+            assert stored.profile_id == str(profile_id) and stored.password_generation == 2
         assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert terminal.effect is OperationEffect.UPDATED
         assert terminal.terminal_receipt is not None
-        assert terminal.terminal_receipt.result_ref == f"profile:{profile_id}"
+        assert terminal.terminal_receipt.result_ref != f"profile:{profile_id}"
         _assert_not_durable(root, secret)
-        assert logout_active_profile() == str(profile_id)
+        reset_test_profile_session()
+        assert current_active_bucket_session() is None
 
-        relogin = _run_secret_operation(
-            supervisor=_supervisor(root, operation=operation),
-            definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-            subject_ref=f"profile:{profile_id}",
-            payload=ProfileLoginOperationRequest(profile_id=profile_id),
-            operation_id="5" * 64,
-            secret=_REPLACEMENT.encode("utf-8"),
+        relogin = authenticate_profile_for_invocation(
+            name=str(profile_id),
+            passphrase_callback=lambda: _REPLACEMENT,
+            profile_decode_context=_profile_decode_context_for_test,
         )
-        assert relogin.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert relogin.effect is OperationEffect.UPDATED
+        assert relogin.bucket_id == str(profile_id)
         _assert_not_durable(root, _REPLACEMENT.encode("utf-8"))
 
 
@@ -302,7 +247,11 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
         )
         acquired = asyncio.run(run_to_settlement(supervisor, acquired_id))
         assert acquired.terminal_condition is OperationTerminalCondition.REFUSED
-        assert acquired.effect is OperationEffect.UNKNOWN
+        # The provider's typed cause is kept for the frontend in another process.
+        assert acquired.terminal_receipt is not None
+        assert acquired.terminal_receipt.error_detail_ref is not None
+        # Local provider preflight refused before entering its external-effect guard.
+        assert acquired.effect is OperationEffect.NONE
 
         logout_id = asyncio.run(
             supervisor.submit(

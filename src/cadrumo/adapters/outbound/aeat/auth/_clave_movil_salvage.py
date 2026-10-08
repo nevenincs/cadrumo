@@ -163,6 +163,7 @@ class _ClaveMovilSessionSalvageMixin(abc.ABC):
                 log.debug("ClaveMovilAuthProvider: nothing to salvage, captured state carries no cookies")
                 return
             authenticated_at = now()
+            landing_url = self._salvageable_landing_url(getattr(page, "url", None), target_path=target_path)
             metadata = ClaveMovilSessionMetadata(
                 identity_nif=dni_nie,
                 authenticated_at=authenticated_at,
@@ -170,10 +171,7 @@ class _ClaveMovilSessionSalvageMixin(abc.ABC):
                 storage_state_sha256=session_store.storage_state_sha256(storage_state),
                 used_non_qr_fallback=self._settings.cadrumo_clave_prefer_non_qr,
                 verification_code=None,
-                landing_url=self._salvageable_landing_url(
-                    getattr(page, "url", None),
-                    target_path=target_path,
-                ),
+                landing_url=landing_url,
             )
             self._persist_session(storage_state_path, storage_state=storage_state, metadata=metadata)
         except Exception as exc:
@@ -183,7 +181,11 @@ class _ClaveMovilSessionSalvageMixin(abc.ABC):
                 exc_info=True,
             )
             return
-        log.info("ClaveMovilAuthProvider: salvaged the authenticated session from a failed post-auth navigation")
+        log.info(
+            "ClaveMovilAuthProvider: kept the failed login's session state for the next reuse probe to judge "
+            "authenticated_landing_observed=%s",
+            landing_url is not None,
+        )
 
 
 __all__ = ["_ClaveMovilSessionSalvageMixin"]

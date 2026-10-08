@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:4e582fba2bd056f1da2afa2b10ed61c3c1c5c3052717529285c5ebe179cd41e4'
 related:
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]"
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
 ---
 ## Scope
 

@@ -6,7 +6,7 @@ modelo:
           filing-year:
             label: Filing year
           irpf-declarante-nif:
-            label: Tax ID of the filer
+            label: Declarant's NIF
           m189-clave-identificacion:
             label: Identification method code
           m189-clave-mercado:
@@ -47,7 +47,7 @@ modelo:
           m189-porcentaje-participacion:
             label: Ownership percentage
           m189-representante-legal-nif:
-            label: Tax ID of the legal representative
+            label: Legal representative's NIF
           m189-tipo-soporte:
             label: Submission medium
           m189-valoracion:

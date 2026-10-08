@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b5c2f32751f553f8c481c509934de73600213881dab2797b7927e7fa6c288d2'
+body_hash: 'sha256:8c3a1304bce27af72ac4404acd4ab60038b52315c7d89efab5098e3a9ef4862d'
 related: []
 ---
 
 # `calculation-correctness-campaign` audit: `M390 annual total sums three of LIVA art 161's four recargo tiers`
 
-## Finding
+## Scope
 
+Review the Modelo 390 recargo total at the fourth rate tier and check the related casilla mapping and category fall-through.
+
+## Findings
 `modelo-390-iva-anual-cuota-devengada-total` sums three of the four recargo de
 equivalencia cuota tiers LIVA art. 161 establishes. The 1,75 % tabaco tier
 (art. 161 4.º) is absent, while M303's quarterly total includes its counterpart.
@@ -30,6 +33,24 @@ filing year 2025), not the TOML tree:
 - `modelo-303-iva-cuota-devengada-total` sums 16 casillas **including `158`** —
   the tabaco cuota box, whose Tipo `[157]` the design fixes as the constant
   `00175`.
+
+## Recommendations
+Two questions, deliberately left open:
+
+1. Should `iva.anual.repercutido.recargo.tipo-1-75.cuota` join the annual total?
+   The symmetry argument with M303 casilla 27 says yes, and the header's own
+   reasoning says yes. Confirm against the official M390 box [47] "Total cuotas
+   IVA y recargo de equivalencia" design before adding a member, and note that the
+   AEAT Manual práctico worked example the current tiers were grounded against
+   charges no tabaco recargo, so it cannot settle this the way it settled
+   general/reducido. A `test_m390_super_reducido_recargo_delta`-shaped structural
+   proof is the available instrument, as it was for the third tier.
+2. Correct the header's `casilla 158` reference to `[170]`.
+
+Neither is applied here: the first changes a declared total and must be grounded
+before it ships, per the standing rule that the oracle follows the fix.
+
+No production code, registry data or test was changed by this audit.
 
 ## Why it matters
 
@@ -112,25 +133,6 @@ correspondence from this comment is pointed at the tabaco box while reading abou
 super-reducido. This is the cross-modelo form of the standing hazard: **never
 join on a casilla id across revisions or returns** — ids are reallocated, and this
 one was, by a repair already landed in this campaign.
-
-## Remediation — owner's decision, not taken here
-
-Two questions, deliberately left open:
-
-1. Should `iva.anual.repercutido.recargo.tipo-1-75.cuota` join the annual total?
-   The symmetry argument with M303 casilla 27 says yes, and the header's own
-   reasoning says yes. Confirm against the official M390 box [47] "Total cuotas
-   IVA y recargo de equivalencia" design before adding a member, and note that the
-   AEAT Manual práctico worked example the current tiers were grounded against
-   charges no tabaco recargo, so it cannot settle this the way it settled
-   general/reducido. A `test_m390_super_reducido_recargo_delta`-shaped structural
-   proof is the available instrument, as it was for the third tier.
-2. Correct the header's `casilla 158` reference to `[170]`.
-
-Neither is applied here: the first changes a declared total and must be grounded
-before it ships, per the standing rule that the oracle follows the fix.
-
-No production code, registry data or test was changed by this audit.
 
 ## Blast radius and sibling sweep, same day
 

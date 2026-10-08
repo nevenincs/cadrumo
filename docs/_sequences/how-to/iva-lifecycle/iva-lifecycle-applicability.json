@@ -36,7 +36,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "overview.explain",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicable": false,
           "generated_at": "2026-04-01T09:00:00Z",
@@ -76,7 +84,7 @@
           "year": 2026
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

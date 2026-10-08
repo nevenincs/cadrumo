@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#tui-interface'
 date: '2026-08-16'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ab45add04596d63da761c1554a6d3a269491883a3fa98b6b17d5914878f71e6d'
+body_hash: 'sha256:73a4e86f0aa3a4ee1f10bc3a353fb658e308e0718c059d84a8cb399dda2149c0'
 related:
   - '[[2026-08-11-tui-interface-adr]]'
-  - '[[2026-08-11-tui-interface-ledger]]'
-  - '[[2026-08-11-tui-interface-plan]]'
   - '[[2026-08-11-tui-interface-research]]'
   - '[[2026-08-30-tui-interface-retired-receipt-rows-audit]]'
   - '[[2026-08-31-tui-interface-audit]]'
@@ -38,14 +36,6 @@ Auto-generated index of all documents tagged with `#tui-interface`.
 
 - `2026-08-30-tui-interface-retired-receipt-rows-audit` - `tui-interface` audit: `Open rows whose deliverables an accepted decision retired`
 - `2026-08-31-tui-interface-audit` - `tui-interface` audit: `final interface review`
-
-### exec
-
-- `2026-08-11-tui-interface-ledger` - `tui-interface` ledger
-
-### plan
-
-- `2026-08-11-tui-interface-plan` - `tui-interface` plan
 
 ### reference
 

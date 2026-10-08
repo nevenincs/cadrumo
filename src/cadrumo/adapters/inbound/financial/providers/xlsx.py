@@ -15,16 +15,12 @@ typed workbook cell values for dates and amounts until the parse boundary.
 
 from __future__ import annotations
 
+import io
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
-from openpyxl import load_workbook
-from openpyxl.workbook import Workbook
-from openpyxl.worksheet.worksheet import Worksheet
-
-from .....core.external_constants import XLSX_EXTENSION
 from .....core.logging import get_logger
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
 from .....domain.transactions.raw_transaction import SourceFormat
@@ -43,6 +39,10 @@ from .workbook_layout import (
     best_layout_match,
     iter_worksheet_rows,
 )
+
+if TYPE_CHECKING:
+    from openpyxl.workbook import Workbook
+    from openpyxl.worksheet.worksheet import Worksheet
 
 _logger = get_logger(__name__)
 
@@ -77,7 +77,6 @@ class XlsxProvider(FinancialProvider):
     """
 
     name = "XLSX provider"
-    supported_extensions = frozenset({XLSX_EXTENSION})
     source_format = SourceFormat.XLSX
     # Corpus fixture is a synthetic XLSX generated from the standard bank
     # export column schema; layout fidelity confirmed against the spec.
@@ -96,12 +95,14 @@ class XlsxProvider(FinancialProvider):
         Returns:
             A :class:`ProviderValidation` with the validation outcome.
         """
+        from openpyxl.workbook import Workbook
+
         # Keep the workbook as an object until the locator has returned.  The
         # locator owns its failure teardown, but a successful return still
         # needs this method's validation teardown in its ``finally`` block.
         workbook: object = None
         try:
-            workbook, rows, _, layout, header_row, _, _ = self._locate_sheet(path)
+            workbook, rows, _, layout, header_row, _, _ = self._locate_sheet(self._read_source_bytes(path))
             workbook = _runtime_object(workbook)
         except InvalidFinancialSourceError as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
@@ -145,7 +146,7 @@ class XlsxProvider(FinancialProvider):
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the first matching worksheet."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
-        workbook, rows, sheet_name, layout, headers, lookup, header_index = self._locate_sheet(path)
+        workbook, rows, sheet_name, layout, headers, lookup, header_index = self._locate_sheet(source_bytes)
         if layout is None or headers is None or lookup is None:
             workbook.close()
             raise InvalidFinancialSourceError("Workbook does not contain a supported bank-statement header row")
@@ -166,10 +167,10 @@ class XlsxProvider(FinancialProvider):
 
     def _locate_sheet(
         self,
-        path: Path,
+        source_bytes: bytes,
     ) -> tuple[Workbook, list[list[Any]], str, CsvBankLayout | None, list[str] | None, dict[str, str] | None, int]:
         """Return the first worksheet that matches a known bank layout."""
-        workbook = _open_workbook_or_refuse(path)
+        workbook = _open_workbook_or_refuse(source_bytes)
         try:
             best = _select_best_layout_across_worksheets(workbook)
             best_rows = _materialize_selected_rows_or_refuse_formula_cells(
@@ -256,12 +257,14 @@ def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatc
     return best
 
 
-def _open_workbook_or_refuse(path: Path) -> Workbook:
-    """Open ``path`` with formulas visible or re-wrap the parse failure."""
+def _open_workbook_or_refuse(source_bytes: bytes) -> Workbook:
+    """Open the guarded workbook bytes with formulas visible or re-wrap the parse failure."""
+    from openpyxl import load_workbook
+
     try:
-        return load_workbook(filename=path, read_only=True, data_only=False)
+        return load_workbook(filename=io.BytesIO(source_bytes), read_only=True, data_only=False)
     except Exception as exc:  # pragma: no cover - exercised via validation path
-        raise InvalidFinancialSourceError(f"could not open workbook: {path}") from exc
+        raise InvalidFinancialSourceError("could not open workbook") from exc
 
 
 def _close_workbook_during_teardown(workbook: Workbook) -> None:

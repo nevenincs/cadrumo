@@ -13,9 +13,8 @@ This module composes the four existing scanner runners rather than
 re-implementing any of them. The complexity and duplication dimensions are
 reused from ``dev.audit.report``, while ``dev.audit.dead_code`` and
 ``dev.audit.security`` supply the other two dimensions. The report module is
-wired into ``.github/workflows/code-health-report.yml`` and
-``src/cadrumo/tests/test_dev_audit_report.py`` pins its `to_json()` shape and
-three-dimension composition.
+wired into ``.github/workflows/code-health-report.yml``, and ``dev/audit/tests``
+covers both dashboards' severity mapping, rendering, and persistence.
 
 Two things this module adds that no existing `dev/audit` scanner has:
 
@@ -52,7 +51,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -61,7 +59,7 @@ from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
-from dev.test_runs.paths import allocate_run_directory
+from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
 from .report import DimensionReport, Status, audit_complexity, audit_duplication
@@ -108,7 +106,7 @@ def audit_dead_code(repo_root: Path) -> AdvisoryDimension:
     """Classify the dead-code dimension from the one vulture runner.
 
     AMBER on any finding -- advisory debt, matching today's non-blocking
-    posture (`audit-dead-code` has never gated anything; this display invents
+    posture (`audit-dead-weight` has never gated anything; this display invents
     no new policy). GREEN on a clean scan. AMBER on a tool error, never
     GREEN -- "could not measure" and "nothing to find" are different facts.
     """
@@ -201,21 +199,6 @@ def _wrap(report: DimensionReport) -> AdvisoryDimension:
     return AdvisoryDimension(report, count_by_severity=count_by_severity)
 
 
-def _complexity_dimension() -> AdvisoryDimension:
-    """Run the complexity scanner and preserve unavailable evidence."""
-    try:
-        return _wrap(audit_complexity())
-    except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
-        return _wrap(
-            DimensionReport(
-                name="complexity",
-                status=Status.AMBER,
-                headline=f"complexity signal unavailable this cycle: {exc}",
-                available=False,
-            ),
-        )
-
-
 # ---------------------------------------------------------------------------
 # Aggregation
 # ---------------------------------------------------------------------------
@@ -231,7 +214,7 @@ def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
     boundary, not by line-count thresholds or snapshots of temporary debt.
     """
     return (
-        _complexity_dimension(),
+        _wrap(audit_complexity()),
         audit_dead_code(repo_root),
         _wrap(audit_duplication(repo_root)),
         audit_security(repo_root),
@@ -283,7 +266,7 @@ def _total_findings(dimension: AdvisoryDimension) -> int:
     Complexity and duplication are reused verbatim from ``dev.audit.report``
     and never populate ``findings`` -- their `details` list is not always
     one-line-per-finding either (`audit_duplication` collapses every clone
-    into a single "see `just audit-duplication`" pointer line, so counting
+    into a single "see `just audit-dead-weight`" pointer line, so counting
     `details` would undercount 17 clusters as 1). Their own headline always
     leads with the real count in prose, so that is the honest source here.
     """
@@ -391,7 +374,7 @@ def main() -> int:
         print(render_text(dimensions, overall, full=args.full))
 
     command = tuple(sys.argv)
-    run_dir = persist(allocate_run_dir(repo_root), dimensions, overall, command=command)
+    run_dir = persist(allocate_run_dir(test_log_root()), dimensions, overall, command=command)
     if not args.json:
         print(f"\nfull report persisted to {run_dir / 'summary.json'} and {run_dir / 'summary.md'}")
 

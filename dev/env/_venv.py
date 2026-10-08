@@ -6,11 +6,11 @@ import hashlib
 import os
 import subprocess
 import sys
-import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import REPO_ROOT
 
 if TYPE_CHECKING:
@@ -80,7 +80,7 @@ def _exclusive(venv: Path) -> Iterator[None]:
     Raises:
         RuntimeError: When another install already owns this environment.
     """
-    lock = Path(tempfile.gettempdir()) / _lock_name(venv)
+    lock = prepare_temporary_directory() / _lock_name(venv)
     handle = os.open(lock, os.O_CREAT | os.O_RDWR)
     try:
         if not _try_lock(handle):

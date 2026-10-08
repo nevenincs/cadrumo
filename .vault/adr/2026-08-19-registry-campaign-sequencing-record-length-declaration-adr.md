@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-campaign-sequencing'
 date: '2026-08-19'
-modified: '2026-08-19'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:73a1cbee563751755956d822c5ebddf81a96712defba49b509d3e41ffb613560'
+body_hash: 'sha256:efe05c24602e4a788cfed164ff7ced93b3ddf1134784a0dea1993358258a2ec7'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-export-layout-authoring-backlog-audit]]"
 ---
@@ -95,3 +95,9 @@ the third occurrence is found the same way the first two were -- by someone
 reading a diseño next to a layout. A declared length turns an invisible
 filing-correctness defect into a refusal at registry build, which is where this
 registry puts its other structural facts.
+
+## Consequences
+
+An explicit declared record length makes both under-length and over-length field extents build-time refusals across handwritten and generated layouts. Existing layouts, the generated-tree emitter, and the two measured short records must migrate together.
+
+This removes reliance on review or a render-time design lookup for record size. Every emitted fixed-width record remains tied to the length AEAT declared, including its trailing blank run.

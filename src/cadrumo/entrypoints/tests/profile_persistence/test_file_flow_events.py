@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from itertools import groupby
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
     plant_calculation_revision_unchecked,
@@ -13,7 +15,7 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import (
@@ -71,24 +73,32 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
             "verified_by": "operator-A",
         }
     )
+    # The planted coordinate also contradicts its saved rendering snapshot.
+    # Pin that concrete integrity failure before asserting the sanitized read
+    # refusal, so an unrelated persistence failure cannot satisfy this test.
+    with pytest.raises(ValidationError, match="saved rendering snapshot belongs to another calculation coordinate"):
+        type(stale).model_validate(stale.model_dump(mode="python", context={"secure_calculation_revision": True}))
     plant_calculation_revision_unchecked(cr_repo.load(), stale)
 
     # The repository read refuses the planted row before the action reaches its
     # own divergence check.
     with (
-        pytest.raises(CalculationRevisionPersistenceError, match="disagrees with its parent WorkUnit"),
+        pytest.raises(CalculationRevisionPersistenceError) as refusal,
         bundled_indexed_authority().operation() as operation,
     ):
         file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id="0" * 64,  # repository read refuses before approval lookup
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-A",
             workflow_profile=workflow_profile(),
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         )
+
+    assert refusal.value.context == {"reason": "invalid_payload"}
 
 
 def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
@@ -130,7 +140,7 @@ def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
 
 
 def test_verify_emits_passed_event_on_success(repos: Repos) -> None:
-    """verify_modelo_revision emits ``modelo.verification.passed``
+    """verify_modelo_revision_with_preconditions emits ``modelo.verification.passed``
     when the verifier grants verified-complete; the event id matches
     the persisted verification report."""
 
@@ -175,7 +185,7 @@ def test_verify_emits_passed_event_on_success(repos: Repos) -> None:
 
 
 def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
-    """verify_modelo_revision emits ``modelo.verification.refused``
+    """verify_modelo_revision_with_preconditions emits ``modelo.verification.refused``
     when a required casilla is missing; the calculation revision
     stays DRAFT and the refusal lands in the bucket event log."""
 
@@ -206,7 +216,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -215,7 +225,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert report.granted_verificado_completo is False
 
     catalogue = bv_repo.load()
@@ -388,10 +398,12 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
 
     # Whole calculation/file chain in chronological order for the bucket.
     # Work-unit creation is also persisted in this catalogue by the
-    # shared runtime path.
+    # shared runtime path. One filing emits its supersession and its new
+    # filing at the same instant; the canonical order breaks that tie by
+    # content-addressed event id, so each instant is compared as a group.
     all_events = catalogue.for_bucket(work_unit.bucket_id)
-    type_chain = tuple(
-        e.event_type
+    chain = [
+        e
         for e in all_events
         if e.event_type
         in {
@@ -399,11 +411,14 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: Repos) 
             BucketEventType.MODELO_FILED,
             BucketEventType.MODELO_FILED_SUPERSEDED,
         }
-    )
-    assert type_chain == (
-        BucketEventType.MODELO_CALCULATION_CREATED,
-        BucketEventType.MODELO_FILED,
-        BucketEventType.MODELO_CALCULATION_CREATED,
-        BucketEventType.MODELO_FILED_SUPERSEDED,
-        BucketEventType.MODELO_FILED,
-    )
+    ]
+    type_chain = [
+        sorted(e.event_type.value for e in same_instant)
+        for _, same_instant in groupby(chain, key=lambda event: event.occurred_at)
+    ]
+    assert type_chain == [
+        [BucketEventType.MODELO_CALCULATION_CREATED.value],
+        [BucketEventType.MODELO_FILED.value],
+        [BucketEventType.MODELO_CALCULATION_CREATED.value],
+        sorted((BucketEventType.MODELO_FILED_SUPERSEDED.value, BucketEventType.MODELO_FILED.value)),
+    ]

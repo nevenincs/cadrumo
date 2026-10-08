@@ -18,6 +18,7 @@ from ..checks import (
     COHERENCE_TIER_PREFIX,
     _timeout_progress_diagnostic,
     check_page_coherence,
+    check_page_coherence_in_subprocess,
     check_sequences,
     discover_sequences,
     refresh_sequences,
@@ -374,6 +375,30 @@ def _write_coherence_contracts(root: Path, page: str, second_expected_status: st
 
 
 class TestPageCoherenceMode:
+    @pytest.mark.parametrize("page,jobs", [("coherence", 1), (None, 2)])
+    @pytest.mark.parametrize("expected_status", ["reused", "created"])
+    def test_subprocess_coherence_runs_without_a_default_deadline(
+        self,
+        tmp_path: Path,
+        page: str | None,
+        jobs: int,
+        expected_status: str,
+    ) -> None:
+        """Uncapped scoped and sharded children retain cumulative-state verdicts."""
+        (tmp_path / "coherence.md").write_text(_coherence_page(expected_status), encoding="utf-8")
+        _write_coherence_contracts(tmp_path, "coherence", expected_status)
+
+        problems = check_page_coherence_in_subprocess(docs_root=tmp_path, page=page, jobs=jobs)
+
+        if expected_status == "reused":
+            assert problems == (), problems
+        else:
+            assert len(problems) == 1
+            assert COHERENCE_TIER_PREFIX in problems[0]
+            assert "coherence-second" in problems[0]
+            assert '@expect result.status == "created" failed' in problems[0]
+            assert '"reused"' in problems[0]
+
     def test_cumulative_page_state_is_shared_and_coherent(self, tmp_path: Path) -> None:
         """The green proof IS the cumulative proof: sequence two's
         ``status == "reused"`` expectation can only hold because sequence one's

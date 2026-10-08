@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#fichero-boe-golden-sha-contract-shape'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:c045b9491b5dba55012e7f4b1d9f64268bbb0a09ab1b99fadbbe1498acc7f905'
+modified: '2026-10-03'
+body_hash: 'sha256:64db33f266ca02cf6541ec21985879e0d96e7cd214af86d8c67cfd242d7f0dc1'
 related:
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"
   - '[[2026-06-04-fichero-boe-golden-sha-contract-shape-research]]'
+  - '[[2026-06-03-suite-redgreen-2026-06-02-code-review-audit]]'
 ---
 
 # `fichero-boe-golden-sha-contract-shape` adr: golden SHA stays as the byte-identity lock; DR303 conformance is a sibling assertion | (**status:** `accepted`)
@@ -199,9 +200,10 @@ and self-diagnosing at the test-source layer.
   `aeat-safety-legal-gates` rule; the conformance test stays
   byte-level only).
 
-## Status
+## Historical execution and current enforcement
 
-Accepted. P07.S25 is reshaped into the two-commit sequence above.
-The original coder dispatch (recompute the constant) remains valid
-and can land first; the conformance sibling lands as a follow-up
-that closes the diagnostic gap.
+The decision remains that the golden digest is a byte-identity lock and DR303 byte-shape conformance is an independently grounded assertion; any digest update must remain tied to direct record facts.
+
+Historical execution (2026-06-03): `2026-06-02-suite-redgreen-2026-06-02-plan` P07.S25 records the digest recompute; `2026-06-03-suite-redgreen-2026-06-02-code-review-audit` records the dedicated test and byte assertions passing. `2026-06-02-session-honest-followups-plan` P04.S24 records the DR-grounded recompute as complete.
+
+Curation update (2026-10-03): the cited test and constant are absent from the current source tree (`src/` and `dev/`); a targeted search found no `_M303_GOLDEN_SHA256`, `test_modelo_303_golden_sha_fichero_boe`, or `test_fichero_boe_roundtrip`. The accepted decision remains governing, but the historical pass no longer demonstrates present enforcement. A current implementation task is needed to restore or replace these conformance checks.

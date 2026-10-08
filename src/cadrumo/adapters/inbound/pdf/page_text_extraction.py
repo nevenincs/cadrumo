@@ -37,8 +37,6 @@ from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
 
-import pdfplumber
-
 from .redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 
 
@@ -80,6 +78,8 @@ def extract_pages_text_from_path(
     """
     if not pdf_path.is_file():
         raise error_class(f"{not_found_label}: {_INPUT_PDF_SOURCE_LABEL}")
+    import pdfplumber
+
     try:
         with pdfplumber.open(pdf_path) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
@@ -113,6 +113,8 @@ def extract_pages_text_from_bytes(
     Returns:
         Tuple of stripped per-page text in page order.
     """
+    import pdfplumber
+
     try:
         with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
@@ -150,6 +152,8 @@ def extract_pages_text_concatenated(
         Exception: An instance of the supplied ``error_class`` when pdfplumber
             cannot open the file.
     """
+    import pdfplumber
+
     try:
         with pdfplumber.open(str(pdf_path)) as pdf:
             chunks: list[str] = []

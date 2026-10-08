@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#docs-build-performance'
 date: '2026-09-24'
-modified: '2026-09-24'
+modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:31e892788d95eb793cdc7327c30c2e430220562f2a6e580446d195ee40170bb4'
+body_hash: 'sha256:8e097b0aece6b6fdb62baac71b890aef8cf93e4ae25190e3718ba948ab2f8e26'
 related:
   - "[[2026-09-24-docs-build-performance-research]]"
   - "[[2026-07-18-user-docs-localization-adr]]"
@@ -75,6 +75,8 @@ rather than the symptoms patched.
 - D4: The language roots build concurrently, and the Sphinx doctree environment of
   each root persists in a size-bounded, runner-local cache so unchanged pages are
   not re-read.
+
+- D1 amendment, 2026-10-06. Operator direction 2026-10-06: optimize the user documentation build and its output. The collapsed tree still lists every sibling of the page being read, so a section of N pages spends N squared entries on its own sidebars. A section whose index page lists its members is named in the `cadrumo_navigation_listed_on_index` configuration value; inside it the sidebar is Sphinx's collapsed tree less the members other than the page being read and its ancestors, and the index is where the others are found. The legal reference is the one section named (`docs/conf.py`). Every other page keeps Sphinx's collapsed output unchanged, and that output stays the oracle; the reduced form is proven on the fixture site in `dev/docs/tests/test_navigation.py`. Measured on the English desktop root: each of the 185 legal pages carried 184 sibling entries, about 21 KB of its sidebar, and the section fell from 14.0 MB to 8.6 MB together with the head changes of the same date.
 
 ## Rationale
 

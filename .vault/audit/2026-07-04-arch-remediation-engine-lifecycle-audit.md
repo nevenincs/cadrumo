@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#arch-remediation-engine-lifecycle'
 date: '2026-07-04'
-modified: '2026-07-17'
-body_hash: 'sha256:06d2aee7a1979ea2e890b6605abe288bfe30974a3d5cf6456c2104e52015da44'
+modified: '2026-10-03'
+body_hash: 'sha256:6ad7238648886d75453b57393435ba98acf3cdbf70cca56991a0b7357949a9ae'
 related:
-  - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
   - "[[2026-07-02-arch-remediation-engine-lifecycle-adr]]"
 ---
 
@@ -27,14 +26,11 @@ Evidence used:
   2026-07-02-arch-remediation-engine-lifecycle-plan`: 11 of 11 complete.
 - `vaultspec-core vault check features --feature
   arch-remediation-engine-lifecycle`: clean before this close audit.
-- `uv run --no-sync pytest -q
-  src/aeat/adapters/persistence/storage/tests/test_engine_session_lifecycle.py
-  src/aeat/tests/test_secure_sql.py`: 8 passed.
+- the historical check: 8 passed.
 - Direct source inspection confirmed lazy session-owned engine acquisition in
-  `src/aeat/adapters/persistence/storage/runtime.py`, session-owned disposal in
-  `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py`, and
+  The retired module, session-owned disposal in
+  The retired module, and
   bucket-keyed engine cache ownership in
-  `src/aeat/adapters/persistence/storage/sql/engine.py`.
 
 ## Findings
 

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-19'
-modified: '2026-09-20'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:a58f76a597e0b93f20a19c2ab7c781cca898e5fa22cf61f19219e5357e84a920'
-related:
-  - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 # `registry-authority-artifact-boundary` audit: `fresh worktree bootstrap`
 

@@ -21,10 +21,10 @@ from decimal import Decimal
 import pytest
 
 from ..errors import RegistryValidationError
+from ..ledger_binding_selector_support import LEDGER_IVA_FACTS
 from ..ledger_iva_bindings import (
     _IVA_ALTERNATIVE_MEASURE_FACTS,
     _IVA_INDEPENDENT_QUANTITY_FACTS,
-    _IVA_SUPPORTED_FACTS,
 )
 from ..ledger_renta_income_bindings import (
     _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
@@ -43,7 +43,7 @@ def test_the_iva_family_excludes_nothing_as_an_alternative_measure() -> None:
     exclusion set is correct here where the renta side's is deliberately not.
     """
     assert _IVA_ALTERNATIVE_MEASURE_FACTS == {}
-    assert _IVA_INDEPENDENT_QUANTITY_FACTS == _IVA_SUPPORTED_FACTS
+    assert _IVA_INDEPENDENT_QUANTITY_FACTS == LEDGER_IVA_FACTS
     assert (
         frozenset(
             {"base_amount_sum", "iva_amount_sum", "recargo_amount_sum"},

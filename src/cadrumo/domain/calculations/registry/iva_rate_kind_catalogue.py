@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ....core.time.clock import today_madrid
 from ...iva.schema import IvaRateKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
 from .governed_fact_scope import (
     GovernedFactSource,
     cache_governed_projection,
     governed_facts_in_scope,
+    require_governed_fact_authority,
     validating_governed_facts,
 )
 from .schema_base import DateAxis
@@ -84,44 +88,15 @@ class IvaRateKindCatalogue:
         return matches[0]
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("IVA rate-kind entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate IVA rate-kind key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _resolve_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("IVA rate-kind catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-def _scoped_entries(effective_date: date) -> Mapping[str, str]:
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("IVA rate-kind catalogue requires an explicit authority operation or scope")
-    return _resolve_entries(effective_date=effective_date, authority=authority)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.DEVENGO_DATE, policy=_ENTRIES_POLICY)
 
 
 @cache_governed_projection(maxsize=512)
 def _scoped_catalogue(effective_date: date) -> IvaRateKindCatalogue:
-    entries = _scoped_entries(effective_date)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
     definitions: list[IvaRateKindDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_PREFIX}{raw_token}"
@@ -161,9 +136,7 @@ def resolve_iva_rate_kind_catalogue(
 ) -> IvaRateKindCatalogue:
     """Resolve the complete IVA rate-kind vocabulary through fact 0094."""
     coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("IVA rate-kind catalogue requires an explicit authority operation or scope")
+    selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     with validating_governed_facts(selected):
         return _scoped_catalogue(coordinate)
 

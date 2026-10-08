@@ -5,12 +5,14 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+import httpx
 import pytest
 
 from .....domain.currency.errors import ExchangeRateProviderError
-from .....domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
+from .....domain.currency.models import CurrencyNormalizationStatus, EurRateLookupStatus, MonetaryAmount
 from .....domain.currency.service import CurrencyNormalizationService
 from .....tests.ecb_stub import ecb_csv_fetch
+from .. import ecb_provider
 from ..ecb_provider import EcbReferenceRateProvider, _observation_url, default_ecb_rate_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -37,40 +39,55 @@ def provider() -> EcbReferenceRateProvider:
 
 
 def test_eur_is_identity(provider: EcbReferenceRateProvider) -> None:
-    assert provider.get_eur_rate("EUR", date(2025, 3, 14)) == Decimal("1")
+    lookup = provider.lookup_eur_rate("EUR", date(2025, 3, 14))
+
+    assert lookup.status is EurRateLookupStatus.FOUND
+    assert lookup.rate == Decimal("1")
+    assert lookup.observation_date == date(2025, 3, 14)
 
 
-def test_get_eur_rate_inverts_ecb_eur_base_quote(provider: EcbReferenceRateProvider) -> None:
+def test_lookup_inverts_ecb_eur_base_quote(provider: EcbReferenceRateProvider) -> None:
     # 1 EUR = 1.0889 USD -> USD->EUR = 1/1.0889.
-    assert provider.get_eur_rate("USD", date(2025, 3, 14)) == Decimal("1") / Decimal("1.0889")
+    assert provider.lookup_eur_rate("USD", date(2025, 3, 14)).rate == Decimal("1") / Decimal("1.0889")
     # 1 EUR = 0.84183 GBP -> GBP->EUR = 1/0.84183 (>1, since GBP is stronger).
-    rate = provider.get_eur_rate("GBP", date(2025, 3, 14))
+    rate = provider.lookup_eur_rate("GBP", date(2025, 3, 14)).rate
     assert rate is not None
     assert rate == Decimal("1") / Decimal("0.84183")
     assert rate > Decimal("1")
 
 
-def test_non_publication_date_falls_back_to_prior_working_day(
+def test_non_publication_date_falls_back_to_prior_working_day_and_names_it(
     provider: EcbReferenceRateProvider,
 ) -> None:
     # 2025-03-16 was a Sunday; the ECB published no rate, so the most recent
-    # prior publication (Friday the 14th) applies -- not Thursday the 13th.
-    on_sunday = provider.get_eur_rate("USD", date(2025, 3, 16))
-    assert on_sunday == Decimal("1") / Decimal("1.0889")
-    assert on_sunday != Decimal("1") / Decimal("1.0830")
+    # prior publication (Friday the 14th) applies -- not Thursday the 13th --
+    # and the lookup records Friday as the observation it used.
+    on_sunday = provider.lookup_eur_rate("USD", date(2025, 3, 16))
+
+    assert on_sunday.rate == Decimal("1") / Decimal("1.0889")
+    assert on_sunday.rate != Decimal("1") / Decimal("1.0830")
+    assert on_sunday.rate_date == date(2025, 3, 16)
+    assert on_sunday.observation_date == date(2025, 3, 14)
 
 
-def test_currency_the_ecb_does_not_publish_returns_none(
+def test_currency_the_ecb_does_not_publish_is_unsupported_not_missing(
     provider: EcbReferenceRateProvider,
 ) -> None:
-    assert provider.get_eur_rate("XYZ", date(2025, 3, 14)) is None
+    lookup = provider.lookup_eur_rate("XYZ", date(2025, 3, 14))
+
+    assert lookup.status is EurRateLookupStatus.UNSUPPORTED_CURRENCY
+    assert lookup.rate is None
+    assert lookup.observation_date is None
 
 
-def test_date_outside_the_lookback_window_returns_none(
+def test_date_outside_the_lookback_window_is_a_missing_rate(
     provider: EcbReferenceRateProvider,
 ) -> None:
     # Far earlier than any published observation: the widened window is empty.
-    assert provider.get_eur_rate("USD", date(2024, 12, 1)) is None
+    lookup = provider.lookup_eur_rate("USD", date(2024, 12, 1))
+
+    assert lookup.status is EurRateLookupStatus.MISSING_RATE
+    assert lookup.rate is None
 
 
 @pytest.mark.parametrize("currency", ("usd", " usd "))
@@ -97,20 +114,20 @@ def test_provider_refuses_path_containing_currency_before_lookup(currency: str) 
     provider = EcbReferenceRateProvider(fetch=_transport_that_must_not_be_reached)
 
     with pytest.raises(ExchangeRateProviderError, match="three-letter ISO 4217 code"):
-        provider.get_eur_rate(currency, date(2025, 3, 14))
+        provider.lookup_eur_rate(currency, date(2025, 3, 14))
 
 
 def test_resolved_rates_are_memoized_per_currency_and_date() -> None:
     calls: list[str] = []
     inner = ecb_csv_fetch(_ECB_QUOTES)
 
-    def counting_fetch(url: str) -> str:
+    def counting_fetch(url: str) -> str | None:
         calls.append(url)
         return inner(url)
 
     provider = EcbReferenceRateProvider(fetch=counting_fetch)
-    first = provider.get_eur_rate("USD", date(2025, 3, 14))
-    second = provider.get_eur_rate("USD", date(2025, 3, 14))
+    first = provider.lookup_eur_rate("USD", date(2025, 3, 14))
+    second = provider.lookup_eur_rate("USD", date(2025, 3, 14))
 
     assert first == second
     assert len(calls) == 1, "a repeated (currency, date) lookup must not re-query the ECB"
@@ -125,7 +142,35 @@ def test_transport_failure_raises_rather_than_reporting_a_missing_rate() -> None
 
     provider = EcbReferenceRateProvider(fetch=failing_fetch)
     with pytest.raises(ExchangeRateProviderError):
-        provider.get_eur_rate("USD", date(2025, 3, 14))
+        provider.lookup_eur_rate("USD", date(2025, 3, 14))
+
+
+@pytest.mark.parametrize(("status", "outcome"), ((404, None), (200, "body")))
+def test_the_live_transport_reports_an_unpublished_series_as_none(
+    monkeypatch: pytest.MonkeyPatch, status: int, outcome: str | None
+) -> None:
+    """The Data Portal answers HTTP 404 for a series it does not publish; that is an answer, not a fault."""
+    real_client = httpx.Client
+
+    def scripted_client(**kwargs: object) -> httpx.Client:
+        return real_client(transport=httpx.MockTransport(lambda request: httpx.Response(status, text="body")))
+
+    monkeypatch.setattr(httpx, "Client", scripted_client)
+
+    url = _observation_url("XYZ", date(2025, 3, 1), date(2025, 3, 14))
+    assert ecb_provider._https_fetch(url) == outcome
+
+
+def test_the_live_transport_still_raises_on_a_server_fault(monkeypatch: pytest.MonkeyPatch) -> None:
+    real_client = httpx.Client
+
+    def scripted_client(**kwargs: object) -> httpx.Client:
+        return real_client(transport=httpx.MockTransport(lambda request: httpx.Response(503)))
+
+    monkeypatch.setattr(httpx, "Client", scripted_client)
+
+    with pytest.raises(ExchangeRateProviderError):
+        ecb_provider._https_fetch(_observation_url("USD", date(2025, 3, 1), date(2025, 3, 14)))
 
 
 def test_default_provider_is_cached() -> None:
@@ -133,10 +178,21 @@ def test_default_provider_is_cached() -> None:
 
 
 def test_normalizer_converts_gbp_to_eur_via_provider() -> None:
-    # End-to-end: the service multiplies amount * get_eur_rate, so a GBP amount
-    # converts to a larger EUR amount (GBP stronger than EUR).
+    # End-to-end: the service multiplies amount * rate, so a GBP amount converts
+    # to a larger EUR amount (GBP stronger than EUR).
     service = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider(fetch=ecb_csv_fetch(_ECB_QUOTES)))
     result = service.normalize(MonetaryAmount(amount=Decimal("1000.00"), currency="GBP"), date(2025, 3, 14))
     assert result.status is CurrencyNormalizationStatus.NORMALIZED
     assert result.eur_amount == (Decimal("1000.00") * (Decimal("1") / Decimal("0.84183"))).quantize(Decimal("0.01"))
+    assert result.eur_amount is not None
     assert result.eur_amount > Decimal("1000.00")
+    assert result.rate_observation_date == date(2025, 3, 14)
+
+
+def test_normalizer_reports_an_unpublished_currency_without_a_euro_amount() -> None:
+    service = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider(fetch=ecb_csv_fetch(_ECB_QUOTES)))
+
+    result = service.normalize(MonetaryAmount(amount=Decimal("1000.00"), currency="XYZ"), date(2025, 3, 14))
+
+    assert result.status is CurrencyNormalizationStatus.UNSUPPORTED_CURRENCY
+    assert result.eur_amount is None

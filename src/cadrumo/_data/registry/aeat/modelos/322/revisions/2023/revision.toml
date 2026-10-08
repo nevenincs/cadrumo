@@ -1199,7 +1199,7 @@ restate_provenance = true
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2008-2022", id = "decl.exonerado-modelo-390" }
-fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:115 (sha256 be029175f11e) DR32201 campo 81 posicion 1115 len 1 An; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:130 (sha256 540805f09ca3) DR32201 campo 96 posicion 1310 len 1 An; misma descripcion, longitud, tipo y contenido (Si=1, No=2); campo 81->96 y posicion 1115->1310.", continuidad_origin = "grounded" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:115 (sha256 be029175f11e) DR32201 campo 81 posicion 1115 len 1 An; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:130 (sha256 540805f09ca3) DR32201 campo 96 posicion 1310 len 1 An; misma descripcion, longitud, tipo y contenido (Si=1, No=2); campo 81->96 y posicion 1115->1310.", continuidad_origin = "grounded", constraints = {legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"],source_refs = ["aeat-dr-322-2023"]}}
 removed_fields = []
 restate_provenance = true
 
@@ -1217,7 +1217,7 @@ restate_provenance = true
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2008-2022", id = "decl.prorrata-especial" }
-fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:48 (sha256 be029175f11e) DR32201 campo 15 posicion 132 len 1 Num; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:48 (sha256 540805f09ca3) DR32201 campo 15 posicion 132 len 1 Num; misma descripcion, campo, posicion, longitud, tipo y contenido (Nota 3).", continuidad_origin = "grounded" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:48 (sha256 be029175f11e) DR32201 campo 15 posicion 132 len 1 Num; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:48 (sha256 540805f09ca3) DR32201 campo 15 posicion 132 len 1 Num; misma descripcion, campo, posicion, longitud, tipo y contenido (Nota 3).", continuidad_origin = "grounded", constraints = {legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"],source_refs = ["aeat-dr-322-2023"]}}
 removed_fields = []
 restate_provenance = true
 
@@ -1305,6 +1305,83 @@ fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
 
+[[revisions."2023".casilla_overrides]]
+restate_provenance = true
+
+[revisions."2023".casilla_overrides.selector]
+revision = "2008-2022"
+id = "decl.sin-actividad"
+
+[revisions."2023".casilla_overrides.fields]
+source_refs = ["boe-modelo-322-2023-form-pdf"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2021-10509 AnnexI PDF7-8 printed75940-75941 and BOE-A-2022-19290 AnnexI PDF6-7 printed158993-158994 both print a separate Sin actividad declaration and activity-description columnA with Principal and five Otras rows. The same declaration or row instance continues without a change of meaning. The earliest supported 2022 registry now owns these previously omitted paper fields; no new2023 concept is claimed."
+[[revisions."2023".casilla_overrides]]
+restate_provenance = true
+
+[revisions."2023".casilla_overrides.selector]
+revision = "2008-2022"
+id = "actividad.principal.descripcion"
+
+[revisions."2023".casilla_overrides.fields]
+source_refs = ["boe-modelo-322-2023-form-pdf"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2021-10509 AnnexI PDF7-8 printed75940-75941 and BOE-A-2022-19290 AnnexI PDF6-7 printed158993-158994 both print a separate Sin actividad declaration and activity-description columnA with Principal and five Otras rows. The same declaration or row instance continues without a change of meaning. The earliest supported 2022 registry now owns these previously omitted paper fields; no new2023 concept is claimed."
+[[revisions."2023".casilla_overrides]]
+restate_provenance = true
+
+[revisions."2023".casilla_overrides.selector]
+revision = "2008-2022"
+id = "actividad.otras-1.descripcion"
+
+[revisions."2023".casilla_overrides.fields]
+source_refs = ["boe-modelo-322-2023-form-pdf"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2021-10509 AnnexI PDF7-8 printed75940-75941 and BOE-A-2022-19290 AnnexI PDF6-7 printed158993-158994 both print a separate Sin actividad declaration and activity-description columnA with Principal and five Otras rows. The same declaration or row instance continues without a change of meaning. The earliest supported 2022 registry now owns these previously omitted paper fields; no new2023 concept is claimed."
+[[revisions."2023".casilla_overrides]]
+restate_provenance = true
+
+[revisions."2023".casilla_overrides.selector]
+revision = "2008-2022"
+id = "actividad.otras-2.descripcion"
+
+[revisions."2023".casilla_overrides.fields]
+source_refs = ["boe-modelo-322-2023-form-pdf"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2021-10509 AnnexI PDF7-8 printed75940-75941 and BOE-A-2022-19290 AnnexI PDF6-7 printed158993-158994 both print a separate Sin actividad declaration and activity-description columnA with Principal and five Otras rows. The same declaration or row instance continues without a change of meaning. The earliest supported 2022 registry now owns these previously omitted paper fields; no new2023 concept is claimed."
+[[revisions."2023".casilla_overrides]]
+restate_provenance = true
+
+[revisions."2023".casilla_overrides.selector]
+revision = "2008-2022"
+id = "actividad.otras-3.descripcion"
+
+[revisions."2023".casilla_overrides.fields]
+source_refs = ["boe-modelo-322-2023-form-pdf"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2021-10509 AnnexI PDF7-8 printed75940-75941 and BOE-A-2022-19290 AnnexI PDF6-7 printed158993-158994 both print a separate Sin actividad declaration and activity-description columnA with Principal and five Otras rows. The same declaration or row instance continues without a change of meaning. The earliest supported 2022 registry now owns these previously omitted paper fields; no new2023 concept is claimed."
+[[revisions."2023".casilla_overrides]]
+restate_provenance = true
+
+[revisions."2023".casilla_overrides.selector]
+revision = "2008-2022"
+id = "actividad.otras-4.descripcion"
+
+[revisions."2023".casilla_overrides.fields]
+source_refs = ["boe-modelo-322-2023-form-pdf"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2021-10509 AnnexI PDF7-8 printed75940-75941 and BOE-A-2022-19290 AnnexI PDF6-7 printed158993-158994 both print a separate Sin actividad declaration and activity-description columnA with Principal and five Otras rows. The same declaration or row instance continues without a change of meaning. The earliest supported 2022 registry now owns these previously omitted paper fields; no new2023 concept is claimed."
+[[revisions."2023".casilla_overrides]]
+restate_provenance = true
+
+[revisions."2023".casilla_overrides.selector]
+revision = "2008-2022"
+id = "actividad.otras-5.descripcion"
+
+[revisions."2023".casilla_overrides.fields]
+source_refs = ["boe-modelo-322-2023-form-pdf"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2021-10509 AnnexI PDF7-8 printed75940-75941 and BOE-A-2022-19290 AnnexI PDF6-7 printed158993-158994 both print a separate Sin actividad declaration and activity-description columnA with Principal and five Otras rows. The same declaration or row instance continues without a change of meaning. The earliest supported 2022 registry now owns these previously omitted paper fields; no new2023 concept is claimed."
 [[revisions."2023".casilla_removals]]
 selector = { revision = "2008-2022", id = "73" }
 
@@ -1470,53 +1547,176 @@ sequence_order = {source_refs = [1, 0]}
 family = "completeness_manifest"
 selector = {revision = "2008-2022", id = "aeat-dr-322-2022"}
 replacement_id = "aeat-dr-322-2023"
-sequence_additions = {source_refs = ["aeat-dr-322-2023"]}
+sequence_additions = {source_refs = ["aeat-dr-322-2023"],casillas = [{casilla_id = "152", number = "152"}, {casilla_id = "155", number = "155"}, {casilla_id = "158", number = "158"}, {casilla_id = "161", number = "161"}, {casilla_id = "164", number = "164"}]}
 sequence_removals = {source_refs = [0]}
+[[revisions."2023".family_overrides]]
+family = "formulas"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-01"}
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-38"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-02"}
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-03"}
+[[revisions."2023".family_overrides.sequence_additions."expression.args"]]
+casilla_id = "161"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-04"}
+[[revisions."2023".family_overrides.sequence_additions."expression.args"]]
+casilla_id = "164"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-05"}
+[[revisions."2023".family_overrides.sequence_additions."expression.args"]]
+casilla_id = "152"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-06"}
+[[revisions."2023".family_overrides.sequence_additions."expression.args"]]
+casilla_id = "155"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-07"}
+[[revisions."2023".family_overrides.sequence_additions."expression.args"]]
+casilla_id = "158"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-08"}
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-09"}
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+"expression.args" = [14, 0, 15, 1, 2, 3, 16, 4, 17, 5, 6, 7, 8, 9, 18, 10, 11, 12, 13]
+[[revisions."2023".family_overrides]]
+family = "formulas"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-10"}
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-62"
 
-[[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-11"}
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
 
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2023".family_overrides]]
+family = "formulas"
+
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-63"
+
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
+
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2023".family_overrides]]
+family = "formulas"
+
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-68"
+
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
+
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2023".family_overrides]]
+family = "formulas"
+
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-70"
+
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
+
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2023".family_overrides]]
+family = "formulas"
+
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-88"
+
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
+
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2023".family_overrides]]
+family = "formulas"
+
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-717"
+
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
+
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2023".family_overrides]]
+family = "formulas"
+
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-735"
+
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
+
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2023".family_overrides]]
+family = "formulas"
+
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-printed-65"
+
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf", "aeat-dr-322-2023"]
+
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+[[revisions."2023".family_overrides]]
+family = "constructs"
+
+[revisions."2023".family_overrides.selector]
+revision = "2008-2022"
+id = "modelo-322-papel-actividades"
+
+[revisions."2023".family_overrides.sequence_additions]
+source_refs = ["boe-modelo-322-2023-form-pdf"]
+
+[revisions."2023".family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions."2023".family_overrides.sequence_order]
+source_refs = [1, 0]
+
+# Replace the earlier source-scoped disclosure owner.
 [[revisions."2023".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2008-2022", id = "modelo-322-2022-12"}
+family = "constructs"
+selector = {revision = "2008-2022", id = "modelo-322-printed-disclosure-arithmetic-2008-2022"}

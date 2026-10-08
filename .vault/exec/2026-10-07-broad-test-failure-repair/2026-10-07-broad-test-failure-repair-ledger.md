@@ -1,0 +1,584 @@
+---
+tags:
+  - '#exec'
+  - '#broad-test-failure-repair'
+date: '2026-10-07'
+modified: '2026-10-07'
+body_schema: 'body-v2'
+body_hash: 'sha256:dcded7244f81674a7c22af5474c9105973e5eeb0fdd1df15e239c0d9d1b34cf1'
+related:
+  - "[[2026-10-07-broad-test-failure-repair-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `broad-test-failure-repair` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+
+- `S01` `M` `dev/registry/pipeline/_tree_publication.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/form_projection_fields.py`
+- `S01` `verify:` `117 registry original cases and explicit successors` -> `pass`
+- `S01` `by:` `registry_failures`
+- `S03` `M` `src/cadrumo/application/filing/draft_construction.py`
+- `S03` `M` `src/cadrumo/application/modelo/export.py`
+- `S03` `verify:` `104 runtime original cases mapped to 105 passing successors` -> `pass`
+- `S03` `verify:` `Modelo 390 coverage and filing partition 51 cases` -> `pass`
+- `S03` `by:` `runtime_failures`
+- `S02` `M` `pyproject.toml`
+- `S02` `M` `uv.lock`
+- `S02` `M` `dev/packaging/python_cohort.py`
+- `S02` `M` `dev/packaging/release_cohort.py`
+- `S02` `A` `dev/packaging/tests/test_cohort_source_identity.py`
+- `S02` `verify:` `74 developer original coverage rows and successors` -> `pass`
+- `S02` `verify:` `supported four-distribution build 20261007T204244.295554Z-third-companion-cohort-final-build-82752-bcb10956` -> `pass`
+- `S02` `verify:` `captured source identity and all eight unchanged artifact caps` -> `pass`
+- `S02` `by:` `developer_failures`
+- `S04` `M` `dev/source_tree.py`
+- `S04` `M` `.vault/audit/2026-10-07-broad-test-failure-repair-progress-audit.md`
+- `S04` `verify:` `all 270 original cases mapped to 295 passing current cases` -> `pass`
+- `S04` `verify:` `just check-style` -> `pass`
+- `S04` `verify:` `just check-format` -> `pass`
+- `S04` `verify:` `just check-types` -> `pass`
+- `S04` `verify:` `just check-import-boundaries 20261007T205016.313740Z-check-import-boundaries-60288-006bdfd9` -> `pass`
+- `S04` `verify:` `git diff --check` -> `pass`
+- `S04` `verify:` `source identity and release caller regression scope 40 cases` -> `pass`
+- `S04` `verify:` `fresh retained-cohort Homebrew and Scoop 10 cases 20261007T205057.828019Z-pytest-49608-eb1ee3e9` -> `pass`
+- `S04` `by:` `principal`
+- `S01` `M` `dev/registry/analysis/facts_external_constants_retirement.toml`
+- `S01` `A` `dev/registry/analysis/tests/test_casilla_lineage_stages.py`
+- `S01` `A` `dev/registry/compiler/tests/test_design_constant_record_join.py`
+- `S01` `M` `dev/registry/compiler/tests/test_export_field_placement.py`
+- `S01` `M` `dev/registry/compiler/tests/test_export_layout_reserved_constant.py`
+- `S01` `M` `dev/registry/conformance/tests/test_registry_schema_part1.py`
+- `S01` `A` `dev/registry/pipeline/_tree_clearance_publication.py`
+- `S01` `M` `dev/registry/pipeline/m390_auxiliary_envelope.py`
+- `S01` `M` `dev/registry/pipeline/tests/test_delta_target_publication.py`
+- `S01` `M` `dev/registry/pipeline/tests/test_generated_tree_cli.py`
+- `S01` `M` `dev/registry/pipeline/tests/test_generated_tree_scope_context.py`
+- `S01` `M` `dev/registry/pipeline/tests/test_inherited_bootstrap_supersession.py`
+- `S01` `M` `dev/registry/pipeline/tests/test_m390_dana_reduction_design_semantic_map.py`
+- `S01` `M` `dev/registry/pipeline/tests/test_m390_dana_reduction_retirement_semantic_map.py`
+- `S01` `M` `dev/registry/pipeline/tests/test_m390_recargo_page_relayout_semantic_map.py`
+- `S01` `A` `dev/registry/pipeline/tests/test_source_component_admissions.py`
+- `S01` `M` `dev/registry/pipeline/tests/test_target_currentness_grade.py`
+- `S01` `M` `dev/registry/pipeline/tree_publication_contracts.py`
+- `S01` `M` `dev/registry/pipeline/tree_publication_journal.py`
+- `S01` `M` `dev/registry/pipeline/tree_publication_recovery.py`
+- `S01` `M` `dev/registry/pipeline/tree_publication_supersession_recovery.py`
+- `S01` `M` `dev/registry/registry_collapse_inputs.py`
+- `S01` `M` `dev/registry/tests/_revision_span_boundary_support.py`
+- `S01` `M` `dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py`
+- `S01` `M` `dev/registry/tests/test_casilla_export_refs_derivation.py`
+- `S01` `M` `dev/registry/tests/test_casilla_lineage_seed.py`
+- `S01` `M` `dev/registry/tests/test_detail_record_modelo_coverage.py`
+- `S01` `M` `dev/registry/tests/test_filing_export_two_channel_proof.py`
+- `S01` `M` `dev/registry/tests/test_m390_auxiliary_envelope.py`
+- `S01` `M` `dev/registry/tests/test_modelo_131_2026_late_source_branch.py`
+- `S01` `M` `dev/registry/tests/test_modelo_131_registry.py`
+- `S01` `M` `dev/registry/tests/test_modelo_182_donor_surface_across_editions.py`
+- `S01` `M` `dev/registry/tests/test_modelo_187_188_194_registry.py`
+- `S01` `M` `dev/registry/tests/test_modelo_189_2022_edition.py`
+- `S01` `M` `dev/registry/tests/test_modelo_303_binding_source_repair.py`
+- `S01` `M` `dev/registry/tests/test_modelo_303_exonerado_390_endpoints.py`
+- `S01` `M` `dev/registry/tests/test_modelo_303_printed_total_check.py`
+- `S01` `A` `dev/registry/tests/test_modelo_341_registry.py`
+- `S01` `M` `dev/registry/tests/test_narrow_mechanism_admissions.py`
+- `S01` `M` `dev/registry/tests/test_record_design_modelo_131.py`
+- `S01` `M` `dev/registry/tests/test_revision_span_boundaries.py`
+- `S01` `M` `dev/registry/tests/test_runtime_graph.py`
+- `S01` `M` `dev/registry/tests/test_support_matrix.py`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2022/casillas/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/application_links/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/constructs/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0002-super-reducido-recargo.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/formulas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/formulas/0002-annual-volume.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/revision.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2009-2011-junio/application_links/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2009-2011-junio/constructs/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/application_links/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/constructs/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/constructs/0002-paper-address.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/constructs/0003-paper-identity.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/revision.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/constructs/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/constructs/0002-paper-activities.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/formulas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/formulas/0002-printed-totals.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/revision.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/application_links/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/constructs/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/constructs/0002-paper-fields.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/constructs/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/constructs/0002-paper-amounts.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/casillas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/casillas/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/completeness_manifest/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/completeness_manifest/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/constructs/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/constructs/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/formulas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/formulas/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/casillas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/casillas/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/completeness_manifest/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/completeness_manifest/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/constructs/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/constructs/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/formulas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/formulas/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/casillas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/casillas/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/completeness_manifest/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/completeness_manifest/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/constructs/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/constructs/0002-resultado.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/formulas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/formulas/0002-resultado.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/formulas/0001-declarations.toml`
+- `S01` `D` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/formulas/0002-printed-totals.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/revision.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2026/constructs/0002-printed-disclosure-arithmetic.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2026/revision.toml`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/fixed_width_parser.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/form_context.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/runtime_graph.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/tests/test_clasificacion_casillas_oficiales.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_domain_required_check_guard.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/tests/test_m130_retenciones_gate_registration.py`
+- `S02` `M` `.semgrepignore`
+- `S02` `M` `.vault/adr/2026-10-03-duplication-remediation-hashing-proof-boundaries-adr.md`
+- `S02` `M` `.vault/adr/2026-10-03-duplication-remediation-m200-stock-verification-adr.md`
+- `S02` `M` `.vault/audit/2026-09-30-modelo-editor-workbench-audit.md`
+- `S02` `M` `.vault/audit/2026-10-01-registry-conformance-rectification-audit.md`
+- `S02` `M` `.vault/audit/2026-10-01-vault-health-reconciliation-preexisting-errors-audit.md`
+- `S02` `M` `.vault/audit/2026-10-02-duplication-remediation-audit.md`
+- `S02` `M` `.vault/audit/2026-10-03-application-packaging-audit.md`
+- `S02` `M` `.vault/audit/2026-10-03-complexity-remediation-audit.md`
+- `S02` `M` `.vault/audit/2026-10-03-runtime-without-service-manager-scope-removal-audit.md`
+- `S02` `M` `.vault/audit/2026-10-04-authority-health-completion-audit.md`
+- `S02` `M` `.vault/audit/2026-10-05-registry-workbook-compiler-audit.md`
+- `S02` `M` `.vault/exec/2026-09-26-mcp-purpose-authentication/2026-09-26-mcp-purpose-authentication-ledger.md`
+- `S02` `M` `.vault/exec/2026-09-27-registry-conformance-rectification/2026-09-27-registry-conformance-rectification-ledger.md`
+- `S02` `M` `.vault/exec/2026-10-02-auth-frontend-uniformity/2026-10-02-auth-frontend-uniformity-ledger.md`
+- `S02` `M` `.vault/exec/2026-10-02-complexity-remediation/2026-10-02-complexity-remediation-ledger.md`
+- `S02` `M` `.vault/exec/2026-10-02-duplication-remediation/2026-10-02-duplication-remediation-ledger.md`
+- `S02` `M` `.vault/exec/2026-10-02-registry-health-repair/2026-10-02-registry-health-repair-ledger.md`
+- `S02` `M` `.vault/exec/2026-10-04-desktop-shell/2026-10-04-desktop-shell-ledger.md`
+- `S02` `M` `.vault/exec/2026-10-04-runtime-manager-architecture/2026-10-04-runtime-manager-architecture-ledger.md`
+- `S02` `M` `.vault/reference/2026-10-02-duplication-remediation-reference.md`
+- `S02` `M` `.vault/research/2026-10-01-registry-conformance-rectification-remaining-issues-research.md`
+- `S02` `M` `.vault/research/2026-10-03-application-packaging-research.md`
+- `S02` `M` `dev/acceptance/income_tax/installed_tui_child.py`
+- `S02` `M` `dev/acceptance/income_tax/tests/test_cli_journey.py`
+- `S02` `M` `dev/acceptance/income_tax/tests/test_installed_tui_child.py`
+- `S02` `M` `dev/ci/change_scope.py`
+- `S02` `M` `dev/ci/tests/test_os_keychain_lane_scope.py`
+- `S02` `M` `dev/docs/tests/test_cli_tree.py`
+- `S02` `M` `dev/first_party_source.py`
+- `S02` `M` `dev/locales/_ast_key_calls.py`
+- `S02` `M` `dev/locales/_ast_key_wrappers.py`
+- `S02` `M` `dev/locales/_ast_scanner.py`
+- `S02` `M` `dev/locales/_paths.py`
+- `S02` `M` `dev/locales/_registry_scanner.py`
+- `S02` `M` `dev/locales/fstring_registry.py`
+- `S02` `M` `dev/locales/locale_audit.py`
+- `S02` `A` `dev/locales/tests/test_ast_key_wrapper_positions.py`
+- `S02` `M` `dev/locales/tests/test_audit.py`
+- `S02` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S02` `M` `dev/locales/tests/test_finding_message_facts_are_guaranteed.py`
+- `S02` `M` `dev/locales/tests/test_form_layout_heading_exemption.py`
+- `S02` `A` `dev/locales/tests/test_own_account_key_registration.py`
+- `S02` `M` `dev/locales/wizard_translation_audit.py`
+- `S02` `M` `dev/packaging/_distribution_limits.py`
+- `S02` `M` `dev/packaging/native/cmake_build.py`
+- `S02` `M` `dev/packaging/native/platforms/posix.py`
+- `S02` `M` `dev/packaging/native/tests/test_package_bytecode.py`
+- `S02` `M` `dev/packaging/smoke_sdist_core.py`
+- `S02` `M` `dev/packaging/source_data_contract.py`
+- `S02` `M` `dev/packaging/tests/test_authority_runtime_boundary.py`
+- `S02` `M` `dev/packaging/tests/test_build_scratch_reclaim.py`
+- `S02` `M` `dev/packaging/tests/test_cadrumo_data_distribution.py`
+- `S02` `M` `dev/packaging/tests/test_cadrumo_data_official_build_hook.py`
+- `S02` `M` `dev/packaging/tests/test_classifier_parity.py`
+- `S02` `M` `dev/packaging/tests/test_hashing.py`
+- `S02` `M` `dev/packaging/tests/test_license_attribution_chain.py`
+- `S02` `M` `dev/packaging/tests/test_native_artifact_identity.py`
+- `S02` `M` `dev/packaging/tests/test_native_docs_staging.py`
+- `S02` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S02` `M` `dev/packaging/tests/test_release_cohort.py`
+- `S02` `M` `dev/packaging/tests/test_smoke_core_payload.py`
+- `S02` `M` `dev/packaging/tests/test_smoke_scoop_harness.py`
+- `S02` `M` `dev/packaging/tests/test_var_scratch_mint_sites_are_registered.py`
+- `S02` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.docs.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.json`
+- `S02` `M` `dev/quality/suite.py`
+- `S02` `M` `dev/tests/test_dev_tree_holds_no_run_output.py`
+- `S02` `M` `dev/tests/test_first_party_source_is_defined_once.py`
+- `S02` `M` `dev/tests/test_no_home_directory_cache_paths.py`
+- `S02` `M` `dev/tests/test_precommit_policy.py`
+- `S02` `M` `dev/tests/test_repository_root_constants_resolve.py`
+- `S02` `M` `dev/tests/test_wheel_bundles_corpus_and_registry.py`
+- `S02` `M` `dev/tests/test_wheel_content_boundary.py`
+- `S02` `M` `packaging/authority/hatch_build.py`
+- `S02` `M` `packaging/cadrumo_data_manuals/hatch_build.py`
+- `S02` `M` `packaging/cadrumo_data_manuals/pyproject.toml`
+- `S02` `M` `packaging/cadrumo_data_manuals/README.md`
+- `S02` `A` `packaging/cadrumo_data_normatives/hatch_build.py`
+- `S02` `A` `packaging/cadrumo_data_normatives/LICENSE`
+- `S02` `A` `packaging/cadrumo_data_normatives/NOTICE`
+- `S02` `A` `packaging/cadrumo_data_normatives/pyproject.toml`
+- `S02` `A` `packaging/cadrumo_data_normatives/README.md`
+- `S02` `M` `packaging/cadrumo_data_official/hatch_build.py`
+- `S02` `M` `packaging/cadrumo_data_official/NOTICE`
+- `S02` `M` `packaging/cadrumo_data_official/pyproject.toml`
+- `S02` `M` `packaging/cadrumo_data_official/README.md`
+- `S02` `M` `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/PROVENANCE.md`
+- `S02` `M` `src/cadrumo/_data/corpus/normatives/html/real-decreto-ley-23-2026-art-1.html`
+- `S02` `A` `src/cadrumo/_data/corpus/normatives/pdf/ec-iva-services-withdrawal-20201209.pdf`
+- `S02` `D` `src/cadrumo/_data/corpus/normatives/pdf/ec-vat-services-withdrawal-20201209.pdf`
+- `S02` `M` `src/cadrumo/_data/corpus/normatives/pdf/PROVENANCE.md`
+- `S02` `A` `src/cadrumo/_data/manual_corpus_text/normatives/pdf/aeat-modelo-390-2024-form.pdf.corpus_text.json`
+- `S02` `A` `src/cadrumo/_data/manual_corpus_text/normatives/pdf/aeat-modelo-390-2025-instructions.pdf.corpus_text.json`
+- `S02` `A` `src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2023-26632-modelos-036-030-390.pdf.corpus_text.json`
+- `S02` `A` `src/cadrumo/_data/manual_corpus_text/normatives/pdf/ec-iva-services-withdrawal-20201209.pdf.corpus_text.json`
+- `S02` `D` `src/cadrumo/_data/manual_corpus_text/normatives/pdf/ec-vat-services-withdrawal-20201209.pdf.corpus_text.json`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-303-form-history.toml`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-369-form-history.toml`
+- `S02` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_movil_recovery.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_salvaged_landing_url.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_headless_qr.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_consultations.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_datos.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_linux_secret_service_store.py`
+- `S02` `M` `src/cadrumo/application/aeat_sync/tests/test_workspace_reader.py`
+- `S02` `M` `src/cadrumo/application/live/tests/test_capture_session_write_receipt.py`
+- `S02` `M` `src/cadrumo/application/live/tests/test_notification_document_capture_operation.py`
+- `S02` `M` `src/cadrumo/application/tests/test_workbench_census_projection.py`
+- `S02` `M` `src/cadrumo/application/tests/test_workbench_generation.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_calendar_evidence_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_censal_operation.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_justificante_capture_operation.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_pull_operation.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_notifications_capture_operation.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py`
+- `S02` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/ca/application.yml`
+- `S02` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S02` `M` `src/cadrumo/locales/ca/common.yml`
+- `S02` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/115.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/123.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/126.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/128.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/130.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/136.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/156.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/165.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/180.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/181.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/184.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/188.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/189.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/190.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/193.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/194.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/216.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/280.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/296.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/303.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/308.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/309.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/322.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/341.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/345.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/349.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/369.yml`
+- `S02` `M` `src/cadrumo/locales/ca/modelo/schema/390.yml`
+- `S02` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/en/application.yml`
+- `S02` `M` `src/cadrumo/locales/en/cli.yml`
+- `S02` `M` `src/cadrumo/locales/en/common.yml`
+- `S02` `M` `src/cadrumo/locales/en/errors.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/115.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/123.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/126.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/128.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/130.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/136.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/156.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/165.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/180.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/181.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/184.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/188.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/189.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/190.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/193.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/194.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/216.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/270.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/280.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/296.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/303.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/308.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/309.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/322.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/341.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/345.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/349.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/369.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/390.yml`
+- `S02` `M` `src/cadrumo/locales/en/modelo/schema/576.yml`
+- `S02` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/es/application.yml`
+- `S02` `M` `src/cadrumo/locales/es/cli.yml`
+- `S02` `M` `src/cadrumo/locales/es/common.yml`
+- `S02` `M` `src/cadrumo/locales/es/errors.yml`
+- `S02` `M` `src/cadrumo/locales/es/modelo/schema/126.yml`
+- `S02` `M` `src/cadrumo/locales/es/modelo/schema/156.yml`
+- `S02` `M` `src/cadrumo/locales/es/modelo/schema/303.yml`
+- `S02` `M` `src/cadrumo/locales/es/modelo/schema/309.yml`
+- `S02` `M` `src/cadrumo/locales/es/modelo/schema/322.yml`
+- `S02` `M` `src/cadrumo/locales/es/modelo/schema/349.yml`
+- `S02` `M` `src/cadrumo/locales/es/modelo/schema/369.yml`
+- `S02` `M` `src/cadrumo/locales/es/modelo/schema/390.yml`
+- `S02` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/hu/application.yml`
+- `S02` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S02` `M` `src/cadrumo/locales/hu/common.yml`
+- `S02` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/115.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/123.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/126.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/128.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/130.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/136.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/156.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/165.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/180.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/181.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/184.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/188.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/189.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/190.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/193.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/194.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/216.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/270.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/280.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/296.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/303.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/308.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/309.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/322.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/341.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/345.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/349.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/369.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/390.yml`
+- `S02` `M` `src/cadrumo/locales/hu/modelo/schema/576.yml`
+- `S02` `M` `src/cadrumo/tests/aeat_literal_fixtures.py`
+- `S02` `M` `src/cadrumo/tests/README.md`
+- `S02` `M` `dev/ci/runtime_probe_artifacts.py`
+- `S02` `M` `dev/packaging/acquire_pypi.py`
+- `S02` `M` `dev/packaging/all_extra_smoke.py`
+- `S02` `M` `dev/packaging/cohort_manifest.py`
+- `S02` `M` `dev/packaging/command_spec_attestation.py`
+- `S02` `M` `dev/packaging/lane_verification_core.py`
+- `S02` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S02` `M` `dev/packaging/oracle_emit_cohort.py`
+- `S02` `M` `dev/packaging/smoke_browser.py`
+- `S02` `M` `dev/packaging/smoke_core.py`
+- `S02` `M` `dev/packaging/smoke_homebrew.py`
+- `S02` `M` `dev/packaging/smoke_pip_core.py`
+- `S02` `M` `dev/packaging/smoke_split_install.py`
+- `S02` `M` `dev/packaging/tests/test_acquire_tooling.py`
+- `S02` `M` `dev/packaging/tests/test_command_spec_distribution_lanes.py`
+- `S02` `A` `dev/packaging/tests/test_command_spec_probe.py`
+- `S02` `M` `dev/packaging/tests/test_command_spec_source_lanes.py`
+- `S02` `M` `dev/packaging/tests/test_evidence.py`
+- `S02` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S02` `A` `dev/packaging/tests/test_normative_cohort_contract.py`
+- `S02` `M` `dev/packaging/tests/test_python_cohort_digest_assertions.py`
+- `S02` `M` `dev/packaging/tests/test_python_cohort.py`
+- `S02` `M` `dev/packaging/tests/test_smoke_homebrew.py`
+- `S02` `M` `dev/packaging/tests/test_smoke_split_install_sequence.py`
+- `S02` `A` `dev/packaging/tests/test_split_corpus_probe.py`
+- `S02` `M` `dev/packaging/uv_constraints.py`
+- `S03` `M` `.github/workflows/release.yml`
+- `S03` `M` `dev/ci/tests/test_ci_workflow.py`
+- `S03` `M` `dev/quality/tests/test_governed_fact_runtime_reads.py`
+- `S03` `M` `dev/quality/tests/test_workspace_doors_are_wholly_wired.py`
+- `S03` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S03` `M` `dev/registry/analysis/monetary_scale.py`
+- `S03` `M` `dev/registry/form_layout/official_form_pages.py`
+- `S03` `M` `dev/registry/form_layout/stability_acknowledgements.toml`
+- `S03` `M` `dev/registry/form_layout/tests/test_form_layout_official_headings.py`
+- `S03` `M` `dev/registry/form_layout/tests/test_form_layout_predecessor_layout.py`
+- `S03` `M` `dev/registry/pipeline/tests/test_m232_form_bridge.py`
+- `S03` `M` `dev/registry/tests/test_edition_delta_migration.py`
+- `S03` `M` `dev/registry/tests/test_hand_authored_layouts_agree_with_type_column.py`
+- `S03` `M` `dev/registry/tests/test_monetary_scale.py`
+- `S03` `M` `dev/release/readiness.py`
+- `S03` `M` `dev/release/tests/test_generated_surface_versions.py`
+- `S03` `M` `dev/release/tests/test_pypi_publication_state.py`
+- `S03` `M` `dev/release/tests/test_readiness.py`
+- `S03` `M` `dev/release/tests/test_version_identity.py`
+- `S03` `M` `dev/release/version_identity.py`
+- `S03` `M` `docs/locales/ca/LC_MESSAGES/reference/identity-and-naming.po`
+- `S03` `M` `docs/locales/es/LC_MESSAGES/reference/identity-and-naming.po`
+- `S03` `M` `docs/reference/identity-and-naming.md`
+- `S03` `M` `justfile`
+- `S03` `M` `packaging/homebrew/generate.py`
+- `S03` `M` `packaging/homebrew/tests/test_homebrew_generate.py`
+- `S03` `A` `packaging/homebrew/tests/test_homebrew_platform_resources.py`
+- `S03` `M` `packaging/scoop/generate.py`
+- `S03` `M` `packaging/scoop/tests/test_scoop_generate.py`
+- `S03` `M` `release-please-config.json`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2021/bindings/0001-declarations.toml`
+- `S03` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_verification_chain_m390.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_installation.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/artifact_receipt_store.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/oauth_callback.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/root_layout.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive_sign_in_required.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/workbook/tests/test_review_workbook_xlsx.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/profile/tests/test_binding_prefill.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_390_303_reconciliation_continuity.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_lock_order.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S03` `M` `src/cadrumo/application/export/review_form_data.py`
+- `S03` `M` `src/cadrumo/application/export/review_snapshot_loader.py`
+- `S03` `M` `src/cadrumo/application/filing/tests/test_filing.py`
+- `S03` `M` `src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py`
+- `S03` `M` `src/cadrumo/application/modelo/historical_filing_projection.py`
+- `S03` `M` `src/cadrumo/application/modelo/revision_replay_inputs.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_revision_replay_inputs.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_context_values.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_projection_records.py`
+- `S03` `M` `src/cadrumo/application/modelo/workflow_gate.py`
+- `S03` `M` `src/cadrumo/application/profile_preconditions.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/engine.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/fictional_rows.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/form_value_presentation.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/form_workbook.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/human_workbook.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/template_source.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/workbook_exclusions.py`
+- `S03` `M` `src/cadrumo/application/tests/test_preflight.py`
+- `S03` `M` `src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`
+- `S03` `M` `src/cadrumo/application/user_profile/google_configuration_operation.py`
+- `S03` `M` `src/cadrumo/application/user_profile/tests/test_event_emission_contract.py`
+- `S03` `M` `src/cadrumo/core/errors/registry/_adapters_part2.py`
+- `S03` `M` `src/cadrumo/core/product_identity.py`
+- `S03` `M` `src/cadrumo/core/resources/bundled_data.py`
+- `S03` `M` `src/cadrumo/core/resources/tests/test_corpus_companion_seam.py`
+- `S03` `M` `src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py`
+- `S03` `M` `src/cadrumo/core/tests/test_product_identity.py`
+- `S03` `M` `src/cadrumo/domain/calculations/record_row_membership.py`
+- `S03` `M` `src/cadrumo/domain/filing/validator.py`
+- `S03` `M` `src/cadrumo/domain/modelos/calculation_revision_rendering.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/calculation_review_cli.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/config/_google_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/config/_google_folder_payloads.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/config/_google_folder.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/config/custody_payloads.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_contract_map.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_folder_correlation.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/config/tests/test_misc_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/google_review_cli.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/reconciliation_export_cli.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_api_key_admission.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_guard_action_recovery.py`
+- `S03` `M` `src/cadrumo/entrypoints/google_configuration_operation_composition.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_events.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_verify.py`
+- `S03` `A` `src/cadrumo/entrypoints/tests/test_guarded_calculation_revision_migration_imports.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_grid_tables_real.py`
+- `S03` `M` `src/cadrumo/tests/test_dev_dotenv_bridge.py`
+- `S02` `verify:` `canonical final four-distribution install 20261007T210211.976689Z-third-companion-final-joined-install-41952-5ea3acea` -> `pass`
+- `S02` `verify:` `independent source wheel and installed hashes for all 304 binaries` -> `pass`
+- `S02` `verify:` `strict split proof and manifest regression scope 26 cases` -> `pass`
+- `S04` `M` `src/cadrumo/application/modelo/invoice_withholding_capture_public.py`
+- `S04` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S04` `M` `src/cadrumo/application/aggregation/oss_ioss.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/_workspace_projection.py`
+- `S04` `M` `dev/docs/tests/test_docs_build.py`
+- `S04` `M` `dev/registry/pipeline/render_check.py`
+- `S04` `verify:` `final changed-input configured type style and format gates` -> `pass`
+- `S04` `verify:` `final import 20261007T210149.598861Z-check-import-boundaries-4800-788c6a03` -> `pass`
+- `S04` `verify:` `final canonical install and independent 304 binary proof` -> `pass`
+- `S04` `verify:` `independent integrated review S01 through S04` -> `pass`
+
+## Notes
+
+- `S01` Full conservative path attribution is retained in build/broad-test-failure-repair/registry-task-paths.json. Shared working-tree files include preexisting and concurrent hunks without a task-start byte baseline; no wholesale Step commit is made because it would capture unrelated work. Code remains reviewable and uncommitted.
+- `S03` Complete conservative ownership manifest: build/broad-test-failure-repair/runtime-changed-paths.json. Mixed preexisting and concurrent hunks remain uncommitted; no whole-file ownership or safe commit boundary is asserted.
+- `S02` Companion decision explicitly approved by user. Shared-tree attribution remains conservative; mixed preexisting and concurrent hunks are retained uncommitted. Final installed-resource proof is recorded separately before Step closure.
+- `S04` All original cases are covered; no full-repository-suite claim. Concurrent migration-test timeout is recorded separately. Mixed-hunk Step commits are deferred to preserve unrelated work. Final clean installation remains required before closing S04.

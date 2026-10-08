@@ -22,6 +22,7 @@ from .....domain.categories.spending_category import SpendingCategory
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from .....domain.transactions.errors import TransactionValidationError
+from .....domain.transactions.models import TransactionCatalogue
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
@@ -214,3 +215,50 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
             ports=ports,
         )
+
+
+def test_no_split_reviewed_classification_refuses_stale_parent_and_preserves_encrypted_row(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The lone-child apply cannot replace a row edited after evidence review."""
+    repository, events, objects = repositories
+    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    reviewed = repository.load().get(tx_id)
+    assert reviewed is not None
+    suggestion = suggest_evidence_split(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        operation=operation,
+        proposer=_split_subprocess_proposer(response=_single_line_proposal(), operation=operation),
+        transaction_repository=repository,
+        read_evidence=False,
+        settings=load_settings(),
+        ports=_LLM_PORTS,
+    )
+    newer = reviewed.model_copy(update={"notes": "newer evidence-review row"})
+    repository.save(TransactionCatalogue.from_transactions([newer]))
+    before_events = events.load()
+    with (
+        ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            objects=objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports,
+        pytest.raises(TransactionValidationError, match="changed since it was"),
+    ):
+        apply_evidence_classification(
+            suggestion,
+            bucket_id=_BUCKET,
+            source_command="aeat app ledger classify --read-evidence --auto-split --apply",
+            ports=ports,
+            occurred_at=_NOW,
+            expected_current=reviewed,
+        )
+    stored = repository.load()
+    assert stored.get(tx_id) == newer
+    assert tuple(stored.values()) == (newer,)
+    assert newer.lifecycle_state is TransactionLifecycleState.ACTIVE
+    assert events.load() == before_events

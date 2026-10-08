@@ -67,23 +67,8 @@ _YELLOW = "#B6812C"
 _FONT_SHA256 = "06520d032ec274fa5040b22c6f4a1d829081b24ba40b2da56dae89bf10c7b481"
 
 
-def _run_quickfile() -> tuple[str, ...]:
-    """Run the production CLI and return the stable, reader-relevant output rows."""
-    result = run_command(
-        [sys.executable, "-c", _CLI_BOOTSTRAP, *_CLI_ARGUMENTS],
-        cwd=REPO_ROOT,
-        environment=demo_environment(),
-        errors="replace",
-        timeout_seconds=180,
-    )
-    if result.returncode != 0:
-        diagnostics = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
-        raise RuntimeError(f"quickfile failed with exit code {result.returncode}\n{diagnostics}")
-    rows = tuple(line for line in result.stdout.splitlines() if line.partition("\t")[0] in _VISIBLE_FIELDS)
-    fields: dict[str, list[tuple[str, ...]]] = {}
-    for row in rows:
-        parts = tuple(row.split("\t"))
-        fields.setdefault(parts[0], []).append(parts[1:])
+def _require_quickfile_progress(fields: dict[str, list[tuple[str, ...]]]) -> None:
+    """Require quickfile progress."""
     expected_scalars = {
         "operation": ("quickfile",),
         "modelo": ("115",),
@@ -102,6 +87,10 @@ def _run_quickfile() -> tuple[str, ...]:
     for stage in fields["stage"]:
         if stage[0] in {"create", "calculate", "verify", "export"} and stage[1] != "ok":
             raise RuntimeError(f"quickfile stage did not succeed: {stage}")
+
+
+def _require_quickfile_export(fields: dict[str, list[tuple[str, ...]]]) -> None:
+    """Require quickfile export."""
     if not FICHERO_PATH.is_file() or FICHERO_PATH.stat().st_size == 0:
         raise RuntimeError(f"quickfile did not write a non-empty fichero: {FICHERO_PATH}")
     payload = FICHERO_PATH.read_bytes()
@@ -115,6 +104,27 @@ def _run_quickfile() -> tuple[str, ...]:
     parsed = parse_export_payload(layout, payload)
     if not parsed.fields:
         raise RuntimeError("production export parser returned no fields for the Modelo 115 fichero")
+
+
+def _run_quickfile() -> tuple[str, ...]:
+    """Run the production CLI and return the stable, reader-relevant output rows."""
+    result = run_command(
+        [sys.executable, "-c", _CLI_BOOTSTRAP, *_CLI_ARGUMENTS],
+        cwd=REPO_ROOT,
+        environment=demo_environment(),
+        errors="replace",
+        timeout_seconds=180,
+    )
+    if result.returncode != 0:
+        diagnostics = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
+        raise RuntimeError(f"quickfile failed with exit code {result.returncode}\n{diagnostics}")
+    rows = tuple(line for line in result.stdout.splitlines() if line.partition("\t")[0] in _VISIBLE_FIELDS)
+    fields: dict[str, list[tuple[str, ...]]] = {}
+    for row in rows:
+        parts = tuple(row.split("\t"))
+        fields.setdefault(parts[0], []).append(parts[1:])
+    _require_quickfile_progress(fields)
+    _require_quickfile_export(fields)
     return rows
 
 

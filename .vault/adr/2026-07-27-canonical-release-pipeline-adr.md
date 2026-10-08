@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#canonical-release-pipeline'
 date: '2026-07-27'
-modified: '2026-08-23'
-body_hash: 'sha256:64df373791f24202367db71c43cd58bca147e3a1d1fa8199e69ca08a5bd08a7c'
+modified: '2026-10-03'
+body_hash: 'sha256:9c1ace2048ea2ebb146da54bb6932276e98c62457f43e5254c7d4294ab1f1667'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
@@ -29,7 +29,7 @@ CloudFront distribution, the docs `Last-Modified` is 2026-07-12 â€” fifteen
 stale â€” and no CI invokes any deploy tooling (the sole reference under
 `.github/` is a comment in `publish-release.yml`). The deploy surface is
 deliberately local-human: `dev/deploy/docs_static_site.py` and
-`dev/deploy/frontend_static_site.py` behind `just docs-deploy` /
+the former source file behind `just docs-deploy` /
 `frontend-deploy` with literal `--confirm` phrases, and
 `_require_human_publish_environment` refuses to run under `CI` or
 `GITHUB_ACTIONS`.
@@ -108,7 +108,7 @@ pipeline.
   Actions storage for that reason (`2026-07-20-release-asset-transport-adr`);
   docs automation adding hosted minutes or long-lived cloud secrets cuts
   against both standing choices.
-- `dev/packaging/marketplace_publish.py` replaces only the plugin subtrees the
+- the former source file replaces only the plugin subtrees the
   cohort declares, keeps every other path and index entry (a sibling plugin, a
   README, a LICENSE), refuses name takeovers across `published_by` owners, and
   treats an entry with no recorded publisher as claimable. The cohort publishes

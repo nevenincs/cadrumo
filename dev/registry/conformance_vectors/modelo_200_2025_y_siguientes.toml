@@ -11,7 +11,7 @@
 
 authority_id = "dev.registry.filing-export-conformance"
 mechanism_source_ref = "generated-provenance/200/2025-y-siguientes"
-generation_manifest_sha256 = "a6f8d7bb7a727306a87ab48369aac3f8fa9393bd47ca3872c41a73b3642052e6"
+generation_manifest_sha256 = "cc7a7dbb9590b101a92ebe63016a7c4dc850b1d61e1b5d6d03e49c19515c7b69"
 filing_year = 2025
 period_code = "0A"
 
@@ -26,7 +26,6 @@ layout_ids = ["generated-modelo-200-2025-y-siguientes-fichero"]
 # a synthetic NON-ZERO magnitude deliberately, so the cuota chain is actually
 # exercised; a zero here would render a degenerate base and prove far less.
 "DP200012:00501" = "100000"
-"modelo-200-profile-new-entity-flag" = "0"
 # INCN of the preceding 12 months. NOT a neutral zero: this value selects the
 # tipo de gravamen branch outright. Below one million euros LIS DT 44a gives
 # the transitional microempresa scale (21%/22% for 2025); below ten million it
@@ -40,14 +39,14 @@ layout_ids = ["generated-modelo-200-2025-y-siguientes-fichero"]
 "modelo-200-bin-pendiente-ejercicios-anteriores" = "0"
 "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
 "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores" = "0"
-"modelo-200-2024-rel-202-pagos-fraccionados" = "0"
-"modelo-200-2024-rel-202-pagos-fraccionados-40-2" = "0"
-"modelo-200-2024-rel-self-bin-pendiente-anterior" = "0"
-"modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior" = "0"
-"modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior" = "0"
+"modelo-200-pagos-fraccionados-anuales" = "0"
+"modelo-200-pagos-fraccionados-anuales-40-2" = "0"
 
 [inputs.enum]
-"modelo-200-2024-profile-legal-entity-form" = "sl"
+"modelo-200-profile-legal-entity-form" = "sl"
+
+[boolean_inputs]
+"modelo-200-profile-new-entity-flag" = false
 
 [[probes]]
 record_id = "m200-page-001"

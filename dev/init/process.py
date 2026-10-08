@@ -91,6 +91,34 @@ _MISSING_MARKERS: Final[tuple[str, ...]] = (
 )
 
 
+def _execute_step_command(step: Step, cwd: Path, argv: list[str]) -> tuple[str, int]:
+    """Execute step command."""
+    try:
+        completed = subprocess.run(
+            argv,
+            cwd=cwd,
+            env=step_environment(),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=step.timeout,
+            check=False,
+        )
+        output = (completed.stdout or "") + (completed.stderr or "")
+        code = completed.returncode
+    except FileNotFoundError:
+        output = f"{step.argv[0]}: command not found"
+        code = INIT_HOST_TOOL_MISSING
+    except subprocess.TimeoutExpired:
+        output = f"timed out after {step.timeout} seconds"
+        code = INIT_STEP_FAILED
+    except OSError as exc:  # pragma: no cover - platform-specific spawn failure
+        output = f"{step.argv[0]}: {exc}"
+        code = INIT_STEP_FAILED
+    return (output, code)
+
+
 def resolve(command: str) -> str | None:
     """Return the absolute path of an executable, or ``None``.
 
@@ -188,42 +216,9 @@ def run(step: Step, *, cwd: Path, echo: bool = True) -> tuple[StepResult, int]:
     started = time.monotonic()
     executable = resolve(step.argv[0])
     if executable is None:
-        return (
-            StepResult(
-                name=step.name,
-                argv=step.argv,
-                status=DONE if step.advisory else FAILED,
-                exit_code=INIT_HOST_TOOL_MISSING,
-                duration_ms=0,
-                output_tail=f"{step.argv[0]}: not found on PATH",
-                advisory=step.advisory,
-            ),
-            OK if step.advisory else INIT_HOST_TOOL_MISSING,
-        )
+        return _missing_executable_result(step)
     argv = [executable, *step.argv[1:]]
-    try:
-        completed = subprocess.run(
-            argv,
-            cwd=cwd,
-            env=step_environment(),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=step.timeout,
-            check=False,
-        )
-        output = (completed.stdout or "") + (completed.stderr or "")
-        code = completed.returncode
-    except FileNotFoundError:
-        output = f"{step.argv[0]}: command not found"
-        code = INIT_HOST_TOOL_MISSING
-    except subprocess.TimeoutExpired:
-        output = f"timed out after {step.timeout} seconds"
-        code = INIT_STEP_FAILED
-    except OSError as exc:  # pragma: no cover - platform-specific spawn failure
-        output = f"{step.argv[0]}: {exc}"
-        code = INIT_STEP_FAILED
+    output, code = _execute_step_command(step, cwd, argv)
 
     duration = int((time.monotonic() - started) * 1000)
     if echo and output.strip():
@@ -240,3 +235,19 @@ def run(step: Step, *, cwd: Path, echo: bool = True) -> tuple[StepResult, int]:
     if code == 0 or step.advisory:
         return result, 0
     return result, classify(code, output)
+
+
+def _missing_executable_result(step: Step) -> tuple[StepResult, int]:
+    """Report a missing executable while preserving advisory-step continuation."""
+    return (
+        StepResult(
+            name=step.name,
+            argv=step.argv,
+            status=DONE if step.advisory else FAILED,
+            exit_code=INIT_HOST_TOOL_MISSING,
+            duration_ms=0,
+            output_tail=f"{step.argv[0]}: not found on PATH",
+            advisory=step.advisory,
+        ),
+        OK if step.advisory else INIT_HOST_TOOL_MISSING,
+    )

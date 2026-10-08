@@ -3,25 +3,25 @@ tags:
   - '#research'
   - '#registry-temporal-coverage'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:842932dce66309831ba857e456b974bb0aaab257e1f2cc4e9fc74e9a3ac070ca'
+body_hash: 'sha256:cc78bb49c8e3e310e02e2754c76f1e3e1a03b4d24b89c749475daffc48c39c00'
 related:
   - '[[2026-08-28-registry-narrow-mechanism-widening-adr]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
-  - '[[2026-08-14-registry-temporal-coverage-plan]]'
 ---
 
 # `registry-temporal-coverage` research: `registry temporal coverage`
 
-## Question
+## Findings
+
+### Question
 
 Is `m390-2022` failing alone a fact about that revision, or an artefact of what a
 gate happens to enrol? And if the latter, how widely does the pattern hold?
 
-## Measured answer
+### Measured answer
 
 Three counts over the same tree, taken the same day:
 
@@ -34,7 +34,7 @@ a published export tree, and exactly one is enrolled. The gate iterates one row,
 so one row reds. The number that looked like a fact about 2022 was a fact about
 the enrolment list.
 
-## Shape of the defect
+### Shape of the defect
 
 A gate whose subject is a hand-written list of `(modelo, revision)` pairs answers
 a different question from the one its name implies. It reports on what someone
@@ -53,10 +53,10 @@ all present today:
 Partial enrolment is the most dangerous shape, because the modelo appears
 covered: 390 (1 of 5), 184 (2 of 6), 322 (3 of 4), 200 (1 of 2), 185 (1 of 2).
 
-## Why this is a conformance gap, not a missing capability
+### Why this is a conformance gap, not a missing capability
 
 The corrective standard already exists in this repository and is documented in
-its own words. `src/cadrumo/tests/registry_conformance.py` composes "exactly one
+its own words. the former source file composes "exactly one
 RevisionConformanceRow per modelo revision in the loaded tree", and says why a
 per-modelo scalar cannot stand for a range:
 
@@ -74,7 +74,7 @@ condition `no-silent-under-declaration` forbids elsewhere in this codebase:
 missing, unsupported and proven-absent are distinct states and must not collapse
 into a green suite.
 
-## What a correct gate looks like
+### What a correct gate looks like
 
 The registry is structurally uniform per revision: a schema check that holds for
 `390/2022` has no principled reason to skip `390/2023`. So the enrolment list
@@ -86,7 +86,7 @@ reissued.
 
 An omission says nothing. A pin says why, and fails when its reason expires.
 
-## Prior art — this is NOT a new problem class
+### Prior art — this is NOT a new problem class
 
 Semantic discovery over the vault found the class already decided and planned.
 
@@ -111,13 +111,13 @@ export-fragment S84.
 finding `how-much-can-prove-coverage`: 12 of 97 declared revisions corpus-proven
 clean at that date (97 then, 128 now).
 
-## What this research actually adds
+### What this research actually adds
 
 A DETECTION GAP in the existing census, not a new class.
 
 S32 counts files PEGGED BY A YEAR TOKEN IN THE FILENAME. `_GENERATED_TREES` is a
 literal `(modelo, revision)` list INSIDE ONE FILE -
-`dev/registry/tests/test_generated_export_trees.py` - whose name carries no year
+the former source file - whose name carries no year
 token. The existing metric cannot see it, and it is the larger instance:
 
     29 of 128 declared revisions enrolled          23 percent
@@ -127,7 +127,7 @@ So the census should count IN-FILE ENROLMENT LISTS as well as year-pegged
 filenames. Both are the same defect - a hardcoded temporal subject standing in for
 declared coverage - and only one is currently measured.
 
-## How this folds into the plan
+### How this folds into the plan
 
 This grounds an ADDITION to `W01.P09.S32`'s scope, not a new feature. The remedy
 is already fixed by the narrow-mechanism ADR: derive the enrolled set from the
@@ -139,7 +139,7 @@ reissued. An omission says nothing; a pin says why and expires.
 NOT DONE HERE: the plan is another writer's active surface (99 open steps) and
 S32 is blocked on S84. Proposing the step edit is the operator's call.
 
-## Reconciliation against the accepted record
+### Reconciliation against the accepted record
 
 Semantic discovery found this problem ALREADY DECIDED and ALREADY MEASURED. Two
 sections above were written before that discovery and are corrected here.
@@ -171,7 +171,7 @@ official design interpretation, semantic maps, render profiles, generated trees,
 and byte proof." So enrolment findings belong to `W04.P07`, and this research is
 linked to both plans rather than filed only under its own feature tag.
 
-## What survives as a genuine addition
+### What survives as a genuine addition
 
 Two things, both narrow.
 
@@ -185,12 +185,11 @@ in-file enrolment lists as well as year-pegged filenames.
 refuses `m390-2022` at `literal 'modelo-390-page-07-close'` because
 `_render_candidate()` in `dev/registry/pipeline/cli.py` calls
 `render_complete_export_tree` WITHOUT `source_defects`, while the adjudication for
-a genuine typo in the official file is declared only in
-`dev/registry/tests/test_generated_export_trees.py`. Mechanism is pipeline-owned;
+a genuine typo in the official file is declared only . Mechanism is pipeline-owned;
 data is test-owned; the CLI cannot read it. The test harness renders this tree and
 the CLI cannot, for the same tree and the same design.
 
-## Plan drift observed, needing reconciliation by the owner
+### Plan drift observed, needing reconciliation by the owner
 
 `W04.P07.S79` is OPEN, but its subject has substantially landed: the semantic map
 exists at `dev/registry/mappings/modelo_390/2022/` (0001-records.toml,
@@ -207,3 +206,14 @@ satisfy reconciliation."
 
 The remaining refusal for that row is the source-defect wiring above, which is not
 named by S79, S112, S113 or S115.
+
+## Sources
+
+- the former source file — revision-wide projection over the loaded registry.
+- the former source file — the hand-enrolled generated-tree list and source-defect pins.
+- `dev/registry/pipeline/cli.py` — the publication path that omits source-defect adjudications.
+- `.vault/adr/2026-08-28-registry-narrow-mechanism-widening-adr.md` — the accepted explicit-subject widening constraint.
+- `.vault/adr/2026-08-24-registry-completeness-closure-adr.md` — the governing law-selectable revision coverage boundary.
+- `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md` — the related enrolment and source-defect steps.
+- `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md` — step W01.P09.S32 and its filename census.
+- `.vault/audit/2026-08-15-registry-temporal-coverage-audit.md` — the earlier corpus-proven revision count.

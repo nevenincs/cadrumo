@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#justificante-identity-matching'
 date: '2026-08-07'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a924976cdf3d3b1228cb3ebef8c44f56558febfa64997ef72d34947bd6e9741'
+body_hash: 'sha256:ffdff3b4253d4da961a4995586618c2735d56b5169617806fbb3d8691482c6e3'
 related:
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
 ---
@@ -35,10 +35,6 @@ justificante against its own filed observation.
 
 ## Two distinct AEAT identifier namespaces exist on one receipt
 
-`Justificante` (`src/cadrumo/domain/justificante/_schema.py:76-80`) already
-carries them as separate typed fields, and its own docstring states the
-distinction:
-
 - `csv` — *Código Seguro de Verificación*, the AEAT-assigned verification hash
   printed on the receipt (`JustificanteCsv`, `_schema.py:22-29`).
 - `presentation_id` — AEAT's *"Número de justificante"*, extracted by
@@ -47,17 +43,7 @@ distinction:
   (`_extract.py:164-167`, `212-215`), both anchored on the literal label
   `"Número de justificante"` printed on the receipt body.
 
-`expediente_id` is a **third, unrelated** AEAT identifier: the internal
-case-file reference AEAT assigns to a row in *Consultar declaraciones
-presentadas* (the register), captured by
-`_parse_listbox` from the `"Expediente"` register column
-(`src/cadrumo/adapters/outbound/aeat/sede/_declarations_listbox.py:146`,
-`Declaracion.expediente_id`, `_declarations_schema.py:24`). It never appears on
-the receipt PDF body at all — nothing in `_extract.py` reads or produces it.
-It is the same value carried by `FiledDeclaracionObservation.expediente_id`
-(`_schema.py:455`) and by `JustificanteCaptureSnapshot.expediente_id`
-(`src/cadrumo/application/live/_justificante.py:116`), both sourced from the
-same register/listing surface, not from the receipt.
+`expediente_id` is a **third, unrelated** AEAT identifier: the internal case-file reference AEAT assigns to a row in *Consultar declaraciones presentadas* (the register), captured by `_parse_listbox` from the `"Expediente"` register column (`src/cadrumo/adapters/outbound/aeat/sede/_declarations_listbox.py:146`, `Declaracion.expediente_id`, `_declarations_schema.py:24`). It never appears on the receipt PDF body at all — nothing in `_extract.py` reads or produces it.
 
 `matches_filing_target` (`_schema.py:104-132`) accepts a `presentation_id`
 keyword and, when the receipt carries a non-empty `presentation_id` of its
@@ -68,20 +54,6 @@ defect is at every call site: all three pass a register-namespace
 receipt-namespace `presentation_id`.
 
 ## Every caller conflates the two namespaces (systemic, not M303-local)
-
-1. `_justificante_matches_filed_observation`
-   (`src/cadrumo/application/live/_filed_observation_persistence.py:444-454`) —
-   `presentation_id=observation.expediente_id`. Called from
-   `_parse_matching_filed_justificante` (`:400-441`), itself called from both
-   `persist_filed_justificante_metadata` (`:183`) and
-   `enroll_filed_justificante_evidence` (`:222`) — the register-reconciliation
-   path this campaign is grounding.
-2. `_justificante_matches_capture_axis`
-   (`src/cadrumo/application/live/_justificante.py:596-605`) —
-   `presentation_id=snapshot.expediente_id`.
-3. `register_capture_as_filing_evidence` (`_justificante.py:678-687`, via
-   `_justificante_matches_filing_record`) — also
-   `presentation_id=snapshot.expediente_id`.
 
 No caller anywhere in the tree passes a genuinely receipt-namespace value
 (neither `csv` nor a captured "Número de justificante") into
@@ -214,19 +186,7 @@ what the live pull retrieved.
 
 ## A canonical CSV shape type already exists in `core`, narrower than the domain alias
 
-`cadrumo.core._aeat_csv` (`src/cadrumo/core/_aeat_csv.py:1-45`, exported
-`is_aeat_csv` / `AEAT_CSV_PATTERN` / min/max length constants) states in its
-own module docstring that the CSV contract "lives in `cadrumo.core` because
-every layer meets a CSV and none of them owns it," and constrains it to 8-32
-uppercase alphanumeric characters. `JustificanteCsv`
-(`src/cadrumo/domain/justificante/_schema.py:22-29`) is a separate, narrower
-`Annotated[str, StringConstraints(min_length=4, max_length=64)]` alias that
-does not reuse `core`'s pattern and is looser at the low end (4 vs 8) and
-looser at the high end (64 vs 32). This is exactly the kind of fragmented
-free-form identifier population the operator's parallel canonical
-typed-identifier-system effort is inventorying; this record does not resolve
-it — reconciling `JustificanteCsv` onto `core`'s canonical CSV contract is
-adjacent scope for that effort, not this one, and is out of scope here.
+This is exactly the kind of fragmented free-form identifier population the operator's parallel canonical typed-identifier-system effort is inventorying; this record does not resolve it — reconciling `JustificanteCsv` onto `core`'s canonical CSV contract is adjacent scope for that effort, not this one, and is out of scope here.
 
 ## Observability gap
 

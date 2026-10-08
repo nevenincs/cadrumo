@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#rate-box-evidence-assertion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:4df05d22e53867a0b1fcef9f2e562bd72735330febea80a7a4f562bbfb716a54'
+body_hash: 'sha256:122461d8086e8df76b53bc77a51dbfaa5b723422cfe050ae0f50ea4acf8ad040'
 related:
   - "[[2026-08-07-rate-box-evidence-assertion-research]]"
+  - '[[2026-10-07-broad-test-failure-repair-rate-box-controls-adr]]'
 ---
-
 # `rate-box-evidence-assertion` adr: `an official box asserts only what the evidence determines; the return preserves the whole` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -248,3 +248,9 @@ and would report all 311 of its boxes as absent. Every box-layer casilla this
 record introduces states its official number, so each one is a slot that gate
 can reconcile. Four tiers is not the whole mapping, and the gate should not be
 built on the assumption that this record completes it.
+
+## Scoped amendment (2026-10-07)
+
+Explicitly approved by the user and accepted in `2026-10-07-broad-test-failure-repair-rate-box-controls-adr`. This ruling controls current implementation within its stated scope; the preceding text is preserved as decision history.
+
+For Modelo 390 revisions whose official printed totals sum rate boxes, the blind layer is a separate evidence control, not a liquidation operand. Keep all observations visible there, warn at calculation and refuse export when rate boxes fail to cover that evidence. The earlier assertion that Modelo 390 totals are not sums of their tiers is superseded for these source-grounded revisions. Other modelos and historical epochs require independent source assessment.

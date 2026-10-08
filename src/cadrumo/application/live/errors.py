@@ -147,6 +147,23 @@ class LiveApplicationInputError(LiveApplicationError):
     """Raised when a live AEAT read request is not executable."""
 
 
+class LiveNifIvaCertificateRequiredError(LiveApplicationError):
+    """Refuse the NIF-IVA check before any browser starts.
+
+    AEAT serves its intra-community operator lookup only to certificate
+    logins, and Cadrumo has no certificate route for it, so the check could
+    only ever stop at AEAT's authentication gate. The message points the
+    operator at the European Commission's VIES service instead.
+    """
+
+    def __init__(self) -> None:
+        """Bind the fixed refusal message."""
+        super().__init__(
+            "AEAT's intra-community operator lookup requires a certificate login",
+            translated_message="errors.refused.refused_application_live_nif_iva_certificate_required",
+        )
+
+
 class LiveIvaSurfaceTimeoutError(LiveApplicationError):
     """Raised when one live IVA read surface exceeds its orchestration timeout."""
 
@@ -207,6 +224,7 @@ __all__ = [
     "LiveIvaAcquisitionFailureMode",
     "LiveIvaAcquisitionFailureProtocol",
     "LiveIvaSurfaceTimeoutError",
+    "LiveNifIvaCertificateRequiredError",
     "LiveReadPrecondition",
     "classify_live_iva_acquisition_failure",
     "live_read_no_recovery_verdict",

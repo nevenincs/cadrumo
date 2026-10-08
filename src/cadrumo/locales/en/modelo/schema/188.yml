@@ -3,22 +3,94 @@ modelo:
     '188':
       casilla:
         continuidad:
+          capitalizacion-seguros-declarante-complementaria:
+            label: 'Supplementary: C to add omitted income payments'
+          capitalizacion-seguros-declarante-contacto:
+            label: Contact person's surname and given name
+          capitalizacion-seguros-declarante-ejercicio:
+            label: Tax year
+          capitalizacion-seguros-declarante-justificante-anterior:
+            label: Previous receipt (replacement returns only)
+          capitalizacion-seguros-declarante-nif:
+            label: Declarant's NIF
+          capitalizacion-seguros-declarante-nombre:
+            label: Surname and given name or company name
+          capitalizacion-seguros-declarante-numero-justificante:
+            label: Receipt number (13 digits; starts with 188)
+          capitalizacion-seguros-declarante-sustitutiva:
+            label: 'Replacement: S to replace a previous return'
+          capitalizacion-seguros-declarante-telefono:
+            label: Contact telephone number
+          capitalizacion-seguros-perceptor-base-retenciones:
+            help: For IRPF, the return less the applicable reductions. For IS and
+              IRNR with a permanent establishment, the same amount and sign as the
+              return. Declared value; it is not yet calculated automatically.
+            label: Withholding and payment-on-account base
+          capitalizacion-seguros-perceptor-clave:
+            label: 'Code B: early withdrawal from a PIAS'
+          capitalizacion-seguros-perceptor-ejercicio-devengo:
+            help: Only for amounts accrued in earlier tax years. Each accrual tax
+              year is declared in a separate record.
+            label: Earlier accrual tax year
+          capitalizacion-seguros-perceptor-informacion-adicional:
+            help: Exempt income reported when establishing a PIAS life annuity, declared
+              on early withdrawal of all or part of its economic rights.
+            label: Exempt income reported for early withdrawal from a PIAS
+          capitalizacion-seguros-perceptor-modalidad:
+            label: 'Form: 1 monetary; 2 in kind'
+          capitalizacion-seguros-perceptor-nif:
+            label: Recipient's NIF
+          capitalizacion-seguros-perceptor-nombre:
+            label: Recipient's surname and given name or company name
+          capitalizacion-seguros-perceptor-porcentaje-retencion:
+            help: 'Rate expressed in percentage points: 19 means 19 %. If several
+              rates were applied during the tax year, only the last is declared.'
+            label: Withholding rate (%)
+          capitalizacion-seguros-perceptor-prima:
+            label: Premium paid
+          capitalizacion-seguros-perceptor-provincia:
+            label: Province code
+          capitalizacion-seguros-perceptor-reducciones:
+            help: For IRPF only. Zero is declared if the return is negative; it does
+              not apply to IS or IRNR with a permanent establishment.
+            label: Reductions under the fourth transitional provision
+          capitalizacion-seguros-perceptor-rendimiento-acreedor-hipotecario:
+            label: Return on insurance whose beneficiary is the mortgage creditor
+          capitalizacion-seguros-perceptor-renta-vitalicia-clave:
+            label: 'Operation: A establishment; B early withdrawal'
+          capitalizacion-seguros-perceptor-renta-vitalicia-fecha:
+            help: If both establishment and early withdrawal took place during the
+              tax year, each operation is reported in a separate record.
+            label: Establishment or early-withdrawal date
+          capitalizacion-seguros-perceptor-renta-vitalicia-identificacion:
+            label: Insured life annuity identification
+          capitalizacion-seguros-perceptor-rentas:
+            help: Amount in euros with its sign. Returns with different signs are
+              declared in separate records.
+            label: Income or returns from movable capital
+          capitalizacion-seguros-perceptor-representante-nif:
+            label: Legal representative's NIF
+          capitalizacion-seguros-perceptor-retenciones:
+            help: Declared amount. It must be zero when the base is negative. Cross-field
+              verification and automatic calculation are still pending.
+            label: Withholdings and payments on account
           capitalizacion-seguros-resumen-base-negativa:
-            help: Sum of the withholding and payment-on-account bases shown in the
-              records of recipients with a negative base.
-            label: Negative base for withholdings and payments on account
+            help: Sum of the withholding and payment-on-account bases in recipient
+              records with a negative base.
+            label: Negative withholding and payment-on-account base
           capitalizacion-seguros-resumen-base-positiva:
-            help: Sum of the withholding and payment-on-account bases shown in the
-              records of recipients with a positive base.
-            label: Base for withholdings and payments on account
+            help: Sum of the withholding and payment-on-account bases in recipient
+              records with a positive base.
+            label: Withholding and payment-on-account base
           capitalizacion-seguros-resumen-perceptores-base-negativa:
-            help: Number of recipients (records) whose base for withholdings and payments
-              on account is negative.
-            label: Total number of recipients with a negative base
+            help: Number of records whose withholding and payment-on-account base
+              is negative or zero. A recipient appearing in several records is counted
+              once for each record.
+            label: Total recipients with a negative or zero base
           capitalizacion-seguros-resumen-perceptores-base-positiva:
-            help: Number of recipients (records) whose base for withholdings and payments
-              on account is positive.
-            label: Total number of recipients with a positive base
+            help: Number of recipients (records) whose withholding and payment-on-account
+              base is positive.
+            label: Total recipients with a positive base
           capitalizacion-seguros-resumen-retenciones:
             help: Sum of the withholdings and payments on account applied to the declared
               income.
@@ -29,8 +101,46 @@ modelo:
           insurance contracts. Annual summary.
         title: Withholdings on capitalisation transactions and life insurance - annual
           summary
+      form:
+        section:
+          declaracion:
+            heading: Declaration details
+          declarante:
+            heading: Identity and contact
       revision:
         '2022':
+          casilla:
+            x-e1in4or5e1q6ushecdm62tj5:
+              help: 'Value declared per recipient. Source: AEAT 2017 record design,
+                page 16.'
+            x-e1in4or5e1q6ushedlnm8obcd5i62p0:
+              help: 'Value declared per recipient. Source: AEAT 2017 record design,
+                page 11.'
+            x-e1in4or5e1q6ushedpkmc:
+              help: Under the historical design, if a minor has no NIF, the legal
+                representative's NIF is reported in its corresponding field.
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: 'Value declared per recipient. Source: AEAT 2017 record design,
+                page 10.'
+            x-e1in4or5e1q6ushee1p6irb1:
+              help: 'Value declared per recipient. Source: AEAT 2017 record design,
+                page 18.'
+            x-e1in4or5e1q6ushee1p6utj9dphmio8:
+              help: 'Value declared per recipient. Source: AEAT 2017 record design,
+                page 10.'
+            x-e1in4or5e1q6ushee9imsp39dlkmarjkdsmm2oriclim8rri5lk6is3fehim6obid5ng:
+              help: 'Value declared per recipient. Source: AEAT 2017 record design,
+                page 18.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lhmoobmck:
+              help: 'Value declared per recipient. Source: AEAT 2017 record design,
+                page 16.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Value declared per recipient. Source: AEAT 2017 record design,
+                page 17.'
+            x-e1in4or5e1q6ushee9in0sj5edimst31dpq6abbed5j0:
+              help: Under the historical design, the representative's NIF is reported
+                if the recipient is a minor. In all other cases it is left without
+                a value.
           construct:
             modelo-188-calculation-construct:
               field:
@@ -39,6 +149,37 @@ modelo:
           field:
             label: Modelo 188, tax year 2022
         2023-y-siguientes:
+          casilla:
+            x-e1in4or5e1q6ushecdm62tj5:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 16.'
+            x-e1in4or5e1q6ushedlnm8obcd5i62p0:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 11.'
+            x-e1in4or5e1q6ushedpkmc:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 8.'
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 10.'
+            x-e1in4or5e1q6ushee1p6irb1:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 18.'
+            x-e1in4or5e1q6ushee1p6utj9dphmio8:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 10.'
+            x-e1in4or5e1q6ushee9imsp39dlkmarjkdsmm2oriclim8rri5lk6is3fehim6obid5ng:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 18.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lhmoobmck:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 16.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Value declared per recipient. Source: AEAT 2023 record design,
+                page 17.'
+            x-e1in4or5e1q6ushee9in0sj5edimst31dpq6abbed5j0:
+              help: Reported when the recipient is under 14 years old. In all other
+                cases it is left without a value.
           construct:
             modelo-188-calculation-construct:
               field:

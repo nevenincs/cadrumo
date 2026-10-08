@@ -138,7 +138,7 @@ def _read_state(path: Path) -> LoginThrottleState:
     try:
         state = LoginThrottleState.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
     except (OSError, ValueError):
-        _log.debug("login throttle sidecar unreadable; treating as cleared path=%s", path)
+        _log.warning("login throttle sidecar unreadable; treating as cleared")
         return LoginThrottleState()
     if state.schema_version != LOGIN_THROTTLE_SCHEMA_VERSION:
         _log.debug(

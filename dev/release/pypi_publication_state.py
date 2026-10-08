@@ -28,6 +28,14 @@ from packaging.utils import canonicalize_name, parse_sdist_filename, parse_wheel
 
 from dev._paths import UTF_8
 
+from .package_index_probe import (
+    EndpointQueryPolicy,
+    ResponseReadPolicy,
+    package_index_connection,
+    package_version_request_target,
+    request_package_version,
+)
+
 _UTF_8: Final[str] = UTF_8
 _PYPI_JSON_INDEX: Final[str] = "https://pypi.org/pypi"
 _TIMEOUT_S: Final[int] = 30
@@ -136,24 +144,36 @@ def index_files(project: str, version: str, *, index_url: str = _PYPI_JSON_INDEX
     somewhere other than an index.
     """
     endpoint = urllib.parse.urlsplit(index_url)
-    if endpoint.scheme != "https" or not endpoint.hostname:
+    hostname = endpoint.hostname
+    if endpoint.scheme != "https" or not hostname:
         raise PublicationConflictError(f"index endpoint {index_url!r} is not an HTTPS endpoint")
-    path = f"{endpoint.path.rstrip('/')}/{urllib.parse.quote(project)}/{urllib.parse.quote(version)}/json"
-    connection = http.client.HTTPSConnection(endpoint.hostname, endpoint.port, timeout=_TIMEOUT_S)
+    request_target = package_version_request_target(
+        endpoint.path,
+        endpoint.query,
+        project,
+        version,
+        query_policy=EndpointQueryPolicy.OMIT,
+    )
+    connection = package_index_connection(
+        endpoint.scheme,
+        hostname,
+        endpoint.port,
+        timeout_s=_TIMEOUT_S,
+    )
     try:
-        connection.request("GET", path, headers={"Accept": "application/json"})
-        response = connection.getresponse()
-        body = response.read()
+        response = request_package_version(
+            connection,
+            request_target,
+            read_policy=ResponseReadPolicy.FULL_BODY,
+        )
     except (OSError, http.client.HTTPException) as exc:
         raise PublicationConflictError(f"index check failed for {project}: {exc}") from exc
-    finally:
-        connection.close()
     if response.status == 404:
         return {}
     if not 200 <= response.status < 300:
         raise PublicationConflictError(f"index check failed for {project}: HTTP {response.status}")
     try:
-        payload = json.loads(body.decode(_UTF_8))
+        payload = json.loads(response.body.decode(_UTF_8))
         return {str(entry["filename"]): str(entry["digests"]["sha256"]) for entry in payload.get("urls", ())}
     except (ValueError, KeyError, TypeError, AttributeError) as exc:
         raise PublicationConflictError(f"index answered unreadable metadata for {project}: {exc}") from exc

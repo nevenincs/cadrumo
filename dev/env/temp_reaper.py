@@ -61,7 +61,7 @@ from cadrumo.tests.collection_storage_root import (
     reap_abandoned_numbered_dirs,
 )
 from dev.test_runs.paths import run_log_families, run_log_roots, scratch_base
-from dev.test_runs.reaper import assess_run_directories, assess_scratch_directories, reclaim_run_directories
+from dev.test_runs.reaper import RunVerdict, assess_run_directories, assess_scratch_directories, reclaim_run_directories
 
 CLAUDE_TEMP_STEM = "claude"
 """Claude Code's root under the OS temp directory.
@@ -128,6 +128,98 @@ It says nothing about any OTHER session -- it names one process's own id, not a
 registry -- so it narrows the population by exactly one and the inference still
 has to carry the rest.
 """
+
+
+def _print_spared_runs(run_verdicts: tuple[RunVerdict, ...], verbose: bool, stream: TextIO) -> None:
+    """Print spared runs."""
+    kept_runs = [verdict for verdict in run_verdicts if not verdict.reclaimable]
+    if kept_runs and not verbose:
+        # One line for the spared population rather than one per directory. Only
+        # an in-flight run is spared now, so this is normally a single line, but
+        # a fleet can hold several at once and the reaped lines are the ones an
+        # operator is being asked to sanction; they must not be pushed off the
+        # screen, which is the failure mode a report has instead of a bug.
+        for reason in dict.fromkeys(verdict.reason for verdict in kept_runs):
+            count = sum(1 for verdict in kept_runs if verdict.reason == reason)
+            print(f"  SPARE {count:4d} run directories  {reason}", file=stream)
+
+
+def _partition_session_verdicts(
+    verdicts: list[SessionVerdict],
+) -> tuple[int, list[SessionVerdict], list[SessionVerdict]]:
+    """Partition session verdicts."""
+    reclaimable = 0
+    reaped: list[SessionVerdict] = []
+    spared: list[SessionVerdict] = []
+    for verdict in sorted(verdicts, key=lambda item: -(item.total_bytes or 0)):
+        if verdict.reclaimable:
+            reclaimable += verdict.total_bytes or 0
+            reaped.append(verdict)
+        else:
+            spared.append(verdict)
+    return (reclaimable, reaped, spared)
+
+
+def _print_spared_sessions(spared: list[SessionVerdict], verbose: bool, stream: TextIO) -> None:
+    """Print spared sessions."""
+    if verbose:
+        for verdict in spared:
+            print(f"  SPARE {verdict.session_id}  {verdict.reason}", file=stream)
+    else:
+        for reason in dict.fromkeys(verdict.reason for verdict in spared):
+            count = sum(1 for verdict in spared if verdict.reason == reason)
+            print(f"  SPARE {count:4d} sessions  {reason}", file=stream)
+
+
+def _report_pytest_storage(stream: TextIO, apply: bool) -> None:
+    """Report pytest storage."""
+    numbered_root = pytest_numbered_dir_root()
+    print(f"\npytest numbered directories under {numbered_root}", file=stream)
+    if apply:
+        removed, kept = reap_abandoned_numbered_dirs(numbered_root)
+        print(
+            f"  reclaimed {removed} abandoned, spared {kept} whose owner is running or unknown",
+            file=stream,
+        )
+    else:
+        # Report mode must not delete. This family's only entry point reaps as
+        # it counts, so there is no count to print without acting, and acting
+        # here would make the report's own promise false: it is reached from a
+        # command documented as deleting nothing until --apply. Nothing is lost
+        # by waiting, because every pytest session start already reaps it.
+        print(
+            "  reaped at every pytest session start; not counted here, because counting this"
+            " family means reaping it and a report deletes nothing",
+            file=stream,
+        )
+
+
+def _report_run_storage(stream: TextIO, apply: bool, verbose: bool) -> None:
+    """Report run storage."""
+    run_roots = tuple(root for family in run_log_families() for root in run_log_roots(family))
+    run_verdicts = tuple(verdict for run_root in run_roots for verdict in assess_run_directories(run_root))
+    named_roots = ", ".join(str(root) for root in run_roots) or "no run root exists yet"
+    print(f"\nRun directories under {named_roots}", file=stream)
+    for verdict in run_verdicts:
+        _print_run_verdict(verdict, verbose, stream)
+    _print_spared_runs(run_verdicts, verbose, stream)
+    if apply:
+        print(f"  removed {reclaim_run_directories(run_verdicts)} run directories", file=stream)
+
+
+def _report_run_scratch(stream: TextIO, apply: bool, verbose: bool) -> None:
+    """Report run scratch."""
+    base = scratch_base()
+    scratch_verdicts = assess_scratch_directories(base)
+    print(f"\nRun scratch under {base}", file=stream)
+    for verdict in scratch_verdicts:
+        if verdict.reclaimable or verbose:
+            print(
+                f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.directory.name}  {verdict.reason}",
+                file=stream,
+            )
+    if apply:
+        print(f"  removed {reclaim_run_directories(scratch_verdicts)} scratch directories", file=stream)
 
 
 @dataclass(frozen=True)
@@ -318,25 +410,7 @@ def assess_claude_sessions(
             raise
         return verdicts
     for project in projects:
-        if is_link_like(project) or not project.is_dir():
-            continue
-        try:
-            sessions = scan_directory(project, require_root=True)
-        except OSError:
-            continue
-        for session in sessions:
-            if is_link_like(session) or not session.is_dir() or (mine and session.name == mine):
-                continue
-            verdicts.append(
-                assess_session(
-                    session,
-                    project.name,
-                    now=reference,
-                    ceiling=ceiling,
-                    measure_spared=measure_spared,
-                    transcript_root=transcript_root,
-                ),
-            )
+        _assess_project_sessions(project, mine, reference, ceiling, measure_spared, transcript_root, verdicts)
     return verdicts
 
 
@@ -385,15 +459,7 @@ def _report(
     sessions, and printing one line each buries every other section of the
     report it now forms part of.
     """
-    reclaimable = 0
-    reaped: list[SessionVerdict] = []
-    spared: list[SessionVerdict] = []
-    for verdict in sorted(verdicts, key=lambda item: -(item.total_bytes or 0)):
-        if verdict.reclaimable:
-            reclaimable += verdict.total_bytes or 0
-            reaped.append(verdict)
-        else:
-            spared.append(verdict)
+    reclaimable, reaped, spared = _partition_session_verdicts(verdicts)
 
     # Sorted by size above, so the tail is the sessions holding nothing. They
     # are still reaped -- an empty abandoned scratchpad is still a directory --
@@ -410,13 +476,7 @@ def _report(
     folded = len(reaped) - len(listed)
     if folded:
         print(f"  REAP  {folded} further abandoned sessions holding under 1 MB each", file=stream)
-    if verbose:
-        for verdict in spared:
-            print(f"  SPARE {verdict.session_id}  {verdict.reason}", file=stream)
-    else:
-        for reason in dict.fromkeys(verdict.reason for verdict in spared):
-            count = sum(1 for verdict in spared if verdict.reason == reason)
-            print(f"  SPARE {count:4d} sessions  {reason}", file=stream)
+    _print_spared_sessions(spared, verbose, stream)
 
     verb = "reclaimed" if applying else "reclaimable"
     print(f"  {verb}: {_gigabytes(reclaimable)}   spared: {len(spared)} of {len(verdicts)} sessions", file=stream)
@@ -452,25 +512,7 @@ def report_temporary_storage(
     """
     ceiling = idle_hours * 3600
 
-    numbered_root = pytest_numbered_dir_root()
-    print(f"\npytest numbered directories under {numbered_root}", file=stream)
-    if apply:
-        removed, kept = reap_abandoned_numbered_dirs(numbered_root)
-        print(
-            f"  reclaimed {removed} abandoned, spared {kept} whose owner is running or unknown",
-            file=stream,
-        )
-    else:
-        # Report mode must not delete. This family's only entry point reaps as
-        # it counts, so there is no count to print without acting, and acting
-        # here would make the report's own promise false: it is reached from a
-        # command documented as deleting nothing until --apply. Nothing is lost
-        # by waiting, because every pytest session start already reaps it.
-        print(
-            "  reaped at every pytest session start; not counted here, because counting this"
-            " family means reaping it and a report deletes nothing",
-            file=stream,
-        )
+    _report_pytest_storage(stream, apply)
 
     # Both bases, because a pytest controller roots its run under the OS temp
     # directory rather than the checkout (see conftest.py) and the repository base
@@ -479,43 +521,12 @@ def report_temporary_storage(
     # same marker `test-runs` does, and assessing only the family this section was
     # first written for left the others to be judged by name alone, with no owner
     # check, while a run was still writing into them.
-    run_roots = tuple(root for family in run_log_families() for root in run_log_roots(family))
-    run_verdicts = tuple(verdict for run_root in run_roots for verdict in assess_run_directories(run_root))
-    named_roots = ", ".join(str(root) for root in run_roots) or "no run root exists yet"
-    print(f"\nRun directories under {named_roots}", file=stream)
-    for verdict in run_verdicts:
-        if verdict.reclaimable or verbose:
-            print(
-                f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.directory.name}  {verdict.reason}",
-                file=stream,
-            )
-    kept_runs = [verdict for verdict in run_verdicts if not verdict.reclaimable]
-    if kept_runs and not verbose:
-        # One line for the spared population rather than one per directory. Only
-        # an in-flight run is spared now, so this is normally a single line, but
-        # a fleet can hold several at once and the reaped lines are the ones an
-        # operator is being asked to sanction; they must not be pushed off the
-        # screen, which is the failure mode a report has instead of a bug.
-        for reason in dict.fromkeys(verdict.reason for verdict in kept_runs):
-            count = sum(1 for verdict in kept_runs if verdict.reason == reason)
-            print(f"  SPARE {count:4d} run directories  {reason}", file=stream)
-    if apply:
-        print(f"  removed {reclaim_run_directories(run_verdicts)} run directories", file=stream)
+    _report_run_storage(stream, apply, verbose)
 
     # A run's scratch sits directly under the temp base, not inside its run
     # directory, so reclaiming the run directory leaves it behind; it is judged
     # by the same owner and silence rules.
-    base = scratch_base()
-    scratch_verdicts = assess_scratch_directories(base)
-    print(f"\nRun scratch under {base}", file=stream)
-    for verdict in scratch_verdicts:
-        if verdict.reclaimable or verbose:
-            print(
-                f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.directory.name}  {verdict.reason}",
-                file=stream,
-            )
-    if apply:
-        print(f"  removed {reclaim_run_directories(scratch_verdicts)} scratch directories", file=stream)
+    _report_run_scratch(stream, apply, verbose)
 
     session_root = claude_session_root()
     print(f"\nClaude Code session scratchpads under {session_root}", file=stream)
@@ -530,3 +541,43 @@ def report_temporary_storage(
     reclaimed = reclaim(verdicts)
     print(f"  removed {_gigabytes(reclaimed)}", file=stream)
     return reclaimed
+
+
+def _assess_project_sessions(
+    project: Path,
+    mine: str,
+    reference: float,
+    ceiling: float,
+    measure_spared: bool,
+    transcript_root: Path,
+    verdicts: list[SessionVerdict],
+) -> None:
+    """Assess project sessions."""
+    if is_link_like(project) or not project.is_dir():
+        return
+    try:
+        sessions = scan_directory(project, require_root=True)
+    except OSError:
+        return
+    for session in sessions:
+        if is_link_like(session) or not session.is_dir() or (mine and session.name == mine):
+            continue
+        verdicts.append(
+            assess_session(
+                session,
+                project.name,
+                now=reference,
+                ceiling=ceiling,
+                measure_spared=measure_spared,
+                transcript_root=transcript_root,
+            ),
+        )
+
+
+def _print_run_verdict(verdict: RunVerdict, verbose: bool, stream: TextIO) -> None:
+    """Print run verdict."""
+    if verdict.reclaimable or verbose:
+        print(
+            f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.directory.name}  {verdict.reason}",
+            file=stream,
+        )

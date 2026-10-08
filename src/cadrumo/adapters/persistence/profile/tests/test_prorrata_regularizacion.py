@@ -28,7 +28,7 @@ from .....application.calculations.prorrata_regularizacion import (
 )
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.revision_persistence import persist_filed_revision
-from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
+from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed_from_observations
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
@@ -77,9 +77,11 @@ from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_verification_reports import VerificationReportCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..participation_index import TransactionParticipationIndexRepository
 from ..prorrata_register import ProrrataRegisterRepository
+from .filing_report_support import seed_filing_gate_report
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -116,17 +118,16 @@ def _ledger_observation(
     flow: IvaFlowDirection,
     exemption_article: IvaExemptionArticle | None = None,
 ) -> IvaLedgerObservation:
-    deduction = (
-        {
-            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
-            "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
-                source_locator=f"invoice:{ledger_id}",
-                evidence_digest="d" * 64,
-            ),
-        }
-        if flow == IvaFlowDirection.from_registry("soportado")
-        else {}
+    supported = flow == IvaFlowDirection.from_registry("soportado")
+    deduction_fact_kind = IvaDeductionFactKind.from_registry("domestic_current") if supported else None
+    deduction_provenance = (
+        IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
+            source_locator=f"invoice:{ledger_id}",
+            evidence_digest="d" * 64,
+        )
+        if supported
+        else None
     )
     with validating_governed_facts(operation):
         return IvaLedgerObservation(
@@ -139,7 +140,8 @@ def _ledger_observation(
             base_amount=Decimal(base),
             iva_amount=Decimal("0.00"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
-            **deduction,
+            deduction_fact_kind=deduction_fact_kind,
+            deduction_provenance=deduction_provenance,
         )
 
 
@@ -474,9 +476,14 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
                 work_unit_repository=work_unit_repository,
                 operation=operation,
             )
+            verification_repository = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
+            report_id = seed_filing_gate_report(revision, verification_repository)
+            _, filing_baseline_revision_id = filing_repository.load_revisioned()
 
             persist_filed_revision(
                 target=revision,
+                approved_verification_report_id=report_id,
+                filing_baseline_revision_id=filing_baseline_revision_id,
                 work_unit=work_unit,
                 work_units=work_unit_repository.load(),
                 notes=None,
@@ -484,6 +491,7 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
                 now=_T0 + timedelta(hours=2),
                 calculation_repository=calculation_repository,
                 filing_repository=filing_repository,
+                verification_repository=verification_repository,
                 work_unit_repository=work_unit_repository,
                 bucket_event_repository=BucketEventHistoryRepository(),
                 calculation_observation_repository=observation_repository,
@@ -496,9 +504,9 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
             )
 
             settled_entry = prorrata_repository.load().entry_for(_SETTLEMENT_YEAR)
-            seed_evaluation = evaluate_carried_prior_definitiva_seed(
+            seed_evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
                 ejercicio=_CARRY_YEAR,
-                observation_repository=observation_repository,
+                observations=tuple(observation_repository.iter_modelo(Modelo("303").value)),
                 operation=_authority_operation_for_test,
             )
 

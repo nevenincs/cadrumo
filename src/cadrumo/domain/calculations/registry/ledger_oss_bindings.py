@@ -9,10 +9,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ....core.aggregation import (
-    BindingAggregationOp,
-    BindingSourceKind,
-)
+from ....core.aggregation import BindingSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.clock import today_madrid
 from ...iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
@@ -22,14 +19,18 @@ from ._ledger_binding_resolution import (
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
-from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .eu_member_state_catalogue import require_eu_member_state, require_registry_declared_eu_member_state
-from .governed_fact_scope import governed_facts_in_scope
+from .governed_fact_scope import governed_facts_in_scope, require_governed_fact_authority
 from .ids import BindingId
 from .iva_rate_kind_catalogue import require_iva_rate_kind, require_registry_declared_iva_rate_kind
-from .ledger_binding_selector_support import LedgerIvaFact, OssIossLedgerFact
+from .ledger_binding_selector_support import OSS_IOSS_LEDGER_FACTS, LedgerIvaFact, OssIossLedgerFact
+from .ledger_binding_validation import (
+    ledger_binding_build_diagnostics,
+    ledger_binding_selector,
+    require_ledger_aggregation_op,
+    require_ledger_fact,
+)
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 
 if TYPE_CHECKING:
@@ -84,9 +85,7 @@ class OssIossLedgerObservation(BaseModel):
     @model_validator(mode="after")
     def _validate_registry_regime(self) -> Self:
         """Refuse an observation whose regime is absent from facts authority."""
-        authority = governed_facts_in_scope()
-        if authority is None:
-            raise RegistryValidationError("ledger OSS observation validation requires generation-pinned governed facts")
+        authority = require_governed_fact_authority(None, subject="ledger OSS observation validation")
         regime = require_oss_ioss_regime(
             self.regime,
             effective_date=self.transaction_date,
@@ -151,9 +150,7 @@ class LedgerOssProvider(BaseModel):
     @classmethod
     def _validate_registry_transaction_kinds(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
         """Refuse binding transaction kinds absent from the classification fact."""
-        authority = governed_facts_in_scope()
-        if authority is None:
-            raise RegistryValidationError("ledger OSS binding validation requires candidate governed facts")
+        authority = require_governed_fact_authority(None, subject="ledger OSS binding validation")
         return tuple(
             require_transaction_kind(kind, effective_date=today_madrid(), operation=authority) for kind in value
         )
@@ -164,14 +161,6 @@ class LedgerOssProvider(BaseModel):
         if len(set(value)) != len(value):
             raise RegistryValidationError("transaction_kinds entries must be unique")
         return value
-
-
-def _ledger_oss_selector(binding: BindingDefinition) -> LedgerOssProvider:
-    """Validate and parse a binding selector into a typed OSS / IOSS selector."""
-    try:
-        return provider_member(binding, LedgerOssProvider)
-    except (ValueError, TypeError) as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_oss_aggregation selector") from exc
 
 
 def validate_ledger_oss_aggregation_binding_definition(
@@ -189,22 +178,9 @@ def validate_ledger_oss_aggregation_binding_definition(
             transaction kind), or if the aggregation operator is
             inconsistent with the declared fact.
     """
-    if binding.source != BindingSourceKind.LEDGER_OSS_AGGREGATION:
-        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_oss_aggregation source")
-    selector = _ledger_oss_selector(binding)
-
-    if binding.aggregation is not None:
-        op = binding_aggregation_op(binding)
-        if op != BindingAggregationOp.SUM:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} ledger_oss_aggregation supports only aggregation op 'sum', got {op.value!r}",
-            )
-
-    if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_oss_aggregation supports only "
-            f"facts {{iva_amount_sum, base_amount_sum}}, got {selector.fact!r}",
-        )
+    selector = ledger_binding_selector(binding, BindingSourceKind.LEDGER_OSS_AGGREGATION, LedgerOssProvider)
+    require_ledger_aggregation_op(binding)
+    require_ledger_fact(binding, selector.fact, OSS_IOSS_LEDGER_FACTS)
 
 
 def _oss_build_matcher(
@@ -234,7 +210,7 @@ def _oss_aggregate(
     matched: Sequence[OssIossLedgerObservation],
     selector: LedgerOssProvider,
 ) -> Decimal:
-    if selector.fact == "iva_amount_sum":
+    if selector.fact == LedgerIvaFact.IVA_AMOUNT_SUM:
         return sum((observation.iva_amount for observation in matched), Decimal("0"))
     return sum((observation.base_amount for observation in matched), Decimal("0"))
 
@@ -267,7 +243,7 @@ def resolve_ledger_oss_aggregation_binding_values(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-        parse_selector=_ledger_oss_selector,
+        provider_model=LedgerOssProvider,
         build_matcher=_oss_build_matcher,
         aggregate=_oss_aggregate,
     )
@@ -306,7 +282,7 @@ def unsupported_ledger_oss_observations(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-        parse_selector=_ledger_oss_selector,
+        provider_model=LedgerOssProvider,
         build_matcher=_oss_build_matcher,
         is_declarable=_oss_is_declarable,
     )
@@ -336,13 +312,12 @@ def validate_ledger_oss_aggregation_binding(binding: BindingDefinition) -> list[
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_oss_aggregation_binding_definition`. This validator is
     that body's only caller, so the invariant is enforced at registry-build time
-    only; :func:`resolve_ledger_oss_aggregation_binding_values` re-parses the
-    selector independently through :func:`_ledger_oss_selector`.
+    only; :func:`resolve_ledger_oss_aggregation_binding_values` narrows the
+    selector independently through its own provider model.
     """
-    failures = selector_against_model(binding, LedgerOssProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(binding, "ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition)
+    return ledger_binding_build_diagnostics(
+        binding, LedgerOssProvider, validate_ledger_oss_aggregation_binding_definition
+    )
 
 
 LedgerOssProvider = LedgerOssProvider

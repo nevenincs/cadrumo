@@ -1,0 +1,137 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2019-2023.form_layouts]]
+id = "form-layout"
+revision_id = "2019-2023"
+seed_source = "authored"
+review = { state = "generated" }
+generator_version = 1
+source_state_digest = "2cdc7a8e20180a28597a53b1779e70407fea77de3b718f082d0c2840557dbbe4"
+design_sources = [
+    { source_ref = "aeat-dr-131-2019-2023-v101", sha256 = "0d5096a70ebbeb6bb2527a4c9fc834d7ce208a975aac8a1371c6fd59d90fffb4" },
+    { source_ref = "boe-2015-1656-modelos-130-131-form", sha256 = "4828839126e33ccab7150d801d1090f3b90cb683c32efc064ab10d7cfcd258de" },
+]
+placements = [
+    { casilla_id = "01", kind = "on_form", box_number = "01" },
+    { casilla_id = "02", kind = "on_form", box_number = "02" },
+    { casilla_id = "03", kind = "on_form", box_number = "03" },
+    { casilla_id = "04", kind = "on_form", box_number = "04" },
+    { casilla_id = "05", kind = "on_form", box_number = "05" },
+    { casilla_id = "06", kind = "on_form", box_number = "06" },
+    { casilla_id = "07", kind = "on_form", box_number = "07" },
+    { casilla_id = "08", kind = "on_form", box_number = "08" },
+    { casilla_id = "09", kind = "on_form", box_number = "09" },
+    { casilla_id = "10", kind = "on_form", box_number = "10" },
+    { casilla_id = "11", kind = "on_form", box_number = "11" },
+    { casilla_id = "12", kind = "on_form", box_number = "12" },
+    { casilla_id = "13", kind = "on_form", box_number = "13" },
+    { casilla_id = "14", kind = "on_form", box_number = "14" },
+    { casilla_id = "15", kind = "on_form", box_number = "15" },
+    { casilla_id = "modulos-1-unidades", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-1-unidades-anterior", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-2-unidades", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-3-unidades", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-4-unidades", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-5-unidades", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-6-unidades", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-7-unidades", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-epigrafe", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-indice-inicio-actividad", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-indice-pequena-dimension", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-indice-temporada", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-minoracion-inversion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "modulos-pequena-dimension-ignorado-flag", kind = "working_figure" },
+    { casilla_id = "modulos-rendimiento-neto-actividad", kind = "working_figure" },
+    { casilla_id = "modulos-rendimiento-neto-minorado", kind = "working_figure" },
+    { casilla_id = "modulos-rendimiento-neto-modulos", kind = "working_figure" },
+    { casilla_id = "modulos-rendimiento-neto-previo", kind = "working_figure" },
+    { casilla_id = "modulos-temporada-inicio-actividad-conflicto-flag", kind = "working_figure" },
+    { casilla_id = "saldo-negativo-fin-periodo", kind = "working_figure" },
+]
+
+[[revisions.2019-2023.form_layouts.pages]]
+id = "pag-1"
+official_ref = "BOE-A-2015-1656, anexo II, pág. 8"
+heading_key = "modelo.schema.131.form.page.pag-1.heading"
+official_heading = "Pago fraccionado · Estimación objetiva"
+
+[[revisions.2019-2023.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.131.form.section.identificacion.heading"
+official_heading = "Declarante (1)"
+blocks = [
+    { kind = "context_field", id = "nif", export_layout_id = "modelo-131-fichero-boe", export_record_id = "modelo-131-2019-2023-page-01", export_field_id = "modelo-131-2019-2023-tax-id", heading_key = "modelo.schema.131.form.context.nif", official_heading = "NIF" },
+    { kind = "context_field", id = "nombre", export_layout_id = "modelo-131-fichero-boe", export_record_id = "modelo-131-2019-2023-page-01", export_field_id = "modelo-131-2019-2023-declarante-nombre", heading_key = "modelo.schema.131.form.context.nombre", official_heading = "Nombre" },
+    { kind = "context_field", id = "apellidos", export_layout_id = "modelo-131-fichero-boe", export_record_id = "modelo-131-2019-2023-page-01", export_field_id = "modelo-131-2019-2023-declarante-apellidos", heading_key = "modelo.schema.131.form.context.apellidos", official_heading = "Apellidos" },
+]
+
+[[revisions.2019-2023.form_layouts.pages.sections]]
+id = "devengo"
+heading_key = "modelo.schema.131.form.section.devengo.heading"
+official_heading = "Devengo (2)"
+blocks = [
+    { kind = "context_field", id = "ejercicio", export_layout_id = "modelo-131-fichero-boe", export_record_id = "modelo-131-2019-2023-page-01", export_field_id = "modelo-131-2019-2023-filing-year", heading_key = "modelo.schema.131.form.context.ejercicio", official_heading = "Ejercicio" },
+    { kind = "context_field", id = "periodo", export_layout_id = "modelo-131-fichero-boe", export_record_id = "modelo-131-2019-2023-page-01", export_field_id = "modelo-131-2019-2023-period-code", heading_key = "modelo.schema.131.form.context.periodo", official_heading = "Período" },
+]
+
+[[revisions.2019-2023.form_layouts.pages.sections]]
+id = "liquidacion-i"
+heading_key = "modelo.schema.131.form.section.liquidacion-i.heading"
+official_heading = "I. Actividades económicas en estimación objetiva distintas de las agrícolas, ganaderas, forestales y pesqueras."
+blocks = [
+    { kind = "grid", id = "actividades", columns = [{ key = "epigrafe", heading_key = "modelo.schema.131.form.column.epigrafe.heading", official_heading = "Actividad (epígrafe IAE)" }, { key = "rendimiento-neto", heading_key = "modelo.schema.131.form.column.rendimiento-neto.heading", official_heading = "Rendimiento neto de la actividad a efectos del pago fraccionado" }, { key = "porcentaje", heading_key = "modelo.schema.131.form.column.porcentaje.heading", official_heading = "Porcentaje aplicable" }, { key = "resultado", heading_key = "modelo.schema.131.form.column.resultado.heading", official_heading = "Resultado de aplicar el porcentaje correspondiente a cada actividad" }], rows = [{ key = "actividad-1", heading_key = "modelo.schema.131.form.actividad-1.heading", official_heading = "Actividad 1", cells = [{ kind = "binding_input", binding_id = "modelo-131.page1.actividad-1-epigrafe" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-1-rendimiento-neto" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-1-porcentaje" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-1-resultado" }] }, { key = "actividad-2", heading_key = "modelo.schema.131.form.actividad-2.heading", official_heading = "Actividad 2", cells = [{ kind = "binding_input", binding_id = "modelo-131.page1.actividad-2-epigrafe" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-2-rendimiento-neto" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-2-porcentaje" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-2-resultado" }] }, { key = "actividad-3", heading_key = "modelo.schema.131.form.actividad-3.heading", official_heading = "Actividad 3", cells = [{ kind = "binding_input", binding_id = "modelo-131.page1.actividad-3-epigrafe" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-3-rendimiento-neto" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-3-porcentaje" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-3-resultado" }] }, { key = "actividad-4", heading_key = "modelo.schema.131.form.actividad-4.heading", official_heading = "Actividad 4", cells = [{ kind = "binding_input", binding_id = "modelo-131.page1.actividad-4-epigrafe" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-4-rendimiento-neto" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-4-porcentaje" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-4-resultado" }] }, { key = "actividad-5", heading_key = "modelo.schema.131.form.actividad-5.heading", official_heading = "Actividad 5", cells = [{ kind = "binding_input", binding_id = "modelo-131.page1.actividad-5-epigrafe" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-5-rendimiento-neto" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-5-porcentaje" }, { kind = "binding_input", binding_id = "modelo-131.page1.actividad-5-resultado" }] }] },
+    { kind = "field", id = "casilla-01", casilla_id = "01" },
+    { kind = "field", id = "casilla-02", casilla_id = "02" },
+]
+
+[[revisions.2019-2023.form_layouts.pages.sections]]
+id = "liquidacion-ii"
+heading_key = "modelo.schema.131.form.section.liquidacion-ii.heading"
+official_heading = "II. Actividades económicas en estimación objetiva distintas de las agrícolas, ganaderas, forestales y pesqueras, sin posibilidad de determinar ninguno de los datos-base a efectos del pago fraccionado."
+blocks = [
+    { kind = "field", id = "casilla-03", casilla_id = "03" },
+    { kind = "field", id = "casilla-04", casilla_id = "04" },
+]
+
+[[revisions.2019-2023.form_layouts.pages.sections]]
+id = "liquidacion-iii"
+heading_key = "modelo.schema.131.form.section.liquidacion-iii.heading"
+official_heading = "III. Actividades agrícolas, ganaderas, forestales y pesqueras en estimación objetiva."
+blocks = [
+    { kind = "field", id = "casilla-05", casilla_id = "05" },
+    { kind = "field", id = "casilla-06", casilla_id = "06" },
+]
+
+[[revisions.2019-2023.form_layouts.pages.sections]]
+id = "liquidacion-iv"
+heading_key = "modelo.schema.131.form.section.liquidacion-iv.heading"
+official_heading = "IV. Total liquidación."
+blocks = [
+    { kind = "field", id = "casilla-07", casilla_id = "07" },
+    { kind = "field", id = "casilla-08", casilla_id = "08" },
+    { kind = "field", id = "casilla-09", casilla_id = "09" },
+    { kind = "field", id = "casilla-10", casilla_id = "10" },
+    { kind = "field", id = "casilla-11", casilla_id = "11" },
+    { kind = "field", id = "casilla-12", casilla_id = "12" },
+    { kind = "field", id = "casilla-13", casilla_id = "13" },
+    { kind = "field", id = "casilla-14", casilla_id = "14" },
+    { kind = "field", id = "casilla-15", casilla_id = "15" },
+]
+
+[[revisions.2019-2023.form_layouts.pages.sections]]
+id = "ingreso"
+heading_key = "modelo.schema.131.form.section.ingreso.heading"
+official_heading = "Ingreso (4)"
+blocks = [
+    { kind = "context_field", id = "iban", export_layout_id = "modelo-131-fichero-boe", export_record_id = "modelo-131-2019-2023-page-01", export_field_id = "modelo-131-2019-2023-domiciliacion-iban", heading_key = "modelo.schema.131.form.context.iban", official_heading = "Código IBAN" },
+]
+
+[[revisions.2019-2023.form_layouts.pages.sections]]
+id = "complementaria-7"
+heading_key = "modelo.schema.131.form.section.complementaria-7.heading"
+official_heading = "Complementaria (7)"
+blocks = [
+    { kind = "context_field", id = "declaracion-complementaria", export_layout_id = "modelo-131-fichero-boe", export_record_id = "modelo-131-2019-2023-page-01", export_field_id = "modelo-131-2019-2023-declaracion-complementaria", heading_key = "modelo.schema.131.form.context.declaracion-complementaria", official_heading = "Autoliquidación complementaria" },
+    { kind = "field", id = "field", binding_id = "modelo-131.page1.justificante-anterior" },
+]

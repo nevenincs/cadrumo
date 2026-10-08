@@ -176,10 +176,10 @@ def reader(secure_object_test_profile: TestRuntimeProfile) -> Iterator[tuple[str
     """Serve a real reader endpoint on a loopback port; yield its URL and requests.
 
     Depends on ``secure_object_test_profile`` for the real bucket runtime: the reading path
-    writes run telemetry through the profile-bound encrypted repository, so a
+    writes run record through the profile-bound encrypted repository, so a
     read with no active bucket fails before the transport is reached. Taking the
     shared fixture keeps this a REAL storage runtime rather than disabling the
-    telemetry write to make the test pass.
+    run-record write to make the test pass.
     """
     requests: Queue[dict[str, object]] = Queue()
     _LoopbackRequestHandler.requests = requests
@@ -225,7 +225,7 @@ def test_the_read_actually_reaches_the_loopback_endpoint(
 
     _read_through_the_wired_path(chat_url)
 
-    sent = requests.get(timeout=5)
+    sent = requests.get_nowait()
     assert sent["stream"] is False
     assert isinstance(sent["messages"], list)
 
@@ -242,7 +242,7 @@ def test_the_transcription_not_the_raw_bytes_is_what_the_reader_receives(
 
     _read_through_the_wired_path(chat_url)
 
-    sent = requests.get(timeout=5)
+    sent = requests.get_nowait()
     messages = sent["messages"]
     assert isinstance(messages, list), "the wired request carried no message list"
     prompt = "".join(str(message.get("content", "")) for message in messages if isinstance(message, dict))

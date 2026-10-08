@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:36928e0b5d33cf720d8ae0c7877e43203cfa2c8f4c49bd99b977179d6498f905'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:34a5bce1675d2332399fae2b9809abe60b5b303654574829b1442cb7f4afb103'
+related: []
 ---
+
 # `tui-architecture` audit: `s123 dependency receipt review`
 
 ## Scope
@@ -19,7 +19,7 @@ Independent review of S123 at HEAD `a096a2685343e5bc38f4ec54114fcbb0724af143`, i
 
 ### LOW â€” Full-project type-diagnostic count is not attributable to the S123 receipt module
 
-The reported eleven type diagnostics were assessed separately from the S123 receipt surface. Focused `basedpyright src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` reports zero errors/warnings, as does focused Ruff. The broad type command did not complete within the terminalâ€™s 30-second result window, so this review cannot assign the eleven project-wide diagnostics to a precise source set. They are not reproduced by the S123 module and do not evidence an S123 receipt/authority defect. Resolve and inventory them at the next broad quality-gate run.
+The reported eleven type diagnostics were assessed separately from the S123 receipt surface. The broad type command did not complete within the terminalâ€™s 30-second result window, so this review cannot assign the eleven project-wide diagnostics to a precise source set. They are not reproduced by the S123 module and do not evidence an S123 receipt/authority defect. Resolve and inventory them at the next broad quality-gate run.
 
 No MEDIUM, HIGH, or CRITICAL finding.
 

@@ -13,15 +13,14 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_catalogue_file
-from .._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from .._export_tree import render_complete_export_tree
+from ..export_tree_models import ExportTreeTransportProfile, RenderedExportTree
 from ..joined_record_design import join_record_design_semantics
 from ..record_design_intermediate import load_record_design_intermediate
-from ..render_profile import (
-    RenderProfile,
-    RenderProfileSourceEvidence,
-    load_render_profile,
-    load_render_profile_source_evidence,
-)
+from ..render_profile_evidence import RenderProfileSourceEvidence
+from ..render_profile_loading import load_render_profile
+from ..render_profile_model import RenderProfile
+from ..render_profile_source_reader import load_render_profile_source_evidence
 from ..semantic_map import (
     SemanticMap,
     load_semantic_map,

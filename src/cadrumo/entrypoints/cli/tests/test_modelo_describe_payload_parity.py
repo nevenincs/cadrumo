@@ -21,6 +21,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.period import Period
 from ....domain.calculations.registry.query_reports import ModeloDescribeReport
@@ -42,6 +43,7 @@ def _report(**overrides: Any) -> ModeloDescribeReport:
         "cadence": "anual",
         "jurisdiction": "ES",
         "revision": "2025-y-siguientes",
+        "authority_grade": RegistryAuthorityGrade.FILING,
         "revision_ids": ("2024-y-siguientes", "2025-y-siguientes"),
         "filing_year": 2025,
         "filing_period": Period(filing_year=2025, code="0A"),
@@ -90,6 +92,27 @@ def test_from_report_carries_legal_and_source_grounding() -> None:
     assert result.valid_from == date(2025, 1, 1)
     assert result.valid_to == date(2025, 12, 31)
     assert result.filing_period == Period(filing_year=2025, code="0A")
+
+
+@pytest.mark.parametrize(
+    ("grade", "wire_grade"),
+    (
+        (None, None),
+        (RegistryAuthorityGrade.APPLICABILITY, "applicability"),
+        (RegistryAuthorityGrade.FILING, "filing"),
+    ),
+)
+def test_authority_grade_is_nullable_and_value_preserving(
+    grade: RegistryAuthorityGrade | None,
+    wire_grade: str | None,
+) -> None:
+    """An ungraded revision stays ungraded and declared grades reach JSON unchanged."""
+    report = _report(authority_grade=grade)
+    result = ModeloDescribeResult.from_report(report)
+
+    assert report.authority_grade is grade
+    assert result.authority_grade is grade
+    assert result.model_dump(mode="json")["authority_grade"] == wire_grade
 
 
 def test_emitted_json_carries_the_grounding_fields() -> None:

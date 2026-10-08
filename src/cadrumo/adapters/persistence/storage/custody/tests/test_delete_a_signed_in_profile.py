@@ -21,7 +21,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -77,7 +77,7 @@ def test_the_profile_the_operator_is_signed_into_can_be_deleted(tmp_path: Path) 
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=outcome.label,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,

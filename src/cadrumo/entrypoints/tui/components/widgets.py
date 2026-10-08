@@ -217,17 +217,29 @@ class ContentDataTable[CellType](DataTable[CellType]):
             return
 
         columns = list(self.columns.items())
+        allocated = self._allocated_widths(columns, available)
+        if self._apply_allocated_widths(columns, allocated):
+            # The same signal Textual's own column mutators raise: the table
+            # re-measures its virtual size on the next idle, so the scroll
+            # extent describes the widths just assigned.
+            self._require_update_dimensions = True
+            self.refresh()
+
+    def _allocated_widths(self, columns: list[tuple[ColumnKey, Column]], available: int) -> dict[ColumnKey, int]:
+        """Calculate the current viewport's width allocation from declared floors."""
         # A rebuilt column set retires its keys; the floors it declared go with it.
         self._declared_widths = {key: width for key, width in self._declared_widths.items() if key in self.columns}
         natural = {key: self._natural_width(key, column) for key, column in columns}
         fill_key = _resolve_fill_column_key([key for key, _column in columns], self.fill_column)
-        allocated = _allocate_column_widths(
+        return _allocate_column_widths(
             available,
             [(key, self._declared_width(key, column), len(str(column.label)), natural[key]) for key, column in columns],
             fill_key=fill_key,
             cell_padding=self.cell_padding,
         )
 
+    def _apply_allocated_widths(self, columns: list[tuple[ColumnKey, Column]], allocated: dict[ColumnKey, int]) -> bool:
+        """Apply each allocated width, disabling content sizing when taking ownership."""
         changed = False
         for key, column in columns:
             # Textual renders an auto-width column from its measured content and
@@ -240,13 +252,7 @@ class ContentDataTable[CellType](DataTable[CellType]):
                 column.width = allocated[key]
                 column.auto_width = False
                 changed = True
-
-        if changed:
-            # The same signal Textual's own column mutators raise: the table
-            # re-measures its virtual size on the next idle, so the scroll
-            # extent describes the widths just assigned.
-            self._require_update_dimensions = True
-            self.refresh()
+        return changed
 
     def _natural_width(self, key: ColumnKey, column: Column) -> int:
         """The width at which this column stops hiding anything."""
@@ -261,8 +267,8 @@ class ContentDataTable[CellType](DataTable[CellType]):
 
 
 _NOTICE_GLYPH: Final[dict[str, str]] = {
-    "info": "ⓘ",
-    "warning": "⚠",
+    "info": "•",
+    "warning": "▲",
 }
 
 
@@ -342,7 +348,7 @@ class RequirementStatus(StrEnum):
 
 
 _REQUIREMENT_GLYPH: Final[dict[RequirementStatus, str]] = {
-    RequirementStatus.REQUIRED_MISSING: "✖",
+    RequirementStatus.REQUIRED_MISSING: "!",
     RequirementStatus.REQUIRED_PRESENT: "✓",
     RequirementStatus.NEEDS_APPLICABILITY: "?",
     RequirementStatus.OPTIONAL: "○",

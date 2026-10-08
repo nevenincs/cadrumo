@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:3a27f3496e6328a35a099c81b404dfb9f70f56b2dcd540d00b8aa45c69d2cee3'
+modified: '2026-10-03'
+body_hash: 'sha256:994680f1791e0245dcefc954d50fb6332dedd2011022f06e581ec38e39be9bcf'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S204-001 | PASS | Evidence models are pure manifest data
 
-`src/aeat/application/evidence/_models.py` contains Pydantic records, enum
+The retired module contained Pydantic records, enum
 catalogues, typed ids, and deterministic bundle-id derivation. It has no file
 IO, runtime repository construction, active-profile lookup, or SQL route
 selection. Persistence is owned by the service/repository layer in the next
@@ -27,8 +27,8 @@ surface the secure-storage audit is standardizing.
 
 ## S204-003 | PASS | Validation
 
-- `uv run --no-sync -q ruff check src/aeat/application/evidence/_models.py src/aeat/application/evidence/test_evidence.py src/aeat/application/evidence/test_ids.py` passed.
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/application/evidence/test_evidence.py src/aeat/application/evidence/test_ids.py` passed with 20 tests.
+- the historical check passed.
+- the historical check passed with 20 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S204

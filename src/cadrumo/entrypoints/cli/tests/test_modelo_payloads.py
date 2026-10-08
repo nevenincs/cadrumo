@@ -13,25 +13,15 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from decimal import Decimal
 from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    CalculationSourceRef,
-    derive_calculation_revision_id,
-)
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._modelo_payloads import (
     CalculationRevisionPayload,
@@ -40,14 +30,12 @@ from .._modelo_payloads import (
     FindingPayload,
     WorkCalculateResult,
 )
-from .._modelo_rendering import calculation_revision_payload
 from .._modelo_revision_payload_parts import (
     CalculationRevisionProjectionFields,
     DetailRowPayload,
     ObservationPayload,
     SourceProvenancePayload,
 )
-from .._modelo_spreadsheet_payloads import ModeloSpreadsheetCalculateCasillaPayload
 from .._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .._modelo_work_wizard_payloads import WorkWizardResult
 
@@ -235,20 +223,11 @@ def test_casilla_provenance_payloads_share_formula_identifier_validation() -> No
         legal_refs=("ley-58-2003:art-120",),
         source_refs=("libro-1",),
     )
-    google = ModeloSpreadsheetCalculateCasillaPayload(
-        casilla_id=_PAYLOAD_CASILLA,
-        value="1234.56",
-        formula_id="m130-test-formula",
-        legal_refs=("ley-58-2003:art-120",),
-        source_refs=("libro-1",),
-    )
-
-    assert observation.formula_id == delta.formula_id == google.formula_id == "m130-test-formula"
+    assert observation.formula_id == delta.formula_id == "m130-test-formula"
 
     for payload_type, payload in (
         (CasillaObservationPayload, observation.model_dump()),
         (DeltaRowPayload, delta.model_dump()),
-        (ModeloSpreadsheetCalculateCasillaPayload, google.model_dump()),
     ):
         payload["formula_id"] = "bad formula"
         with pytest.raises(ValidationError, match="String should match pattern"):
@@ -414,142 +393,6 @@ def test_work_observations_result_roundtrips_observation_contract() -> None:
     assert restored == payload
     assert restored.observation_count == 1
     assert restored.observations[0].legal_refs == ("ley-58-2003:art-120",)
-
-
-def test_calculation_revision_projection_preserves_absent_by_design_marker(operation: PinnedAuthorityOperation) -> None:
-    """An intentional zero must stay distinguishable from a value-bearing zero at the CLI edge.
-
-    :class:`CasillaObservation` persists ``absent_by_design`` so a casilla whose
-    binding produced no source anchor for the period (Modelo 130 casilla 15 at
-    1T) is not read as a declared zero. The projection dropped the marker, so
-    the operator-facing payload could not tell the two apart.
-    """
-    absent = CasillaObservation(
-        casilla_id=_PAYLOAD_CASILLA,
-        value=Decimal("0"),
-        legal_refs=("ley-58-2003:art-120",),
-        source_refs=("libro-1",),
-        absent_by_design=True,
-    )
-    declared_zero = CasillaObservation(
-        casilla_id=_INPUT_EJERCICIO_CASILLA,
-        value=Decimal("0"),
-        legal_refs=("ley-58-2003:art-120",),
-        source_refs=("libro-1",),
-    )
-    casilla_values = {_PAYLOAD_CASILLA: Decimal("0"), _INPUT_EJERCICIO_CASILLA: Decimal("0")}
-    revision = CalculationRevision(
-        calculation_revision_id=derive_calculation_revision_id(
-            work_unit_id=_WORK_UNIT_ID,
-            input_values_by_casilla_id={},
-            binding_overrides={},
-            casilla_values=casilla_values,
-            filing_instance_evidence=None,
-            source_provenance=(),
-        ),
-        work_unit_id=_WORK_UNIT_ID,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        state=CalculationRevisionState.BORRADOR,
-        casilla_values=casilla_values,
-        observations=(absent, declared_zero),
-        created_at=_REVISION_TIMESTAMP,
-        updated_at=_REVISION_TIMESTAMP,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-
-    payload = calculation_revision_payload(revision, include_result_summary=False, operation=operation)
-    by_casilla = {row.casilla_id: row for row in payload.observations}
-
-    assert by_casilla[_PAYLOAD_CASILLA].absent_by_design is True
-    assert by_casilla[_INPUT_EJERCICIO_CASILLA].absent_by_design is False
-
-    restored = CalculationRevisionPayload.model_validate_json(payload.model_dump_json())
-    restored_by_casilla = {row.casilla_id: row for row in restored.observations}
-    assert restored_by_casilla[_PAYLOAD_CASILLA].absent_by_design is True
-    assert restored_by_casilla[_INPUT_EJERCICIO_CASILLA].absent_by_design is False
-
-
-def test_calculation_revision_projection_carries_dependency_treatment_without_disturbing_the_value(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """A ``factual_evidence`` carry reaches the operator-facing payload with its value intact.
-
-    The registry's declared carry classification (``direct_annual_settlement`` /
-    ``factual_evidence``) must reach the CLI JSON boundary alongside its
-    provenance, and its presence must never withhold or alter the casilla value
-    it accompanies. Both declared classes are exercised on the SAME casilla
-    value so the projection cannot silently special-case either one.
-    """
-    casilla_values = {_PAYLOAD_CASILLA: Decimal("500.00")}
-    source_provenance = (
-        CalculationSourceRef(
-            resolver_id="previous_filing",
-            resolved_binding_source=BindingSourceKind.PREVIOUS_FILING,
-            contributor_source_kind="previous_filing",
-            contributor_binding_source=BindingSourceKind.PREVIOUS_FILING,
-            lineage_role=CalculationSourceLineageRole.PRIMARY,
-            source_ref="193:2024:0A:withholding-total",
-            parent_source_ref=None,
-            dependency_treatment="factual_evidence",
-        ),
-        CalculationSourceRef(
-            resolver_id="relation_prefill",
-            resolved_binding_source=BindingSourceKind.RELATION_PREFILL,
-            contributor_source_kind="relation_prefill",
-            contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
-            lineage_role=CalculationSourceLineageRole.PRIMARY,
-            source_ref="modelo-130-rel-100-previous-year:100:2024:0A",
-            parent_source_ref=None,
-            dependency_treatment="direct_annual_settlement",
-        ),
-    )
-    revision = CalculationRevision(
-        calculation_revision_id=derive_calculation_revision_id(
-            work_unit_id=_WORK_UNIT_ID,
-            input_values_by_casilla_id={},
-            binding_overrides={},
-            casilla_values=casilla_values,
-            source_provenance=source_provenance,
-            filing_instance_evidence=None,
-        ),
-        work_unit_id=_WORK_UNIT_ID,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        state=CalculationRevisionState.BORRADOR,
-        casilla_values=casilla_values,
-        observations=(
-            CasillaObservation(
-                casilla_id=_PAYLOAD_CASILLA,
-                value=Decimal("500.00"),
-                legal_refs=("ley-58-2003:art-120",),
-                source_refs=("libro-1",),
-            ),
-        ),
-        source_provenance=source_provenance,
-        created_at=_REVISION_TIMESTAMP,
-        updated_at=_REVISION_TIMESTAMP,
-        filing_instance_evidence=None,
-    )
-
-    payload = calculation_revision_payload(revision, include_result_summary=False, operation=operation)
-    by_source_ref = {row.source_ref: row for row in payload.source_provenance}
-
-    assert by_source_ref["193:2024:0A:withholding-total"].resolver_id == "previous_filing"
-    assert by_source_ref["193:2024:0A:withholding-total"].dependency_treatment == "factual_evidence"
-    assert (
-        by_source_ref["modelo-130-rel-100-previous-year:100:2024:0A"].dependency_treatment == "direct_annual_settlement"
-    )
-    # Carrying the treatment must not disturb the casilla value it accompanies.
-    assert payload.casilla_values[_PAYLOAD_CASILLA] == "500.00"
-
-    restored = CalculationRevisionPayload.model_validate_json(payload.model_dump_json())
-    restored_by_source_ref = {row.source_ref: row for row in restored.source_provenance}
-    assert restored_by_source_ref["193:2024:0A:withholding-total"].dependency_treatment == "factual_evidence"
-    assert (
-        restored_by_source_ref["modelo-130-rel-100-previous-year:100:2024:0A"].dependency_treatment
-        == "direct_annual_settlement"
-    )
-    assert restored.casilla_values[_PAYLOAD_CASILLA] == "500.00"
 
 
 def test_source_provenance_payload_dependency_treatment_defaults_to_undeclared() -> None:

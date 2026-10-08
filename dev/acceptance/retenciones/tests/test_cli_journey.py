@@ -10,17 +10,12 @@ import pytest
 
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
-from ..cli_journey import (
-    RetencionesInstalledCliError,
-    _attest_annual_no_activity_periods,
-    _create_withholding_profile,
-    _failure_evidence,
-    _is_full_annual_campaign,
-    _is_full_campaign,
-    _materialize_annual_source_period,
-    _select_annual_slices,
-    _select_slices,
-)
+from ..cli_annual import _is_full_annual_campaign, _select_annual_slices
+from ..cli_annual_source import _attest_annual_no_activity_periods, _materialize_annual_source_period
+from ..cli_contracts import RetencionesInstalledCliError
+from ..cli_journey import _failure_evidence
+from ..cli_periodic import _is_full_campaign, _select_slices
+from ..cli_profile import _create_withholding_profile
 from ..scenario import build_installed_annual_cli_slices, build_installed_periodic_cli_slices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -38,7 +38,12 @@ from ...author_family_identities import derive_projection_endpoint_id
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
 from .. import _export_tree
-from .._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from .. import export_field_derivation as _field_patterns
+from .. import export_tree_serialization as serialization
+from .._export_tree import render_complete_export_tree
+from ..export_field_literal_derivation import _OFFICIAL_QUOTE_FOLD
+from ..export_field_numeric_derivation import _numeric_derivation
+from ..export_field_render_profile_derivation import _WIDTH_17_SIGNED_POLICY, _WIDTH_17_UNSIGNED_POLICY
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
     _write_canonical_manifest_atomically,
@@ -47,23 +52,18 @@ from ..export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
-from ..generated_tree_inventory import generated_export_trees
+from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
 from ..record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
 )
-from ..render_profile import (
-    RenderProfile,
-    RenderProfileAnchor,
-    RenderProfileDesignIdentity,
-    RenderProfileSourceEvidence,
-    ReviewedPolicyDecision,
-    SingletonNumericRule,
-    Width17MembershipRule,
-)
+from ..render_profile_evidence import RenderProfileSourceEvidence, ReviewedPolicyDecision
+from ..render_profile_model import RenderProfile
+from ..render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity
+from ..render_profile_rules import SingletonNumericRule, Width17MembershipRule
 from ..semantic_map import SemanticMap
-from ._generated_tree_test_support import bundled_revision_inspection, isolated_authorities
+from ._generated_tree_test_support import bundled_revision_inspection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -92,7 +92,7 @@ def test_toml_serialization_refusal_never_carries_the_offending_value() -> None:
     assert probe_value in str(raw_excinfo.value), "premise: rtoml's own error must actually carry the value"
 
     with pytest.raises(RegistryValidationError) as excinfo:
-        _export_tree.render_toml_bytes("generated/example.toml", {"bad": _Unserializable()})
+        serialization.render_toml_bytes("generated/example.toml", {"bad": _Unserializable()})
 
     message = str(excinfo.value)
     assert probe_value not in message
@@ -344,7 +344,7 @@ def _joined(
     *,
     numeric_content: str | None = "2 enteros y 2 decimales",
     second_field_aeat_type: str = "A",
-):
+) -> JoinedRecordDesign:
     return join_record_design_semantics(
         _semantic_map(),
         _intermediate(numeric_content=numeric_content, second_field_aeat_type=second_field_aeat_type),
@@ -1320,15 +1320,15 @@ def test_note_governed_numeric_enumeration_retains_the_period_specific_closed_do
         .fields[1]
     )
 
-    annotated_derivation = _export_tree._numeric_derivation(
+    annotated_derivation = _numeric_derivation(
         annotated,
         export_record_id="generated-record-type-2",
     )
-    unannotated_derivation = _export_tree._numeric_derivation(
+    unannotated_derivation = _numeric_derivation(
         unannotated,
         export_record_id="generated-record-type-2",
     )
-    incomplete_note_pair_derivation = _export_tree._numeric_derivation(
+    incomplete_note_pair_derivation = _numeric_derivation(
         incomplete_note_pair,
         export_record_id="generated-record-type-2",
     )
@@ -1508,14 +1508,14 @@ def test_bare_constant_not_proven_in_the_contenido_column_is_refused(tmp_path, o
 
 def test_labelled_official_literal_accepts_the_m184_sentence_stop_but_not_an_alternative() -> None:
     """M184 2025 prints the constant before a merged explanatory sentence."""
-    labelled = _export_tree._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(
+    labelled = _field_patterns._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(
         'Constante "E". rentas. Declaración anual.',
     )
 
     assert labelled is not None
     assert labelled.group("literal") == "E"
-    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S". rentas.') is not None
-    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". rentas.\no "S".') is not None
+    assert _field_patterns._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S". rentas.') is not None
+    assert _field_patterns._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". rentas.\no "S".') is not None
 
 
 def test_labelled_official_literal_accepts_m296_field_enumeration_after_the_constant() -> None:
@@ -1524,10 +1524,10 @@ def test_labelled_official_literal_accepts_m296_field_enumeration_after_the_cons
         "Constante «F» ANEXO «VALORES NEGOCIABLES. RELACIÓN DE PAGO A CONTRIBUYENTES» "
         'Sólo para claves de percepción "1" ó "2" (posiciones 100-101 del tipo de registro 2).'
     )
-    folded = official_content.translate(_export_tree._OFFICIAL_QUOTE_FOLD)
+    folded = official_content.translate(_OFFICIAL_QUOTE_FOLD)
 
-    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded) is None
-    labelled = _export_tree._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded)
+    assert _field_patterns._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded) is None
+    labelled = _field_patterns._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded)
     assert labelled is not None
     assert labelled.group("literal") == "F"
 
@@ -1641,16 +1641,16 @@ def test_renderer_refuses_a_fragment_prefix_that_overflows_its_padded_width() ->
     function is exercised directly. The last in-width prefix must still render, or
     the guard would be refusing legitimate output one short of the boundary.
     """
-    width = _export_tree._FRAGMENT_PREFIX_DIGITS
+    width = serialization._FRAGMENT_PREFIX_DIGITS
     last_in_width = 10**width - 1
 
     assert (
-        _export_tree._record_relative_path(last_in_width, "generated-record")
+        serialization._record_relative_path(last_in_width, "generated-record")
         == f"{last_in_width}-record-generated-record.toml"
     )
 
     with pytest.raises(RegistryValidationError, match="overflows"):
-        _export_tree._record_relative_path(last_in_width + 1, "generated-record")
+        serialization._record_relative_path(last_in_width + 1, "generated-record")
 
 
 def _code_only_source(module: ModuleType) -> str:
@@ -1727,7 +1727,9 @@ def test_dash_numeric_enumeration_reads_labels_and_refuses_ranges(
     expected: tuple[str, ...],
 ) -> None:
     """The dash-enumeration reader admits AEAT's label spellings, never a range."""
-    values = tuple(match.group("value") for match in _export_tree._DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content))
+    values = tuple(
+        match.group("value") for match in _field_patterns._DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content)
+    )
 
     assert values == expected
 
@@ -1740,7 +1742,7 @@ def test_bare_record_tag_is_recognised_without_a_constante_label() -> None:
     pattern keys on the tag's SHAPE, so admitting them cannot turn an arbitrary
     unlabelled cell into a mandated literal.
     """
-    matcher = _export_tree._OFFICIAL_BARE_RECORD_TAG_RE
+    matcher = _field_patterns._OFFICIAL_BARE_RECORD_TAG_RE
 
     assert matcher.fullmatch("</T35301000>") is not None
     assert matcher.fullmatch("<T32201000>") is not None
@@ -1761,7 +1763,7 @@ def test_width_17_sign_policies_cover_every_declared_policy() -> None:
     false. Adding a policy must break here rather than in a filed amount.
     """
     declared = set(get_args(Width17MembershipRule.model_fields["sign_policy"].annotation))
-    handled = {_export_tree._WIDTH_17_SIGNED_POLICY, _export_tree._WIDTH_17_UNSIGNED_POLICY}
+    handled = {_WIDTH_17_SIGNED_POLICY, _WIDTH_17_UNSIGNED_POLICY}
     assert handled == declared, (
         f"width-17 sign policies handled by the derivation {sorted(handled)} do not match the "
         f"declared set {sorted(declared)}; an unhandled policy renders as unsigned decimal"
@@ -1835,27 +1837,18 @@ def test_a_blank_run_naturaleza_the_semantic_map_calls_value_bearing_is_refused(
         )
 
 
-def _joined_fields_by_aeat_type(modelo: str) -> dict[str, JoinedRecordDesignField]:
-    """Return one real joined field per official type token, from the live join.
-
-    Deliberately taken from the real record design rather than assembled here: a
-    hand-built stand-in would prove the helper's `if`, not that the official type
-    column actually reaches it.
-    """
-    tree = next(item for item in generated_export_trees() if item.modelo == modelo)
-    joined, _map, _transport, _profile, _evidence = isolated_authorities(tree)
-    found: dict[str, JoinedRecordDesignField] = {}
-    for field in joined.fields:
-        found.setdefault(field.parser_field.aeat_type, field)
-    return found
+def _joined_field_with_aeat_type(aeat_type: str) -> JoinedRecordDesignField:
+    """Return a parser-owned field from the hermetic joined-design fixture."""
+    joined = _joined(_synthetic_static_inspection(), second_field_aeat_type=aeat_type)
+    return next(field for field in joined.fields if field.parser_field.aeat_type == aeat_type)
 
 
 @pytest.mark.unit
 def test_an_unsigned_official_type_derives_an_unsigned_slot() -> None:
     """`Num` is numerico SIN signo, and it must still render without refusal."""
-    from .._export_tree import _derive_sign_from_official_type
+    from ..export_field_numeric_derivation import _derive_sign_from_official_type
 
-    unsigned = _joined_fields_by_aeat_type("390")["Num"]
+    unsigned = _joined_field_with_aeat_type("Num")
 
     assert _derive_sign_from_official_type(unsigned) is False
 
@@ -1870,9 +1863,9 @@ def test_a_signed_official_type_derives_a_signed_slot() -> None:
     reserves no byte -- the marker displaces the leading digit when the value is
     negative -- and the derivation reads that grounding rather than refusing.
     """
-    from .._export_tree import _derive_sign_from_official_type
+    from ..export_field_numeric_derivation import _derive_sign_from_official_type
 
-    signed = _joined_fields_by_aeat_type("390")["N"]
+    signed = _joined_field_with_aeat_type("N")
 
     assert _derive_sign_from_official_type(signed) is True
 
@@ -1890,7 +1883,7 @@ def test_requirement_reading_sets_aside_sentence_punctuation_but_not_a_qualifier
     unconditional; it is read as a requirement for natural persons only. A
     wording nobody has adjudicated is neither, and stays unclaimed.
     """
-    from .._export_tree import _is_required, _qualified_requirement
+    from ..export_field_schema import _is_required, _qualified_requirement
 
     assert _is_required(None) is False
     assert _is_required("Obligatorio") is True
@@ -1906,3 +1899,22 @@ def test_requirement_reading_sets_aside_sentence_punctuation_but_not_a_qualifier
     assert _qualified_requirement("Obligatorio (persona física).") == "natural_person"
     assert _qualified_requirement("Obligatorio si procede") is None
     assert _qualified_requirement("OBLIGATORIO") is None
+
+
+def test_an_obligatory_casilla_whose_contenido_admits_blank_keeps_a_blank_representation() -> None:
+    """Read obligatoriness and an admitted blank together for casilla and computed text.
+
+    DR145 row 2 is ``obligatorio`` with contenido ``blanco o "C" (compl.)``: the
+    position is always written and blank is one of its two values. A layout
+    ``required`` field has no blank representation, so the principal page's
+    indicator could not be rendered at all. A contenido that names no blank keeps
+    the field required, and a cell that is not obligatorio stays unrequired.
+    """
+    from ..export_field_schema import _is_required_admitting_blank_text
+
+    assert _is_required_admitting_blank_text("obligatorio", 'blanco o "C" (compl.)') is False
+    assert _is_required_admitting_blank_text("Obligatorio", "C o blanco") is False
+    assert _is_required_admitting_blank_text("obligatorio", None) is True
+    assert _is_required_admitting_blank_text("obligatorio", '"C" (compl.)') is True
+    assert _is_required_admitting_blank_text("obligatorio", "Blanquear") is True
+    assert _is_required_admitting_blank_text(None, 'blanco o "C"') is False

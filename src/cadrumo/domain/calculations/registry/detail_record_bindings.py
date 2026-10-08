@@ -5,18 +5,20 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.foreign_asset_obligation import M720AssetClassCode
 from ....core.identity.tax_id import TaxIdIdentityToken
-from ....core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.parsing.codes import IsoCurrencyCode
+from ...currency.models import CurrencyNormalizationStatus, MonetaryAmount, NormalizedAmount
+from ...foreign_assets.register import M720AssetRef
+from ...foreign_assets.valuation import M720ValuationEvent
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     invariant_diagnostics,
@@ -30,19 +32,19 @@ from .ids import BindingId
 from .schema_exports import ExportFieldDataType
 
 if TYPE_CHECKING:
+    from ...foreign_assets.record_join import Modelo720Record
     from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "AtributionMemberObservation",
     "Modelo720RowObservation",
-    "RefundOperationObservation",
-    "RelatedPartyOperationObservation",
+    "Modelo720ValuedRow",
+    "foreign_asset_record_order",
+    "foreign_asset_row_order",
     "resolve_atribucion_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
     "validate_atribucion_binding",
     "validate_foreign_asset_binding",
-    "validate_refund_binding",
-    "validate_related_party_binding",
 ]
 
 
@@ -62,12 +64,12 @@ def _validate_detail_record_row_field(
     selector_row_field: object,
     family_label: str,
 ) -> None:
-    """Shared op/fact invariant for the four detail-record families.
+    """Shared op/fact invariant for the detail-record families.
 
     Every detail-record family declares exactly the ``row_field`` fact, defaults
     to (and requires) the ``rows`` aggregation op, and must name a ``row_field``
-    selector key. The four families enforced this with byte-identical bodies; the
-    one shared check raises a family-labelled :class:`RegistryValidationError`.
+    selector key; the one shared check raises a family-labelled
+    :class:`RegistryValidationError`.
     """
     if selector_fact != "row_field":
         raise RegistryValidationError(
@@ -77,131 +79,6 @@ def _validate_detail_record_row_field(
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
     if selector_row_field is None:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
-
-
-# Related-party operation source bindings (modelo 232).
-#
-# Legal authority: LIS art. 18 (operaciones vinculadas), RD 634/2015
-# art. 13 (informe-pa�s-por-pa�s y declaraci�n modelo 232), Orden
-# HFP/816/2017 Anexo (diseno de registro modelo 232).
-# ---------------------------------------------------------------------------
-
-
-_RelatedPartyRowField = Literal[
-    "counterparty_tax_id",
-    "counterparty_legal_name",
-    "country_code",
-    "operation_kind_code",
-    "transfer_pricing_method_code",
-    "amount",
-]
-
-
-def _hydrate_operation_kind_code(value: object) -> object:
-    """Hydrate a resolved binding value into its typed ``TipoOperacionVinculada`` member.
-
-    Binding values arrive from the registry as free-form text, so this is the
-    boundary that turns a token into a member. It is the same code set the
-    operator-supplied CLI row carries, which is why both read it from ``core``
-    rather than either side re-spelling the table.
-    """
-    if not isinstance(value, str):
-        return value
-    try:
-        return TipoOperacionVinculada(value.upper())
-    except ValueError:
-        accepted = ", ".join(repr(str(member)) for member in TipoOperacionVinculada)
-        raise ValueError(f"operation_kind_code must be one of {accepted}; got {value!r}") from None
-
-
-def _hydrate_transfer_pricing_method_code(value: object) -> object:
-    """Hydrate a resolved binding value into its typed ``MetodoValoracion`` member."""
-    if not isinstance(value, str):
-        return value
-    try:
-        return MetodoValoracion(value.upper())
-    except ValueError:
-        accepted = ", ".join(repr(str(member)) for member in MetodoValoracion)
-        raise ValueError(f"transfer_pricing_method_code must be one of {accepted}; got {value!r}") from None
-
-
-class RelatedPartyOperationObservation(BaseModel):
-    """One related-party operation for modelo 232."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_id: str = Field(min_length=1, max_length=128)
-    counterparty_tax_id: TaxIdIdentityToken
-    counterparty_legal_name: str = Field(default="", max_length=200)
-    # Required, and deliberately not defaulted to Spain. Modelo 232 declares
-    # operations with pa�ses o territorios calificados como para�sos fiscales
-    # alongside operaciones vinculadas, so the country is the axis the
-    # declaration exists to surface -- a default marks a tax-haven counterparty
-    # as domestic on exactly that axis. The operator-supplied row carrying the
-    # same operation is required for the same reason; this is the registry-side
-    # representation of it, and the two must agree.
-    country_code: CountryCodeAlpha2
-    transaction_date: date
-    operation_kind_code: Annotated[TipoOperacionVinculada, BeforeValidator(_hydrate_operation_kind_code)]
-    transfer_pricing_method_code: Annotated[
-        MetodoValoracion,
-        BeforeValidator(_hydrate_transfer_pricing_method_code),
-    ] = MetodoValoracion.NO_DECLARADO
-    amount: Decimal
-
-    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
-
-    @field_validator("amount")
-    @classmethod
-    @pydantic_validation_boundary
-    def _decimal_amount(cls, value: Decimal) -> Decimal:
-        return value
-
-
-class RelatedPartyOperationProvider(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-
-    kind: Literal[BindingSourceKind.RELATED_PARTY_OPERATION] = BindingSourceKind.RELATED_PARTY_OPERATION
-
-    # Only ``row_field`` is a legal fact for related-party-operation
-    # bindings; every handler raises on anything else. Promoting to a
-    # Literal at the type level mirrors the runtime check at the
-    # snapshot-build gate. Audit selector-drift F2.
-    fact: Literal["row_field"]
-    row_field: _RelatedPartyRowField | None = None
-    grouping: str | None = Field(default=None, min_length=1, max_length=64)
-    record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: ExportFieldDataType | None = None
-    """Scalar type of the value this row field contributes to the export.
-
-    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
-    so the selector model admits the key, since a source-family selector is
-    validated whole against its own strict model. Optional while the families
-    adopt it.
-    """
-
-
-def _validated_related_party_selector(binding: BindingDefinition) -> RelatedPartyOperationProvider:
-    try:
-        selector = provider_member(binding, RelatedPartyOperationProvider)
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed related-party selector") from exc
-    _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "related-party")
-    return selector
-
-
-def validate_related_party_binding(binding: BindingDefinition) -> list[str]:
-    """Validate a related-party-operation binding at registry-build time.
-
-    Accumulating ``list[str]`` validator: validates the selector shape against
-    :class:`RelatedPartyOperationProvider` and lifts the resolve-time op/fact invariant
-    (``row_field`` fact paired with the ``rows`` op and a named ``row_field``)
-    to build time, preserving the underlying pydantic field error.
-    """
-    failures = selector_against_model(binding, RelatedPartyOperationProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(binding, "related-party", lambda b: _validated_related_party_selector(b))
 
 
 # ---------------------------------------------------------------------------
@@ -214,29 +91,46 @@ def validate_related_party_binding(binding: BindingDefinition) -> list[str]:
 
 
 _ForeignAssetRowField = Literal[
+    "asset_ref",
     "asset_class_code",
     "country_code",
     "currency_code",
     "asset_identifier",
     "valuation_amount",
+    "valuation_event",
+    "valuation_event_date",
     "acquisition_date",
+    "identifier_scheme",
+    "subclave",
+    "declarant_condition",
+    "titularidad_detail",
+    "participation_pct",
 ]
 
 
 class Modelo720RowObservation(BaseModel):
-    """One foreign asset for modelo 720."""
+    """One foreign-asset lot for modelo 720, valued in the currency it is held in.
+
+    ``asset_ref`` is the register identity the type 2 record joins on, and
+    ``asset_identifier`` the official identifier kept as a cross-check.
+    ``valuation_amount`` is the native amount measured at ``valuation_event``;
+    its euro value exists only once a :class:`Modelo720ValuedRow` converts it.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
+    asset_ref: M720AssetRef
     asset_class_code: M720AssetClassCode
     country_code: CountryCodeAlpha2
-    currency_code: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
+    currency_code: IsoCurrencyCode
     asset_identifier: str = Field(default="", max_length=128)
     acquisition_date: date
     valuation_amount: Decimal
+    valuation_event: M720ValuationEvent
+    valuation_event_date: date | None = None
 
-    _iso_code_uppercase = field_validator("country_code", "currency_code")(uppercase_alpha_code("ISO code"))
+    _iso_code_uppercase = field_validator("country_code")(uppercase_alpha_code("ISO code"))
 
     @field_validator("valuation_amount")
     @classmethod
@@ -245,6 +139,50 @@ class Modelo720RowObservation(BaseModel):
         if value < Decimal("0"):
             raise RegistryValidationError("foreign asset valuation must be non-negative")
         return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _event_date_only_for_extinction(self) -> Modelo720RowObservation:
+        is_extinction = self.valuation_event is M720ValuationEvent.EXTINCTION
+        if is_extinction != (self.valuation_event_date is not None):
+            raise RegistryValidationError("an extinction valuation, and only one, carries its extinction date")
+        return self
+
+    @property
+    def native_amount(self) -> MonetaryAmount:
+        """The valuation in the currency it is held in."""
+        return MonetaryAmount(amount=self.valuation_amount, currency=self.currency_code)
+
+
+class Modelo720ValuedRow(BaseModel):
+    """A modelo 720 lot with the euro value its type 2 record declares.
+
+    Admits only a native-euro or rate-converted valuation of the observation's
+    own amount, so a missing rate can never reach a row as a figure.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    observation: Modelo720RowObservation
+    valuation: NormalizedAmount
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _valuation_converts_the_observation(self) -> Modelo720ValuedRow:
+        converted = {CurrencyNormalizationStatus.NATIVE_EUR, CurrencyNormalizationStatus.NORMALIZED}
+        if self.valuation.status not in converted or self.valuation.eur_amount is None:
+            raise RegistryValidationError("a modelo 720 row declares only a native or converted euro valuation")
+        if self.valuation.original != self.observation.native_amount:
+            raise RegistryValidationError("a modelo 720 valuation converts the observation's own amount")
+        return self
+
+    @property
+    def valuation_eur(self) -> Decimal:
+        """The euro valuation the record declares."""
+        eur_amount = self.valuation.eur_amount
+        if eur_amount is None:
+            raise RegistryValidationError("a modelo 720 row declares only a native or converted euro valuation")
+        return eur_amount
 
 
 class ForeignAssetProvider(BaseModel):
@@ -324,42 +262,72 @@ def _resolve_foreign_asset_rows(
 
 def resolve_foreign_asset_binding_row_values(
     revision: ModeloRevision,
-    observations: Iterable[Modelo720RowObservation],
+    records: Iterable[Modelo720Record],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer foreign-asset bindings into per-row indexed values.
 
     Args:
         revision: The :class:`ModeloRevision` whose foreign-asset bindings are resolved.
-        observations: Modelo 720 row observations to group into rows.
+        records: Joined type 2 records, one per lot and declared condition; row
+            indexes follow the record key, never an input position.
     """
-    available = tuple(observations)
+    available = tuple(records)
     members, cohort_classes = _foreign_asset_binding_members(revision)
     if not members:
         return {}
     # All bindings in a cohort share the same asset_classes filter.
     sample_classes = next(iter(cohort_classes)) if cohort_classes else ()
     class_filter = set(sample_classes)
-    filtered = tuple(obs for obs in available if not class_filter or obs.asset_class_code in class_filter)
+    filtered = tuple(
+        record for record in available if not class_filter or record.row.observation.asset_class_code in class_filter
+    )
     rows = _build_foreign_asset_rows(filtered)
     return _resolve_foreign_asset_rows(members, rows)
 
 
+def foreign_asset_row_order(row: Modelo720ValuedRow) -> tuple[str, str, str, str, str]:
+    """Return the deterministic row order of a valued modelo 720 lot."""
+    obs = row.observation
+    return (
+        obs.country_code,
+        obs.asset_class_code,
+        obs.asset_identifier,
+        obs.acquisition_date.isoformat(),
+        obs.asset_ref,
+    )
+
+
+def foreign_asset_record_order(record: Modelo720Record) -> tuple[str, str, str, str, str, str]:
+    """Return the deterministic row order of a type 2 record: its lot, then the declarant condition."""
+    return (*foreign_asset_row_order(record.row), record.declaration.condition.value)
+
+
 def _build_foreign_asset_rows(
-    observations: tuple[Modelo720RowObservation, ...],
+    records: tuple[Modelo720Record, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     rows: list[Mapping[str, Decimal | str]] = []
-    for obs in sorted(
-        observations,
-        key=lambda o: (o.country_code, o.asset_class_code, o.asset_identifier, o.acquisition_date.isoformat()),
-    ):
+    for record in sorted(records, key=foreign_asset_record_order):
+        row = record.row
+        obs = row.observation
+        declaration = record.declaration
+        event_date = obs.valuation_event_date
         rows.append(
             {
+                "asset_ref": obs.asset_ref,
                 "asset_class_code": obs.asset_class_code,
                 "country_code": obs.country_code,
                 "currency_code": obs.currency_code,
                 "asset_identifier": obs.asset_identifier,
-                "valuation_amount": obs.valuation_amount,
+                "valuation_amount": row.valuation_eur,
+                "valuation_event": obs.valuation_event,
+                "valuation_event_date": event_date.isoformat() if event_date is not None else "",
                 "acquisition_date": obs.acquisition_date.isoformat(),
+                "identifier_scheme": record.asset.identifier.scheme,
+                # Position 103 is zero for a class without subclaves (I).
+                "subclave": str(record.asset.subclave) if record.asset.subclave is not None else "0",
+                "declarant_condition": declaration.condition,
+                "titularidad_detail": declaration.titularidad_detail or "",
+                "participation_pct": declaration.participation_pct,
             },
         )
     return tuple(rows)
@@ -573,88 +541,5 @@ def resolve_atribucion_binding_row_values(
     return resolved
 
 
-# ---------------------------------------------------------------------------
-# Refund operation source bindings (modelo 360).
-#
-# Legal authority: Ley 37/1992 art. 117 bis (devolucion 8a Directiva),
-# Orden EHA/789/2010 Anexo (modelo 360 diseno de registro).
-# ---------------------------------------------------------------------------
-
-
-_RefundRowField = Literal[
-    "member_state_code",
-    "operation_kind_code",
-    "operation_date",
-    "supplier_tax_id",
-    "refund_amount",
-]
-
-
-class RefundOperationObservation(BaseModel):
-    """One foreign-MS refund operation for modelo 360."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_id: str = Field(min_length=1, max_length=128)
-    member_state_code: CountryCodeAlpha2
-    operation_kind_code: str = Field(min_length=1, max_length=4)
-    operation_date: date
-    supplier_tax_id: TaxIdIdentityToken
-    refund_amount: Decimal
-
-    _iso_code_uppercase = field_validator("member_state_code")(uppercase_alpha_code("member_state_code"))
-
-    @field_validator("refund_amount")
-    @classmethod
-    @pydantic_validation_boundary
-    def _decimal_amount(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0"):
-            raise RegistryValidationError("refund_amount must be non-negative")
-        return value
-
-
-class RefundOperationProvider(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
-
-    kind: Literal[BindingSourceKind.REFUND_OPERATION] = BindingSourceKind.REFUND_OPERATION
-
-    fact: Literal["row_field"]
-    row_field: _RefundRowField | None = None
-    grouping: str | None = Field(default=None, min_length=1, max_length=64)
-    record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: ExportFieldDataType | None = None
-    """Scalar type of the value this row field contributes to the export.
-
-    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
-    so the selector model admits the key, since a source-family selector is
-    validated whole against its own strict model. Optional while the families
-    adopt it.
-    """
-
-
 AtribucionMemberProvider = AtribucionMemberProvider
 ForeignAssetProvider = ForeignAssetProvider
-RefundOperationProvider = RefundOperationProvider
-RelatedPartyOperationProvider = RelatedPartyOperationProvider
-
-
-def _validated_refund_selector(binding: BindingDefinition) -> RefundOperationProvider:
-    try:
-        selector = provider_member(binding, RefundOperationProvider)
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed refund selector") from exc
-    _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "refund")
-    return selector
-
-
-def validate_refund_binding(binding: BindingDefinition) -> list[str]:
-    """Validate a refund-operation binding at registry-build time.
-
-    Accumulating ``list[str]`` validator: validates the selector against
-    :class:`RefundOperationProvider` and lifts the resolve-time op/fact invariant to
-    build time, preserving the underlying pydantic field error.
-    """
-    failures = selector_against_model(binding, RefundOperationProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(binding, "refund", lambda b: _validated_refund_selector(b))

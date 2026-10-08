@@ -46,6 +46,7 @@ from .actions_common import (
     replace_transaction,
     require_transaction,
     resolve_bucket_event_repository,
+    resolve_revision_guarded_transaction_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
@@ -62,12 +63,11 @@ from .actions_manual import (
 from .id_resolution import resolve_transaction_id
 from .models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
-    ApplyRulesAppliedRow,
-    ApplyRulesResult,
     BulkClassifyFailure,
     BulkClassifyResult,
     BulkClassifyRow,
     ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
 )
 
 _BULK_CLASSIFY_NON_PATCH_COLUMNS = frozenset({"transaction_id"})
@@ -320,9 +320,11 @@ def _apply_bulk_classify_rows(
     # once, mutate an in-memory working catalogue, accumulate events, and
     # persist a single atomic write at the end.
     now = normalise_timestamp(None)
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    repository = resolve_revision_guarded_transaction_repository(
+        bucket_id=bucket_id, repository=ports.transaction_repository
+    )
     event_repo = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
-    working = repository.load()
+    working, catalogue_revision = repository.load_revisioned()
     all_events: list[BucketEvent] = []
     blockers_by_txid = blockers_by_source_transaction_id(
         bucket_id=bucket_id,
@@ -357,6 +359,7 @@ def _apply_bulk_classify_rows(
             event_repository=event_repo,
             catalogue=working,
             events=tuple(all_events),
+            expected_catalogue_revision=catalogue_revision,
         )
 
     return applied, skipped, apply_failures, all_event_ids
@@ -585,74 +588,39 @@ def plan_classification_rules(
     )
 
 
-def apply_classification_rules(
+def apply_classification_rule_match(
     *,
     bucket_id: str,
-    reaffirm: bool = False,
+    row: ClassificationRulePlanRow,
     actor: str,
-    source_command: str = "aeat app ledger rule apply",
+    source_command: str,
+    reaffirm: bool,
     ports: LedgerActionPorts,
-    rule_repository: LedgerClassificationRuleRepositoryProtocol | None = None,
-) -> ApplyRulesResult:
-    """Apply stored classification rules to unclassified ACTIVE transactions.
+) -> ManualLedgerTransactionResult:
+    """Apply one row from the canonical plan through the normal manual mutation.
 
-    Scope: ACTIVE transactions in ``NOT_YET_PROCESSED`` state.
-    When ``reaffirm=True``, also includes ACTIVE transactions where
-    ``classified_by == "manual"`` so the operator can explicitly
-    re-run the rule engine over manually classified rows.
-
-    Rules are evaluated in priority order (lower number = higher priority);
-    the first matching rule wins. Match is ``re.search(pattern, description,
-    re.IGNORECASE)``.
-
-    Returns an :class:`~application.ledger.models.ApplyRulesResult`.
+    The operation supervisor uses this semantic write boundary to place an
+    irreversible fence around each independent transaction/event co-commit, so
+    patch construction and ``rule:<id>`` provenance are single-sourced.
     """
-    plan = plan_classification_rules(
+    patch = ManualLedgerTransactionPatch(
+        business_classification=row.classification,
+        category_id=row.category_id,
+    )
+    return update_manual_transaction_fields(
         bucket_id=bucket_id,
+        transaction_id=row.transaction_id,
+        patch=patch,
+        actor=actor,
+        classified_by_override=f"rule:{row.matched_rule_id}",
+        source_command=source_command,
         reaffirm=reaffirm,
         ports=ports,
-        rule_repository=rule_repository,
-    )
-
-    all_event_ids: list[str] = []
-    applied_rows: list[ApplyRulesAppliedRow] = []
-    for row in plan.matches:
-        patch = ManualLedgerTransactionPatch(
-            business_classification=row.classification,
-            category_id=row.category_id,
-        )
-        result = update_manual_transaction_fields(
-            bucket_id=bucket_id,
-            transaction_id=row.transaction_id,
-            patch=patch,
-            actor=actor,
-            classified_by_override=f"rule:{row.matched_rule_id}",
-            source_command=source_command,
-            reaffirm=reaffirm,
-            ports=ports,
-        )
-        all_event_ids.extend(result.bucket_event_ids)
-        applied_rows.append(
-            ApplyRulesAppliedRow(
-                transaction_id=row.transaction_id,
-                matched_rule_id=row.matched_rule_id,
-                classification=row.classification,
-            ),
-        )
-
-    return ApplyRulesResult(
-        rules_evaluated=plan.rules_evaluated,
-        transactions_scanned=plan.transactions_scanned,
-        matched=len(applied_rows),
-        skipped_already_classified=plan.skipped_already_classified,
-        no_match=plan.no_match,
-        applied=tuple(applied_rows),
-        bucket_event_ids=tuple(all_event_ids),
     )
 
 
 __all__ = [
     "add_classification_rule",
-    "apply_classification_rules",
+    "apply_classification_rule_match",
     "bulk_classify_from_csv",
 ]

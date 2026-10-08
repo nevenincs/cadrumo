@@ -19,7 +19,6 @@ from ...application.workflow.persistence import (
     WorkflowSecureObjectStorePort,
     WorkflowStateStorageProbe,
 )
-from ...application.workflow.run_models import WorkflowResult
 from ...application.workflow.state_models import WorkflowState
 from ...core.classification.policies import SensitivityClass
 from ...core.logging import get_logger
@@ -39,6 +38,7 @@ from .storage.schema_lineage import inner_envelope_classification_is_expected, i
 from .storage.secure_object_namespaces import WORKFLOW_RUN_NAMESPACE, WORKFLOW_STATE_NAMESPACE
 
 if TYPE_CHECKING:
+    from ...application.workflow.run_models import WorkflowResult
     from .storage.sql.secure_objects import SecureObjectRepository
 
 _logger = get_logger(__name__)
@@ -95,6 +95,8 @@ def _validate_workflow_run_envelope(payload: bytes) -> Envelope[WorkflowResult]:
         raise EnvelopeVersionError(
             f"workflow run is at version {header.schema_version}; consumer requires {_RUN_VERSION}",
         )
+    from ...application.workflow.run_models import WorkflowResult
+
     return Envelope[WorkflowResult].model_validate_json(text)
 
 
@@ -224,6 +226,8 @@ class _PersistenceWorkflow:
         )
 
     def save_run(self, store: WorkflowSecureObjectStorePort, result: WorkflowResult) -> None:
+        from ...application.workflow.run_models import WorkflowResult
+
         envelope = Envelope[WorkflowResult](
             schema_version=_RUN_VERSION,
             written_at=utc_now(),

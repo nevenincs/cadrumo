@@ -9,6 +9,34 @@ modelo:
         official_name: Impuesto sobre la Renta de las Personas Físicas. Actividades
           económicas en estimación directa. Pago fraccionado.
         title: IRPF pago fraccionado estimación directa
+      form:
+        context:
+          apellidos: Apellidos
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la autoliquidación anterior
+          nif: NIF
+          nombre: Nombre
+          periodo: Período
+        page:
+          dr-13001:
+            heading: Página 1 · Pago fraccionado
+        section:
+          complementaria:
+            heading: Complementaria (7)
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Declarante (1)
+          ingreso:
+            heading: Ingreso (4)
+          liquidacion-3-i-actividades-econ-estim-directa:
+            heading: I. Actividades económicas en estimación directa
+          liquidacion-3-ii-actividades-agricolas-ga-829910:
+            heading: II. Actividades agrícolas, ganaderas, forestales y pesqueras
+          liquidacion-3-iii-total-liquidacion:
+            heading: III. Total liquidación
       revision:
         2019-y-siguientes:
           casilla:

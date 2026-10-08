@@ -7,15 +7,55 @@ the published support envelope and each directory's own earliest edition.
 
 from __future__ import annotations
 
+import json
+
 import pytest
+from pydantic import TypeAdapter, ValidationError
 
 from ..authority import bundled_indexed_authority
 from ..errors import FilingYearOutsideSupportEnvelopeError, NoRevisionForPeriodError
-from ..modelo_inception import DeclaredInception, UnauthoredBefore
+from ..modelo_inception import DeclaredInception, ModeloInceptionField, UnauthoredBefore
 from ..schema import SupportedFilingYearsCatalogue
 from ..temporal import ModeloRevisionDirectory, select_revision_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    (
+        DeclaredInception(filing_year=2023, legal_refs=("orden-hfp-886-2023:art-1",)),
+        UnauthoredBefore(
+            earliest_authored=2022,
+            reason="Synthetic earlier-edition authoring debt",
+            legal_refs=("orden-eha-3377-2011:art-1",),
+        ),
+    ),
+)
+def test_inception_references_survive_json_union_roundtrip(
+    declaration: DeclaredInception | UnauthoredBefore,
+) -> None:
+    """Saved snapshots read the tagged declaration under strict JSON validation."""
+    adapter = TypeAdapter(ModeloInceptionField)
+    assert adapter.validate_json(declaration.model_dump_json()) == declaration
+    if isinstance(declaration, UnauthoredBefore):
+        # Complete saved rendering stores the member fields without the authored wrapper.
+        flat = json.loads(declaration.model_dump_json())["unauthored"]
+        assert adapter.validate_json(json.dumps(flat)) == declaration
+
+
+@pytest.mark.parametrize("invalid_refs", (None, "orden-eha-3377-2011:art-1", [123]))
+def test_inception_json_union_refuses_invalid_reference_shapes(invalid_refs: object) -> None:
+    """Array normalization keeps strict reference admission intact."""
+    payload = {
+        "unauthored": {
+            "earliest_authored": 2022,
+            "reason": "Synthetic earlier-edition authoring debt",
+            "legal_refs": invalid_refs,
+        }
+    }
+    with pytest.raises(ValidationError):
+        TypeAdapter(ModeloInceptionField).validate_json(json.dumps(payload))
 
 
 def _published_directories() -> tuple[tuple[ModeloRevisionDirectory, ...], SupportedFilingYearsCatalogue]:

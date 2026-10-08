@@ -19,8 +19,13 @@ AEAT maintenance, WAF, rate-limit, and transport failures into typed
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import Mapping
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
+
+from .....core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
     # playwright is the optional `browser` extra; keep its types out of module
@@ -40,6 +45,7 @@ from .....application.auth.protocols import BrowserContextProvisioner
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
+from .....core.file_permissions import restrict_directory_permissions
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
@@ -61,9 +67,6 @@ from .site_health_records import (
 )
 
 logger = get_logger(__name__)
-
-#: Channels served by the Playwright-managed Chromium build rather than a system browser.
-_BUNDLED_CHROMIUM_CHANNELS = frozenset({"", "chromium", "chromium-headless-shell"})
 
 
 class BrowserSession:
@@ -96,6 +99,7 @@ class BrowserSession:
         self.profile = profile
         self.evasion_strategy = evasion_strategy or PlaywrightStealthEvasion()
         self._browser: Browser | None = None
+        self._working_directory: TemporaryDirectory[str] | None = None
         self._lifecycle_lock = asyncio.Lock()
 
     async def create_context(
@@ -142,16 +146,20 @@ class BrowserSession:
                     ),
                 )
             logger.info(
-                "browser context create starting profile=%s channel=%s headless=%s has_proxy=%s",
+                "browser context create starting profile=%s headless=%s has_proxy=%s",
                 self.profile.name,
-                self.settings.cadrumo_browser_channel,
                 self.settings.cadrumo_browser_headless,
                 bool(self.settings.cadrumo_proxy_url),
             )
             proxy = self._build_proxy_settings()
-            browser = await self._launch_chromium(proxy)
-            self._browser = browser
             try:
+                await await_cancellation_complete(
+                    self._launch_owned_chromium(proxy),
+                    task_name="cadrumo-browser-launch",
+                )
+                browser = self._browser
+                if browser is None:
+                    raise InternalInvariantError("Chromium launch completed without an owned browser")
                 context_kwargs = self._build_context_kwargs(
                     storage_state=storage_state,
                     provisioner=provisioner,
@@ -210,45 +218,82 @@ class BrowserSession:
     def _require_bundled_browser_provisioned(self) -> None:
         """Refuse a bundled-Chromium launch before Playwright reports a missing executable.
 
-        A system channel such as ``chrome`` or ``msedge`` is the operator's own
-        installation, so only the Playwright-managed build is checked here.
+        Playwright-managed Chromium is the only supported browser, so the
+        check runs before every launch.
         """
-        if self.settings.cadrumo_browser_channel not in _BUNDLED_CHROMIUM_CHANNELS:
-            return
         from .....application.provisioning_browser import probe_playwright_browser
 
-        status = probe_playwright_browser()
+        status = probe_playwright_browser(settings=self.settings)
         if status.available:
             return
         logger.error(
-            "browser launch refused failure_mode=%s profile=%s channel=%s",
+            "browser launch refused failure_mode=%s profile=%s",
             BrowserFailureMode.BROWSER_NOT_PROVISIONED,
             self.profile.name,
-            self.settings.cadrumo_browser_channel,
         )
         raise BrowserError(
             "Chromium browser build is not provisioned",
             failure_mode=BrowserFailureMode.BROWSER_NOT_PROVISIONED,
-            context={"profile": self.profile.name, "channel": self.settings.cadrumo_browser_channel},
+            context={"profile": self.profile.name},
             translated_message=tr("adapters.browser.errors.not_provisioned"),
             precondition_verdict=status.precondition_verdict,
         )
 
+    async def _launch_owned_chromium(self, proxy: ProxySettings | None) -> None:
+        """Retain the browser before deferred launch cancellation can escape."""
+        self._browser = await self._launch_chromium(proxy)
+
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
-        """Launch Chromium with the profile's channel/headless/proxy config; raise BrowserError on failure."""
+        """Launch Chromium with the profile's headless/proxy config; raise BrowserError on failure."""
         self._require_bundled_browser_provisioned()
         try:
-            return await self.playwright.chromium.launch(
-                channel=self.settings.cadrumo_browser_channel,
+            root = self.settings.cadrumo_chromium_data_root
+            root.mkdir(parents=True, exist_ok=True, mode=0o700)
+            self._working_directory = TemporaryDirectory(prefix="session-", dir=root)
+            working_path = Path(self._working_directory.name).resolve()
+            restrict_directory_permissions(working_path)
+            (working_path / "artifacts").mkdir(mode=0o700)
+            child_directories = {
+                "HOME": working_path / "home",
+                "USERPROFILE": working_path / "home",
+                "XDG_CACHE_HOME": working_path / "xdg-cache",
+                "XDG_CONFIG_HOME": working_path / "xdg-config",
+                "XDG_DATA_HOME": working_path / "xdg-data",
+                "XDG_STATE_HOME": working_path / "xdg-state",
+                "APPDATA": working_path / "appdata-roaming",
+                "LOCALAPPDATA": working_path / "appdata-local",
+            }
+            for directory in set(child_directories.values()):
+                directory.mkdir(mode=0o700)
+            from .....core.storage_taxonomy import StorageCategory
+            from .....core.storage_taxonomy_locations import storage_path
+
+            temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=self.settings)
+            temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+            child_environment: dict[str, str | float] = dict(os.environ)
+            child_environment.update({name: str(path) for name, path in child_directories.items()})
+            child_environment.update({name: str(temporary_root) for name in ("TEMP", "TMP", "TMPDIR")})
+            # Keep the default persistent context empty. Authenticated contexts
+            # are still isolated new_context calls with encrypted state inputs.
+            context = await self.playwright.chromium.launch_persistent_context(
+                user_data_dir=working_path / "profile",
+                downloads_path=working_path / "artifacts",
+                traces_dir=working_path / "artifacts",
+                accept_downloads=False,
                 headless=self.settings.cadrumo_browser_headless,
                 proxy=proxy,
+                env=child_environment,
             )
+            browser = context.browser
+            if browser is None:
+                await context.close()
+                raise InternalInvariantError("Chromium context has no browser owner")
+            return browser
         except Exception as exc:
             logger.error(
-                "browser launch failed failure_mode=%s profile=%s channel=%s headless=%s has_proxy=%s exc_type=%s",
+                "browser launch failed failure_mode=%s profile=%s headless=%s has_proxy=%s exc_type=%s",
                 BrowserFailureMode.BROWSER_LAUNCH_FAILED,
                 self.profile.name,
-                self.settings.cadrumo_browser_channel,
                 self.settings.cadrumo_browser_headless,
                 bool(self.settings.cadrumo_proxy_url),
                 type(exc).__name__,
@@ -259,7 +304,6 @@ class BrowserSession:
                 failure_mode=BrowserFailureMode.BROWSER_LAUNCH_FAILED,
                 context={
                     "profile": self.profile.name,
-                    "channel": self.settings.cadrumo_browser_channel,
                     "headless": self.settings.cadrumo_browser_headless,
                     "has_proxy": bool(self.settings.cadrumo_proxy_url),
                     "cause_type": type(exc).__name__,
@@ -548,10 +592,11 @@ class BrowserSession:
     async def _close_browser_locked(self) -> None:
         """Close the retained browser while the lifecycle lock is held."""
         browser = self._browser
-        if browser is None:
-            return
         try:
-            await browser.close()
+            if browser is not None:
+                await browser.close()
+                self._browser = None
+            self._cleanup_working_directory()
         except Exception as exc:
             logger.warning(
                 "failed to close retained browser failure_mode=%s profile=%s exc_type=%s",
@@ -570,7 +615,12 @@ class BrowserSession:
                     outcome=NoRecoveryOutcome.SAFETY,
                 ),
             ) from exc
-        self._browser = None
+
+    def _cleanup_working_directory(self) -> None:
+        """Remove only this launch's temporary data after its browser has closed."""
+        if self._working_directory is not None:
+            self._working_directory.cleanup()
+            self._working_directory = None
 
 
 def _storage_state_source(context_kwargs: Mapping[str, object]) -> str:

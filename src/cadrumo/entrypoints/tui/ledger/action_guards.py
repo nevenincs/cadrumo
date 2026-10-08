@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
+from ..action_target import require_action_target
 
 #: Injected action attribute -> the command key it must resolve to, and the
 #: refusal wording the surface already used for it.
@@ -68,8 +68,7 @@ def require_canonical_ledger_actions(
         action = supplied[attribute]
         if action is None:
             continue
-        if lookup_action(action.action_id).target_command_key != command_key:
-            raise ValueError(refusal)
+        require_action_target(action, command_key, refusal)
 
 
 __all__ = ["require_canonical_ledger_actions"]

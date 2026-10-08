@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ..iban import BIC_SHAPE_RE, IBAN_MASK, IBAN_SHAPE_RE, iban_mod_97, mask_iban, normalise_iban
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -99,3 +99,37 @@ def test_a_caller_that_omits_its_own_shape_gate_is_now_refused_not_silently_acce
     # And the same gate-omitting caller still accepts a genuine IBAN, so the
     # fix closes the hole without breaking the real path.
     assert _caller_without_its_own_shape_gate("ES91 2100 0418 4502 0005 1332") == 1
+
+
+@pytest.mark.parametrize(
+    "candidate",
+    [
+        "ES9121000418450200051332\n",
+        "ES" + chr(0x0669) + chr(0x0661) + "21000418450200051332",
+        "ES91210004184502000513" + chr(0x0663) + chr(0x0662),
+    ],
+)
+def test_the_shape_refuses_a_trailing_newline_and_non_ascii_digits_under_either_match(candidate: str) -> None:
+    assert IBAN_SHAPE_RE.match(candidate) is None
+    assert IBAN_SHAPE_RE.fullmatch(candidate) is None
+    with pytest.raises(ValueError, match="ISO 13616-shaped"):
+        iban_mod_97(candidate)
+
+
+def test_the_mask_keeps_only_the_country_code_and_the_last_four_characters() -> None:
+    assert mask_iban("ES91 2100 0418 4502 0005 1332") == f"ES {IBAN_MASK} 1332"
+    assert "91" not in mask_iban("ES9121000418450200051332").replace("1332", "")
+
+
+def test_a_value_too_short_to_hide_anything_is_masked_entirely() -> None:
+    assert mask_iban("ES12 3456") == IBAN_MASK
+
+
+@pytest.mark.parametrize("candidate", ["CAIXESBB", "CAIXESBBXXX", "DEUTDEFF500"])
+def test_the_bic_shape_admits_eight_or_eleven_characters(candidate: str) -> None:
+    assert BIC_SHAPE_RE.match(candidate) is not None
+
+
+@pytest.mark.parametrize("candidate", ["CAIXESB", "CAIXESBBXX", "caixesbb", "CAIXESBB\n", "1AIXESBB"])
+def test_the_bic_shape_refuses_other_lengths_case_and_a_trailing_newline(candidate: str) -> None:
+    assert BIC_SHAPE_RE.match(candidate) is None

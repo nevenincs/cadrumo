@@ -771,3 +771,24 @@ source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 [[revisions.2022.formulas.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-volumen-operaciones-anual"
+target_casilla_id = "88"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["boe-modelo-303-2021-form-pdf", "aeat-dr-303-2022"]
+
+# BOE-A-2021-10509 Annex II, page 4, printed page 75946.
+# The printed total adds the fifteen operation categories and deducts the
+# non-habitual operations and investment-goods deliveries in boxes 79 and 99.
+[[revisions.2022.formulas.source_citations]]
+source_ref = "boe-modelo-303-2021-form-pdf"
+required_text = ["Total volumen de operaciones", "121 Ley IVA", "[97] + [98] - [79] - [99]"]
+
+[revisions.2022.formulas.expression]
+op = "subtract"
+args = [
+    { op = "add", args = [{ casilla_id = "80" }, { casilla_id = "81" }, { casilla_id = "93" }, { casilla_id = "94" }, { casilla_id = "83" }, { casilla_id = "84" }, { casilla_id = "125" }, { casilla_id = "126" }, { casilla_id = "127" }, { casilla_id = "128" }, { casilla_id = "86" }, { casilla_id = "95" }, { casilla_id = "96" }, { casilla_id = "97" }, { casilla_id = "98" }] },
+    { op = "add", args = [{ casilla_id = "79" }, { casilla_id = "99" }] },
+]

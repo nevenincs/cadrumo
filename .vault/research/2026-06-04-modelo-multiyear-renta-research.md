@@ -5,7 +5,6 @@ tags:
 date: '2026-06-04'
 modified: '2026-07-17'
 body_hash: 'sha256:4a9e9f7dd9d091da08bd1087ad85afb4045abab2de489d8175483cf605169d6b'
-related: []
 related:
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr]]'

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6486ddd04983cf8e28b12f2099d6493fad34ac85ff634d23c6cbd49f8dad1abc'
+body_hash: 'sha256:17c4fb5b7ef62e677bb70cb27286d7475fb28469f4e65d9b618a01d43f4b2829'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -383,13 +383,26 @@ predecessor's value would inherit the wrong slot. The layout owns the edge throu
 back-pointer, and the loader computes the field and refuses an authored value.
 
 The back-pointer is the casilla a layout field resolves to, including through a record's row-field
-mapping, with one exception: a record declaring `binding_record` takes its field positions from
-its binding selectors, so its rows are templates and contribute no edge. A record whose positions
-come from the official design uses the row mapping only to name the box each field fills, so those
-rows are edges. Declaring `binding_record` on such a record would add a second source of field
-positions beside the official design. That template rows carry no back-reference is a contract
-choice, not a fact about the data — a template row still fills a real box — so a later rule that
-every box a filing writes carries an export reference would have to give template rows edges too.
+mapping. Logical template rows whose positions are supplied only by a record's `binding_record`
+selectors contribute no edge under this rule. Fields positioned by the official design use their
+row mapping to name the casilla each field fills, and those mappings are edges.
+
+A source-complete record may retain `binding_record` for `binding_rows` multiplicity while
+representing a fixed binding selector explicitly as an inline `BINDING` field. That field consumes
+the selector once only when the canonical binding identity, selected record, offset, length,
+data type, decimal scale and signedness agree exactly. Ambiguous, mismatched or wrong-record
+representations are refused even when their byte spans do not overlap. Unrepresented selectors
+continue to supply their existing positions; arbitrary coordinate deduplication is forbidden.
+This reconciles compiler placement with the existing runtime resolver and preserves official
+field provenance and row multiplicity. It introduces no taxpayer-value inheritance or legal
+continuity claim.
+
+That logical template rows carry no back-reference is a contract choice, not a fact about the
+data — a template row still fills a real box — so a later rule that every box a filing writes
+carries an export reference would have to give template rows edges too. This clarification was
+authorized by the registry repair continuation on 2026-10-03 and is grounded in the current
+runtime resolver, compiler placement checks and exact-match/refusal tests recorded in
+`2026-10-02-registry-health-repair-registry-health-audit`.
 
 A row may state source references **in addition to** the edition default: it materialises as the
 default followed by the row's additions, and those additions inherit with the row. A row stating a

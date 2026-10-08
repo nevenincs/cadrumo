@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
+from functools import partial
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
@@ -18,6 +19,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from cadrumo.domain.calculations.registry.schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     VerificationExpectationDefinition,
+    VerificationPredicateOperator,
     verification_predicate_operator_name,
 )
 
@@ -26,7 +28,7 @@ from ._validate_verification_predicates import (
     _CASILLA_LIST_OPERATORS,
     _advisory_when_ratio_ge_predicate_failures,
     _casilla_equals_implies_diverges_predicate_failures,
-    _casilla_equals_implies_nonzero_predicate_failures,
+    _casilla_equals_implies_numeric_predicate_failures,
     _casilla_equals_implies_profile_flag_predicate_failures,
     _casilla_list_predicate_failures,
     _deduccion_requires_adquisicion_before_predicate_failures,
@@ -44,7 +46,14 @@ _MIXED_TOKEN_PREDICATE_VALIDATORS: dict[
     str,
     Callable[[str, str, str, set[CasillaId], Mapping[CasillaId, CasillaDefinition]], list[str]],
 ] = {
-    "casilla_equals_implies_nonzero": _casilla_equals_implies_nonzero_predicate_failures,
+    "casilla_equals_implies_nonzero": partial(
+        _casilla_equals_implies_numeric_predicate_failures,
+        operator=VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
+    ),
+    "casilla_equals_implies_zero": partial(
+        _casilla_equals_implies_numeric_predicate_failures,
+        operator=VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO,
+    ),
     "casilla_equals_implies_profile_flag": _casilla_equals_implies_profile_flag_predicate_failures,
     "casilla_equals_implies_diverges": _casilla_equals_implies_diverges_predicate_failures,
     "deduccion_requires_adquisicion_before": _deduccion_requires_adquisicion_before_predicate_failures,
@@ -299,6 +308,7 @@ def _verification_predicate_expression_failures(
             expression,
             operator_name=op_name,
             casillas=casillas,
+            casilla_by_id=casilla_by_id,
         )
     return []
 

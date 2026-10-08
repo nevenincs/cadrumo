@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:8eaf2bb8337a5ba4e100c031dafc93b6a33338043373debc63aa908598a83dd6'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]"
   - '[[2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit]]'

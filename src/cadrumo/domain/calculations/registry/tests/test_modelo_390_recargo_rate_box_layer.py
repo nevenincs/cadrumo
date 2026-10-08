@@ -7,17 +7,10 @@ axis. One reducido tier carries three recargo rates, so a 10 % supply charging
 [694] stayed empty. Splitting a tier's roles gives each official box its own
 casilla, bound to exactly one rate.
 
-The declared annual TOTAL was never wrong. ``iva.anual.cuota-devengada-total``
-enumerates all three rate-blind recargo casillas, so every recargo euro reached
-the return; what was false was the breakdown across official boxes. That is why
-the repair adds a box layer instead of narrowing the tier bindings: narrowing
-would fix the breakdown by deleting the rate-unrecorded rows from the total.
-
-Those three tier casillas remain the TOTAL layer here, unchanged and still in the
-devengada formula. The box layer carries no ``export_refs`` yet: the record
-decomposition for this block is established separately, and a declared but
-unpopulated money field renders ``0,00`` rather than a blank, which would turn a
-silence into a false nil.
+The official total sums the printed rate boxes. Separate rate-blind controls
+retain observations with missing rates and support the coverage gate. They do
+not also enter the printed sum: doing so would count rated amounts twice.
+Export refuses any unallocated amount instead of silently omitting it.
 
 Real-behaviour: the committed revision through the real registry authority, rows
 built by the real ``invoice_line_to_iva_observation`` bridge from operator inputs
@@ -48,7 +41,9 @@ from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from ..rate_box_partition import derive_rate_box_partitions, rate_box_coverage_shortfalls
 from ..schema import BindingDefinition, ModeloRevision
+from .m390_formula_support import assert_partition_is_not_double_counted, liquidation_operands
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -190,7 +185,7 @@ def test_the_reducido_tier_merge_is_separated() -> None:
     assert resolved["modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota"] == Decimal("31.00")
     assert resolved["modelo-390-iva-recargo-equivalencia-tipo-1-cuota"] == Decimal("17.00")
     assert resolved["modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"] == Decimal("11.00")
-    # The rate-blind tier casilla still carries all three, because it feeds the total.
+    # The rate-blind tier casilla still carries all three, to expose unallocated amounts to the coverage gate.
     assert resolved["modelo-390-iva-recargo-equivalencia-reducido-cuota"] == Decimal("59.00")
 
 
@@ -229,12 +224,10 @@ def test_no_recargo_box_claims_the_rate_unrecorded_row() -> None:
 
 
 def test_the_rate_blind_total_layer_retains_the_unrated_recargo() -> None:
-    """The control the whole split rests on: unrated recargo stays in the total.
+    """Unrated recargo remains visible in the separate control total.
 
-    The rate boxes deliberately exclude it, so the rate-blind tier casilla is the
-    only thing keeping it in ``iva.anual.cuota-devengada-total``. If a later
-    change narrows that binding, this money reaches no casilla at all and leaves
-    the declared annual total silently.
+    Rate boxes deliberately exclude it. Narrowing the control would hide that
+    amount from the coverage gate and permit an incomplete export.
     """
     without = _resolve(_rated_rows())["modelo-390-iva-recargo-equivalencia-reducido-cuota"]
     with_unrated = _resolve((*_rated_rows(), _unrated_row()))["modelo-390-iva-recargo-equivalencia-reducido-cuota"]
@@ -252,9 +245,8 @@ def test_every_rate_split_recargo_group_carries_exactly_one_rate_blind_binding()
     Scoped to ``recargo_amount_sum``. It passes today partly by ABSENCE: the 0 %
     recargo rung (boxes [663]/[664]) is deliberately not declared, because the
     recargo block has no rate-blind ZERO tier binding to sit behind it. Adding one
-    means adding a term to the annual devengada total formula, which is a change
-    to a money-bearing total and a decision of its own. Declaring the 0 % box
-    without that change would red this assertion, which is the intended outcome.
+    requires a matching coverage control. Declaring the 0 % box without that
+    control would fail this assertion.
     """
     revision = _m390_revision()
     grouped: dict[tuple[object, ...], list[dict[str, object]]] = {}
@@ -298,36 +290,37 @@ def test_every_recargo_box_casilla_states_its_official_box_number() -> None:
         )
 
 
-def test_no_recargo_box_casilla_enters_an_annual_total_formula() -> None:
-    """A recargo box casilla in the devengada total would double-count its tier.
+def test_recargo_box_layer_never_double_counts_its_blind_control() -> None:
+    """Official box sums must not also consume the matching blind control total."""
+    revision = _m390_revision()
+    partitions = tuple(
+        partition
+        for partition in derive_rate_box_partitions(revision)
+        if any(str(box).startswith("iva.anual.repercutido.recargo.tipo-") for box in partition.box_casilla_ids)
+    )
+    assert partitions, "no rate-box partition was checked"
+    for partition in partitions:
+        assert_partition_is_not_double_counted(revision, partition)
 
-    The three tier casillas already carry these rows for the total. Summing a box
-    casilla as well would count every rate-recorded recargo euro twice and make
-    the return OVER-declare -- the opposite error from the one being fixed, and
-    the only way this repair could damage a figure that is currently correct.
+
+def test_unrated_recargo_remains_visible_to_the_coverage_gate() -> None:
+    """Blind controls retain unrated money for the advisory and export refusal.
+
+    The official tax total sums the printed rate boxes. Adding blind controls
+    to that formula would double count rated rows; controls remain separately
+    available to the shared coverage gate instead.
     """
     revision = _m390_revision()
-    box_ids = set(_OFFICIAL_BOX_NUMBER)
-    for formula in revision.formulas:
-        referenced = {arg.casilla_id for arg in formula.expression.args if arg.casilla_id is not None}
-        leaked = referenced & box_ids
-        assert not leaked, f"formula {formula.id} sums recargo box casillas {sorted(leaked)}"
-
-
-def test_the_rate_blind_recargo_casillas_still_feed_the_devengada_total() -> None:
-    """The total layer must stay wired, or the split becomes the narrowing it replaces.
-
-    This is the assertion that distinguishes "breakdown repaired, total intact"
-    from "breakdown repaired, total silently reduced". It reads the formula rather
-    than the resolver, so removing a tier casilla from the sum fails here even
-    when every rung still resolves correctly.
-    """
-    revision = _m390_revision()
-    total = next(f for f in revision.formulas if f.id == "modelo-390-iva-anual-cuota-devengada-total")
-    referenced = {arg.casilla_id for arg in total.expression.args if arg.casilla_id is not None}
-    for tier in ("general", "reducido", "super-reducido"):
-        casilla_id = f"iva.anual.repercutido.recargo.{tier}"
-        assert casilla_id in referenced, f"{casilla_id} left the annual devengada total"
+    resolved = _resolve((*_rated_rows(), _unrated_row()))
+    values = {casilla.id: resolved[casilla.binding] for casilla in revision.casillas if casilla.binding in resolved}
+    shortfalls = rate_box_coverage_shortfalls(derive_rate_box_partitions(revision), values)
+    recargo = [shortfall for shortfall in shortfalls if shortfall.partition.fact == "recargo_amount_sum"]
+    assert len(recargo) == 1
+    assert recargo[0].shortfall == _UNRATED_RECARGO
+    assert recargo[0].partition.total_casilla_id == "iva.anual.repercutido.recargo.reducido"
+    operands = liquidation_operands(revision)
+    assert recargo[0].partition.total_casilla_id not in operands
+    assert set(recargo[0].partition.box_casilla_ids) <= operands
 
 
 def test_no_recargo_rate_box_exports_without_something_to_populate_it() -> None:
@@ -339,16 +332,15 @@ def test_no_recargo_rate_box_exports_without_something_to_populate_it() -> None:
     originally asserted the whole box layer exports NOTHING: the layer landed
     inert while the recargo decomposition was established separately.
 
-    The layer is no longer inert. All six boxes now carry a ledger binding, and
-    the three AEAT prints on "Pag. 2 bis" -- the sheet the 2024 diseno added --
-    export to their own official positions. Keeping the blanket refusal would now
+    The layer is no longer inert. Its boxes carry ledger bindings and export
+    to the official positions declared by each revision's source design. Keeping the blanket refusal would now
     assert the ABSENCE of shipped, grounded behaviour.
 
     So the guard is narrowed to the hazard rather than dropped, and it is the
     binding, not the export, that is the precondition: an exporting box with no
     binding and no formula still fails here. Measured across all four revisions,
-    nothing currently trips it (2022 exports 0 of 6, 2023 one, 2024 and 2025
-    three each, every one of them bound), so this discards no live finding.
+    every exported rate box must have a value producer, including the newly
+    connected 0.5 %, 1.4 % and 5.2 % owners in each source epoch.
     """
     for revision_id in _M390_REVISION_IDS:
         casillas = {casilla.id: casilla for casilla in _m390_revision(revision_id).casillas}
@@ -401,12 +393,12 @@ def test_mutation_widening_a_recargo_box_binding_re_creates_the_tier_merge() -> 
 
 
 def test_mutation_narrowing_the_total_binding_deletes_the_unrecorded_recargo() -> None:
-    """Mutation two: narrowing the total layer deletes money from the return.
+    """Mutation two: narrowing the control hides an unallocated amount.
 
     This is why the repair is a split rather than a narrowing. Giving the
     rate-blind reducido recargo binding an ``applied_rates`` axis makes it drop
     the row whose rate was never recorded, and that money reaches no other
-    casilla -- it leaves the annual devengada total. This reddens
+    casilla, so the coverage gate loses evidence of the shortfall. This reddens
     ``test_the_rate_blind_total_layer_retains_the_unrated_recargo``.
     """
     rows = (*_rated_rows(), _unrated_row())

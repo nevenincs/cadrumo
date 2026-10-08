@@ -34,6 +34,7 @@ from typing import Final, Protocol
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
+from dev.first_party_source import PRODUCT_PACKAGE
 
 from .authority_currency import require_current_authority
 
@@ -109,12 +110,7 @@ def _imported_modules(tree: ast.Module, package: str) -> Iterator[str]:
         if isinstance(node, ast.Import):
             yield from (alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
-            if node.level:
-                parts = package.split(".")
-                base = ".".join(parts[: len(parts) - node.level + 1])
-                module = f"{base}.{node.module}" if node.module else base
-            else:
-                module = node.module or ""
+            module = _resolved_import_module(node, package)
             yield module
             yield from (f"{module}.{alias.name}" for alias in node.names)
         pending.extend(ast.iter_child_nodes(node))
@@ -184,7 +180,7 @@ def verdict_key(
     digest.update(
         f"python:{sys.version}\nplatform:{platform.system()}\nauthority:{authority_database_sha256}\n".encode()
     )
-    _hash_tree(digest, repo_root / "src" / "cadrumo", label="src")
+    _hash_tree(digest, repo_root / PRODUCT_PACKAGE, label="src")
     _hash_tree(digest, repo_root / "dev" / "docs" / "sequences", label="engine")
     for relative in engine_import_closure(repo_root):
         _hash_tree(digest, repo_root / relative, label=f"engine-import/{relative}")
@@ -241,7 +237,7 @@ def published_verdict_key(*, docs_root: Path, goldens_root: Path | None) -> str:
     Raises:
         SequenceEngineError: When the published authority is not current.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+    from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
     require_current_authority()
@@ -270,3 +266,13 @@ def check_reusing_verdict(key: str, check: Callable[[], tuple[str, ...]]) -> tup
     if not problems:
         record_clean_verdict(key)
     return problems, None
+
+
+def _resolved_import_module(node: ast.ImportFrom, package: str) -> str:
+    if node.level:
+        parts = package.split(".")
+        base = ".".join(parts[: len(parts) - node.level + 1])
+        module = f"{base}.{node.module}" if node.module else base
+    else:
+        module = node.module or ""
+    return module

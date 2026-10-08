@@ -29,10 +29,8 @@ from __future__ import annotations
 import pytest
 
 from .....application.ledger.workspace import LedgerWorkspaceArea
-from ..models import (
-    LEDGER_DESTINATION_BY_AREA,
-    declared_ledger_destination_ids,
-)
+from ...destination_alias import closed_destination_ids
+from ..models import LEDGER_DESTINATION_BY_AREA, LedgerDestinationIdV1
 from ..routes import _SCREEN_BY_AREA, LEDGER_ROUTES, LedgerUnavailableScreen, resolve_ledger_screen
 from .workspace_fixtures import ledger_controller, ledger_projection
 
@@ -71,7 +69,7 @@ def test_the_destinations_are_exactly_the_declared_catalogue() -> None:
     The alias is the closed set; a value outside it would be unroutable, and
     one inside it that no area names would be a screen with no way in.
     """
-    assert frozenset(LEDGER_DESTINATION_BY_AREA.values()) == declared_ledger_destination_ids()
+    assert frozenset(LEDGER_DESTINATION_BY_AREA.values()) == closed_destination_ids(LedgerDestinationIdV1)
 
 
 def test_the_route_catalogue_carries_the_same_destination_for_every_area() -> None:

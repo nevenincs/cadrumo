@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:4377ed802507f0b9dfd93979d7d3e15f7350bfc63167ff7fa8fea79885ffc473'
+modified: '2026-10-03'
+body_hash: 'sha256:155fc00934b391815e5ae36d7bcac53247dcda613696529af033d60ddd85dfc7'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S211-001 | PASS | Testing registry is not a storage authority
 
-`src/aeat/application/filing/_testing_registry.py` builds filing drafts through
+The retired module built filing drafts through
 the production registry runtime and supplies an empty `TransactionCatalogue`
 when approving deterministic test drafts. It does not inspect bucket manifests,
 read active-profile settings, open files, construct secure-object repositories,
@@ -34,8 +34,8 @@ patches, skips, xfails, fake repositories, or mirrored calculation logic.
 
 ## S211-004 | PASS | Validation
 
-- `uv run --no-sync pytest -q src/aeat/application/filing/test_testing_registry.py` passed with 11 tests.
-- `uv run --no-sync ruff check src/aeat/application/filing/_testing_registry.py src/aeat/application/filing/test_testing_registry.py` passed.
+- the historical check passed with 11 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S211

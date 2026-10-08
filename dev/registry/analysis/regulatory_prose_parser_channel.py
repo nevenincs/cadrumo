@@ -33,10 +33,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.toml import read_toml
+from dev.first_party_source import FIRST_PARTY_ROOTS, is_production_source
 from dev.quality.unread_inputs import report_unread
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-SCANNED_ROOTS = ("src/cadrumo", "dev")
 LEDGER_PATH = Path(__file__).with_name("regulatory_prose_parser_channel.toml")
 
 #: Vocabulary that marks a pattern as reading AEAT design or legal prose.
@@ -77,12 +77,10 @@ class ProseParserEnrolment:
 
 
 def _iter_scanned_modules() -> Iterator[Path]:
-    for root in SCANNED_ROOTS:
+    for root in FIRST_PARTY_ROOTS:
         for path in sorted((REPO_ROOT / root).rglob("*.py")):
-            parts = path.parts
-            if "tests" in parts or "__pycache__" in parts:
-                continue
-            yield path
+            if is_production_source(path, root=REPO_ROOT):
+                yield path
 
 
 def _prose_pattern_count(tree: ast.Module) -> int:

@@ -188,7 +188,7 @@ def run_subprocess_cli_harness(
     extra_env: Mapping[str, str] | None = None,
     cwd: Path | None = None,
     stdin_payload: str | None = None,
-    timeout: float = 120.0,
+    timeout: float | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run ``harness_source`` as a fresh ``python -c`` child and capture its output.
 
@@ -239,7 +239,7 @@ def run_cadrumo_subprocess(
     extra_env: Mapping[str, str] | None = None,
     cwd: Path | None = None,
     stdin_payload: str | None = None,
-    timeout: float = 120.0,
+    timeout: float | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run one real ``cadrumo`` CLI invocation in a fresh interpreter.
 

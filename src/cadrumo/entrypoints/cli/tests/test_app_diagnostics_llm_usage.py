@@ -3,8 +3,8 @@
 Exercises the verb end to end against the real CLI, the real
 :func:`~cadrumo.application.diagnostics_run_health.build_llm_usage_report`
 aggregator, and real encrypted SQLite persistence in an isolated storage
-root. No test doubles: LLM run telemetry is seeded through its production
-writer (:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`) and the
+root. No test doubles: LLM run record is seeded through its production
+writer (:class:`~cadrumo.adapters.outbound.llm.LLMRunRecorder`) and the
 verb reports the run-count/duration/success-rate summary back typed, grouped
 by provider and, within each provider, by model.
 """
@@ -17,26 +17,22 @@ from datetime import UTC, datetime
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
+from ....adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from .cli_runner import invoke_cached_cli
+from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
-_BUCKET_ID = "33333333-4444-4555-8666-777777777777"
-
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id=_BUCKET_ID,
-    autouse=False,
-    settings_overrides={"cadrumo_output_language": "en"},
-)
+__all__ = ["diagnostics_native_profile"]
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(args)
+    return invoke_diagnostics_cli(args)
 
 
 def _seed_runs() -> None:
@@ -48,7 +44,7 @@ def _seed_runs() -> None:
     150ms). This exercises both the provider-level fold and the nested
     per-model fold within a provider that uses more than one model.
     """
-    recorder = LLMRunTelemetryRecorder()
+    recorder = LLMRunRecorder()
     seeds = (
         ("run-1", "llm:claude:test-model", "model-a", 100, True, ""),
         ("run-2", "llm:claude:test-model", "model-a", 300, True, ""),
@@ -72,7 +68,7 @@ def _seed_runs() -> None:
         )
 
 
-def test_llm_usage_aggregates_by_provider_and_model(_isolated_backend: None) -> None:
+def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """The verb groups real recorded runs by provider, then by model within each provider."""
     _seed_runs()
 
@@ -122,8 +118,8 @@ def test_llm_usage_aggregates_by_provider_and_model(_isolated_backend: None) -> 
     assert payload["overall_success_rate"] == "0.8333"
 
 
-def test_llm_usage_empty_is_instructive(_isolated_backend: None) -> None:
-    """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
+def test_llm_usage_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
+    """With no LLM run record the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "llm-usage"])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
@@ -140,7 +136,7 @@ def test_llm_usage_empty_is_instructive(_isolated_backend: None) -> None:
     assert "diagnostics.llm_usage.no_run_data" in codes
 
 
-def test_llm_usage_provider_filter_scopes_the_summary(_isolated_backend: None) -> None:
+def test_llm_usage_provider_filter_scopes_the_summary(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--provider`` restricts the summary to one provider label."""
     _seed_runs()
 
@@ -157,7 +153,7 @@ def test_llm_usage_provider_filter_scopes_the_summary(_isolated_backend: None) -
     assert payload["total_failed"] == 0
 
 
-def test_llm_usage_since_until_scopes_by_date(_isolated_backend: None) -> None:
+def test_llm_usage_since_until_scopes_by_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """``--since``/``--until`` narrow the usage summary by date."""
     _seed_runs()
 
@@ -184,14 +180,16 @@ def test_llm_usage_since_until_scopes_by_date(_isolated_backend: None) -> None:
     assert payload["by_provider"][0]["models"][0]["model"] == "model-a"
 
 
-def test_llm_usage_rejects_malformed_date(_isolated_backend: None) -> None:
+def test_llm_usage_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
     result = _invoke(["--format", "json", "app", "diagnostics", "llm-usage", "--since", "01/04/2026"])
     assert result.exit_code != 0
     assert "ISO date" in result.output
 
 
-def test_llm_usage_human_text_reports_provider_and_model_lines(_isolated_backend: None) -> None:
+def test_llm_usage_human_text_reports_provider_and_model_lines(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
     """The human-readable text output lists per-provider and nested per-model rows."""
     _seed_runs()
 

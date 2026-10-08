@@ -43,7 +43,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
@@ -52,6 +52,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
@@ -87,6 +88,18 @@ _M369_BUCKET = "36900000-0000-4000-8000-000000000013"
 _M369_REVISION = "esquema-union"
 _M369_YEAR = 2026
 _DEFAULT_OSS_REGIME = OssIossRegime("union_scheme")
+
+# DR369 v1.1, T36901: positions 9/14 state VOES/D; positions 56/73
+# require the declarant country and NEUOSS registration, which an invoice
+# aggregation cannot establish. These are explicit synthetic operator inputs;
+# position 220 declares activity for the fixture's one taxable service.
+_EXTERIOR_DECLARANT_BINDINGS: dict[BindingId, str] = {
+    "modelo-369-exterior-fichero.regimen": "VOES",
+    "modelo-369-exterior-fichero.categoria": "D",
+    "modelo-369-exterior-fichero.1-declarante-pais": "US",
+    "modelo-369-exterior-fichero.1-declarante-numero-de-operador-en-el-regimen-neuoss": "EU724000000001",
+    "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad": "0",
+}
 
 
 class _EmptyInvoiceCatalogueReader:
@@ -280,12 +293,12 @@ def _m369_invoice(
 
 
 @pytest.mark.parametrize(
-    ("period_token", "operation_date", "issued_at", "expected_wire_period"),
+    ("period_token", "operation_date", "issued_at", "expected_envelope_period", "expected_detail_period"),
     (
-        ("EXT-1T", date(2026, 2, 15), date(2026, 5, 15), b"01"),
-        ("EXT-2T", date(2026, 5, 15), date(2026, 8, 15), b"02"),
-        ("EXT-3T", date(2026, 8, 15), date(2026, 11, 15), b"03"),
-        ("EXT-4T", date(2026, 11, 15), date(2027, 2, 15), b"04"),
+        ("EXT-1T", date(2026, 2, 15), date(2026, 5, 15), b"1T", b"01"),
+        ("EXT-2T", date(2026, 5, 15), date(2026, 8, 15), b"2T", b"02"),
+        ("EXT-3T", date(2026, 8, 15), date(2026, 11, 15), b"3T", b"03"),
+        ("EXT-4T", date(2026, 11, 15), date(2027, 2, 15), b"4T", b"04"),
     ),
 )
 def test_m369_exterior_period_calculate_review_export_e2e(
@@ -294,15 +307,16 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     period_token: str,
     operation_date: date,
     issued_at: date,
-    expected_wire_period: bytes,
+    expected_envelope_period: bytes,
+    expected_detail_period: bytes,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Every Exterior quarter retains its token and renders the official ordinal."""
+    """Exterior quarters retain their token and render the envelope and detail grammars."""
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=m369_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
     invoice_repo.save(
         build_invoice_catalogue(
             (
@@ -345,15 +359,37 @@ def test_m369_exterior_period_calculate_review_export_e2e(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_311,
+            # The no-activity flag is consumed arithmetically by the current
+            # formula; the declarant's text fields remain on the string channel.
+            binding_values={
+                "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0"),
+            },
+            enum_binding_values={
+                key: value
+                for key, value in _EXTERIOR_DECLARANT_BINDINGS.items()
+                if key != "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad"
+            },
             clock=_T1,
         )
     period_casilla = validated_casilla_id("decl.periodo")
     exterior_cuota = validated_casilla_id("iva.exterior.de.services-cuota")
     assert result.revision.input_values_by_casilla_id[period_casilla] == period_token
     assert Decimal(result.revision.casilla_values[exterior_cuota]) == Decimal("19.00")
+    (membership,) = result.revision.closed_record_row_sets
+    assert membership.work_unit_id == work_unit.work_unit_id
+    assert membership.registry_snapshot_ref.period == period_token
+    assert membership.authority_generation == operation.pin().logical_generation
+    assert len(membership.rows) == 28
+    assert sum(row.occupied for row in membership.rows) == 1
+    reloaded = cr_repo.load(operation=operation).get(result.revision.calculation_revision_id)
+    assert reloaded is not None
+    assert reloaded.closed_record_row_sets == (membership,)
+    assert all(
+        result.revision.binding_overrides[binding] == value for binding, value in _EXTERIOR_DECLARANT_BINDINGS.items()
+    )
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -362,8 +398,10 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
-    assert report.granted_verificado_completo is True, report.findings
+        ).report
+    assert report.granted_verificado_completo is True, [
+        (finding.message_locale_key, finding.message_facts) for finding in report.findings
+    ]
 
     output_path = tmp_path / f"modelo-369-{period_token}.txt"
     with bundled_indexed_authority().operation() as operation:
@@ -383,8 +421,14 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             operation=operation,
         )
     assert receipt.period.registry_token == period_token
+    # This envelope carries the declarant NIF, not a software/developer identity.
+    assert receipt.software_identity_grade is None
     wire = output_path.read_bytes()
-    assert wire[10:12] == expected_wire_period
+    # DR369 v1.1, T3690 general structure: positions 11-12 and the
+    # corresponding closer carry 1T..4T. T36901 positions 218-219 instead
+    # carry the numeric quarter 1..4, padded to two bytes.
+    assert wire[10:12] == expected_envelope_period
+    assert wire.endswith(b"</T36902026" + expected_envelope_period + b"0000>")
     assert period_token.encode("ascii") not in wire
     layout = (
         published_authority_operation()
@@ -400,21 +444,44 @@ def test_m369_exterior_period_calculate_review_export_e2e(
         assert len(matches) == 1, [(field.field_id, field.binding_id, field.value) for field in detail]
         return matches[0]
 
+    assert detail_value("regimen") == "VOES"
+    assert detail_value("categoria") == "D"
+    assert detail_value("1-declarante-pais") == "US"
+    assert detail_value("1-declarante-numero-de-operador-en-el-regimen-neuoss") == "EU724000000001"
     assert detail_value("2-ejercicio-y-periodo-ejercicio") == 2026
     assert detail_value("2-ejercicio-y-periodo-tipo-de-periodo") == "T"
     assert detail_value("2-ejercicio-y-periodo-periodo") == int(period_token[-2])
+    assert (
+        next(
+            field.raw
+            for field in detail
+            if field.binding_id == "modelo-369-exterior-fichero.2-ejercicio-y-periodo-periodo"
+        ).encode("ascii")
+        == expected_detail_period
+    )
+    assert detail_value("2-ejercicio-y-periodo-declaracion-sin-actividad") == "0"
     assert detail_value("3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1") == "DE"
     assert detail_value("3-prestaciones-de-servicios-tipo-de-iva-1") == Decimal("19")
     assert detail_value("3-prestaciones-de-servicios-tipo-iva-1") == "S"
     assert detail_value("3-prestaciones-de-servicios-base-imponible-1") == Decimal("100")
     assert detail_value("3-prestaciones-de-servicios-cuota-iva-1") == Decimal("19")
     record_ids = {field.record_id for field in parsed.fields}
-    assert "modelo-369-exterior-t36902" not in record_ids
+    # DR369 selects pages T36901..T36903 for Exterior. General notes 6-7
+    # require empty correction groups to be entirely blank, including numeric
+    # slots; the presence of that fixed page does not declare a correction.
+    assert "modelo-369-exterior-t36902" in record_ids
+    corrections = tuple(
+        field
+        for field in parsed.fields
+        if field.record_id == "modelo-369-exterior-t36902" and field.binding_id is not None
+    )
+    assert corrections
+    assert all(field.raw == " " * len(field.raw) and field.value is None for field in corrections), corrections
     assert "modelo-369-exterior-t36903" in record_ids
     closure_start = wire.index(b"<T36903>")
-    malformed_optional = wire[:closure_start] + b"<T36902>" + wire[closure_start:]
+    malformed_correction_page = wire[:closure_start] + b"<T36902>" + wire[closure_start:]
     with pytest.raises(RegistryValidationError):
-        parse_export_payload(layout, malformed_optional)
+        parse_export_payload(layout, malformed_correction_page)
 
 
 @pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind("super_reduced"), IvaRateKind("zero")))
@@ -549,7 +616,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
         )
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 result.revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -558,7 +625,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                 clock=_T1,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         assert ambient_invoice_repo.exists() is False
         assert any(
             ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
@@ -687,7 +754,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
     assert result.revision.source_provenance == (), "unresolved OSS source must persist no resolved-source trace"
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -696,7 +763,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is False
     finding = next(
@@ -823,7 +890,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
     )
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -832,7 +899,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is False
     finding = next(
@@ -933,7 +1000,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
         result.revision.source_provenance
     )
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -942,7 +1009,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert report.granted_verificado_completo is True, report.findings
     assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
         result.revision.calculation_revision_id

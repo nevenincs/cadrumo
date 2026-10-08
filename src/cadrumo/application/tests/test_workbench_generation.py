@@ -24,7 +24,10 @@ from ...domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
-from .. import workbench_generation as generation_module
+from ...tests.aeat_literal_fixtures import (
+    CENSO_SOURCE_URL_FIXTURE,
+)
+from .. import workbench_generation_calendar as calendar_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..ledger.action_ports import LedgerActionPorts
@@ -37,14 +40,13 @@ from ..ledger.workspace import (
 )
 from ..live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
-from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
+from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 from ..modelo.work_addressing import ModeloExactWorkUnitTarget
-from ..modelo.workspace import graded_snapshot_refusal, resolve_static_inspection_result
+from ..modelo.workspace import resolve_static_inspection_result
 from ..modelo.workspace_models import (
-    ModeloWorkspaceCapabilityName,
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceProjectionV1,
-    ModeloWorkspaceRefusalCode,
+    ModeloWorkspaceStaticInspectionResultV1,
 )
 from ..operations.registry import OperationPublicContractSetV1
 from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
@@ -64,14 +66,15 @@ from ..user_profile.censal_operation import (
 )
 from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
-    ModeloWorkspaceProjectedReadV1,
-    SecureProfileWorkbenchGenerationReadDoorV1,
-    WorkbenchGenerationAvailability,
-    WorkbenchGenerationInputsV1,
-    WorkbenchGenerationSourceResultV1,
     assemble_workbench_generation,
     assemble_workbench_generation_from,
 )
+from ..workbench_generation_contracts import (
+    WorkbenchGenerationAvailability,
+    WorkbenchGenerationInputsV1,
+    WorkbenchGenerationSourceResultV1,
+)
+from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -84,7 +87,7 @@ _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 def test_installed_calendar_reaches_latest_completed_filing_year() -> None:
     """The TUI calendar can select quarterly work from the completed tax year."""
-    assert generation_module._calendar_query_range(date(2026, 9, 21)) == OverviewCalendarRange(
+    assert calendar_module._calendar_query_range(date(2026, 9, 21)) == OverviewCalendarRange(
         from_date=date(2025, 1, 1),
         to_date=date(2026, 12, 31),
     )
@@ -103,6 +106,7 @@ def _test_censal_operation_definition():
         browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=unopened_censal_fetch,
+        provider_preflight=lambda _profile_id, _operation: None,
     )
 
 
@@ -128,7 +132,7 @@ class _Repository[ValueT]:
         self.calls += 1
         return self.value
 
-    def load_revisioned(self) -> tuple[ValueT, str]:
+    def load_revisioned(self, *, operation: PinnedAuthorityOperation | None = None) -> tuple[ValueT, str]:
         self.calls += 1
         index = min(self.calls - 1, len(self.revisions) - 1)
         return self.value, self.revisions[index]
@@ -269,14 +273,13 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
     assert generation.ledger.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.aeat_sync.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.modelo.availability is WorkbenchGenerationAvailability.UNAVAILABLE
-    assert generation.modelo_graded_refusals.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.search.availability is WorkbenchGenerationAvailability.UNAVAILABLE
 
 
 def test_secure_profile_provider_contains_rejected_declarations_projection(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A contradictory declaration catalogue refuses only its workspace source."""
+    """An invalid declaration identity refuses its row while retaining its healthy neighbour."""
     period = Period.from_year_and_code(2026, "1T")
     revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
     unit = WorkUnit(
@@ -323,23 +326,22 @@ def test_secure_profile_provider_contains_rejected_declarations_projection(
     generation = InstalledWorkbenchGenerationProviderV1(door)()
 
     assert generation.home.projection is not None
-    assert generation.declarations.projection is None
-    assert generation.declarations.availability is WorkbenchGenerationAvailability.UNAVAILABLE
-    assert generation.declarations.refusal == "workbench.declarations.snapshot_projector_unavailable"
-    assert generation.declarations_admission.state is WorkbenchDestinationAdmissionState.UNAVAILABLE
+    projection = generation.declarations.projection
+    assert projection is not None
+    assert len(projection.declarations) == 2
+    healthy, refused = projection.declarations
+    assert healthy.work_unit_id == unit.work_unit_id
+    assert healthy.summary is not None and healthy.summary.state.value == "draft"
+    assert refused.work_unit_id == duplicate_address.work_unit_id
+    assert refused.summary is not None and refused.summary.state.value == "unreadable"
+    assert all(row.summary is not None and row.summary.result is None for row in projection.declarations)
+    assert all(zone.availability.value == "stale" for zone in projection.zones if zone.item_count is not None)
 
 
-def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
+def test_secure_profile_modelo_source_carries_each_work_unit_s_projection(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A GRADED_SNAPSHOT refusal for one work unit reaches the generation, keyed by its identity.
-
-    The projection itself is never dropped on that refusal -- STATIC_INSPECTION
-    remains a valid secondary view for every taxpayer-facing refusal code the
-    graded resolver returns -- so this proves both halves travel: the Modelo
-    source still names the unit, and the refusal map explains why its
-    projection is the static fallback rather than the requested graded one.
-    """
+    """The Modelo source names every work unit the profile holds, through the reader it is given."""
     period = Period.from_year_and_code(2026, "1T")
     revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
     unit = WorkUnit(
@@ -374,18 +376,7 @@ def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
         authority=authority_operation,
         output_language=OutputLanguage.ES,
     )
-    refusal = graded_snapshot_refusal(
-        ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
-        requested_target=exact_target,
-        selected_target=static_result.projection.target,
-        capability=ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
-        reconsideration_condition="calculate this work unit, then request a graded snapshot again",
-        facts=(),
-        evidence=(),
-        source_disposition=None,
-        recovery_action=None,
-    ).refusal
-
+    assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
         operation=authority_operation,
@@ -399,9 +390,7 @@ def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
             profile_label="Perfil local",
             expires_at=_NOW,
         ),
-        modelo_projection_reader=lambda _unit: ModeloWorkspaceProjectedReadV1(
-            projection=static_result.projection, graded_refusal=refusal
-        ),
+        modelo_projection_reader=lambda _unit: static_result.projection,
     )
 
     generation = InstalledWorkbenchGenerationProviderV1(door)()
@@ -409,70 +398,6 @@ def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
     assert generation.modelo.availability is WorkbenchGenerationAvailability.AVAILABLE
     assert generation.modelo.projection is not None
     assert [projection.target.work_unit_id for projection in generation.modelo.projection] == [unit.work_unit_id]
-    assert generation.modelo_graded_refusals.availability is WorkbenchGenerationAvailability.AVAILABLE
-    assert generation.modelo_graded_refusals.projection == {str(unit.work_unit_id): refusal}
-
-
-def test_secure_profile_modelo_reader_with_no_refusal_leaves_the_refusal_map_empty(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """A work unit admitted at its requested grade has no entry, not a ``None`` one."""
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
-    unit = WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=_PROFILE_ID,
-            modelo="130",
-            filing_year=2026,
-            period=period,
-            revision_id=revision_id,
-        ),
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=period,
-        revision_id=revision_id,
-        name="declaration",
-        created_at=_NOW,
-        updated_at=_NOW,
-    )
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(WorkUnitCatalogue.model_construct(work_units={unit.work_unit_id: unit}))
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
-
-    exact_target = ModeloWorkspaceExactWorkUnitTargetV1(
-        target=ModeloExactWorkUnitTarget(work_unit_id=unit.work_unit_id, bucket_id=unit.bucket_id)
-    )
-    static_result = resolve_static_inspection_result(
-        exact_target,
-        bucket_id=_PROFILE_ID,
-        catalogue_repository=cast(Any, work_units),
-        authority=authority_operation,
-        output_language=OutputLanguage.ES,
-    )
-
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
-        modelo_projection_reader=lambda _unit: ModeloWorkspaceProjectedReadV1(projection=static_result.projection),
-    )
-
-    generation = InstalledWorkbenchGenerationProviderV1(door)()
-
-    assert generation.modelo.projection is not None
-    assert generation.modelo_graded_refusals.availability is WorkbenchGenerationAvailability.AVAILABLE
-    assert generation.modelo_graded_refusals.projection == {}
 
 
 def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
@@ -606,7 +531,7 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
         return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
 
-    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
         operation=authority_operation,
@@ -750,7 +675,7 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
         return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
 
-    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
     written = TransactionCatalogue.model_validate([_synthetic_transaction()])
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
@@ -792,7 +717,7 @@ def test_a_quiet_ledger_publishes_its_generation(
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
         return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
 
-    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
         operation=authority_operation,
@@ -828,7 +753,7 @@ def test_calendar_evidence_scope_preserves_available_empty_for_historical_filing
         evaluated_on=_NOW.date(),
     )
 
-    scoped = generation_module._scope_filing_records((historical,), schedule)
+    scoped = calendar_module._scope_filing_records((historical,), schedule)
 
     assert scoped == ()
 
@@ -972,7 +897,7 @@ def test_home_refuses_its_ledger_zone_rather_than_publishing_an_unmeasured_zero(
     in a summary is indistinguishable from whole truth once rendered.
     """
     from ..overview.home import HomeLedgerReadiness
-    from ..workbench_generation import _home_ledger_readiness
+    from ..workbench_generation_home import _home_ledger_readiness
 
     measured = _ledger_projection_with_statuses(LedgerWorkspaceStatus.READY)
     readiness = _home_ledger_readiness(measured)
@@ -1012,7 +937,7 @@ def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
     from datetime import UTC, datetime
 
     from ..overview.home import HomeAccountSession, HomeAvailability, HomeSessionPosture, HomeZoneState
-    from ..workbench_generation import _secure_profile_home_input
+    from ..workbench_generation_home import _secure_profile_home_input
 
     observed_at = datetime(2026, 9, 4, tzinfo=UTC)
     home = _secure_profile_home_input(
@@ -1050,7 +975,7 @@ def test_only_a_verified_calculation_reads_as_ready_on_home() -> None:
     for Home, and this asserts the whole table so a new calculation state
     cannot be added and silently default to anything.
     """
-    from ..workbench_generation import _HOME_DECLARATION_STATES
+    from ..workbench_generation_home import _HOME_DECLARATION_STATES
 
     assert set(_HOME_DECLARATION_STATES) == set(CalculationRevisionState), (
         "a calculation state has no declared Home reading, so it would raise or "
@@ -1080,7 +1005,7 @@ def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeas
     with no `tui.home.reason.*` entry renders the degraded generic line, so an
     action invented to fill the zone would arrive unreadable.
     """
-    from ..workbench_generation import _home_ledger_actions
+    from ..workbench_generation_home import _home_ledger_actions
 
     populated = _ledger_projection_with_statuses(LedgerWorkspaceStatus.NEEDS_ATTENTION)
     offered = _home_ledger_actions(populated)
@@ -1132,7 +1057,7 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     outstanding.
     """
     from ..overview.home import HomeDeclarationResume
-    from ..workbench_generation import _home_declaration_actions
+    from ..workbench_generation_home import _home_declaration_actions
 
     def _resume(state: HomeDeclarationState, unit: str) -> HomeDeclarationResume:
         return HomeDeclarationResume(
@@ -1193,7 +1118,7 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
         VerificationReportCatalogue,
         derive_verification_report_id,
     )
-    from ..workbench_generation import _dependency_blocked_revisions
+    from ..workbench_generation_home import _dependency_blocked_revisions
 
     def _catalogue(
         kind: ModeloVerificationFindingKind,
@@ -1335,7 +1260,7 @@ def test_the_filing_history_reads_the_bucket_event_log(
     """A bound event log makes the filing history observable, not permanently unavailable."""
     from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
     from ...domain.buckets.event_repository import build_bucket_event
-    from ..modelo.declarations_workspace import DeclarationsLifecycleKind, DeclarationsWorkspaceZone
+    from ..modelo.declarations_workspace_contracts import DeclarationsLifecycleKind, DeclarationsWorkspaceZone
 
     period = Period.from_year_and_code(2026, "1T")
     revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
@@ -1392,3 +1317,135 @@ def test_the_filing_history_reads_the_bucket_event_log(
     history = next(zone for zone in declarations.zones if zone.zone is DeclarationsWorkspaceZone.FILING_HISTORY)
     assert history.reason_code is None
     assert [row.kind for row in declarations.lifecycle] == [DeclarationsLifecycleKind.CREATED]
+
+
+def test_secure_generation_refuses_a_census_capture_changed_during_read(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A concurrent pull cannot publish a generation with mismatched census evidence."""
+    from dataclasses import replace
+
+    from ..user_profile.censal_observation import (
+        CensalObservation,
+        CensalObservationAddress,
+        CensalObservationIdentity,
+    )
+
+    observation = CensalObservation(
+        identity=CensalObservationIdentity(nif="00000001R"),
+        domicilio_fiscal=CensalObservationAddress(),
+        domicilio_notificacion=CensalObservationAddress(),
+        captured_at=_NOW,
+        source_url=CENSO_SOURCE_URL_FIXTURE,
+    )
+    reads = iter((None, observation))
+    door = replace(
+        _plain_generation_door(authority_operation, profile=_Repository(_profile_record(authority_operation))),
+        census_observation_reader=lambda: next(reads),
+    )
+    with pytest.raises(InternalInvariantError, match="changed during capture"):
+        door.read_workbench_generation_inputs()
+
+
+def test_a_resident_s_holiday_territory_survives_the_registered_result_round_trip(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A resident's calendar names its territory and still crosses the operation boundary.
+
+    The registered read projects the generation, stores it as JSON and the
+    frontend restores it with no pinned authority; a calendar row carrying the
+    territory must survive both legs with its meaning intact.
+    """
+    from uuid import UUID
+
+    from ..workbench_generation_projection import (
+        WorkbenchGenerationOperationProjection,
+        project_workbench_generation,
+        restore_workbench_generation,
+    )
+
+    record = create_user_profile_record(
+        context=authority_operation.profile_create_context(),
+        profile_id=_PROFILE_ID,
+        setup_state=ProfileSetupState.COMPLETE,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="X1234567L"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+        ),
+    )
+    generation = InstalledWorkbenchGenerationProviderV1(
+        _plain_generation_door(authority_operation, profile=_Repository(record))
+    )()
+    calendar = generation.declarations_calendar.projection
+    assert calendar is not None
+    assert "ES-MD" in {row.holiday_territory for row in calendar.entries}
+
+    public = project_workbench_generation(UUID(_PROFILE_ID), generation)
+    decoded = WorkbenchGenerationOperationProjection.model_validate_json(public.model_dump_json(), strict=True)
+    restored = restore_workbench_generation(decoded)
+
+    assert restored == generation
+    assert restored.declarations_calendar.projection is not None
+    assert restored.declarations_calendar.projection.entries == calendar.entries
+
+
+def test_stored_filed_captures_reach_aeat_sync_through_the_calendar_reader(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """AEAT Sync reads the same stored captures the calendar does, in the same capture.
+
+    The profile holds no local filing: a captured submission must still appear
+    as an AEAT-only declaration rather than leaving the area never captured.
+    """
+    from dataclasses import replace
+
+    from ..overview.evidence import AeatCalendarEvidenceSources, CalendarEvidenceReadOutcome
+    from ..overview.tests.calendar_test_support import filed_declaration_observation
+
+    captured_at = datetime(2025, 4, 16, 8, 0, tzinfo=UTC)
+    reads: list[None] = []
+
+    def read_captures() -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
+        reads.append(None)
+        return CalendarEvidenceReadOutcome(
+            state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=captured_at),
+            value=AeatCalendarEvidenceSources(
+                filed_declaration_observations=(filed_declaration_observation(artefacts=()),)
+            ),
+        )
+
+    profile = _Repository(
+        _profile_record(authority_operation, facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),))
+    )
+    door = replace(
+        _plain_generation_door(authority_operation, profile=profile),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(_test_censal_operation_definition()).contract,)
+        ),
+        calendar_aeat_reader=read_captures,
+    )
+
+    generation = InstalledWorkbenchGenerationProviderV1(door)()
+
+    assert len(reads) == 1
+    projection = generation.aeat_sync.projection
+    assert projection is not None
+    (row,) = projection.filed_declarations
+    assert (str(row.modelo), row.filing_year, row.period.registry_token) == ("303", 2025, "1T")
+    assert row.local_filing_state.value == "not_observed"
+    assert row.aeat_observation_state.value == "submitted"
+    assert row.aeat_observed_at == captured_at
+    assert row.justificante_state.value == "not_observed"
+    filed = next(item for item in projection.overview if item.area.value == "filed_declarations")
+    assert (filed.local_state.value, filed.aeat_state.value) == ("absent", "present")

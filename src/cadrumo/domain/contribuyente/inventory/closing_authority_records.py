@@ -1,9 +1,4 @@
-"""Canonical closing-authority records for inventory year-end resolution.
-
-The public classes are loaded by the records facade after its foundational
-closing observations and enums exist. The facade rebinds their module identity
-to the historical public module.
-"""
+"""Canonical inventory closing authority records."""
 
 from __future__ import annotations
 
@@ -19,7 +14,7 @@ from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.time.utc import UtcInstant
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
-from .records import (
+from .closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
     InventoryValidationError,

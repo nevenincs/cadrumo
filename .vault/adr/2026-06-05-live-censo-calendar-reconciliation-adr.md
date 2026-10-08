@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#live-censo-calendar-reconciliation'
 date: '2026-06-05'
-modified: '2026-07-17'
-body_hash: 'sha256:63fbb485c7736162cabacbdcdf5ac50fc495cd7421f7b8f16803cc9788089a0c'
+modified: '2026-10-03'
+body_hash: 'sha256:64c9cda833724036dcab03fc4e2cac0368c6db9ea14169010e1bfabf6d5b12ce'
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-research]]'
 ---
@@ -18,7 +18,3 @@ Modelo obligations must derive from the taxpayer's legal situation, and the cale
 ## Decision
 
 The calendar resolves each obligation from live censo-backed facts when present, falls back to profile facts otherwise, and refuses (never silently defaults) when the necessary facts are absent. Every emitted obligation stamps which source it used, so the operator can see the basis of each deadline.
-
-## Status
-
-Accepted.

@@ -3,19 +3,43 @@
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Iterator
+from contextvars import ContextVar
 from datetime import date
 
 import pytest
 
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from ....application.workflow.profile_bucket_scan import list_profile_buckets
 from ....core.classification.policies import SensitivityClass
 from ....core.time.clock import now, today_madrid
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
-from .cli_runner import invoke_cached_cli
+from ._overview_native_support import invoke_native_overview
+from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["active_profile_isolated_backend"]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
+_PROFILE: ContextVar[NativeCliProfileFixture] = ContextVar("backlog_native_profile")
+
+
+@pytest.fixture(autouse=True)
+def _native_profile(native_overview_profile: NativeCliProfileFixture) -> Iterator[None]:
+    token = _PROFILE.set(native_overview_profile)
+    try:
+        yield
+    finally:
+        _PROFILE.reset(token)
+
+
+def _invoke(args: list[str]):
+    return invoke_native_overview(_PROFILE.get(), args)
+
 
 # The backlog lists only windows already closed today, so an exercise shows all four
 # quarters once its fourth-quarter window (closing in the next January) has passed.
@@ -30,7 +54,7 @@ def test_backlog_renders_envelope_with_explicit_window() -> None:
     """A concrete --from / --to window renders the backlog envelope
     including the range echo, as_of, and late_count header."""
 
-    result = invoke_cached_cli(
+    result = _invoke(
         [
             "app",
             "overview",
@@ -51,7 +75,7 @@ def test_backlog_renders_envelope_with_explicit_window() -> None:
 
 @pytest.mark.parametrize("year", _CLOSED_EXERCISES)
 def test_backlog_json_preserves_exact_modelo_303_quarterly_coordinates(year: int) -> None:
-    result = invoke_cached_cli(
+    result = _invoke(
         [
             "--format",
             "json",
@@ -80,7 +104,7 @@ def test_backlog_json_preserves_exact_modelo_303_quarterly_coordinates(year: int
 def test_backlog_rejects_malformed_from_date() -> None:
     """A non-ISO --from is rejected by the parsing boundary."""
 
-    result = invoke_cached_cli(
+    result = _invoke(
         ["app", "overview", "backlog", "--from", "not-a-date"],
     )
     assert result.exit_code != 0, result.output
@@ -89,7 +113,7 @@ def test_backlog_rejects_malformed_from_date() -> None:
 def test_backlog_rejects_malformed_to_date() -> None:
     """A non-ISO --to is rejected by the parsing boundary."""
 
-    result = invoke_cached_cli(
+    result = _invoke(
         ["app", "overview", "backlog", "--to", "not-a-date"],
     )
     assert result.exit_code != 0, result.output
@@ -98,27 +122,29 @@ def test_backlog_rejects_malformed_to_date() -> None:
 def test_backlog_help_advertises_local_only() -> None:
     """Help text must signal `local-only` across locales."""
 
-    result = invoke_cached_cli(["app", "overview", "backlog", "--help"])
+    result = _invoke(["app", "overview", "backlog", "--help"])
     assert result.exit_code == 0, result.output
     assert any(
         token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output
 
 
-_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _WORK_UNIT_NAMESPACE = "cadrumo.domain.modelos.work_units"
 _WORK_UNIT_OBJECT_KEY = "catalogue"
 
 
-def _persist_invalid_work_unit_catalogue_payload(bucket_id: str) -> None:
-    secure_object_repository_for_bucket(bucket_id).save(
-        namespace=_WORK_UNIT_NAMESPACE,
-        object_key=_WORK_UNIT_OBJECT_KEY,
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
-        written_at=now(),
-        payload=b'{"status":"invalid work-unit catalogue envelope"',
-    )
+def _persist_invalid_work_unit_catalogue_payload() -> str:
+    (bucket_id,) = tuple(list_profile_buckets())
+    with open_test_profile_session(bucket_id):
+        secure_object_repository_for_bucket(bucket_id).save(
+            namespace=_WORK_UNIT_NAMESPACE,
+            object_key=_WORK_UNIT_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=now(),
+            payload=b'{"status":"invalid work-unit catalogue envelope"',
+        )
+    return bucket_id
 
 
 def test_work_unit_load_failure_degrades_to_notice_not_refusal() -> None:
@@ -127,11 +153,12 @@ def test_work_unit_load_failure_degrades_to_notice_not_refusal() -> None:
     # the whole surface — refusing left a behind-but-fresh taxpayer (the
     # regularizar-atrasos persona) unable to answer "what have I missed".
     from ....core.json_contract import NoticeSeverity
-    from .._overview_evidence import local_modelo_work_units
+    from ...overview_evidence_composition import local_modelo_work_units
 
-    _persist_invalid_work_unit_catalogue_payload(_BUCKET_ID)
+    bucket_id = _persist_invalid_work_unit_catalogue_payload()
 
-    units, notice = local_modelo_work_units(_BUCKET_ID)
+    with open_test_profile_session(bucket_id):
+        units, notice = local_modelo_work_units(bucket_id)
     assert units == ()
     assert notice is not None
     assert notice.code == "overview.work_units_degraded"
@@ -142,9 +169,9 @@ def test_backlog_renders_despite_work_unit_load_failure() -> None:
     # End-to-end: with the work-unit load forced to fail, the backlog still
     # renders (exit 0) from the deadline schedule and surfaces the degradation
     # line, rather than exiting non-zero with a "persisted work state" refusal.
-    _persist_invalid_work_unit_catalogue_payload(_BUCKET_ID)
+    _persist_invalid_work_unit_catalogue_payload()
 
-    result = invoke_cached_cli(
+    result = _invoke(
         ["app", "overview", "backlog", "--from", "2026-01-01", "--to", "2026-12-31", "--allow-incomplete"],
     )
     assert result.exit_code == 0, result.output

@@ -1,10 +1,19 @@
 modelo:
   schema:
     '193':
+      binding:
+        modelo-193-123-base-anual:
+          label: Éves adólevonási és adóelőleg-alap · 123-as nyomtatvány, 06. mező
+        modelo-193-123-retenciones-anual:
+          label: Éves adólevonások és adóelőlegek · 123-as nyomtatvány, 09. mező
+        modelo-193-perceptor-rows-base-total:
+          label: A kedvezményezettek adólevonási és adóelőleg-alapja összesen
+        modelo-193-perceptor-rows-retenciones-total:
+          label: A kedvezményezettek adólevonásai és adóelőlegei összesen
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            label: A levonások és előlegfizetések alapja
+            label: A levonások és adóelőlegek alapja
           declaracion-anterior-numero:
             label: A korábbi bevallás azonosító száma
           declaracion-complementaria:
@@ -32,7 +41,7 @@ modelo:
           gastos-total-declarante:
             label: Levonható költségek (35/2006 törvény 26.1.a cikk)
           payee-base-retenciones-193:
-            label: A levonások és előlegfizetések alapja
+            label: A levonások és adóelőlegek alapja
           payee-ceuta-melilla-clave:
             label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
           payee-clave-codigo:
@@ -63,8 +72,6 @@ modelo:
             label: A BEVALLÓ JELLEGE
           payee-naturaleza-percepcion:
             label: JELLEG
-          payee-nif:
-            label: A kedvezményezett adószáma
           payee-nif-pagador-anterior:
             label: AZ ELŐZŐ KIFIZETŐ NIF SZÁMA
           payee-numero-orden-193:
@@ -84,7 +91,7 @@ modelo:
           payee-reducciones-193:
             label: Csökkentések összege
           payee-retenciones-193:
-            label: Forrásadó és részletfizetés
+            label: Levonások és adóelőlegek
           payee-retenciones-forales-araba:
             label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
               Tanácsa
@@ -100,27 +107,72 @@ modelo:
             label: KÓD TÍPUSA
           payee-tipo-percepcion:
             label: A juttatás típusa
-          perc-nif-representante:
-            label: A törvényes képviselő adószáma
-          representante-legal-nif:
-            label: A törvényes képviselő adószáma
           retenciones-ingresadas-total:
             label: BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
           retenciones-ingresos-a-cuenta:
-            label: Forrásadó és részletfizetés
+            label: Levonások és adóelőlegek
           total-perceptores-count:
             label: A KEDVEZMÉNYEZETTEK SZÁMA
       construct:
         modelo-193-annual-summary:
           field:
-            title: 193-as nyomtatvány, tőkejövedelem levonásainak éves összesítése
+            title: Modelo 193 nyomtatvány, tőkejövedelem levonásainak éves összesítése
       field:
         official_name: Modelo 193. Adatszolgáltatási bevallás. Egyes tőkejövedelmekre
           és egyes jövedelmekre vonatkozó adóelőleg-levonások és -befizetések. Éves
           összesítő.
         title: Tőkejövedelmek adóelőleg-levonásának éves összesítője
+      form:
+        context:
+          ejercicio:
+            heading: Adóév
+          nif:
+            heading: A bevalló adóazonosítója
+          nombre:
+            heading: Név vagy cégnév
+        page:
+          gastos:
+            heading: 'Melléklet: költségkimutatás'
+          perceptores-1:
+            heading: Kedvezményezettek jegyzéke · 1
+          perceptores-2:
+            heading: Kedvezményezettek jegyzéke · 2
+          perceptores-3:
+            heading: Kedvezményezettek jegyzéke · 3
+          resumen:
+            heading: Összesítő lap
+        section:
+          contacto:
+            heading: Kapcsolattartó
+          declaracion:
+            heading: A bevallás azonosítója és típusa
+          declarante:
+            heading: Bevalló és adóév
+          gastos:
+            heading: Kezelési és letéti költségek
+          identificacion:
+            heading: A kedvezményezett azonosítása
+          importes:
+            heading: Juttatások és adólevonások
+          operacion:
+            heading: Az ügylet azonosítása
+          prestamos:
+            heading: Értékpapír-kölcsönök és egyéb adatok
+          rendimiento:
+            heading: Jövedelem és értékpapírszámla
+          territorio:
+            heading: Területi megoszlás
+          totales:
+            heading: A bevallásban szereplő adatok összesítése
       revision:
         '2022':
+          casilla:
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: A törvényes képviselő NIF-azonosítója
+            x-e1in4opedpkmc:
+              label: A jövedelemszerző NIF-azonosítója
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: A törvényes képviselő NIF-azonosítója
           field:
             label: 193-as modelo, 2022. adóév
         '2023':
@@ -129,273 +181,273 @@ modelo:
         '2024':
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: A 193-as nyomtatvány bevallói rekordjában bevallott végösszeg.
+              help: A Modelo 193 nyomtatvány bevallói rekordjában bevallott végösszeg.
                 A nyomtatvány egész és tizedes részre bontja.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 193-es nyomtatvány 121. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 121. rovata, 2024. adóév.
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
-              help: A 193-as nyomtatvány bevallói rekordjában bevallott végösszeg.
+              help: A Modelo 193 nyomtatvány bevallói rekordjában bevallott végösszeg.
                 A nyomtatvány egész és tizedes részre bontja.
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
-              help: A 193-es nyomtatvány 235. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 235. rovata, 2024. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
-              help: A 193-es nyomtatvány 108-120. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 108-120. rovata, 2024. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
-              help: A 193-es nyomtatvány 123-135. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 123-135. rovata, 2024. adóév.
               label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: A 193-es nyomtatvány 68-107. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 68-107. rovata, 2024. adóév.
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: A 193-es nyomtatvány 59-67. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 59-67. rovata, 2024. adóév.
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
-              help: A 193-es nyomtatvány 175-189. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 175-189. rovata, 2024. adóév.
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: A 193-as nyomtatvány bevallói rekordjában bevallott végösszeg.
+              help: A Modelo 193 nyomtatvány bevallói rekordjában bevallott végösszeg.
                 A nyomtatvány egész és tizedes részre bontja.
             x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: A 193-es nyomtatvány 122. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 122. rovata, 2024. adóév.
               label: JUTTATÁS TÍPUSA
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: A 193-es nyomtatvány 136-144. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 136-144. rovata, 2024. adóév.
             x-ctgn6t3f5pkmqs3fe9q6a:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-ctgn6t3f5pn6ipg:
-              help: A 193-es nyomtatvány 18-26. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 18-26. rovata, 2024. adóév.
               label: AZ ADÓZÓ NIF SZÁMA
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
-              help: A 193-es nyomtatvány 27-35. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 27-35. rovata, 2024. adóév.
               label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-ctgn6t3f5pn6urb2e9ig:
-              help: A 193-es nyomtatvány 36-75. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 36-75. rovata, 2024. adóév.
               label: AZ ADÓZÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY MEGNEVEZÉSE
             x-e1in4opec9gn6p8:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opecdinat315lmmar39dhm62:
-              help: A 193-es nyomtatvány 314. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 314. rovata, 2024. adóév.
             x-e1in4opecdm62tj5:
-              help: A 193-es nyomtatvány 92. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 92. rovata, 2024. adóév.
             x-e1in4opecdm62tj55lhmup39ctng:
-              help: A 193-es nyomtatvány 79. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 79. rovata, 2024. adóév.
             x-e1in4opecdm62tj55lmmasj3c5i6u:
-              help: A 193-es nyomtatvány 339. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 339. rovata, 2024. adóév.
             x-e1in4opecdnm8qb7dsmm6tb5dpq62:
-              help: A 193-es nyomtatvány 97-116. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 97-116. rovata, 2024. adóév.
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
-              help: A 193-es nyomtatvány 80-91. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 80-91. rovata, 2024. adóév.
             x-e1in4opecdnmqs35dppm2or9dtn6aso:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: A 193-es nyomtatvány 118-121. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 118-121. rovata, 2024. adóév.
             x-e1in4opecpim6q315li6atj5dpjmu:
-              help: A 193-es nyomtatvány 331-338. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 331-338. rovata, 2024. adóév.
             x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
-              help: A 193-es nyomtatvány 209-216. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 209-216. rovata, 2024. adóév.
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
-              help: A 193-es nyomtatvány 217-224. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 217-224. rovata, 2024. adóév.
             x-e1in4opectgn4obeehkm2so:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opedlim8qb1chnn4:
-              help: A 193-es nyomtatvány 76. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 76. rovata, 2024. adóév.
               label: KÖZVETÍTŐ KEDVEZMÉNYEZETT
             x-e1in4opedpgn8tbic5m6auj1:
-              help: A 193-es nyomtatvány 93-94. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 93-94. rovata, 2024. adóév.
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
-              help: A 193-es nyomtatvány 208. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 208. rovata, 2024. adóév.
             x-e1in4opedpkmc:
-              help: A 193-es nyomtatvány 18-26. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 18-26. rovata, 2024. adóév.
               label: A KEDVEZMÉNYEZETT NIF SZÁMA
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
-              help: A 193-es nyomtatvány 322-330. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 322-330. rovata, 2024. adóév.
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
-              help: A 193-es nyomtatvány 27-35. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 27-35. rovata, 2024. adóév.
               label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-e1in4opedpnmqojick:
-              help: A 193-es nyomtatvány 36-75. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 36-75. rovata, 2024. adóév.
               label: A KEDVEZMÉNYEZETT VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
             x-e1in4opedpqmqpbidsmmusj4cln0:
-              help: A 193-es nyomtatvány 315-321. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 315-321. rovata, 2024. adóév.
             x-e1in4opee1gmero:
-              help: A 193-es nyomtatvány 95. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 95. rovata, 2024. adóév.
             x-e1in4opee1imsobcd5t62or9dtn6aso:
-              help: A 193-es nyomtatvány 182-192. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 182-192. rovata, 2024. adóév.
             x-e1in4opee1imsp39cln78p8:
-              help: A 193-es nyomtatvány 117. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 117. rovata, 2024. adóév.
             x-e1in4opee1in4or5e1hmirreclpg:
-              help: A 193-es nyomtatvány 123-135. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 123-135. rovata, 2024. adóév.
               label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
             x-e1in4opee1nn4or5dpq62qj5:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee1p6utj9dphmio8:
-              help: A 193-es nyomtatvány 77-78. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 77-78. rovata, 2024. adóév.
             x-e1in4opee9im8tb3cdkmurj5ec:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ec:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
-              help: A 193-es nyomtatvány 249-261. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 249-261. rovata, 2024. adóév.
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
                 BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opeehkn0rpdcdnm8qb7ds:
-              help: A 193-es nyomtatvány 96. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 96. rovata, 2024. adóév.
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
-              help: A 193-es nyomtatvány 122. rovata, 2024. adóév.
+              help: A Modelo 193 nyomtatvány 122. rovata, 2024. adóév.
               label: JUTTATÁS TÍPUSA
           field:
             label: 193-as modelo, 2024. adóév
         2025-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: A 193-as nyomtatvány bevallói rekordjában bevallott végösszeg.
+              help: A Modelo 193 nyomtatvány bevallói rekordjában bevallott végösszeg.
                 A nyomtatvány egész és tizedes részre bontja.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 193-es nyomtatvány 121. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 121. rovata, 2025. adóév.
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
-              help: A 193-as nyomtatvány bevallói rekordjában bevallott végösszeg.
+              help: A Modelo 193 nyomtatvány bevallói rekordjában bevallott végösszeg.
                 A nyomtatvány egész és tizedes részre bontja.
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
-              help: A 193-es nyomtatvány 235. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 235. rovata, 2025. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
-              help: A 193-es nyomtatvány 108-120. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 108-120. rovata, 2025. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6ubb1dpq6asj9dtp0:
-              help: A 193-es nyomtatvány 123-135. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 123-135. rovata, 2025. adóév.
               label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: A 193-es nyomtatvány 68-107. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 68-107. rovata, 2025. adóév.
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: A 193-es nyomtatvány 59-67. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 59-67. rovata, 2025. adóév.
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
-              help: A 193-es nyomtatvány 175-189. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 175-189. rovata, 2025. adóév.
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: A 193-as nyomtatvány bevallói rekordjában bevallott végösszeg.
+              help: A Modelo 193 nyomtatvány bevallói rekordjában bevallott végösszeg.
                 A nyomtatvány egész és tizedes részre bontja.
             x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: A 193-es nyomtatvány 122. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 122. rovata, 2025. adóév.
               label: JUTTATÁS TÍPUSA
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: A 193-es nyomtatvány 136-144. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 136-144. rovata, 2025. adóév.
             x-ctgn6t3f5pkmqs3fe9q6a:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-ctgn6t3f5pn6ipg:
-              help: A 193-es nyomtatvány 18-26. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 18-26. rovata, 2025. adóév.
               label: AZ ADÓZÓ NIF SZÁMA
             x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
-              help: A 193-es nyomtatvány 27-35. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 27-35. rovata, 2025. adóév.
               label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-ctgn6t3f5pn6urb2e9ig:
-              help: A 193-es nyomtatvány 36-75. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 36-75. rovata, 2025. adóév.
               label: AZ ADÓZÓ VEZETÉKNEVE ÉS UTÓNEVE VAGY MEGNEVEZÉSE
             x-e1in4opec9gn6p8:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opecdinat315lmmar39dhm62:
-              help: A 193-es nyomtatvány 314. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 314. rovata, 2025. adóév.
             x-e1in4opecdm62tj5:
-              help: A 193-es nyomtatvány 92. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 92. rovata, 2025. adóév.
             x-e1in4opecdm62tj55lhmup39ctng:
-              help: A 193-es nyomtatvány 79. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 79. rovata, 2025. adóév.
             x-e1in4opecdm62tj55lmmasj3c5i6u:
-              help: A 193-es nyomtatvány 339. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 339. rovata, 2025. adóév.
             x-e1in4opecdnm8qb7dsmm6tb5dpq62:
-              help: A 193-es nyomtatvány 97-116. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 97-116. rovata, 2025. adóév.
             x-e1in4opecdnm8qb7dsmmarb9ednn4:
-              help: A 193-es nyomtatvány 80-91. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 80-91. rovata, 2025. adóév.
             x-e1in4opecdnmqs35dppm2or9dtn6aso:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: A 193-es nyomtatvány 118-121. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 118-121. rovata, 2025. adóév.
             x-e1in4opecpim6q315li6atj5dpjmu:
-              help: A 193-es nyomtatvány 331-338. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 331-338. rovata, 2025. adóév.
             x-e1in4opecpim6q315lkmsqb3d5niqs3iclpn8obdds:
-              help: A 193-es nyomtatvány 209-216. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 209-216. rovata, 2025. adóév.
             x-e1in4opecpim6q315lr6arj3d5mmipbeehniqs3iclpn8obdds:
-              help: A 193-es nyomtatvány 217-224. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 217-224. rovata, 2025. adóév.
             x-e1in4opectgn4obeehkm2so:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4oped5pmirg:
-              help: A 193-es nyomtatvány 193-204. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 193-204. rovata, 2025. adóév.
               label: ISIN-KÓD
             x-e1in4opedlim8qb1chnn4:
-              help: A 193-es nyomtatvány 76. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 76. rovata, 2025. adóév.
               label: KÖZVETÍTŐ KEDVEZMÉNYEZETT
             x-e1in4opedpgn8tbic5m6auj1:
-              help: A 193-es nyomtatvány 93-94. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 93-94. rovata, 2025. adóév.
             x-e1in4opedpgn8tbic5m6auj15li6aorcc5p62rjkck:
-              help: A 193-es nyomtatvány 208. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 208. rovata, 2025. adóév.
             x-e1in4opedpkmc:
-              help: A 193-es nyomtatvány 18-26. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 18-26. rovata, 2025. adóév.
               label: A KEDVEZMÉNYEZETT NIF SZÁMA
             x-e1in4opedpkmcbbgc5jm2p3fe8mm2rjkclp6irri:
-              help: A 193-es nyomtatvány 322-330. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 322-330. rovata, 2025. adóév.
             x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
-              help: A 193-es nyomtatvány 27-35. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 27-35. rovata, 2025. adóév.
               label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-e1in4opedpnmqojick:
-              help: A 193-es nyomtatvány 36-75. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 36-75. rovata, 2025. adóév.
               label: A KEDVEZMÉNYEZETT VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
             x-e1in4opedpqmqpbidsmmusj4cln0:
-              help: A 193-es nyomtatvány 315-321. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 315-321. rovata, 2025. adóév.
             x-e1in4opee1gmero:
-              help: A 193-es nyomtatvány 95. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 95. rovata, 2025. adóév.
             x-e1in4opee1imsobcd5t62or9dtn6aso:
-              help: A 193-es nyomtatvány 182-192. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 182-192. rovata, 2025. adóév.
             x-e1in4opee1imsp39cln78p8:
-              help: A 193-es nyomtatvány 117. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 117. rovata, 2025. adóév.
             x-e1in4opee1in4or5e1hmirreclpg:
-              help: A 193-es nyomtatvány 123-135. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 123-135. rovata, 2025. adóév.
               label: AZ ELŐZŐ BEVALLÁS AZONOSÍTÓ SZÁMA
             x-e1in4opee1nn4or5dpq62qj5:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee1p6utj9dphmio8:
-              help: A 193-es nyomtatvány 77-78. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 77-78. rovata, 2025. adóév.
             x-e1in4opee9im8tb3cdkmurj5ec:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ec:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
-              help: A 193-es nyomtatvány 249-261. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 249-261. rovata, 2025. adóév.
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
                 BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
-              help: A 193-es nyomtatványon bevallott kedvezményezetti adat. A nyomtatvány
-                az összegeket egész és tizedes részre bontja.
+              help: A Modelo 193 nyomtatványon bevallott kedvezményezetti adat. A
+                nyomtatvány az összegeket egész és tizedes részre bontja.
             x-e1in4opeehkn0rpdcdnm8qb7ds:
-              help: A 193-es nyomtatvány 96. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 96. rovata, 2025. adóév.
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
-              help: A 193-es nyomtatvány 122. rovata, 2025. adóév.
+              help: A Modelo 193 nyomtatvány 122. rovata, 2025. adóév.
               label: JUTTATÁS TÍPUSA
           field:
             label: 193-as modelo, 2025. adóévtől

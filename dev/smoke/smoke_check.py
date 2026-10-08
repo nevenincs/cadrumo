@@ -156,8 +156,9 @@ def check_mcp_script() -> None:
     result = _run(MCP_SCRIPT, ["--help"])
     if result.returncode != 0:
         _fail(f"{MCP_SCRIPT} --help exited {result.returncode}: {result.stderr.strip()[:400]}")
-    if "--profile-secrets-file" not in result.stdout:
-        _fail(f"{MCP_SCRIPT} --help does not offer --profile-secrets-file: {result.stdout.strip()[:200]}")
+    for option in ("--profile-id", "--credential-reference"):
+        if option not in result.stdout:
+            _fail(f"{MCP_SCRIPT} --help does not offer {option}: {result.stdout.strip()[:200]}")
     imported = asyncio.run(
         _run_async(
             [sys.executable, "-c", "from cadrumo_harness.mcp.server import serve; assert callable(serve)"],

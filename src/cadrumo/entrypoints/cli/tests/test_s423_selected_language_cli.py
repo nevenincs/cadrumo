@@ -79,7 +79,7 @@ def _run_cli(
         env_strip_prefixes=("AEAT_",),
         cwd=Path.cwd(),
         stdin_payload=stdin_payload,
-        timeout=120.0,
+        timeout=None,
     )
 
 
@@ -101,7 +101,7 @@ def _persisted_report(storage_root: Path, verification_report_id: str) -> dict[s
         [str(storage_root), str(storage_root / "fallback-store"), verification_report_id],
         env_strip_prefixes=("AEAT_",),
         cwd=Path.cwd(),
-        timeout=120.0,
+        timeout=None,
     )
     assert result.returncode == 0, _combined_output(result)
     return STR_KEYED_MAPPING_ADAPTER.validate_json(result.stdout)

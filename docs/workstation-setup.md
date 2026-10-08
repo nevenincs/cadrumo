@@ -121,12 +121,18 @@ Run `aeat config check` again after each change to confirm the gap is closed.
 
 ## Connect an AI assistant
 
-The Cadrumo package includes `cadrumo-mcp`, the Model Context Protocol (MCP)
-server that lets an AI assistant operate the same gated commands as the CLI.
-It needs no separate install. Run `cadrumo-mcp --help` to confirm it is on
-your path, then follow [Connect an agent](how-to/connect-an-agent.md) to
-register it with your assistant. On Windows, install with `pip` or
-`uv tool install` to get the command on your path.
+Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an agent
+to registered operations through the local runtime and binds each connection
+to an explicit profile ID. Run `cadrumo-mcp --help` to confirm it is on your
+path. In a source checkout, check the installed entrypoint with:
+
+```bash
+uv sync
+uv run --no-sync cadrumo-mcp --help
+```
+
+[Connect an agent](how-to/connect-an-agent.md) shows profile-bound registration
+and the grant request flow.
 
 ## Next steps
 

@@ -72,14 +72,16 @@ class TestCalcTimeRevisionAssertion:
         with override_settings(cadrumo_output_language="en"):
             msg = resolve_error_message(exc_info.value)
         assert "2022" in msg, "message must name the stale (pinned) revision"
-        assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
-        assert "re-create" in msg.lower() or "recreate" in msg.lower() or "re-create" in msg
+        assert "2026-hasta-01-y-1t" in msg, "message must name the law-determined revision"
+        assert "create the declaration again" in msg.lower(), (
+            "message must tell the filer how to move to the current version"
+        )
 
     def test_calc_time_assertion_passes_for_correctly_pinned_revision(
         self, authority_operation: PinnedAuthorityOperation
     ) -> None:
         """The law-determined pin passes the resolver assertion unchanged."""
-        correct_revision_id = "2026-y-siguientes"
+        correct_revision_id = "2026-hasta-01-y-1t"
         correct_unit = _work_unit(revision_id=correct_revision_id)
 
         snapshot = resolve_registry_snapshot_for_work_unit(correct_unit, operation=authority_operation)
@@ -100,14 +102,16 @@ class TestRevisionForWorkUnitAssertion:
         with override_settings(cadrumo_output_language="en"):
             msg = resolve_error_message(exc_info.value)
         assert "2022" in msg, "message must name the stale (pinned) revision"
-        assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
-        assert "re-create" in msg.lower()
+        assert "2026-hasta-01-y-1t" in msg, "message must name the law-determined revision"
+        assert "create the declaration again" in msg.lower(), (
+            "message must tell the filer how to move to the current version"
+        )
 
     def test_revision_for_work_unit_passes_for_correctly_pinned_revision(
         self, authority_operation: PinnedAuthorityOperation
     ) -> None:
         """The calculation-input revision projection accepts a correct pin."""
-        correct_revision_id = "2026-y-siguientes"
+        correct_revision_id = "2026-hasta-01-y-1t"
         correct_unit = _work_unit(revision_id=correct_revision_id)
 
         revision = _revision_for_work_unit(correct_unit, operation=authority_operation)

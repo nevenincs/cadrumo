@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#sync-control-surface'
 date: '2026-08-08'
-modified: '2026-08-15'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:4bbb2d00f5fa368a9b6de5bc71f989b007fd377f832272276e800182906c0238'
+body_hash: 'sha256:1b95bdfee6370bcf335304d94b4ec3021023adc69a27b25a48baca16ac8faf6d'
 related:
   - '[[2026-08-08-sync-control-surface-reference]]'
   - '[[2026-07-25-censal-profile-autofill-adr]]'
@@ -88,9 +88,10 @@ information a preview would need — and each computes it too late to help.
 
 ## Constraints
 
-- A dry-run for Sheets requires reading the current remote state to diff
-  against, so it costs a network round trip and needs the read capability, not
-  only the export capability. It cannot be offered offline.
+- Sheets preview describes a new immutable publication from one local snapshot,
+  including destination, included records, exclusions and findings. It does not
+  read existing review cells or notes. Destination admission is a separate
+  scoped metadata check; an offline inventory cannot claim live admission.
 - Progress reporting has no channel. The CLI contract is a single terminal JSON
   envelope with a notices list; there is no streaming surface, and inventing one
   is a decision about the envelope itself rather than about sync.
@@ -108,12 +109,12 @@ a caller cannot mistake a preview for a commit.
 **The payload differs by write shape, and the difference is declared, not
 incidental.**
 
-For the Sheets export — an idempotent whole-surface overwrite — the preview
-answers *what would this clear and rewrite*: the per-tab cell ranges the plan
-would clear, the count of cells whose value would change against the current
-read-back, and any foreign content the apply would refuse on. The parity
-machinery the `verify` verb already owns supplies the comparison; the export
-preview reuses it rather than growing a second differ.
+For Sheets, the authorized 2026-10-05 outbound-review amendment replaces the
+overwrite contract with new-version publication. Preview describes the selected
+revision, baseline, ledger/evidence inventory, missing data and target root.
+Re-export creates a new document and preserves existing user work. Public
+verify is retired; bounded developer acceptance does not supply a general
+remote-cell diff route.
 
 For the filed sweep — an unconditional upsert over records the operator may
 already have calculated against — the preview answers *which previously captured
@@ -139,10 +140,9 @@ be the provenance authority for the thing that writes it.
 
 **Cancellation is ruled as interruption-safety, not as a cancel control.** Each
 sweep must leave a consistent store when interrupted. The filed sweep already
-satisfies this — each observation is its own atomic upsert. The Sheets apply
-does not: an interruption between the clear and the update leaves the operator's
-spreadsheet emptied. That window is a defect this record names, and closing it
-is a precondition of any future cancel affordance.
+satisfies this — each observation is its own atomic upsert. The historical Sheets clear/update path does not. Its replacement records
+partial/uncertain publication and reconciles only that in-flight publication,
+without clearing or rewriting an earlier published review copy.
 
 ## Rationale
 
@@ -186,3 +186,7 @@ remembers what it did.
 - Progress reporting is deliberately unruled. It needs a decision about whether
   the CLI envelope grows a streaming channel, which is a contract-level question
   this record has no standing to answer.
+
+## Amendment 2026-10-05 - outbound review
+
+The product owner's Session 01 instruction authorizes the scoped wording changes above, governed by 2026-10-05-google-outbound-review-adr. Earlier descriptions of then-current behavior remain historical evidence, not permission to retain retired routes. Other commitments remain in force. This amendment records architecture, not completed implementation or live acceptance.

@@ -3,13 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-29'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:390cd7dd15ef094ecf529fba5e13e31b33484a02bdb9dfb1279cb265c1cd49d4'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+body_hash: 'sha256:e6938964a7611aaa5712e660b2e26896fa28ad93db39bebc0450897a0600015c'
+related: []
 ---
 
 # `registry-completeness-closure` audit: `gate staleness sweep`
@@ -23,6 +20,18 @@ The registry itself is healthy. The conformance report renders 48 rows, every on
 `registry_validated=true`, so the bundled authority loads and validates at HEAD.
 None of the 53 failures was a registry-data defect. They fall into three classes,
 and the classes matter more than the count.
+
+## Scope
+
+Compare current registry gate results with their recorded subjects after moves, withdrawals, and follow-up corrections.
+
+## Findings
+
+The sweep found stale subjects alongside genuine open work; the gate still had eight failures at the measured checkpoint, while several previously reported holes were either resolved or based on incorrect assumptions.
+
+## Recommendations
+
+Update only moved or withdrawn gate subjects, retain genuine red items, and rerun the closure checks against a stable measured tree.
 
 ## Class 1 -- a change landed without sweeping its dependents
 
@@ -372,14 +381,7 @@ operation date.
 
 ### Collateral: the sanctioned locale tooling was unreachable
 
-`dev.locales` -- the ONLY sanctioned way to touch the catalogues -- would not
-start: `dev/locales/_colanding.py` and two of its test modules still imported from
-`cadrumo.application.operator_surface`, whose namespace the inert-namespace
-campaign has emptied. Repointed to the canonical defining modules (`contract`,
-`models`, `errors`, `help`, `help_models`). The rest of that lane stays red on the
-same class of breakage (`operator_surface._contract`, `contribuyente.CCAA`) and
-belongs to the campaign that moved them. No locale failure references modelo 270,
-and the moved keys resolve in all four catalogues.
+Repointed to the canonical defining modules (`contract`, `models`, `errors`, `help`, `help_models`). The rest of that lane stays red on the same class of breakage (`operator_surface._contract`, `contribuyente.CCAA`) and belongs to the campaign that moved them. No locale failure references modelo 270, and the moved keys resolve in all four catalogues.
 
 ### Standing caution on measurement
 
@@ -392,11 +394,7 @@ law-coverage gate.
 
 ### Generated export-tree enrolment: two owed trees, one wrong-year pairing
 
-Two enrolled rows in `dev/registry/tests/test_generated_export_trees.py` were
-red and both looked like stale enrolment. Neither was. Nothing was deleted --
-`git status` is clean on both revision directories and both `export/` trees are
-absent at HEAD -- and the rows carry the deliberate "enrolled with the layout,
-not after it" discipline that the m347 entry above them explains.
+Neither was. Nothing was deleted -- `git status` is clean on both revision directories and both `export/` trees are absent at HEAD -- and the rows carry the deliberate "enrolled with the layout, not after it" discipline that the m347 entry above them explains.
 
 `m200-2024` failed with a source-authority refusal rather than an absent tree:
 the row paired revision `2024` with `aeat-dr-200-2025`. That source carries
@@ -458,18 +456,7 @@ reviewed authored layout.
 `m200-2025-y-siguientes` carries neither shape (0/0), so it alone has no
 duplicate-ownership conflict.
 
-**There is no publication route into the shipped registry.** The only references
-to `publish_validated_generated_export_tree` are its definition in
-`_tree_publication.py`, the pipeline re-export, and
-`dev/registry/tests/test_generated_tree_publication.py`, which drives it against
-temporary fixtures. No CLI verb, script or dev entry point publishes a generated
-tree into `src/`. The check module additionally forbids itself a publisher
-surface by gate (`test_check_module_has_no_migration_reader_or_publisher_surface`),
-so the separation is deliberate -- but the operator-facing half of it was never
-built. The enrolment gate's own instruction, "publish it through the generator's
-own publication authority", currently names a route that does not exist. That,
-rather than an unrendered tree, is why both rows have stayed owed, and it is the
-gap to close before either row can go green.
+No CLI verb, script or dev entry point publishes a generated tree into `src/`. The check module additionally forbids itself a publisher surface by gate (`test_check_module_has_no_migration_reader_or_publisher_surface`), so the separation is deliberate -- but the operator-facing half of it was never built. The enrolment gate's own instruction, "publish it through the generator's own publication authority", currently names a route that does not exist. That, rather than an unrendered tree, is why both rows have stayed owed, and it is the gap to close before either row can go green.
 
 ### The dev/registry unit lane, measured module by module
 

@@ -15,11 +15,17 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...deadlines.festivos import CalendarCCAA
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    BooleanTokenCase,
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    required_mapping_boolean,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "calendar CCAA catalogue"
@@ -111,15 +117,6 @@ class CalendarCcaaCatalogue:
             ) from exc
 
 
-def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
-    if value == "true":
-        return True
-    if value == "false":
-        return False
-    raise RegistryValidationError(f"calendar CCAA catalogue {key!r} must be true or false")
-
-
 def _integer(entries: Mapping[str, str], key: str) -> int:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     try:
@@ -131,75 +128,17 @@ def _integer(entries: Mapping[str, str], key: str) -> int:
     return parsed
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("calendar CCAA entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate calendar CCAA catalogue key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("deadline calendar territory fact must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("calendar CCAA catalogue requires an explicit authority operation or scope")
-
-
-def _selected_entries(
-    *,
-    effective_date: date | None,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_entries(coordinate)
-    return _resolve_entries(effective_date=coordinate, authority=selected)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
     definitions: list[CalendarCcaaDefinition] = []
     for raw_code in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
-        code = raw_code.upper()
-        if code != raw_code or not code.startswith("ES-") or len(code) != 5:
-            raise RegistryValidationError(f"calendar CCAA code {raw_code!r} is not canonical ISO 3166-2:ES syntax")
-        suffix = code[3:]
-        if not suffix.isalpha() or not suffix.isupper():
-            raise RegistryValidationError(f"calendar CCAA code {raw_code!r} is not canonical ISO 3166-2:ES syntax")
-        prefix = f"{_PREFIX}{code}."
-        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != code:
-            raise RegistryValidationError(f"calendar CCAA code {code!r} declares a mismatched value")
-        member_name = required_mapping_entry(entries, f"{prefix}member_name", subject=_ENTRY_SUBJECT).upper()
-        definitions.append(
-            CalendarCcaaDefinition(
-                token=CalendarCCAA.from_registry(code),
-                member_name=member_name,
-                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                territory_kind=required_mapping_entry(entries, f"{prefix}territory_kind", subject=_ENTRY_SUBJECT),
-            ),
-        )
-    tokens = [definition.token for definition in definitions]
-    if len(tokens) != len(set(tokens)):
-        raise RegistryValidationError("calendar CCAA catalogue contains duplicate codes")
-    member_names = [definition.member_name for definition in definitions]
-    if len(member_names) != len(set(member_names)):
-        raise RegistryValidationError("calendar CCAA catalogue contains duplicate member names")
+        definitions.append(_territory_definition(entries, raw_code))
+    _validate_unique_territory_definitions(definitions)
 
     tax_residence_fact_id = required_mapping_entry(
         entries, f"{_RELATION_PREFIX}tax_residence_fact_id", subject=_ENTRY_SUBJECT
@@ -213,8 +152,18 @@ def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
         raise RegistryValidationError(
             "calendar CCAA catalogue relation count does not match its declared territory order",
         )
-    includes_foral_territories = _boolean(entries, f"{_RELATION_PREFIX}includes_foral_territories")
-    includes_autonomous_cities = _boolean(entries, f"{_RELATION_PREFIX}includes_autonomous_cities")
+    includes_foral_territories = required_mapping_boolean(
+        entries,
+        f"{_RELATION_PREFIX}includes_foral_territories",
+        subject=_ENTRY_SUBJECT,
+        case=BooleanTokenCase.CASE_INSENSITIVE,
+    )
+    includes_autonomous_cities = required_mapping_boolean(
+        entries,
+        f"{_RELATION_PREFIX}includes_autonomous_cities",
+        subject=_ENTRY_SUBJECT,
+        case=BooleanTokenCase.CASE_INSENSITIVE,
+    )
     return CalendarCcaaCatalogue(
         definitions=tuple(definitions),
         tax_residence_fact_id=tax_residence_fact_id,
@@ -227,6 +176,33 @@ def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
             expected_count=tax_residence_common_regime_count,
         ),
     )
+
+
+def _territory_definition(entries: Mapping[str, str], raw_code: str) -> CalendarCcaaDefinition:
+    code = raw_code.upper()
+    if code != raw_code or not code.startswith("ES-") or len(code) != 5:
+        raise RegistryValidationError(f"calendar CCAA code {raw_code!r} is not canonical ISO 3166-2:ES syntax")
+    suffix = code[3:]
+    if not suffix.isalpha() or not suffix.isupper():
+        raise RegistryValidationError(f"calendar CCAA code {raw_code!r} is not canonical ISO 3166-2:ES syntax")
+    prefix = f"{_PREFIX}{code}."
+    if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != code:
+        raise RegistryValidationError(f"calendar CCAA code {code!r} declares a mismatched value")
+    return CalendarCcaaDefinition(
+        token=CalendarCCAA.from_registry(code),
+        member_name=required_mapping_entry(entries, f"{prefix}member_name", subject=_ENTRY_SUBJECT).upper(),
+        description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+        territory_kind=required_mapping_entry(entries, f"{prefix}territory_kind", subject=_ENTRY_SUBJECT),
+    )
+
+
+def _validate_unique_territory_definitions(definitions: list[CalendarCcaaDefinition]) -> None:
+    tokens = [definition.token for definition in definitions]
+    if len(tokens) != len(set(tokens)):
+        raise RegistryValidationError("calendar CCAA catalogue contains duplicate codes")
+    member_names = [definition.member_name for definition in definitions]
+    if len(member_names) != len(set(member_names)):
+        raise RegistryValidationError("calendar CCAA catalogue contains duplicate member names")
 
 
 def _tax_residence_territories(
@@ -263,21 +239,13 @@ def _tax_residence_territories(
     return MappingProxyType(relation)
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_catalogue(effective_date: date) -> CalendarCcaaCatalogue:
-    return _catalogue(_bundled_entries(effective_date))
-
-
 def resolve_calendar_ccaa_catalogue(
     *,
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> CalendarCcaaCatalogue:
     """Resolve the selected dated deadline-calendar territory catalogue."""
-    coordinate = effective_date or today_madrid()
-    if authority is None and governed_facts_in_scope() is None:
-        return _bundled_catalogue(coordinate)
-    return _catalogue(_selected_entries(effective_date=coordinate, authority=authority))
+    return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
 __all__ = [

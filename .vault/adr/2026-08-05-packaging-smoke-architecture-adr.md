@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#packaging-smoke-architecture'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:380a3f086106f2ea8e05e653df8d3c98dfe0640036304a80cd551d70e10173d4'
 related:
@@ -11,6 +11,7 @@ related:
   - "[[2026-06-28-product-packaging-research]]"
   - "[[2026-07-20-ci-speed-redesign-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-research]]"
+  - '[[2026-06-28-product-packaging-adr]]'
 ---
 
 # `packaging-smoke-architecture` adr: `Lane-form hierarchy for the packaging proof surface` | (**status:** `accepted`)

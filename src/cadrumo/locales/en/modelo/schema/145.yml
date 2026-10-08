@@ -7,6 +7,51 @@ modelo:
           Income Tax Regulations).
         title: IRPF. Withholdings on employment income. Notification of details to
           the payer
+      form:
+        authored2012:
+          column:
+            anio-adopcion:
+              heading: Adoption or fostering year
+            anio-nacimiento:
+              heading: Year of birth
+            ayuda-movilidad:
+              heading: Assistance from others or reduced mobility
+            computo-entero:
+              heading: Full allocation
+            convivencia-otros:
+              heading: Living with other descendants
+            discapacidad-grado:
+              heading: Degree of disability
+          page:
+            heading: Payer communication · 2012 design awaiting review
+          row:
+            ascendiente-1:
+              heading: Ascendant 1
+            ascendiente-2:
+              heading: Ascendant 2
+            descendiente-1:
+              heading: Descendant 1
+            descendiente-2:
+              heading: Descendant 2
+            descendiente-3:
+              heading: Descendant 3
+            descendiente-4:
+              heading: Descendant 4
+          section:
+            acuse:
+              heading: 7. Acknowledgement of receipt
+            ascendientes:
+              heading: 3. Ascendants
+            descendientes:
+              heading: 2. Children and other descendants
+            firma:
+              heading: 6. Communication date and signature
+            pensiones:
+              heading: 4. Spousal maintenance and child support
+            perceptor:
+              heading: 1. Recipient details
+            vivienda:
+              heading: 5. Main residence
       revision:
         2012-01-31-y-siguientes:
           casilla:

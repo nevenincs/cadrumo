@@ -13,14 +13,15 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from .....domain.contribuyente.inventory.records import (
     InventoryLedger,
     InventoryLedgerDocument,
-    InventoryLedgerError,
     MovementKind,
     MovementRecord,
     ValuationMethod,
 )
+from .....domain.contribuyente.inventory.valuation import compute_inventory_valuation
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository, record_movement
@@ -31,6 +32,10 @@ from ._inventory_acquisition_fixture import (
 _runtime_profile = default_bucket_runtime_profile_fixture()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def _validate_candidate(candidate: InventoryLedger) -> None:
+    compute_inventory_valuation(candidate)
 
 
 def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> MovementRecord:
@@ -64,6 +69,7 @@ def test_inventory_persistence_and_real_movement_append() -> None:
         "retail",
         _movement(MovementKind.PURCHASE, "2", "10", 1),
         year=2025,
+        validate_candidate=_validate_candidate,
     )
 
     assert len(updated.period_movements) == 1
@@ -105,7 +111,7 @@ def test_inventory_duplicate_movement_refusal_is_localized_and_structured() -> N
     )
 
     with pytest.raises(InventoryLedgerError) as exc_info:
-        record_movement("retail", movement, year=2025)
+        record_movement("retail", movement, year=2025, validate_candidate=_validate_candidate)
 
     assert exc_info.value.translated_message == "adapters.persistence.profile.inventory.errors.movement_already_exists"
     assert exc_info.value.context == {"movement_id": movement.movement_id}

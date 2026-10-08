@@ -125,7 +125,10 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
 
         wu_repo, cr_repo, _, vr_repo, bv_repo = repos
         work_unit = seed_work_unit(wu_repo, filing_year=2024)
-        # A NON-empty bucket ledger is the whole point. Against an empty one the
+        # A NON-empty bucket ledger is the whole point. The row is personal:
+        # it changes the catalogue basis without supplying an unrecorded
+        # business source that should correctly withhold verification.
+        # Against an empty one the
         # digest of a transient empty catalogue and the digest of the bucket's own
         # agree by accident, and the assertion below holds however the basis is
         # stamped.
@@ -143,7 +146,7 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
                 ports=_calculation_ports_130,
                 clock=T1,
             )
-        verify_revision(
+        report = verify_revision(
             revision.calculation_revision_id,
             revision=revision,
             work_unit=work_unit,
@@ -153,6 +156,7 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
             bucket_event_repository=bv_repo,
             clock=T2,
         )
+        assert report.granted_verificado_completo, report.findings
 
         stored = tuple(ModeloDraftRepository(bucket_id=work_unit.bucket_id).iter_drafts())
         assert len(stored) == 1
@@ -210,7 +214,7 @@ def _seed_one_bucket_transaction(bucket_id: str) -> None:
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "business_classification": BusinessClassification.BUSINESS,
+            "business_classification": BusinessClassification.PERSONAL,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#reconcile-value-comparison'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:fb58902d0527d256579a4cd308ee01d704e8d5b3ac28190894b402fe567e3531'
+modified: '2026-10-03'
+body_hash: 'sha256:a0db505743ec19809880f99b4b72cdc6b8054b1a4ec2e2faa2f0e01c573ff0df'
 related:
   - "[[2026-07-01-reconcile-value-comparison-research]]"
 ---
@@ -17,7 +17,7 @@ related:
 close the filing loop: pull the AEAT justificante (or read a local one) and confirm
 the filing matches what it computed. The research established that the compare is
 **identity-only** — `_reconcile_parsed_justificante`
-(`src/cadrumo/application/modelo/_reconcile.py`) diffs four header fields (`modelo`,
+ diffs four header fields (`modelo`,
 `ejercicio`, `period`, `tax_id`) and returns `MATCHES` / `MISMATCHES`, but never
 loads the calculation revision and never reconciles the receipt totals the parser
 already extracts. `verdict=matches` therefore means "this is a receipt for the right
@@ -38,7 +38,7 @@ implementation plan.
   registry-declared, build-validated `Mapping[Literal["ingresar","devolver"],
   CasillaId]` (`_schema.py`) mapping each receipt total kind to the revision's
   canonical **result** casilla. `calculation_result_summary`
-  (`src/cadrumo/application/modelo/_result_summary.py`) already consumes it to render
+   already consumes it to render
   `result_ingresar` / `result_devolver` rows from `revision.casilla_values`. The
   reconciler must reuse this map so the value it compares is the *same* canonical
   result the summary and export surfaces render — satisfying

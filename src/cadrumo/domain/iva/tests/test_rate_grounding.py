@@ -13,10 +13,10 @@ import pypdfium2 as pdfium
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.iva.schema import require_eu_member_state
 
-from ....core.corpus_text import normalise_corpus_text
 from ....core.resources.bundled_data import bundled_path
+from ....core.text_fold import normalise_corpus_text
+from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate
 from ..rates import load_iva_rate_table

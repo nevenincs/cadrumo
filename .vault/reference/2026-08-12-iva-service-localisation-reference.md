@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#iva-service-localisation'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8cd6d286f3806796b249f461399387f42ee424bc35178be0bc4d01619c7b571e'
+body_hash: 'sha256:a28200ed20ab87397aea1f638d365f981c87d0c39b90a37117283b36d6081fd3'
 related: []
 ---
 
@@ -21,11 +21,7 @@ services limb is not, and one of them under-declares.
 
 ### The citation table omits every general place-of-supply article
 
-`src/cadrumo/domain/iva/_supply_nature.py` carries `STATUTORY_CITATIONS`, the
-closed vocabulary of LIVA articles an invoice may print under RD 1619/2012
-art. 6.1.j, each row declaring what citing it establishes about the nature of the
-supply. Seven rows ship. Arts. 68, 69 and 70 -- the general place-of-supply rules
-for goods and services respectively -- are absent.
+Seven rows ship. Arts. 68, 69 and 70 -- the general place-of-supply rules for goods and services respectively -- are absent.
 
 The reason is a property of the row's CHECK, not of the corpus. The gate at
 `src/cadrumo/domain/iva/tests/test_supply_nature.py` reads
@@ -44,12 +40,7 @@ them, each with the article's own rubric as its `title`:
 - `#a69` -- "Lugar de realización de las prestaciones de servicios. Reglas generales."
 - `#a70` -- "Lugar de realización de las prestaciones de servicios. Reglas especiales."
 
-Anchor scoping is not a new mechanism in this tree. The registry's own evidence
-validator already resolves a `corpus_ref` of the form `<file>#<anchor>` to a
-single unit, and `src/cadrumo/domain/iva/tests/test_iva_registry_grounding.py`
-pins the property directly: two articles in one document, the phrase present in
-only the second, a citation pointing at the first, and the refusal that a
-file-scoped check cannot produce.
+Anchor scoping is not a new mechanism in this tree.
 
 ### The consequence, measured
 
@@ -86,12 +77,7 @@ design step rather than a row addition.
 
 ### The outbound services row under-declares, and the widening was recent
 
-`_r22_services_outbound_third_country` in
-`src/cadrumo/domain/iva/_classification.py` sends every ES-issued service to a
-customer in `_OUTSIDE_THE_COMUNIDAD` to `OPERACION_NO_SUJETA`, citing art. 69. It
-declares `consumes=_ESTABLISHMENT_ONLY` and reads no customer tax status --
-though `IvaInvoiceClassificationCriteria` already carries
-`customer_tax_status: CustomerTaxStatus`, and nine sibling rows already read it.
+It declares `consumes=_ESTABLISHMENT_ONLY` and reads no customer tax status -- though `IvaInvoiceClassificationCriteria` already carries `customer_tax_status: CustomerTaxStatus`, and nine sibling rows already read it.
 
 Art. 69 forks on exactly that axis:
 

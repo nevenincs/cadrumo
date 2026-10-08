@@ -5,14 +5,19 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self
 
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .facts.schema import FactSelector
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    BooleanTokenCase,
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    required_mapping_boolean,
+)
+from .facts.variants import FactSelector
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IVA rate-role catalogue"
@@ -88,39 +93,12 @@ class IvaRateRoleCatalogue:
         )
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    """Narrow a mapping payload to a unique string-to-string mapping."""
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("IVA rate-role entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate IVA rate-role key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _bool(entries: Mapping[str, str], key: str) -> bool:
-    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
-    if value == "true":
-        return True
-    if value == "false":
-        return False
-    raise RegistryValidationError(f"IVA rate-role catalogue {key!r} must be true or false")
-
-
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=effective_date,
-            selectors=(_SCOPE_SELECTOR,),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("IVA rate-role catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
+_ENTRIES_FACT = StringMappingFact(
+    fact_id=_FACT_ID, date_axis=DateAxis.DEVENGO_DATE, policy=_ENTRIES_POLICY, selectors=(_SCOPE_SELECTOR,)
+)
 
 
 def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaRateRoleCatalogue:
@@ -135,8 +113,15 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaRateRoleCatalogue:
         definitions.append(
             IvaRateRoleDefinition(
                 token=token,
-                is_default=_bool(entries, f"{prefix}is_default"),
-                supersedes_tier_default=_bool(entries, f"{prefix}supersedes_tier_default"),
+                is_default=required_mapping_boolean(
+                    entries, f"{prefix}is_default", subject=_ENTRY_SUBJECT, case=BooleanTokenCase.CASE_INSENSITIVE
+                ),
+                supersedes_tier_default=required_mapping_boolean(
+                    entries,
+                    f"{prefix}supersedes_tier_default",
+                    subject=_ENTRY_SUBJECT,
+                    case=BooleanTokenCase.CASE_INSENSITIVE,
+                ),
             ),
         )
     if not definitions:
@@ -158,11 +143,9 @@ def resolve_iva_rate_role_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IvaRateRoleCatalogue:
     """Resolve the IVA rate-role vocabulary through the selected facts authority."""
-    coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("IVA rate-role catalogue requires an explicit authority operation or scope")
-    return _catalogue_from_entries(_resolve_entries(effective_date=coordinate, authority=selected))
+    return _catalogue_from_entries(
+        _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
+    )
 
 
 __all__ = [

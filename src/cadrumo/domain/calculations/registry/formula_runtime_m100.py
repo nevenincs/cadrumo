@@ -22,6 +22,7 @@ from .formula_runtime_ops import (
 from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
+from .formula_runtime_ops import text_tolerant_casilla_value
 from .ids import ParameterId
 from .schema_formula import FormulaExpression
 
@@ -356,40 +357,6 @@ def _m100_resolve_eo_agraria_indices_correctores_args(
     )
 
 
-def _m100_eo_agraria_read_indice(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
-    """Read one Fase 3ª índice-corrector casilla, tolerating either declared type.
-
-    Every índice casilla in the Anexo I instrucción 2.3 cascade (letras a) to
-    h)) is a rate the operator/preparer reads off the Anexo table, but the
-    AEAT Diseño de Registros declares one of the eight (índice 4, «piensos
-    adquiridos a terceros», casilla 1543) with field type ``X`` (text) while
-    the other seven use ``P012`` (decimal) — an AEAT dictionary quirk, not a
-    semantic difference in the índice itself. A text-typed casilla's value
-    only ever reaches :attr:`EvalContext.text_values`, never
-    :attr:`EvalContext.values`: the numeric map carries no entry for a text
-    casilla at all, so reading it through
-    :func:`~domain.calculations.registry.formula_runtime_ops.numeric_casilla_value`
-    is refused. A casilla the registry declares as text is therefore read
-    from ``text_values`` whether or not the operator filled it, and the
-    numeric map serves every ``P012`` índice, which a caller never routes
-    through ``text_inputs``; the same cascade loop handles both declared
-    types without a position-keyed special case. An unparsable, blank or
-    absent text value resolves to zero, the same "índice not applied" signal
-    a blank decimal casilla gives.
-    """
-    if casilla_id in ctx.text_values or casilla_id in ctx.text_casilla_ids:
-        ctx.operand_refs.append(casilla_id)
-        ctx.operand_casilla_refs.append(casilla_id)
-        raw_text = ctx.text_values.get(casilla_id, "").strip()
-        try:
-            value = Decimal(raw_text) if raw_text else ZERO
-        except ArithmeticError:
-            value = ZERO
-        ctx.operand_values.append(value)
-        return value
-    return _numeric_casilla_value(casilla_id, ctx)
-
-
 def evaluate_m100_resolve_eo_agraria_indices_correctores(
     expression: FormulaExpression,
     ctx: _EvalContext,
@@ -406,8 +373,8 @@ def evaluate_m100_resolve_eo_agraria_indices_correctores(
 
     Each índice casilla (1540 to 1547, one per letra a) to h)) is an
     operator/preparer-declared rate (AEAT Diseño de Registros field type
-    ``P012`` for seven of the eight, ``X`` for índice 4 — see
-    :func:`_m100_eo_agraria_read_indice`, fields ``E5AI1`` to ``E5AI8``) — the
+    ``P012`` for seven of the eight, ``X`` for índice 4, fields ``E5AI1`` to ``E5AI8``; read through
+    :func:`~domain.calculations.registry.formula_runtime_ops.text_tolerant_casilla_value`) — the
     taxpayer reads the applicable índice off the Anexo I table for their
     activity and enters it directly, mirroring how the M131
     estimación-objetiva módulos engine resolves its own índice corrector de
@@ -433,7 +400,7 @@ def evaluate_m100_resolve_eo_agraria_indices_correctores(
         return minorado
     rendimiento = minorado
     for indice_casilla_id in args.indice_casilla_ids:
-        indice = _m100_eo_agraria_read_indice(indice_casilla_id, ctx)
+        indice = text_tolerant_casilla_value(indice_casilla_id, ctx)
         if indice <= ZERO:
             continue
         rendimiento = rendimiento * indice

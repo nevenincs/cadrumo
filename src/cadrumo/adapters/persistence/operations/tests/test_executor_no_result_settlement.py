@@ -339,6 +339,7 @@ def test_censal_review_checkpoint_waits_for_its_response_instead_of_failing(tmp_
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             censal_fetch_port=fetch_censal_datos,
+            provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquire,
         )
         owner = _censal_supervisor(

@@ -335,11 +335,9 @@ def test_every_advisory_message_is_constructible(advisory_builders: tuple[_Build
 #: and a gate held back until someone does that protects nothing in the
 #: meantime.
 #:
-#: The remaining entry builds ``CalculationSourceDiagnostic``, which elides on
-#: overflow, so it cannot crash a filing; it truncates silently instead,
-#: losing whichever interpolated term falls off the end. That is a
-#: message-quality defect rather than a safety one -- shorten the prose to
-#: retire it.
+#: The list is empty. Its last entry built ``CalculationSourceDiagnostic``,
+#: which elides on overflow, so it could not crash a filing; it truncated
+#: silently instead, losing whichever interpolated term fell off the end.
 #:
 #: The two ``ModeloVerificationFinding`` entries this list used to carry were
 #: the sharp case: that model had no eliding validator, so its cramped builders
@@ -348,11 +346,7 @@ def test_every_advisory_message_is_constructible(advisory_builders: tuple[_Build
 #: of headroom, so it was a live crash rather than a theoretical one -- and both
 #: had their prose shortened until the data fits with room to spare. The model
 #: now elides as well, so the shape cannot return silently.
-_KNOWN_CRAMPED_BUILDERS: frozenset[str] = frozenset(
-    {
-        "cadrumo/application/modelo/prorrata_regularizacion_advisory.py:485",
-    },
-)
+_KNOWN_CRAMPED_BUILDERS: frozenset[str] = frozenset[str]()
 
 
 #: Characters an interpolated term is assumed to need. Deliberately low: it

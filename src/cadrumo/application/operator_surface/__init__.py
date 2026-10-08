@@ -1,33 +1,7 @@
-"""Backend-owned operator-surface namespace.
+"""Backend-owned operator contracts and presentation builders.
 
-The application-layer command-shape declarations are defined in
-:mod:`application.operator_surface.contract`,
-:mod:`application.operator_surface.models`,
-:mod:`application.operator_surface.help`,
-:mod:`application.operator_surface.errors`. Command adapters consume this
-surface as data and render it; they do not define a second contract.
-
-Root-surface declarations flow through :func:`get_operator_surface_contract`,
-:data:`ACCEPTED_ROOTS`, :data:`MOUNTED_COMMAND_FAMILIES`, and
-:class:`OperatorSurfaceContract`. Source-kind aliases remain parser-only
-:class:`SourceKindAlias` records that resolve through
-:func:`resolve_source_kind_alias` to canonical
-:class:`core.aggregation.BindingSourceKind` members. No operator-specific source-kind
-taxonomy is introduced here.
-
-Help and landing surfaces are defined by :func:`build_help_document`,
-:func:`build_root_landing_report`, :class:`HelpDocument`, and
-:class:`RootLandingReport`. Refused surfaces use the registered
-:class:`OperatorSurfaceContractError` path shared with
-:func:`require_accepted_root`.
-
-Consumer-specific projections of these protocol-neutral contracts belong to
-the consuming distribution, not to the base application.
-
-Consumers import from the owning module -- :mod:`contract`, :mod:`manifest`,
-:mod:`models`, :mod:`help`, :mod:`help_models`, :mod:`action_resolution`,
-:mod:`errors` -- rather than from this package
-root, which is inert.
+Consumers import the defining contract, manifest, models, help, action
+resolution or errors module directly.
 """
 
 from __future__ import annotations

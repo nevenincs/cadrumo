@@ -14,7 +14,7 @@ total`` (correctly form_number "47") was the ONLY casilla exported to page 02
 offset 1628 -- the box [34] slot -- so every recargo-de-equivalencia filer's
 [34] carried a recargo-inflated figure while [47] was never written at all.
 The fix adds ``iva.anual.total-bases-cuotas-iva`` (form_number "34"), an
-IVA-only total over the four devengada rungs this revision currently models,
+IVA-only subtotal over the revision's printed quota entries,
 and repoints the page 02 offset-1628 field to it; a new page 02 bis
 offset-353 field carries the pre-existing recargo-inclusive total to [47].
 
@@ -26,6 +26,9 @@ registry so it can recompile an isolated scratch mutation and inspect the exact
 export structure.  Its mutation proof keeps the IVA-versus-recargo disclosure
 split honest, while the position assertions keep both totals on their respective
 official records.
+The current calculation covers all 35 printed VAT quota entries for 2022/2023
+and all 47 for later editions. The mutation below changes a formula operand;
+the separate position assertions check the export fields.
 """
 
 from __future__ import annotations
@@ -46,19 +49,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _CASILLA_BOX_34 = "iva.anual.total-bases-cuotas-iva"
 _CASILLA_BOX_47 = "iva.anual.cuota-devengada-total"
 _FORMULA_BOX_34 = "modelo-390-iva-anual-total-bases-cuotas-iva"
-# The IVA rungs box [34] sums on this revision. The domestic inversion del
-# sujeto pasivo [28] is one of the rows the design totals in [33]/[34]; it is
-# also in [47], as Modelo 303 box [13] is in [27], so the two totals keep
-# differing by exactly the recargo de equivalencia.
-_NON_RECARGO_TERMS = frozenset(
-    {
-        "iva.anual.repercutido.general",
-        "iva.anual.repercutido.reducido",
-        "iva.anual.repercutido.super-reducido",
-        "iva.anual.autorepercutido.intracomunitaria",
-        "iva.anual.autorepercutido.interior.cuota",
-    }
+# Independently transcribed quota columns from the applicable printed forms.
+_QUOTAS_2022 = (
+    "701 02 703 04 06 705 501 707 503 505 709 644 711 646 648 "
+    "713 08 715 10 12 14 717 22 719 24 26 721 546 723 548 552 28 30 650 32"
 )
+_QUOTAS_2024 = (
+    "701 668 02 703 670 04 06 705 672 501 707 674 503 505 709 676 644 711 678 646 648 "
+    "713 680 08 715 682 10 12 14 717 684 22 719 686 24 26 721 688 546 723 690 548 552 28 30 650 32"
+)
+
+
+def _non_recargo_terms(revision: ModeloRevision) -> frozenset[str]:
+    printed = _QUOTAS_2022 if revision.id in {"2022", "2023"} else _QUOTAS_2024
+    owners = {p.box_number: p.casilla_id for p in revision.form_layouts[0].placements if p.box_number}
+    return frozenset(owners[number] for number in printed.split())
 
 
 def _m390_revisions(root: Path) -> dict[str, ModeloRevision]:
@@ -185,22 +190,12 @@ def test_box_34_formula_excludes_every_recargo_term() -> None:
 
         arg_casilla_ids = {arg.casilla_id for arg in formula.expression.args if arg.casilla_id is not None}
 
-        assert arg_casilla_ids == _NON_RECARGO_TERMS, revision_id
+        assert arg_casilla_ids == _non_recargo_terms(revision), revision_id
         assert not any("recargo" in casilla_id for casilla_id in arg_casilla_ids), revision_id
 
 
-def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the_gate(tmp_path: Path) -> None:
-    """Re-introduce the exact original defect on an isolated scratch copy of
-    the registry tree (never the tracked file) and confirm the position test
-    above would have caught it.
-
-    Anti-tautology / mutation proof: this reverts the export-layout field's
-    ``casilla_id`` for the page-02 offset-1628 field back to
-    ``iva.anual.cuota-devengada-total`` (the pre-fix state), reloads the
-    mutated scratch copy, and asserts the position test's own condition now
-    fails on that mutated tree -- proving the gate has teeth rather than
-    passing vacuously.
-    """
+def test_mutation_adding_recargo_to_vat_subtotal_reds_the_gate(tmp_path: Path) -> None:
+    """Replace one VAT quota with a real surcharge owner and detect the contamination."""
     scratch_root = scratch_registry_tree(tmp_path, "390")
     target_revision_id = next(
         revision_id
@@ -214,13 +209,13 @@ def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the
         revision_id=target_revision_id,
         section="formulas",
         member=f'id = "{_FORMULA_BOX_34}"',
-        find='{ casilla_id = "iva.anual.repercutido.general" }',
-        replace='{ casilla_id = "iva.anual.recargo-equivalencia.general" }',
+        find='{ casilla_id = "iva.anual.repercutido.tipo-0.cuota" }',
+        replace='{ casilla_id = "iva.anual.repercutido.recargo.general" }',
     )
 
     mutated_revision = _m390_revisions(scratch_root)[target_revision_id]
     mutated_formula = {formula.id: formula for formula in mutated_revision.formulas}[_FORMULA_BOX_34]
     mutated_terms = {arg.casilla_id for arg in mutated_formula.expression.args if arg.casilla_id is not None}
 
-    assert mutated_terms != _NON_RECARGO_TERMS
+    assert mutated_terms != _non_recargo_terms(mutated_revision)
     assert any("recargo" in casilla_id for casilla_id in mutated_terms)

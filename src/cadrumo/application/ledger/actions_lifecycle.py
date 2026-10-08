@@ -563,6 +563,41 @@ def _catalogue_reset_report(
     )
 
 
+def _catalogue_reset_preview(
+    *,
+    bucket_id: str,
+    removed_ids: tuple[str, ...],
+    dry_run: bool,
+    actor: str,
+    reason: str,
+    purchase_evidence_ids: tuple[str, ...],
+    attachment_ids: tuple[str, ...],
+    blockers: tuple[LedgerRemovalBlocker, ...],
+    draft_advisories: tuple[LedgerRemovalBlocker, ...],
+    guard_ids: tuple[str, ...],
+) -> LedgerCatalogueResetReport | None:
+    """Resolve finalized-reference refusal and dry-run report before any writes."""
+    if blockers and not dry_run:
+        raise_finalized_modelo_blocked(
+            operation="ledger catalogue reset",
+            transaction_ids=guard_ids,
+            blockers=blockers,
+        )
+    if not dry_run:
+        return None
+    return _catalogue_reset_report(
+        bucket_id=bucket_id,
+        removed_ids=removed_ids,
+        dry_run=True,
+        actor=actor,
+        reason=reason,
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        blockers=blockers,
+        draft_advisories=draft_advisories,
+    )
+
+
 def reset_ledger_catalogue(
     *,
     bucket_id: str,
@@ -576,11 +611,14 @@ def reset_ledger_catalogue(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
+    max_receipt_items: int | None = None,
 ) -> LedgerCatalogueResetReport:
     """Reset one bucket's ledger catalogue after finalized-modelo checks.
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerCatalogueResetReport`.
     """
+    if max_receipt_items is not None and max_receipt_items < 1:
+        raise ValueError("max_receipt_items must be positive when provided")
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger reset")
     trimmed_source_command = require_source_command(source_command, operation="ledger reset")
@@ -608,35 +646,20 @@ def reset_ledger_catalogue(
         invoice_repository=invoice_repository,
     )
     attachment_ids = _reset_attachment_ids(catalogue)
-    if blockers:
-        if not dry_run:
-            raise_finalized_modelo_blocked(
-                operation="ledger catalogue reset",
-                transaction_ids=guard_ids,
-                blockers=blockers,
-            )
-        return _catalogue_reset_report(
-            bucket_id=bucket_id,
-            removed_ids=removed_ids,
-            dry_run=dry_run,
-            actor=trimmed_actor,
-            reason=reason.strip(),
-            purchase_evidence_ids=purchase_evidence_ids,
-            attachment_ids=attachment_ids,
-            blockers=blockers,
-            draft_advisories=draft_advisories,
-        )
-    if dry_run:
-        return _catalogue_reset_report(
-            bucket_id=bucket_id,
-            removed_ids=removed_ids,
-            dry_run=True,
-            actor=trimmed_actor,
-            reason=reason.strip(),
-            purchase_evidence_ids=purchase_evidence_ids,
-            attachment_ids=attachment_ids,
-            draft_advisories=draft_advisories,
-        )
+    preview = _catalogue_reset_preview(
+        bucket_id=bucket_id,
+        removed_ids=removed_ids,
+        dry_run=dry_run,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        blockers=blockers,
+        draft_advisories=draft_advisories,
+        guard_ids=guard_ids,
+    )
+    if preview is not None:
+        return preview
     removal_events = _reset_removal_events(
         catalogue,
         invoice_catalogue,
@@ -655,6 +678,24 @@ def reset_ledger_catalogue(
         occurred_at=now,
     )
     events = (*removal_events, reset_event)
+    if max_receipt_items is not None:
+        receipt_counts = {
+            "removed_transaction_ids": len(removed_ids),
+            "cascaded_purchase_invoice_evidence_ids": len(purchase_evidence_ids),
+            "cascaded_attachment_ids": len(attachment_ids),
+            "stale_draft_revision_references": len(draft_advisories),
+            "bucket_event_ids": len(events),
+        }
+        over_limit = {name: count for name, count in receipt_counts.items() if count > max_receipt_items}
+        if over_limit:
+            raise TransactionValidationError(
+                "ledger catalogue reset refused because its result exceeds the registered receipt limit",
+                context={
+                    "max_receipt_items": str(max_receipt_items),
+                    "over_limit_collections": ",".join(sorted(over_limit)),
+                    "over_limit_counts": ",".join(f"{name}:{over_limit[name]}" for name in sorted(over_limit)),
+                },
+            )
     _persist_catalogue_reset(
         repository=repository,
         event_repository=event_repository,

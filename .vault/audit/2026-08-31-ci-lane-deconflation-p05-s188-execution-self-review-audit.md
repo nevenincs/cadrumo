@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:32907abe72f440f31100c5d90d3b84f9a2d3eb3c732e3bbb0f347cfa6380b206'
+body_hash: 'sha256:65692854357a0955f70650b66e8dcd2c3eb8065f242ce88c449d18f2eaf2a5dd'
 related: []
 ---
 
@@ -25,7 +25,7 @@ The global audit still reports 60 legacy overages, but none is one of S188's six
 
 ### s188-formatter-boundary | low | Unrelated formatter finding is excluded
 
-The formatter line at `dev/registry/analysis/load_census_classification.py:729` is not an S188 path or defect. The record therefore does not claim a full-green format result.
+The record therefore does not claim a full-green format result.
 
 ### s188-manifest | low | Full source commit is mechanically represented
 

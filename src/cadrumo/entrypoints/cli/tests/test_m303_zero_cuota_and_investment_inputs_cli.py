@@ -47,8 +47,7 @@ from ....tests.cli_envelope import (
 )
 from ._m303_ordinary_cli_support import joint_return_options
 from ._modelo_work_ux_support import operator_profile_facts
-from .cli_runner import invoke_cached_cli
-from .modelo_profile_seed import ProfileSeeder, seed_profile
+from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
 
 __all__ = ["_isolated_cli_backend", "seed_profile"]
 
@@ -84,7 +83,7 @@ def _profile_facts() -> dict[str, str]:
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_cached_cli(["--format", "json", *args])
+    return invoke_seeded_profile_cli(["--format", "json", *args])
 
 
 def _added_transaction_id(result: Result) -> str:
@@ -469,7 +468,7 @@ def test_an_investment_asset_id_without_its_register_record_is_refused(
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
     assert error["code"] == "REFUSED_PROFILE_BIENES_INVERSION_VALIDATION"
-    assert error["message"] == "investment observation has no reciprocal bienes-inversion record"
+    assert error["message"] == "A capital-goods IVA regularisation record failed validation."
     context = error["context"]
     assert isinstance(context, dict)
     assert context["ledger_transaction_id"] == investment_transaction_id

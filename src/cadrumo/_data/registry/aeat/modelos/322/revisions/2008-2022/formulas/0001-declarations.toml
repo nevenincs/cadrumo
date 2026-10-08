@@ -41,3 +41,366 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:a
 [[revisions."2008-2022".formulas.source_citations]]
 source_ref = "aeat-modelo-322-procedure"
 required_text = ["modelo 322"]
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-38"
+target_casilla_id = "38"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["Operaciones intragrupo", "las cuotas resultantes"]
+
+[revisions.2008-2022.formulas.expression]
+op = "add"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "03"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "06"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "09"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "11"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "14"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "17"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "20"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "22"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "24"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "26"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "29"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "32"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "35"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "37"
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-62"
+target_casilla_id = "62"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["IVA Deducible", "cuotas deducibles"]
+
+[revisions.2008-2022.formulas.expression]
+op = "add"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "40"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "42"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "44"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "46"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "48"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "50"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "52"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "54"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "56"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "58"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "59"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "60"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "61"
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-63"
+target_casilla_id = "63"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["casilla 63 = casilla 38 - casilla 62 + casilla 76"]
+
+[revisions.2008-2022.formulas.expression]
+op = "add"
+
+[[revisions.2008-2022.formulas.expression.args]]
+op = "subtract"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+casilla_id = "38"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+casilla_id = "62"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "76"
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-68"
+target_casilla_id = "68"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["Resultado de la regularización anual", "última autoliquidación del año"]
+
+[revisions.2008-2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2008-2022.formulas.expression.args]]
+op = "add"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+casilla_id = "65"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+casilla_id = "77"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+casilla_id = "67"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "66"
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-70"
+target_casilla_id = "70"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["resultado de la operación indicada con el signo que corresponda"]
+
+[revisions.2008-2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "68"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "69"
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-88"
+target_casilla_id = "88"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["Total volumen de operaciones"]
+
+[revisions.2008-2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2008-2022.formulas.expression.args]]
+op = "subtract"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+op = "add"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "80"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "81"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "93"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "94"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "83"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "84"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "125"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "126"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "127"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "128"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "86"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "95"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "96"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "97"
+
+[[revisions.2008-2022.formulas.expression.args.args.args]]
+casilla_id = "98"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+casilla_id = "79"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "99"
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-717"
+target_casilla_id = "717"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["Rectificación de las deducciones", "Regularización de bienes de inversión"]
+
+[revisions.2008-2022.formulas.expression]
+op = "add"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "701"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "703"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "705"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "707"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "709"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "711"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "713"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "715"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "716"
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-735"
+target_casilla_id = "735"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["casillas correspondientes al Grupo 1 con la misma descripción"]
+
+[revisions.2008-2022.formulas.expression]
+op = "add"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "719"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "721"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "723"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "725"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "727"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "729"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "731"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "733"
+
+[[revisions.2008-2022.formulas.expression.args]]
+casilla_id = "734"
+
+[[revisions.2008-2022.formulas]]
+id = "modelo-322-printed-65"
+target_casilla_id = "65"
+rounding = "money-2"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["boe-modelo-322-2021-form-pdf", "aeat-dr-322-2022", "aeat-modelo-322-instructions-20261006"]
+
+[[revisions.2008-2022.formulas.source_citations]]
+source_ref = "aeat-modelo-322-instructions-20261006"
+required_text = ["65 = 63 x 64", "Los demás sujetos pasivos consignarán en esta casilla el 100%"]
+
+[revisions.2008-2022.formulas.expression]
+op = "divide"
+
+[[revisions.2008-2022.formulas.expression.args]]
+op = "multiply"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+casilla_id = "63"
+
+[[revisions.2008-2022.formulas.expression.args.args]]
+casilla_id = "64"
+
+[[revisions.2008-2022.formulas.expression.args]]
+literal = "100"

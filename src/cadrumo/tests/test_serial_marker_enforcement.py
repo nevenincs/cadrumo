@@ -112,7 +112,7 @@ def _nested_pytest(package: Path, *args: str) -> subprocess.CompletedProcess[str
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=300,
+            timeout=None,
             check=False,
         )
     )

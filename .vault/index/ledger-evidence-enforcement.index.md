@@ -4,15 +4,12 @@ tags:
   - '#index'
   - '#ledger-evidence-enforcement'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a3c058929201480ef68b270706eb1a0af743e753cd3d7ced39a98c06dc63da79'
+body_hash: 'sha256:f700668fe62607947db906f3d0f8491329a346c0eee07774d939bf669fac1aa9'
 related:
   - '[[2026-06-10-ledger-evidence-enforcement-adr]]'
-  - '[[2026-06-10-ledger-evidence-enforcement-ledger]]'
-  - '[[2026-06-10-ledger-evidence-enforcement-plan]]'
   - '[[2026-06-10-ledger-evidence-enforcement-research]]'
-  - '[[2026-06-12-ledger-evidence-enforcement-P04-summary]]'
   - '[[2026-06-12-ledger-evidence-enforcement-code-review-audit]]'
 ---
 
@@ -29,15 +26,6 @@ Auto-generated index of all documents tagged with `#ledger-evidence-enforcement`
 ### audit
 
 - `2026-06-12-ledger-evidence-enforcement-code-review-audit` - `ledger-evidence-enforcement` Code Review
-
-### exec
-
-- `2026-06-10-ledger-evidence-enforcement-ledger` - `ledger-evidence-enforcement` ledger
-- `2026-06-12-ledger-evidence-enforcement-P04-summary` - `ledger-evidence-enforcement` `P01-P04` summary
-
-### plan
-
-- `2026-06-10-ledger-evidence-enforcement-plan` - `ledger-evidence-enforcement` `Encrypted evidence bytes and advisory evidence gate` plan
 
 ### research
 

@@ -177,19 +177,25 @@ class BatchItemResult(BaseModel):
         A degraded reading is tied to a stored draft the same way: a refused or
         paused item has no draft for it to describe.
         """
-        refused = self.status == "refused"
-        if refused and not self.refusal_code:
-            raise ValueError("a refused batch item must carry the reason it was refused")
-        if refused and self.refusal_verdict is None:
-            raise ValueError("a refused batch item must carry the typed verdict explaining what was seen")
-        if not refused and self.refusal_code:
-            raise ValueError(f"refusal_code is only meaningful for a refused item; got status={self.status!r}")
-        if not refused and self.refusal_verdict is not None:
-            raise ValueError(f"refusal_verdict is only meaningful for a refused item; got status={self.status!r}")
-        if self.label_reading_fallback is not None and self.status not in COMPLETED_BATCH_ITEM_STATUSES:
-            raise ValueError(
-                f"label_reading_fallback describes a stored draft; a {self.status!r} item has none",
-            )
+        _validate_batch_item_refusal(self)
+        _validate_batch_item_fallback(self)
+
+
+def _validate_batch_item_refusal(item: BatchItemResult) -> None:
+    refused = item.status == "refused"
+    if refused and not item.refusal_code:
+        raise ValueError("a refused batch item must carry the reason it was refused")
+    if refused and item.refusal_verdict is None:
+        raise ValueError("a refused batch item must carry the typed verdict explaining what was seen")
+    if not refused and item.refusal_code:
+        raise ValueError(f"refusal_code is only meaningful for a refused item; got status={item.status!r}")
+    if not refused and item.refusal_verdict is not None:
+        raise ValueError(f"refusal_verdict is only meaningful for a refused item; got status={item.status!r}")
+
+
+def _validate_batch_item_fallback(item: BatchItemResult) -> None:
+    if item.label_reading_fallback is not None and item.status not in COMPLETED_BATCH_ITEM_STATUSES:
+        raise ValueError(f"label_reading_fallback describes a stored draft; a {item.status!r} item has none")
 
 
 class UnresolvedBatchSource(BaseModel):
@@ -592,7 +598,7 @@ BATCH_DRAFT_EXTRACTOR = "extract_invoice_draft_from_evidence"
 BATCH_READ_TRANSPORTS: Final[tuple[str, ...]] = (LOCAL_TRANSPORT_LABEL,)
 
 
-def _batch_sources(sources: Iterable[Path | str]) -> tuple[Path, ...]:
+def _batch_sources(sources: Iterable[Path | str], *, source_directory: Path | None = None) -> tuple[Path, ...]:
     """Expand each submitted source to the files it names.
 
     A directory contributes the files directly inside it. Enumeration order is
@@ -602,8 +608,9 @@ def _batch_sources(sources: Iterable[Path | str]) -> tuple[Path, ...]:
     resolved: list[Path] = []
     for source in sources:
         path = Path(source).expanduser()
-        if path.is_dir():
-            resolved.extend(child for child in scan_directory(path) if child.is_file())
+        readable = source_directory / path if source_directory is not None and not path.is_absolute() else path
+        if readable.is_dir():
+            resolved.extend(path / child.name for child in scan_directory(readable) if child.is_file())
         else:
             resolved.append(path)
     return tuple(resolved)
@@ -613,6 +620,7 @@ def run_evidence_batch(
     *,
     bucket_id: str,
     sources: Iterable[Path | str],
+    source_directory: Path | None = None,
     direction: InvoiceKind,
     evidence_ports: LedgerEvidencePorts,
     extraction_ports: InvoiceDraftExtractionPorts,
@@ -620,6 +628,7 @@ def run_evidence_batch(
     legends: tuple[RegimeLegend, ...],
     settings: Settings | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
+    before_item: Callable[[], None] | None = None,
     profile: HardwareProfile | None = None,
 ) -> BatchRunResult:
     """Run the ingestion pipeline over every source, one typed row each.
@@ -647,6 +656,8 @@ def run_evidence_batch(
     Args:
         bucket_id: Ledger bucket every record is written into.
         sources: Files and directories to ingest.
+        source_directory: Absolute submitting-frontend directory used only for
+            byte access; logical source paths and persisted breadcrumbs remain unchanged.
         direction: The direction declared for the whole run. Part of each
             item's identity, so the same document filed both ways is two
             records rather than one.
@@ -664,6 +675,8 @@ def run_evidence_batch(
         on_item: Called with each row as it completes, for progress reporting.
             A raising callback must not lose the run, so it is guarded like any
             other per-item failure.
+        before_item: Optional current-authority admission before source reads
+            and before/after item work. Failures propagate outside row translators.
         profile: Measured hardware the admission check judges against; probed
             when omitted. The same injection point the admission primitive
             itself exposes, so a contended machine can be exercised from real
@@ -679,94 +692,233 @@ def run_evidence_batch(
     from .invoice_draft_extraction import extract_invoice_draft_from_evidence
 
     resolved_settings = settings or _load_settings()
-    service = PurchaseInvoiceEvidenceService(
-        ports=evidence_ports,
+    service = PurchaseInvoiceEvidenceService(ports=evidence_ports)
+    addressed, deterministic, roles, unresolved = _plan_batch_inputs(
+        sources=sources,
+        source_directory=source_directory,
+        extraction_ports=extraction_ports,
+        operation=operation,
+        before_item=before_item,
+        sha256=sha256_hex,
     )
+    lane = _InferenceLaneState(settings=resolved_settings, profile=profile)
+    rows = _run_planned_batch_items(
+        addressed=addressed,
+        deterministic=deterministic,
+        roles=roles,
+        lane=lane,
+        bucket_id=bucket_id,
+        source_directory=source_directory,
+        direction=direction,
+        settings=resolved_settings,
+        service=service,
+        extract=extract_invoice_draft_from_evidence,
+        extraction_ports=extraction_ports,
+        operation=operation,
+        legends=legends,
+        read_draft=read_extraction_draft,
+        write_draft=write_extraction_draft,
+        before_item=before_item,
+        on_item=on_item,
+    )
+    return summarise_batch(rows, unresolved, lane.pause())
 
+
+def _plan_batch_inputs(
+    *,
+    sources: Iterable[Path | str],
+    source_directory: Path | None,
+    extraction_ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    before_item: Callable[[], None] | None,
+    sha256: Callable[[bytes], str],
+) -> tuple[
+    dict[tuple[str, str], Path],
+    set[str],
+    dict[str, ModelRole],
+    list[UnresolvedBatchSource],
+]:
+    if source_directory is not None and not source_directory.is_absolute():
+        raise ValueError("source directory must be absolute")
     addressed: dict[tuple[str, str], Path] = {}
     deterministic: set[str] = set()
     roles: dict[str, ModelRole] = {}
     unresolved: list[UnresolvedBatchSource] = []
-    for path in _batch_sources(sources):
-        try:
-            # Read to hash and to probe the shape, then released. The bytes are
-            # re-read per item at work time rather than held: a folder of
-            # documents held in memory at once is unbounded, and spilling them
-            # anywhere would be the spool file this design exists without.
-            data = path.read_bytes()
-        except OSError as exc:
-            unresolved.append(
-                UnresolvedBatchSource(
-                    source_name=str(path),
-                    refusal_code="unreadable_source",
-                    refusal_verdict=ledger_no_recovery_verdict(
-                        LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
-                        facts={
-                            "source_name": path.name,
-                            "file_readable": False,
-                            "read_error_type": exc.__class__.__name__,
-                        },
-                    ),
-                ),
-            )
-            continue
-        content_address = sha256_hex(data)
-        probe = extraction_ports.evidence_input_ports.document_shape_probe
-        if _reads_without_a_model(
-            data,
-            document_shape_probe=probe,
+    probe = extraction_ports.evidence_input_ports.document_shape_probe
+    for path in _batch_sources(sources, source_directory=source_directory):
+        if before_item is not None:
+            before_item()
+        _record_batch_source(
+            path=path,
+            source_directory=source_directory,
+            probe=probe,
             text_layer_ports=extraction_ports.text_layer_ports,
             operation=operation,
-        ):
-            deterministic.add(content_address)
-        role = _reader_role_for(data, document_shape_probe=probe)
-        if role is not None:
-            roles[content_address] = role
-        addressed[(content_address, str(path))] = path
+            sha256=sha256,
+            addressed=addressed,
+            deterministic=deterministic,
+            roles=roles,
+            unresolved=unresolved,
+        )
+    return addressed, deterministic, roles, unresolved
 
-    lane = _InferenceLaneState(settings=resolved_settings, profile=profile)
+
+def _record_batch_source(
+    *,
+    path: Path,
+    source_directory: Path | None,
+    probe: EvidenceDocumentShapeProbe,
+    text_layer_ports: EvidenceTextLayerPorts,
+    operation: PinnedAuthorityOperation,
+    sha256: Callable[[bytes], str],
+    addressed: dict[tuple[str, str], Path],
+    deterministic: set[str],
+    roles: dict[str, ModelRole],
+    unresolved: list[UnresolvedBatchSource],
+) -> None:
+    # Read to hash and probe the shape, then release. The bytes are re-read at
+    # work time rather than retaining a folder's worth or spilling a spool file.
+    readable = source_directory / path if source_directory is not None and not path.is_absolute() else path
+    try:
+        data = readable.read_bytes()
+    except OSError as exc:
+        unresolved.append(
+            UnresolvedBatchSource(
+                source_name=str(path),
+                refusal_code="unreadable_source",
+                refusal_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
+                    facts={
+                        "source_name": path.name,
+                        "file_readable": False,
+                        "read_error_type": exc.__class__.__name__,
+                    },
+                ),
+            ),
+        )
+        return
+    content_address = sha256(data)
+    if _reads_without_a_model(data, document_shape_probe=probe, text_layer_ports=text_layer_ports, operation=operation):
+        deterministic.add(content_address)
+    role = _reader_role_for(data, document_shape_probe=probe)
+    if role is not None:
+        roles[content_address] = role
+    addressed[(content_address, str(path))] = path
+
+
+def _run_planned_batch_items(
+    *,
+    addressed: dict[tuple[str, str], Path],
+    deterministic: set[str],
+    roles: dict[str, ModelRole],
+    lane: _InferenceLaneState,
+    bucket_id: str,
+    source_directory: Path | None,
+    direction: InvoiceKind,
+    settings: Settings,
+    service: PurchaseInvoiceEvidenceService,
+    extract: Callable[..., InvoiceDraft],
+    extraction_ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
+    read_draft: Callable[..., StoredExtractionDraft | None],
+    write_draft: Callable[..., object],
+    before_item: Callable[[], None] | None,
+    on_item: Callable[[BatchItemResult], None] | None,
+) -> list[BatchItemResult]:
     rows: list[BatchItemResult] = []
     for content_address, source_name in order_batch_sources(addressed):
+        if before_item is not None:
+            before_item()
         path = addressed[(content_address, source_name)]
-        reads_without_a_model = content_address in deterministic
-        if not lane.admits(deterministic=reads_without_a_model, role=roles.get(content_address)):
-            # Paused, not refused: the document is fine and the work simply has
-            # not happened. One run-level explanation carries the reason, rather
-            # than stamping N identical refusals onto N innocent documents.
-            row = BatchItemResult(
-                content_address=content_address,
-                identity=batch_item_identity(content_address=content_address, direction=direction),
-                direction=direction,
-                source_name=path.name,
-                status="paused",
-                needed_inference=True,
-            )
-        else:
-            row = _ingest_one_batch_item(
-                needed_inference=not reads_without_a_model,
-                bucket_id=bucket_id,
-                path=path,
-                content_address=content_address,
-                direction=direction,
-                settings=resolved_settings,
-                service=service,
-                extract=extract_invoice_draft_from_evidence,
-                extraction_ports=extraction_ports,
-                operation=operation,
-                legends=legends,
-                read_draft=read_extraction_draft,
-                write_draft=write_extraction_draft,
-            )
-            if row.status == "refused":
-                lane.close_if_no_reader_is_available(roles.get(content_address))
+        row = _run_planned_batch_item(
+            content_address=content_address,
+            path=path,
+            reads_without_a_model=content_address in deterministic,
+            role=roles.get(content_address),
+            lane=lane,
+            bucket_id=bucket_id,
+            source_directory=source_directory,
+            direction=direction,
+            settings=settings,
+            service=service,
+            extract=extract,
+            extraction_ports=extraction_ports,
+            operation=operation,
+            legends=legends,
+            read_draft=read_draft,
+            write_draft=write_draft,
+        )
         rows.append(row)
-        if on_item is not None:
-            # Progress reporting is incidental to the run; a sink that fails
-            # must not cost the operator results already produced.
-            with suppress(Exception):
-                on_item(row)
+        _report_batch_item(row, before_item=before_item, on_item=on_item)
+    return rows
 
-    return summarise_batch(rows, unresolved, lane.pause())
+
+def _run_planned_batch_item(
+    *,
+    content_address: str,
+    path: Path,
+    reads_without_a_model: bool,
+    role: ModelRole | None,
+    lane: _InferenceLaneState,
+    bucket_id: str,
+    source_directory: Path | None,
+    direction: InvoiceKind,
+    settings: Settings,
+    service: PurchaseInvoiceEvidenceService,
+    extract: Callable[..., InvoiceDraft],
+    extraction_ports: InvoiceDraftExtractionPorts,
+    operation: PinnedAuthorityOperation,
+    legends: tuple[RegimeLegend, ...],
+    read_draft: Callable[..., StoredExtractionDraft | None],
+    write_draft: Callable[..., object],
+) -> BatchItemResult:
+    if not lane.admits(deterministic=reads_without_a_model, role=role):
+        return _paused_batch_item(content_address=content_address, direction=direction, path=path)
+    row = _ingest_one_batch_item(
+        needed_inference=not reads_without_a_model,
+        bucket_id=bucket_id,
+        path=path,
+        source_directory=source_directory,
+        content_address=content_address,
+        direction=direction,
+        settings=settings,
+        service=service,
+        extract=extract,
+        extraction_ports=extraction_ports,
+        operation=operation,
+        legends=legends,
+        read_draft=read_draft,
+        write_draft=write_draft,
+    )
+    if row.status == "refused":
+        lane.close_if_no_reader_is_available(role)
+    return row
+
+
+def _paused_batch_item(*, content_address: str, direction: InvoiceKind, path: Path) -> BatchItemResult:
+    return BatchItemResult(
+        content_address=content_address,
+        identity=batch_item_identity(content_address=content_address, direction=direction),
+        direction=direction,
+        source_name=path.name,
+        status="paused",
+        needed_inference=True,
+    )
+
+
+def _report_batch_item(
+    item: BatchItemResult,
+    *,
+    before_item: Callable[[], None] | None,
+    on_item: Callable[[BatchItemResult], None] | None,
+) -> None:
+    if before_item is not None:
+        before_item()
+    if on_item is not None:
+        # Progress reporting is incidental; a broken sink cannot lose prior rows.
+        with suppress(Exception):
+            on_item(item)
 
 
 def _refusal_verdict(
@@ -801,6 +953,7 @@ def _ingest_one_batch_item(
     *,
     bucket_id: str,
     path: Path,
+    source_directory: Path | None = None,
     content_address: str,
     direction: InvoiceKind,
     settings: Settings,
@@ -837,7 +990,13 @@ def _ingest_one_batch_item(
         )
 
     try:
-        attached = service.add(bucket_id=bucket_id, source_path=path, idempotency_key=identity)
+        attached = service.add(
+            bucket_id=bucket_id,
+            source_path=path,
+            source_directory=source_directory,
+            idempotency_key=identity,
+            expected_content_digest=content_address,
+        )
     except Exception as exc:  # reason: one document's failure is its own row, never the run's end.
         return refused(
             "evidence_refused",

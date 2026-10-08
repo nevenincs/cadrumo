@@ -18,6 +18,7 @@ from .._app_live_command_spec_support import (
     _LEAF_INVOCATION,
     _METADATA_GROUP_INVOCATION,
     _METADATA_POLICY,
+    _NETWORK_READ_POLICY,
     _OPTIONAL_MODELOS_OPTION,
     _OPTIONAL_TAXPAYER_NIF_OPTION,
     _OPTIONAL_YEAR_FROM_OPTION,
@@ -44,22 +45,21 @@ from .._app_live_notifications_command_specs import (
 )
 from .._app_live_portals_command_specs import LIVE_PORTALS_COMMAND_SPECS
 from .._app_live_verify_command_specs import _VERIFY_EXPECTED_OPTION, LIVE_VERIFY_COMMAND_SPECS
-from .._command_runtime import build_command_subtree
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import (
+from ..command_graph import CommandSpecGraph
+from ..command_parameter_contracts import OptionSpec
+from ..command_shared_contracts import (
     BindingState,
-    CommandSpecGraph,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
+from ..command_spec import ExecutionPolicySpec, InvocationSpec
+from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -177,6 +177,18 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
             live_write=False,
         )
         == _ENCRYPTED_LOCAL_READ_POLICY
+    )
+    assert (
+        ExecutionPolicySpec(
+            capabilities=frozenset(["aeat", "encrypted-facts", "network"]),
+            side_effects=frozenset(["network"]),
+            performance="external-io",
+            write_route=CommandWriteRoute.NONE,
+            destructive=False,
+            handoff=False,
+            live_write=False,
+        )
+        == _NETWORK_READ_POLICY
     )
     assert (
         ExecutionPolicySpec(
@@ -354,8 +366,8 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     ):
         assert spec.invocation is _LEAF_INVOCATION
 
-    for key in ("app_live_filed_list",):
-        assert foundation[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in ("app_live_filed_list", "app_live_filed_discover"):
+        assert foundation[key].policy is _NETWORK_READ_POLICY
     for key in (
         "app_live_borrador_100_list",
         "app_live_borrador_100_view",

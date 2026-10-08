@@ -18,9 +18,10 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Callable, Iterable, Sequence
+from pathlib import Path
 from typing import Final
 
-from dev.ci.change_scope import git_changed_files, selects_sequence_goldens
+from dev.ci.change_scope import read_changed_files, selects_sequence_goldens
 from dev.docs.sequences.checks import check_sequences_in_subprocess, default_docs_root
 from dev.docs.sequences.errors import SequenceEngineError
 from dev.docs.sequences.golden_store import refresh_invocation
@@ -52,14 +53,14 @@ def _check_committed_goldens(jobs: int) -> tuple[str, ...]:
 
 
 def run_sequence_goldens_gate(
-    changed_files: Iterable[str],
+    changed_files: Iterable[str] | None,
     *,
     jobs: int = DEFAULT_JOBS,
     input_key: Callable[[], str] = committed_goldens_key,
     check: Callable[[int], tuple[str, ...]] = _check_committed_goldens,
 ) -> int:
     """Run the gate for ``changed_files``; return 0 when clean or not selected, else 1."""
-    if not selects_sequence_goldens(changed_files):
+    if changed_files is not None and not selects_sequence_goldens(changed_files):
         print("cli-sequence goldens: not selected; no changed path can alter documented output")
         return 0
     try:
@@ -86,12 +87,10 @@ def run_sequence_goldens_gate(
 
 def main(
     argv: Sequence[str] | None = None,
-    *,
-    changed_files_source: Callable[[str], Sequence[str]] | None = None,
 ) -> int:
-    """Run the gate for the changes since ``--base``."""
+    """Run the gate for supplied paths, or the full gate when absent."""
     parser = argparse.ArgumentParser(prog="python -m dev.ci.sequence_goldens_gate", description=__doc__)
-    parser.add_argument("--base", required=True, help="git ref the pull request merges into")
+    parser.add_argument("--changed-files", type=Path, help="file of repository-relative changed paths")
     parser.add_argument(
         "--jobs",
         type=int,
@@ -102,8 +101,11 @@ def main(
     if arguments.jobs < 1:
         parser.error("--jobs must be at least 1")
 
-    source = changed_files_source if changed_files_source is not None else git_changed_files
-    return run_sequence_goldens_gate(source(arguments.base), jobs=arguments.jobs)
+    try:
+        changed = None if arguments.changed_files is None else read_changed_files(arguments.changed_files)
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    return run_sequence_goldens_gate(changed, jobs=arguments.jobs)
 
 
 if __name__ == "__main__":  # pragma: no cover - entrypoint

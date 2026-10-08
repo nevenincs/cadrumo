@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#cli-verb-profile-diagnostics'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f95ab616e98ad458daff46c02825e1e18adad8731bc96d18533889c1e5614c33'
-related:
-  - "[[2026-08-08-profile-requirement-grounding-plan]]"
+body_hash: 'sha256:65b6703d7710635fa0864a863f497998c99dd467b9725ec49eeb277548fb0616'
+related: []
 ---
 
 # `cli-verb-profile-diagnostics` reference: `CLI verb profile-refusal message inventory`
@@ -18,15 +17,7 @@ Inventory of every CLI surface that refuses or warns because the ACTIVE profile
 lacks specific information, classified by whether the operator is told WHICH
 field is missing, under its human label, with its legal basis.
 
-The canonical mechanism already exists and is not in question:
-`build_profile_preflight_requirement` in
-`src/cadrumo/application/user_profile/_preflight.py`, exported from
-`application/user_profile`, reduces a profile path to its `section.field` form,
-resolves the locale-catalogue operator label (never a raw dotted path), and
-unions the schema field's `legal_refs` with the registry-binding grounding from
-`build_profile_grounding_index`. It already backs the modelo readiness gate,
-`config profile preflight` and `app modelo readiness`. What is incomplete is its
-COVERAGE across other verbs, not its design.
+It already backs the modelo readiness gate, `config profile preflight` and `app modelo readiness`. What is incomplete is its COVERAGE across other verbs, not its design.
 
 ## Distinguishing the two failure classes
 
@@ -42,15 +33,7 @@ is in scope here:
   without its own decision, per the deferral already recorded for
   `config profile status`, `wizard status` and `overview diagnostics`.
 
-A separate class, also out of scope, is the cold-start refusal: no active
-profile exists at all. `_no_active_profile_refusal` in
-`src/cadrumo/entrypoints/cli/_common.py` already handles this correctly and
-distinguishes "no profile registered" from "none active". No field is missing in
-that case, so there is nothing for the schema to name. Both
-`_require_active_profile` helpers (`_app_quickfile.py:53`, `_modelo.py:265`, and
-the late-bound module global in `_modelo_reconcile_cli.py`) delegate to it and
-are correct as they stand. They were candidate sites in the initiating brief;
-inspection cleared them.
+No field is missing in that case, so there is nothing for the schema to name. Both `_require_active_profile` helpers (`_app_quickfile.py:53`, `_modelo.py:265`, and the late-bound module global in `_modelo_reconcile_cli.py`) delegate to it and are correct as they stand. They were candidate sites in the initiating brief; inspection cleared them.
 
 ## Confirmed message-defect sites
 
@@ -62,15 +45,7 @@ used by `overview calendar`), `:633` (`overview agenda`) and `:710`
 `", ".join(warning.code for warning in ...warnings)` and pass it to the
 `cli.overview.calendar_refused_incomplete` locale key as `keys`.
 
-For profile-completeness warnings, `warning.code` IS the raw profile selector
-token: `_build_completeness_and_warnings` in
-`src/cadrumo/application/overview/_calendar_warnings.py:448` constructs
-`CalendarWarning(code=key, ...)` where `key` comes from `_gating_fields()` and is
-a `model_selectors` token such as `has_employees`,
-`pays_rent_with_retencion`, `does_intracomunitario`,
-`third_party_transactions_above_347_threshold`, `irpf.estimation_regime` or
-`iva.regime`. The operator is shown these tokens verbatim, with no operator
-label and no legal basis.
+The operator is shown these tokens verbatim, with no operator label and no legal basis.
 
 Two further defects compound at the same three call sites:
 
@@ -124,13 +99,7 @@ category would otherwise be pointed back at a field they already filled in.
 missing-profile-coefficient warning as
 `", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))`.
 
-The operator receives registry binding ids. The corresponding profile keys are
-recoverable: `unresolved_profile_bindings` is populated in
-`src/cadrumo/application/modelo/_data_inventory.py:174` from bindings whose
-`source` is `BindingSourceKind.PROFILE`, and every such binding names its
-consumed profile keys in its selector. `_selector_profile_keys` in
-`src/cadrumo/domain/calculations/registry/_profile_grounding.py:123` already
-performs exactly that extraction, but is private to that module.
+The operator receives registry binding ids.
 
 This site DOES already emit through the typed `Notice` channel, so only the
 schema-derivation half is missing.

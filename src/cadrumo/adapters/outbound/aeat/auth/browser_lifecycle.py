@@ -25,11 +25,6 @@ class CloseIntentBarrier:
         """Return whether one or more close callers are registered."""
         return self._close_intents > 0
 
-    @property
-    def close_intents(self) -> int:
-        """Return the number of registered close callers."""
-        return self._close_intents
-
     @asynccontextmanager
     async def work(self) -> AsyncGenerator[None]:
         """Enter ordinary work only when every registered closer has exited."""

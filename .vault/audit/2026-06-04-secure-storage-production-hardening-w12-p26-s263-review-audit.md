@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:93476d99adf81a329a7f164b4bb480ad9246ef7e478da283a0d1039b6aa19cf0'
+modified: '2026-10-03'
+body_hash: 'sha256:e629e893b387b05ffc482c38162d257c7bf43fad22031c278048b7c39804aaa1'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S263-001 | HIGH | Aggregate mismatch errors leaked profile identifiers and labels
 
-`src/aeat/application/user_profile/_aggregate.py` rejected cross-store mismatch states with messages containing raw profile UUIDs and operator labels. Those mismatches are precisely the failure mode most likely to be logged or surfaced during storage repair, so the error text was too detailed for a secure-storage boundary.
+The retired module rejected cross-store mismatch states with messages containing raw profile UUIDs and operator labels. Those mismatches are precisely the failure mode most likely to be logged or surfaced during storage repair, so the error text was too detailed for a secure-storage boundary.
 
 Disposition: fixed. The aggregate now raises a sanitized `UserProfileValidationError` with a stable fallback message, a locale key, and context limited to the mismatch category.
 
@@ -30,8 +30,8 @@ Disposition: fixed. The helper remains centralized for sanitized error construct
 
 ## S263-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/user_profile/_aggregate.py src/aeat/application/user_profile/test_aggregate.py`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/test_aggregate.py`
+- the historical check
+- the historical check
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
 

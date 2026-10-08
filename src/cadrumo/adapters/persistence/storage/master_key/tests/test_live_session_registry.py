@@ -93,7 +93,7 @@ def test_sweep_zeroises_a_session_bound_on_another_thread() -> None:
         assert _dek_bytes(session) == b"\x00" * len(_DEK), "the worker's DEK was not zeroised"
     finally:
         release.set()
-        worker.join(timeout=30)
+        worker.join()
 
 
 def test_sweep_is_idempotent_and_survives_an_already_sealed_session() -> None:

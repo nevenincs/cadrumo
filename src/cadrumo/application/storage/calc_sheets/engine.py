@@ -21,13 +21,15 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.hashing import sha256_hex
 from ....core.i18n.render import tr
-from ....core.period import Period
+from ....core.period import Period, is_administrative_period_token
 from ....core.time.clock import now
+from ....domain.calculations.record_row_membership import ClosedRecordRowSet, resolve_closed_record_rows
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.binding_selector_utils import (
     BindingRowSetSelector,
     binding_row_set_selector,
 )
+from ....domain.calculations.registry.binding_value_contract import BindingDataType
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
@@ -54,11 +56,15 @@ from ._styling import compute_styling
 from ._translator import is_translatable, translate_formula
 from .errors import CalcSheetsEngineError
 from .evidence import sheet_evidence_from_ledger_filing
+from .fictional_rows import fictional_unused_form_rows
+from .formula_guards import conditional_missing_input_guard
 from .layout import SheetLayout, plan_layout
+from .number_formats import numeric_format
 from .records import (
     OperatorInputs,
     RelationValue,
     RelationValues,
+    SheetAdministrativeFrame,
     SheetAnchor,
     SheetCellAddress,
     SheetCellConstraint,
@@ -78,14 +84,16 @@ from .records import (
     SheetSectionHeader,
     SheetTariffTable,
     SheetTariffTableRow,
+    SheetTemplatePreviewMetadata,
     SheetValueCell,
     TabName,
 )
+from .template_source import WorkbookTemplateSource
 
 # This stamp binds a rendered workbook to the layout compiler as well as the
 # registry snapshot. Increment it whenever a change can move an operator
 # input, relation, or tariff coordinate.
-CALC_SHEETS_ENGINE_VERSION: Final[str] = "calc-sheets/0.2.0"
+CALC_SHEETS_ENGINE_VERSION: Final[str] = "calc-sheets/0.3.0"
 _ACQUISITION_MIRROR_BINDING_SUFFIX: Final[str] = "-adquisicion"
 
 # The scalar parameter shapes a tariff anchor can materialise, mapped to the
@@ -155,7 +163,7 @@ def registry_sha(snapshot: RegistrySnapshot) -> str:
 
 def _guide_paragraphs(snapshot: RegistrySnapshot) -> tuple[str, ...]:
     modelo = snapshot.modelo
-    return (
+    paragraphs = (
         tr(
             "application.storage.calc_sheets.engine.guide.period",
             modelo_title=modelo.title,
@@ -163,8 +171,10 @@ def _guide_paragraphs(snapshot: RegistrySnapshot) -> tuple[str, ...]:
             filing_year=snapshot.filing_year,
         ),
         tr("application.storage.calc_sheets.engine.guide.editable_cells"),
-        tr("application.storage.calc_sheets.engine.guide.pull_command"),
     )
+    if snapshot.filing_period is not None:
+        return (*paragraphs, tr("application.storage.calc_sheets.engine.guide.pull_command"))
+    return paragraphs
 
 
 def _stamp_registry_metadata(snapshot: RegistrySnapshot) -> SheetExportMetadata:
@@ -172,7 +182,11 @@ def _stamp_registry_metadata(snapshot: RegistrySnapshot) -> SheetExportMetadata:
         modelo_id=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
         filing_year=snapshot.filing_year,
-        period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+        period=(
+            SheetAdministrativeFrame(filing_year=snapshot.filing_year, code=snapshot.period)
+            if is_administrative_period_token(snapshot.period)
+            else Period.from_year_and_code(snapshot.filing_year, snapshot.period)
+        ),
         engine_version=CALC_SHEETS_ENGINE_VERSION,
         registry_sha=registry_sha(snapshot),
         exported_at=now(),
@@ -279,9 +293,8 @@ def _value_cells_for_entradas(
             ),
         )
         binding = binding_row.binding
-        # Numeric bindings live in ``binding_cells``; date bindings (consumed by
-        # the ``age_at_year_end`` op) live in ``date_binding_cells``. Both render
-        # as an operator-input Entradas cell.
+        # Scalar bindings retain their native text, boolean or numeric value;
+        # date bindings have their own address map for date formula operators.
         binding_address = (
             layout.binding_cells[binding] if binding in layout.binding_cells else layout.date_binding_cells[binding]
         )
@@ -289,7 +302,7 @@ def _value_cells_for_entradas(
             SheetValueCell(
                 address=binding_address,
                 value=None,
-                role="operator_input",
+                role="source_value" if binding_row.readonly else "operator_input",
             ),
         )
     return tuple(cells)
@@ -365,6 +378,7 @@ def _formula_cells(
 ) -> tuple[SheetFormulaCell, ...]:
     by_id = casillas_by_id(revision)
     formulas = {formula.id: formula for formula in revision.formulas}
+    expressions_by_target = {formula.target_casilla_id: formula.expression for formula in revision.formulas}
     cells: list[SheetFormulaCell] = []
     for row in layout.calculos_rows:
         casilla = by_id[row.casilla_id]
@@ -380,6 +394,11 @@ def _formula_cells(
                 casilla_id=casilla.id,
                 rounding_scale=scale,
                 rounding_rule=rule,
+                missing_input_condition=conditional_missing_input_guard(
+                    formula.expression,
+                    formulas=expressions_by_target,
+                    layout=layout,
+                ),
             ),
         )
     return tuple(cells)
@@ -811,6 +830,18 @@ def _relation_dependency_treatment(
 def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     last_calc_row = max((row.row for row in layout.calculos_rows), default=1)
     return (
+        *(
+            SheetProtectedRange(
+                tab=row.tab,
+                start_row=row.row,
+                end_row=row.row,
+                start_column=1,
+                end_column=4,
+                description="Dato de origen de solo lectura",
+            )
+            for row in layout.binding_rows
+            if row.readonly
+        ),
         SheetProtectedRange(
             tab=TabName.CALCULOS,
             start_row=1,
@@ -860,23 +891,13 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     )
 
 
-def _number_format_pattern(data_type: str) -> tuple[Literal["money", "integer", "percentage"], str] | None:
-    if data_type == "money":
-        return ("money", "#,##0.00")
-    if data_type == "integer":
-        return ("integer", "0")
-    if data_type == "ratio":
-        return ("percentage", "0.00%")
-    return None
-
-
 def _number_formats(
     revision: ModeloRevision,
     layout: SheetLayout,
 ) -> tuple[SheetNumberFormat, ...]:
     formats: list[SheetNumberFormat] = []
     for casilla in revision.casillas:
-        pattern = _number_format_pattern(casilla.data_type)
+        pattern = numeric_format(casilla.data_type)
         if pattern is None:
             continue
         data_type, format_pattern = pattern
@@ -894,6 +915,29 @@ def _number_formats(
                 pattern=format_pattern,
             ),
         )
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    formatted_addresses = {directive.address.qualified() for directive in formats}
+    for binding_id, address in {**layout.binding_cells, **layout.date_binding_cells}.items():
+        if address.qualified() in formatted_addresses:
+            continue
+        binding = bindings_by_id[binding_id]
+        data_type = binding.value.data_type
+        if data_type is BindingDataType.BOOLEAN:
+            # A boolean is neither numeric zero/one nor the strings TRUE/FALSE.
+            # Both transports already preserve literal bool payloads.
+            continue
+        pattern = numeric_format(data_type)
+        if pattern is not None:
+            format_type, format_pattern = pattern
+            directive = SheetNumberFormat(address=address, data_type=format_type, pattern=format_pattern)
+        elif data_type is BindingDataType.DATE:
+            directive = SheetNumberFormat(address=address, data_type="date", pattern="yyyy-mm-dd")
+        elif data_type in (BindingDataType.TEXT, BindingDataType.ENUM):
+            directive = SheetNumberFormat(address=address, data_type="text", pattern="@")
+        else:
+            directive = SheetNumberFormat(address=address, data_type="decimal", pattern="0.############")
+        formats.append(directive)
+        formatted_addresses.add(address.qualified())
     return tuple(formats)
 
 
@@ -1008,6 +1052,7 @@ def build_export_plan(
     relation_resolver: RelationResolver | None = None,
     ledger_filing_evidence: LedgerFilingEvidence | None = None,
     casilla_ids_by_contributor_id: Mapping[str, Iterable[CasillaId]] | None = None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
 ) -> SheetExportPlan:
     """Walk a registry snapshot and produce a complete `SheetExportPlan`.
 
@@ -1052,6 +1097,9 @@ def build_export_plan(
             projection refuses to infer modelo-specific tax attribution
             from row contents and raises for an unattributed
             contributor.
+        closed_record_row_sets: Admitted source membership from the same
+            saved calculation. This enables unused-row predicates, without
+            converting an unfilled operator row into evidence of absence.
 
     Returns:
         A complete :class:`SheetExportPlan` ready for the Google apply adapter.
@@ -1078,25 +1126,22 @@ def build_export_plan(
         bracket_filter_date=filing_anchor,
         excluded_casilla_ids=excluded,
     )
-    relations = _relation_values_with_registry_grounding(snapshot, layout, supplied_relations)
-
-    entradas = _value_cells_for_entradas(revision, layout, inputs)
-    calculos_labels = _label_cells_for_calculos(revision, layout)
-    tariff_tables = _tariff_tables(revision, layout, filing_anchor)
-    tariff_values = _tariff_value_cells(tariff_tables)
-    relation_value_cells = _relation_value_cells(layout, relations)
-    formula_cells = _formula_cells(revision, layout)
-    provenance = _provenance_rows(revision, layout)
-    provenance_values = _provenance_value_cells(provenance)
-    protected = _protected_ranges(layout)
-    number_formats = _number_formats(revision, layout)
-    section_headers = _section_headers(layout)
-    anchors = _anchors(layout)
-    anchor_value_cells = tuple(
-        SheetValueCell(address=anchor.address, value=anchor.label, role="label") for anchor in anchors
+    supplied_addresses = {
+        layout.entradas_cells[item.casilla_id].qualified()
+        for item in inputs.values
+        if item.value is not None and item.casilla_id in layout.entradas_cells
+    }
+    rows = resolve_closed_record_rows(
+        snapshot,
+        closed_record_row_sets,
+        supplied_binding_ids={
+            binding
+            for binding, address in {**layout.binding_cells, **layout.date_binding_cells}.items()
+            if address.qualified() in supplied_addresses
+        },
     )
-    cell_constraints = _collect_cell_constraints(revision, layout)
-    row_sets = collect_row_sets(revision)
+    layout = layout.model_copy(update={"record_rows": rows})
+    relations = _relation_values_with_registry_grounding(snapshot, layout, supplied_relations)
 
     evidence = (
         sheet_evidence_from_ledger_filing(
@@ -1121,6 +1166,106 @@ def build_export_plan(
         paragraphs=guide_paragraphs,
     )
 
+    return assemble_workbook_plan(
+        revision=revision,
+        layout=layout,
+        inputs=inputs,
+        relations=relations,
+        filing_anchor=filing_anchor,
+        evidence=evidence,
+        metadata=metadata,
+        guide=guide,
+    )
+
+
+def build_template_preview_plan(
+    source: WorkbookTemplateSource,
+    *,
+    guide: SheetGuideContent,
+    operator_inputs: OperatorInputs | None = None,
+    unused_example_rows: Mapping[str, tuple[str, ...]] | None = None,
+) -> SheetExportPlan[SheetTemplatePreviewMetadata]:
+    """Compile fictional inputs without profile, evidence, or relation resolution."""
+    frame = source.preview_frame
+    anchor = calculation_filing_date(frame) if isinstance(frame, Period) else date(frame.filing_year, 12, 31)
+    excluded = _untranslatable_internal_only_casillas(source.revision, bracket_filter_date=anchor)
+    layout = plan_layout(source.revision, bracket_filter_date=anchor, excluded_casilla_ids=excluded)
+    if unused_example_rows:
+        layout = layout.model_copy(
+            update={"record_rows": fictional_unused_form_rows(source.revision, unused_example_rows)}
+        )
+    return assemble_workbook_plan(
+        revision=source.revision,
+        layout=layout,
+        inputs=operator_inputs if operator_inputs is not None else OperatorInputs(),
+        relations=RelationValues(),
+        filing_anchor=anchor,
+        evidence=SheetEvidenceFacet(),
+        metadata=SheetTemplatePreviewMetadata(
+            kind="template_preview",
+            modelo_id=source.modelo_id,
+            revision_id=source.revision.id,
+            preview_year=frame.filing_year,
+            preview_period=frame.code,
+            template_digest=source.template_digest,
+            engine_version=CALC_SHEETS_ENGINE_VERSION,
+            title=guide.title,
+            exported_at=now(),
+        ),
+        guide=guide,
+    )
+
+
+def assemble_workbook_plan[M: (SheetExportMetadata, SheetTemplatePreviewMetadata)](
+    *,
+    revision: ModeloRevision,
+    layout: SheetLayout,
+    inputs: OperatorInputs,
+    relations: RelationValues,
+    filing_anchor: date,
+    evidence: SheetEvidenceFacet,
+    metadata: M,
+    guide: SheetGuideContent,
+) -> SheetExportPlan[M]:
+    """Assemble cells using selected typed inputs, without granting filing authority.
+
+    Production callers select and ground these inputs through a registry snapshot.
+    Fictional preview callers must supply their own distinct preview identity.
+    This assembly stage neither selects a revision nor resolves profile data.
+
+    The ``revision`` parameter uses :class:`ModeloRevision`, which declares the form and its value contracts.
+    """
+    entradas = _value_cells_for_entradas(revision, layout, inputs)
+    calculos_labels = _label_cells_for_calculos(revision, layout)
+    tariff_tables = _tariff_tables(revision, layout, filing_anchor)
+    tariff_values = _tariff_value_cells(tariff_tables)
+    relation_value_cells = _relation_value_cells(layout, relations)
+    formula_cells = _formula_cells(revision, layout)
+    provenance = _provenance_rows(revision, layout)
+    provenance_values = _provenance_value_cells(provenance)
+    protected = _protected_ranges(layout)
+    number_formats = list(_number_formats(revision, layout))
+    for table in tariff_tables:
+        if table.data_type == "bracket_table":
+            coordinates = (
+                (SheetCellAddress.at(table.anchor.tab, table.anchor.row + row, table.anchor.column + column), kind)
+                for row in range(1, len(table.bracket_rows) + 1)
+                for column, kind in enumerate(("money", "money", "money", "ratio"))
+            )
+        else:
+            coordinates = iter(((table.anchor, table.data_type),))
+        for address, kind in coordinates:
+            pattern = numeric_format(kind)
+            if pattern is not None:
+                number_formats.append(SheetNumberFormat(address=address, data_type=pattern[0], pattern=pattern[1]))
+    section_headers = _section_headers(layout)
+    anchors = _anchors(layout)
+    anchor_value_cells = tuple(
+        SheetValueCell(address=anchor.address, value=anchor.label, role="label") for anchor in anchors
+    )
+    cell_constraints = _collect_cell_constraints(revision, layout)
+    row_sets = collect_row_sets(revision)
+
     value_cells = (
         entradas + calculos_labels + tariff_values + relation_value_cells + provenance_values + anchor_value_cells
     )
@@ -1130,17 +1275,17 @@ def build_export_plan(
         section_headers=section_headers,
         anchors=anchors,
         provenance=provenance,
-        guide_paragraphs=len(guide_paragraphs),
+        guide_paragraphs=len(guide.paragraphs),
     )
 
-    return SheetExportPlan(
+    return SheetExportPlan[M](
         metadata=metadata,
         value_cells=value_cells,
         formula_cells=formula_cells,
         tariffs=tariff_tables,
         provenance=provenance,
         protected_ranges=protected,
-        number_formats=number_formats,
+        number_formats=tuple(number_formats),
         section_headers=section_headers,
         anchors=anchors,
         cell_constraints=cell_constraints,
@@ -1292,6 +1437,9 @@ def _collect_cell_constraints(
                 sign=casilla.constraints.sign,
                 min_value=casilla.constraints.min_value,
                 max_value=casilla.constraints.max_value,
+                allowed_values=casilla.constraints.enum,
+                min_length=casilla.constraints.min_length,
+                max_length=casilla.constraints.max_length,
                 legal_refs=tuple(casilla.constraints.legal_refs),
                 casilla_id=casilla.id,
             ),

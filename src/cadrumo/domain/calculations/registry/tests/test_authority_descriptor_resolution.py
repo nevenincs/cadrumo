@@ -8,8 +8,9 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.resources.bundled_data import bundled_path
-from .. import authority as authority_module
-from ..authority import bundled_authority_descriptor_path
+from .. import authority_location
+from ..authority_location import bundled_authority_descriptor_path, published_authority_generation
+from ..authority_store import AuthorityDescriptor
 from ..errors import AuthorityDescriptorUnavailableError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -71,9 +72,38 @@ def test_absent_packaged_descriptor_refuses_when_no_root_is_configured(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     absent = tmp_path / "packaged" / _DESCRIPTOR_NAME
-    monkeypatch.setattr(authority_module, "_bundled_path", lambda *parts: absent)
+    monkeypatch.setattr(authority_location, "_bundled_path", lambda *parts: absent)
     with override_settings(cadrumo_authority_root=None), pytest.raises(AuthorityDescriptorUnavailableError) as refusal:
         bundled_authority_descriptor_path()
     error = refusal.value
     assert error.authority_root_configured is False
     assert error.searched_path == absent
+
+
+def test_published_generation_names_the_descriptor_selected_generation(tmp_path: Path) -> None:
+    """The cohort identity is read from the descriptor alone, so republishing moves it."""
+    first = AuthorityDescriptor(
+        database=f"authority-{'1' * 64}.sqlite3",
+        database_size=1,
+        database_sha256="1" * 64,
+        logical_generation="a" * 64,
+    )
+    republished = AuthorityDescriptor(
+        database=f"authority-{'2' * 64}.sqlite3",
+        database_size=1,
+        database_sha256="2" * 64,
+        logical_generation="b" * 64,
+    )
+    descriptor = tmp_path / _DESCRIPTOR_NAME
+    with override_settings(cadrumo_authority_root=tmp_path):
+        descriptor.write_bytes(first.to_bytes())
+        assert published_authority_generation() == "a" * 64
+        descriptor.write_bytes(republished.to_bytes())
+        assert published_authority_generation() == "b" * 64
+
+
+def test_published_generation_is_absent_without_a_well_formed_descriptor(tmp_path: Path) -> None:
+    with override_settings(cadrumo_authority_root=tmp_path):
+        assert published_authority_generation() is None
+        _published_descriptor(tmp_path)
+        assert published_authority_generation() is None

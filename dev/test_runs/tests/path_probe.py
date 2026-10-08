@@ -22,10 +22,12 @@ def test_write_resolved_pytest_paths(tmp_path_factory: pytest.TempPathFactory, p
             {
                 "basetemp": str(tmp_path_factory.getbasetemp()),
                 "cache": str(pytestconfig.cache._cachedir),
+                "log_dir": os.environ.get("CADRUMO_LOG_DIR"),
                 "run_root": os.environ["CADRUMO_TEST_RUN_ROOT"],
                 "scratch": os.environ["CADRUMO_TEST_RUN_SCRATCH"],
                 "stdlib_temp": tempfile.gettempdir(),
                 "storage_root": str(collection_storage_root()),
+                "storage_temp_root": os.environ["CADRUMO_TEMP_DIR"],
                 "tool_cache_home": os.environ.get("XDG_CACHE_HOME"),
             }
         ),

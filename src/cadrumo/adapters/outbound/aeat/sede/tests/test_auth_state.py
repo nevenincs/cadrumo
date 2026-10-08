@@ -12,7 +12,6 @@ Coverage (contract):
   translated_message when storage_state_path is None.
 - contract-E: fetch_iva_compensation_wallet raises SedeNavigationError with
   translated_message when storage_state_path is None.
-- contract-F: walk_expedientes_tree raises SedeNavigationError with
   translated_message when storage_state_path is None.
 """
 
@@ -137,23 +136,6 @@ def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path()
                 target_period=Period.from_year_and_code(2025, "4T"),
             ),
         )
-
-    assert exc_info.value.translated_message is not None
-    assert "adapters.sede.errors.no_auth_session" not in exc_info.value.translated_message
-
-
-# ---------------------------------------------------------------------------
-# contract-F: walk_expedientes_tree carries translated_message on None path
-# ---------------------------------------------------------------------------
-
-
-def test_walk_expedientes_tree_carries_translated_message_on_none_path() -> None:
-    from ..walker import walk_expedientes_tree
-
-    session = _minimal_session(storage_state_path=None)
-
-    with pytest.raises(SedeNavigationError) as exc_info:
-        asyncio.run(walk_expedientes_tree(session))
 
     assert exc_info.value.translated_message is not None
     assert "adapters.sede.errors.no_auth_session" not in exc_info.value.translated_message

@@ -11,7 +11,6 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
@@ -36,7 +35,7 @@ from .modelo_bindings_actividad_assets import (
     classify_ledger_expenses_against_asset_register,
     register_owned_acquisition_diagnostics,
 )
-from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
+from .renta_ledger import RentaLedgerExpenseAggregation, aggregate_renta_ledger_expenses_from_repositories
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -48,6 +47,7 @@ from .source_resolution_operations import (
 )
 from .source_resolution_operations import sorted_source_ids as sorted_ids
 from .source_resolution_operations import (
+    source_context_operation,
     source_issue_diagnostics,
     storage_degradation_resolution,
 )
@@ -82,6 +82,42 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         self._usage_ratio_profile_loader = usage_ratio_profile_loader
         self._activity_asset_history_repository = activity_asset_history_repository
 
+    def _aggregate(
+        self, context: CalculationSourceContext
+    ) -> RentaLedgerExpenseAggregation | CalculationSourceResolution:
+        try:
+            profile = context.profile
+            with source_context_operation(context) as operation:
+                usage_ratios = resolve_effective_usage_ratios(
+                    bucket_id=context.bucket_id,
+                    year=context.filing_year,
+                    usage_ratio_profile_loader=self._usage_ratio_profile_loader,
+                    operation=operation,
+                    profile_record=profile.record if profile is not None else None,
+                )
+                return aggregate_renta_ledger_expenses_from_repositories(
+                    bucket_id=context.bucket_id,
+                    period=aggregation_period_for_modelo(
+                        filing_year=context.filing_year,
+                        code=context.period.registry_token,
+                    ),
+                    ports=self._ports,
+                    profile_year=context.filing_year,
+                    usage_ratios=usage_ratios,
+                    modelo=context.modelo,
+                    profile_record=profile.record if profile is not None else None,
+                    prorrata_register_repository=self._prorrata_register_repository,
+                    profile_decode_context=profile.profile_decode_context if profile is not None else None,
+                    operation=operation,
+                )
+        except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the ledger Renta gastos estimación directa aggregation binding for ``context``.
 
@@ -94,37 +130,9 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         if not revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 
-        try:
-            profile = context.profile
-            with bundled_indexed_authority().operation() as operation:
-                usage_ratios = resolve_effective_usage_ratios(
-                    bucket_id=context.bucket_id,
-                    year=context.filing_year,
-                    usage_ratio_profile_loader=self._usage_ratio_profile_loader,
-                    operation=operation,
-                    profile_record=profile.record if profile is not None else None,
-                )
-            aggregation = aggregate_renta_ledger_expenses_from_repositories(
-                bucket_id=context.bucket_id,
-                period=aggregation_period_for_modelo(
-                    filing_year=context.filing_year,
-                    code=context.period.registry_token,
-                ),
-                ports=self._ports,
-                profile_year=context.filing_year,
-                usage_ratios=usage_ratios,
-                modelo=context.modelo,
-                profile_record=profile.record if profile is not None else None,
-                prorrata_register_repository=self._prorrata_register_repository,
-                profile_decode_context=profile.profile_decode_context if profile is not None else None,
-            )
-        except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=self.owned_sources,
-                error=exc,
-            )
+        aggregation = self._aggregate(context)
+        if isinstance(aggregation, CalculationSourceResolution):
+            return aggregation
         asset_history = self._activity_asset_history_repository.load()
         register_owned = classify_ledger_expenses_against_asset_register(
             asset_history.revisions,

@@ -16,11 +16,14 @@ from ....application.calculations.iva_compensation_history import seed_iva_compe
 from ....application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState
 from ....domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ....tests.cli_envelope import require_schema_envelope
 from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif
 from .cli_runner import invoke_cached_cli
+from .native_profile_cli_support import invoke_native_cli, reauthenticate_native_profile
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -59,7 +62,11 @@ def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
-            report = query_iva_wallet_balance(as_of_year=2025, repository=IvaCompensationHistoryRepository())
+            report = query_iva_wallet_balance(
+                as_of_year=2025,
+                repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
         assert report.lot_count == 1, "seeded carry-forward must surface as exactly one wallet lot"
         assert report.total_balance == Decimal("1500.00"), "balance must reflect the seeded amount, not zero"
@@ -79,7 +86,11 @@ def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
-            report = query_iva_wallet_balance(as_of_year=2025, repository=IvaCompensationHistoryRepository())
+            report = query_iva_wallet_balance(
+                as_of_year=2025,
+                repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
         assert report.lot_count == 0, "a zero seed must not fabricate a wallet lot"
         assert report.total_balance == Decimal("0")
@@ -150,29 +161,26 @@ def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
     assert result.exit_code != 0
 
 
-def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
+def test_cli_seed_verb_happy_path(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> None:
     """Seed verb with --confirm creates the state and emits the correct fields."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
-        _store_profile_with_nif(_NIF)
-        result = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "iva-wallet",
-                "seed",
-                "--filing-year",
-                "2024",
-                "--period",
-                "4T",
-                "--amount",
-                "1200.50",
-                "--confirm",
-            ],
-            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="wallet-seed-happy", facts={"identity.tax_id": _NIF})
+        result = invoke_native_cli(
+            profile,
+            "app",
+            "modelo",
+            "iva-wallet",
+            "seed",
+            "--filing-year",
+            "2024",
+            "--period",
+            "4T",
+            "--amount",
+            "1200.50",
+            "--confirm",
         )
 
+        reauthenticate_native_profile(profile, authority_operation=authority_operation)
         repo = IvaCompensationHistoryRepository()
         stored = repo.load_period(Period.from_year_and_code(2024, "4T"))
 
@@ -257,31 +265,31 @@ def test_cli_seed_verb_refuses_spanish_thousands_amount_and_persists_nothing(tmp
     assert stored is None, "a refused amount must not persist a carry-forward balance"
 
 
-def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) -> None:
+def test_cli_override_verb_records_taxpayer_override_decision(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The override verb records a non-blocking taxpayer_override decision."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
-        _store_profile_with_nif(_NIF)
-        result = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "iva-wallet",
-                "override",
-                "--filing-year",
-                "2025",
-                "--period",
-                "2T",
-                "--amount",
-                "210.00",
-                "--reason",
-                "1T 2025 credit a compensar carried forward",
-                "--evidence-locator",
-                "local M303 1T-2025 filed revision",
-                "--confirm",
-            ],
-            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="wallet-override", facts={"identity.tax_id": _NIF})
+        reauthenticate_native_profile(profile, authority_operation=authority_operation)
+        result = invoke_native_cli(
+            profile,
+            "app",
+            "modelo",
+            "iva-wallet",
+            "override",
+            "--filing-year",
+            "2025",
+            "--period",
+            "2T",
+            "--amount",
+            "210.00",
+            "--reason",
+            "1T 2025 credit a compensar carried forward",
+            "--evidence-locator",
+            "local M303 1T-2025 filed revision",
+            "--confirm",
         )
 
     assert result.exit_code == 0, result.output
@@ -351,45 +359,45 @@ def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
     assert result.exit_code != 0
 
 
-def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
+def test_cli_seed_verb_refuses_duplicate(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> None:
     """Seed verb refuses a second seed for the same period."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
-        _store_profile_with_nif(_NIF)
-        first_result = invoke_cached_cli(
-            [
-                "app",
-                "modelo",
-                "iva-wallet",
-                "seed",
-                "--filing-year",
-                "2024",
-                "--period",
-                "4T",
-                "--amount",
-                "1200.00",
-                "--confirm",
-            ],
-            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="wallet-seed-duplicate", facts={"identity.tax_id": _NIF})
+        first_result = invoke_native_cli(
+            profile,
+            "app",
+            "modelo",
+            "iva-wallet",
+            "seed",
+            "--filing-year",
+            "2024",
+            "--period",
+            "4T",
+            "--amount",
+            "1200.00",
+            "--confirm",
         )
         assert first_result.exit_code == 0, first_result.output
-        result = invoke_cached_cli(
-            [
-                "app",
-                "modelo",
-                "iva-wallet",
-                "seed",
-                "--filing-year",
-                "2024",
-                "--period",
-                "4T",
-                "--amount",
-                "500.00",
-                "--confirm",
-            ],
-            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+        result = invoke_native_cli(
+            profile,
+            "app",
+            "modelo",
+            "iva-wallet",
+            "seed",
+            "--filing-year",
+            "2024",
+            "--period",
+            "4T",
+            "--amount",
+            "500.00",
+            "--confirm",
         )
+        reauthenticate_native_profile(profile, authority_operation=authority_operation)
+        stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code != 0
+    assert stored is not None
+    assert stored.available_end_amount == Decimal("1200.00")
 
 
 def test_carry_forward_lot_rejects_unbalanced_amounts_anti_tautology() -> None:

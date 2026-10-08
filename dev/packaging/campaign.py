@@ -203,10 +203,6 @@ _INSTALLED_ORACLES_TESTS: Final[str] = f"{_PACKAGING_TESTS}/test_installed_oracl
 #: numbers meaningful; this driver fans flavor lanes across a runner shared by
 #: co-resident jobs, which is the condition that policy names.
 _PERF_HOLDOUT: Final[str] = "not perf"
-#: Wall ceiling for a preflight pass. The dev tree's real install and harness
-#: tests legitimately exceed the product suite's 300 s ini ceiling; 900 s still
-#: kills a genuine wedge in minutes.
-_PREFLIGHT_TIMEOUT_SECONDS: Final[int] = 900
 
 
 @dataclass(frozen=True)
@@ -233,7 +229,7 @@ class PytestPass:
         target: The path this pass collects from.
         parallel: Whether the pass may run across xdist workers.
         ignore: Paths held out of this pass because another pass owns them.
-        timeout_seconds: Per-test wall ceiling, or ``None`` for the ini default.
+        timeout_seconds: Explicit caller per-test deadline; ``None`` emits no override.
         pinned_basetemp: Whether to pin a repo-local basetemp for the pass.
     """
 
@@ -273,15 +269,14 @@ class PytestPass:
 #:
 #: Split because the directory holds both cohorts and one invocation cannot
 #: carry both schedulers. Together with the installed-oracle pass below they
-#: own every test in the directory except the ``perf`` holdout, which is the
-#: invariant ``dev/packaging/tests/test_preflight_recipe_selection.py`` proves.
+#: own every test in the directory, which is the invariant
+#: ``dev/packaging/tests/test_preflight_recipe_selection.py`` proves.
 _PREFLIGHT_PASSES: Final[tuple[PytestPass, ...]] = (
     PytestPass(
         label="preflight-tests",
         markers=f"(unit or integration) and not serial and {_PERF_HOLDOUT}",
         target=_PACKAGING_TESTS,
         parallel=True,
-        timeout_seconds=_PREFLIGHT_TIMEOUT_SECONDS,
         pinned_basetemp=True,
     ),
     PytestPass(
@@ -290,7 +285,6 @@ _PREFLIGHT_PASSES: Final[tuple[PytestPass, ...]] = (
         target=_PACKAGING_TESTS,
         parallel=False,
         ignore=(_INSTALLED_ORACLES_TESTS,),
-        timeout_seconds=_PREFLIGHT_TIMEOUT_SECONDS,
         pinned_basetemp=True,
     ),
 )
@@ -433,16 +427,11 @@ _NO_TESTS_COLLECTED: Final[int] = 5
 def serial_pass_modules(pytest_pass: PytestPass, repo_root: Path) -> tuple[str, ...]:
     """Return the modules a SERIAL pass should be split across, or empty.
 
-    A serial pass runs `-n0`, so one wedged test takes the whole invocation
-    with it -- and on Windows pytest-timeout falls back to the thread method,
-    which cannot interrupt `subprocess.wait`, so the session dies with NO
-    summary line at all and every later module in that pass is never reached.
-    A campaign could therefore surface at most one serial defect per run, which
-    is expensive locally and ruinous on CI where the run costs an hour of a
-    two-machine fleet.
+    A serial pass runs ``-n0``. A process crash or forced termination can
+    end the invocation before later modules run and prevent a summary.
 
-    Splitting the invocation bounds that blast radius to one module. The
-    selection is unchanged: same markers, same files, same scheduler.
+    Separate invocations let later modules report after a failed module.
+    The selection is unchanged: same markers, same files, same scheduler.
 
     A parallel pass is returned empty and left whole, because xdist already
     isolates a crashing test into a worker.
@@ -549,6 +538,22 @@ def _adopt_cohort(source: Path, repo_root: Path) -> None:
     shutil.copytree(cohort, destination)
 
 
+def _run_campaign_forms(selectors: tuple[str, ...], workers: int, repo_root: Path, log_dir: Path) -> None:
+    failures: list[str] = []
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(_run_form, selector, repo_root, log_dir) for selector in selectors]
+        for future in futures:
+            selector, exit_code, seconds, log_path = future.result()
+            verdict = "ok" if exit_code == 0 else f"FAILED exit {exit_code}"
+            print(f"[campaign] form {selector}: {verdict} in {seconds / 60:.1f} min", flush=True)
+            sys.stdout.write(log_path.read_text(encoding=_UTF_8, errors="replace"))
+            sys.stdout.flush()
+            if exit_code != 0:
+                failures.append(selector)
+    if failures:
+        raise SystemExit(f"packaging forms failed: {', '.join(sorted(failures))}")
+
+
 def main(argv: list[str] | None = None) -> int:
     """Build the cohort once, run the profile's lanes concurrently, then the serial oracles."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -594,12 +599,8 @@ def main(argv: list[str] | None = None) -> int:
         test_workers = _test_worker_count(args.test_workers)
         # Every preflight pass runs even after one fails, and the campaign
         # reports all of them together. The exit status is unchanged -- any
-        # failure still ends the run -- but stopping at the first one made a
-        # single wedged module hide every later pass, so a campaign could
-        # surface at most one defect per invocation. That is expensive
-        # everywhere and ruinous on CI, where the invocation costs an hour of
-        # a two-machine fleet. A gate should report what it found, not the
-        # first thing it found.
+        # failure still ends the run -- but stopping at the first one hid
+        # every later pass's outcome.
         preflight_failures = preflight_pass_failures(_PREFLIGHT_PASSES, repo_root, test_workers)
         if preflight_failures:
             raise SystemExit("campaign preflight failed: " + "; ".join(preflight_failures))
@@ -623,20 +624,7 @@ def main(argv: list[str] | None = None) -> int:
     for lane_name in dict.fromkeys(selector.split("/", 1)[0] for selector in selectors):
         print(f"[campaign]   lane {lane_name}: {_LANES[lane_name].invariant}", flush=True)
 
-    failures: list[str] = []
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(_run_form, selector, repo_root, log_dir) for selector in selectors]
-        for future in futures:
-            selector, exit_code, seconds, log_path = future.result()
-            verdict = "ok" if exit_code == 0 else f"FAILED exit {exit_code}"
-            print(f"[campaign] form {selector}: {verdict} in {seconds / 60:.1f} min", flush=True)
-            sys.stdout.write(log_path.read_text(encoding=_UTF_8, errors="replace"))
-            sys.stdout.flush()
-            if exit_code != 0:
-                failures.append(selector)
-
-    if failures:
-        raise SystemExit(f"packaging forms failed: {', '.join(sorted(failures))}")
+    _run_campaign_forms(selectors, workers, repo_root, log_dir)
 
     _run_step(
         pytest_pass_argv(_INSTALLED_ORACLES_PASS, repo_root, test_workers=None),

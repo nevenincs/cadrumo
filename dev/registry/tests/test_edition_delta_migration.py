@@ -35,30 +35,21 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev._paths import REPO_ROOT
+from dev.test_runs.paths import test_log_root as development_log_root
 
-from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, restatement_differences
+from ..analysis.delta_minimality import restatement_differences
+from ..compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_delta_migration import (
-    BlockedCause,
-    EditionPlan,
-    MigrationOutcome,
-    MigrationPlan,
-    PredecessorBasis,
-    _choose_drops,
-    _Defaults,
-    _EditionSource,
-    _Placed,
-    _read_edition,
-    _validate_staged_modelo,
-    assess_migration_state,
-    main,
-    migrate_modelo,
-    persist_migration_report,
-    plan_migration,
-)
+from ..edition_delta_assessment import assess_migration_state
+from ..edition_delta_migration import MigrationOutcome, main, migrate_modelo, persist_migration_report
+from ..edition_delta_planning import plan_migration
+from ..edition_delta_row_delta import _choose_drops
+from ..edition_delta_source import _Defaults, _EditionSource, _Placed, _read_edition
+from ..edition_delta_source_publication import _validate_staged_modelo
+from ..edition_delta_types import BlockedCause, EditionPlan, MigrationPlan, PredecessorBasis
 from ..edition_export_scenarios import edition_export_scenarios
 from ..edition_round_trip import RoundTripFindingKind, copy_registry_tree, edition_round_trip_report
 
@@ -66,7 +57,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUNDLED = bundled_path("registry", "aeat")
 _PILOT = "303"
-_NO_EXPORT_SURFACE = "194"
+#: M136's two enrolled form-only editions have no export surface and can be
+#: detached losslessly. M194 now publishes exports and its distinct lineage
+#: attestation references must remain on their original predecessor edges.
+_NO_EXPORT_SURFACE = "136"
 _ROW_HEADER = re.compile(r'^\[\[revisions\.(?:"[^"\n]+"|[^".\]\n]+)\.casillas\]\]$', re.MULTILINE)
 _ROW_SOURCE_LINE = re.compile(r"^source_refs = \[[^\]]*\]\n", re.MULTILINE)
 #: Findings the pilot is expected to carry: bytes no scenario covers, and labels
@@ -206,9 +200,7 @@ def registry_copy(tmp_path_factory: pytest.TempPathFactory) -> Callable[[Path, s
 
     ``_build_registry`` re-materialises every edition of a modelo out of the
     bundled corpus, and its output is a pure function of the modelo id, so the
-    module was paying for the same tree repeatedly: nine builds covering three
-    distinct modelos. Measured here, a build costs 16.6 s for the pilot and 9.1 s
-    for 194 against 0.5 s and 0.3 s to copy the finished tree.
+    module would otherwise pay for the same materialized tree repeatedly.
 
     Every consumer still receives its own directory, because these tests plant
     defects in the tree they are given.
@@ -723,9 +715,9 @@ def test_blocked_semantic_edition_remains_readable_for_independent_later_work(
     registry = _semantic_withdrawal_fixture(tmp_path / "registry")
     definition = _load(registry, "999")
 
-    from .. import edition_delta_migration as migration
+    from .. import edition_delta_planning_predecessor as predecessor_policy
 
-    original = migration._choose_predecessor
+    original = predecessor_policy.choose_predecessor
 
     def semantic_middle(
         position: int,
@@ -738,7 +730,7 @@ def test_blocked_semantic_edition_remains_readable_for_independent_later_work(
             return "2023", PredecessorBasis.DECLARED, []
         return original(position, revisions, source, reconsider_technical_roots=reconsider_technical_roots)
 
-    monkeypatch.setattr(migration, "_choose_predecessor", semantic_middle)
+    monkeypatch.setattr(predecessor_policy, "choose_predecessor", semantic_middle)
 
     plan = plan_migration(registry / "modelos" / "999", definition)
 
@@ -807,6 +799,11 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(
     registry = registry_copy(tmp_path / "target", _NO_EXPORT_SURFACE)
     before = _load(registry, _NO_EXPORT_SURFACE)
     assert not any(revision.export_layouts for revision in before.revisions.values())
+    assert len(before.revisions) > 1, "the clean publication fixture must exercise inheritance"
+    modelo_dir = registry / "modelos" / _NO_EXPORT_SURFACE
+    before_files = {
+        path.relative_to(modelo_dir).as_posix(): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()
+    }
     pristine = shutil.copytree(registry, tmp_path / "pristine" / "registry" / "aeat")
 
     outcome = migrate_modelo(
@@ -815,6 +812,10 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(
 
     assert outcome.report is not None and outcome.report.findings == ()
     assert outcome.applied
+    assert outcome.changed
+    assert before_files != {
+        path.relative_to(modelo_dir).as_posix(): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()
+    }, "the clean proof must publish an actual source transformation"
     published = _load(registry, _NO_EXPORT_SURFACE)
     assert {str(r.id): r.predecessor for r in published.revisions.values()} == {
         str(edition.revision_id): None for edition in outcome.plan.editions
@@ -894,7 +895,7 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     assert " publication_readiness_status=failed " in summary, output
     assert " publication_execution_status=not_performed " in summary, output
     assert " applied=False " in summary, output
-    assert persisted.is_relative_to((REPO_ROOT / ".logs" / "audit-runs").resolve())
+    assert persisted.is_relative_to((development_log_root() / ".logs" / "audit-runs").resolve())
     assert persisted.is_file()
     assert "summary changed=True" in persisted.read_text(encoding="utf-8")
     assert not persisted.is_relative_to((tmp_path / "work").resolve())

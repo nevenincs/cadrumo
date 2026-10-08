@@ -1,6 +1,16 @@
 modelo:
   schema:
     '193':
+      binding:
+        modelo-193-123-base-anual:
+          label: Base anual de retenciones e ingresos a cuenta · Modelo 123, casilla
+            06
+        modelo-193-123-retenciones-anual:
+          label: Retenciones e ingresos a cuenta del año · Modelo 123, casilla 09
+        modelo-193-perceptor-rows-base-total:
+          label: Total de bases de retenciones e ingresos a cuenta de los perceptores
+        modelo-193-perceptor-rows-retenciones-total:
+          label: Total de retenciones e ingresos a cuenta de los perceptores
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
@@ -121,6 +131,48 @@ modelo:
           a cuenta sobre determinados rendimientos del capital mobiliario y determinadas
           rentas. Resumen anual.
         title: Resumen anual de retenciones sobre capital mobiliario
+      form:
+        context:
+          ejercicio:
+            heading: Ejercicio
+          nif:
+            heading: NIF del declarante
+          nombre:
+            heading: Apellidos y nombre o razón social
+        page:
+          gastos:
+            heading: 'Anexo: relación de gastos'
+          perceptores-1:
+            heading: Relación de perceptores · 1
+          perceptores-2:
+            heading: Relación de perceptores · 2
+          perceptores-3:
+            heading: Relación de perceptores · 3
+          resumen:
+            heading: Hoja resumen
+        section:
+          contacto:
+            heading: Persona de contacto
+          declaracion:
+            heading: Identificación y tipo de declaración
+          declarante:
+            heading: Declarante y ejercicio
+          gastos:
+            heading: Gastos de administración y depósito
+          identificacion:
+            heading: Identificación del perceptor
+          importes:
+            heading: Percepciones y retenciones
+          operacion:
+            heading: Identificación de la operación
+          prestamos:
+            heading: Préstamos de valores y otros datos
+          rendimiento:
+            heading: Rendimiento y cuenta de valores
+          territorio:
+            heading: Distribución territorial
+          totales:
+            heading: Resumen de los datos incluidos en la declaración
       revision:
         '2022':
           field:

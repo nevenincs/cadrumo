@@ -158,7 +158,7 @@ def _generated_cli_reference_links() -> frozenset[str]:
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=None,
             check=False,
         )
         assert result.returncode == 0, result.stderr

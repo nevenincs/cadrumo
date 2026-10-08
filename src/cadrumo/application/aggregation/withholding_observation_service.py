@@ -10,13 +10,15 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Protocol
+from typing import Annotated, Literal, Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.period import Period
@@ -170,39 +172,63 @@ class WithholdingProjectionEntry(BaseModel):
 
     @model_validator(mode="after")
     def _has_exactly_one_projection(self) -> WithholdingProjectionEntry:
-        if (self.retencion is None) == (self.percepcion is None):
-            raise ValueError("one and only one withholding projection is required")
-        if self.retencion is not None:
-            expected_role = WithholdingProjectionRole.RETENCION
-            source_object_id = self.retencion.source_object_id
-        else:
-            if self.percepcion is None:
-                raise ValueError("one and only one withholding projection is required")
-            expected_role = WithholdingProjectionRole.PERCEPCION
-            source_object_id = self.percepcion.source_id
-        if self.identity.projection_role is not expected_role:
-            raise ValueError("projection role must match its payload")
-        if source_object_id != self.identity.source_object_id:
-            raise ValueError("projection source must match its composite identity")
-        if (
-            self.allocation.liability.source_kind != self.identity.source_kind
-            or self.allocation.liability.source_object_id != self.identity.source_object_id
-            or self.allocation.liability.source_revision_id != self.identity.source_revision_id
-            or self.allocation.recognition_event_id != self.identity.recognition_event_id
-            or self.allocation.allocation_id != self.identity.allocation_id
-        ):
-            raise ValueError("economic allocation must match its projection identity")
-        if self.retencion is not None and (
-            self.retencion.taxable_base != self.allocation.allocated_base
-            or self.retencion.retencion_amount != self.allocation.allocated_withholding
-        ):
-            raise ValueError("retencion projection amounts must match economic allocation")
-        if self.percepcion is not None and (
-            self.percepcion.percibido_dinerario != self.allocation.allocated_base
-            or self.percepcion.retencion_practicada != self.allocation.allocated_withholding
-        ):
-            raise ValueError("percepcion projection amounts must match economic allocation")
+        role, source_object_id = _projection_payload(self)
+        _validate_projection_identity(self, role=role, source_object_id=source_object_id)
+        _validate_projection_amounts(self)
         return self
+
+
+def _projection_payload(entry: WithholdingProjectionEntry) -> tuple[WithholdingProjectionRole, str]:
+    if (entry.retencion is None) == (entry.percepcion is None):
+        raise ValueError("one and only one withholding projection is required")
+    if entry.retencion is not None:
+        return WithholdingProjectionRole.RETENCION, entry.retencion.source_object_id
+    if entry.percepcion is None:
+        raise ValueError("one and only one withholding projection is required")
+    return WithholdingProjectionRole.PERCEPCION, entry.percepcion.source_id
+
+
+def _validate_projection_identity(
+    entry: WithholdingProjectionEntry,
+    *,
+    role: WithholdingProjectionRole,
+    source_object_id: str,
+) -> None:
+    if entry.identity.projection_role is not role:
+        raise ValueError("projection role must match its payload")
+    if source_object_id != entry.identity.source_object_id:
+        raise ValueError("projection source must match its composite identity")
+    liability = entry.allocation.liability
+    if (
+        liability.source_kind != entry.identity.source_kind
+        or liability.source_object_id != entry.identity.source_object_id
+        or liability.source_revision_id != entry.identity.source_revision_id
+        or entry.allocation.recognition_event_id != entry.identity.recognition_event_id
+        or entry.allocation.allocation_id != entry.identity.allocation_id
+    ):
+        raise ValueError("economic allocation must match its projection identity")
+
+
+def _validate_projection_amounts(entry: WithholdingProjectionEntry) -> None:
+    if entry.retencion is not None and (
+        entry.retencion.taxable_base != entry.allocation.allocated_base
+        or entry.retencion.retencion_amount != entry.allocation.allocated_withholding
+    ):
+        raise ValueError("retencion projection amounts must match economic allocation")
+    if entry.percepcion is not None and (
+        entry.percepcion.percibido_dinerario != entry.allocation.allocated_base
+        or entry.percepcion.retencion_practicada != entry.allocation.allocated_withholding
+    ):
+        raise ValueError("percepcion projection amounts must match economic allocation")
+
+
+class WithholdingSourceCatalogueBaseline(BaseModel):
+    """Source catalogue revision that must still hold when evidence commits."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_kind: Literal[BindingSourceKind.PAYABLE_INVOICE, BindingSourceKind.LEDGER_TRANSACTION]
+    revision_id: Hex64Str
 
 
 class WithholdingMutationEnvelope(BaseModel):
@@ -217,26 +243,12 @@ class WithholdingMutationEnvelope(BaseModel):
     baseline: WithholdingWindowBaseline | None = None
     reason: str | None = Field(default=None, min_length=1, max_length=500)
     supersedes_generation_id: WithholdingGenerationId | None = None
+    # Admission control for the write, independent of the evidence's replay identity.
+    source_catalogue_baseline: WithholdingSourceCatalogueBaseline | None = Field(default=None, exclude=True, repr=False)
 
     @model_validator(mode="after")
     def _validate_shape(self) -> WithholdingMutationEnvelope:
-        if self.baseline is not None and self.baseline.scope_token != self.scope.token:
-            raise ValueError("withholding baseline belongs to another window")
-        if self.mode is WithholdingMutationMode.APPEND:
-            if not self.entries or self.baseline is not None:
-                raise ValueError("append requires entries and no baseline")
-        elif self.mode is WithholdingMutationMode.REPLACE:
-            if not self.entries or self.baseline is None:
-                raise ValueError("replace requires entries and an exact baseline")
-        else:
-            if self.entries or self.baseline is None or not self.reason:
-                raise ValueError("clear requires a baseline, a reason, and no entries")
-        if self.supersedes_generation_id is not None and (
-            self.mode is not WithholdingMutationMode.REPLACE or self.baseline is None or not self.reason
-        ):
-            raise ValueError("a correction requires baseline-guarded replace and a reason")
-        if len({entry.identity.token for entry in self.entries}) != len(self.entries):
-            raise ValueError("projection identities must be unique within one command")
+        _validate_mutation_envelope(self)
         return self
 
     @property
@@ -245,6 +257,50 @@ class WithholdingMutationEnvelope(BaseModel):
         value = self.model_dump(mode="json")
         value["entries"] = sorted(value["entries"], key=lambda item: _identity_json_token(item["identity"]))
         return sha256_hex(_canonical_json(value).encode("utf-8"))
+
+
+def _validate_mutation_envelope(envelope: WithholdingMutationEnvelope) -> None:
+    _validate_source_catalogue_baseline(envelope)
+    _validate_window_baseline(envelope)
+    _validate_mode_shape(envelope)
+    _validate_correction_shape(envelope)
+    _validate_unique_projection_identities(envelope)
+
+
+def _validate_source_catalogue_baseline(envelope: WithholdingMutationEnvelope) -> None:
+    baseline = envelope.source_catalogue_baseline
+    if baseline is not None and any(
+        entry.identity.source_kind != baseline.source_kind.value for entry in envelope.entries
+    ):
+        raise ValueError("withholding source baseline must match its projection sources")
+
+
+def _validate_window_baseline(envelope: WithholdingMutationEnvelope) -> None:
+    if envelope.baseline is not None and envelope.baseline.scope_token != envelope.scope.token:
+        raise ValueError("withholding baseline belongs to another window")
+
+
+def _validate_mode_shape(envelope: WithholdingMutationEnvelope) -> None:
+    if envelope.mode is WithholdingMutationMode.APPEND:
+        if not envelope.entries or envelope.baseline is not None:
+            raise ValueError("append requires entries and no baseline")
+    elif envelope.mode is WithholdingMutationMode.REPLACE:
+        if not envelope.entries or envelope.baseline is None:
+            raise ValueError("replace requires entries and an exact baseline")
+    elif envelope.entries or envelope.baseline is None or not envelope.reason:
+        raise ValueError("clear requires a baseline, a reason, and no entries")
+
+
+def _validate_correction_shape(envelope: WithholdingMutationEnvelope) -> None:
+    if envelope.supersedes_generation_id is not None and (
+        envelope.mode is not WithholdingMutationMode.REPLACE or envelope.baseline is None or not envelope.reason
+    ):
+        raise ValueError("a correction requires baseline-guarded replace and a reason")
+
+
+def _validate_unique_projection_identities(envelope: WithholdingMutationEnvelope) -> None:
+    if len({entry.identity.token for entry in envelope.entries}) != len(envelope.entries):
+        raise ValueError("projection identities must be unique within one command")
 
 
 class WithholdingWindowState(BaseModel):
@@ -331,13 +387,10 @@ class WithholdingObservationService:
         )
         for attempt in range(attempts):
             state = self._repository.load_window(envelope.scope)
-            replay = self._repository.idempotency_replay(envelope.scope, envelope.idempotency_key)
-            if replay is not None:
-                if replay.command_digest != envelope.command_digest:
-                    raise WithholdingObservationMutationError("idempotency_conflict")
-                return WithholdingMutationResult(baseline=replay.baseline, replayed=True)
-            if envelope.mode is not WithholdingMutationMode.APPEND and envelope.baseline != state.baseline:
-                raise WithholdingObservationMutationError("stale_baseline")
+            replay_result = _replay_result(self._repository, envelope)
+            if replay_result is not None:
+                return replay_result
+            _require_current_baseline(envelope, state)
             try:
                 successor = _successor(state.entries, envelope)
                 baseline = self._repository.commit_transition(
@@ -347,9 +400,7 @@ class WithholdingObservationService:
                 )
                 return WithholdingMutationResult(baseline=baseline)
             except WithholdingObservationMutationError as exc:
-                if exc.refusal_code != "concurrent_write":
-                    raise
-                if attempt + 1 == attempts:
+                if not _retry_after_concurrent_write(exc, attempt=attempt, attempts=attempts):
                     raise
         raise AssertionError("bounded append loop must return or raise")
 
@@ -360,6 +411,27 @@ class WithholdingObservationService:
     def read_generation(self, scope: WithholdingWindowScope, generation_id: str) -> WithholdingGenerationAudit | None:
         """Read immutable correction/audit history for an exact window."""
         return self._repository.load_generation(scope, generation_id)
+
+
+def _replay_result(
+    repository: WithholdingObservationMutationRepository,
+    envelope: WithholdingMutationEnvelope,
+) -> WithholdingMutationResult | None:
+    replay = repository.idempotency_replay(envelope.scope, envelope.idempotency_key)
+    if replay is None:
+        return None
+    if replay.command_digest != envelope.command_digest:
+        raise WithholdingObservationMutationError("idempotency_conflict")
+    return WithholdingMutationResult(baseline=replay.baseline, replayed=True)
+
+
+def _require_current_baseline(envelope: WithholdingMutationEnvelope, state: WithholdingWindowState) -> None:
+    if envelope.mode is not WithholdingMutationMode.APPEND and envelope.baseline != state.baseline:
+        raise WithholdingObservationMutationError("stale_baseline")
+
+
+def _retry_after_concurrent_write(error: WithholdingObservationMutationError, *, attempt: int, attempts: int) -> bool:
+    return error.refusal_code == "concurrent_write" and attempt + 1 < attempts
 
 
 def _successor(
@@ -402,6 +474,7 @@ __all__ = [
     "WithholdingProjectionIdentity",
     "WithholdingProjectionRole",
     "WithholdingScopeToken",
+    "WithholdingSourceCatalogueBaseline",
     "WithholdingWindowBaseline",
     "WithholdingWindowScope",
     "WithholdingWindowState",

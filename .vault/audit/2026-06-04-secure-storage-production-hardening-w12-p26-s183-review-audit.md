@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:eb561d64e85912253b545feafd9b6d3346e7aa628a7c71b0cdc7076afe0ae2bd'
+modified: '2026-10-03'
+body_hash: 'sha256:84e0f6d009120b90586f2814abd7b99360997d062065558726193486c4e1ff51'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The added test exercises the public active-bucket factory under real settings ov
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime.py src/aeat/adapters/persistence/storage/test_hardening_convention_guards.py` passed with 39 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/runtime.py src/aeat/adapters/persistence/storage/runtime_repository.py src/aeat/adapters/persistence/storage/test_runtime.py src/aeat/adapters/persistence/storage/test_hardening_convention_guards.py` passed.
+- the historical check passed with 39 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` failed to spawn `vaultspec-core`; this is tracked as a tooling gate failure and was not treated as a blocker per user instruction.
 - Scoped hygiene scans found no private runtime-helper import, naked environment access, monkeypatch/fake/stub shortcuts, skips/xfails, silent pass/suppress, or ignore pragmas.

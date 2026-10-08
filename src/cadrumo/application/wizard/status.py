@@ -19,6 +19,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.values import UserProfileRecord
 from ..operator_actions.models import DeclaredNextAction
 from ..state_projection_auth import build_auth_readiness_without_live_backend
 from ..user_profile.completeness import iva_regime_required
@@ -217,11 +218,19 @@ def load_active_taxpayer_profile(
         raise WizardStatusError(
             "active taxpayer projection requires the schema pinned to the authority operation",
         )
+    return taxpayer_profile_from_record(record, schema=schema)
+
+
+def taxpayer_profile_from_record(record: UserProfileRecord, *, schema: ProfileSchemaDefinition) -> TaxpayerProfile:
+    """Apply canonical taxpayer readiness to an explicitly captured profile record.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
+    """
     values: dict[str, str] = dict(record_to_path_values(record))
     if not values.get(_TAX_ID_PATH):
         _require_active_profile_tax_id(
             values,
-            active_profile=resolve_active_bucket_id(),
+            active_profile=str(record.profile_id),
             requirement=_grounded_tax_id_requirement(schema=schema),
         )
     return projection_for_taxpayer(record, schema=schema)

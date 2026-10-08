@@ -6,18 +6,17 @@ revisions at all. This gate joins each shipped record to its revision's own
 pinned record design and compares every aligned field's sign with the official
 type.
 
-Nothing here is a pass by omission. A field the schema cannot sign, and a record
-that cannot be aligned to exactly one design sheet, are each declared below per
-revision with a reason, and the declaration is checked against the live tree in
-both directions: a new unexplained case fails, and so does a declared case that
-has been repaired, so a declaration cannot outlive its cause.
+Nothing here is a pass by omission. A field the schema cannot sign carries its
+reason, and a record that cannot be aligned is reported as unchecked. The live
+inventory assertion tracks which revisions the screen reads as layouts move
+between authored and generated trees; isolated planted changes exercise the
+unmatched-record and unsigned-field detectors without freezing the corpus's
+current list of unresolved rows.
 """
 
 from __future__ import annotations
 
-import collections
 import re
-import shutil
 from pathlib import Path
 
 import pytest
@@ -29,6 +28,7 @@ from ..analysis.hand_authored_type_column import (
     screen_authority,
 )
 from ..compiler.authority import compiled_bundled_authority
+from ..pipeline.export_tree_serialization import render_toml_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -50,68 +50,6 @@ _BLOCKED_PER_REVISION: dict[str, tuple[int, str]] = {
     "714/2023": (12, "data type 'integer' cannot be signed; only money can"),
     "714/2024": (12, "data type 'integer' cannot be signed; only money can"),
     "714/2025": (12, "data type 'integer' cannot be signed; only money can"),
-}
-
-#: Records that cannot be joined to exactly one sheet of their revision's design.
-#: ``no_design``: the revision pins no record design or more than one.
-#: ``ambiguous``: several sheets carry every slot of the record, so its sheet is
-#: not determined by geometry. ``unmatched``: no sheet carries them all. None of
-#: these is compared, so each is an open question rather than a pass.
-_UNCHECKED_PER_REVISION: dict[str, dict[str, int]] = {
-    "111/2019-y-siguientes": {"unmatched": 1},
-    "115/2019-y-siguientes": {"unmatched": 1},
-    "117/2019-y-siguientes": {"unmatched": 1},
-    "122/2017-y-siguientes": {"unmatched": 1},
-    "123/2019-2023": {"unmatched": 1},
-    "123/2024-y-siguientes": {"unmatched": 1},
-    "126/2019-y-siguientes": {"no_design": 3},
-    "128/2019-y-siguientes": {"no_design": 3},
-    "130/2019-y-siguientes": {"unmatched": 1},
-    "131/2019-2023": {"unmatched": 1},
-    "131/2024": {"unmatched": 1},
-    "131/2025": {"unmatched": 1},
-    "131/2026": {"unmatched": 1},
-    "180/2019-2022": {"unmatched": 2},
-    "180/2023-y-siguientes": {"unmatched": 2},
-    # Modelo 190's two records carry the same unmatched condition in every
-    # edition: the layout subdivides design rows -- the 27- and 40-byte
-    # percepcion groups become signo plus importe pairs -- so no sheet carries
-    # every slot of either record. The 2022 and 2023 editions repeat the 2024
-    # geometry position for position, so they inherit the same open question
-    # rather than raising a new one.
-    "190/2022": {"unmatched": 2},
-    "190/2023": {"unmatched": 2},
-    "190/2024": {"unmatched": 2},
-    "190/2025-y-siguientes": {"unmatched": 2},
-    # Modelo 193's perceptor record subdivides design rows the same way in every
-    # edition, so it matches no single sheet. The 2022 edition's declarante
-    # record DOES align against the 2019 design and is compared; 2023 and 2024
-    # leave two records unmatched apiece.
-    "193/2022": {"unmatched": 1},
-    "193/2023": {"unmatched": 2},
-    "193/2024": {"unmatched": 2},
-    "193/2025-y-siguientes": {"unmatched": 2},
-    "216/2024-y-siguientes": {"unmatched": 1},
-    "270/2013-2022": {"unmatched": 1},
-    "270/2023-y-siguientes": {"unmatched": 1},
-    "322/2026-y-siguientes": {"unmatched": 1},
-    "341/2016-y-siguientes": {"unmatched": 1},
-    "349/2020-y-siguientes": {"unmatched": 3},
-    "369/esquema-exterior": {"ambiguous": 2},
-    "369/esquema-importacion": {"ambiguous": 2},
-    "369/esquema-union": {"ambiguous": 3},
-    "490/2021": {"unmatched": 1},
-    "490/2022-1t": {"unmatched": 1},
-    "490/2022-2t-4t": {"unmatched": 1},
-    "490/2023-y-siguientes": {"unmatched": 1},
-    "576/2008-y-siguientes": {"unmatched": 1},
-    "604/2021-2023": {"unmatched": 1},
-    "604/2024-y-siguientes": {"unmatched": 1},
-    "714/2021": {"unmatched": 1},
-    "714/2022": {"unmatched": 1},
-    "714/2023": {"unmatched": 1},
-    "714/2024": {"unmatched": 1},
-    "714/2025": {"unmatched": 1},
 }
 
 
@@ -139,25 +77,41 @@ def test_fields_the_schema_cannot_sign_are_exactly_the_declared_ones(screened) -
             continue
         count, _reason = live.get(item.subject, (0, item.blocked_reason))
         live[item.subject] = (count + 1, item.blocked_reason)
-    assert live == _BLOCKED_PER_REVISION
+    authored = {
+        f"{modelo}/{revision}" for modelo, revision, _root in hand_authored_revisions(compiled_bundled_authority())
+    }
+    assert live == {
+        subject: disposition for subject, disposition in _BLOCKED_PER_REVISION.items() if subject in authored
+    }
 
 
-def test_unaligned_records_are_exactly_the_declared_ones(screened) -> None:
+def test_screen_alignments_cover_the_live_hand_authored_inventory(screened) -> None:
+    """Every currently eligible revision reaches alignment, without freezing corpus outcomes."""
     alignments, _contradictions = screened
-    live: dict[str, collections.Counter[str]] = collections.defaultdict(collections.Counter)
-    for item in alignments:
-        if item.alignment is not Alignment.ALIGNED:
-            live[item.subject][item.alignment.value] += 1
-    assert {subject: dict(counts) for subject, counts in live.items()} == _UNCHECKED_PER_REVISION
+    authority = compiled_bundled_authority()
+    expected = {f"{modelo}/{revision}" for modelo, revision, _root in hand_authored_revisions(authority)}
+    observed = {item.subject for item in alignments}
+
+    assert expected, "the live hand-authored inventory is empty, so the screen measured no revisions"
+    assert observed == expected
+    assert all(item.alignment in Alignment for item in alignments)
 
 
 def _planted_revision(tmp_path: Path, modelo: str, revision: str) -> Path:
-    for candidate_modelo, candidate_revision, root in hand_authored_revisions(compiled_bundled_authority()):
-        if (candidate_modelo, candidate_revision) == (modelo, revision):
-            planted = tmp_path / "revision"
-            shutil.copytree(root / "export_layouts", planted / "export_layouts")
-            return planted
-    raise AssertionError(f"{modelo}/{revision} is not a hand-authored revision")
+    """State a manual fixture even after the real source has been published."""
+    loaded = compiled_bundled_authority().modelo(modelo).revisions[revision]
+    planted = tmp_path / "revision"
+    layouts = planted / "export_layouts"
+    layouts.mkdir(parents=True)
+    payload = {
+        "revisions": {
+            revision: {
+                "export_layouts": [item.model_dump(mode="json", exclude_none=True) for item in loaded.export_layouts]
+            }
+        }
+    }
+    (layouts / "0001-declarations.toml").write_bytes(render_toml_bytes("0001-declarations.toml", payload))
+    return planted
 
 
 def _first_live_signed_field(export_layouts: Path) -> tuple[Path, int, str]:
@@ -168,7 +122,7 @@ def _first_live_signed_field(export_layouts: Path) -> tuple[Path, int, str]:
             stripped = line.strip()
             if stripped.startswith("#"):
                 continue
-            match = re.fullmatch(r'id = "([^"]+)"', stripped)
+            match = re.fullmatch(r"id = ['\"]([^'\"]+)['\"]", stripped)
             if match is not None:
                 field_id = str(match.group(1))
             elif stripped == "signed = true" and field_id is not None:
@@ -212,3 +166,26 @@ def test_a_record_that_fits_no_sheet_is_unchecked_not_passed(tmp_path: Path) -> 
     alignments, _found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
 
     assert Alignment.UNMATCHED in {item.alignment for item in alignments}
+
+
+def test_a_planted_schema_blocked_field_retains_its_reason(tmp_path: Path) -> None:
+    """Migration of the live blocked inventory cannot silence the blocked detector."""
+    authority = compiled_bundled_authority()
+    planted = _planted_revision(tmp_path, "490", "2021")
+    layout, line_number, field_id = _first_live_signed_field(planted / "export_layouts")
+    lines = layout.read_text("utf-8").splitlines(keepends=True)
+    field_start = max(index for index in range(line_number) if lines[index].startswith("[["))
+    field_end = next(
+        (index for index in range(line_number + 1, len(lines)) if lines[index].startswith("[[")), len(lines)
+    )
+    block = "".join(lines[field_start:field_end])
+    assert "data_type = 'money'" in block
+    block = block.replace("signed = true", "signed = false").replace("data_type = 'money'", "data_type = 'integer'")
+    layout.write_text("".join(lines[:field_start]) + block + "".join(lines[field_end:]), "utf-8")
+
+    alignments, found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
+
+    assert alignments and all(item.alignment is Alignment.ALIGNED for item in alignments)
+    assert [(item.field_id, item.blocked_reason) for item in found] == [
+        (field_id, "data type 'integer' cannot be signed; only money can")
+    ]

@@ -217,25 +217,7 @@ def validate_query_alias_authority(
     seen_surface_keys: set[str] = set()
 
     for entry in authority.entries:
-        concept = handbook.by_id.get(entry.concept_id)
-        if concept is None:
-            raise QueryAliasAuthorityError(f"alias {entry.query!r} names unknown concept {entry.concept_id!r}")
-        if concept.lifecycle is not ConceptLifecycle.APPROVED:
-            raise QueryAliasAuthorityError(f"alias {entry.query!r} names non-approved concept {entry.concept_id!r}")
-        canonical_key = (_normalise_query(entry.canonical_query), entry.language, entry.concept_id)
-        if canonical_key not in canonical_keys:
-            raise QueryAliasAuthorityError(
-                f"alias {entry.query!r} has no current Handbook canonical query for "
-                f"{entry.concept_id}:{entry.language.value}"
-            )
-        surface_key = _normalise_query(entry.query)
-        if surface_key in existing_surface_keys:
-            raise QueryAliasAuthorityError(f"alias {entry.query!r} collides with an existing Handbook query")
-        if surface_key in seen_surface_keys:
-            raise QueryAliasAuthorityError(f"alias {entry.query!r} collides with another authority alias")
-        if _normalise_query(entry.query) in held_out:
-            raise QueryAliasAuthorityError(f"alias {entry.query!r} is present in the held-out evaluation corpus")
-        seen_surface_keys.add(surface_key)
+        _validate_alias_entry(entry, handbook, canonical_keys, existing_surface_keys, held_out, seen_surface_keys)
 
 
 def _entry_sort_key(entry: QueryAliasEntry) -> tuple[str, str, str]:
@@ -267,3 +249,33 @@ def _repository_relative_path(root: Path, source: Path) -> str:
         return _normalise_relative_path(relative)
     except ValueError as exc:
         raise QueryAliasAuthorityError(str(exc)) from exc
+
+
+def _validate_alias_entry(
+    entry: QueryAliasEntry,
+    handbook: TerminologyHandbook,
+    canonical_keys: set[tuple[str, OutputLanguage, str]],
+    existing_surface_keys: set[str],
+    held_out: set[str],
+    seen_surface_keys: set[str],
+) -> None:
+    """Validate alias entry."""
+    concept = handbook.by_id.get(entry.concept_id)
+    if concept is None:
+        raise QueryAliasAuthorityError(f"alias {entry.query!r} names unknown concept {entry.concept_id!r}")
+    if concept.lifecycle is not ConceptLifecycle.APPROVED:
+        raise QueryAliasAuthorityError(f"alias {entry.query!r} names non-approved concept {entry.concept_id!r}")
+    canonical_key = (_normalise_query(entry.canonical_query), entry.language, entry.concept_id)
+    if canonical_key not in canonical_keys:
+        raise QueryAliasAuthorityError(
+            f"alias {entry.query!r} has no current Handbook canonical query for "
+            f"{entry.concept_id}:{entry.language.value}"
+        )
+    surface_key = _normalise_query(entry.query)
+    if surface_key in existing_surface_keys:
+        raise QueryAliasAuthorityError(f"alias {entry.query!r} collides with an existing Handbook query")
+    if surface_key in seen_surface_keys:
+        raise QueryAliasAuthorityError(f"alias {entry.query!r} collides with another authority alias")
+    if _normalise_query(entry.query) in held_out:
+        raise QueryAliasAuthorityError(f"alias {entry.query!r} is present in the held-out evaluation corpus")
+    seen_surface_keys.add(surface_key)

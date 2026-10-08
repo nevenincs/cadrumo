@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.acceptance.assets.installed_tui_child import InstalledAssetTuiReceipt, write_receipt_atomically
+from dev.acceptance.assets.installed_tui_child import write_receipt_atomically
+from dev.acceptance.assets.installed_tui_contracts import InstalledAssetTuiReceipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

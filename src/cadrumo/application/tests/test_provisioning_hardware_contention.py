@@ -22,6 +22,7 @@ from http import HTTPStatus
 from queue import Queue
 from typing import ClassVar, override
 
+import httpx
 import pytest
 
 from ...core.config import override_settings
@@ -472,7 +473,7 @@ def test_resident_set_is_read_from_the_runtime_ps_endpoint(runtime: tuple[str, Q
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
         residents = read_runtime_residents()
     assert residents == (RuntimeResident(name="qwen2.5vl:3b", size_bytes=4 * GIB, size_vram_bytes=3 * GIB),)
-    assert events.get(timeout=5) == {"method": "GET", "path": "/api/ps"}
+    assert events.get_nowait() == {"method": "GET", "path": "/api/ps"}
 
 
 def test_an_unreachable_runtime_reads_as_unmeasured_not_as_empty() -> None:
@@ -496,7 +497,7 @@ def test_unload_releases_a_selected_resident_with_a_zero_keep_alive_and_no_promp
         )
     assert outcome.unloaded is True
     assert outcome.was_resident is True
-    posted = events.get(timeout=5)
+    posted = events.get_nowait()
     assert posted["method"] == "POST"
     assert posted["body"] == {"model": "qwen2.5vl:3b", "keep_alive": 0}
     body = posted["body"]
@@ -696,6 +697,26 @@ def test_a_pull_stream_that_ends_without_success_is_not_reported_as_pulled(
     assert outcome.bytes_fetched == 10
 
 
+def test_http_error_from_progress_callback_keeps_the_last_streamed_byte_count(
+    runtime: tuple[str, Queue[dict[str, object]]],
+) -> None:
+    """A callback transport error retains observed bytes without confirming the pull."""
+    chat_url, _events = runtime
+    _RuntimeLoopbackHandler.pull_lines = [{"status": "success", "completed": GIB, "total": GIB}]
+
+    def fail_after_progress(_progress: object) -> None:
+        raise httpx.ReadError("progress transport failed")
+
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        outcome = pull_runtime_model(
+            "small-model:1b", 1 * GIB, profile=_roomy_profile(), on_progress=fail_after_progress
+        )
+
+    assert outcome.pulled is False
+    assert outcome.bytes_fetched == GIB
+    assert outcome.facts["runtime_error_type"] == "ReadError"
+
+
 def test_every_pull_attempt_is_recorded_as_the_last_pull(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
     """The status projection's last-pull row reflects the most recent attempt, refused or not."""
     chat_url, _events = runtime
@@ -755,8 +776,8 @@ def test_a_readiness_check_reports_ready_when_the_runtime_answers(
     assert outcome.answered is True
     assert outcome.resident is True
     assert outcome.elapsed_ms is not None
-    assert events.get(timeout=5)["path"] == "/api/ps"
-    assert events.get(timeout=5)["path"] == "/api/generate"
+    assert events.get_nowait()["path"] == "/api/ps"
+    assert events.get_nowait()["path"] == "/api/generate"
 
 
 def test_a_readiness_check_for_a_model_that_is_not_installed_names_the_pull_and_loads_nothing(

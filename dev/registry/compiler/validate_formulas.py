@@ -21,7 +21,9 @@ from typing import Final
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
+from cadrumo.domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
 from cadrumo.domain.calculations.registry.runtime_graph import formula_evaluation_order
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
@@ -86,9 +88,58 @@ def validate_formula_section(
         )
 
         failures.extend(validate_boolean_channel_operands(prefix, formula, revision=revision))
+        failures.extend(validate_text_comparison_operands(prefix, formula, revision=revision))
+        failures.extend(validate_record_row_operands(prefix, formula, revision=revision))
 
     for target in sorted(duplicates([formula.target_casilla_id for formula in revision.formulas])):
         failures.append(f"{prefix}: duplicate formula target {target!r}")
+    return failures
+
+
+def validate_record_row_operands(scope: str, formula: FormulaDefinition, *, revision: ModeloRevision) -> list[str]:
+    """Restrict fixed-row presence predicates to actual record-field bindings."""
+    record_bindings = {
+        binding.id
+        for binding in revision.bindings
+        if isinstance(binding.provider, ManualInputProvider) and binding.provider.record is not None
+    }
+    failures: list[str] = []
+
+    def visit(expression: FormulaExpression) -> None:
+        if expression.op == "record_row_unused" and expression.args[0].binding not in record_bindings:
+            failures.append(f"{scope}: formula {formula.id!r} record_row_unused requires a declared fixed record slot")
+        for arg in expression.args:
+            visit(arg)
+
+    visit(formula.expression)
+    return failures
+
+
+def validate_text_comparison_operands(scope: str, formula: FormulaDefinition, *, revision: ModeloRevision) -> list[str]:
+    """Require declared text channels before a country or other code comparison."""
+    text_bindings = {
+        binding.id
+        for binding in revision.bindings
+        if binding.value.channel in (BindingValueChannel.TEXT, BindingValueChannel.ENUM)
+    }
+    text_casillas = text_family_casilla_ids(revision.casillas)
+    failures: list[str] = []
+
+    def visit(expression: FormulaExpression, parent_op: str | None = None) -> None:
+        if expression.text_literal is not None and parent_op != "text_equal":
+            failures.append(f"{scope}: formula {formula.id!r} text_literal may only be an operand of text_equal")
+        if expression.op == "text_equal":
+            for arg in expression.args:
+                if (
+                    arg.text_literal is None
+                    and arg.binding not in text_bindings
+                    and arg.casilla_id not in text_casillas
+                ):
+                    failures.append(f"{scope}: formula {formula.id!r} text_equal requires declared text operands")
+        for arg in expression.args:
+            visit(arg, expression.op)
+
+    visit(formula.expression)
     return failures
 
 
@@ -97,7 +148,7 @@ def validate_formula_section(
 #: first argument as the branch condition. Every other position consumes its
 #: operand as a quantity, where a truth value has no defensible magnitude.
 _BOOLEAN_OPERAND_POSITIONS: Final[frozenset[tuple[str, int]]] = frozenset(
-    {("equal", 0), ("equal", 1), ("if_then_else", 0)},
+    {("equal", 0), ("equal", 1), ("if_then_else", 0), ("require_condition", 0), ("record_row_unused", 0)},
 )
 
 

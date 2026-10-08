@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import BindingSourceKind as _BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.period import Period as _Period
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.ids import BindingId
@@ -390,7 +391,7 @@ def _lift_previous_filing_casilla_overrides_to_bindings(
     resolved_bindings: Mapping[BindingId, Decimal],
 ) -> dict[BindingId, Decimal]:
     """Promote operator casilla overrides for previous-filing-bound casillas into bindings."""
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     revision_casillas_by_id = casillas_by_id(revision)
     promoted: dict[BindingId, Decimal] = {}
     for casilla_id, value in casilla_inputs.items():

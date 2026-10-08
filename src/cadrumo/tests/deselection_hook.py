@@ -152,6 +152,21 @@ def apply(
     if executed == 0:
         terminalreporter.write_sep("=", "NOTHING RAN", red=True, bold=True)
         collected = _collected_count(terminalreporter)
+        if not deselected and (
+            collected is None or (collected == 0 and config.getoption("numprocesses", default=None))
+        ):
+            terminalreporter.write_line(
+                "This run executed 0 tests. The controller received no selected tests; "
+                "worker selection and empty or failed collection cannot be distinguished here.",
+                red=True,
+                bold=True,
+            )
+            terminalreporter.write_line(
+                "Check the requested paths and collection errors above. If collection succeeded, "
+                "re-run with -m '' to select every lane and check any -k filter.",
+                red=True,
+            )
+            return
         if collected == 0 and not deselected:
             # NOT a marker problem, and saying so would send the reader to
             # check lanes when the real cause is above: a path that does not

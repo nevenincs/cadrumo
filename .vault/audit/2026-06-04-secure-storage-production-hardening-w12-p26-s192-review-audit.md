@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:52cdb2bf01c1aa6815582874fc072cf5999bfadfbce5577702a3da65c094b4a1'
+modified: '2026-10-03'
+body_hash: 'sha256:f9567d904268f47a1f5f840679ceb0475dfecac14ce0a303e314f0b44e05e556'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
@@ -48,8 +48,8 @@ that no critical or high issues remain.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/aggregation/_renta_ledger.py src/aeat/application/aggregation/test_renta_ledger.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/aggregation/test_renta_ledger.py` passed with 15 tests.
+- the historical check passed.
+- the historical check passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Disposition: close `AFR-090`.

@@ -8,6 +8,26 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.ledger.evidence.PurchaseInvoiceEvidenceSnapshotConflictError",
+        ErrorCode(
+            code="REFUSED_PURCHASE_INVOICE_EVIDENCE_SNAPSHOT_CHANGED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.purchase_invoice_evidence_snapshot_changed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.ledger_add_command.SourceJurisdictionRequiredError",
+        ErrorCode(
+            code="REFUSED_LEDGER_SOURCE_JURISDICTION_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.ledger_source_jurisdiction_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.counterparty_establishment_ports.CounterpartyEstablishmentPersistenceError",
         ErrorCode(
             code="FAIL_COUNTERPARTY_ESTABLISHMENT_PERSISTENCE",
@@ -18,11 +38,11 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger.evidence_sweep_ports.EvidenceSweepFileNotReachableError",
+        "cadrumo.application.ledger.invoice_confirmation.InvoiceEvidenceReviewChangedError",
         ErrorCode(
-            code="REFUSED_EVIDENCE_SWEEP_FILE_NOT_REACHABLE",
+            code="REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.canonical_evidence_sweep_file_not_reachable",
+            message_key="errors.refused.canonical_invoice_evidence_review_changed",
             retryable=False,
             runbook_id=None,
         ),

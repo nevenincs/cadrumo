@@ -4,8 +4,9 @@
 This module owns the WHOLE duplication measurement: source selection, command
 construction, execution, timeout, stdout/stderr/returncode handling, parsing,
 clone records, and availability classification. Both consumers -- the
-``just audit-duplication`` recipe and the ``dev.audit.report`` health
-dashboard's D2 dimension -- go through :func:`run_duplication_scan`. There is
+``just audit-dead-weight`` recipe (through ``dev.audit.dead_weight``) and the
+``dev.audit.report`` health dashboard's D2 dimension (``just report-code-health``)
+-- go through :func:`run_duplication_scan`. There is
 deliberately no second jscpd command anywhere in the tree: a measurement tool
 that duplicates itself is the very defect it exists to detect.
 
@@ -33,7 +34,7 @@ plus no false green -- not zero clones.
 Two limits are deliberate, recorded here so neither is re-derived as a defect:
 
 * **Scope is the product tree.** :data:`_PRODUCT_SOURCE_ROOT` is
-  ``src/cadrumo`` alone, because the governing audit scopes every instrument to
+  :data:`dev.first_party_source.PRODUCT_PACKAGE` alone, because the governing audit scopes every instrument to
   "the intended production scope" and the duplication the campaign cares about
   is duplicate AUTHORITY in shipped code -- a second writer with weaker guards,
   not two similar-looking dev scripts. ``dev/`` is therefore unmeasured by the
@@ -62,18 +63,21 @@ See Also:
 from __future__ import annotations
 
 import ast
+import io
 import re
 import shutil
 import subprocess
 import sys
-from collections.abc import Callable
-from dataclasses import dataclass
+import tokenize
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.first_party_source import PRODUCT_PACKAGE, production_exclusion_globs
 from dev.packaging.command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
@@ -84,8 +88,8 @@ _CLONE_CAP: Final[int] = 20
 
 _JSCPD_SPEC: Final[str] = "jscpd@4.2.0"
 _JSCPD_TIMEOUT_SECONDS: Final[float] = 300.0
-_PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
-_JSCPD_IGNORE: Final[str] = "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**"
+_PRODUCT_SOURCE_ROOT: Final[Path] = Path(PRODUCT_PACKAGE)
+_JSCPD_IGNORE: Final[str] = ",".join(production_exclusion_globs())
 
 # The jscpd summary table's "Total:" row, post-ANSI-strip, reads:
 #   | Total: | 1252 | 290727 | 1676107 | 65 | 1185 (0.41%) | 10882 (0.65%) |
@@ -97,7 +101,9 @@ _TABLE_TOTAL_LABEL: Final[str] = "Total:"
 _CELL_FILES_ANALYZED: Final[int] = 2
 _CELL_DUPLICATED_LINES: Final[int] = 6
 _MIN_TABLE_CELLS: Final[int] = 8
-_CLONE_SITE: Final = re.compile(r"^\s*(?:-|\s)\s*(?P<path>.+?) \[(?P<start>\d+):\d+ - (?P<end>\d+):\d+\]")
+_CLONE_SITE: Final = re.compile(
+    r"^\s*(?:-|\s)\s*(?P<path>.+?) \[(?P<start>\d+):(?P<start_column>\d+) - (?P<end>\d+):(?P<end_column>\d+)\]"
+)
 
 
 class DuplicationOutcome(StrEnum):
@@ -118,13 +124,21 @@ class CloneGroup:
         """Render the block as its original multi-line console text."""
         return "\n".join(self.lines)
 
-    def sites(self) -> tuple[tuple[str, int, int], ...]:
+    def sites(self) -> tuple[tuple[str, int, int, int, int], ...]:
         """Return the source spans named by jscpd's console block."""
-        sites: list[tuple[str, int, int]] = []
+        sites: list[tuple[str, int, int, int, int]] = []
         for line in self.lines[1:]:
             match = _CLONE_SITE.match(line)
             if match is not None:
-                sites.append((match.group("path"), int(match.group("start")), int(match.group("end"))))
+                sites.append(
+                    (
+                        match.group("path"),
+                        int(match.group("start")),
+                        int(match.group("start_column")),
+                        int(match.group("end")),
+                        int(match.group("end_column")),
+                    )
+                )
         return tuple(sites)
 
 
@@ -142,6 +156,8 @@ class DuplicationResult:
     clone_count: int = 0
     duplicated_pct: str = ""
     groups: tuple[CloneGroup, ...] = ()
+    raw_groups: tuple[CloneGroup, ...] = ()
+    declaration_groups: tuple[CloneGroup, ...] = ()
     reason: str = ""
 
     @classmethod
@@ -171,6 +187,7 @@ class DuplicationResult:
             clone_count=clone_count,
             duplicated_pct=duplicated_pct,
             groups=groups,
+            raw_groups=groups,
         )
 
     @classmethod
@@ -196,7 +213,8 @@ class DuplicationResult:
         pct_clause = f", {self.duplicated_pct}% duplicated lines" if self.duplicated_pct else ""
         return (
             f"{self.clone_count} clone cluster(s){pct_clause} "
-            f"across {self.files_analyzed} analysed file(s) (advisory debt)"
+            f"across {self.files_analyzed} analysed file(s) (advisory); "
+            f"{len(self.groups)} executable or unclassified, {len(self.declaration_groups)} declaration-only"
         )
 
 
@@ -315,40 +333,233 @@ def classify_jscpd_output(raw_stdout: str) -> DuplicationResult:
     )
 
 
-def _span_is_import_preamble(repo_root: Path, site: tuple[str, int, int]) -> bool:
-    path, start, end = site
+def _source_span(source: str, node: ast.stmt) -> tuple[tuple[int, int], tuple[int, int]]:
+    """Translate AST UTF-8 byte columns into tokenizer character columns."""
+    rows = source.splitlines()
+
+    def position(line: int, column: int) -> tuple[int, int]:
+        return line, len(rows[line - 1].encode(_UTF_8)[:column].decode(_UTF_8))
+
+    if node.end_lineno is None or node.end_col_offset is None:
+        raise ValueError("Parsed statement has no source extent")
+    return position(node.lineno, node.col_offset), position(node.end_lineno, node.end_col_offset)
+
+
+def _site_span(site: tuple[str, int, int, int, int]) -> tuple[tuple[int, int], tuple[int, int]]:
+    _, start, start_column, end, end_column = site
+    return (start, start_column - 1), (end, end_column)
+
+
+def _intersects(left: tuple[tuple[int, int], tuple[int, int]], right: tuple[tuple[int, int], tuple[int, int]]) -> bool:
+    return left[0] < right[1] and right[0] < left[1]
+
+
+def _span_is_import_preamble(repo_root: Path, site: tuple[str, int, int, int, int]) -> bool:
+    path = site[0]
     try:
-        tree = ast.parse((repo_root / path).read_text(encoding=_UTF_8), filename=path)
+        source = (repo_root / path).read_text(encoding=_UTF_8)
+        tree = ast.parse(source, filename=path)
     except (OSError, UnicodeError, SyntaxError):
         return False
-    statements = [
-        node for node in tree.body if getattr(node, "end_lineno", node.lineno) >= start and node.lineno <= end
-    ]
-    starts_in_import = any(
-        isinstance(node, (ast.Import, ast.ImportFrom))
-        and node.lineno <= start <= getattr(node, "end_lineno", node.lineno)
-        for node in statements
-    )
-    carries_behavior = any(
-        isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) for node in statements
-    )
-    return starts_in_import and not carries_behavior
+    span = _site_span(site)
+    statements = [node for node in tree.body if _intersects(_source_span(source, node), span)]
+    return bool(statements) and all(isinstance(node, ast.Import | ast.ImportFrom) for node in statements)
 
 
-def _spans_overlap(left: tuple[str, int, int], right: tuple[str, int, int]) -> bool:
-    return left[0] == right[0] and left[1] <= right[2] and right[1] <= left[2]
+def _span_contains(left: tuple[str, int, int, int, int], right: tuple[str, int, int, int, int]) -> bool:
+    return (
+        left[0] == right[0]
+        and _site_span(left)[0] <= _site_span(right)[0]
+        and _site_span(right)[1] <= _site_span(left)[1]
+    )
+
+
+def _span_is_declaration(repo_root: Path, site: tuple[str, int, int, int, int]) -> bool:
+    """Prove every cloned token is inert, retaining unknown and executable spans."""
+    path = site[0]
+    try:
+        source = (repo_root / path).read_text(encoding=_UTF_8)
+        tree = ast.parse(source, filename=path)
+    except (OSError, UnicodeError, SyntaxError):
+        return False
+    declared: list[tuple[tuple[int, int], tuple[int, int]]] = []
+    executable: list[tuple[tuple[int, int], tuple[int, int]]] = []
+
+    def imported_names(module: str, name: str) -> set[str]:
+        aliases = {
+            alias.asname or alias.name
+            for node in tree.body
+            if isinstance(node, ast.ImportFrom) and node.module == module and not node.level
+            for alias in node.names
+            if alias.name == name
+        }
+        rebound = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)}
+        rebound.update(
+            node.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
+        )
+        rebound.update(node.arg for node in ast.walk(tree) if isinstance(node, ast.arg))
+        rebound.update(
+            alias.asname or alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Import | ast.ImportFrom)
+            for alias in node.names
+            if not (
+                isinstance(node, ast.ImportFrom) and node.module == module and alias.name == name and not node.level
+            )
+        )
+        return aliases - rebound
+
+    type_checking = imported_names("typing", "TYPE_CHECKING")
+    fields = imported_names("pydantic", "Field")
+    protocols = imported_names("typing", "Protocol") | imported_names("typing_extensions", "Protocol")
+
+    def inert(value: ast.AST | None) -> bool:
+        if value is None or isinstance(value, ast.Constant | ast.Name):
+            return True
+        if isinstance(value, ast.Tuple | ast.List | ast.Set):
+            return all(inert(item) for item in value.elts)
+        if isinstance(value, ast.Dict):
+            return all(
+                key is not None and inert(key) and inert(item)
+                for key, item in zip(value.keys, value.values, strict=True)
+            )
+        return (
+            isinstance(value, ast.UnaryOp)
+            and isinstance(value.op, ast.UAdd | ast.USub)
+            and isinstance(value.operand, ast.Constant)
+        )
+
+    def docstring(node: ast.stmt) -> bool:
+        return isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+
+    def has_call(nodes: Sequence[ast.AST]) -> bool:
+        return any(isinstance(part, ast.Call) for node in nodes for part in ast.walk(node))
+
+    def visit(body: list[ast.stmt], *, in_class: bool = False, protocol: bool = False) -> None:
+        for index, node in enumerate(body):
+            span = _source_span(source, node)
+            if isinstance(node, ast.Import | ast.ImportFrom) or (index == 0 and docstring(node)):
+                declared.append(span)
+            elif isinstance(node, ast.If) and isinstance(node.test, ast.Name) and node.test.id in type_checking:
+                declared.append((span[0], _source_span(source, node.body[-1])[1]))
+                visit(node.orelse, in_class=in_class, protocol=protocol)
+            elif isinstance(node, ast.ClassDef):
+                header = (span[0], _source_span(source, node.body[0])[0])
+                declared.append(header)
+                if has_call(node.bases + node.decorator_list + [keyword.value for keyword in node.keywords]):
+                    executable.append(header)
+                is_protocol = any(isinstance(base, ast.Name) and base.id in protocols for base in node.bases)
+                visit(node.body, in_class=True, protocol=is_protocol)
+            elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                header = (span[0], _source_span(source, node.body[0])[0])
+                declared.append(header)
+                defaults = node.args.defaults + [value for value in node.args.kw_defaults if value is not None]
+                annotations = [
+                    arg.annotation
+                    for arg in [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]
+                    if arg.annotation is not None
+                ]
+                for variadic in (node.args.vararg, node.args.kwarg):
+                    if variadic is not None and variadic.annotation is not None:
+                        annotations.append(variadic.annotation)
+                if node.returns is not None:
+                    annotations.append(node.returns)
+                if has_call(defaults + node.decorator_list + annotations):
+                    executable.append(header)
+                arguments = {arg.arg for arg in [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]}
+                if node.args.vararg is not None:
+                    arguments.add(node.args.vararg.arg)
+                if node.args.kwarg is not None:
+                    arguments.add(node.args.kwarg.arg)
+                for number, stmt in enumerate(node.body):
+                    stub = protocol and (
+                        isinstance(stmt, ast.Pass)
+                        or (
+                            isinstance(stmt, ast.Expr)
+                            and isinstance(stmt.value, ast.Constant)
+                            and stmt.value.value is Ellipsis
+                        )
+                        or (
+                            isinstance(stmt, ast.Delete)
+                            and all(isinstance(target, ast.Name) and target.id in arguments for target in stmt.targets)
+                        )
+                    )
+                    (declared if stub or (number == 0 and docstring(stmt)) else executable).append(
+                        _source_span(source, stmt)
+                    )
+            elif isinstance(node, ast.AnnAssign | ast.Assign):
+                value = node.value
+                targets = [node.target] if isinstance(node, ast.AnnAssign) else node.targets
+                safe = all(isinstance(target, ast.Name) for target in targets) and inert(value)
+                if in_class and isinstance(node, ast.AnnAssign) and isinstance(value, ast.Call):
+                    safe = (
+                        isinstance(value.func, ast.Name)
+                        and value.func.id in fields
+                        and not value.args
+                        and all(
+                            item.arg not in {None, "default_factory"} and inert(item.value) for item in value.keywords
+                        )
+                    )
+                if isinstance(node, ast.AnnAssign) and has_call([node.annotation]):
+                    safe = False
+                (declared if safe else executable).append(span)
+            else:
+                executable.append(span)
+
+    visit(tree.body)
+    span = _site_span(site)
+    try:
+        relevant = [
+            (token.start, token.end)
+            for token in tokenize.generate_tokens(io.StringIO(source).readline)
+            if token.type
+            not in {
+                tokenize.ENCODING,
+                tokenize.COMMENT,
+                tokenize.NL,
+                tokenize.NEWLINE,
+                tokenize.INDENT,
+                tokenize.DEDENT,
+                tokenize.ENDMARKER,
+            }
+            and _intersects((token.start, token.end), span)
+        ]
+    except (tokenize.TokenError, IndentationError):
+        return False
+    return bool(relevant) and all(
+        any(interval[0] <= token[0] and token[1] <= interval[1] for interval in declared)
+        and not any(_intersects(token, interval) for interval in executable)
+        for token in relevant
+    )
+
+
+def classify_clone_spans(result: DuplicationResult, repo_root: Path) -> DuplicationResult:
+    """Retain raw measurements while separating proven declarations from review leads."""
+    if result.outcome is not DuplicationOutcome.CLONES:
+        return result
+    groups = actionable_clone_groups(result.raw_groups, repo_root)
+    declarations = tuple(
+        group
+        for group in groups
+        if len(group.sites()) >= 2 and all(_span_is_declaration(repo_root, site) for site in group.sites())
+    )
+    return replace(
+        result, groups=tuple(group for group in groups if group not in declarations), declaration_groups=declarations
+    )
 
 
 def actionable_clone_groups(groups: tuple[CloneGroup, ...], repo_root: Path) -> tuple[CloneGroup, ...]:
     """Remove structural noise and duplicate reports without hiding executable clones."""
     retained: list[CloneGroup] = []
-    retained_sites: list[tuple[tuple[str, int, int], ...]] = []
+    retained_sites: list[tuple[tuple[str, int, int, int, int], ...]] = []
     for group in groups:
         sites = group.sites()
         if len(sites) >= 2 and all(_span_is_import_preamble(repo_root, site) for site in sites):
             continue
         if len(sites) == 2 and any(
-            len(previous) == 2 and _spans_overlap(sites[0], previous[0]) and _spans_overlap(sites[1], previous[1])
+            len(previous) == 2 and _span_contains(previous[0], sites[0]) and _span_contains(previous[1], sites[1])
             for previous in retained_sites
         ):
             continue
@@ -400,31 +611,29 @@ def run_duplication_scan(
     result = classify_jscpd_output(completed.stdout)
     if result.outcome is not DuplicationOutcome.CLONES:
         return result
-    groups = actionable_clone_groups(result.groups, repo_root)
-    if not groups:
-        return DuplicationResult.observed_zero(result.files_analyzed)
-    return DuplicationResult.from_clones(
-        files_analyzed=result.files_analyzed,
-        clone_count=len(groups),
-        duplicated_pct=result.duplicated_pct,
-        groups=groups,
-    )
+    return classify_clone_spans(result, repo_root)
 
 
 def render_console_report(result: DuplicationResult) -> str:
-    """Render the operator-facing console report for ``just audit-duplication``."""
+    """Render the operator-facing console report for ``python -m dev.audit.duplication``."""
     if result.outcome is DuplicationOutcome.UNAVAILABLE:
         return f"duplication: {result.headline()}"
     if result.outcome is DuplicationOutcome.OBSERVED_ZERO:
         return f"duplication: {result.headline()}."
 
-    pct_clause = f", {result.duplicated_pct}% duplicated lines" if result.duplicated_pct else ""
-    out = [f"duplication: {result.clone_count} clones{pct_clause}."]
+    out = [f"duplication: {result.headline()}."]
+    omitted = len(result.raw_groups) - len(result.groups) - len(result.declaration_groups)
+    missing = max(0, result.clone_count - len(result.raw_groups))
+    out.append(
+        f"Raw evidence: {omitted} import-only or overlapping reports; {missing} reports without parsed locations."
+    )
     for group in result.groups[:_CLONE_CAP]:
         out.append("")
         out.append(group.render())
     if len(result.groups) > _CLONE_CAP:
         out.append(f"\n... {len(result.groups) - _CLONE_CAP} more clones")
+    for group in result.declaration_groups:
+        out.extend(("", "Declaration-only token overlap:", group.render()))
     return "\n".join(out)
 
 

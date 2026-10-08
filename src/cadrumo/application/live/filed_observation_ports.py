@@ -24,6 +24,7 @@ from ...core.period import Period
 
 if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.bindings import RegistryModeloObservation
     from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
     from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
@@ -313,6 +314,7 @@ class FiledFilingReconciliationPort(Protocol):
         *,
         actor: str,
         clock: datetime,
+        authority_operation: PinnedAuthorityOperation | None = None,
     ) -> FilingReconciliationResult:
         """Reconcile ``entry`` and return the chain decision."""
         ...

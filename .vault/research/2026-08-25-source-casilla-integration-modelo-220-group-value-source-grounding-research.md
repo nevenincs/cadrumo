@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6888a5ea6628b10118f163b336989afb9da43e8b96badf287fbb445645b3879f'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:e3379682132fd347887bc487229e73e244dbd4a0e15a978854d8c05500dc47af'
+related: []
 ---
 
 # `source-casilla-integration` research: `modelo 220 group value source grounding`
@@ -70,23 +69,20 @@ Exact repository search found no `m220.` `FilingProducerKey`, M220
 `BindingSourceKind`, M220 binding directory, source-mesh resolver, or
 source-connectivity census row. The filing worklist independently records that
 the absent M220 producer namespace means non-casilla fields have no canonical
-identity or application producer. `src/cadrumo/core/_filing_producer_key.py:10`
+identity or application producer. the former source file
 `src/cadrumo/core/aggregation.py:233`
-`src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:573`
 
 The nearby Modelo 222 profile owns fiscal-group identity for a different
 quarterly return only. It does not retain the M220 member rows, individual
 filing receipt references, group adjustments, value lineage, or an absence
 state, so it cannot be reused as a M220 value owner.
-`src/cadrumo/application/filing/_producer_snapshot.py:183`
 
 The existing 2024 M220 manual casillas are valid direct filing entry. The 2025
 revision remains applicability-only. Neither direct input nor an official
 layout coordinate proves encrypted source persistence, immutable source
 identity/fingerprint, replay, review, or source-owned export. The accepted ADR
 requires these properties before a candidate becomes implementation-ready.
-`src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/casillas/centidades-grupo-dominante.nif__centidades-grupo-dependiente.opcion-fraccionamiento.toml:1`
-`src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml:1`
+
 `.vault/adr/2026-08-22-source-casilla-integration-adr.md:52`
 
 ### The evidence leaves composite ownership and two-era lifecycle proof absent
@@ -120,12 +116,9 @@ or semantic equivalence.
 - `src/cadrumo/_data/corpus/manuals/sociedades/2025/source.pdf.extracted.md:34017`
 - `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026.html:13`
 - `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026.html:19`
-- `src/cadrumo/core/_filing_producer_key.py:10`
+
 - `src/cadrumo/core/aggregation.py:233`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:573`
-- `src/cadrumo/application/filing/_producer_snapshot.py:183`
-- `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/casillas/centidades-grupo-dominante.nif__centidades-grupo-dependiente.opcion-fraccionamiento.toml:1`
-- `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml:1`
+
 - `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml:1`
 - `.vault/adr/2026-08-22-source-casilla-integration-adr.md:52`
 - `.vault/adr/2026-08-22-source-casilla-integration-adr.md:81`

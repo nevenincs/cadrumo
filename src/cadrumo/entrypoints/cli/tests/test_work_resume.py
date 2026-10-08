@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Iterator, Sequence
+from contextvars import ContextVar
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    open_test_profile_session,
-    seed_test_profile_record,
-)
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.workflow_gate import workflow_period_for_work_unit
 from ....application.operator_actions.models import (
@@ -24,6 +21,7 @@ from ....application.operator_actions.models import (
     ConditionEvidence,
     PreconditionVerdict,
 )
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....application.workflow.abort import WorkflowAbortReason
 from ....application.workflow.persistence import list_runs, load_run, save_run
 from ....application.workflow.run_models import (
@@ -33,7 +31,7 @@ from ....application.workflow.run_models import (
     WorkflowStage,
     WorkflowStep,
 )
-from ....core.bucket_pointer import resolve_active_bucket_id
+from ....core.config import override_settings
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import (
     ActionArgumentStatus,
@@ -42,73 +40,80 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
+from ....domain.buckets.event import BucketEventObjectType, BucketEventType
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.deadlines.models import ObligationStatus
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition import build_work_lifecycle_ports
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
+
+_NATIVE_FIXTURE: ContextVar[NativeCliProfileFixture] = ContextVar("resume_native_fixture")
+_AUTHORITY_PIN: ContextVar[PinnedAuthorityOperation] = ContextVar("resume_authority_pin")
 
 
-def _invoke_work(args: Sequence[str]) -> Result:
-    return invoke_cached_cli(["app", "modelo", "work", *args])
+def _invoke_work(args: Sequence[str], *, format: str | None = None, language: str | None = None) -> Result:
+    fixture = _NATIVE_FIXTURE.get()
+    assert fixture.label is not None
+    close_active_bucket_session()
+    prefix = ["--profile", fixture.label, "--profile-secrets-stdin"]
+    if format is not None:
+        prefix[:0] = ["--format", format]
+    if language is not None:
+        prefix[:0] = ["--language", language]
+    with override_settings(cadrumo_cli_reveal_identifiers=False):
+        result = invoke_cached_cli(
+            [*prefix, "app", "modelo", "work", *args],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
+        )
+    assert fixture.passphrase not in result.output
+    return result
 
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
-_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
-_PROFILE_LABEL = "resume-test"
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Operator"),
-    UserProfileFact(path="identity.surnames", value="Resume"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
+_PROFILE_LABEL = "Native resume operator"
 
 
-def _seed_ready_profile_record(bucket_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T,
-            updated_at=_T,
-            context=_profile_creation_context_for_test(),
-        ),
-        label=_PROFILE_LABEL,
-    )
+def _profile_facts() -> dict[str, str]:
+    return {
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.name": "Native",
+        "identity.surnames": "Resume",
+        "activities.description": "consulting",
+        "censo.activity_start_date": "2025-01-01",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    }
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Iterator[None]:
-    # Seeding builds records with the leased creation context, so the lease
-    # must exist before this fixture runs; an autouse fixture is otherwise set
-    # up ahead of the module's ``usefixtures`` lease.
-    del authority_operation
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
-    ):
-        register_minimal_profile(profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
-        _seed_ready_profile_record(_PROFILE_ID)
-        yield
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(label=_PROFILE_LABEL, facts=_profile_facts())
+        close_active_bucket_session()
+        authenticate_profile_for_invocation(
+            name=_PROFILE_LABEL,
+            passphrase_callback=lambda: fixture.passphrase,
+            profile_decode_context=authority_operation.profile_decode_context(),
+        )
+        fixture_token = _NATIVE_FIXTURE.set(fixture)
+        pin_token = _AUTHORITY_PIN.set(authority_operation)
+        try:
+            yield
+        finally:
+            _AUTHORITY_PIN.reset(pin_token)
+            _NATIVE_FIXTURE.reset(fixture_token)
 
 
 def _obligation(modelo: str = "130", period: Period | None = None) -> WorkflowObligationFacts:
@@ -227,18 +232,26 @@ def _builder_refused_run(run_id: str) -> WorkflowResult:
 
 
 def _seed_work_unit():
-    bucket_id = resolve_active_bucket_id()
-    assert isinstance(bucket_id, str)
-    with bundled_indexed_authority().operation() as operation:
-        return create_work_unit(
-            ports=build_work_lifecycle_ports(bucket_id=bucket_id),
-            bucket_id=bucket_id,
-            modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2019-y-siguientes",
-            operation=operation,
-        )
+    bucket_id = resolve_login_target(_PROFILE_LABEL).bucket_id
+    return create_work_unit(
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+        bucket_id=bucket_id,
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2019-y-siguientes",
+        operation=_AUTHORITY_PIN.get(),
+    )
+
+
+def _reopen_oracle_session() -> None:
+    fixture = _NATIVE_FIXTURE.get()
+    close_active_bucket_session()
+    authenticate_profile_for_invocation(
+        name=_PROFILE_LABEL,
+        passphrase_callback=lambda: fixture.passphrase,
+        profile_decode_context=_AUTHORITY_PIN.get().profile_decode_context(),
+    )
 
 
 def test_resume_help_advertises_the_command() -> None:
@@ -281,7 +294,7 @@ def test_resume_refuses_missing_run_with_bad_parameter() -> None:
 def test_resume_refuses_non_resumable_reason() -> None:
     run_id = "c" * 16
     save_run(_aborted_run(run_id, reason=WorkflowAbortReason.USER_CANCELLED))
-    result = invoke_cached_cli(["--language", "en", "app", "modelo", "work", "resume", run_id])
+    result = _invoke_work(["resume", run_id], language="en")
     assert result.exit_code != 0
     assert "terminal by design" in result.output
 
@@ -329,7 +342,7 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert '"missing_argument_names":["work_unit_id"]' in text_result.output
     assert '"conditionality":"requires_arguments"' in text_result.output
 
-    json_result = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "runs"])
+    json_result = _invoke_work(["runs"], format="json")
     assert json_result.exit_code == 0, json_result.output
     payload = json.loads(json_result.output)["result"]
     rendered = next(row for row in payload["runs"] if row["run_id"] == run.run_id)
@@ -369,11 +382,11 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
         "no_recovery_outcome": None,
     }
 
-    run_result = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "run", run.run_id])
+    run_result = _invoke_work(["run", run.run_id], format="json")
     assert run_result.exit_code == 0, run_result.output
     full = json.loads(run_result.output)["result"]
     assert full["run_id"] == run.run_id
-    details_result = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "run-details", run.run_id])
+    details_result = _invoke_work(["run-details", run.run_id], format="json")
     assert details_result.exit_code == 0, details_result.output
     details = json.loads(details_result.output)["result"]
     assert details["summary_detail_kind"] == "workflow_failure"
@@ -381,6 +394,7 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert full["modelo"] == "130"
     assert full["obligation_status"] == "UPCOMING"
 
+    _reopen_oracle_session()
     assert load_run(run.run_id) == stored_before
     assert [candidate.run_id for candidate in list_runs()] == [run.run_id]
 
@@ -403,6 +417,16 @@ def test_resume_accepts_run_id_directly() -> None:
     result = _invoke_work(["resume", run_id])
     assert result.exit_code == 0, result.output
     assert f"prior_workflow_run_id\t{run_id}" in result.output
+
+
+def test_resume_accepts_exact_run_with_matching_expected_period() -> None:
+    """An explicit year/period constrains the same recorded run's obligation."""
+    run_id = "9" * 16
+    save_run(_aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE))
+    result = _invoke_work(["resume", run_id, "--year", "2026", "--period", "1T"])
+    assert result.exit_code == 0, result.output
+    assert f"prior_workflow_run_id\t{run_id}" in result.output
+    assert "period\t2026 1T" in result.output
 
 
 def test_resume_accepts_modelo_year_period_without_raw_id() -> None:
@@ -476,26 +500,29 @@ def test_resume_refuses_ambiguous_modelo_year_period_with_candidate_guidance() -
 
 
 def test_resume_emits_no_bucket_event() -> None:
-    """The resume verb must not emit any bucket event into BucketEventHistoryRepository.
-
-    Drives `work resume` against a real persisted aborted run through the CLI
-    runner and asserts that the real BucketEventHistoryRepository (backed by
-    the isolated SQLite engine) has zero entries after the command completes.
-    """
+    """Resume leaves domain events and the persisted run unchanged."""
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 
     run_id = "d" * 16
-    save_run(_aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE))
+    run = _aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE)
+    save_run(run)
+    profile_id = resolve_login_target(_PROFILE_LABEL).bucket_id
 
     repo = BucketEventHistoryRepository()
     before = repo.load().events
 
     result = _invoke_work(["resume", run_id])
 
+    _reopen_oracle_session()
     after = repo.load().events
-    new_event_ids = set(after.keys()) - set(before.keys())
-    assert not new_event_ids, (
-        f"`work resume` emitted {len(new_event_ids)} unexpected bucket event(s): "
-        f"{new_event_ids!r}. The resume verb must be read-only. "
-        f"CLI output:\n{result.output}"
-    )
+    assert result.exit_code == 0
+    assert all(after.get(event_id) == event for event_id, event in before.items())
+    added = tuple(event for event_id, event in after.items() if event_id not in before)
+    assert all(
+        event.event_type is BucketEventType.PROFILE_ACTIVATED
+        and event.object_type is BucketEventObjectType.PROFILE
+        and event.actor == "profile-login"
+        and event.object_id == profile_id
+        for event in added
+    ), tuple((event.event_type.value, event.object_type.value) for event in added)
+    assert load_run(run_id) == run

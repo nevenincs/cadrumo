@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from ....tests.cli_envelope import unwrap_schema_envelope
-from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import invoke_seeded_profile_cli
 
 _OBSERVED_AT_BY_LAST_PERIOD = {
     "4T": "2025-12-31T12:00:00+00:00",
@@ -43,7 +43,7 @@ class OrdinaryM303SecureEvidence:
 
 def admit_ordinary_m303_secure_evidence(*, period: Literal["4T", "12"] = "4T") -> OrdinaryM303SecureEvidence:
     """Admit one real 2025 last-period non-applicability attestation."""
-    result = invoke_cached_cli(
+    result = invoke_seeded_profile_cli(
         [
             "--format",
             "json",

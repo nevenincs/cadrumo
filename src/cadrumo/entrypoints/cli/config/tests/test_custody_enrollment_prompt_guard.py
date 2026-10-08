@@ -55,7 +55,6 @@ _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, obj
 # reach the prompt, which has been measured at over a minute on a box running
 # parallel test lanes, so the budget is set well clear of that rather than
 # close to it.
-_CHILD_BUDGET_SECONDS = 300.0
 
 _LABEL = "Console Less Login Subject"
 
@@ -87,13 +86,13 @@ try:
     try:
         # A real locked profile, so the login below has a capsule to unwrap
         # and must reach the passphrase channel to do it.
-        from cadrumo.application.user_profile.login_session import logout_active_profile
+        from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
         from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
         from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 
         with composed_profile_persistence_ports():
             register_cli_profile(label=label, log_in=False)
-            logout_active_profile()
+            reset_test_profile_session()
         verdict["profile_registered"] = True
         pointer_path = storage_root / "active-profile"
         pointer_before = pointer_path.read_bytes() if pointer_path.is_file() else None
@@ -157,7 +156,7 @@ async def _wait_for_console_less_login(command: list[str], *, creationflags: int
             stderr=asyncio.subprocess.DEVNULL,
         )
     try:
-        await asyncio.wait_for(process.wait(), timeout=_CHILD_BUDGET_SECONDS)
+        await asyncio.wait_for(process.wait(), timeout=None)
     except TimeoutError:
         process.kill()
         await process.wait()

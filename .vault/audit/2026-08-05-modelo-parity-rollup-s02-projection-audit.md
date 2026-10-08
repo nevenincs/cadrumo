@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:06fc3f84536769997d0054f2264ea933b817654bc90020ec7c532e994824d9bc'
+body_hash: 'sha256:00939c566ff0a24cbab086a593a082d8a8104e0efd9b36dda7267c673b05c7ec'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
 ---
+
 ## Scope
 
 Reviewed the SOL-authorized projection of the exact-year casilla/layout comparator into the finite annual conformance report. The review covers the typed coordinate contract, authority-selected snapshot wiring, JSON/text projections, degraded-read behavior, and the distinction between measured XML-dictionary identity and unsupported printed-form/XSD parity.
@@ -43,9 +43,9 @@ The delegated `vaultspec-code-reviewer` was invoked with the mandatory RAG-groun
 
 ## Verification
 
-- `uv run --no-sync pytest -q -n 0 dev/tests/test_registry_conformance_cli.py -k 'report_json_keeps_the_finite_annual_matrix or annual_matrix_revision_is_read_from_the_validated_authority or report_text_projects_schema_layout or annual_coordinate_rejects_mismatched_schema_comparison or degraded_report_does_not_claim_validated_annual_coordinates or annual_matrix_rejects_an_incomplete_classification_census or annual_matrix_rejects_a_census_count_that_does_not_match_coordinates or annual_matrix_rejects_duplicate_exact_coordinates'` â€” 8 passed.
+- the historical check â€” 8 passed.
 - The broader report/matrix selector passed 12 tests and retained one unrelated locale-ratchet failure; the full legacy CLI file remains bounded by pre-existing `localization_key` peer-schema failures and the known locale baseline boundary.
-- `uv run --no-sync basedpyright src/cadrumo/application/registry/__init__.py dev/registry/conformance/manager.py` â€” 0 errors, 0 warnings, 0 notes.
+- the historical check â€” 0 errors, 0 warnings, 0 notes.
 - `uv run --no-sync ruff check` and `ruff format --check` on the three authorized files â€” clean.
 - Real CLI JSON report â€” D2025 identity measured, 2,238 registry, 2,205 dictionary, 33 divergence, zero extra; classification remains `not_yet_measured` and provisional.
 - Real CLI text report â€” coordinate and layout rows present with measured and unsupported statuses; the real no-source comparator test preserves `unmeasured` separately.

@@ -69,12 +69,23 @@ class _Spawner:
     """Records spawn requests and optionally brings the runtime endpoint up."""
 
     def __init__(self, *, bring_up: bool = False, fail: bool = False) -> None:
-        self.calls: list[tuple[Path, str]] = []
+        self.calls: list[tuple[Path, str, str, str, str, str, str, str]] = []
         self._bring_up = bring_up
         self._fail = fail
 
     def __call__(self, executable: Path, env: Mapping[str, str]) -> int:
-        self.calls.append((executable, env["OLLAMA_HOST"]))
+        self.calls.append(
+            (
+                executable,
+                env["OLLAMA_HOST"],
+                env["OLLAMA_MODELS"],
+                env["TEMP"],
+                env["HOME"],
+                env["USERPROFILE"],
+                env["APPDATA"],
+                env["LOCALAPPDATA"],
+            )
+        )
         if self._fail:
             raise FileNotFoundError(str(executable))
         if self._bring_up:
@@ -220,15 +231,43 @@ def test_start_is_a_no_op_when_the_runtime_already_answers() -> None:
     assert spawner.calls == []
 
 
-def test_start_spawns_the_located_runtime_and_waits_for_it_to_answer() -> None:
+def test_start_spawns_the_located_runtime_with_controlled_model_storage_and_waits_for_it(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     spawner = _Spawner(bring_up=True)
-    with _runtime(up=False) as chat_url, override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+    monkeypatch.setenv("CADRUMO_OLLAMA_MODELS_DIR", "models/test")
+    with (
+        _runtime(up=False) as chat_url,
+        override_settings(
+            cadrumo_llm_ollama_chat_url=chat_url,
+            cadrumo_local_storage_root=tmp_path / "configured-storage",
+            cadrumo_temp_dir=tmp_path / "configured-storage" / "tmp",
+        ),
+    ):
         outcome = start_runtime(spawn=spawner, which=_lookup({"ollama": "/usr/bin/ollama"}), timeout_s=5)
     assert outcome.running is True
     assert outcome.already_running is False
     assert outcome.started_pid == 4242
     port = chat_url.split(":")[2].split("/")[0]
-    assert spawner.calls == [(Path("/usr/bin/ollama"), f"127.0.0.1:{port}")]
+    models_root = tmp_path / "configured-storage" / "models" / "test"
+    temporary_root = tmp_path / "configured-storage" / "tmp"
+    home_root = tmp_path / "configured-storage" / "components" / "ollama" / "home"
+    assert spawner.calls == [
+        (
+            Path("/usr/bin/ollama"),
+            f"127.0.0.1:{port}",
+            str(models_root.resolve()),
+            str(temporary_root.resolve()),
+            str(home_root.resolve()),
+            str(home_root.resolve()),
+            str((home_root / "AppData" / "Roaming").resolve()),
+            str((home_root / "AppData" / "Local").resolve()),
+        )
+    ]
+    assert models_root.is_dir()
+    assert temporary_root.is_dir()
+    assert home_root.is_dir()
 
 
 def test_start_refuses_a_remote_endpoint_without_spawning() -> None:

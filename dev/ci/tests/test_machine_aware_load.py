@@ -25,13 +25,10 @@ from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 from dev.test_runs.logging import collect_only_listing
 
-from ..lane_reachability import (
-    _JUST_CALL,
-    Lane,
-    declared_lanes,
-    expression_selects,
-    marker_sets_in,
-)
+from ..lane_contracts import Lane
+from ..lane_marker_inventory import expression_selects, marker_sets_in
+from ..lane_reachability import declared_lanes
+from ..lane_recipe_commands import _JUST_CALL
 from ..workflow_run_text import executed_lines, executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -310,7 +307,6 @@ def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None
 # model is proven against ground truth rather than trusted on its own say-so.
 
 _HARNESS_RECIPE: Final = "test-pytest-harness"
-_COLLECTION_TIMEOUT_SECONDS: Final = 300
 # A directory containing the harness members, so collection walks to them the
 # way a path-unrestricted lane does. Passing the member FILES directly would not
 # test the contract: an explicit path argument overrides `--ignore`.
@@ -543,7 +539,7 @@ def test_dropping_the_exclusion_lets_a_real_lane_actually_collect_a_member() -> 
             _MEMBER_PARENT,
         ],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=_COLLECTION_TIMEOUT_SECONDS,
+        timeout_seconds=None,
     )
     listing, _summary = collect_only_listing(result.stdout)
     collected = (

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-dated-validity'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cca71b1246644d3cfea77e9adea7fdb61992675165897c351515049104349e46'
+body_hash: 'sha256:5b3e7668659e04d324632c943d80e89586989678a55d71c940a117376941bec8'
 related:
   - "[[2026-08-27-registry-dated-validity-frozen-constant-hunt-audit]]"
 ---
@@ -65,11 +65,7 @@ one hundred.
 Ranking every finding by how the Python literal relates to registry authority
 produces four tiers, and the product already contains its own best answer.
 
-Tier one, registry-resolved at runtime and fails closed. The rental tier
-resolver in `src/cadrumo/domain/fincas/tier_resolver.py` reads the per-year
-reduccion-rate parameter and overrides its own documented constant whenever the
-registry differs; a missing parameter raises a validation error rather than
-falling back. The literals there are commentary that cannot win.
+Tier one, registry-resolved at runtime and fails closed. The literals there are commentary that cannot win.
 
 Tier two, registry-gated by a real test. The general IVA rate constant is
 asserted equal to the value the dated IVA registry resolves. The constant still
@@ -85,11 +81,7 @@ first despite being the smallest.
 
 ### orden-constants-refuse-new-law | critical | the comparison direction makes correct new law indistinguishable from a corrupt extraction
 
-`src/cadrumo/domain/calculations/registry/_m303_orden_constants.py` pins the
-seasonal correction coefficients and their day bands, the difficult-justification
-percentage, and the 2022 Lorca reduction of twenty per cent. Every one of those
-values is ALREADY carried as registry data in the annual-Orden census, each with
-a required-text field quoting the Orden verbatim.
+Every one of those values is ALREADY carried as registry data in the annual-Orden census, each with a required-text field quoting the Orden verbatim.
 
 The code compares manifest against constant and refuses on inequality. So when a
 future Orden changes a coefficient, the census will faithfully carry the new
@@ -144,11 +136,7 @@ figures that compose it, so if either moved it would not follow.
 
 ### tautological-drift-gate | high | the centralisation gate protects exactly one constant while appearing to protect several
 
-`src/cadrumo/core/tests/test_external_constants_centralisation_part2.py`
-contains two kinds of assertion. One resolves the dated IVA registry and
-compares it to the constant: a real gate. The other asserts constants against
-hardcoded copies of themselves, which detects an edit to the constant but can
-never detect divergence from the registry, because the registry is never read.
+One resolves the dated IVA registry and compares it to the constant: a real gate. The other asserts constants against hardcoded copies of themselves, which detects an edit to the constant but can never detect divergence from the registry, because the registry is never read.
 
 The amortizacion rate and the maritime exemption fraction sit behind the second
 kind.

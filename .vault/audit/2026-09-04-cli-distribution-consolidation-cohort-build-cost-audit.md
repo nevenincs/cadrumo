@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-distribution-consolidation'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:5d23fb224ad89f2e4dcb0b587c7878a731cf5fc7179718d31ce2d00e52a6f15a'
-related:
-  - "[[2026-09-02-cli-distribution-consolidation-plan]]"
+related: []
 ---
 
 # `cli-distribution-consolidation` audit: `cohort build cost`

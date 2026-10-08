@@ -8,7 +8,7 @@ from datetime import date
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...domain.calculations.registry.iva_schema_vocabulary import (
+from ...domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_export_code,
     m303_tax_territory_exclusively_foral_mark,
     m303_tax_territory_is_foral,
@@ -20,8 +20,14 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
 from ...domain.deadlines.models import ModeloIVAProfile
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
+from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
-from ...domain.modelos.calculation_revision_m303_evidence import M303InsolvencyFilingSubtype
+from ...domain.modelos.calculation_revision_m303_evidence import (
+    M303Exonerado390FilingEvidence,
+    M303InsolvencyFilingFact,
+    M303InsolvencyFilingSubtype,
+)
+from ..aggregation.m303_arrivals import M303ProrrataTransitionArrival
 from ._producer_ownership import filing_producer_ownership as _filing_producer_ownership
 from .producer_snapshot import (
     AmendmentEvidence,
@@ -36,8 +42,11 @@ from .producer_snapshot import (
     Modelo296ProfileFacts,
     Modelo353ProfileFacts,
     RefundAccountSelection,
+    SelectedFilingAccount,
+    TaxpayerIdentityFacts,
 )
 from .producer_snapshot_m200 import Modelo200ProfileFacts
+from .producer_snapshot_m360 import Modelo360ProfileFacts
 
 
 @dataclass(frozen=True)
@@ -103,6 +112,105 @@ _M296_DECLARANTE_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M296_DEC_N: "n",
     FilingProducerKey.M296_DEC_SELLO_ELECTRONICO: "sello_electronico",
 }
+
+
+_M360_SOLICITANTE_DOMICILIO_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_TIPO_VIA: "tipo_via",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_NOMBRE_VIA: "nombre_via",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_TIPO_NUMERACION: "tipo_numeracion",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_NUMERO_CASA: "numero_casa",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_CALIFICADOR_NUMERO: "calificador_numero",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_BLOQUE: "bloque",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_PORTAL: "portal",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_ESCALERA: "escalera",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_PLANTA: "planta",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_PUERTA: "puerta",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_DATOS_COMPLEMENTARIOS: "datos_complementarios",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_LOCALIDAD: "localidad",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_CODIGO_POSTAL: "codigo_postal",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_NOMBRE_MUNICIPIO: "nombre_municipio",
+    FilingProducerKey.M360_SOLICITANTE_DOMICILIO_PROVINCIA: "provincia",
+}
+_M360_REPRESENTANTE_DOMICILIO_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_TIPO_VIA: "tipo_via",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_NOMBRE_VIA: "nombre_via",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_TIPO_NUMERACION: "tipo_numeracion",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_NUMERO_CASA: "numero_casa",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_CALIFICADOR_NUMERO: "calificador_numero",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_BLOQUE: "bloque",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_PORTAL: "portal",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_ESCALERA: "escalera",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_PLANTA: "planta",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_PUERTA: "puerta",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_DATOS_COMPLEMENTARIOS: "datos_complementarios",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_LOCALIDAD: "localidad",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_CODIGO_POSTAL: "codigo_postal",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_NOMBRE_MUNICIPIO: "nombre_municipio",
+    FilingProducerKey.M360_REPRESENTANTE_DOMICILIO_PROVINCIA: "provincia",
+}
+_M360_SOLICITANTE_APARTADO_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_NUMERO: "numero",
+    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_LOCALIDAD: "localidad",
+    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_CODIGO_POSTAL: "codigo_postal",
+    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_NOMBRE_MUNICIPIO: "nombre_municipio",
+    FilingProducerKey.M360_SOLICITANTE_APARTADO_CORREOS_PROVINCIA: "provincia",
+}
+_M360_REPRESENTANTE_APARTADO_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_NUMERO: "numero",
+    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_LOCALIDAD: "localidad",
+    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_CODIGO_POSTAL: "codigo_postal",
+    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_NOMBRE_MUNICIPIO: "nombre_municipio",
+    FilingProducerKey.M360_REPRESENTANTE_APARTADO_CORREOS_PROVINCIA: "provincia",
+}
+_M360_REPRESENTANTE_FOREIGN_ADDRESS_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_STREET: "street",
+    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_CITY: "city",
+    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_POSTAL_CODE: "postal_code",
+    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_REGION: "region",
+    FilingProducerKey.M360_REPRESENTANTE_FOREIGN_ADDRESS_COUNTRY_CODE: "country_code",
+}
+#: DR360 página 1 campos 31-35 read "espacios": a solicitante established in Spain, or in
+#: Canarias, Ceuta o Melilla, has no foreign address to declare, so these always resolve blank.
+_M360_SOLICITANTE_FOREIGN_ADDRESS_KEYS: tuple[FilingProducerKey, ...] = (
+    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_STREET,
+    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_CITY,
+    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_POSTAL_CODE,
+    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_REGION,
+    FilingProducerKey.M360_SOLICITANTE_FOREIGN_ADDRESS_COUNTRY_CODE,
+)
+_M360_SCALAR_KEYS: tuple[FilingProducerKey, ...] = (
+    FilingProducerKey.M360_PRESENTACION_EN_PRUEBAS,
+    FilingProducerKey.M360_NIVEL_CALIDAD_DATOS,
+    FilingProducerKey.M360_PAIS_DESTINO_SOLICITUD,
+    FilingProducerKey.M360_CAUSA_PRESENTACION,
+    FilingProducerKey.M360_COMUNICACION_PRORRATA_DEFINITIVA,
+    FilingProducerKey.M360_NUMERO_REGISTRO_DECLARACION_ANTERIOR,
+    FilingProducerKey.M360_SOLICITANTE_TAX_ID,
+    FilingProducerKey.M360_SOLICITANTE_FULL_NAME,
+    FilingProducerKey.M360_SOLICITANTE_EMAIL,
+    FilingProducerKey.M360_SOLICITANTE_PHONE,
+    FilingProducerKey.M360_SOLICITANTE_ESTABLECIDO_EN_TAI,
+    FilingProducerKey.M360_SOLICITANTE_HACIENDA_FORAL,
+    FilingProducerKey.M360_SOLICITANTE_DELEGACION_CANARIAS_CEUTA_MELILLA,
+    FilingProducerKey.M360_REPRESENTANTE_TAX_ID,
+    FilingProducerKey.M360_REPRESENTANTE_FULL_NAME,
+    FilingProducerKey.M360_REPRESENTANTE_EMAIL,
+    FilingProducerKey.M360_REPRESENTANTE_PHONE,
+    FilingProducerKey.M360_CUENTA_TITULAR_NOMBRE,
+    FilingProducerKey.M360_CUENTA_TITULAR_EN_CALIDAD_DE,
+    FilingProducerKey.M360_CUENTA_DIVISA,
+)
+_M360_PRODUCER_KEYS: frozenset[FilingProducerKey] = frozenset(
+    {
+        *_M360_SCALAR_KEYS,
+        *_M360_SOLICITANTE_FOREIGN_ADDRESS_KEYS,
+        *_M360_SOLICITANTE_DOMICILIO_FIELD_BY_KEY,
+        *_M360_REPRESENTANTE_DOMICILIO_FIELD_BY_KEY,
+        *_M360_SOLICITANTE_APARTADO_FIELD_BY_KEY,
+        *_M360_REPRESENTANTE_APARTADO_FIELD_BY_KEY,
+        *_M360_REPRESENTANTE_FOREIGN_ADDRESS_FIELD_BY_KEY,
+    }
+)
 
 
 _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
@@ -427,6 +535,7 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         # here would let the ownership claim and the resolver drift apart, and the
         # exhaustiveness assertion below would then fire on a key one of them forgot.
         *_M296_DECLARANTE_FIELD_BY_KEY,
+        *_M360_PRODUCER_KEYS,
     }
 )
 
@@ -525,6 +634,117 @@ def m353_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     return {
         key: (getattr(profile, field) if profile is not None else None) for key, field in _M353_FIELD_BY_KEY.items()
     }
+
+
+def _m360_zero_one(value: bool | None) -> str | None:
+    """DR360 writes these answers "1"/"0"; absent stays absent, never a "0"."""
+    if value is None:
+        return None
+    return "1" if value else "0"
+
+
+def _m360_solicitante_name(identity: TaxpayerIdentityFacts) -> str | None:
+    """DR360 campo 13, "Apellidos y nombre o denominación social".
+
+    An entity's legal name, or a person's surnames before the given name as the label
+    orders them. ``full_name`` is not used: its order is not part of the identity
+    contract, and guessing it would print a name AEAT cannot match to the NIF.
+    """
+    if identity.legal_name is not None:
+        return identity.legal_name
+    if identity.surnames is not None and identity.given_name is not None:
+        return f"{identity.surnames} {identity.given_name}"
+    return None
+
+
+def _m360_scope_values(
+    field_by_key: dict[FilingProducerKey, str], scope: object | None
+) -> dict[FilingProducerKey, object]:
+    return {key: (getattr(scope, field) if scope is not None else None) for key, field in field_by_key.items()}
+
+
+def m360_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
+    """Resolve the solicitud, parties and account holder Modelo 360's página 1 cites.
+
+    The solicitante is the filing's taxpayer, so its NIF and name come from the snapshot's
+    identity rather than a second copy in the profile. Every other value comes from
+    :class:`Modelo360ProfileFacts`, whose types already enforce DR360's widths and code
+    sets; a field the profile leaves absent resolves to ``None`` and the renderer decides,
+    from the layout's own ``required`` flag, whether that blank is legal.
+
+    A profile of the wrong type yields every key as ``None`` rather than raising: this
+    resolver runs for every modelo, and only Modelo 360's snapshot validator may decide
+    that a 360 filing without these facts is invalid.
+    """
+    profile = snapshot.model_profile
+    values: dict[FilingProducerKey, object] = {key: None for key in _M360_PRODUCER_KEYS}
+    if not isinstance(profile, Modelo360ProfileFacts):
+        return values
+    solicitud = profile.solicitud
+    solicitante = profile.solicitante
+    establecimiento = solicitante.establecimiento
+    representante = profile.representante
+    values.update(
+        {
+            FilingProducerKey.M360_PRESENTACION_EN_PRUEBAS: _m360_zero_one(solicitud.presentacion_en_pruebas),
+            FilingProducerKey.M360_NIVEL_CALIDAD_DATOS: solicitud.nivel_calidad_datos.value,
+            FilingProducerKey.M360_PAIS_DESTINO_SOLICITUD: solicitud.pais_destino,
+            FilingProducerKey.M360_CAUSA_PRESENTACION: solicitud.causa_presentacion.value,
+            FilingProducerKey.M360_COMUNICACION_PRORRATA_DEFINITIVA: _m360_zero_one(
+                solicitud.comunicacion_prorrata_definitiva
+            ),
+            FilingProducerKey.M360_NUMERO_REGISTRO_DECLARACION_ANTERIOR: (
+                solicitud.numero_registro_declaracion_anterior
+            ),
+            FilingProducerKey.M360_SOLICITANTE_TAX_ID: str(snapshot.taxpayer_tax_id),
+            FilingProducerKey.M360_SOLICITANTE_FULL_NAME: _m360_solicitante_name(snapshot.taxpayer_identity),
+            FilingProducerKey.M360_SOLICITANTE_EMAIL: solicitante.email,
+            FilingProducerKey.M360_SOLICITANTE_PHONE: solicitante.phone,
+            FilingProducerKey.M360_SOLICITANTE_ESTABLECIDO_EN_TAI: _m360_zero_one(
+                establecimiento.establecido_en_territorio_de_aplicacion
+            ),
+            FilingProducerKey.M360_SOLICITANTE_HACIENDA_FORAL: (
+                establecimiento.hacienda_foral.value if establecimiento.hacienda_foral is not None else None
+            ),
+            FilingProducerKey.M360_SOLICITANTE_DELEGACION_CANARIAS_CEUTA_MELILLA: (
+                establecimiento.delegacion_canarias_ceuta_melilla.value
+                if establecimiento.delegacion_canarias_ceuta_melilla is not None
+                else None
+            ),
+            FilingProducerKey.M360_REPRESENTANTE_TAX_ID: (
+                str(representante.tax_id) if representante is not None else None
+            ),
+            FilingProducerKey.M360_REPRESENTANTE_FULL_NAME: (
+                representante.full_name if representante is not None else None
+            ),
+            FilingProducerKey.M360_REPRESENTANTE_EMAIL: representante.email if representante is not None else None,
+            FilingProducerKey.M360_REPRESENTANTE_PHONE: representante.phone if representante is not None else None,
+            FilingProducerKey.M360_CUENTA_TITULAR_NOMBRE: profile.cuenta.titular_nombre,
+            FilingProducerKey.M360_CUENTA_TITULAR_EN_CALIDAD_DE: profile.cuenta.titular_en_calidad_de.value,
+            FilingProducerKey.M360_CUENTA_DIVISA: profile.cuenta.divisa,
+        }
+    )
+    values.update(_m360_scope_values(_M360_SOLICITANTE_DOMICILIO_FIELD_BY_KEY, solicitante.domicilio))
+    values.update(_m360_scope_values(_M360_SOLICITANTE_APARTADO_FIELD_BY_KEY, solicitante.apartado_correos))
+    values.update(
+        _m360_scope_values(
+            _M360_REPRESENTANTE_DOMICILIO_FIELD_BY_KEY,
+            representante.domicilio if representante is not None else None,
+        )
+    )
+    values.update(
+        _m360_scope_values(
+            _M360_REPRESENTANTE_APARTADO_FIELD_BY_KEY,
+            representante.apartado_correos if representante is not None else None,
+        )
+    )
+    values.update(
+        _m360_scope_values(
+            _M360_REPRESENTANTE_FOREIGN_ADDRESS_FIELD_BY_KEY,
+            representante.foreign_address if representante is not None else None,
+        )
+    )
+    return values
 
 
 _M202_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
@@ -733,12 +953,7 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACIONES_E: "b_2_suma_de_porcentajes_de_participaciones_e",
     FilingProducerKey.M200_BALANCE_0_NO_CONSTA_1_MOD_NORMAL_2_MOD_ABREV: "balance_0_no_consta_1_mod_normal_2_mod_abrev",
     FilingProducerKey.M200_CODIGO_CNAE_2025_ACTIVIDAD_PRINCIPAL: "codigo_cnae_2025_actividad_principal",
-    FilingProducerKey.M200_CODIGO_PAIS_COUNTRY_CODE: "codigo_pais_country_code",
     FilingProducerKey.M200_COMO_CONSECUENCIA_DE_LA_PRESENTACION_DE_LA_A: "como_consecuencia_de_la_presentacion_de_la_a",
-    FilingProducerKey.M200_CUENTA_BANCARIA_BANCO_BANK_NAME: "cuenta_bancaria_banco_bank_name",
-    FilingProducerKey.M200_CUENTA_BANCARIA_CIUDAD_CITY: "cuenta_bancaria_ciudad_city",
-    FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: "cuenta_bancaria_codigo_swift_bic",
-    FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: "cuenta_bancaria_marca_sepa",
     FilingProducerKey.M200_CUENTA_CORRIENTE_TRIBUTARIA: "cuenta_corriente_tributaria",
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF: "datos_de_la_sociedad_matriz_ultima_nif",
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NOMBRE_DE: "datos_de_la_sociedad_matriz_ultima_nombre_de",
@@ -770,7 +985,6 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO_8: "deduccion_resto_del_grupo_8",
     FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO_9: "deduccion_resto_del_grupo_9",
     FilingProducerKey.M200_DIRECCION_DE_CORREO_ELECTRONICO_PARA_INCIDEN: "direccion_de_correo_electronico_para_inciden",
-    FilingProducerKey.M200_DIRECCION_DEL_BANCO_BANK_ADDRESS: "direccion_del_banco_bank_address",
     FilingProducerKey.M200_ECPN_0_NO_CONSTA_1_MOD_NORMAL_2_MOD_ABREVIAD: "ecpn_0_no_consta_1_mod_normal_2_mod_abreviad",
     FilingProducerKey.M200_EJERCICIO: "ejercicio",
     FilingProducerKey.M200_ENTIDAD_CUYO_IMPORTE_NETO_DE_LA_CIFRA_DE_NEG: "entidad_cuyo_importe_neto_de_la_cifra_de_neg",
@@ -829,8 +1043,6 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_NO_IDENTIFICACION_DE_LA_SOCIEDAD_DOMINANTE_E: "no_identificacion_de_la_sociedad_dominante_e",
     FilingProducerKey.M200_NO_RESIDENTES_MAS_DE_UN_ESTABLECIMIENTO_PERM: "no_residentes_mas_de_un_establecimiento_perm",
     FilingProducerKey.M200_NOMBRE_Y_APELLIDOS_DE_LA_PERSONA_DE_CONTACTO: "nombre_y_apellidos_de_la_persona_de_contacto",
-    FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: "numero_de_cuenta_iban",
-    FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: "numero_de_cuenta_iban_2",
     FilingProducerKey.M200_NUMERO_DE_PERIODO_IMPOSITIVO: "numero_de_periodo_impositivo",
     FilingProducerKey.M200_PAIS_DE_EXPEDICION_DEL_DOCUMENTO_DE_IDENTIFI: "pais_de_expedicion_del_documento_de_identifi",
     FilingProducerKey.M200_PAIS_DE_RESIDENCIA: "pais_de_residencia",
@@ -891,15 +1103,43 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
 }
 
 
-def m200_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+def m200_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
     """Resolve the header facts modelo 200's layout cites.
 
     A profile of the wrong type yields every key as ``None`` rather than raising: this runs
     for every modelo, and AEAT writes an empty alphanumeric header field to blancos.
     """
-    profile = model_profile if isinstance(model_profile, Modelo200ProfileFacts) else None
-    return {
+    profile = snapshot.model_profile if isinstance(snapshot.model_profile, Modelo200ProfileFacts) else None
+    values: dict[FilingProducerKey, object] = {
         key: (getattr(profile, field) if profile is not None else None) for key, field in _M200_FIELD_BY_KEY.items()
+    }
+    values.update(_m200_account_values(snapshot.selected_account if profile is not None else None))
+    return values
+
+
+def _m200_account_values(selected: SelectedFilingAccount | None) -> dict[FilingProducerKey, object]:
+    """Feed modelo 200's DID page by role from the one selected account.
+
+    DR200 page DID carries the devolución account block (Marca SEPA at 242, IBAN
+    at 243, SWIFT-BIC and the foreign-bank block after it) and, separately, the
+    ingreso domiciliación IBAN at 443. A refund selection fills the first, a
+    charge selection the second; the account is never copied into the profile.
+    """
+    refund = selected.account if isinstance(selected, RefundAccountSelection) else None
+    charge = selected.account if isinstance(selected, ChargeAccountSelection) else None
+    return {
+        FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: (
+            None
+            if refund is None
+            else derive_sepa_marca(iban=refund.iban, bank_country_code=refund.bank_country_code).value
+        ),
+        FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: None if refund is None else refund.iban,
+        FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: None if refund is None else refund.swift_bic,
+        FilingProducerKey.M200_CUENTA_BANCARIA_BANCO_BANK_NAME: None if refund is None else refund.bank_name,
+        FilingProducerKey.M200_DIRECCION_DEL_BANCO_BANK_ADDRESS: None if refund is None else refund.bank_address,
+        FilingProducerKey.M200_CUENTA_BANCARIA_CIUDAD_CITY: None if refund is None else refund.bank_city,
+        FilingProducerKey.M200_CODIGO_PAIS_COUNTRY_CODE: None if refund is None else refund.bank_country_code,
+        FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: None if charge is None else charge.iban,
     }
 
 
@@ -948,7 +1188,9 @@ def _shared_filing_producer_values(
     identity = snapshot.taxpayer_identity
     values: dict[FilingProducerKey, object] = {
         FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
-        FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
+        FilingProducerKey.FILING_RESULT_DISPOSITION: (
+            None if snapshot.elections.result_disposition is None else snapshot.elections.result_disposition.value
+        ),
         FilingProducerKey.TAXPAYER_TAX_ID: str(snapshot.taxpayer_tax_id),
         FilingProducerKey.TAXPAYER_LEGAL_NAME: identity.legal_name,
         FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,
@@ -1030,14 +1272,16 @@ def _apply_foral_m303_overrides(
     )
 
 
-def _model_specific_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+def _model_specific_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
+    model_profile = snapshot.model_profile
     values: dict[FilingProducerKey, object] = {}
     values.update(m222_producer_values(model_profile))
     values.update(m202_producer_values(model_profile))
     values.update(m210_producer_values(model_profile))
-    values.update(m200_producer_values(model_profile))
+    values.update(m200_producer_values(snapshot))
     values.update(m296_producer_values(model_profile))
     values.update(m353_producer_values(model_profile))
+    values.update(m360_producer_values(snapshot))
     return values
 
 
@@ -1062,7 +1306,7 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
     m303_motive = m303_rectificativa_motive_producer_values(snapshot.amendment_evidence)
     values = _shared_filing_producer_values(snapshot, account, m303_profile, m303_filing, m303_motive)
     _apply_foral_m303_overrides(values, m303_profile, m303_filing)
-    values.update(_model_specific_producer_values(snapshot.model_profile))
+    values.update(_model_specific_producer_values(snapshot))
     _validate_shared_producer_values(values)
     return values
 
@@ -1143,41 +1387,57 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
     transition_applicable = transition.is_applicable
     # DP30301 Nota 4: the exemption is a question only in the last period; every other period prints "0".
     final_exonerado = m303_facts.exonerado_390 if is_last_filing_period_of_year(m303_facts.period) else None
+    special_option, special_revocation = _m303_prorrata_election_lexicals(transition, transition_applicable)
+    insolvency_declared, insolvency_date, insolvency_subtype = _m303_insolvency_lexicals(insolvency)
     return M303FilingLexicals(
         joint_return_elected=yes_no(m303_facts.joint_return_elected),
         # DP30301 Nota 3: the art. 121 answer is printed only by a filer exempt from Modelo 390, and only in the
         # last period; every other filing carries "0" whatever the operator answered.
-        annual_volume_nonzero=(
-            yes_no(m303_facts.annual_volume_nonzero)
-            if final_exonerado is not None
-            and final_exonerado.applicable
-            and m303_facts.annual_volume_nonzero is not None
-            else "0"
-        ),
+        annual_volume_nonzero=_m303_annual_volume_lexical(m303_facts, final_exonerado),
         recipient_of_cash_accounting_operations=yes_no(
             m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
         ),
-        prorrata_special_option=(
-            yes_no(transition.transition == opcion_prorrata_transition()) if transition_applicable else None
-        ),
-        prorrata_special_revocation=(
-            yes_no(transition.transition == revocacion_prorrata_transition()) if transition_applicable else None
-        ),
-        insolvency_declared="1" if insolvency is not None else "2",
-        insolvency_judicial_order_date=(
-            insolvency.judicial_order_date.strftime("%d%m%Y") if insolvency is not None else None
-        ),
-        insolvency_filing_subtype=(
-            {
-                M303InsolvencyFilingSubtype.PRE_ORDER: "1",
-                M303InsolvencyFilingSubtype.POST_ORDER: "2",
-            }[insolvency.subtype]
-            if insolvency is not None
-            else None
-        ),
+        prorrata_special_option=special_option,
+        prorrata_special_revocation=special_revocation,
+        insolvency_declared=insolvency_declared,
+        insolvency_judicial_order_date=insolvency_date,
+        insolvency_filing_subtype=insolvency_subtype,
         exonerado_390_applicable="0" if final_exonerado is None else yes_no(final_exonerado.applicable),
         prorrata_transition_applicable=transition_applicable,
     )
+
+
+def _m303_annual_volume_lexical(
+    m303_facts: M303FilingFacts,
+    final_exonerado: M303Exonerado390FilingEvidence | None,
+) -> str:
+    if final_exonerado is None or not final_exonerado.applicable or m303_facts.annual_volume_nonzero is None:
+        return "0"
+    return yes_no(m303_facts.annual_volume_nonzero)
+
+
+def _m303_prorrata_election_lexicals(
+    transition: M303ProrrataTransitionArrival,
+    applicable: bool,
+) -> tuple[str | None, str | None]:
+    if not applicable:
+        return None, None
+    return (
+        yes_no(transition.transition == opcion_prorrata_transition()),
+        yes_no(transition.transition == revocacion_prorrata_transition()),
+    )
+
+
+def _m303_insolvency_lexicals(
+    insolvency: M303InsolvencyFilingFact | None,
+) -> tuple[str, str | None, str | None]:
+    if insolvency is None:
+        return "2", None, None
+    subtype = {
+        M303InsolvencyFilingSubtype.PRE_ORDER: "1",
+        M303InsolvencyFilingSubtype.POST_ORDER: "2",
+    }[insolvency.subtype]
+    return "1", insolvency.judicial_order_date.strftime("%d%m%Y"), subtype
 
 
 def m303_foral_lexicals(m303_filing: M303FilingLexicals) -> M303ForalLexicals:

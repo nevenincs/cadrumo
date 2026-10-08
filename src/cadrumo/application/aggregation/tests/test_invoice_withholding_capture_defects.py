@@ -1,8 +1,8 @@
-"""Invoice withholding capture refuses through the one projection, naming every defect.
+"""Invoice withholding capture names every canonical liability defect.
 
-The capture builder and the store projection answer the same question -- does
+The capture builder and the defect sweep answer the same question -- does
 this invoice carry a retención the taxpayer owes as retenedor? -- so the
-capture asks the projection rather than a first-defect copy of it. An operator
+capture uses that sweep before reading the invoice's euro figures. An operator
 fixing a record must see everything wrong with it in one refusal, as a stable
 token list for machines and as a localized explanation per defect for people.
 """
@@ -26,7 +26,7 @@ from ..invoice_retencion import (
     InvoiceWithholdingEvidenceError,
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
-    project_received_invoice_retencion,
+    invoice_retencion_liability_defects,
 )
 from ..withholding_recognition import (
     WithholdingIncomeKind,
@@ -126,14 +126,14 @@ def test_an_invoice_with_two_defects_is_refused_with_both() -> None:
         InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER,
     )
     assert refusal.defects == expected
-    assert refusal.defects == project_received_invoice_retencion(invoice, scheme=_request(invoice).scheme).defects
+    assert refusal.defects == invoice_retencion_liability_defects(invoice)
     assert refusal.refusal_code == "no_retencion_declared,non_resident_supplier"
     assert envelope.code == "REFUSED_INVOICE_WITHHOLDING_DEFECTS"
     assert envelope.category == "REFUSED"
     assert envelope.context is not None
     assert envelope.context["refusal_code"] == "no_retencion_declared,non_resident_supplier"
     reasons = envelope.context["defect_reasons"]
-    assert "The invoice declares no withheld amount." in reasons
+    assert "The invoice shows no withheld amount." in reasons
     assert "The supplier is not resident in Spain" in reasons
     assert reasons.index("no withheld amount") < reasons.index("not resident in Spain")
 
@@ -148,10 +148,9 @@ def test_a_single_defect_refuses_with_the_code_it_always_carried() -> None:
 
 
 def test_a_clean_invoice_still_captures_the_projected_liability() -> None:
-    """A routable invoice yields the capture command, bounded by the projection's euro figures."""
+    """A routable invoice yields a capture command bounded by its declared euro figures."""
     invoice = _invoice()
-    projection = project_received_invoice_retencion(invoice, scheme=_request(invoice).scheme)
-    assert projection.observation is not None
+    assert invoice_retencion_liability_defects(invoice) == ()
 
     capture = build_invoice_withholding_capture(
         invoice,
@@ -162,10 +161,10 @@ def test_a_clean_invoice_still_captures_the_projected_liability() -> None:
     )
 
     snapshot = capture.command.liability_snapshot
-    assert snapshot.liability_base == projection.observation.taxable_base == Decimal("1000.00")
-    assert snapshot.liability_withholding == projection.observation.retencion_amount == Decimal("190.00")
+    assert snapshot.liability_base == invoice.base_total_eur == Decimal("1000.00")
+    assert snapshot.liability_withholding == invoice.retention_amount_eur == Decimal("190.00")
     assert snapshot.liability_settlement == Decimal("1020.00")
-    assert capture.command.perceptor_nif == projection.observation.perceptor_nif
+    assert capture.command.perceptor_nif == invoice.counterparty_tax_id
     assert capture.scope.modelo == "123"
 
 

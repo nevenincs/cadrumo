@@ -1,0 +1,10 @@
+[[revisions.2012-01-31-y-siguientes.export_layouts]]
+id = 'modelo-145-dr-v20-fixed-width'
+format = 'fixed_width'
+source_refs = ['aeat-dr-145-v20']
+legal_refs = [
+    'rd-439-2007:art-88',
+    'resolucion-dgt-2011-01-03-modelo-145:aprobacion',
+    'resolucion-dgt-2013-12-17-modelo-145:amendment',
+]
+dictionary_path_overrides = []

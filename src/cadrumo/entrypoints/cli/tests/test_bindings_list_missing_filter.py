@@ -18,19 +18,25 @@ real bucket and the real registry authority resolves the bindings.
 
 from __future__ import annotations
 
-from datetime import date
+import json
+import sys
+from collections.abc import Callable, Iterator
+from pathlib import Path
 
 import pytest
+from click.testing import Result
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
-
-from ....domain.user_profile.values import UserProfileFact
-from ._strict_cli_fixture_support import binding_isolated_backend
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import native_cli_profile_scope
 
-__all__ = ["binding_isolated_backend"]
-
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+    pytest.mark.usefixtures("authority_operation"),
+]
 
 # Modelo 100 (IRPF) 2025 declares formula-consumed ``source = "profile"``
 # bindings. The partial profile below satisfies the explicit facts for
@@ -61,16 +67,43 @@ _KNOWN_RESOLVED_BINDING_IDS = frozenset(
 )
 
 
-def _seed_partial_modelo_100_profile() -> None:
-    """Write the four profile facts that resolve a proper subset of M100 bindings."""
-    set_active_test_profile_facts(
-        (
-            UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-        ),
-    )
+@pytest.fixture
+def invoke_modelo_query(tmp_path: Path) -> Iterator[Callable[[list[str]], Result]]:
+    """Run both views through one native profile worker with the four facts."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="bindings-missing-native",
+            facts={
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Example",
+                "activities.description": "design",
+                "censo.activity_start_date": "2024-01-01",
+                "contact.postcode": "28013",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "tax_residence.ccaa": "cataluna",
+                "renta_filing.declaration_type": "1",
+                "renta_taxpayer.birth_date": "1980-03-15",
+                "renta_family.minor_children_in_unit": "false",
+                "iva.regime": "GENERAL",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            },
+        )
+
+        def invoke(args: list[str]) -> Result:
+            assert profile.label is not None
+            close_active_bucket_session()
+            return invoke_cached_cli(
+                ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
+                input=json.dumps({"profile_passphrase": profile.passphrase}),
+            )
+
+        yield invoke
 
 
 def _binding_rows_in_listing(output: str) -> dict[str, tuple[str, ...]]:
@@ -97,7 +130,9 @@ def _binding_ids_in_listing(output: str) -> set[str]:
     return set(_binding_rows_in_listing(output))
 
 
-def test_bindings_list_missing_returns_strict_subset_of_unfiltered() -> None:
+def test_bindings_list_missing_returns_strict_subset_of_unfiltered(
+    invoke_modelo_query: Callable[[list[str]], Result],
+) -> None:
     """``--missing`` removes the profile-resolved bindings.
 
     With an active profile that satisfies a proper subset of Modelo 100's
@@ -106,12 +141,11 @@ def test_bindings_list_missing_returns_strict_subset_of_unfiltered() -> None:
     by the seeded facts. The authority may add further derived profile
     bindings, so the test does not freeze that complete set.
     """
-    _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
 
-    unfiltered = invoke_cached_cli(scope)
+    unfiltered = invoke_modelo_query(scope)
     assert unfiltered.exit_code == 0, unfiltered.output
-    filtered = invoke_cached_cli([*scope, "--missing"])
+    filtered = invoke_modelo_query([*scope, "--missing"])
     assert filtered.exit_code == 0, filtered.output
 
     all_rows = _binding_rows_in_listing(unfiltered.output)
@@ -134,7 +168,9 @@ def test_bindings_list_missing_returns_strict_subset_of_unfiltered() -> None:
     assert "missing_filter\tTrue" in filtered.output
 
 
-def test_bindings_list_without_missing_retains_profile_resolved_rows() -> None:
+def test_bindings_list_without_missing_retains_profile_resolved_rows(
+    invoke_modelo_query: Callable[[list[str]], Result],
+) -> None:
     """Without ``--missing`` the profile-resolved bindings are still listed.
 
     The unfiltered listing is the full configured-binding set: a binding
@@ -143,10 +179,9 @@ def test_bindings_list_without_missing_retains_profile_resolved_rows() -> None:
     to the strict-subset test — it confirms the dropped rows genuinely
     exist in the unfiltered view, so the subset difference is real.
     """
-    _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
 
-    unfiltered = invoke_cached_cli(scope)
+    unfiltered = invoke_modelo_query(scope)
     assert unfiltered.exit_code == 0, unfiltered.output
 
     all_ids = _binding_ids_in_listing(unfiltered.output)

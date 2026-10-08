@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#canonical-identifiers'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:02dc0f3940213478b5167f31a9b418610a5c177226c345c306c93ed71151f65b'
-related:
-  - "[[2026-08-07-canonical-identifiers-plan]]"
+related: []
 ---
 
 # `canonical-identifiers` audit: `S14 storage-key audit`

@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:fd9d79a43045c1fcf4ff8ae8598c078baf8c3d1ceaef5e29fccd4a2aacc778b5'
+modified: '2026-10-03'
+body_hash: 'sha256:832336ffffb8c400b08c3e972911b13cfd0ef01687e97642a91dda6bf734cce7'
 related:
   - '[[2026-06-04-repo-health-triage-research]]'
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
@@ -14,11 +14,7 @@ related:
 
 ## Discovery method
 
-The codebase was searched through the resident VaultSpec RAG service on port
-`8766` using `vaultspec-rag search --port 8766`. This avoided opening the local
-Qdrant store from a second process. The semantic results were cross-checked with
-targeted `rg`, `scripts/check_relative_imports.py`, `just audit-deps`, and
-`just audit-dead-code`.
+The codebase was searched through the resident VaultSpec RAG service on port `8766` using `vaultspec-rag search --port 8766`. This avoided opening the local Qdrant store from a second process.
 
 ## Semantic query ledger
 
@@ -36,14 +32,9 @@ targeted `rg`, `scripts/check_relative_imports.py`, `just audit-deps`, and
 
 Structural anchors:
 
-- `scripts/check_relative_imports.py` reports 14 package-internal absolute import
   violations.
 - `lint-imports` analyzes 1925 files and 7863 dependencies, with 3 kept contracts
   and 1 broken layered-architecture contract.
-- Representative violations include `src/aeat/adapters/outbound/fx/_ecb_provider.py`,
-  `src/aeat/adapters/outbound/fx/_ecb_refresh.py`,
-  `src/aeat/application/user_profile/test_bundle_reexports.py`, and
-  `src/aeat/application/workflow/test_declaration_key.py`.
 
 Type anchors:
 
@@ -57,12 +48,8 @@ Complexity anchors:
 
 - Radon reports 284 C-or-worse blocks.
 - Complexipy reports total cognitive complexity of 21856 over 1926 files.
-- High-priority files include `src/aeat/entrypoints/cli/_modelo.py`,
-  `src/aeat/application/modelo/_actions.py`,
-  `src/aeat/domain/calculations/registry/_bindings.py`,
-  `src/aeat/domain/calculations/registry/_formula_runtime.py`,
-  `src/aeat/entrypoints/cli/_ledger.py`, and
-  `src/aeat/application/ledger/_actions.py`.
+- High-priority files include `src/cadrumo/entrypoints/cli/_modelo.py`,
+  `src/cadrumo/entrypoints/cli/_ledger.py`, and
 
 Hygiene anchors:
 
@@ -78,10 +65,7 @@ Security and site anchors:
 
 - Semgrep reports 159 blocking findings over 17782 tracked files, but mixes
   production code, tests, mirrored official data, and fixtures.
-- RAG site discovery anchors include `src/aeat/domain/portals/_categories.py`,
-  `src/aeat/adapters/outbound/aeat/sede/_declarations.py`,
-  `src/aeat/adapters/outbound/aeat/sede/__init__.py`, and
-  `src/aeat/_data/corpus/test_corpus_provenance.py`.
+  `src/cadrumo/adapters/outbound/aeat/sede/__init__.py`, and
 
 ## Agent synthesis
 
@@ -95,17 +79,12 @@ live/auth as the later high-risk cluster.
 
 The duplication/test-hygiene explorer added the following high-signal items:
 
-- `just verify-shims` currently calls missing `scripts/verify_shims.py`, so the
   shim gate fails before checking the repository.
-- `src/aeat/adapters/outbound/google/test_document_link_resolver.py` has two
   undocumented `monkeypatch.setattr` sites around `_drive_service`.
-- `src/aeat/application/operator_surface/_filing_status_token.py` is explicitly a
   shim duplicating the filing-status token.
-- `src/aeat/core/parsing/__init__.py` carries private underscore compatibility
+- `src/cadrumo/core/parsing/__init__.py` carries private underscore compatibility
   aliases.
-- `src/aeat/adapters/outbound/aeat/browser/_httpx_fallback.py` is fail-closed, but
   should be reviewed as a placeholder-named backend.
-- URL authority is spread across `src/aeat/core/external_constants.toml`, portal
+- URL authority is spread across `src/cadrumo/core/external_constants.toml`, portal
   entries, registry cross-reference TOMLs, and Sede adapters. The
-  `src/aeat/domain/calculations/registry/_remote_state_guard.py` policy remains a
   strong control, but depends on complete planned-operation declarations.

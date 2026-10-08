@@ -43,34 +43,7 @@ if TYPE_CHECKING:
 
 
 def _relative_path_anchor(state_root_inputs: StateRootInputs | None = None) -> Path:
-    """Return the base a relative operator path resolves against.
-
-    Always the platform user-data directory
-    (:func:`cadrumo.core.config_state_root.platform_user_data_root`), the
-    same root :func:`~cadrumo.core.config_state_root.resolve_state_root`
-    hands the storage default. A relative override of a ``var/``-style
-    operator setting (storage root, cache dir, log dir, financial catalogue
-    dir, ...) therefore lands beside the state it belongs with, and can
-    never resolve inside a virtualenv or an ephemeral package cache.
-
-    There is no source-checkout arm. An earlier revision branched here on
-    whether the process was running from a repository, which made a
-    source-layout guess decide where operator data was written; a
-    tax-filing product does not classify its own installation. A developer
-    who wants a checkout-local location sets the corresponding setting
-    explicitly, and an explicit override wins over this anchor.
-
-    Args:
-        state_root_inputs: Injectable
-            :class:`~cadrumo.core.config_state_root.StateRootInputs` seam.
-            ``None`` (the live default) captures the running process's
-            inputs via
-            :func:`~cadrumo.core.config_state_root.live_state_root_inputs`
-            — the same seam
-            :func:`~cadrumo.core.config_state_root.default_storage_root`
-            reads, so a relative override and the unset default resolve
-            consistently.
-    """
+    """Return the repository application-data anchor captured for this process."""
     inputs = state_root_inputs if state_root_inputs is not None else live_state_root_inputs()
     return platform_user_data_root(inputs)
 
@@ -667,7 +640,7 @@ def select_filesystem_retention_survivors[EntryT, TimestampT: _RetentionTimestam
 
     Mirrors :func:`~cadrumo.adapters.outbound.llm.retention.select_retention_removal_keys`'s
     pure rank-and-bound shape, generalized to a filesystem entry (a run
-    directory, a dump file, a telemetry file, a compiled-cache pickle)
+    directory, a dump file, a log file, a compiled-cache pickle)
     instead of a secure-object key, and widened from that primitive's fixed
     cutoff-then-count pipeline to composable, independently-optional bounds.
     Deletion stays with the caller: this function only decides who survives.

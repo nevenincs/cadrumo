@@ -8,11 +8,11 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.iva.schema import require_eu_member_state
 
 from ....core.config import override_settings
 from ....core.i18n.render import clear_output_language_cache
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import TransactionCatalogue

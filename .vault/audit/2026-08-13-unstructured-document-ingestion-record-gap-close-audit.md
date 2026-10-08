@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#unstructured-document-ingestion'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5c33603b2d28956e507fdb89964f3b8216eee68e64ed7bd29f358d50ae92c340'
-related:
-  - "[[2026-08-07-unstructured-document-ingestion-plan]]"
+body_hash: 'sha256:418471f5542319a1ac80794374cdc6c1774bc6b803524f1fe26b3d2c7fe19ab5'
+related: []
 ---
-
 # `unstructured-document-ingestion` audit: `thirty-four closed steps with no execution record`
 
 ## Scope
@@ -29,7 +27,9 @@ of the three it is.
 the fact would imply a contemporaneous account nobody has. What can honestly be
 established now is whether the deliverable exists, and that is what is recorded.
 
-## Finding 1 -- eight rows carry their own account in the row text
+## Findings
+
+### Finding 1 -- eight rows carry their own account in the row text
 
 `W02.P05.S222`, `W02.P05.S247`, `W09.P17.S148`, `W09.P17.S167`,
 `W09.P17.S239`, `W09.P17.S240`, `W09.P17.S323`, `W09.P17.S326`.
@@ -45,7 +45,7 @@ belongs in a record was written into the plan instead. That is a real defect --
 the plan is a work list and a record is evidence, and prose in the wrong one is
 not discoverable from the exec trail -- but nothing is missing.
 
-## Finding 2 -- twenty rows verified against a named artefact at HEAD
+### Finding 2 -- twenty rows verified against a named artefact at HEAD
 
 Each names a concrete surface, and each surface is present:
 
@@ -85,7 +85,7 @@ Each names a concrete surface, and each surface is present:
 delivered-as-specified and delivered-narrower that this audit exists to make
 visible. Nothing about it is narrower; the names simply drifted.
 
-## Finding 3 -- six rows are verified only to surface level, not to claim level
+### Finding 3 -- six rows are verified only to surface level, not to claim level
 
 **RESOLVED. All six were read against their assertions, and all six are
 delivered.** This section originally recorded them as unverified because a
@@ -133,7 +133,7 @@ delivered MORE completely than the row asked.
 **Classification: delivered as specified, record absent.** No row in the audit
 now stands unverified.
 
-## What this says about readiness
+### What this says about readiness
 
 The plan is **substantively complete**. All 34 record-less closures were checked
 against the tree, and not one turned out to be unbuilt, narrowed, or
@@ -159,7 +159,9 @@ Neither gap is a reason to reopen a row. The rows are closed correctly; the
 question the trail could not answer -- which of the three completion states each
 closure was -- is answered here, per row, against HEAD.
 
-## Actions
+## Recommendations
+
+### Actions
 
 - **No open verification work remains.** Every one of the 34 is classified
   against HEAD, and the six that were unverified at first pass are resolved

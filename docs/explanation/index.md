@@ -2,7 +2,7 @@
 
 This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday taxpayer in Spain: anyone with a NIF (*Número de Identificación Fiscal*, for a Spanish citizen the DNI number plus letter) or NIE (*Número de Identidad de Extranjero*) who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
 
-Read this to understand how the pieces fit together. To actually perform a task, start from the [Getting started page](../how-to/index.md), the step-by-step [Quickstart](../how-to/quickstart.md), or the modelo run-throughs of [the income-tax year](../how-to/irpf-lifecycle.md) and [the IVA year](../how-to/iva-lifecycle.md).
+Read this to understand how the pieces fit together. To actually perform a task, start from the [Getting started page](../how-to/index.md), the step-by-step [Quickstart](../how-to/quickstart.md), or the modelo run-throughs of [the income-tax year](../how-to/irpf-lifecycle.md) and [the VAT year](../how-to/iva-lifecycle.md).
 
 ---
 
@@ -14,7 +14,7 @@ The tool runs entirely on your own computer. It prepares your filing for you, bu
 
 ## The journey at a glance
 
-Your data moves one way through the tool. Bank movements come in, get sorted and made tax-ready, pass a readiness check, become the numbered boxes of a form, get edited and double-checked, turn into an export file, and finally get recorded once you've filed it yourself.
+Your data moves one way through the tool. Bank transactions come in, get sorted and made tax-ready, pass a readiness check, become the numbered boxes of a form, get edited and double-checked, turn into an export file, and finally get recorded once you've filed it yourself.
 
 ```mermaid
 graph TD
@@ -32,13 +32,13 @@ Each stop on this journey is owned in depth by one member of this cluster. The f
 
 ## From your records to the figures on the form
 
-Your bank movements start as plain amounts and dates with no tax meaning. Before the tool can fill in a form, each movement is sorted into a tax category and, where a cost is partly personal, adjusted to the business share. A readiness check then confirms the records are complete for the period. From there the tool fills in each numbered box of the form, following the rules the agency publishes, and saves the result as a draft. See [How your records become tax figures](from-records-to-figures.md).
+Your bank transactions start as plain amounts and dates with no tax meaning. Before the tool can fill in a form, each movement is sorted into a tax category and, where a cost is partly personal, adjusted to the business share. A readiness check then confirms the records are complete for the period. From there the tool fills in each numbered box of the form, following the rules the agency publishes, and saves the result as a draft. See [How your records become tax figures](from-records-to-figures.md).
 
 ---
 
 ## Editing and double-checking a calculation
 
-A first draft is rarely the last word. Adjust figures, re-run the calculation, and keep a saved version of each pass without losing the earlier ones. If you find a mistake after filing, an amendment corrects it. When you're ready, a completeness check looks over the whole form for missing inputs and inconsistent figures. See [Editing and verifying a calculation](editing-and-verifying.md).
+A first draft is rarely the last word. Adjust figures, re-run the calculation, and keep a saved version of each pass without losing the earlier ones. If you find a mistake after filing, a correction fixes it. When you're ready, a completeness check looks over the whole form for missing inputs and inconsistent figures. See [Editing and checking a calculation](editing-and-verifying.md).
 
 ---
 
@@ -58,18 +58,19 @@ Before you commit to a form, review every figure and trace it back to the input 
 
 ## Recording a filing, after you upload it yourself
 
-The tool stops at the file. You file through the agency's portal, and the agency hands you a {term}`justificante`. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
+The tool stops at the file. You file through the agency's portal, and the agency hands you an {term}`AEAT receipt <justificante>`. Back in the tool, you record the filing, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 
-## What "verify" and "file" mean here
+(what-verify-and-file-mean-here)=
+## What "check" and "record filing" mean here
 
-Two everyday words have narrow, local meanings in this tool:
+Two everyday steps have narrow, local meanings in this tool:
 
-- **Verify** is a completeness and consistency check that runs on your own computer. It confirms the form holds together and nothing required is missing. It does not test the form against the agency's portal, and it's not a promise the agency will accept it.
-- **File** is a local "final" note in your own records. It marks a form as done so you don't change it by accident. It is not a submission - the tool never sends anything to the agency.
+- **Check** is a completeness and consistency step that runs on your own computer. It confirms the form holds together and nothing required is missing. It does not test the form against the agency's portal, and it's not a promise the agency will accept it.
+- **Record filing** is a local "final" note in your own records. It marks the declaration as "Recorded as filed" so you don't change it by accident. It is not a submission - the tool never sends anything to the agency.
 
-These two ideas are covered in depth in [Editing and verifying a calculation](editing-and-verifying.md) and [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
+These two ideas are covered in depth in [Editing and checking a calculation](editing-and-verifying.md) and [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 
@@ -77,7 +78,7 @@ These two ideas are covered in depth in [Editing and verifying a calculation](ed
 
 Read straight through for the whole picture, or jump to the stage you're working on. Every member links to the how-to guide that performs its task and back to the {doc}`glossary </_generated/glossary>` for any word you're unsure of.
 
-When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). For a step-by-step run-through of a full filing year, follow [the income-tax year](../how-to/irpf-lifecycle.md) or [the IVA year](../how-to/iva-lifecycle.md); for the shortest single-filing path, the [Quickstart](../how-to/quickstart.md).
+When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). For a step-by-step run-through of a full filing year, follow [the income-tax year](../how-to/irpf-lifecycle.md) or [the VAT year](../how-to/iva-lifecycle.md); for the shortest single-filing path, the [Quickstart](../how-to/quickstart.md).
 
 ```{toctree}
 :hidden:

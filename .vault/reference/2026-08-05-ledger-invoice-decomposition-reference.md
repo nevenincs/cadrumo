@@ -3,13 +3,15 @@ tags:
   - '#reference'
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5a6ce86741cf67be3dc0a4e71b43fb6f7d56b3fdeccef47c8303faf765881b69'
+body_hash: 'sha256:79cd5eaeac972bfc153ada10452f7cfe43054797a02411c6503d97257274f6c1'
 related: []
 ---
 
 # `ledger-invoice-decomposition` reference: `invoice decomposition and income grounding`
+
+## Summary
 
 Grounding for an ADR on two coupled hardening sites: the ledger ingestion contract for an
 invoice, and the calculation backend that decomposes an invoice into the components a modelo

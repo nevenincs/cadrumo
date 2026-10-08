@@ -10,6 +10,7 @@ from typing import Final
 from cadrumo.core.paths import path_stat_fingerprint
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
+from dev.registry.compiler.corpus_source_location import PACKAGED_DATA_ROOT
 
 __all__ = [
     "classify_normative_corpus_bytes",
@@ -18,7 +19,6 @@ __all__ = [
 ]
 
 _NORMATIVES_TREE_PREFIX: Final = "corpus/normatives/"
-_PACKAGED_DATA_ROOT: Final = Path("src") / "cadrumo" / "_data"
 _EXCERPT_HEADER: Final = b"Official BOE consolidated source excerpt"
 _BOE_DOCUMENT_ID: Final = re.compile(rb"\bBOE-A-\d{4}-\d+\b")
 _BOE_STRUCTURAL_MARKUP: Final = re.compile(
@@ -31,7 +31,7 @@ def _normative_roots(source_root: Path) -> tuple[Path, Path, Path, bool]:
     """Resolve one source root's normative tree roots once; every reference under it shares them."""
     root = source_root.resolve()
     direct_normatives = (root / "corpus" / "normatives").resolve()
-    packaged_data_root = (root / _PACKAGED_DATA_ROOT).resolve()
+    packaged_data_root = (root / PACKAGED_DATA_ROOT).resolve()
     packaged_normatives = (packaged_data_root / "corpus" / "normatives").resolve()
     contained = (
         root in direct_normatives.parents
@@ -48,7 +48,7 @@ def resolve_normative_corpus_path(source_root: Path, corpus_ref: str) -> Path | 
         return None
     root, direct_normatives, packaged_normatives, contained = _normative_roots(source_root)
     direct = (root / corpus_path).resolve()
-    packaged = (root / _PACKAGED_DATA_ROOT / corpus_path).resolve()
+    packaged = (root / PACKAGED_DATA_ROOT / corpus_path).resolve()
     if not (contained and direct_normatives in direct.parents and packaged_normatives in packaged.parents):
         raise RegistryValidationError(f"normative corpus target {corpus_ref!r} escapes the normative corpus tree")
     path = direct if direct.is_file() else packaged

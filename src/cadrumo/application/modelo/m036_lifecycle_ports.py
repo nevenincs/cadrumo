@@ -69,17 +69,8 @@ class M036LifecyclePorts:
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
 
 
-class M036LifecyclePortsFactory(Protocol):
-    """Construct the complete M036 lifecycle capability bundle."""
-
-    def __call__(self, *, bucket_id: str) -> M036LifecyclePorts:
-        """Return all authorities required for the requested bucket."""
-        ...
-
-
 __all__ = [
     "M036DeclarationPersistenceError",
     "M036DeclarationRepositoryPort",
     "M036LifecyclePorts",
-    "M036LifecyclePortsFactory",
 ]

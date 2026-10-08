@@ -3,16 +3,19 @@ tags:
   - '#reference'
   - '#secure-storage-performance-hardening'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ccf32d62a417dc1001773274e34dc111ed33c3577f313e15c9158d75ef2cc402'
+body_hash: 'sha256:b802ab38eae2eb2f767d6013bc8f4e9a729f2402f8d83ee01d5bbd6631a3cbfd'
 related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
   - "[[2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit]]"
 ---
 
 # `secure-storage-performance-hardening` reference: measured outcomes
+
+## Summary
+
+This reference records measured import and filesystem-side-effect reductions from secure-storage hardening, with the gates and scaling observations used to reproduce the results.
 
 Every figure below was measured on this tree, in fresh child processes, and is
 reproducible by the gate named beside it. Nothing here is estimated.

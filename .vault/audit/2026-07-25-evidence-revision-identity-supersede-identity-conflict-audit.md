@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#evidence-revision-identity'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:d36faef2fa977ecc083a6e3ed7b2c41ff2cafd78ad09a66f094acc026f1f6bdf'
+modified: '2026-10-03'
+body_hash: 'sha256:a3c500c86cdbe739dbca8abf021cd45afc0643cf5eb535f9b64525432e46885a'
 related:
   - "[[2026-07-24-evidence-revision-identity-adr]]"
-  - "[[2026-07-25-evidence-revision-identity-plan]]"
 ---
 
 # `evidence-revision-identity` audit: `the supersede transition the ADR mandates is unrepresentable under the revision-id invariant`
@@ -48,7 +47,7 @@ The decision's Implementation section requires a transition that "opens a NEW
 draft revision from a finalized one, carrying the same inputs and re-capturing
 the evidence bundle at the next verify". A calculation revision's identity is
 pinned to its own content: the model validator in
-`src/cadrumo/domain/modelos/_calculation_revision.py` re-derives the id from the
+The retired module re-derives the id from the
 record's fields and refuses the record when the two disagree, and the catalogue
 is keyed on that same id, rejecting any key that does not equal its record's
 `calculation_revision_id`. A successor carrying the same inputs therefore derives
@@ -102,7 +101,7 @@ as the immutability the bundle exists to provide.
 
 Minting the successor under a second work unit fails on the same class of
 constraint one level up. `derive_work_unit_id` in
-`src/cadrumo/domain/modelos/_work_unit.py` is content-addressed over exactly
+The retired module was content-addressed over exactly
 bucket, modelo, filing year, period and registry revision, with no lineage axis
 and no room for one that would not change what a work unit means. A second work
 unit for one filing target would also reach every natural-lookup selector,

@@ -33,6 +33,7 @@ from ...core.citation_grounding import CitationGrounding
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.registry_token import RegistryToken
 from ...core.validity_window import ValidityWindow
 from .errors import IvaValidationError
 
@@ -212,23 +213,12 @@ class IvaArt69DosService(_OpaqueRegistryToken):
     __slots__ = ()
 
 
-class EUMemberState(str):
+class EUMemberState(RegistryToken):
     """Opaque EU IVA member-state token projected from fact 0131."""
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> EUMemberState:
-        """Reject direct construction outside the facts-registry projection."""
-        if not _registry_validated:
-            raise TypeError("EUMemberState tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("EU member-state token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> EUMemberState:
-        """Construct a token only at the typed registry projection boundary."""
-        return cls(value, _registry_validated=True)
+    _empty_value_message = "EU member-state token must be a non-empty string"
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
@@ -243,11 +233,6 @@ class EUMemberState(str):
     @classmethod
     def _project_pydantic(cls, value: object) -> EUMemberState:
         return require_eu_member_state(value)
-
-    @property
-    def value(self) -> str:
-        """Return the persisted registry token for serialization."""
-        return str(self)
 
 
 def require_eu_member_state(
@@ -312,7 +297,9 @@ def default_iva_cash_accounting_treatment(
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
     """Return the registry-declared ordinary cash-accounting treatment."""
-    from ..calculations.registry.iva_schema_vocabulary import default_iva_cash_accounting_treatment as resolve_default
+    from ..calculations.registry.iva_cash_accounting_vocabulary import (
+        default_iva_cash_accounting_treatment as resolve_default,
+    )
 
     return resolve_default(effective_date=on_date, authority=authority)
 
@@ -334,7 +321,9 @@ def is_iva_cash_accounting_supplier_regime(
     authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return whether a treatment is the registry-declared supplier token."""
-    from ..calculations.registry.iva_schema_vocabulary import resolve_iva_cash_accounting_catalogue
+    from ..calculations.registry.iva_cash_accounting_vocabulary import (
+        resolve_iva_cash_accounting_catalogue,
+    )
 
     catalogue = resolve_iva_cash_accounting_catalogue(effective_date=on_date, authority=authority)
     return treatment == catalogue.supplier_regime_token

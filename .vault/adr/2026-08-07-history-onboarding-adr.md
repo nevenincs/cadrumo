@@ -3,15 +3,13 @@ tags:
   - '#adr'
   - '#history-onboarding'
 date: '2026-08-07'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:33e4345124199f1892c04dbec5629915aedcd2f3379586e9dc6c666e483fc126'
 related:
   - "[[2026-08-07-history-onboarding-reference]]"
   - "[[2026-08-07-declarations-register-pagination-adr]]"
-  - "[[2026-08-07-dehu-notification-legal-effect-reference]]"
   - "[[2026-07-12-justificante-reframing-audit]]"
-  - '[[2026-08-07-history-onboarding-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
 ---
 # `history-onboarding` adr: `New-profile AEAT history discovery and onboarding` | (**status:** `accepted`)

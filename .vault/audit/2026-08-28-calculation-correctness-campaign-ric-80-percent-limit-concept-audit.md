@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5566f4fde7877640e4bf55fc8871d5a4b657438265af992878711a32dfb987db'
+body_hash: 'sha256:597cc24d9cc8a8b57c8358f7f02c4065447253dd2bcb7a252c282b8434046f6d'
 related: []
 ---
 
 # `calculation-correctness-campaign` audit: `The RIC 80 percent parameter is named a reduccion but art 27.15 limits a deduccion en la cuota`
 
-## Finding
+## Scope
 
+Review the legal meaning, name, citation, and current formula reachability of the RIC 80 percent limit.
+
+## Findings
 `renta-2025-ric-reduccion-rate-maximo` carries the value `80` and cites
 `ley-19-1994:art-27`. The **value is correct and is stated in the bundled
 corpus.** What is wrong is the concept the parameter's name and its
@@ -56,6 +59,18 @@ changes the arithmetic: a reducción acts on the base, a deducción on the cuota
 and the §27.15 denominator is a *proportional share* of the cuota íntegra rather
 than any whole quantity.
 
+## Recommendations
+Rename to say what §27.15 limits — a deducción en la cuota íntegra, capped at a
+proportional share — and replace the `required_text` with a phrase carrying the
+distinguishing words (`deducción en la cuota íntegra`, `ochenta por ciento`) so
+the cross-check can discriminate. Do **not** wire the parameter into a formula on
+the strength of its current name.
+
+A rename is not a mechanical edit here: the name states a tax-treatment fact, so
+per the standing rule this is a tax review, not a text substitution. The value
+itself is correct and must not change.
+
+No production code, registry data or test was changed by this audit.
 ## Why this has no live consequence today
 
 The parameter is **unconsumed** — no formula reads it (recorded previously as the
@@ -82,17 +97,3 @@ is adequate here because §15 is present verbatim, but a sweep that treats a
 per-article file as the complete article will draw false negatives from the
 paragraphs the excerpt omits. The full `ley-19-1994.html` (294.215 characters) is
 the fallback.
-
-## Remediation — owner's decision, not taken here
-
-Rename to say what §27.15 limits — a deducción en la cuota íntegra, capped at a
-proportional share — and replace the `required_text` with a phrase carrying the
-distinguishing words (`deducción en la cuota íntegra`, `ochenta por ciento`) so
-the cross-check can discriminate. Do **not** wire the parameter into a formula on
-the strength of its current name.
-
-A rename is not a mechanical edit here: the name states a tax-treatment fact, so
-per the standing rule this is a tax review, not a text substitution. The value
-itself is correct and must not change.
-
-No production code, registry data or test was changed by this audit.

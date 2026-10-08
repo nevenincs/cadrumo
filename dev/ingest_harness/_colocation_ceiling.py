@@ -81,6 +81,33 @@ AUTHORED_LABEL_PAIRS: Final[tuple[tuple[str, str], ...]] = (
 )
 
 
+def _unpartitioned_row(
+    doc_id: str, shared: tuple[str, str] | None, unexplained: tuple[str, str] | None, pairs: tuple[tuple[str, str], ...]
+) -> CeilingRow:
+    """Unpartitioned row."""
+    if unexplained is not None:
+        # Both anchors were found on DIFFERENT lines and the partition still
+        # came back empty. Nothing in the measured causes explains that, so it
+        # gets its own outcome rather than being folded into the shared-line
+        # population it would otherwise inflate.
+        return CeilingRow(
+            doc_id=doc_id,
+            outcome=CeilingOutcome.UNPARTITIONED_FOR_ANOTHER_REASON,
+            supplier_anchor=unexplained[0],
+            customer_anchor=unexplained[1],
+        )
+    if shared is not None:
+        return CeilingRow(
+            doc_id=doc_id,
+            outcome=CeilingOutcome.ANCHORS_SHARE_A_LINE,
+            supplier_anchor=shared[0],
+            customer_anchor=shared[1],
+        )
+    if len(pairs) == len(AUTHORED_LABEL_PAIRS):
+        return CeilingRow(doc_id=doc_id, outcome=CeilingOutcome.NO_AUTHORED_ANCHORS)
+    return CeilingRow(doc_id=doc_id, outcome=CeilingOutcome.ANCHOR_NOT_PRINTED)
+
+
 class CeilingOutcome(StrEnum):
     """Why one document can or cannot be partitioned by ANY authored anchor pair.
 
@@ -246,27 +273,7 @@ def _row_for(doc_id: str, text: str, ground_truth: Mapping[str, object]) -> Ceil
         else:
             unexplained = unexplained or (supplier, customer)
 
-    if unexplained is not None:
-        # Both anchors were found on DIFFERENT lines and the partition still
-        # came back empty. Nothing in the measured causes explains that, so it
-        # gets its own outcome rather than being folded into the shared-line
-        # population it would otherwise inflate.
-        return CeilingRow(
-            doc_id=doc_id,
-            outcome=CeilingOutcome.UNPARTITIONED_FOR_ANOTHER_REASON,
-            supplier_anchor=unexplained[0],
-            customer_anchor=unexplained[1],
-        )
-    if shared is not None:
-        return CeilingRow(
-            doc_id=doc_id,
-            outcome=CeilingOutcome.ANCHORS_SHARE_A_LINE,
-            supplier_anchor=shared[0],
-            customer_anchor=shared[1],
-        )
-    if len(pairs) == len(AUTHORED_LABEL_PAIRS):
-        return CeilingRow(doc_id=doc_id, outcome=CeilingOutcome.NO_AUTHORED_ANCHORS)
-    return CeilingRow(doc_id=doc_id, outcome=CeilingOutcome.ANCHOR_NOT_PRINTED)
+    return _unpartitioned_row(doc_id, shared, unexplained, pairs)
 
 
 def documents_with_authored_transcription(

@@ -47,6 +47,73 @@ TemporalCoverageFailureCode = Literal[
 ]
 
 
+def _validated_outcome_failure(row: TemporalRevisionCoverage) -> str | None:
+    """Return the first shape error for a validated temporal-coverage row."""
+    if row.selected_revision != row.revision:
+        return "validated temporal coverage must select its declared revision"
+    if row.declared_authority_grade is None:
+        return "validated temporal coverage requires a declared authority grade"
+    if row.failure_code is not None or row.failure_detail is not None:
+        return "validated temporal coverage cannot carry a refusal"
+    return None
+
+
+def _law_selection_refusal_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision is not None:
+        return "law-selection refusal cannot retain a selected revision"
+    return None
+
+
+def _selected_revision_mismatch_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision is None or row.selected_revision == row.revision:
+        return "selected-revision mismatch requires a conflicting selected revision"
+    return None
+
+
+def _undeclared_grade_refusal_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision != row.revision:
+        return "undeclared-grade refusal requires the registered selected revision"
+    if row.declared_authority_grade is not None:
+        return "undeclared-grade refusal cannot carry a declared authority grade"
+    return None
+
+
+def _declared_grade_snapshot_refusal_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision != row.revision:
+        return "declared-grade snapshot refusal requires the registered selected revision"
+    if row.declared_authority_grade is None:
+        return "declared-grade snapshot refusal requires a declared authority grade"
+    return None
+
+
+def _snapshot_revision_mismatch_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision is None or row.selected_revision == row.revision:
+        return "snapshot-revision mismatch requires a conflicting snapshot revision"
+    if row.declared_authority_grade is None:
+        return "snapshot-revision mismatch requires a declared authority grade"
+    return None
+
+
+def _failure_code_shape_failure(row: TemporalRevisionCoverage) -> str | None:
+    """Return the outcome-shape error associated with a typed refusal code."""
+    if row.failure_code == "law_selection_refused":
+        return _law_selection_refusal_failure(row)
+    if row.failure_code == "selected_revision_mismatch":
+        return _selected_revision_mismatch_failure(row)
+    if row.failure_code == "undeclared_authority_grade":
+        return _undeclared_grade_refusal_failure(row)
+    if row.failure_code == "declared_grade_snapshot_refused":
+        return _declared_grade_snapshot_refusal_failure(row)
+    return _snapshot_revision_mismatch_failure(row)
+
+
+def _refused_outcome_failure(row: TemporalRevisionCoverage) -> str | None:
+    """Return the first shape error for a refused temporal-coverage row."""
+    if row.failure_code is None or row.failure_detail is None:
+        return "refused temporal coverage requires a typed failure code and detail"
+    return _failure_code_shape_failure(row)
+
+
 class TemporalRevisionCoverage(BaseModel):
     """Validated temporal evidence for one law-selected revision coordinate.
 
@@ -71,40 +138,9 @@ class TemporalRevisionCoverage(BaseModel):
 
     @model_validator(mode="after")
     def _validate_outcome_shape(self) -> TemporalRevisionCoverage:
-        if self.status == "validated":
-            if self.selected_revision != self.revision:
-                raise ValueError("validated temporal coverage must select its declared revision")
-            if self.declared_authority_grade is None:
-                raise ValueError("validated temporal coverage requires a declared authority grade")
-            if self.failure_code is not None or self.failure_detail is not None:
-                raise ValueError("validated temporal coverage cannot carry a refusal")
-            return self
-        if self.failure_code is None or self.failure_detail is None:
-            raise ValueError("refused temporal coverage requires a typed failure code and detail")
-        if self.failure_code == "law_selection_refused":
-            if self.selected_revision is not None:
-                raise ValueError("law-selection refusal cannot retain a selected revision")
-            return self
-        if self.failure_code == "selected_revision_mismatch":
-            if self.selected_revision is None or self.selected_revision == self.revision:
-                raise ValueError("selected-revision mismatch requires a conflicting selected revision")
-            return self
-        if self.failure_code == "undeclared_authority_grade":
-            if self.selected_revision != self.revision:
-                raise ValueError("undeclared-grade refusal requires the registered selected revision")
-            if self.declared_authority_grade is not None:
-                raise ValueError("undeclared-grade refusal cannot carry a declared authority grade")
-            return self
-        if self.failure_code == "declared_grade_snapshot_refused":
-            if self.selected_revision != self.revision:
-                raise ValueError("declared-grade snapshot refusal requires the registered selected revision")
-            if self.declared_authority_grade is None:
-                raise ValueError("declared-grade snapshot refusal requires a declared authority grade")
-            return self
-        if self.selected_revision is None or self.selected_revision == self.revision:
-            raise ValueError("snapshot-revision mismatch requires a conflicting snapshot revision")
-        if self.declared_authority_grade is None:
-            raise ValueError("snapshot-revision mismatch requires a declared authority grade")
+        failure = _validated_outcome_failure(self) if self.status == "validated" else _refused_outcome_failure(self)
+        if failure is not None:
+            raise ValueError(failure)
         return self
 
 

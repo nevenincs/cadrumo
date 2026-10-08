@@ -3,17 +3,17 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:bfef99e8d73de1c10e38929c02b4fb5c8afe8c3dc1d730c469ee0ae0b04e74e4'
+body_hash: 'sha256:4c802d2b0ab6fbdc00ccbc1391af5faecbfe397fddc2c499d6ef6f2b5bba16c7'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s128-workspace-projection-composition-reference]]"
   - "[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]"
   - "[[2026-06-04-modelo-addressing-ux-adr]]"
   - "[[2026-06-10-period-revision-resolution-adr]]"
 ---
+
 # `tui-architecture` audit: `S160 native work capture owner and atomicity reconciliation`
 
 ## Scope
@@ -93,31 +93,11 @@ detail S167 can defer.
 
 ### registry-authority-bypass | high | The existing revision assertion authority is a raw registry-loader path
 
-`resolve_registry_revision_for_work_target` directly calls
-`load_registry_tree(bundled_path("registry", "aeat"))` and then
-`select_revision` (`src/cadrumo/application/modelo/_work_addressing.py:723` and
-`:756`). The always-on registry-authority rule makes
-`ValidatedRegistryAuthority` the production orchestration boundary and forbids
-raw loader plus independent validation/selection paths. S160's instruction to
-delegate this existing function therefore conflicts with its simultaneous
-prohibition on an alternate loader. Native capture cannot make the bypass
-authoritative merely by wrapping it with a generation.
+The always-on registry-authority rule makes `ValidatedRegistryAuthority` the production orchestration boundary and forbids raw loader plus independent validation/selection paths. S160's instruction to delegate this existing function therefore conflicts with its simultaneous prohibition on an alternate loader. Native capture cannot make the bypass authoritative merely by wrapping it with a generation.
 
 ### s128-capture-order | high | The reference resolves work before the one permitted native work capture
 
-The accepted ADR's consistency protocol begins by invoking each selected S126
-registration; each call performs the canonical owner's one atomic capture, and
-assembly follows only from those captured projections
-(`.vault/adr/2026-08-24-tui-registry-api-gate-adr.md:353` and `:360`). The S128
-reference instead directs target resolution through the addressing owner at
-step 2 and invokes the selected registrations at step 4
-(`.vault/reference/2026-08-25-tui-architecture-s128-workspace-projection-composition-reference.md:44`
-and `:46`). Current `resolve_modelo_work_target` reaches the repository through
-the selector (`src/cadrumo/application/modelo/_work_addressing.py:695`). The
-reference sequence therefore reads work state once to choose the target and a
-second time to capture it. A transition between the reads can resolve A and
-capture B before the two-pass generation check even begins. The reference is
-carrying a sequencing decision that conflicts with its accepted decision home.
+The accepted ADR's consistency protocol begins by invoking each selected S126 registration; each call performs the canonical owner's one atomic capture, and assembly follows only from those captured projections (`.vault/adr/2026-08-24-tui-registry-api-gate-adr.md:353` and `:360`). The S128 reference instead directs target resolution through the addressing owner at step 2 and invokes the selected registrations at step 4 (`.vault/reference/2026-08-25-tui-architecture-s128-workspace-projection-composition-reference.md:44` and `:46`). The reference sequence therefore reads work state once to choose the target and a second time to capture it. A transition between the reads can resolve A and capture B before the two-pass generation check even begins. The reference is carrying a sequencing decision that conflicts with its accepted decision home.
 
 ### owner-coordinate | high | The semantic owner label does not fix the physical owner or generation scope
 
@@ -141,43 +121,19 @@ transitions must advance the S160 generation.
 
 ### address-state-contract | high | Absent, discarded, active-only, exact, and broad-address behavior is under-specified for the native surface
 
-The canonical selector intentionally has two lifecycle views. Natural reads
-include discarded units (`natural_target_work_units` at
-`src/cadrumo/application/modelo/_selectors.py:324`), while create-or-reuse
-filters to `BORRADOR` (`active_natural_target_work_units` at `:363`). Natural
-absence returns `ModeloWorkResolution(state=ABSENT)` at `:376`; exact absence
-raises `ModeloWorkUnitNotFoundError` at `:465`; the general natural resolver
-uses the all-state set at `:490`. Consequently one discarded unit is resolved,
-an active plus discarded pair is ambiguous, and the active-create view treats
-discarded work as absent before the single writer issues its terminal refusal.
+The canonical selector intentionally has two lifecycle views. Natural absence returns `ModeloWorkResolution(state=ABSENT)` at `:376`; exact absence raises `ModeloWorkUnitNotFoundError` at `:465`; the general natural resolver uses the all-state set at `:490`. Consequently one discarded unit is resolved, an active plus discarded pair is ambiguous, and the active-create view treats discarded work as absent before the single writer issues its terminal refusal.
 
-The Workspace ADR says exact absence refuses, zero natural matches is explicit
-absence, and multiple active natural matches refuse, but it does not settle the
-discarded-only or active-plus-discarded Workspace cases. S160 also names a
-resolved-work-target surface without naming its input type. The public
-`ModeloWorkTarget` union includes the permissive transport
-`ModeloWorkAddress` as well as the two canonical operands
-(`src/cadrumo/application/modelo/_work_addressing.py:278`), whereas Workspace V1
-admits only the tagged visible and exact operands. Without a ruling, a native
-capture can accidentally widen Workspace admission or erase a terminal state.
+The Workspace ADR says exact absence refuses, zero natural matches is explicit absence, and multiple active natural matches refuse, but it does not settle the discarded-only or active-plus-discarded Workspace cases. S160 also names a resolved-work-target surface without naming its input type. Without a ruling, a native capture can accidentally widen Workspace admission or erase a terminal state.
 
 ### selector-policy-fragmentation | high | Four production pathways bypass part or all of the canonical selector policy
 
 The exact census found one canonical natural selector family in
 `_selectors.py` and these parallel production paths:
 
-- `work_review_projection._work_unit_for_target` scans the repository itself,
-  then filters by law-selected revision (`src/cadrumo/application/modelo/work_review_projection.py:272`,
-  `:283`, and `:302`). It can choose the law-revision candidate despite another
-  natural candidate, where the canonical selector refuses natural ambiguity.
 - `_external_import_actions.py` performs its own active-only natural scan,
   ambiguity branch, revision comparison, and create branch (`:201` through
   `:238`) instead of delegating the canonical active resolver and single writer
   as one policy chain.
-- `overview._data_prep._work_unit_step` filters a preloaded active tuple and
-  takes `matching[0]` (`src/cadrumo/application/overview/_data_prep.py:325`,
-  `:332`, and `:351`), silently selecting where the canonical policy would
-  expose ambiguity.
 - `_calculate_input.py` performs direct exact catalogue reads at `:1413` and
   `:1421`, then a raw registry load and selection at `:1426` and `:1428`.
   This site is constraint-shape-divergent from a natural selector, so it is not

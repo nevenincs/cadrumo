@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:441e9243c6f8019ec131438594df8397ec5ec8ac041daa5d63bfe5789507f3de'
+modified: '2026-10-03'
+body_hash: 'sha256:ccea749de6b524baec75de6e9743693f51117e16d74345216bb0f0b1b4ab7780'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S287-001 | PASS | Active-profile pointer I/O boundary
 
-`src/aeat/core/_bucket_pointer_io.py` owns the plaintext active-profile pointer file
+The retired module owned the plaintext active-profile pointer file
 used before encrypted bucket state can be opened. This is the expected bootstrap
 boundary for selecting the runtime secure bucket. The module reads and writes only
 `<aeat-root>/active-profile`; it does not open secure-object repositories, route SQL,
@@ -58,7 +58,7 @@ does not mock, monkeypatch, skip, xfail, or duplicate runtime implementation log
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/_bucket_pointer_io.py src/aeat/core/test_bucket_pointer_io.py src/aeat/core/test_storage_route_classification.py src/aeat/adapters/persistence/storage/runtime_repository.py src/aeat/adapters/persistence/storage/test_runtime.py src/aeat/entrypoints/cli/test_ledger_exception_propagation.py`
-- `uv run --no-sync pytest -q src/aeat/core/test_bucket_pointer_io.py src/aeat/core/test_storage_route_classification.py src/aeat/adapters/persistence/storage/test_runtime.py::test_default_route_repository_refuses_pointer_scoped_active_profile_without_session src/aeat/entrypoints/cli/test_ledger_exception_propagation.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "active profile pointer file bucket pointer io load_settings os.replace manifest discovery" --type code --port 8766 --max-results 8`

@@ -181,19 +181,27 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.file",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "aeat_accepted": false,
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "88f45ea32b2b594f40b5d1a0ffbee5a11c41a44b6a1513f7652bf4bb3d293551",
+          "calculation_revision_id": "a5e9ff5a2ed15fca36f2c930531e0eff2ab7e44b40487bdb8463aa67fcc51494",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "56ea1b595b55cb903b5c9603c081ff7b82fa78e55a3143aee1cb22bdf9ad18a4",
+          "filing_record_id": "554a7dac6c141802648059f963c65d3b54c96712892368da3e8db77aec89f7fc",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -212,7 +220,7 @@
           "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

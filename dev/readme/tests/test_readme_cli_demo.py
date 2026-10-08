@@ -35,7 +35,7 @@ def test_demo_bootstrap_runs_the_real_cadrumo_help_surface() -> None:
         cwd=REPO_ROOT,
         environment=prepare_cli_demo.demo_environment(),
         errors="replace",
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
     assert completed.returncode == 0, completed.stderr

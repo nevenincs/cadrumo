@@ -3,11 +3,13 @@ tags:
   - '#adr'
   - '#bindings-interface-hardening'
 date: '2026-06-14'
-modified: '2026-08-15'
-body_hash: 'sha256:57fe3f5d6549edf0ff7000273b5166b1167d9a9eed9ef93780c7a3359987eb92'
+modified: '2026-10-03'
+body_hash: 'sha256:83b0b12d6e6dec024fc21b942fa8cc1d8b2f94cc49741d0b7fcc6543eb1bfd0e'
 related:
   - "[[2026-06-14-bindings-interface-hardening-research]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
+  - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
+  - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 ---
 
 # `bindings-interface-hardening` adr: `bindings interface hardening: one validation contract, provenance parity, semantic disambiguation` | (**status:** `accepted`)
@@ -229,14 +231,6 @@ originating audit/plan.
   modules behind the package `__all__` facade; new families follow the established
   module shape rather than growing the monolith.
 
-## Status
+## Scope after later phases
 
-Accepted and FOUNDATIONAL — not reopened. This ADR hardened the REGISTRY-binding
-definition altitude (validation contract, typed `BindingAggregation`/op,
-`BindingSourceKind`, provenance parity). The bindings-architecture-unification sweep
-extends it in two respects, recorded in the canonical PHASE ADRs (not a central apex
-doc): the phase-2.1 `binding-source-kind-taxonomy-unification` ADR widens this ADR's
-`BindingSourceKind` from registry-only to the registry+mesh union; the future
-phase-2.3 (fold-in/relation) ADR applies this ADR's typed-aggregation discipline to
-relations (which it did not cover). Those phase ADRs are the canonical direction; this
-ADR's decisions remain in force.
+This ADR governs registry binding definition and validation, typed `BindingAggregation`/`BindingAggregationOp`, the registry-scoped `BindingSourceKind` at the time of acceptance, and binding provenance parity. The accepted phase 2.1 `binding-source-kind-taxonomy-unification` ADR widens `BindingSourceKind` to the registry-plus-mesh union. The accepted phase 2.3 `binding-fold-in-carry-unification` ADR uses a separate `RelationAggregationOp` for relation folds; that relation axis does not broaden this ADR's binding-only aggregation contract. Both phase decisions preserve this ADR's accepted scope.

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#quality-hardening-campaign'
 date: '2026-06-09'
-modified: '2026-07-17'
-body_hash: 'sha256:3a274eec22a72862eddbd3bd720330eb9b61a54a2be490a0a2569621f288cb1c'
+modified: '2026-10-03'
+body_hash: 'sha256:bd2f9f13d56737364e3a06b8c6cf2225a2a9b9f190f4d8eb066ddf752d5a6a6f'
 related:
   - '[[2026-06-09-quality-hardening-campaign-research]]'
 ---
@@ -18,7 +18,3 @@ The repository's quality lanes (lint, type-check, tests, docs, dependency and im
 ## Decision
 
 Treat every quality lane exposed by the justfile as a standing gate, with a recorded 2026-06-09 baseline. Subsequent hardening work is measured against that baseline and may only ratchet the gates tighter.
-
-## Status
-
-Accepted.

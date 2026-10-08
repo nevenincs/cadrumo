@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#mcp-closed-value-axes'
 date: '2026-08-08'
-modified: '2026-08-09'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:63183412f3f34e31cf8633bf05508ae5832bb89b6e49d1469f176c3c37abae81'
+body_hash: 'sha256:6905963d9955f8f7bc1c71def0c7a62d80a843ec6f93bdaa90e94231be8fac79'
 related: []
 ---
 
@@ -27,7 +27,7 @@ The CLI rule says a Typer parameter over a closed set declares that set's enum. 
 
 The MCP input schema is **derived** from the click parameter type. An option annotated `str` produces `{"type": "string"}` with no `enum`, so the agent reading the tool schema is told nothing about the accepted set and must guess. Hand-parsing the token inside the handler does not repair this: the refusal arrives *after* the guess, and the schema — the only thing the agent reads before calling — stays silent. Every site found here had exactly that shape: a `str` annotation, plus a hand-rolled parser raising a localised "must be one of" error that the schema never surfaces.
 
-The reusable point is that **the defect is invisible from the file being edited.** Nothing in the CLI module hints that a second consumer derives a contract from the annotation. `src/cadrumo/entrypoints/mcp/_input_schema.py:217` already knows this — its comment cites the architecture rule by name and unwraps Typer's `FuncParamType` to recover choices — but that knowledge lives in the schema builder, not where the annotations are written.
+The reusable point is that **the defect is invisible from the file being edited.** Nothing in the CLI module hints that a second consumer derives a contract from the annotation. the retired module already knows this — its comment cites the architecture rule by name and unwraps Typer's `FuncParamType` to recover choices — but that knowledge lives in the schema builder, not where the annotations are written.
 
 ### Measuring it: match the description against real enum value sets
 
@@ -43,12 +43,10 @@ Adjudication rejected three, and the rejections are the more instructive half.
 
 A sweep that acted on its candidate list without adjudication would have shipped one broken filter and two nonsense annotations out of seven changes.
 
-### Four confirmed sites
+### Confirmed sites
 
 | command | parameter | enum | prior shape |
 |---|---|---|---|
-| `diagnostics.telemetry.status` | `--tier` | `TelemetryTier` | `str \| None` + `_parse_tier` |
-| `diagnostics.telemetry.flush` | `--tier` | `TelemetryTier` | `str \| None` + `_parse_tier` |
 | `registry.audit_oracles` | `--environment` | `OracleEnvironment` | `str`, **default already an enum member** |
 | `modelo.filing_record.import` | `--evidence-kind` | `ExternalEvidenceKind` | `str` + inline `ExternalEvidenceKind(...)` |
 
@@ -56,7 +54,7 @@ A sweep that acted on its candidate list without adjudication would have shipped
 
 ### A `TYPE_CHECKING`-only import is a latent runtime break under Typer
 
-`TelemetryTier` was imported only under `if TYPE_CHECKING:`, which is correct while the name appears solely in annotations under `from __future__ import annotations`. It stops being correct the moment Typer needs that annotation: Typer resolves parameter types at runtime via `get_type_hints()` to build the click type, so the guarded import must be promoted in the same change.
+An enum imported only under `if TYPE_CHECKING:`, which is correct while the name appears solely in annotations under `from __future__ import annotations`. It stops being correct the moment Typer needs that annotation: Typer resolves parameter types at runtime via `get_type_hints()` to build the click type, so the guarded import must be promoted in the same change.
 
 This class passes lint, passes `--collect-only`, and passes any import probe — the failure only appears when the command is actually constructed. Any retype of this shape must check whether the enum's import is real or guarded.
 
@@ -110,7 +108,7 @@ The standing architecture rule already anticipates this: a late refusal is accep
 
 After the ceded-autonomic regression, every axis retyped across this campaign was re-checked against the failure mode, on two questions: did the deleted refusal say anything a generic "not one of" does not, and does any command body depend on receiving an out-of-set value.
 
-**All five deleted refusal messages were purely generic.** Recovered verbatim from HEAD: `'--operation-type must be one of: {valid}'`, `'--tier must be one of: {accepted}; got {value!r}.'`, `'--evidence-kind must be one of {canonical}; got {kind}.'`, `'Invalid review state: {state}'`, `'--state must be one of: active, superseded, discarded, all.'`. Click's replacement is equal or better in every case; `Invalid review state` did not even name the accepted set, so that retype strictly improved the refusal.
+**All four deleted refusal messages were purely generic.** Recovered verbatim from HEAD: `'--operation-type must be one of: {valid}'`, `'--evidence-kind must be one of {canonical}; got {kind}.'`, `'Invalid review state: {state}'`, `'--state must be one of: active, superseded, discarded, all.'`. Click's replacement is equal or better in every case; `Invalid review state` did not even name the accepted set, so that retype strictly improved the refusal.
 
 **No command body guards any of these axes.** Nothing resembling `guard_ceded_autonomic_modelo` exists for operation-type, tier, environment, evidence-kind, review state or snapshot state.
 
@@ -124,7 +122,7 @@ Adjudicating `--ccaa` (a singleton carried since the field-name sweep) turned up
 
 But it also **normalises input**: `parse_tax_region("comunidad-valenciana")` resolves to `CCAA.COMUNIDAD_VALENCIANA` whose value is `comunidad_valenciana`. The option's own help advertises the hyphenated form. A `click.Choice` over enum values accepts only the underscored spelling, so pinning would refuse the exact example the help gives.
 
-The same check applied backwards to this campaign's own work: three retypes dropped normalisation their hand-parsers performed — `--operation-type` lost `.upper()`, and `--tier` and `review --state` lost `.strip().lower()`. No test or shipped document depends on the looser forms, and the enum values are lowercase so ordinary typing still matches, but **only the first was disclosed when it happened**. Recorded here because a silent narrowing of accepted input is the same class of defect as a silent narrowing of accepted values, and `click.Choice(case_sensitive=False)` would restore it wherever that is wanted.
+The same check applied backwards to this campaign's own work: two retypes dropped normalisation their hand-parsers performed — `--operation-type` lost `.upper()`, and `review --state` lost `.strip().lower()`. No test or shipped document depends on the looser forms, and the enum values are lowercase so ordinary typing still matches, but **only the first was disclosed when it happened**. Recorded here because a silent narrowing of accepted input is the same class of defect as a silent narrowing of accepted values, and `click.Choice(case_sensitive=False)` would restore it wherever that is wanted.
 
 ### The pre-filter, restated with all three edges
 
@@ -263,7 +261,7 @@ So the shape is the `iva_rate` shape exactly, and slightly worse: there the guar
 
 ## Recommendations
 
-**Actioned.** All four sites now declare their enum; two hand-rolled parsers and their four-locale error keys are deleted; the `TelemetryTier` import is promoted to module scope. A parametrized gate in `entrypoints/mcp/tests/test_tools_and_dispatch.py` asserts each axis reaches the MCP schema as an `enum`, reading the expected set **from the enum itself** so adding a member cannot leave the gate asserting a stale list. Mutation-proved: all four cases red against the pre-fix source.
+**Actioned.** All confirmed sites now declare their enum; the hand-rolled parsers and their four-locale error keys are deleted. A parametrized gate in `entrypoints/mcp/tests/test_tools_and_dispatch.py` asserts each axis reaches the MCP schema as an `enum`, reading the expected set **from the enum itself** so adding a member cannot leave the gate asserting a stale list. Mutation-proved: every case red against the pre-fix source.
 
 **Not actioned, deliberately.** `--state` on the borrador list stays a bare string. Making it honest needs a four-member type (the lifecycle states plus `all`) or a `click.Choice`, which is a design decision about whether "all" belongs in the lifecycle enum — not a mechanical retype. Recorded rather than forced.
 
@@ -323,11 +321,11 @@ The `app.live.*` four are the ones to adjudicate carefully rather than sweep: th
 
 ### The narrowing is repaired, not merely disclosed
 
-The three retypes that dropped their parser's normalisation now carry `click_type=case_insensitive_choice(EnumClass)`, a single helper in `_common.py`. The probe that settled it is worth stating because the obvious objection turns out to be false: passing a `click_type` does **not** cost the enum annotation. The handler still receives a real member, `--tier CRASH_ONLY` and `--tier crash_only` both resolve to `TelemetryTier.CRASH_ONLY`, `bogus` is still refused, and the MCP schema still carries the closed value set — the input-schema builder's `FuncParamType` unwrap recovers the choices exactly as its own comment says it does.
+The two retypes that dropped their parser's normalisation now carry `click_type=case_insensitive_choice(EnumClass)`, a single helper in `_common.py`. The probe that settled it is worth stating because the obvious objection turns out to be false: passing a `click_type` does **not** cost the enum annotation. The handler still receives a real member, either letter case resolves to the same member, `bogus` is still refused, and the MCP schema still carries the closed value set — the input-schema builder's `FuncParamType` unwrap recovers the choices exactly as its own comment says it does.
 
 So the narrowing was never a necessary cost of typing the axis; it was a side effect of reaching for the plainest form. Every previously-accepted spelling is accepted again, and nothing new is admitted — `case_sensitive=False` matches only the declared choices.
 
-Applied to all four operation-type sites rather than only the three that regressed, because the evidence surface was already case-sensitive while the business-invoice surface was not; leaving that split would have preserved the asymmetry the original retype set out to remove.
+Applied to all four operation-type sites rather than only the two that regressed, because the evidence surface was already case-sensitive while the business-invoice surface was not; leaving that split would have preserved the asymmetry the original retype set out to remove.
 
 ### The portal filter takes the full taxonomy
 

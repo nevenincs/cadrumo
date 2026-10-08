@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#binding-resolver-contract-unification'
 date: '2026-07-04'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_hash: 'sha256:3c484ac456e4dc230ec1b1da33d18ff376e034f972cc16af2e14a98db899b485'
-related:
-  - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
+related: []
 ---
 
 # `binding-resolver-contract-unification` audit: `S12/S14/S18 evidence review`

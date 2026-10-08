@@ -19,6 +19,7 @@ from ....application.operations.frontend_requests import (
     OperationPublicEventPageV1,
     OperationPublicEventV1,
     OperationPublicLogEventV1,
+    OperationPublicNoticeEventV1,
     OperationPublicTerminalEventV1,
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationId
@@ -26,6 +27,7 @@ from ....application.operations.persistence.replay import RESYNCHRONIZING_REPLAY
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEventKind
+from ....core.operator_progress import OperatorDisplayCode
 
 _DEFAULT_MAX_ROWS = 500
 
@@ -41,6 +43,8 @@ class OperationModalLogRowV1(BaseModel):
     code: OperationEventCode
     severity: OperationLogSeverity | None
     diagnostic_ref: OperationDiagnosticReference | None
+    notice_code: OperationEventCode | None = None
+    display_code: OperatorDisplayCode | None = None
 
 
 class OperationModalLogViewV1(BaseModel):
@@ -129,6 +133,7 @@ _DIAGNOSTIC_CARRYING_EVENTS = (
 def _project_row(event: OperationPublicEventV1) -> OperationModalLogRowV1:
     severity = event.severity if isinstance(event, OperationPublicLogEventV1) else None
     diagnostic_ref = event.diagnostic_ref if isinstance(event, _DIAGNOSTIC_CARRYING_EVENTS) else None
+    notice = event if isinstance(event, OperationPublicNoticeEventV1) else None
     return OperationModalLogRowV1(
         sequence=event.sequence,
         timestamp=event.timestamp,
@@ -136,6 +141,8 @@ def _project_row(event: OperationPublicEventV1) -> OperationModalLogRowV1:
         code=event.code,
         severity=severity,
         diagnostic_ref=diagnostic_ref,
+        notice_code=None if notice is None else notice.notice_code,
+        display_code=None if notice is None else notice.display_code,
     )
 
 

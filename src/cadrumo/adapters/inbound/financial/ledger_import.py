@@ -27,6 +27,7 @@ from .providers.csv import CsvProvider
 from .providers.detection import detect_provider
 from .providers.ofx import OfxProvider
 from .providers.pdf_n26 import PdfN26Provider
+from .providers.xls import XlsProvider
 from .providers.xlsx import XlsxProvider
 
 
@@ -77,15 +78,17 @@ class FinancialProviderResolverAdapter:
     @staticmethod
     def _resolve_concrete_provider(*, provider_id: str, path: Path) -> FinancialProvider | None:
         """Select and construct the parser owned by this adapter package."""
-        if provider_id in {"auto", "n26"}:
+        if provider_id == "auto":
             return detect_provider(path)
         if provider_id == "csv":
             return CsvProvider()
         if provider_id in {"ofx", "qfx"}:
             return OfxProvider()
-        if provider_id in {"xlsx", "excel"}:
+        if provider_id == "xlsx":
             return XlsxProvider()
-        if provider_id in {"pdf", "pdf-n26"}:
+        if provider_id == "xls":
+            return XlsProvider()
+        if provider_id == "pdf-n26":
             return PdfN26Provider()
         raise TransactionValidationError(
             translated_message="errors.transaction.unknown_ledger_provider",

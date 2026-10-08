@@ -429,13 +429,17 @@ class StatelessSnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
     def _build_payload(self, *, snapshot_id: str, bucket_id: str, capture: TCapture) -> TPayload: ...
 
     def _capture_stateless(self, *, bucket_id: str, capture: TCapture) -> TPayload:
+        return self._capture_stateless_with_status(bucket_id=bucket_id, capture=capture)[0]
+
+    def _capture_stateless_with_status(self, *, bucket_id: str, capture: TCapture) -> tuple[TPayload, bool]:
+        """Persist once and report whether this call wrote a new snapshot."""
         repository = self._repository_for(bucket_id)
         snapshot_id = self._derive_snapshot_id(capture)
         if repository.exists(snapshot_id):
-            return repository.load(snapshot_id)
+            return repository.load(snapshot_id), False
         payload = self._build_payload(snapshot_id=snapshot_id, bucket_id=repository.bucket_id, capture=capture)
         repository.save(payload)
-        return payload
+        return payload, True
 
     def list_snapshots(self, *, bucket_id: str) -> tuple[TPayload, ...]:
         """Execute this public contract operation."""

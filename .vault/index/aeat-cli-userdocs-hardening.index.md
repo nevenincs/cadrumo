@@ -4,18 +4,13 @@ tags:
   - '#index'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:460682f5c7927608345dfeb31ca80910e2fa251d2b1edb5ba15aa20ee5d779a7'
+body_hash: 'sha256:42a26274885997de681cad13709ac4b15177cca2107999a38a7fa2dc3c6cd6e9'
 related:
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-summary]]'
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P02-summary]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-code-review-audit]]'
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-ledger]]'
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-reader-review-audit]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-research]]'
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-w01-summary-exec]]'
   - '[[2026-06-05-general-audience-prose-rollout-audit]]'
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
   - '[[2026-06-14-aeat-cli-userdocs-hardening-audit]]'
@@ -39,17 +34,6 @@ Auto-generated index of all documents tagged with `#aeat-cli-userdocs-hardening`
 - `2026-06-05-general-audience-prose-rollout-audit` - `aeat-cli-userdocs-hardening` General-Audience Prose Audit
 - `2026-06-10-aeat-cli-userdocs-hardening-audit` - `aeat-cli-userdocs-hardening` audit: `userdocs hardening waves A-C session audit`
 - `2026-06-14-aeat-cli-userdocs-hardening-audit` - `aeat-cli-userdocs-hardening` audit: `userdocs backlog and decision steps resolution`
-
-### exec
-
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P01-summary` - `aeat-cli-userdocs-hardening` `W01.P01` summary
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P02-summary` - `aeat-cli-userdocs-hardening` `W01.P02` summary
-- `2026-06-04-aeat-cli-userdocs-hardening-ledger` - `aeat-cli-userdocs-hardening` ledger
-- `2026-06-04-aeat-cli-userdocs-hardening-w01-summary-exec` - `aeat-cli-userdocs-hardening` `W01` summary
-
-### plan
-
-- `2026-06-04-aeat-cli-userdocs-hardening-plan` - `aeat-cli-userdocs-hardening` `AEAT CLI user documentation handbook hardening` plan
 
 ### research
 

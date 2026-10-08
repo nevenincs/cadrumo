@@ -6,6 +6,7 @@ from ...application.ledger.operator_input_contracts import (
     INVOICE_CLASS_INPUT,
     INVOICE_KIND_INPUT,
     IVA_AMOUNT_INPUT,
+    IVA_CATEGORY_INPUT,
     NOTES_INPUT,
 )
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
@@ -25,13 +26,10 @@ from ._app_ledger_command_spec_support import (
     _required_text_argument,
     _required_text_option,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -39,6 +37,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -185,6 +184,16 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option(
                 "attachment_id", ("--attachment-id",), "cli.app.ledger.evidence.extract_attachment_id_help"
             ),
+            _required_text_option(
+                "expected_source_sha256",
+                ("--expected-source-sha256",),
+                "cli.app.ledger.evidence.confirm_expected_source_sha256_help",
+            ),
+            _required_text_option(
+                "expected_draft_review_sha256",
+                ("--expected-draft-review-sha256",),
+                "cli.app.ledger.evidence.confirm_expected_draft_review_sha256_help",
+            ),
             _optional_text_option(
                 "counterparty_nif", ("--counterparty-nif",), "cli.app.ledger.evidence.confirm_counterparty_nif_help"
             ),
@@ -201,6 +210,8 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "taxable_base", ("--taxable-base",), "cli.app.ledger.evidence.confirm_taxable_base_help"
             ),
             _optional_text_option("iva_rate", ("--iva-rate",), "cli.app.ledger.evidence.confirm_iva_rate_help"),
+            _option_from_application_contract(IVA_AMOUNT_INPUT, "cli.app.ledger.evidence.confirm_iva_amount_help"),
+            _option_from_application_contract(IVA_CATEGORY_INPUT, "cli.app.ledger.evidence.confirm_iva_category_help"),
             _required_text_option("country_code", ("--country-code",), "cli.app.ledger.invoice.country_code_help"),
             _optional_text_option("currency", ("--currency",), "cli.app.ledger.evidence.confirm_currency_help"),
             OptionSpec(
@@ -218,6 +229,18 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(),
                 show_default=True,
                 hidden=False,
+            ),
+            _optional_text_option(
+                "operation_date", ("--operation-date",), "cli.app.ledger.evidence.confirm_operation_date_help"
+            ),
+            _optional_text_option(
+                "retention_rate", ("--retention-rate",), "cli.app.ledger.evidence.confirm_retention_rate_help"
+            ),
+            _optional_text_option(
+                "retention_amount", ("--retention-amount",), "cli.app.ledger.evidence.confirm_retention_amount_help"
+            ),
+            _optional_text_option(
+                "recargo_amount", ("--recargo-amount",), "cli.app.ledger.evidence.confirm_recargo_amount_help"
             ),
             OptionSpec(
                 name="supply_nature",

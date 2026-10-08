@@ -112,4 +112,8 @@ def test_installed_cli_records_a_non_json_refusal_without_retaining_its_diagnost
             "stderr_sha256": "6d8fd9a66eef07138c4f3a0895a15858e2334816ee228be10b1f5e20702edb53",
         },
     }
-    assert cli.commands == [installed_cli_module.CommandEvidence("app ledger list", 2, "non_json_failure", ())]
+    assert cli.commands == [
+        installed_cli_module.CommandEvidence(
+            "app ledger list", 2, "non_json_failure", (), error_code="acceptance.installed_cli.non_json_failure"
+        )
+    ]

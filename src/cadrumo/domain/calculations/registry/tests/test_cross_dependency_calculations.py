@@ -57,12 +57,7 @@ from ..bindings_previous_filing import resolve_previous_filing_binding_values
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relation_dependency import RelationDependencyRole, RelationKind
-from ..relations import (
-    RegistryFoldRequirement,
-    relation_prefill_bindings_for_period,
-    relation_source_requirements,
-    resolve_relation_values_from_observations,
-)
+from ..relations import RegistryFoldRequirement, relation_prefill_bindings_for_period, relation_source_requirements
 from ..runtime_graph import expression_binding_refs
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
@@ -72,9 +67,10 @@ from ._cross_dependency_calculation_support import (
     _observations_from_requirements,
     source_editions_calculate,
 )
-from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
+from .relation_fixture import resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -1212,7 +1208,7 @@ def _registry_filing_date(filing_year: int, period: str) -> date:
     context production would never produce.
 
     This is deliberately NOT the deadline authority's
-    ``resolve_filing_closes_on``. Three distinct dates exist for one Modelo 130
+    ``resolve_filing_window``. Three distinct dates exist for one Modelo 130
     quarter and only one of them is this key's contract: the payment cutoff
     (the 20th of the following month), the plazo voluntario close
     (weekend-adjusted, and 30 January for 4T), and the calculation filing

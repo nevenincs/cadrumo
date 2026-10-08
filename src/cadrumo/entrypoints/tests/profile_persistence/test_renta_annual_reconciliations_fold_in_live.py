@@ -71,6 +71,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
@@ -79,7 +80,9 @@ from ....adapters.persistence.profile.retencion_observations import RetencionObs
 from ....adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
+from ....adapters.persistence.profile.tests.percepcion_observation_authoring import replace_percepcion_observations
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -99,7 +102,7 @@ from ....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.revision_persistence import persist_filed_revision
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.aggregation import (
@@ -455,7 +458,8 @@ def _seed_retencion_perceptors(
     """Persist one complete retenciones observation window."""
     period = Period.from_year_and_code(_YEAR, period_code)
     assert period.contains(_RETENCION_ACCRUED_ON), (period_code, _RETENCION_ACCRUED_ON)
-    RetencionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
+    replace_retencion_observations(
+        RetencionObservationRepositoryAdapter(objects=secure_objects),
         modelo=modelo,
         filing_year=_YEAR,
         period=period,
@@ -574,7 +578,8 @@ def _seed_m190_withholding_detail(
     """Persist one per-perceptor-clave row as quarterly M111 detail, the M190 count's source."""
     period = Period.from_year_and_code(_M190_YEAR, _M190_DETAIL_QUARTER)
     assert period.contains(_M190_DETAIL_TRANSACTION_DATE), (_M190_DETAIL_QUARTER, _M190_DETAIL_TRANSACTION_DATE)
-    PercepcionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
+    replace_percepcion_observations(
+        PercepcionObservationRepositoryAdapter(objects=secure_objects),
         modelo=_M190_DETAIL_SOURCE_MODELO,
         filing_year=_M190_YEAR,
         period=period,
@@ -601,7 +606,7 @@ def _seed_m190_withholding_detail(
                 foral_retention_gipuzkoa=Decimal("0"),
                 foral_retention_bizkaia=Decimal("0"),
                 base_retenciones=Decimal("0"),
-            ),
+            )
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
@@ -645,7 +650,8 @@ def _attest_m111_no_retenciones_periods(
 def _seed_and_file_m111_1t(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> BucketAggregationCalculationResult:
-    RetencionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
+    replace_retencion_observations(
+        RetencionObservationRepositoryAdapter(objects=secure_objects),
         modelo="111",
         filing_year=_M190_YEAR,
         period=Period.from_year_and_code(_M190_YEAR, "1T"),
@@ -659,13 +665,13 @@ def _seed_and_file_m111_1t(
                 taxable_base=Decimal("1000.00"),
                 retencion_amount=Decimal("150.00"),
                 accrued_on=f"{_M190_YEAR}-03-15",
-            ),
+            )
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     result = _calculate_periodic(secure_objects, modelo="111", period="1T", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -675,7 +681,7 @@ def _seed_and_file_m111_1t(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert report.granted_verificado_completo is True, report.findings
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID)
@@ -684,16 +690,21 @@ def _seed_and_file_m111_1t(
     assert work_unit is not None
     verified_revision = cr_repo.load().get(result.revision.calculation_revision_id)
     assert verified_revision is not None
+    filing_repository = ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID)
+    _, filing_baseline_revision_id = filing_repository.load_revisioned()
     with bundled_indexed_authority().operation() as operation:
         persist_filed_revision(
             target=verified_revision,
+            approved_verification_report_id=report.verification_report_id,
+            filing_baseline_revision_id=filing_baseline_revision_id,
             work_unit=work_unit,
             work_units=work_units,
             notes=None,
             actor="test-operator",
             now=_T1,
             calculation_repository=cr_repo,
-            filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
+            filing_repository=filing_repository,
+            verification_repository=VerificationReportCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
             work_unit_repository=wu_repo,
             bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
             calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
@@ -778,7 +789,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
 
     result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -788,7 +799,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert Decimal(result.revision.casilla_values[_DECL_PERCEPCIONES_COUNT]) == Decimal("1")
     assert report.granted_verificado_completo is False
@@ -837,7 +848,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -847,7 +858,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is True, report.findings
     blocking_cross_period = tuple(
@@ -883,7 +894,7 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
 
     result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -893,7 +904,7 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is False
     missing = {

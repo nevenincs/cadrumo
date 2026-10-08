@@ -284,7 +284,7 @@ modelo:
       construct:
         m151-impatriado-calculation:
           field:
-            title: 151-es nyomtatvány, személyi jövedelemadó, bevándorolt munkavállalók
+            title: Modelo 151 nyomtatvány, személyi jövedelemadó, bevándorolt munkavállalók
               rendszere, adóösszeg
       field:
         official_name: Modelo 151. Az IRPF bevallása a spanyol területre kiküldött
@@ -944,9 +944,9 @@ modelo:
             x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g68:
               label: Ügyiratszám
             x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g64:
-              label: A 211-es nyomtatvány bizonylatszáma
+              label: A Modelo 211 nyomtatvány bizonylatszáma
             x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g68:
-              label: A 211-es nyomtatvány bizonylatszáma
+              label: A Modelo 211 nyomtatvány bizonylatszáma
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
               label: Jövedelem típusa [1]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
@@ -1156,7 +1156,7 @@ modelo:
             x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
               label: Átruházási érték [2]
           field:
-            label: 151-es nyomtatvány, 2015–2022 adóévek (bevándorolt munkavállalók
+            label: Modelo 151 nyomtatvány, 2015–2022 adóévek (bevándorolt munkavállalók
               különleges rendszere; a 93.2.e).1. cikk szerinti általános adótábla
               és a 93.2.e).2. cikk szerinti megtakarítási adótábla az adott adóévre
               alkalmazandó szöveg szerint)
@@ -1181,27 +1181,28 @@ modelo:
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               label: Befizetés / Csoportos beszedés / Visszatérítés. IBAN
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
-              help: A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról
+              help: A Modelo 151 nyomtatvány kollektív befektetési jegyek átruházásáról
                 szóló mellékletének adata.
               label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
                 jegyeinek átruházása. Tőkenyereség
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
-              help: A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról
+              help: A Modelo 151 nyomtatvány kollektív befektetési jegyek átruházásáról
                 szóló mellékletének adata.
               label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
                 jegyeinek átruházása. A befektetési társaság vagy alap NIF száma
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
-              help: A 151-es nyomtatvány 03. rovata, 2025. adóév.
+              help: A Modelo 151 nyomtatvány 03. rovata, 2025. adóév.
+              label: Nyomtatvány
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
-              help: A 151-es nyomtatvány 01. rovata, 2025. adóév.
+              help: A Modelo 151 nyomtatvány 01. rovata, 2025. adóév.
               label: A nyomtatvány- és oldalazonosító kezdete
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
-              help: A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról
+              help: A Modelo 151 nyomtatvány kollektív befektetési jegyek átruházásáról
                 szóló mellékletének adata.
               label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
                 jegyeinek átruházása. Tőkenyereségek összesen
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
-              help: A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról
+              help: A Modelo 151 nyomtatvány kollektív befektetési jegyek átruházásáról
                 szóló mellékletének adata.
               label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
                 jegyeinek átruházása. Levonások vagy előlegfizetések összesen
@@ -2077,9 +2078,9 @@ modelo:
             x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6kmj0cg:
               label: Jegyzőkönyvi szám [65]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6g:
-              label: A 211-es nyomtatvány igazolószáma [54]
+              label: A Modelo 211 nyomtatvány igazolószáma [54]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6gmj0cg:
-              label: A 211-es nyomtatvány igazolószáma [54]
+              label: A Modelo 211 nyomtatvány igazolószáma [54]
             x-e0o3gbjgdhgmst315kpj8:
               label: Emelet [34]
             x-e0o3gbjgdhgmst315kpj8b9g68:

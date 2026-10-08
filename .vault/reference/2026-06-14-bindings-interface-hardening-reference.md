@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#bindings-interface-hardening'
 date: '2026-06-14'
-modified: '2026-07-17'
-body_hash: 'sha256:fcdb128f2608b9019b8e825d9acffddd1b80885afe20e43c0827969ae3bf2eb6'
+modified: '2026-10-03'
+body_hash: 'sha256:89a04cf3f40dd4c7e72bbce0febdc0231d9d6999ecd5b550d164fb49cdf1f058'
 related:
   - "[[2026-06-14-bindings-interface-hardening-adr]]"
   - "[[2026-06-14-bindings-interface-hardening-research]]"
@@ -21,15 +21,12 @@ factory branch lands peer commits continuously).
 
 ### Schema and dispatch (cluster A, B)
 
-- `src/aeat/domain/calculations/registry/_schema.py:977-1004` — `DataBindingDefinition`
   (`id`, `source` 18-member Literal `:979-997`, `selector` `:998`, free-form
   `aggregation` `:999`, dead `typed_enum` `:1000`, `legal_refs`/`source_refs`
   `:1001-1004`).
-- `src/aeat/domain/calculations/registry/_bindings.py:535-558` —
   `_BINDING_SELECTOR_REGISTRY` (selector-model dispatch table).
 - `_bindings.py:561-610` — `validate_binding_selector_shape`; counterpart/withholding
   build-time lift at `:591-592` and `:605-609`.
-- `src/aeat/domain/calculations/registry/_binding_selector_utils.py:15-20` —
   `selector_as_dict` normalisation.
 - Per-family modules: `_counterpart_bindings.py` (`_validated_counterpart_selector`
   `:123`; resolvers `:186-263`), `_invoice_bindings.py`
@@ -40,54 +37,45 @@ factory branch lands peer commits continuously).
   list[str]` `:124-127`), `_detail_record_bindings.py` (resolve-only
   `_validated_*_selector` `:85,214,349,456`), `_bindings_previous_filing.py`
   (`_aggregate_previous_filing_binding` op check at resolve `:379-395`).
-- Source-kind enums: `src/aeat/core/aggregation.py` — `AggregationSourceKind`
+- Source-kind enums: `src/cadrumo/core/aggregation.py` — `AggregationSourceKind`
   `:13-30`, `COUNTERPART_SOURCE_KINDS` `:41-48`, `RowSetGroupingKind` `:79-92`
   (half-adopted: `RELATED_PARTY`/`ATRIBUCION`/`REFUND` enum members unused as source
   tokens).
 
 ### Resolution / mesh (settled; cluster C residuals only)
 
-- `src/aeat/application/aggregation/_source_mesh.py` — `ModeloSourceResolver`
   protocol `:212-232`, `CalculationSourceResolution` `:120-209`,
   `merge_source_resolutions` `:235-288`, `DEFERRED_SOURCE_KINDS` `:65-73`,
   `collect_unhandled_source_diagnostics` `:291-317`.
-- `src/aeat/application/modelo/_calculation_actions.py` — mesh assembly
   `:534-578`, `_BUCKET_AGGREGATION_OWNED_SOURCES` `:129-144`,
   `assert_no_novel_source_kinds` `:875-903` (live `:691`), unhandled diagnostics
   live `:587-595`.
-- R2 carry-gate triplication: `src/aeat/application/calculations/_binding_prefill.py:75-97`
   and `:558-561` (silent prev-filing skip); `_cross_period_clean_state.py:706-740`;
   `_relation_prefill.py:164` (non-formula relation silent), `:360-365`
   (`_formula_relation_ids` filter).
 
 ### Operator boundary (cluster D)
 
-- Carrier: `src/aeat/domain/filing/_schema.py:71-80` — `ModeloBindingValue`
   (no `legal_refs`/`source_refs`); casilla parity model `ModeloCasillaProvenance`
   `:83-98`.
-- Builder: `src/aeat/application/filing/__init__.py:426-454` — hardcoded
+- Builder: `src/cadrumo/application/filing/__init__.py` — hardcoded
   `source="registry binding input"`, drops binding grounding; casilla provenance
   `:235-243`.
-- CLI: `src/aeat/entrypoints/cli/_modelo_discovery_cli.py` — `bindings` sub-app
+- CLI: `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py` — `bindings` sub-app
   `:72-83`, `list` `:427-487` (`--modelo` untyped `:431-434`), `preview`
   `:500-596`; `_binding_list_rows_for_report` `:401-418`.
-- CLI payloads: `src/aeat/entrypoints/cli/_modelo_payloads.py:825-860` —
+- CLI payloads: `src/cadrumo/entrypoints/cli/_modelo_payloads.py` —
   `BindingRowPayload` (unused) / `BindingPreviewRowPayload`;
   `ModeloBindingsListResult.bindings: list[dict[str, object]]` `:850`.
-- Override parse: `src/aeat/entrypoints/cli/_modelo_cli_support.py:126-150`
+- Override parse: `src/cadrumo/entrypoints/cli/_modelo_cli_support.py`
   (`validate_binding_key`, value verbatim); numeric/enum heuristic
-  `src/aeat/application/modelo/_calculate_input.py:214-220`.
 - Export (already preserves grounding): `registry/_export.py:191-215`.
 
 ### Semantic homonyms (cluster E)
 
-- `src/aeat/application/modelo/_profile_binding.py` — profile-fact resolution
   (keep "binding").
-- `src/aeat/adapters/outbound/google/_profile_binding.py:26` — OAuth active-profile
   scoping (RENAME).
-- `src/aeat/application/modelo/_decimal_binding_value.py:26` — `decimal_from_string`
   parser (RECLASSIFY).
-- `src/aeat/domain/iva/tests/test_legal_basis_binding.py` — rate→BOE verification
   (RENAME concept).
 - Source-resolver result types (one role, three shapes):
   `ProfileSourcedBindingResult` (`_profile_binding.py`),

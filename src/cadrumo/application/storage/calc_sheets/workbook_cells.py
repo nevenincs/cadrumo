@@ -32,10 +32,12 @@ from typing import Final
 
 from .export_tables import evidence_table, guide_stamps
 from .records import (
+    AnySheetExportPlan,
     SheetCellAddress,
-    SheetExportPlan,
     SheetFormulaCell,
+    SheetReviewMetadata,
     SheetRowSet,
+    SheetTemplatePreviewMetadata,
     SheetValueCell,
     TabName,
 )
@@ -98,8 +100,10 @@ def row_set_header_blocks(row_sets: Iterable[SheetRowSet]) -> tuple[SheetCellBlo
     )
 
 
-def guide_cell_blocks(plan: SheetExportPlan) -> tuple[SheetCellBlock, ...]:
+def guide_cell_blocks(plan: AnySheetExportPlan) -> tuple[SheetCellBlock, ...]:
     """Address the Guía title, prose paragraphs, and export identity stamps."""
+    if plan.human_presentation or isinstance(plan.metadata, (SheetReviewMetadata, SheetTemplatePreviewMetadata)):
+        return ()
     blocks: list[SheetCellBlock] = [
         SheetCellBlock(
             anchor=SheetCellAddress.at(TabName.GUIDE, _GUIDE_TITLE_ROW, 1),
@@ -121,9 +125,11 @@ def guide_cell_blocks(plan: SheetExportPlan) -> tuple[SheetCellBlock, ...]:
     return tuple(blocks)
 
 
-def evidence_cell_blocks(plan: SheetExportPlan) -> tuple[SheetCellBlock, ...]:
+def evidence_cell_blocks(plan: AnySheetExportPlan) -> tuple[SheetCellBlock, ...]:
     """Address the Evidencia fingerprint, header row, and one row per fact."""
     fingerprint, header, body = evidence_table(plan)
+    if plan.human_presentation or isinstance(plan.metadata, (SheetReviewMetadata, SheetTemplatePreviewMetadata)):
+        return ()
     blocks: list[SheetCellBlock] = [
         SheetCellBlock(
             anchor=SheetCellAddress.at(TabName.EVIDENCIA, _EVIDENCE_FINGERPRINT_ROW, 1),
@@ -144,7 +150,7 @@ def evidence_cell_blocks(plan: SheetExportPlan) -> tuple[SheetCellBlock, ...]:
     return tuple(blocks)
 
 
-def plan_value_blocks(plan: SheetExportPlan) -> tuple[SheetCellBlock, ...]:
+def plan_value_blocks(plan: AnySheetExportPlan) -> tuple[SheetCellBlock, ...]:
     """Address every non-formula value the plan writes, in canonical order.
 
     The order is the one both transports write in: literal plan cells, the Guía
@@ -159,6 +165,24 @@ def plan_value_blocks(plan: SheetExportPlan) -> tuple[SheetCellBlock, ...]:
     )
 
 
+def validate_merged_content(plan: AnySheetExportPlan) -> None:
+    """Refuse merges that erase derived guide, evidence, or row-set cells."""
+    if not plan.merged_ranges:
+        return
+    addresses = tuple(
+        address for block in plan_value_blocks(plan) for address, value in block.addressed_values() if value is not None
+    ) + tuple(cell.address for cell in plan.formula_cells)
+    for region in plan.merged_ranges:
+        if any(
+            address.tab == region.tab
+            and region.start_row <= address.row <= region.end_row
+            and region.start_column <= address.column <= region.end_column
+            and (address.row, address.column) != (region.start_row, region.start_column)
+            for address in addresses
+        ):
+            raise ValueError("merged range would discard workbook content")
+
+
 __all__ = [
     "EVIDENCE_FINGERPRINT_LABEL",
     "SheetCellBlock",
@@ -168,5 +192,6 @@ __all__ = [
     "guide_cell_blocks",
     "plan_value_blocks",
     "row_set_header_blocks",
+    "validate_merged_content",
     "value_cell_blocks",
 ]

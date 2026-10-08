@@ -20,6 +20,7 @@ from pydantic import TypeAdapter
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity.tax_id import tax_id_identity_token
+from ...core.parsing.utils import parse_bool
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
@@ -102,33 +103,16 @@ class AtribucionMemberSourceResolver:
         if not _revision_uses_atribucion_member(context):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
-        record = self._profile_record
-        profile_schema = self._profile_decode_context.schema if self._profile_decode_context is not None else None
-        if record is None and context.profile is not None:
-            record = context.profile.record
-            profile_schema = context.profile.profile_decode_context.schema
-        if record is None:
-            profile_decode_context = self._profile_decode_context
-            if profile_decode_context is None:
-                raise TypeError("attribution profile resolution requires a ProfileDecodeContext")
-            try:
-                repository = ProfileRecordRepository.for_current_session(
-                    context.bucket_id,
-                    profile_decode_context=profile_decode_context,
-                )
-                record = repository.load(context.bucket_id)
-                profile_schema = repository.session.profile_decode_context.schema
-            except ProfileNotFoundError:
-                return CalculationSourceResolution(
-                    resolver_id=self.resolver_id,
-                    owned_sources=self.owned_sources,
-                    diagnostics=(
-                        _diagnostic("active attribution-entity profile is missing; M184 member rows cannot resolve"),
-                    ),
-                )
-
-        if profile_schema is None:
-            raise TypeError("attribution profile resolution requires a ProfileDecodeContext")
+        profile = _resolve_attribution_profile(
+            context,
+            configured_record=self._profile_record,
+            configured_decode_context=self._profile_decode_context,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+        if isinstance(profile, CalculationSourceResolution):
+            return profile
+        record, profile_schema = profile
         projection = _project_attribution_socio_facts(
             _attribution_entity_socio_facts(record.facts),
             schema=profile_schema,
@@ -160,6 +144,41 @@ class AtribucionMemberSourceResolver:
                 for socio in projection.complete
             ),
         )
+
+
+def _resolve_attribution_profile(
+    context: CalculationSourceContext,
+    *,
+    configured_record: UserProfileRecord | None,
+    configured_decode_context: ProfileDecodeContext | None,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> tuple[UserProfileRecord, ProfileSchemaDefinition] | CalculationSourceResolution:
+    record = configured_record
+    profile_schema = configured_decode_context.schema if configured_decode_context is not None else None
+    if record is None and context.profile is not None:
+        record = context.profile.record
+        profile_schema = context.profile.profile_decode_context.schema
+    if record is not None:
+        if profile_schema is None:
+            raise TypeError("attribution profile resolution requires a ProfileDecodeContext")
+        return record, profile_schema
+
+    if configured_decode_context is None:
+        raise TypeError("attribution profile resolution requires a ProfileDecodeContext")
+    try:
+        repository = ProfileRecordRepository.for_current_session(
+            context.bucket_id,
+            profile_decode_context=configured_decode_context,
+        )
+        record = repository.load(context.bucket_id)
+    except ProfileNotFoundError:
+        return CalculationSourceResolution(
+            resolver_id=resolver_id,
+            owned_sources=owned_sources,
+            diagnostics=(_diagnostic("active attribution-entity profile is missing; M184 member rows cannot resolve"),),
+        )
+    return record, repository.session.profile_decode_context.schema
 
 
 def _revision_uses_atribucion_member(context: CalculationSourceContext) -> bool:
@@ -382,7 +401,17 @@ def _optional_bool(value: object) -> bool | None:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        return value.strip().lower() in {"true", "1", "yes", "x"}
+        token = value.strip()
+        if not token:
+            return None
+        # "X" is the diseño's own affirmative flag mark, which the human
+        # vocabulary does not carry.
+        if token.upper() == "X":
+            return True
+        parsed = parse_bool(token)
+        if parsed is None:
+            raise ValueError(f"attribution member boolean profile fact is not a recognised yes/no token; got {value!r}")
+        return parsed
     raise ValueError(f"attribution member boolean profile fact must be bool-compatible; got {type(value).__name__}")
 
 

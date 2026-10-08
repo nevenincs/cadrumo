@@ -57,6 +57,24 @@ modelo:
           de determinades loteries i apostes. Autoliquidació.
         title: Gravamen especial sobre els premis de determinades loteries i apostes.
           Autoliquidació
+      form:
+        page:
+          pag-1:
+            heading: Gravamen especial sobre els premis de determinades loteries i
+              apostes
+        section:
+          complementaria:
+            heading: Complementària
+          declarante:
+            heading: Declarant
+          devengo:
+            heading: Meritació
+          ingreso:
+            heading: Ingrés
+          liquidacion:
+            heading: Liquidació
+          loteria:
+            heading: Loteria o aposta premiada
       revision:
         2022-2025:
           construct:

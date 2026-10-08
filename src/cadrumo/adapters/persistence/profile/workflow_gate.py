@@ -13,8 +13,9 @@ from ....application.modelo.workflow_gate_ports import (
 )
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloPresentado
-from ..storage.errors import StorageError
+from ..storage.errors import STORAGE_OPERATION_FAILURES
 from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.sql.secure_objects import SecureObjectRepository
 from .filing_drafts import ModeloDraftRepository
 from .submission import SubmissionRepository
 
@@ -35,7 +36,7 @@ class WorkflowGateDraftRepositoryAdapter(WorkflowGateDraftRepositoryProtocol):
         """
         try:
             self._repository.save(payload)
-        except (StorageError, OSError) as exc:
+        except STORAGE_OPERATION_FAILURES as exc:
             raise WorkflowGatePersistenceError("draft_save") from exc
 
 
@@ -51,7 +52,7 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         """Load one historical submission and translate storage failures."""
         try:
             return self._repository.load(record_id)
-        except (StorageError, OSError) as exc:
+        except STORAGE_OPERATION_FAILURES as exc:
             raise WorkflowGatePersistenceError("submission_load") from exc
 
     @override
@@ -59,7 +60,7 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         """Yield historical submissions while translating iteration failures."""
         try:
             yield from self._repository.iter_submissions()
-        except (StorageError, OSError) as exc:
+        except STORAGE_OPERATION_FAILURES as exc:
             raise WorkflowGatePersistenceError("submission_iter") from exc
 
     @override
@@ -67,14 +68,18 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         """List historical submission ids and translate storage failures."""
         try:
             return self._repository.list_submission_ids()
-        except (StorageError, OSError) as exc:
+        except STORAGE_OPERATION_FAILURES as exc:
             raise WorkflowGatePersistenceError("submission_list") from exc
 
 
-def build_workflow_gate_ports(*, bucket_id: str) -> WorkflowGatePorts:
-    """Compose workflow-gate persistence capabilities for one profile bucket."""
+def build_workflow_gate_ports(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> WorkflowGatePorts:
+    """Compose workflow-gate persistence capabilities for one profile bucket.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     return WorkflowGatePorts(
         draft_repository=WorkflowGateDraftRepositoryAdapter(
             repository=ModeloDraftRepository(bucket_id=normalized_bucket_id, objects=objects),

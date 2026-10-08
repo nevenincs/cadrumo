@@ -11,6 +11,39 @@ modelo:
           en instituciones financieras.
         title: Retenciones e ingresos a cuenta - rendimientos del capital mobiliario
           de cuentas en instituciones financieras
+      form:
+        column:
+          base: Base de retenciones e ingresos a cuenta
+          ingresos-anteriores: Ingresos de ejercicios anteriores
+          regularizacion: Regularización
+          retenciones: Retenciones e ingresos a cuenta
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la autoliquidación anterior
+          nif: NIF
+          nombre: Nombre
+          periodo: Período
+        page:
+          modelo-126-page-01:
+            heading: Retenciones sobre rendimientos de cuentas en entidades financieras
+        row:
+          periodificacion-1: Periodificación · primera línea
+          periodificacion-2: Periodificación · segunda línea
+          retenciones: Retenciones e ingresos a cuenta
+        section:
+          complementaria:
+            heading: Complementaria (6)
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Identificación (1)
+          ingreso:
+            heading: Ingreso (4)
+          liquidacion:
+            heading: Liquidación (3)
       revision:
         2019-y-siguientes:
           casilla:

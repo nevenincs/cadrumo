@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#distribution-harness-identity'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9840e968fc3cfeb2a52ca83d1b72a5f16decbc1573d4130a547fe4ff67f50174'
+body_hash: 'sha256:a877cf7fa95800a6f61c6ddf632c1f05939fc1ac9b667299d182093f29c5f8d1'
 related:
   - '[[2026-07-16-distribution-harness-identity-adr]]'
   - '[[2026-07-16-distribution-harness-identity-research]]'
-  - '[[2026-07-18-distribution-harness-identity-ledger]]'
-  - '[[2026-07-18-distribution-harness-identity-plan]]'
 ---
 
 # `distribution-harness-identity` feature index
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#distribution-harness-identit
 ### adr
 
 - `2026-07-16-distribution-harness-identity-adr` - `distribution-harness-identity` adr: `Cadrumo-prefixed harness namespace and bilingual Model Context Protocol product description` | (**status:** `accepted`)
-
-### exec
-
-- `2026-07-18-distribution-harness-identity-ledger` - `distribution-harness-identity` ledger
-
-### plan
-
-- `2026-07-18-distribution-harness-identity-plan` - `distribution-harness-identity` plan
 
 ### research
 

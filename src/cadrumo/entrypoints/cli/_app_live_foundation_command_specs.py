@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ._app_live_command_spec_support import (
-    _ENCRYPTED_LOCAL_READ_POLICY,
     _LEAF_INVOCATION,
     _METADATA_GROUP_INVOCATION,
     _METADATA_POLICY,
+    _NETWORK_READ_POLICY,
     _OPTIONAL_MODELOS_OPTION,
     _OPTIONAL_YEAR_FROM_OPTION,
     _OPTIONAL_YEAR_OPTION,
@@ -21,21 +18,18 @@ from ._app_live_command_spec_support import (
     _REQUIRED_YEAR_OPTION,
     NO_RESULT_SCHEMA,
 )
-from .command_spec import (
-    CommandSpec,
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
-    ExecutionPolicySpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from .command_spec import (
-    translation_key as _key,
-)
+from .command_shared_contracts import translation_key as _key
+from .command_spec import CommandSpec
 
 LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -87,7 +81,7 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OPTIONAL_YEAR_FROM_OPTION,
             _OPTIONAL_YEAR_TO_OPTION,
         ),
-        policy=_ENCRYPTED_LOCAL_READ_POLICY,
+        policy=_NETWORK_READ_POLICY,
         handler=LazyBinding.available(DeferredTarget("._app_live", "filed_list_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -104,15 +98,7 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=_LEAF_INVOCATION,
         parameters=(),
-        policy=ExecutionPolicySpec(
-            capabilities=frozenset(["aeat", "encrypted-facts", "network"]),
-            side_effects=frozenset(["network"]),
-            performance="external-io",
-            write_route=CommandWriteRoute.NONE,
-            destructive=False,
-            handoff=False,
-            live_write=False,
-        ),
+        policy=_NETWORK_READ_POLICY,
         handler=LazyBinding.available(DeferredTarget("._app_live", "filed_discover_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:46f8d9904fb28eb1a987b9af936fd9e02341a1293e6a86096eeba713365b4c6f'
+body_hash: 'sha256:7bc82aabdbf0eeac1efb73954b1ed4a60796bb7957bf38dc6922e3d94af1cb03'
 related:
   - "[[2026-08-28-calculation-correctness-campaign-m390-recargo-total-fourth-tier-audit]]"
 ---
@@ -14,12 +14,9 @@ related:
 
 ## Scope
 
+Review the revision-specific legal citations for Modelo 303 transitional rates and distinguish citation defects from calculation defects.
+
 ## Findings
-
-## Recommendations
-
-## Finding
-
 The two RD-ley 4/2024 transitional rungs of Modelo 303's régimen general
 devengado block — boxes **[154]** (reducido transitorio) and **[166]**
 (super-reducido transitorio) — encode the correct rates, and their grounding is
@@ -35,6 +32,24 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91",
 
 LIVA arts. 88 and 91 state the *ordinary* rates. None of the four states 7,5 %
 or 2 %.
+
+## Recommendations
+`real-decreto-ley-20-2022:art-72` carries "vigencia hasta el 30 de junio de 2024",
+so it is in force for `2024-hasta-08-y-2t` (Q1/Q2) and out of force for
+`2024-desde-09-y-3t` (Q3/Q4). An applicability-window mechanism already excludes
+out-of-window entries from snapshots — `test_source_applicability_window.py:163`
+asserts exactly that shape for a sibling article — so adding the 20/2022 citation
+to the late-2024 revision would be wrong on the law and may be refused.
+
+`real-decreto-ley-4-2024:art-1` is in window for the 10/4T 2024 period and is the
+instrument establishing 7,5 % and 2 %.
+
+Owner's decision, not taken here: add `real-decreto-ley-4-2024:art-1` to all four
+rows, add `real-decreto-ley-20-2022:art-72` only to the early-2024 revision, and
+correct the stale test docstring. This is a citation change on rate rows, so it is
+a tax review, and no value may move.
+
+No production code, registry data or test was changed by this audit.
 
 ## The values are correct — a citation defect, not a computation defect
 
@@ -79,25 +94,6 @@ in this campaign: a reviewer checking cited article against encoded value finds 
 mismatch, and the wrong resolution — move 7,5 % to a rate art. 91 does state — is
 more obvious than the right one, which is to add the missing citations. These are
 devengado rungs, so such an alignment would move a taxpayer's output VAT.
-
-## Remediation is per-revision — do not apply it uniformly
-
-`real-decreto-ley-20-2022:art-72` carries "vigencia hasta el 30 de junio de 2024",
-so it is in force for `2024-hasta-08-y-2t` (Q1/Q2) and out of force for
-`2024-desde-09-y-3t` (Q3/Q4). An applicability-window mechanism already excludes
-out-of-window entries from snapshots — `test_source_applicability_window.py:163`
-asserts exactly that shape for a sibling article — so adding the 20/2022 citation
-to the late-2024 revision would be wrong on the law and may be refused.
-
-`real-decreto-ley-4-2024:art-1` is in window for the 10/4T 2024 period and is the
-instrument establishing 7,5 % and 2 %.
-
-Owner's decision, not taken here: add `real-decreto-ley-4-2024:art-1` to all four
-rows, add `real-decreto-ley-20-2022:art-72` only to the early-2024 revision, and
-correct the stale test docstring. This is a citation change on rate rows, so it is
-a tax review, and no value may move.
-
-No production code, registry data or test was changed by this audit.
 
 ## Correction: half of this remediation would also be refused
 

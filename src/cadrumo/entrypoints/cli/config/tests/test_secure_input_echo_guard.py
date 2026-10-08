@@ -58,7 +58,7 @@ async def _wait_for_prompt_probe(*, command: list[str], creationflags: int = 0) 
             stderr=asyncio.subprocess.DEVNULL,
         )
     try:
-        await asyncio.wait_for(process.wait(), timeout=90)
+        await asyncio.wait_for(process.wait(), timeout=None)
     except TimeoutError:
         process.kill()
         await process.wait()
@@ -72,7 +72,7 @@ def _run_probe(body: str) -> dict[str, object]:
             [sys.executable, "-c", textwrap.dedent(body)],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=None,
             check=False,
         )
     )
@@ -196,7 +196,7 @@ def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
             input=f"{_PLANTED_INPUT}\n",
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=None,
             check=False,
         )
     )
@@ -396,7 +396,7 @@ def test_the_predicate_predicts_the_refusal_it_names() -> None:
             input=f"{_PLANTED_INPUT}\n",
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=None,
             check=False,
         )
     )

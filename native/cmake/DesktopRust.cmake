@@ -1,0 +1,46 @@
+# The desktop image uses the native host Cargo layout declared by its locator.
+# Supply the same admitted Rust tools/platform environment as the native owners.
+function(cadrumo_desktop_rust_environment output)
+  if(NOT CADRUMO_RUST_ROOT)
+    set(${output} "" PARENT_SCOPE)
+    return()
+  endif()
+  set(rust_bin "${CADRUMO_RUST_ROOT}/bin")
+  foreach(tool cargo rustc rustdoc)
+    if(NOT IS_ABSOLUTE "${rust_bin}/${tool}${CMAKE_EXECUTABLE_SUFFIX}"
+        OR NOT EXISTS "${rust_bin}/${tool}${CMAKE_EXECUTABLE_SUFFIX}")
+      message(FATAL_ERROR "Desktop requires the selected native Rust ${tool} tool")
+    endif()
+  endforeach()
+  if(CADRUMO_PIN_rust_target)
+    execute_process(COMMAND "${rust_bin}/rustc${CMAKE_EXECUTABLE_SUFFIX}" -vV
+      OUTPUT_VARIABLE rust_identity OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+    string(REGEX MATCH "host: ([^\r\n]+)" rust_host "${rust_identity}")
+    if(NOT CMAKE_MATCH_1 STREQUAL CADRUMO_PIN_rust_target)
+      message(FATAL_ERROR "Desktop native host must match the selected Rust target and artifact locator")
+    endif()
+  endif()
+  set(environment "CADRUMO_DESKTOP_RUST_BIN=${rust_bin}"
+    "RUSTC=${rust_bin}/rustc${CMAKE_EXECUTABLE_SUFFIX}"
+    "RUSTDOC=${rust_bin}/rustdoc${CMAKE_EXECUTABLE_SUFFIX}")
+  if(TARGET rust_platform)
+    get_directory_property(names DIRECTORY "${CADRUMO_SOURCE_ROOT}/native"
+      DEFINITION CADRUMO_RUST_ENVIRONMENT_NAMES)
+  else()
+    set(names ${CADRUMO_RUST_ENVIRONMENT_NAMES})
+  endif()
+  foreach(name IN LISTS names)
+    if(name STREQUAL "CARGO_BUILD_TARGET")
+      message(FATAL_ERROR "Explicit desktop Cargo targets require a matching artifact locator")
+    endif()
+    if(TARGET rust_platform)
+      get_directory_property(value DIRECTORY "${CADRUMO_SOURCE_ROOT}/native"
+        DEFINITION "CADRUMO_RUST_ENV_${name}")
+    else()
+      set(value "${CADRUMO_RUST_ENV_${name}}")
+    endif()
+    string(REPLACE ";" "\\;" value "${value}")
+    list(APPEND environment "${name}=${value}")
+  endforeach()
+  set(${output} "${environment}" PARENT_SCOPE)
+endfunction()

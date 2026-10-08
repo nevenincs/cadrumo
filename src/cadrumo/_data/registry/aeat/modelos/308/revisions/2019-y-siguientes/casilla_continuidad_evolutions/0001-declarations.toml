@@ -45,3 +45,11 @@ to_revision = "2019-y-siguientes"
 evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-eha-3786-2008:art-2", "ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2016", "aeat-dr-308-2019"]
+[[revisions."2019-y-siguientes".casilla_continuidad_evolutions]]
+id = "buyer-country-from-2011-representation-evolved"
+continuidad_id = "mtn-adquirente-pais"
+from_revision = "2011-julio-2015"
+to_revision = "2019-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-dr-308-2011-july", "aeat-dr-308-2019"]

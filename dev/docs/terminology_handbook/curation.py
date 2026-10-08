@@ -108,20 +108,7 @@ def audit_handbook(concepts_dir: Path | None = None) -> AuditReport:
             case ConceptLifecycle.RETIRED:
                 retired += 1
 
-        empty_langs = tuple(
-            section.language.value
-            for section in concept.languages
-            if _is_uncurated_short_description(section.short_description)
-        )
-        if empty_langs:
-            empty_short[concept.concept_id] = tuple(sorted(empty_langs))
-
-        missing = _dangling_targets(concept, known)
-        if missing:
-            dangling[concept.concept_id] = missing
-
-        if concept.lifecycle is ConceptLifecycle.RETIRED and concept.replaced_by is None:
-            retired_no_replacement.append(concept.concept_id)
+        _audit_concept_issues(concept, known, empty_short, dangling, retired_no_replacement)
 
         if concept.seed_provenance is not None:
             seeded += 1
@@ -378,3 +365,27 @@ def _stamp(today: date | None) -> date:
     from cadrumo.core.time.clock import now
 
     return now().date()
+
+
+def _audit_concept_issues(
+    concept: ConceptRecord,
+    known: set[str],
+    empty_short: dict[str, tuple[str, ...]],
+    dangling: dict[str, tuple[str, ...]],
+    retired_no_replacement: list[str],
+) -> None:
+    """Accumulate one concept's curation and relation findings."""
+    empty_langs = tuple(
+        section.language.value
+        for section in concept.languages
+        if _is_uncurated_short_description(section.short_description)
+    )
+    if empty_langs:
+        empty_short[concept.concept_id] = tuple(sorted(empty_langs))
+
+    missing = _dangling_targets(concept, known)
+    if missing:
+        dangling[concept.concept_id] = missing
+
+    if concept.lifecycle is ConceptLifecycle.RETIRED and concept.replaced_by is None:
+        retired_no_replacement.append(concept.concept_id)

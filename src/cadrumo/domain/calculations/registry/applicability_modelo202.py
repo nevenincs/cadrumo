@@ -20,7 +20,7 @@ from ...deadlines.models import TaxpayerProfile
 from .entity_type import entity_type_legal_entity_token as _registry_entity_type_legal_entity_token
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact, ScalarFactQuery
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import LegalRefId
 from .schema_base import DateAxis
 
@@ -111,10 +111,7 @@ def resolve_modelo_202_art_40_3_incn_threshold(
     authority: GovernedFactSource | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the LIS art. 40.3 INCN threshold with complete authority provenance."""
-    if authority is None:
-        authority = governed_facts_in_scope()
-        if authority is None:
-            raise RegistryValidationError("Modelo 202 applicability requires an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="Modelo 202 applicability")
     declarations = _modelo_202_applicability_declarations(
         effective_date=effective_date,
         authority=authority,
@@ -162,10 +159,7 @@ def modelo_202_modality_from_inputs(
         :class:`Modelo202ModalityVerdict`: Derived modality, explanation, and
         legal grounding.
     """
-    if authority is None:
-        authority = governed_facts_in_scope()
-        if authority is None:
-            raise RegistryValidationError("Modelo 202 applicability requires an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="Modelo 202 applicability")
     declarations = _modelo_202_applicability_declarations(
         effective_date=effective_date,
         authority=authority,
@@ -216,6 +210,7 @@ def derive_modelo_202_modality(
     profile: TaxpayerProfile,
     *,
     effective_date: date,
+    authority: GovernedFactSource | None = None,
 ) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 pago-fraccionado modality and return a :class:`Modelo202ModalityVerdict`.
 
@@ -226,6 +221,7 @@ def derive_modelo_202_modality(
         entity_type=profile.entity_type,
         incn_prior_12_months=profile.incn_prior_12_months,
         effective_date=effective_date,
+        authority=authority,
     )
 
 

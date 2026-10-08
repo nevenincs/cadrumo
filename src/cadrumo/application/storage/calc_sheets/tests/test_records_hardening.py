@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -169,6 +170,45 @@ def test_sheet_cell_constraint_rejects_blank_legal_ref() -> None:
             address=SheetCellAddress.at(TabName.ENTRADAS, row=2, column=4),
             sign="non_negative",
             legal_refs=(" ",),
+            casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
+        )
+
+
+def test_allowed_value_formula_escapes_literals_and_preserves_numeric_bounds() -> None:
+    constraint = SheetCellConstraint(
+        address=SheetCellAddress.at(TabName.ENTRADAS, row=2, column=4),
+        allowed_values=('A"),TRUE(),("', "01"),
+        min_value=Decimal("0"),
+        max_value=Decimal("9"),
+        legal_refs=(_VALID_LEGAL_REF,),
+        casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
+    )
+    formula = constraint.text_validation_formula()
+    assert formula == 'OR(ISBLANK(D2),AND(OR(EXACT(D2,"A""),TRUE(),("""),EXACT(D2,"01")),ISNUMBER(D2),D2>=0,D2<=9))'
+    with pytest.raises(ValidationError):
+        SheetCellConstraint(
+            address=constraint.address,
+            allowed_values=(),
+            legal_refs=(_VALID_LEGAL_REF,),
+            casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
+        )
+
+
+def test_text_length_constraints_keep_zero_and_reject_reversed_bounds() -> None:
+    constraint = SheetCellConstraint(
+        address=SheetCellAddress.at(TabName.ENTRADAS, row=2, column=4),
+        min_length=0,
+        max_length=24,
+        legal_refs=(_VALID_LEGAL_REF,),
+        casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
+    )
+    assert constraint.text_validation_formula() == "OR(ISBLANK(D2),AND(LEN(D2)>=0,LEN(D2)<=24))"
+    with pytest.raises(ValidationError, match="minimum text length"):
+        SheetCellConstraint(
+            address=constraint.address,
+            min_length=25,
+            max_length=24,
+            legal_refs=(_VALID_LEGAL_REF,),
             casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
         )
 

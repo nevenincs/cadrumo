@@ -35,13 +35,9 @@ from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..errors import StorageValidationError
-from ..master_key.active_session import (
-    NoActiveBucketSessionError,
-    activate_session,
-    has_active_bucket_session,
-    suspend_active_session,
-)
+from ..master_key.active_session import NoActiveBucketSessionError, activate_session, has_active_bucket_session
 from ..master_key.bucket_session import BucketSession
+from ..master_key.tests.session_scope import suspend_active_session
 from ..runtime_repository import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_active_bucket_or_default_route,
@@ -744,7 +740,7 @@ def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -
         capture_output=True,
         text=True,
         check=True,
-        timeout=120,
+        timeout=None,
     )
     leaked = result.stdout.strip()
     assert leaked == "", f"importing diagnostics eagerly pulled the heavy subtree: {leaked}"

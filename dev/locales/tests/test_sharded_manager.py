@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ..manager import LocaleManager, LocaleNode
+from ..locale_nodes import LocaleNode
+from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

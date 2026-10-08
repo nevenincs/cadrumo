@@ -6,7 +6,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Literal, Protocol, get_args
+from typing import Final, Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -14,6 +14,7 @@ from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.invoice_draft_records import LabelReadingFallback
+from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
@@ -29,13 +30,17 @@ from ....application.ledger.workspace import (
 from ....application.operator_actions.models import ActionReference
 from ....core.aggregation import IntracomOperationType
 from ....core.country_code import CountryCodeAlpha2
+from ....core.identity.digest import ContentDigest
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.invoices.business_premises import SituacionInmueble
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.models import Transaction
+from ....domain.transactions.own_accounts import OwnAccountId
+from ..destination_alias import closed_destination_ids
 
 type LedgerDestinationIdV1 = Literal[
     "ledger.overview",
@@ -46,15 +51,6 @@ type LedgerDestinationIdV1 = Literal[
     "ledger.evidence",
     "ledger.reconciliation",
 ]
-
-
-def declared_ledger_destination_ids() -> frozenset[str]:
-    """Read the internal closed destination set from its defining type alias.
-
-    Defined beside the alias it reads rather than beside a consumer, so the
-    set and its declaration cannot drift apart.
-    """
-    return frozenset(item for item in get_args(LedgerDestinationIdV1.__value__) if isinstance(item, str))
 
 
 #: The one pairing of workspace area to internal destination.
@@ -94,7 +90,7 @@ def _require_total_destination_pairing() -> None:
     if tuple(LEDGER_DESTINATION_BY_AREA) != tuple(LedgerWorkspaceArea):
         raise ValueError("Ledger destinations must cover every workspace area in canonical order")
     destinations = tuple(LEDGER_DESTINATION_BY_AREA.values())
-    if frozenset(destinations) != declared_ledger_destination_ids() or len(frozenset(destinations)) != len(
+    if frozenset(destinations) != closed_destination_ids(LedgerDestinationIdV1) or len(frozenset(destinations)) != len(
         destinations
     ):
         raise ValueError("Ledger destinations must cover the internal catalogue exactly once")
@@ -209,11 +205,23 @@ class LedgerImportSourceKind(StrEnum):
     INVOICES_ISSUED = "invoices_issued"
 
 
+class LedgerImportSourceBindingV1(BaseModel):
+    """One file a preview read, bound to the SHA-256 of the bytes it parsed."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    path: Path
+    sha256: ContentDigest
+
+
 class LedgerImportRequestV1(BaseModel):
     """One operator-chosen file or folder and how to read it.
 
-    ``provider`` applies to a bank statement and ``country`` to an invoice
-    book; each is ignored by the other kind rather than guessed for it.
+    ``provider`` and ``own_account_id`` apply to a bank statement and
+    ``country`` to an invoice book; each is ignored by the other kind rather
+    than guessed for it. ``own_account_id`` names the own bank account the
+    statement belongs to, or ``None`` to bind only rows whose statement names
+    a registered account.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -222,6 +230,9 @@ class LedgerImportRequestV1(BaseModel):
     source_kind: LedgerImportSourceKind
     provider: LedgerProviderID = LedgerProviderID.AUTO
     country: str | None = Field(default=None, min_length=2, max_length=2)
+    own_account_id: OwnAccountId | None = None
+    previewed_sources: tuple[LedgerImportSourceBindingV1, ...] | None = None
+    """Set only to apply: exactly the files a preview read, each refused if its bytes changed since."""
 
 
 class LedgerImportFileRefusalV1(BaseModel):
@@ -264,6 +275,8 @@ class LedgerImportOutcomeV1(BaseModel):
     refused_files: tuple[LedgerImportFileRefusalV1, ...] = ()
     refused_rows: tuple[LedgerImportRowRefusalV1, ...] = ()
     unmapped_columns: tuple[str, ...] = ()
+    sources: tuple[LedgerImportSourceBindingV1, ...] = ()
+    """The files a preview read and the digest of each; applying binds to exactly these."""
 
 
 class LedgerImportDoorV1(Protocol):
@@ -340,6 +353,9 @@ class LedgerInvoiceEntryV1(BaseModel):
     retention_amount: Decimal | None = None
     invoice_class: LedgerInvoiceClassChoice = LedgerInvoiceClassChoice.ORDINARIA
     series: str | None = None
+    arrendamiento_local_negocio: bool = False
+    situacion_inmueble: SituacionInmueble | None = None
+    referencia_catastral: str | None = None
     notes: str = ""
 
 
@@ -427,7 +443,7 @@ class LedgerReaderReadinessV1(BaseModel):
 
 
 class LedgerEvidenceDraftV1(BaseModel):
-    """What the on-host reader found in one document, as display text.
+    """What the on-host reader found in one document, including its canonical review.
 
     ``None`` is a field the reader could not ground in the document; it is
     shown as unread, never as zero. ``label_reading_fallback`` says when some
@@ -450,6 +466,7 @@ class LedgerEvidenceDraftV1(BaseModel):
     suggested_kind: InvoiceKind | None
     discrepancies: int
     label_reading_fallback: LabelReadingFallback | None = None
+    full_projection: InvoiceDraftProjectionV1 | None = None
 
 
 class LedgerEvidenceConfirmationV1(BaseModel):
@@ -583,6 +600,7 @@ __all__ = [
     "LedgerImportOutcomeV1",
     "LedgerImportRequestV1",
     "LedgerImportRowRefusalV1",
+    "LedgerImportSourceBindingV1",
     "LedgerImportSourceKind",
     "LedgerInvoiceAddDoorV1",
     "LedgerInvoiceAddResultV1",
@@ -597,5 +615,4 @@ __all__ = [
     "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",
-    "declared_ledger_destination_ids",
 ]

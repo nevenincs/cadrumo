@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#wizard-registration-bootstrap'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:1e77fa5ad56c918ed5b7789813dca0fb0007b0378ffb2c4ccb22773a59f1b0f0'
+modified: '2026-10-03'
+body_hash: 'sha256:d054168eab4b121e026d30df64e81d4b6e35cd0861dd087a3b5637bca906b059'
 related:
   - '[[2026-06-02-wizard-registration-bootstrap-research]]'
   - '[[2026-06-01-domain-boundary-audit-adr]]'
@@ -59,9 +59,9 @@ Keep one outer-to-inner registration seam:
 
 The current implementation is the accepted shape:
 
-- `src/cadrumo/domain/contribuyente/_keys.py` owns the slot and guard;
-- `src/cadrumo/application/wizard/_compiler.py` owns compilation and the push;
-- `src/cadrumo/application/wizard/_catalogue.py` owns core catalogue
+- the former source file owns the slot and guard;
+- the former source file owns compilation and the push;
+- the former source file owns core catalogue
   registration; and
 - `src/cadrumo/entrypoints/cli/__init__.py` wires production startup.
 

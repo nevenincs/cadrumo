@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#binding-resolver-contract-unification'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:2cd14c3cfb810bb944095fea953361651b7aab4ed894957964014017fa212bbc'
-related:
-  - "[[2026-06-26-binding-resolver-contract-unification-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:18241bfa098ffe784d69dceda69ba3cd10e5b3bc7635937118d99509d3621eac'
+related: []
 ---
 
 # `binding-resolver-contract-unification` audit: `Wave 1 D9 close-blocker audit`
@@ -55,7 +54,7 @@ them with a successor plan before any checkbox or exec record is claimed.
 
 ### hub-file-wip-blocks-enrollment-work | medium | `_calculation_actions.py` is dirty and single-owner
 
-The remaining enrollment/final-gate surface includes `src/aeat/application/modelo/_calculation_actions.py`,
+The remaining enrollment/final-gate surface includes the retired module,
 which has non-authored WIP in the shared worktree. The dispatch brief treats that file
 as single-owner. This pass did not touch it. P05.S18 remains open until P03 is resolved
 and the gate surface is peer-clean.
@@ -97,7 +96,6 @@ The D9 follow-up execution moved the earlier #36 counterpart/foreign-assets
 classification forward. `P03.S10` and `P03.S11` are no longer deferred: they have
 landed exec records and plan checks for the counterpart and foreign-assets resolver
 classes. A targeted `P03.S21` pass then added M349 correctness evidence in
-`src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
 
 The M349 fixture is complete for the step's value-preservation purpose: the
 per-modelo service result equals `aggregate_counterpart_349`, and the counterpart

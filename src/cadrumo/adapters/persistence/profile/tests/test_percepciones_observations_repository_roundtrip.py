@@ -36,12 +36,15 @@ from .....domain.calculations.registry.withholding_bindings import (
     aggregate_withholding_by_clave,
 )
 from ...storage.crypto.encrypted_columns import secure_object_key_digest
+from ...storage.envelope.tests.record_set_authoring import replace_records
 from ...storage.errors import PathContainmentError, SecureObjectRowIdentityError
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...storage.sql.tests.raw_key_writer import save_with_raw_key
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations import (
     PercepcionObservationRepositoryAdapter,
 )
+from .percepcion_observation_authoring import replace_percepcion_observations, save_percepcion_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -92,7 +95,8 @@ def test_withholding_observation_survives_encrypted_storage_roundtrip(tmp_path: 
         original = _observation(nif="11111111H", clave="A", subclave="01")
         repo = _repository()
         period = Period.from_year_and_code(2024, "0A")
-        repo.save_observation(
+        save_percepcion_observation(
+            repo,
             modelo="190",
             filing_year=2024,
             period=period,
@@ -142,7 +146,8 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
             _observation(nif="11111111H", clave="G"),
         )
         for record in records:
-            repo.save_observation(
+            save_percepcion_observation(
+                repo,
                 modelo="190",
                 filing_year=2024,
                 period=period,
@@ -183,7 +188,8 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
         obs = _observation(nif="33333333P", clave="C")
-        repo.save_observation(
+        save_percepcion_observation(
+            repo,
             modelo="190",
             filing_year=2023,
             period=Period.from_year_and_code(2023, "0A"),
@@ -222,7 +228,8 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
             _observation(nif="11111111H", clave="G"),
             _observation(nif="22222222J", clave="A"),
         )
-        repo.replace_observations(
+        replace_percepcion_observations(
+            repo,
             modelo="190",
             filing_year=2024,
             period=period,
@@ -231,7 +238,8 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
         )
         assert len(repo.load_observations("190", period)) == 3
         # Re-pull dropped the 11111111H/clave-G percepción.
-        repo.replace_observations(
+        replace_percepcion_observations(
+            repo,
             modelo="190",
             filing_year=2024,
             period=period,
@@ -261,7 +269,8 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             _observation(nif="22222222J", clave="A"),
             _observation(nif="33333333P", clave="B"),
         )
-        repo.replace_observations(
+        replace_percepcion_observations(
+            repo,
             modelo="190",
             filing_year=2024,
             period=period,
@@ -278,7 +287,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
-            repo.replace_records((replacement,), (*stale_identifiers, "190:2024:0A:../escape:A:-"))
+            replace_records(repo, (replacement,), (*stale_identifiers, "190:2024:0A:../escape:A:-"))
 
         survived = repo.load_observations("190", period)
         assert set(survived) == set(declared)
@@ -295,18 +304,17 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
         period = Period.from_year_and_code(2024, "0A")
-        repo.replace_observations(
+        replace_percepcion_observations(
+            repo,
             modelo="190",
             filing_year=2024,
             period=period,
-            observations=(
-                _observation(nif="11111111H", clave="A"),
-                _observation(nif="22222222J", clave="A"),
-            ),
+            observations=(_observation(nif="11111111H", clave="A"), _observation(nif="22222222J", clave="A")),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         carried = _observation(nif="11111111H", clave="A", dinerario=Decimal("2500"))
-        repo.replace_observations(
+        replace_percepcion_observations(
+            repo,
             modelo="190",
             filing_year=2024,
             period=period,
@@ -341,7 +349,8 @@ def test_whitespace_variant_tax_ids_are_one_perceptor_in_store_and_aggregation(t
         breakdown = aggregate_withholding_by_clave((padded, canonical))
         assert sum(row.percepcion_count for row in breakdown) == 1
 
-        repo.replace_observations(
+        replace_percepcion_observations(
+            repo,
             modelo="190",
             filing_year=2024,
             period=period,
@@ -376,7 +385,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
         period = Period.from_year_and_code(2024, "0A")
         row_a = _observation(nif="11111111H", clave="A")
         row_b = _observation(nif="22222222J", clave="B")
-        repo.replace_observations(
+        replace_percepcion_observations(
+            repo,
             modelo="190",
             filing_year=2024,
             period=period,
@@ -397,7 +407,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
 
         key_a = repo.extract_identifier(_payload(row_a))
         write_b = repo.to_secure_object_write(_payload(row_b))
-        repo.secure_object_repository.save_with_raw_key(
+        save_with_raw_key(
+            repo.secure_object_repository,
             namespace=repo.namespace,
             hashed_object_key=secure_object_key_digest(key_a),
             classification=repo.sensitivity,

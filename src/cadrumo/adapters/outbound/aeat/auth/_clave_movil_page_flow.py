@@ -41,6 +41,7 @@ from .._representation_gate import (
     dismiss_pre303_alert_modal_if_present,
     wait_for_own_name_representation_selector,
 )
+from .clave_movil_state import ClaveMovilPageState, classify_clave_movil_page
 from .clave_movil_support import (
     DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS as _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
 )
@@ -173,17 +174,6 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                 "cannot drive the Cl@ve Móvil non-QR fallback",
             )
         surface = self._clave_surface()
-        await click(surface.authorize_button_selector)
-        # AEAT can return the 'petición pendiente' refusal in place of the non-QR
-        # link page. Detect it here — as the QR route already does right after its
-        # entry click — so a pending refusal fails fast with PENDING_PETITION_BLOCKED
-        # instead of blocking the full navigation timeout on a link that never renders.
-        await self._raise_if_pending_request_error(page)
-        await wait_for(
-            surface.non_qr_link_selector,
-            timeout=self._navigation_timeout_ms,
-        )
-        await click(surface.non_qr_link_selector)
         await wait_for(surface.nif_input_selector, timeout=self._navigation_timeout_ms)
         await fill(surface.nif_input_selector, "")
         await type_text(surface.nif_input_selector, dni_nie)
@@ -193,7 +183,9 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             fecha = (self._settings.cadrumo_clave_movil_dni_fecha or "").strip()
             if not fecha:
                 raise ClaveMovilConfigurationError(
-                    "CADRUMO_CLAVE_MOVIL_DNI_FECHA is required for the non-QR DNI fallback (format YYYY-MM-DD).",
+                    "CADRUMO_CLAVE_MOVIL_DNI_FECHA (format YYYY-MM-DD) is required for the default "
+                    "app-request route with a DNI; set CADRUMO_CLAVE_PREFER_NON_QR=false to scan a QR "
+                    "code in a visible browser instead.",
                 )
             await type_text(surface.dni_fecha_input_selector, fecha)
         else:
@@ -201,12 +193,82 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             soporte = unwrap_optional_secret(self._settings.cadrumo_clave_movil_nie_soporte).strip()
             if not soporte:
                 raise ClaveMovilConfigurationError(
-                    "CADRUMO_CLAVE_MOVIL_NIE_SOPORTE is required for the non-QR NIE fallback.",
+                    "CADRUMO_CLAVE_MOVIL_NIE_SOPORTE is required for the default app-request route "
+                    "with a NIE; set CADRUMO_CLAVE_PREFER_NON_QR=false to scan a QR code in a visible "
+                    "browser instead.",
                 )
             await type_text(surface.nie_soporte_input_selector, soporte)
         await wait_for(surface.continue_button_visible_selector, timeout=self._navigation_timeout_ms)
         await click(surface.continue_button_selector)
         await self._raise_if_pending_request_error(page)
+
+    async def _observe_clave_page(self, page: BrowserPagePort, target_path: str) -> ClaveMovilPageState:
+        content = getattr(page, "content", None)
+        if content is None:
+            raise AeatLoginAssertionError("Authentication requires browser page content observation")
+        try:
+            html = await content()
+        except PlaywrightError:
+            # A document replacement can race the observation. The bounded
+            # driver observes again before choosing any action.
+            return ClaveMovilPageState.UNKNOWN
+        state = classify_clave_movil_page(
+            url=page.url,
+            html=html,
+            target_path=target_path,
+            settings=self._settings,
+        )
+        if state is ClaveMovilPageState.UNTRUSTED:
+            raise AeatLoginAssertionError("Authentication left the trusted AEAT authority")
+        return state
+
+    async def _drive_clave_entry(self, page: BrowserPagePort, *, dni_nie: str, target_path: str) -> None:
+        """Reach a challenge or accepted session from the state AEAT actually renders."""
+        acted: set[ClaveMovilPageState] = set()
+        try:
+            async with asyncio.timeout(self._navigation_timeout_ms / 1000) as budget:
+                while True:
+                    state = await self._observe_clave_page(page, target_path)
+                    await self._raise_if_pending_request_error(page)
+                    if state in {
+                        ClaveMovilPageState.WAITING,
+                        ClaveMovilPageState.REPRESENTATION,
+                        ClaveMovilPageState.AUTHENTICATED,
+                    }:
+                        return
+                    if state is ClaveMovilPageState.QR and not self._settings.cadrumo_clave_prefer_non_qr:
+                        return
+                    # Never send a second identity submission merely because its
+                    # asynchronous response has not replaced the form yet.
+                    if state not in acted:
+                        if state is ClaveMovilPageState.SELECTOR:
+                            await self._click_clave_movil_button(page)
+                        elif state is ClaveMovilPageState.QR:
+                            await page.click(self._clave_surface().non_qr_link_selector)
+                        elif state is ClaveMovilPageState.IDENTITY:
+                            await self._drive_non_qr_fallback(page, dni_nie)
+                            # The submission issues AEAT's petition, which stays valid for the
+                            # whole approval window; page-load budgets must not cut it short.
+                            budget.reschedule(
+                                asyncio.get_running_loop().time() + self._settings.cadrumo_clave_movil_timeout_ms / 1000
+                            )
+                        if state is not ClaveMovilPageState.UNKNOWN:
+                            acted.add(state)
+                    await asyncio.sleep(0.2)
+        except TimeoutError as exc:
+            await self._cancel_pending_auth_request(page)
+            diagnostic_id = await self._dump_diagnostic(page, reason="clave-entry-state-not-reached")
+            raise ClaveMovilApprovalTimeoutError(
+                "AEAT Cl@ve Móvil did not reach a recognised waiting, representation or "
+                "authenticated state within the login budget.",
+                failure_mode=ClaveMovilFailureMode.PUSH_WAIT_STATE_NOT_REACHED,
+                context={
+                    "reason": "aeat-clave-movil-entry-state-not-reached",
+                    "current_url": _url_diagnostic(getattr(page, "url", "") or ""),
+                    "target_path": target_path,
+                    "diagnostic_id": diagnostic_id,
+                },
+            ) from exc
 
     async def _push_wait_state_signals(
         self,
@@ -251,7 +313,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         await self._raise_if_pending_request_error(page)
         current_url = getattr(page, "url", "") or ""
         surface = self._clave_surface()
-        if target_path in current_url and surface.selector_access_path_marker not in current_url:
+        if await self._observe_clave_page(page, target_path) is ClaveMovilPageState.AUTHENTICATED:
             return
         if verification_code:
             return
@@ -549,7 +611,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             current = getattr(page, "url", "") or ""
             surface = self._clave_surface()
             await self._raise_if_pending_request_error(page)
-            if target_path in current and surface.selector_access_path_marker not in current:
+            if await self._observe_clave_page(page, target_path) is ClaveMovilPageState.AUTHENTICATED:
                 return
             # Only match the representation dispatcher when it is the URL PATH,
             # not the `ref=` query parameter (which contains it URL-
@@ -598,7 +660,17 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             await self._dismiss_pre303_alert_modal_if_present(page)
             if not await self._own_name_representation_is_already_selected(page):
                 await click(selected_own_name)
-            await click(pre303.representation_submit_selector)
+            try:
+                await click(pre303.representation_submit_selector, strict=True, timeout=self._navigation_timeout_ms)
+            except PlaywrightTimeoutError:
+                # AEAT can show its alert after the initial DOM inspection,
+                # covering the confirmation while Playwright waits to click.
+                # Retry once only after actually dismissing that known overlay.
+                if not await self._dismiss_pre303_alert_modal_if_present(page):
+                    raise
+                if not await self._own_name_representation_is_already_selected(page):
+                    await click(selected_own_name)
+                await click(pre303.representation_submit_selector, strict=True, timeout=self._navigation_timeout_ms)
         except PlaywrightError as exc:
             raise AeatLoginAssertionError(
                 "AEAT representation gate did not expose the own-name continuation expected for the "
@@ -646,7 +718,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             )
         return own_name is not None and _html_input_checked(own_name)
 
-    async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPagePort) -> None:
+    async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPagePort) -> bool:
         """Dismiss the visible Pre303 alert modal before submitting own-name access.
 
         Delegates to the canonical, collapsed implementation in
@@ -658,7 +730,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         behaviour unchanged.
         """
         pre303 = self._settings.external_constants().aeat.pre303
-        await dismiss_pre303_alert_modal_if_present(
+        return await dismiss_pre303_alert_modal_if_present(
             page,
             alert_modal_selector=pre303.alert_modal_selector,
             alert_continue_button_text=pre303.alert_continue_button_text,

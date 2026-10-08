@@ -22,6 +22,7 @@ from ._kdf_codec import (
 from ._kdf_codec import (
     decode_canonical_b64 as _decode_canonical_b64,
 )
+from ._kdf_records import DEK_EPOCH_BYTES
 from .errors import ProfileCustodyRecordError
 from .records import ProfileCustodyEnvelope
 
@@ -91,7 +92,7 @@ class ProfileCustodySentinelRecord(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _validate_epoch(cls, value: str) -> str:
-        _decode_canonical_b64(value, field_name="dek_epoch", expected_bytes=16)
+        _decode_canonical_b64(value, field_name="dek_epoch", expected_bytes=DEK_EPOCH_BYTES)
         return value
 
     @field_validator("nonce_b64")

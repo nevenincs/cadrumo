@@ -32,13 +32,12 @@ import pytest
 
 from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..redaction.rules import redact_for_cli_output, redact_for_log
+from .redaction_span_recovery import recover_replaced_spans
 from .test_redaction_population_coverage import (
-    _DIGEST_RE,
     _admitting_authority,
-    _recover_hashed_spans,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("authority_operation")]
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 RECORDED_SEQUENCES = REPOSITORY_ROOT / "docs" / "_sequences"
@@ -119,13 +118,11 @@ def test_no_recorded_operator_line_is_rewritten_unless_it_carries_an_identity() 
             emitted = funnel(line)
             if emitted == line:
                 continue
-            for digest in _DIGEST_RE.findall(emitted):
-                spans = _recover_hashed_spans(line, digest)
-                admitted = {span for span in spans if _admitting_authority(span)}
-                if admitted:
-                    redacted_tokens |= admitted
+            for span in recover_replaced_spans(line, emitted):
+                if span in redacted_tokens or _admitting_authority(span):
+                    redacted_tokens.add(span)
                     continue
-                violations.append(f"{funnel_name}: {line!r} -> {emitted!r} (hashed {sorted(spans)!r})")
+                violations.append(f"{funnel_name}: {line!r} -> {emitted!r} (hashed {span!r})")
 
     assert not violations, "the funnel rewrote recorded operator output that carries no identity:\n" + "\n".join(
         violations[:20]

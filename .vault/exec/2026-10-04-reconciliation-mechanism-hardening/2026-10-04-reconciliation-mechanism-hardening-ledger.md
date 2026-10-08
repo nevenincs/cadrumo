@@ -1,0 +1,185 @@
+---
+tags:
+  - '#exec'
+  - '#reconciliation-mechanism-hardening'
+date: '2026-10-04'
+modified: '2026-10-04'
+body_schema: 'body-v2'
+body_hash: 'sha256:e403e2a2832835add285a236251cc37c5071bac3f7653aefa969ee70c00e129d'
+related:
+  - "[[2026-10-04-reconciliation-mechanism-hardening-plan]]"
+---
+
+# `reconciliation-mechanism-hardening` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/application/modelo/pulled_filing_reconcile.py`
+- `S01` `M` `src/cadrumo/application/modelo/verification_model_findings.py`
+- `S01` `M` `src/cadrumo/adapters/persistence/profile/tests/test_pulled_filing_divergence_reconcile.py`
+- `S01` `verify:` `focused encrypted working-calculation tests (11 cases)` -> `pass`
+- `S01` `verify:` `scoped Ruff format ty basedpyright pyrefly private-import checks` -> `pass`
+- `S01` `verify:` `independent S01 code review` -> `pass`
+- `S01` `by:` `mirror_fix`
+- `S02` `M` `src/cadrumo/application/modelo/filing_chain_reconciliation.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_filing_chain_reconciliation.py`
+- `S02` `M` `src/cadrumo/locales/en/application.yml`
+- `S02` `M` `src/cadrumo/locales/es/application.yml`
+- `S02` `M` `src/cadrumo/locales/ca/application.yml`
+- `S02` `M` `src/cadrumo/locales/hu/application.yml`
+- `S02` `verify:` `pytest -n0 test_filing_chain_reconciliation.py (23 cases)` -> `pass`
+- `S02` `verify:` `scoped Ruff format ty basedpyright pyrefly and canonical private-import checks` -> `pass`
+- `S02` `verify:` `independent S02 corrected replay review` -> `pass`
+- `S02` `by:` `root`
+- `S03` `M` `src/cadrumo/application/modelo/_m303_m349_reconcile.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_m303_m349_intracom_reconcile.py`
+- `S03` `A` `src/cadrumo/adapters/persistence/profile/tests/test_cross_model_reconciliation_persistence.py`
+- `S03` `M` `src/cadrumo/application/modelo/finding_message_text.py`
+- `S03` `A` `src/cadrumo/entrypoints/tests/reconciliation_finding_fixtures.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_verification_report_view.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py`
+- `S03` `M` `src/cadrumo/locales/en/application.yml`
+- `S03` `M` `src/cadrumo/locales/es/application.yml`
+- `S03` `M` `src/cadrumo/locales/ca/application.yml`
+- `S03` `M` `src/cadrumo/locales/hu/application.yml`
+- `S03` `verify:` `combined working and cross-model tests (32 cases)` -> `pass`
+- `S03` `verify:` `CLI TUI and shared finding renderer tests (13 cases)` -> `pass`
+- `S03` `verify:` `scoped Ruff format ty basedpyright pyrefly canonical private-import checks` -> `pass`
+- `S03` `verify:` `independent S03 review including renderer correction` -> `pass`
+- `S03` `by:` `mirror_fix`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation.py`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation_records.py`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
+- `S05` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_modelo_reconcile_cli.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_payloads_modelo_reconcile.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_pull.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_reconciliation_import.py`
+- `S05` `A` `src/cadrumo/adapters/persistence/profile/tests/test_reconciliation_revision_provenance.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_pull_operation.py`
+- `S05` `M` `src/cadrumo/locales/en/cli.yml`
+- `S05` `M` `src/cadrumo/locales/es/cli.yml`
+- `S05` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S05` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S05` `verify:` `37 focused reconciliation and 3 provenance coverage tests` -> `pass`
+- `S05` `verify:` `7 registered pull-operation tests including explicit missing-ID refusal` -> `pass`
+- `S05` `verify:` `Ruff format ty basedpyright pyrefly canonical private static imports` -> `pass`
+- `S05` `verify:` `actual CLI explicit-revision retained receipt import and encrypted readback` -> `pass`
+- `S05` `verify:` `independent S05 review` -> `pass`
+- `S05` `by:` `receipt_fix`
+- `S04` `M` `src/cadrumo/application/modelo/iva_wallet_gate.py`
+- `S04` `M` `src/cadrumo/application/modelo/iva_wallet_seed.py`
+- `S04` `M` `src/cadrumo/domain/iva_compensation/reconciliation.py`
+- `S04` `M` `src/cadrumo/application/modelo/export.py`
+- `S04` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S04` `M` `src/cadrumo/application/modelo/verification_gate_findings.py`
+- `S04` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S04` `M` `src/cadrumo/application/modelo/export_ports.py`
+- `S04` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/live_state_composition.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/calculation_observations.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_iva_wallet_correction.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_export_ports_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/_iva_wallet_engine_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_lifecycle_gate.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_overrides.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_filing.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_iva_wallet.py`
+- `S04` `verify:` `33 wallet lifecycle domain live and encrypted persistence tests` -> `pass`
+- `S04` `verify:` `23 correction override and history tests` -> `pass`
+- `S04` `verify:` `9 verify file refile export tests` -> `pass`
+- `S04` `verify:` `Ruff format ty basedpyright pyrefly canonical private static imports` -> `pass`
+- `S04` `verify:` `independent S04 review` -> `pass`
+- `S04` `by:` `receipt_fix`
+- `S06` `M` `src/cadrumo/application/aeat_sync/_workspace_projection.py`
+- `S06` `M` `src/cadrumo/application/aeat_sync/reconciliation_reader.py`
+- `S06` `M` `src/cadrumo/application/aeat_sync/tests/test_reconciliation_reader.py`
+- `S06` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S06` `M` `src/cadrumo/application/search/installed_workbench.py`
+- `S06` `M` `src/cadrumo/application/search/tests/test_installed_workbench.py`
+- `S06` `M` `src/cadrumo/application/workbench_generation_public_contracts.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/aeat_sync/screens.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py`
+- `S06` `M` `src/cadrumo/locales/en/common.yml`
+- `S06` `M` `src/cadrumo/locales/es/common.yml`
+- `S06` `M` `src/cadrumo/locales/ca/common.yml`
+- `S06` `M` `src/cadrumo/locales/hu/common.yml`
+- `S06` `verify:` `78 AEAT Sync and search unit tests` -> `pass`
+- `S06` `verify:` `106 AEAT Sync integration tests` -> `pass`
+- `S06` `verify:` `11 persisted comparison readback tests and exact revision TUI detail test` -> `pass`
+- `S06` `verify:` `scoped Ruff format ty basedpyright pyrefly and 11-file canonical private imports` -> `pass`
+- `S06` `verify:` `manual runtime actual CLI exact-ID receipt import and history` -> `pass`
+- `S06` `verify:` `manual runtime installed uninstrumented TUI 4 comparisons 30 rows 28 differences` -> `pass`
+- `S06` `verify:` `encrypted history local calculation unchanged and no local filing created` -> `pass`
+- `S06` `verify:` `independent integrated code and manual-runtime review` -> `pass`
+- `S06` `by:` `root`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S07` `A` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_submitted_file_coverage.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part2.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/_declarations_support.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_filing.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_workbench_help_queue.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S07` `M` `.vault/audit/2026-10-04-reconciliation-mechanism-hardening-audit.md`
+- `S07` `verify:` `authenticated CLI iva-wallet pull and pull-history 2023-2026` -> `pass`
+- `S07` `verify:` `encrypted wallet history FIFO and calculation readback` -> `pass`
+- `S07` `verify:` `CLI calculate verify export and exported casilla110 parse roundtrip` -> `pass`
+- `S07` `verify:` `installed TUI saved wallet value imported origin and help panel` -> `pass`
+- `S07` `verify:` `focused optional coverage and IVA lifecycle 11 tests` -> `pass`
+- `S07` `verify:` `corrected declaration adapter fixtures 37 tests` -> `pass`
+- `S07` `verify:` `corrected positive IVA filing lifecycle 3 tests` -> `pass`
+- `S07` `verify:` `help concurrency cancellation identity deadline 5 tests` -> `pass`
+- `S07` `verify:` `scoped Ruff format ty basedpyright pyrefly and private imports` -> `pass`
+- `S07` `verify:` `native human generation test MCP contract precondition` -> `fail`
+- `S07` `by:` `root`
+- `S07` `M` `src/cadrumo/application/runtime/projection_pages.py`
+- `S07` `M` `src/cadrumo/application/runtime/tests/test_projection_pages.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/test_projection_page_client.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_projection_pages.py`
+- `S07` `verify:` `Focused projection page application/client tests 23` -> `pass`
+- `S07` `verify:` `Native Windows multipage inventory and global lock continuation refusal` -> `pass`
+- `S07` `verify:` `Installed restarted runtime TUI reconciliation 28 local remote detail values` -> `pass`
+- `S07` `verify:` `Installed restarted runtime TUI wallet casilla and editor` -> `pass`
+- `S07` `verify:` `Projection production Ruff format ty basedpyright pyrefly` -> `pass`
+- `S07` `verify:` `Paging tests Ruff format ty` -> `pass`
+- `S07` `verify:` `Independent S07 integrated review` -> `pass`
+- `S07` `verify:` `Canonical scoped private import scan 12 files zero findings` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S08` `M` `.vault/audit/2026-10-04-reconciliation-mechanism-hardening-audit.md`
+- `S08` `verify:` `Restricted session tests 13` -> `pass`
+- `S08` `verify:` `Native launcher session switching` -> `pass`
+- `S08` `verify:` `Native human workbench full regression` -> `pass`
+- `S08` `verify:` `Ruff format ty and production basedpyright pyrefly` -> `pass`
+- `S08` `verify:` `Integrated scope review` -> `pass`
+- `S08` `by:` `root`
+- `S09` `M` `src/cadrumo/application/operations/registry_schema_validation.py`
+- `S09` `M` `src/cadrumo/application/operations/tests/test_registry_schema_validation.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/worker_service.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_human_admission_preparation.py`
+- `S09` `M` `.vault/audit/2026-10-04-reconciliation-mechanism-hardening-audit.md`
+- `S09` `verify:` `Schema and startup diagnostics tests22` -> `pass`
+- `S09` `verify:` `Cold and shared native admission three fresh workers` -> `pass`
+- `S09` `verify:` `Original populated native workbench current authority` -> `pass`
+- `S09` `verify:` `Ruff format ty and configured strict schema checks` -> `pass`
+- `S09` `verify:` `Scoped private import scan six files` -> `pass`
+- `S09` `verify:` `Scoped independent mitigation review` -> `pass`
+- `S09` `by:` `root`
+
+## Notes
+
+- `S06` Two earlier TUI startup attempts timed out; later installed runs and final manual-owner acceptance passed. Startup reliability is not claimed fixed.
+- `S06` Repository-wide import gate not green; unrelated generated metadata and concurrent changes excluded.
+- `S07` Live acceptance uses a synthetic local calculation with genuine encrypted AEAT evidence; no remote submission or local filing.
+- `S07` Native suite failed before help checks at unrelated MCP contract denial timeout; not counted as passing.
+- `S07` One uninstrumented TUI root run refused intermittently; subsequent direct root and instrumented installed calculation run passed; final reconciliation run pending.
+- `S07` Broad native workbench test retains unrelated MCP `frontend_denied` precondition failure before help assertions; no full repository green claim. Live history starts2023 and does not establish immediate target predecessor; `wallet_only` authority retained. No official submission or payment.
+- `S08` Intermediate human admission timeout recorded in audit; isolated native reruns pass without production deadline changes. Preserve unrelated working-tree styling hunks.
+- `S09` Checkpoint verified performance mitigation and stage diagnostics. S09 stays open: historical intermittent admission timeout not reproduced with phase evidence, so exact attribution remains pending.

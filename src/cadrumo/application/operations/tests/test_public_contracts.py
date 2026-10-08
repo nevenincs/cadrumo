@@ -6,8 +6,9 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated, TypedDict
 
 import pytest
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -29,11 +30,7 @@ from ..capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..frontend_contracts import (
-    OperationObservationResultV1,
-    OperationReviewProjectionResultV1,
-    OperationWorkspaceRefreshTargetResultV1,
-)
+from ..frontend_contracts import OperationReviewProjectionResultV1, OperationWorkspaceRefreshTargetResultV1
 from ..frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProgressV1,
@@ -51,6 +48,7 @@ from ..frontend_requests import (
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
     OperationObservationRequestV1,
+    OperationObservationResultV1,
     OperationObservationSuccessV1,
     OperationObservationVersionHeader,
     OperationPublicEventPageV1,
@@ -70,19 +68,18 @@ from ..frontend_requests import (
     OperationWorkspaceRefreshTargetVersionHeader,
 )
 from ..models import OperationRequest
+from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..owner import OperationExecutorContext
 from ..persistence.replay import OperationReplayStatus
 from ..registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
-    OperationSchemaIdentityV1,
 )
+from ..schema_identity import OperationSchemaIdentityV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -98,7 +95,7 @@ _SCHEMA = OperationSchemaIdentityV1(
 
 
 class SafeProjection(BaseModel):
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+    model_config = STRICT_FROZEN_CONFIG
     code: Annotated[str, Field(min_length=1)]
 
 

@@ -8,12 +8,14 @@ import shutil
 import subprocess
 import sys
 import threading
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import suppress
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.recovery_key import (
     RECOVERY_CODE_ALPHABET,
     RECOVERY_CODE_GROUP_COUNT,
@@ -22,9 +24,11 @@ from cadrumo.adapters.persistence.storage.recovery_key import (
 )
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 
-from ....core.config import load_settings
+from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ....core.config import load_settings, override_settings
+from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.inventory import SRC_CADRUMO
-from ..config.tests.isolated_storage_fixture import COMPLETE_NATURAL_PERSON_FLAGS
+from ..config.tests.isolated_storage_fixture import COMPLETE_NATURAL_PERSON_FLAGS, native_profile_view_server
 from ._machine_secret_channels_support import (
     _CERTIFICATE_INPUT,
     _HARNESS,
@@ -42,6 +46,7 @@ from ._machine_secret_channels_support import (
     bootstrap_interpreter,
     cleanup_keychain,
 )
+from ._machine_secret_channels_support import host_profile_runtime as host_profile_runtime
 from .password_only_profile import FIXTURE_PROFILE_INPUT, register_password_only_profile
 from .subprocess_cli import as_text_completed_process, subprocess_cli_env
 
@@ -70,9 +75,12 @@ def _authority_root_environment() -> dict[str, str]:
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
-def test_login_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
+def test_login_succeeds_through_each_leaf_channel(
+    tmp_path: Path, channel: str, host_profile_runtime: Callable[[Path], None]
+) -> None:
     root = tmp_path / "login"
     register_password_only_profile(root)
+    host_profile_runtime(root)
     payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
     args = ["--format", "json", "config", "login", "s13-operator"]
     result = (
@@ -151,7 +159,7 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
                 encoding="utf-8",
                 capture_output=True,
                 check=False,
-                timeout=120,
+                timeout=None,
                 close_fds=True,
                 startupinfo=startup,
             )
@@ -175,7 +183,7 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
                 encoding="utf-8",
                 capture_output=True,
                 check=False,
-                timeout=120,
+                timeout=None,
                 pass_fds=tuple(descriptors),
             )
     finally:
@@ -227,9 +235,17 @@ def test_profile_recovery_enable_succeeds_through_each_leaf_channel(tmp_path: Pa
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
+@pytest.mark.windows_only
 def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
+    """The installed CLI rotates only its selected profile through the native worker."""
     root = tmp_path / f"rotate-{channel}"
-    register_password_only_profile(root)
+    selected = register_password_only_profile(root, label="rotation-target")
+    other = register_password_only_profile(root, label="untouched-profile")
+    selected_id, other_id = UUID(selected.profile_id), UUID(other.profile_id)
+    with override_settings(cadrumo_local_storage_root=root):
+        ProfileCapsuleLifecycle().select(selected.profile_id)
+    selected_before = load_committed_profile_password_material(selected_id, root=root)
+    other_before = load_committed_profile_password_material(other_id, root=root)
     payload = json.dumps(
         {
             "current_passphrase": FIXTURE_PROFILE_INPUT,
@@ -238,13 +254,36 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
         }
     )
     args = ["--format", "json", "config", "passphrase", "change"]
-    result = (
-        _run(root, [*args, "--secrets-stdin"], stdin=payload)
-        if channel == "stdin"
-        else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
-    )
-    document = _assert_success(result, root)
-    assert document["result"]["changed"] is True
+    with native_profile_view_server(root):
+        result = (
+            _run(root, [*args, "--secrets-stdin"], stdin=payload)
+            if channel == "stdin"
+            else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
+        )
+        document = _assert_success(result, root)
+        reopened = _run(
+            root,
+            ["--format", "json", "config", "login", "rotation-target", "--secrets-stdin"],
+            stdin=json.dumps({"passphrase": _NEW_PROFILE_INPUT}),
+        )
+        login_document = _assert_success(reopened, root)
+    assert document["status"] == "success"
+    assert document["command"] == "config.passphrase.change"
+    assert document["result"] == {
+        "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+        "changed": True,
+        "password_generation": selected_before.envelope.password_generation + 1,
+        "dek_epoch_preserved": True,
+        "recovery_enrollment_retained": False,
+    }
+    selected_after = load_committed_profile_password_material(selected_id, root=root)
+    other_after = load_committed_profile_password_material(other_id, root=root)
+    assert selected_after.envelope.password_generation == selected_before.envelope.password_generation + 1
+    assert selected_after.envelope.dek_epoch == selected_before.envelope.dek_epoch
+    assert other_after.commit == other_before.commit
+    assert other_after.envelope == other_before.envelope
+
+    assert login_document["command"] == "config.login"
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
@@ -273,9 +312,10 @@ def test_restore_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str
     assert document["result"]["recovery_enrolled"] is False
 
 
-def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
+def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path, host_profile_runtime: Callable[[Path], None]) -> None:
     root = tmp_path / "fd-zero"
     outcome = register_password_only_profile(root)
+    host_profile_runtime(root)
     result = _run(
         root,
         ["--format", "json", "config", "login", outcome.profile_id, "--secrets-fd", "0"],
@@ -286,9 +326,12 @@ def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
     assert "S13_DESCRIPTOR_CLOSED" in result.stderr
 
 
-def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(tmp_path: Path) -> None:
+def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(
+    tmp_path: Path, host_profile_runtime: Callable[[Path], None]
+) -> None:
     root = tmp_path / "root-read"
     register_password_only_profile(root, label="root-reader")
+    host_profile_runtime(root)
     result = _run(
         root,
         ["--format", "json", "--profile-secrets-stdin", "config", "profile", "history", "root-reader"],
@@ -303,10 +346,11 @@ def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(tmp_path: Path
     "sources", (("profile-fd", "leaf-stdin"), ("profile-stdin", "leaf-fd"), ("profile-fd", "leaf-fd"))
 )
 def test_certificate_write_accepts_every_valid_dual_source_combination(
-    tmp_path: Path, sources: tuple[str, str]
+    tmp_path: Path, sources: tuple[str, str], host_profile_runtime: Callable[[Path], None]
 ) -> None:
     root = tmp_path / "certificate"
     register_password_only_profile(root, label="cert-operator")
+    host_profile_runtime(root)
     _register_certificate_source(root, name="s13-cert")
     profile_payload = json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT})
     leaf_payload = json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT})
@@ -340,10 +384,13 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
     assert result.stderr.count("S13_DESCRIPTOR_CLOSED") == len(inherited)
 
 
-def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -> None:
+def test_platform_descriptor_bootstrap_authenticates_real_read(
+    tmp_path: Path, host_profile_runtime: Callable[[Path], None]
+) -> None:
     if sys.platform != "win32":
         root = tmp_path / "posix-descriptor-reader"
         register_password_only_profile(root, label="posix-reader")
+        host_profile_runtime(root)
         result = _run(
             root,
             [
@@ -368,6 +415,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
 
     root = tmp_path / "windows-handle"
     register_password_only_profile(root, label="windows-reader")
+    host_profile_runtime(root)
     reader, writer = os.pipe()
     try:
         os.write(writer, json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}).encode())
@@ -409,7 +457,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=180,
+            timeout=None,
             close_fds=True,
             startupinfo=startup,
         )
@@ -527,7 +575,7 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=45,
+            timeout=None,
             close_fds=True,
             startupinfo=startup,
             after_spawn=release_parent_copies,
@@ -604,7 +652,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path
             encoding="utf-8",
             capture_output=True,
             check=False,
-            timeout=45,
+            timeout=None,
             pass_fds=(handoff_writer, verification_reader),
         )
     finally:
@@ -627,11 +675,13 @@ def test_platform_recovery_descriptors_complete_real_headless_enrolment(tmp_path
 
 def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_write(
     tmp_path: Path,
+    host_profile_runtime: Callable[[Path], None],
 ) -> None:
     """The platform descriptor route composes with portable leaf stdin."""
     if sys.platform != "win32":
         root = tmp_path / "posix-descriptor-certificate"
         register_password_only_profile(root, label="posix-writer")
+        host_profile_runtime(root)
         _register_certificate_source(root, name="s13-posix-cert")
         result = _run(
             root,
@@ -663,6 +713,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
 
     root = tmp_path / "windows-certificate"
     register_password_only_profile(root, label="windows-writer")
+    host_profile_runtime(root)
     _register_certificate_source(root, name="s13-windows-cert")
     reader, writer = os.pipe()
     try:
@@ -710,7 +761,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=180,
+            timeout=None,
             close_fds=True,
             startupinfo=startup,
         )
@@ -835,7 +886,8 @@ def _cold_profile_templates(tmp_path_factory: pytest.TempPathFactory) -> Iterato
     complete = base / "complete"
     register_password_only_profile(incomplete)
     register_password_only_profile(complete)
-    _complete_registered_profile(complete, flags=COMPLETE_NATURAL_PERSON_FLAGS)
+    with native_profile_view_server(complete):
+        _complete_registered_profile(complete, flags=COMPLETE_NATURAL_PERSON_FLAGS)
     try:
         yield {"incomplete": incomplete, "complete": complete}
     finally:
@@ -851,6 +903,7 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
     leaf: str,
     argv: tuple[str, ...],
     stdin: str | None,
+    host_profile_runtime: Callable[[Path], None],
 ) -> None:
     """No profile leaf may depend on an earlier command having warmed the process.
 
@@ -864,7 +917,15 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
     of its own fresh process, against a record in each setup state.
     """
     root = tmp_path / "storage"
-    shutil.copytree(_cold_profile_templates[state], root)
+    template = _cold_profile_templates[state]
+
+    def omit_template_runtime(source: str, names: list[str]) -> set[str]:
+        # Installation identity pins the template's physical root; the copied
+        # capsule gets a fresh installed owner for this isolated subprocess.
+        return {".runtime"} if Path(source).resolve() == template.resolve() and ".runtime" in names else set()
+
+    shutil.copytree(template, root, ignore=omit_template_runtime)
+    host_profile_runtime(root)
     archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
     if leaf == "archive-inspect":
         exported = _run(

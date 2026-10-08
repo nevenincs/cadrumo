@@ -168,7 +168,7 @@
         {
           "json_path": "result.work_unit_id",
           "name": "work_unit_id",
-          "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "value": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
         }
       ],
       "envelope": null,
@@ -234,7 +234,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e"
+          "value": "ff7223ef27865b2619904450c10e5012d1485be892fe64fcdb8505864d85cb56"
         }
       ],
       "envelope": null,
@@ -251,7 +251,7 @@
         "modelo",
         "work",
         "verify",
-        "3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e"
+        "ff7223ef27865b2619904450c10e5012d1485be892fe64fcdb8505864d85cb56"
       ],
       "captures": [],
       "envelope": null,
@@ -259,7 +259,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.verify\nverification_report_id\t0c839cf5d29ab606cd461d8ac77d51cbe8c991550881579101b5f4792b10ffbf\ncalculation_revision_id\t3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t3\nfinding\tadvisory\twarning\t\tModelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form\nfinding\tadvisory\twarning\t\tAn output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late\nfinding\tadvisory\twarning\t\tAn output transaction has no supporting evidence (binding bf64e35fb5ecb5fa5bb10d7053d2506eab6adc12441bdf97c3bc09a288b6d063, source output_iva_evidence, reason missing_transaction_evidence).\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late\nnotice\tmodelo.work.verify.finding.advisory\tModelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.\nnotice\tmodelo.work.verify.finding.advisory\tAn output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).\nnotice\tmodelo.work.verify.finding.advisory\tAn output transaction has no supporting evidence (binding bf64e35fb5ecb5fa5bb10d7053d2506eab6adc12441bdf97c3bc09a288b6d063, source output_iva_evidence, reason missing_transaction_evidence).\n"
+      "text": "operation\tmodelo.work.verify\nverification_report_id\t4236d73f0819a12581f7bd90b0e9720393c650e43237de8ebc66b86226b78ae4\ncalculation_revision_id\tff7223ef27865b2619904450c10e5012d1485be892fe64fcdb8505864d85cb56\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t3\nfinding\tadvisory\twarning\t\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf\nnotice\tmodelo.work.verify.finding.advisory\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -268,7 +268,7 @@
         "modelo",
         "work",
         "file",
-        "3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e"
+        "ff7223ef27865b2619904450c10e5012d1485be892fe64fcdb8505864d85cb56"
       ],
       "captures": [],
       "envelope": null,
@@ -276,7 +276,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\ta7202acebd694b2aed279beb8a453e0beea783c4754660103523cb9815b82147\nwork_unit_id\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\ncalculation_revision_id\t3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\tc929ac861d11225df1071fff4e0f11fee181da4b314add36d3c53f00e2f8bdb0\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\tff7223ef27865b2619904450c10e5012d1485be892fe64fcdb8505864d85cb56\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -286,9 +286,9 @@
         "app",
         "modelo",
         "export",
-        "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
+        "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53",
         "--revision",
-        "3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e",
+        "ff7223ef27865b2619904450c10e5012d1485be892fe64fcdb8505864d85cb56",
         "--output",
         "./modelo-303-revision.boe"
       ],
@@ -306,7 +306,7 @@
               "modelo": "303",
               "period": "1T"
             },
-            "message": "The local export is not official filing evidence.",
+            "message": "The exported file is not an AEAT filing receipt.",
             "severity": "warning"
           },
           {
@@ -318,21 +318,44 @@
               "period": "1T",
               "software_identity_grade": "development_mock"
             },
-            "message": "The file header carries Cadrumo's all-zero development software identity; AEAT will not accept this file for presentation.",
+            "message": "AEAT will not accept this file for filing: it contains Cadrumo's all-zero development software identity. Enter the calculated box values in the AEAT form instead.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
         "result": {
-          "bucket_event_id": "9e6475a8f5a2fd4055d81e65028cba05b384c0d389ae1ad82086eff6f0459832",
+          "bucket_event_id": "b1b8cecb20020893e921d5ad365d4fa5b7b0e1e4830fc4c26a2a24503e07b17d",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e",
-          "file_sha256": "1c6bf3c68518187e6a81d35a804421bb026341959b6e604f789b19c4f97aa782",
+          "calculation_revision_id": "ff7223ef27865b2619904450c10e5012d1485be892fe64fcdb8505864d85cb56",
+          "file_sha256": "ba0b3588150a97b3d24687469f152f084a6fdfbcc718302649321032a17332ed",
           "filing_year": 2026,
           "format": "fichero-boe",
+          "iva_wallet_decision_provenance": {
+            "authority_source_kinds": [
+              "local_recurrence"
+            ],
+            "authority_source_refs": [
+              "sha256:64bc1cee701fc87c375234c8799bc82399c69968a5cc5e312b265e764a3ed334"
+            ],
+            "decision_ref": "sha256:4c310e680d2cfcf762e02632eb11d35a3e3c1bcd873094cf589fa50bb526a362",
+            "divergence": "first_period_zero",
+            "selected_authority": "local_recurrence",
+            "target_period": {
+              "code": "1T",
+              "filing_year": 2026
+            },
+            "target_year": 2026
+          },
           "modelo": "303",
           "operation": "modelo.export",
-          "output_path": "modelo-303-revision.boe",
+          "output_path": "<sandbox-workdir>/modelo-303-revision.boe",
           "payment_election": "ingreso",
           "period": {
             "code": "1T",
@@ -348,7 +371,7 @@
           "refund_election": null,
           "resolved_result_disposition": "I",
           "software_identity_grade": "development_mock",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
         },
         "schema_version": "2",
         "status": "warning"

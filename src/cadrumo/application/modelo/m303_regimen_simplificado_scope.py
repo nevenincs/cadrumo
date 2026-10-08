@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.iva_schema_vocabulary import (
+from ...domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
 from ...domain.deadlines.models import M303RegimeComposition, TaxpayerProfile

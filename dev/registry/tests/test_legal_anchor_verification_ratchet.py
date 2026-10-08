@@ -27,8 +27,9 @@ from typing import Final
 
 import pytest
 
-from cadrumo.core.corpus_text import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
+from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.resources.bundled_data import bundled_path
+from dev.corpus.text import resolve_anchored_extracted_unit
 
 from .catalogue_verification_support import authored_catalogues
 

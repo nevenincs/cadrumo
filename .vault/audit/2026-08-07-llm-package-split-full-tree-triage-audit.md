@@ -3,33 +3,29 @@ tags:
   - '#audit'
   - '#llm-package-split'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b0d3cedcac1bcc359cc70635701a76c2c783516fe412b4355d95feb3e35fe1d0'
+body_hash: 'sha256:cd78ea5942154df87648508c30cb9c8bea6e2d1173b0d6b7c9acc2b8bb9ee756'
 related:
-  - "[[2026-08-06-llm-package-split-plan]]"
   - "[[2026-08-07-llm-package-split-plan-tracker-reconciliation-audit]]"
 ---
-
 # `llm-package-split` audit: `Full-tree triage: what the whole-suite run found, and who owns it`
 
 ## Scope
 
-## Findings
-
-## Recommendations
-
-## Context
+### Context
 
 The invoice campaign's close review left "the whole-tree suite has not run since the deletions" as its last open item. It has now run: **24,245 passed, 127 failed, 8 errors, 34 minutes**. This is the owner triage, because in this worktree a red whole-tree gate is mostly other people's in-flight work and a number without attribution is not actionable.
 
-## Owned and fixed
+## Findings
+
+### Owned and fixed
 
 One failure was genuinely mine. Making `counterparty_country` required on the evidence-confirm path left two CLI suites still invoking the verb without it: `test_ledger_evidence_printed_total_notice` and `test_ledger_evidence_self_counterparty`, six invocations between them. Both sit outside every path-scoped suite the change was verified against.
 
 That is the whole argument for running the tree at least once. The change was verified across the invoice, ledger, CLI-conformance and evidence-confirm suites and every one was green; the two files that broke were reachable only from a run that selects everything. A scoped gate cannot tell you about the callers you did not think to scope.
 
-## Peer-owned, confirmed by inspection rather than assumed
+### Peer-owned, confirmed by inspection rather than assumed
 
 **The docs build.** Failing, and the failure MOVED between two runs minutes apart: first a control character in a `notes` field on a legal entry (`real-decreto-ley-4-2024:art-1`), then an `ImportError` for `UnroutedRentaQuantity` from `_ledger_bindings`. The first was fixed by its author while this triage was running. The second is an uncommitted edit in that same file, with consumers still importing the symbol. Both belong to the legal-grounding and IVA-binding work landing continuously through the morning.
 
@@ -41,6 +37,10 @@ That is the whole argument for running the tree at least once. The change was ve
 
 The gate itself names the remedy: promote to the owning package's facade, or add a named, reasoned debt entry in the same commit. Both are the author's call. Writing debt entries for another agent's actively-moving files would bless a state they may be mid-way through changing, and the reasons would be mine to invent rather than theirs to state.
 
-## A note on the instrument
+### A note on the instrument
 
 Running these gates under `xdist` produced `Different tests were collected between gw0 and gw1` across every worker -- a collection mismatch, not a test failure. The tree was changing under the run. Every triage above was re-run with `-n 0` before being believed. A parallel run against a worktree with several agents landing commits reports races as failures, and on this volume that is the default outcome rather than an unlucky one.
+
+## Recommendations
+
+Keep peer-owned failures with their owning feature and rerun the affected gates after the collection mismatch is resolved; do not treat a worker collection mismatch as a product failure.

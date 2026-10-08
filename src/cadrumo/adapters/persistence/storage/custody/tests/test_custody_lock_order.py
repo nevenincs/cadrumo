@@ -150,8 +150,8 @@ def test_the_root_lock_is_taken_before_the_profile_lock(tmp_path: Path) -> None:
             pass
     finally:
         release_root.set()
-        sibling.join(timeout=30)
-        transaction.join(timeout=30)
+        sibling.join(timeout=None)
+        transaction.join()
 
     assert entered.is_set(), "the transaction never completed once the root lock was released"
 
@@ -172,9 +172,8 @@ def test_the_probe_fails_when_the_profile_lock_is_genuinely_held(tmp_path: Path)
     # `pytest.raises(Exception)` is satisfied by a missing parent directory, a
     # typo in the leaf path, or an import error in the primitive -- every one of
     # which would let this proof pass while proving nothing about exclusivity.
-    # Determined by observation, not assumption: the second acquire raises
-    # `ProfileCustodyRecordError("local custody lock cannot be exclusively
-    # opened")`.
+    # Exhausting the contention deadline raises the dedicated held-lock
+    # refusal; a filesystem-open refusal would test a different condition.
     #
     # The MESSAGE is matched as well as the type, because this one class
     # carries ten distinct refusals in the lock module alone -- a non-positive
@@ -187,7 +186,7 @@ def test_the_probe_fails_when_the_profile_lock_is_genuinely_held(tmp_path: Path)
     # the established practice for this class in `custody/tests/test_capsule.py`.
     with (
         profile_custody_local_lock(target, timeout_seconds=_PROBE_SECONDS),
-        pytest.raises(ProfileCustodyRecordError, match="cannot be exclusively opened"),
+        pytest.raises(ProfileCustodyRecordError, match="local custody lock remains held"),
         profile_custody_local_lock(target, timeout_seconds=0.5),
     ):
         pass

@@ -3,13 +3,14 @@ tags:
   - '#reference'
   - '#modelo-work-binding-architecture'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:13b42826c71a569263f8e2ddc872c2a08cfdcf4447ce02ddadd21fb45fb4abb9'
+body_hash: 'sha256:de68433b5c47cc70ac96164fdf31e0e83050ba0db79f4c946ecf2d2715b34e66'
 related:
   - "[[2026-06-14-bindings-interface-hardening-adr]]"
   - "[[2026-06-10-period-revision-resolution-adr]]"
 ---
+
 # `modelo-work-binding-architecture` reference: `CLI, calculation, binding, and secure-storage architecture`
 
 This reference traces the operator-facing modelo lifecycle from CLI parsing through registry selection, binding resolution, calculation, verification, export, and encrypted persistence. It also records the supported shapes and current gaps for repeating records, generalized sheet row sets, and inventory.
@@ -26,9 +27,9 @@ The ordinary operator sequence is:
 4. `aeat app modelo work wizard` prompts for the promptable subset, while `work calculate` accepts canonical `--casilla`, `--binding`, `--relation`, and typed `--row` inputs.
 5. `work revision`, `observations`, and `review` inspect the frozen calculation result; `work verify` runs registry, provenance, clean-state, and workflow gates; `work file` creates an internal presented record; `modelo export` renders a local AEAT file and never submits it to AEAT.
 
-The principal CLI registration and orchestration sites are `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py:296`, `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py:132`, and `src/cadrumo/entrypoints/cli/_modelo_export_cli.py:123`. Input-channel typing is centralized in `src/cadrumo/application/modelo/_calculate_input.py:369`; calculation and source resolution are in `src/cadrumo/application/modelo/_calculation_actions.py:220` and `src/cadrumo/application/aggregation/_source_mesh.py:813`; immutable revision persistence is in `src/cadrumo/application/modelo/_revision_persistence.py:302`.
+The principal CLI registration and orchestration sites are `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py:296`, `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py:132`, and `src/cadrumo/entrypoints/cli/_modelo_export_cli.py:123`.
 
-A binding is not an object attached to a work unit. `DataBindingDefinition` in `src/cadrumo/domain/calculations/registry/_schema.py:656` is a registry-owned declaration of a named source edge: binding id, closed source kind, typed selector, aggregation operation, optional enum, grounding, and prefill policy. The selected `ModeloRevision` determines which bindings exist. A user satisfies one by populating its owning source repository, by supplying a permitted temporary scalar `--binding ID=VALUE`, or by supplying the distinct `--relation RELATION_ID=VALUE` channel. Deterministic ledger and invoice sources refuse caller substitution; selected manual, profile, previous-filing, and carry channels have their own override policies. Date-valued profile facts must come from the profile and cannot be smuggled through the decimal/string override channel.
+The selected `ModeloRevision` determines which bindings exist. A user satisfies one by populating its owning source repository, by supplying a permitted temporary scalar `--binding ID=VALUE`, or by supplying the distinct `--relation RELATION_ID=VALUE` channel. Deterministic ledger and invoice sources refuse caller substitution; selected manual, profile, previous-filing, and carry channels have their own override policies. Date-valued profile facts must come from the profile and cannot be smuggled through the decimal/string override channel.
 
 Binding resolution is typed and provenance-bearing. A `CalculationSourceResolution` can carry decimal bindings, enum bindings, date bindings, row-indexed binding values, relation values, bound casillas, typed detail rows, source record ids, and diagnostics. Precedence is deterministic and source ownership is checked; duplicate row ownership and caller substitution of locked sources fail rather than silently winning. Unhandled source kinds produce explicit diagnostics.
 

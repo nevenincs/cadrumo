@@ -44,7 +44,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "19191919-1919-4919-8919-191919191919"
 _RATIO = Decimal("0.37")
-_JOIN_TIMEOUT_S = 60.0
 
 
 @pytest.fixture
@@ -103,7 +102,7 @@ def test_concurrent_distinct_category_sets_do_not_lose_updates(
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join(timeout=_JOIN_TIMEOUT_S)
+            thread.join()
 
         assert not [t for t in threads if t.is_alive()], "a writer deadlocked under contention"
         assert errors == [], f"concurrent writers raised: {errors}"

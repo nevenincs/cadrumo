@@ -2031,7 +2031,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
 [[revisions."2025".casilla_continuidad_evolutions]]
-id = "m100-1965-2024-2025-label-and-legal-refs-evolved"
+id = "m100-0848-2024-2025-label-and-legal-refs-evolved"
 continuidad_id = "irpf-deduccion-c-valenciana-autoconsumo-pendiente"
 from_revision = "2024"
 to_revision = "2025"

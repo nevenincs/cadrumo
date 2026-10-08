@@ -33,7 +33,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.evidence.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "bucket_event_ids": [
@@ -44,18 +52,18 @@
           "evidence_id": "6509f06abb0c5756",
           "invoice_date": "2026-03-21",
           "invoice_number": "2026-0142",
-          "iva_amount": "21.00",
+          "iva_amount": "21",
           "iva_rate": "21",
           "media_kind": "pdf",
           "notes": "",
           "source_path": "fixtures/factura-material-oficina.pdf",
           "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "supplier": "Papeleria SL",
-          "taxable_base": "100.00",
+          "taxable_base": "100",
           "updated_at": "2026-04-01T09:00:00Z"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -100,7 +108,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
             "f1ec9edddf0a77a16796b89d2bb8ba402d90afe393a2e94eb83264ece38cc8d4"
@@ -148,7 +164,7 @@
           "transaction_id": "9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -172,7 +188,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b\nDate\t2026-03-21\nAmount\t121\nDescription\tOffice supplies\nReview status\tpending\n"
+      "text": "ID\t9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b\nDate\t2026-03-21\nAmount\t121\nDescription\tOffice supplies\nReview status\tpending\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -188,7 +204,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "review_status": "pending",
@@ -233,7 +257,7 @@
           "transaction_id": "9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

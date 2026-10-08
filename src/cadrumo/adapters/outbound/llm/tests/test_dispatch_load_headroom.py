@@ -47,7 +47,7 @@ from .....tests.loopback_llm import (
     write_json_response,
 )
 from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient, LLMRetryPolicy, transport_retry_permitted
 from ..errors import LLMContentionError
@@ -145,13 +145,13 @@ def _client(
         cadrumo_llm_model=_CATALOGUED_MODEL,
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
     )
     return LLMClient(
         settings=settings,
         cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
         usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_telemetry_recorder=LLMRunTelemetryRecorder(root_dir=settings.cadrumo_llm_run_telemetry_dir),
+        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
         retry_policy=retry_policy or LLMRetryPolicy(max_attempts=1),
         hardware_profile=profile,
         runtime_residents=residents,

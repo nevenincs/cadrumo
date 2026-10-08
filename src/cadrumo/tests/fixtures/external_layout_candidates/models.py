@@ -43,8 +43,8 @@ EXTERNAL_LAYOUT_CANDIDATE_KINDS: frozenset[str] = frozenset({"plain", "fillable"
 EXTERNAL_LAYOUT_SOURCE_CLASSIFICATION = "third_party_hosted_external_layout_candidate"
 AEAT_PUBLISHED_FACSIMILE_CLASSIFICATION = "aeat_published_facsimile"
 
-_SHA256 = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 _NONEMPTY = Annotated[str, Field(min_length=1)]
+_SHA256 = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 _PDF_HEADER_RE = re.compile(rb"\A%PDF-(\d\.\d)")
 _NIF_LIKE_RE = re.compile(r"\b(?:[XYZ]\d{7}[A-Z]|\d{8}[A-Z]|[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J])\b", re.I)
 _IBAN_LIKE_RE = re.compile(r"\b[A-Z]{2}\d{2}(?:[ -]?[A-Z0-9]){11,30}\b")

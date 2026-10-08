@@ -12,9 +12,11 @@ that they still said the same thing.
 
 from __future__ import annotations
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
+
 #: The projects whose artifacts are yanked together, because they are released
 #: as a set and a partial yank leaves an inconsistent resolution.
-PYPI_PROJECTS = ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official")
+PYPI_PROJECTS = PRODUCT_IDENTITY.cohort_distributions
 
 
 def _yank_urls(version: str) -> list[str]:

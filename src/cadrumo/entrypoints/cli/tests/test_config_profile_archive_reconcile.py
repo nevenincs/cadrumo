@@ -1,26 +1,21 @@
-"""Operator-path proofs for ``aeat config profile archive reconcile``.
+"""Native-worker proofs for ``aeat config profile archive reconcile``.
 
-The export service reconciles before every publication, so an operator who keeps
-exporting never needs this verb. It exists for the one case that trigger
-structurally cannot reach: a crash followed by no further export, where the
-orphan journal and its ``0o600`` cleartext ``.export-tmp`` -- holding the whole
-profile bundle -- would otherwise sit on disk indefinitely.
-
-Every proof drives the real CLI through the runner. Nothing here calls
-``reconcile_prepared_exports`` to do the work; the point is that the operator's
-own invocation is what clears the file.
+The export service reconciles before every publication, so an operator who
+keeps exporting never needs this verb. It exists for the crash case where an
+orphan journal and its ``0o600`` cleartext ``.export-tmp`` would otherwise
+remain on disk. These cases seed that real journal through the canonical
+service, then invoke the registered exact-profile worker route.
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.user_profile.bundle_export import PreparedProfileExport, prepare_profile_export
 from ....application.user_profile.bundle_export_contracts import (
     ProfileBundleExportPurpose,
@@ -31,53 +26,63 @@ from ....application.user_profile.bundle_export_operation import (
     PROFILE_EXPORT_STAGED_TEMP_SUFFIX,
     ProfileBundleExportJournalRepository,
 )
+from ....application.user_profile.login_session import resolve_login_target
 from ....core.directory_scan import scan_directory
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.portable_export import UserProfilePortableExport
 from .cli_runner import invoke_cached_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="reconcile now uses native profile workers"),
+]
 
 _RECONCILE_ARGV = ("--format", "json", "config", "profile", "archive", "reconcile")
+_PROFILE_FACTS = {
+    "identity.tax_id": "12345678Z",
+    "activities.description": "design",
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.name": "Subject",
+    "identity.surnames": "Access",
+}
 
 
-def _create_profile() -> str:
-    """Register the profile through the shared CLI registration door."""
-    return register_cli_profile(
-        label="subject",
-        facts={
-            "identity.tax_id": "12345678Z",
-            "activities.description": "design",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Subject",
-            "identity.surnames": "Access",
-        },
-        log_in=False,
-    )
-
-
-def _request(destination: Path) -> ProfileBundleExportRequest:
+def _request(profile_name: str, destination: Path) -> ProfileBundleExportRequest:
     return ProfileBundleExportRequest(
-        profile_name="subject",
+        profile_name=profile_name,
         destination=destination,
         purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
         transport=ProfileBundleExportTransport.CLEARTEXT_LOCAL,
     )
 
 
-def _prepare_export(request: ProfileBundleExportRequest) -> PreparedProfileExport:
-    """Prepare through the same pinned authority lease as profile registration."""
-    # ``register_cli_profile`` leaves the active record session bound to the
-    # bundled SQLite generation.  ``profile_authority_contexts()`` creates a
-    # standalone fake reader when no lease is active, which is a valid fixture
-    # for record construction but cannot read that already-bound session.
+def _journal(profile: NativeCliProfileFixture) -> ProfileBundleExportJournalRepository:
+    return ProfileBundleExportJournalRepository(storage_root=profile.storage_root)
+
+
+def _prepare_export(profile: NativeCliProfileFixture, destination: Path) -> PreparedProfileExport:
+    """Prepare one exact-profile orphan under the fixture's pinned authority."""
+    if profile.label is None:
+        raise AssertionError("native profile was not registered")
+    profile_id = resolve_login_target(profile.label).bucket_id
     with bundled_indexed_authority().operation() as operation:
-        return prepare_profile_export(request, profile_decode_context=operation.profile_decode_context())
+        return prepare_profile_export(
+            _request(profile.label, destination),
+            journal=_journal(profile),
+            authority_operation=operation,
+            profile_decode_context=operation.profile_decode_context(),
+            authorized_profile_id=profile_id,
+        )
 
 
-def _load_export(path: Path) -> UserProfilePortableExport:
-    """Decode the staged bundle with the same pinned profile context."""
+def _load_export(profile: NativeCliProfileFixture, path: Path) -> UserProfilePortableExport:
+    """Decode a staged bundle with the same pinned profile context."""
+    if profile.label is None:
+        raise AssertionError("native profile was not registered")
     with bundled_indexed_authority().operation() as operation:
         return UserProfilePortableExport.model_validate_json(
             path.read_text(encoding="utf-8"),
@@ -85,22 +90,29 @@ def _load_export(path: Path) -> UserProfilePortableExport:
         )
 
 
-def _reconcile_json() -> dict[str, object]:
-    result = invoke_cached_cli(list(_RECONCILE_ARGV))
+def _reconcile_json(profile: NativeCliProfileFixture) -> dict[str, object]:
+    if profile.label is None:
+        raise AssertionError("native profile was not registered")
+    close_active_bucket_session()
+    result = invoke_cached_cli(
+        (
+            "--language",
+            "en",
+            "--profile",
+            profile.label,
+            "--profile-secrets-stdin",
+            *_RECONCILE_ARGV,
+        ),
+        input=json.dumps({"profile_passphrase": profile.passphrase}),
+    )
+    assert profile.passphrase not in result.output
     assert result.exit_code == 0, result.output
     envelope = STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
     return STR_KEYED_MAPPING_ADAPTER.validate_python(envelope["result"])
 
 
 def _first_row(rows: object) -> dict[str, object]:
-    """Return the first envelope row, asserting it really is a keyed record.
-
-    ``json.loads`` yields ``object``, and a bare ``isinstance(x, dict)`` narrows
-    only to ``dict[Unknown, Unknown]`` — whose key type is ``Never``, so every
-    subsequent ``row["field"]`` is rejected. Rebuilding the row with string keys
-    gives a genuinely typed mapping, and asserts the shape the envelope contract
-    promises rather than suppressing the question.
-    """
+    """Return one keyed envelope row and check the public collection shape."""
     assert isinstance(rows, list)
     assert rows, "expected at least one row"
     row = rows[0]
@@ -109,89 +121,112 @@ def _first_row(rows: object) -> dict[str, object]:
 
 
 def test_the_verb_clears_an_abandoned_crash_orphan_and_its_cleartext_staged_file(tmp_path: Path) -> None:
-    # The case the pre-flight trigger cannot reach: the operator crashed and
-    # never exported again. Only this verb clears the bundle bytes.
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile()
+    """A registered worker clears the exact profile's unpublished staged bundle."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="archive-reconcile-subject", facts=_PROFILE_FACTS)
         destination = tmp_path / "portable.json"
-
-        prepared = _prepare_export(_request(destination))
+        prepared = _prepare_export(profile, destination)
         staged = Path(prepared.staged_path)
-        # The staged temp really is the readable bundle, not an empty placeholder.
-        staged_bundle = _load_export(staged)
+        staged_bundle = _load_export(profile, staged)
         assert any(fact.path == "identity.name" and fact.value == "Subject" for fact in staged_bundle.profile.facts)
-        assert len(ProfileBundleExportJournalRepository().prepared()) == 1
+        assert len(_journal(profile).prepared()) == 1
 
-        payload = _reconcile_json()
+        payload = _reconcile_json(profile)
 
         assert payload["reconciled_count"] == 1
         assert payload["failed_count"] == 0
         first = _first_row(payload["reconciled"])
         assert first["operation_id"] == prepared.operation.operation_id
         assert first["destination"] == str(destination)
-        # The cleartext bundle bytes are gone from disk, and no export ran.
         assert not staged.exists()
         assert not destination.exists()
         assert list(scan_directory(tmp_path, pattern=f"*{PROFILE_EXPORT_STAGED_TEMP_SUFFIX}")) == []
-        assert ProfileBundleExportJournalRepository().list() == ()
+        assert _journal(profile).list() == ()
 
 
 def test_the_verb_reports_an_isolated_failure_without_dropping_its_journal(tmp_path: Path) -> None:
-    # A journal the sweep cannot read must be reported to the operator, not
-    # silently skipped: it may still describe cleartext bytes on disk. It is
-    # kept for a later attempt rather than deleted.
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile()
-        repository = ProfileBundleExportJournalRepository()
-        _prepare_export(_request(tmp_path / "portable.json"))
-        corrupt_id = "d" * 64
+    """A readable exact-profile journal failure is retained beside successful cleanup."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="archive-reconcile-corrupt", facts=_PROFILE_FACTS)
+        _prepare_export(profile, tmp_path / "portable.json")
+        repository = _journal(profile)
+        failed = _prepare_export(profile, tmp_path / "unrecoverable.json")
+        corrupt_id = failed.operation.operation_id
         corrupt_path = repository.path_for(corrupt_id)
-        corrupt_path.write_text("{not valid json", encoding="utf-8")
+        repository.save(failed.operation.model_copy(update={"target_identity": "unsupported-target"}))
 
-        payload = _reconcile_json()
+        payload = _reconcile_json(profile)
 
         assert payload["reconciled_count"] == 1
         assert payload["failed_count"] == 1
         first = _first_row(payload["failed"])
         assert first["journal_id"] == corrupt_id
-        assert first["destination"] is None
-        assert first["reason"] == "ProfileBundleExportJournalCorruptError"
-        # Kept for a retry rather than dropped.
+        assert first["destination"] == str(tmp_path / "unrecoverable.json")
+        assert first["reason"] == "ProfileExportError"
         assert corrupt_path.is_file()
 
 
 def test_the_verb_reports_a_clean_sweep_rather_than_staying_silent(tmp_path: Path) -> None:
-    # An operator running recovery on healthy state must be told there was
-    # nothing to recover, so "nothing to do" cannot read as "it did not run".
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile()
+    """An authenticated empty sweep keeps the explicit informational notice."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="archive-reconcile-empty", facts=_PROFILE_FACTS)
+        payload = _reconcile_json(profile)
+        assert payload["reconciled_count"] == 0
+        assert payload["failed_count"] == 0
 
-        result = invoke_cached_cli(list(_RECONCILE_ARGV))
-
+        close_active_bucket_session()
+        result = invoke_cached_cli(
+            (
+                "--language",
+                "en",
+                "--profile",
+                profile.label or "",
+                "--profile-secrets-stdin",
+                *_RECONCILE_ARGV,
+            ),
+            input=json.dumps({"profile_passphrase": profile.passphrase}),
+        )
         assert result.exit_code == 0, result.output
-        envelope = json.loads(result.output)
-        assert envelope["result"]["reconciled_count"] == 0
-        assert envelope["result"]["failed_count"] == 0
-        codes = [notice["code"] for notice in envelope["notices"]]
-        assert codes == ["config.profile.archive.reconcile.nothing_to_reconcile"]
+        codes = [notice["code"] for notice in json.loads(result.output)["notices"]]
+        assert [code for code in codes if code.startswith("config.profile.archive.reconcile.")] == [
+            "config.profile.archive.reconcile.nothing_to_reconcile"
+        ]
 
 
 def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_path: Path) -> None:
-    # Severity is the operator's signal that bundle bytes may still be on disk,
-    # so it must track the outcome rather than being constant.
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile()
-        repository = ProfileBundleExportJournalRepository()
-        _prepare_export(_request(tmp_path / "portable.json"))
-        repository.path_for("e" * 64).write_text("{not valid json", encoding="utf-8")
+    """Warning severity tracks retained exact-profile journal failures across worker calls."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="archive-reconcile-warning", facts=_PROFILE_FACTS)
+        _prepare_export(profile, tmp_path / "portable.json")
+        repository = _journal(profile)
+        failed = _prepare_export(profile, tmp_path / "unrecoverable.json")
+        corrupt_id = failed.operation.operation_id
+        corrupt_path = repository.path_for(corrupt_id)
+        repository.save(failed.operation.model_copy(update={"target_identity": "unsupported-target"}))
 
-        failed_run = invoke_cached_cli(list(_RECONCILE_ARGV))
+        _reconcile_json(profile)
+        close_active_bucket_session()
+        failed_run = invoke_cached_cli(
+            (
+                "--language",
+                "en",
+                "--profile",
+                profile.label or "",
+                "--profile-secrets-stdin",
+                *_RECONCILE_ARGV,
+            ),
+            input=json.dumps({"profile_passphrase": profile.passphrase}),
+        )
         assert failed_run.exit_code == 0, failed_run.output
-        failed_notices = json.loads(failed_run.output)["notices"]
-        assert [notice["severity"] for notice in failed_notices] == ["info", "warning"]
-        assert failed_notices[1]["code"] == "config.profile.archive.reconcile.failures"
-        assert failed_notices[1]["context"]["journal_ids"] == "e" * 64
-        assert failed_notices[1]["action"] == {
+        failed_notices = [
+            notice
+            for notice in json.loads(failed_run.output)["notices"]
+            if notice["code"].startswith("config.profile.archive.reconcile.")
+        ]
+        assert [notice["severity"] for notice in failed_notices] == ["warning"]
+        assert failed_notices[0]["code"] == "config.profile.archive.reconcile.failures"
+        assert failed_notices[0]["context"]["journal_ids"] == corrupt_id
+        assert failed_notices[0]["action"] == {
             "action": {
                 "action_id": "operator.profile.archive.reconcile",
                 "target_command_key": "config.profile.archive.reconcile",
@@ -200,10 +235,23 @@ def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_pa
             "argument_bindings": [],
         }
 
-        # The corrupt journal survives, so a second run still warns; remove it
-        # and the sweep goes quiet, proving the warning tracks real state.
-        repository.path_for("e" * 64).unlink()
-        clean_run = invoke_cached_cli(list(_RECONCILE_ARGV))
+        corrupt_path.unlink()
+        close_active_bucket_session()
+        clean_run = invoke_cached_cli(
+            (
+                "--language",
+                "en",
+                "--profile",
+                profile.label or "",
+                "--profile-secrets-stdin",
+                *_RECONCILE_ARGV,
+            ),
+            input=json.dumps({"profile_passphrase": profile.passphrase}),
+        )
         assert clean_run.exit_code == 0, clean_run.output
-        clean_notices = json.loads(clean_run.output)["notices"]
+        clean_notices = [
+            notice
+            for notice in json.loads(clean_run.output)["notices"]
+            if notice["code"].startswith("config.profile.archive.reconcile.")
+        ]
         assert [notice["severity"] for notice in clean_notices] == ["info"]

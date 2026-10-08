@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#mcpb-signing-publisher'
 date: '2026-07-17'
-modified: '2026-07-17'
-body_hash: 'sha256:be5e1098768c6a78654b747c531273be8a977f86174d12a7f82f25d5012c7d5c'
+modified: '2026-10-03'
+body_hash: 'sha256:356ec94084f6a1fa252372830fce3747dbbe1bc703f32eed7ffd055638e95bae'
 related:
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
 ---
@@ -67,7 +67,7 @@ client installation and tax oracle against the signed delivery. This preserves t
 accepted single-publication-authority boundary while preventing a signature from
 blessing untested or subsequently modified content. Internal locators:
 `2026-07-15-distribution-installation-readiness-adr`,
-`packaging/mcpb/build.py`, and `dev/packaging/smoke_mcpb.py`.
+`packaging/mcpb/build.py`, and the former source file.
 
 The private key must remain outside the repository, bundles, logs, and general build
 workers. The public leaf certificate and intermediate certificates may accompany

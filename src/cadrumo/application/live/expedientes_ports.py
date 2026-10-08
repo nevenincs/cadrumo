@@ -25,6 +25,7 @@ from ...core.period import Period
 from .snapshot_base import SnapshotRepository
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..auth.session_types import AeatSession
 
 
@@ -73,6 +74,7 @@ class ExpedientesDeclarationReaderProtocol(Protocol):
         session: AeatSession,
         *,
         settings: Settings,
+        authority_operation: PinnedAuthorityOperation,
     ) -> AbstractAsyncContextManager[ExpedientesRegisterProtocol]:
         """Yield a register whose adapter DTOs/errors never cross the port."""
         ...

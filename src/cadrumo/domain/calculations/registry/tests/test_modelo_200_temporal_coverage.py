@@ -23,7 +23,7 @@ R8-M200-1 regression: casilla DP200014:00562 classification fix
 Before this fix the TOML for ``DP200014:00562`` declared
 ``input_kind = "manual"`` and ``required = true`` even though the formula
 ``modelo-200-cuota-integra`` computes it from the base imponible.  This
-caused ``verify_modelo_revision`` to demand the cuota íntegra as a
+caused ``verify_modelo_revision_with_preconditions`` to demand the cuota íntegra as a
 user-supplied input, making every S.A. (and SL, etc.) M200 filing refuse
 VERIFICADO_COMPLETO with a spurious MISSING_REQUIRED_CASILLA finding.
 
@@ -181,7 +181,7 @@ def test_cuota_integra_casilla_is_classified_computed_not_manual() -> None:
     """DP200014:00562 must be classified as computed=true, required=false in the registry.
 
     Before R8-M200-1 the TOML declared ``input_kind = "manual"`` and
-    ``required = true``, causing ``verify_modelo_revision`` to demand the
+    ``required = true``, causing ``verify_modelo_revision_with_preconditions`` to demand the
     cuota íntegra as a user-supplied input.  After the fix the casilla must
     carry ``input_kind = "computed"`` and ``required = False`` so the
     verification layer never blocks on it.

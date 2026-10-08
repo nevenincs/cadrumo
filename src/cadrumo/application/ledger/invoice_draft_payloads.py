@@ -10,9 +10,12 @@ Core types:
 
 from __future__ import annotations
 
+from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
-from .invoice_draft_records import InvoiceDraftIdentityDocumentFields
+from ...core.operations import OperationEffect
+from .invoice_draft_records import InvoiceDraftIdentityDocumentFields, LabelReadingFallbackCause
+from .structured_invoice_ports import StructuredInvoiceClassificationKind
 
 
 class EvidenceDraftLinePayload(OutputSchema):
@@ -72,12 +75,31 @@ class EvidenceDraftDiscrepancyPayload(OutputSchema):
     observed: str | None = None
 
 
+class EvidenceStructuredInvoiceClassPayload(OutputSchema):
+    """The structured reader's original Facturae class and its interpretation."""
+
+    source_code: str
+    kind: StructuredInvoiceClassificationKind
+
+
+class EvidenceLabelReadingFallbackPayload(OutputSchema):
+    """Why an optional model fill did not run, with no document text carried."""
+
+    cause: LabelReadingFallbackCause
+    unread_fields: list[str]
+    reader_error_type: str
+    failed_condition_id: str | None = None
+
+
 class EvidenceExtractResult(InvoiceDraftIdentityDocumentFields, OutputSchema):
     """Reviewable application result for best-effort invoice extraction."""
 
     bucket_id: BucketId
     evidence_id: str | None = None
     attachment_id: str | None = None
+    source_sha256: Hex64Str
+    draft_review_sha256: Hex64Str
+    consent_audit_effect: OperationEffect
     proposed_supply_nature: str | None = None
     invoice_date: str | None = None
     taxable_base: str | None = None
@@ -98,6 +120,8 @@ class EvidenceExtractResult(InvoiceDraftIdentityDocumentFields, OutputSchema):
     provenance: list[EvidenceFieldProvenancePayload] = []
     discrepancies: list[EvidenceDraftDiscrepancyPayload] = []
     raw_text_length: int = 0
+    facturae_invoice_class: EvidenceStructuredInvoiceClassPayload | None = None
+    label_reading_fallback: EvidenceLabelReadingFallbackPayload | None = None
     off_host_provider: str | None = None
     off_host_acknowledged_surface: str | None = None
 
@@ -109,4 +133,6 @@ __all__ = [
     "EvidenceExtractResult",
     "EvidenceFieldAmbiguityCandidatePayload",
     "EvidenceFieldProvenancePayload",
+    "EvidenceLabelReadingFallbackPayload",
+    "EvidenceStructuredInvoiceClassPayload",
 ]

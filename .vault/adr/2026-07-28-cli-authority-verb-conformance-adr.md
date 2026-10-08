@@ -3,10 +3,9 @@ tags:
   - '#adr'
   - '#cli-authority-verb-conformance'
 date: '2026-07-28'
-modified: '2026-08-04'
+modified: '2026-10-03'
 body_hash: 'sha256:884abaf36f525c03020511883de1671f179aa07100e3b472b7e85bcfde879ce0'
 related:
-  - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
   - "[[2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit]]"
 ---
 

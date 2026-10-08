@@ -38,6 +38,7 @@ from ..descendant_facts import (
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..family_types import MinimoDescendientesThresholds
+from .family_counts import descendientes_eligible_minimum
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -76,7 +77,7 @@ def _profile(child: DescendantInfo, anualidades: Decimal | None = None) -> Renta
 
 
 def _eligible(profile: RentaFamilyProfile) -> int:
-    return profile.descendientes_eligible_minimum(_YEAR, thresholds=_THRESHOLDS, context=_FACT_CONTEXT)
+    return descendientes_eligible_minimum(profile, _YEAR, thresholds=_THRESHOLDS, context=_FACT_CONTEXT)
 
 
 # -- the case the retirement declared unconstructible -------------------------

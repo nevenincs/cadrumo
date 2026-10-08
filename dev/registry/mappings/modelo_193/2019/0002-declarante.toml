@@ -1,0 +1,345 @@
+schema_version = 1
+fragment_id = "declarante"
+modelo = "193"
+design_epoch = "2019"
+source_ref = "aeat-dr-193-2019"
+source_sha256 = "bd38312bbe1583f8196f2fcf967ae8e93f10356edd71f93bf4c82d2a3059de69"
+records = []
+variable_envelopes = []
+
+[[entries]]
+export_field_id = "modelo-193-decl-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 24
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-modelo"
+kind = "literal"
+literal = "193"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 26
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 28
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-nif"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 31
+ordinal = "4"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-apellidos-razon-social"
+kind = "header"
+producer_key = "taxpayer.full_name"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 50
+ordinal = "5"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-tipo-soporte"
+kind = "literal"
+literal = "T"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 61
+ordinal = "6"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-persona-contacto-telefono"
+kind = "casilla"
+casilla_id = "decl.persona-contacto-telefono"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 68
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-persona-contacto-nombre"
+kind = "casilla"
+casilla_id = "decl.persona-contacto-nombre"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 70
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-num-identificativo"
+kind = "casilla"
+casilla_id = "decl.num-identificativo"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 82
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-complementaria"
+kind = "casilla"
+casilla_id = "decl.complementaria"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 90
+ordinal = "9"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[entries.part]
+offset = 121
+length = 1
+aeat_type = "Alfabético"
+statement = "121 DECLARACIÓN COMPLEMENTARIA.: Se consignará una “C” si la presentación de esta declaración tiene por objeto incluir percepciones que, debiendo haber figurado en otra declaración del mismo ejercicio presentada anteriormente, hubieran sido completamente omitidas en la misma."
+
+[[entries]]
+export_field_id = "modelo-193-decl-sustitutiva"
+kind = "casilla"
+casilla_id = "decl.sustitutiva"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 90
+ordinal = "9"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[entries.part]
+offset = 122
+length = 1
+aeat_type = "Alfabético"
+statement = "122 DECLARACIÓN SUSTITUTIVA: Se consignará una “S” si la presentación tiene como objeto anular y sustituir a cuenta del IS e IRNR (establecimientos permanentes) sobre completamente a otra declaración anterior, del mismo ejercicio. Una declaración sustitutiva sólo puede anular a una única declaración anterior."
+
+[[entries]]
+export_field_id = "modelo-193-decl-num-identificativo-anterior"
+kind = "casilla"
+casilla_id = "decl.num-identificativo-anterior"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 118
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-total-perceptores"
+kind = "casilla"
+casilla_id = "decl.total-perceptores"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 128
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-base-total-src-145"
+kind = "casilla"
+casilla_id = "decl.base-total"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 149
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-base-total-src-158"
+kind = "casilla"
+casilla_id = "decl.base-total"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 151
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-retenciones-total-src-160"
+kind = "casilla"
+casilla_id = "decl.retenciones-total"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 161
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-retenciones-total-src-173"
+kind = "casilla"
+casilla_id = "decl.retenciones-total"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 163
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-retenciones-ingresadas"
+kind = "casilla"
+casilla_id = "decl.retenciones-ingresadas"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 165
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-declarante-reservado-190"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 187
+ordinal = "15"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-gastos-total-src-220"
+kind = "casilla"
+casilla_id = "decl.gastos-total"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 195
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-gastos-total-src-233"
+kind = "casilla"
+casilla_id = "decl.gastos-total"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 197
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-naturaleza-declarante"
+kind = "casilla"
+casilla_id = "decl.naturaleza-declarante"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 206
+ordinal = "17"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-reserved-tail-src-236"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 284
+ordinal = "18"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-193-decl-reserved-tail-src-488"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 285
+ordinal = "19"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"

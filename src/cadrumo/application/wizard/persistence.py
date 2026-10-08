@@ -24,7 +24,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.contribuyente.descendant import DescendantInfo
     from ...domain.contribuyente.family_types import GuarderiaMonthSpend
-    from ...domain.user_profile.values import UserProfileRecord
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
@@ -41,7 +40,6 @@ from ...domain.calculations.registry.descendant_relacion_catalogue import (
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.user_profile.values import UserProfileRecord
 from ..workflow.errors import WorkflowInputMismatchError
 from .descendant_group import (
     DESCENDANT_PAGE_IDS,
@@ -517,45 +515,14 @@ def descendant_facts_from_answers(
         if not row["birth-date"]:
             continue
         descendientes.append(_descendant_from_row(row, operation=operation))
-    return descendant_facts_from_list(descendientes)
+    return descendant_facts_from_list(descendientes, authority=operation)
 
 
-def descendant_answers_from_record(
-    record: UserProfileRecord | None,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> dict[str, str]:
-    """Re-project a record's descendant facts into repeating-group answers.
-
-    The inverse of :func:`descendant_facts_from_answers`: reads the
-    ``renta_family.descendiente.{n}.*`` facts a record carries, reconstructs
-    each :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo` through the
-    canonical :func:`~cadrumo.domain.contribuyente.descendant_facts.descendant_list_from_facts`,
-    and emits the ``descendientes-count`` answer plus one
-    ``descendientes#<index>.<page-id>`` answer per populated field. This is the
-    exact page-keyed shape :func:`~cadrumo.application.flows.resume.resume_flow`
-    re-walks to re-instantiate the group: the count answer commits first (the
-    familia section orders the count page before the group), revealing the
-    instance pages the remaining answers then seed against the current
-    definition. Returns an empty map when the record declares no descendants,
-    so a childless profile seeds no group.
-
-    The per-field emission mirrors :func:`_descendant_from_row` exactly, so a
-    facts-to-answers re-projection preserves an identical fact set: an absent
-    optional field stays absent on both legs, never coerced to a stored default.
-
-    Args:
-        record: The :class:`UserProfileRecord` whose descendant facts are
-            re-projected into repeating-group answers, or ``None``.
-        operation: Caller-held pinned authority operation used for registry
-            relationship tokens.
-    """
-    if record is None:
-        return {}
+def descendant_answers_from_values(values: Mapping[str, str], *, operation: PinnedAuthorityOperation) -> dict[str, str]:
+    """Seed the canonical repeating flow from an authorized, complete fact view."""
     from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
-    from ..user_profile.projections import record_to_path_values
 
-    descendientes = descendant_list_from_facts(record_to_path_values(record))
+    descendientes = descendant_list_from_facts(dict(values), authority=operation)
     if not descendientes:
         return {}
     answers: dict[str, str] = {DESCENDANTS_COUNT_PAGE_ID: str(len(descendientes))}
@@ -673,7 +640,7 @@ def _optional_bool_answer(value: bool | None) -> str | None:
 
 __all__ = [
     "WizardPersistMode",
-    "descendant_answers_from_record",
+    "descendant_answers_from_values",
     "descendant_facts_from_answers",
     "parse_canonical",
     "profile_values_from_patch",

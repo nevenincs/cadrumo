@@ -9,7 +9,7 @@ from types import MappingProxyType
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 _FACT_ID = "liva-orden-auxiliary-activity-indicator"
@@ -60,11 +60,7 @@ def resolve_annual_orden_auxiliary_activity_indicators(
     annual Orden compiler from silently consulting a published bundle or
     recreating the mapping locally.
     """
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError(
-            "annual Orden auxiliary-activity indicators require a selected candidate facts authority",
-        )
+    selected = require_governed_fact_authority(authority, subject="annual Orden auxiliary-activity indicators")
     resolved = selected.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_FACT_ID,

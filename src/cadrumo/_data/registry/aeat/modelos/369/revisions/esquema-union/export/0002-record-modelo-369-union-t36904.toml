@@ -1,0 +1,1386 @@
+[[revisions.esquema-union.export_layouts]]
+id = 'modelo-369-union-fichero'
+
+[[revisions.esquema-union.export_layouts.records]]
+id = 'modelo-369-union-t36904'
+record_type = 't36904-un'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36904-1-inicio-del-identificador-de-modelo-y-pag'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36904-3-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '369'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36904-6-pagina'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '04'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36904-8-fin-de-identificador-de-modelo'
+offset = 8
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-9-regimen'
+offset = 9
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.regimen'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-14-categoria'
+offset = 14
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.categoria'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-15-tipo-de-pago'
+offset = 15
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.tipo-de-pago'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-16-nrc-pago'
+offset = 16
+length = 22
+kind = 'binding'
+binding = 'modelo-369-union-fichero.nrc-pago'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-38-importe-pagado'
+offset = 38
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.importe-pagado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36904-55-complementaria'
+offset = 55
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-56-1-declarante-pais'
+offset = 56
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.1-declarante-pais'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36904-58-1-declarante-nif'
+offset = 58
+length = 15
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36904-73-1-declarante-apellidos-y-nombre-o-razon'
+offset = 73
+length = 125
+kind = 'header'
+producer_key = 'taxpayer.full_name'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-198-2-ejercicio-y-periodo-ejercicio'
+offset = 198
+length = 4
+kind = 'binding'
+binding = 'modelo-369-union-fichero.2-ejercicio-y-periodo-ejercicio'
+data_type = 'integer'
+required = true
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-202-2-ejercicio-y-periodo-tipo-de-periodo'
+offset = 202
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.2-ejercicio-y-periodo-tipo-de-periodo'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-203-2-ejercicio-y-periodo-periodo'
+offset = 203
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.2-ejercicio-y-periodo-periodo'
+data_type = 'integer'
+required = true
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-205-2-ejercicio-y-periodo-fecha-desde'
+offset = 205
+length = 8
+kind = 'binding'
+binding = 'modelo-369-union-fichero.2-ejercicio-y-periodo-fecha-desde'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-213-2-ejercicio-y-periodo-fecha-hasta'
+offset = 213
+length = 8
+kind = 'binding'
+binding = 'modelo-369-union-fichero.2-ejercicio-y-periodo-fecha-hasta'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'aaaammdd'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-221-2-ejercicio-y-periodo-declaracion-sin-actividad'
+offset = 221
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-222-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai'
+offset = 222
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-224-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1'
+offset = 224
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-229-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-1'
+offset = 229
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-230-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl'
+offset = 230
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-247-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-1'
+offset = 247
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-264-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-2'
+offset = 264
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-266-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2'
+offset = 266
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-271-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-2'
+offset = 271
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-272-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-2'
+offset = 272
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-289-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-2'
+offset = 289
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-306-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-3'
+offset = 306
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-308-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-3'
+offset = 308
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-313-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-3'
+offset = 313
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-314-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-3'
+offset = 314
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-331-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-3'
+offset = 331
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-348-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-4'
+offset = 348
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-350-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-4'
+offset = 350
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-355-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-4'
+offset = 355
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-356-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-4'
+offset = 356
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-373-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-4'
+offset = 373
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-390-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-5'
+offset = 390
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-392-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-5'
+offset = 392
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-397-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-5'
+offset = 397
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-398-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-5'
+offset = 398
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-415-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-5'
+offset = 415
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-432-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-6'
+offset = 432
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-434-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-6'
+offset = 434
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-439-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-6'
+offset = 439
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-440-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-6'
+offset = 440
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-457-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-6'
+offset = 457
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-474-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-7'
+offset = 474
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-7'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-476-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-7'
+offset = 476
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-481-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-7'
+offset = 481
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-7'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-482-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-7'
+offset = 482
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-499-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-7'
+offset = 499
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-516-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-8'
+offset = 516
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-8'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-518-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-8'
+offset = 518
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-8'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-523-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-8'
+offset = 523
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-8'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-524-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-8'
+offset = 524
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-8'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-541-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-8'
+offset = 541
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-8'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-558-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-9'
+offset = 558
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-9'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-560-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-9'
+offset = 560
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-9'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-565-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-9'
+offset = 565
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-9'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-566-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-9'
+offset = 566
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-9'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-583-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-9'
+offset = 583
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-9'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-600-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-10'
+offset = 600
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-10'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-602-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-2'
+offset = 602
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-607-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-10'
+offset = 607
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-10'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-608-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-10'
+offset = 608
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-10'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-625-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-10'
+offset = 625
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-10'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-642-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-11'
+offset = 642
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-11'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-644-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-3'
+offset = 644
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-649-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-11'
+offset = 649
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-11'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-650-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-11'
+offset = 650
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-11'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-667-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-11'
+offset = 667
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-11'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-684-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-12'
+offset = 684
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-12'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-686-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-4'
+offset = 686
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-691-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-12'
+offset = 691
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-12'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-692-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-12'
+offset = 692
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-12'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-709-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-12'
+offset = 709
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-12'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-726-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-13'
+offset = 726
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-13'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-728-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-5'
+offset = 728
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-733-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-13'
+offset = 733
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-13'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-734-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-13'
+offset = 734
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-751-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-13'
+offset = 751
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-768-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-14'
+offset = 768
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-14'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-770-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-6'
+offset = 770
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-775-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-14'
+offset = 775
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-14'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-776-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-14'
+offset = 776
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-14'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-793-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-14'
+offset = 793
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-14'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-810-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-15'
+offset = 810
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-15'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-04-812-3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-7'
+offset = 812
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[revisions.esquema-union.export_layouts.records.row_field_casilla_ids]

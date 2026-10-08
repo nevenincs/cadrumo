@@ -11,6 +11,13 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.outbound.aeat.sede.censal_tables import parse_censal_table
+from cadrumo.adapters.outbound.aeat.sede.censal_tax_status import parse_censal_tax_status
+from cadrumo.adapters.outbound.aeat.sede.tests.censal_consultation_fixtures import (
+    ACTIVITIES_HTML,
+    OBLIGATIONS_HTML,
+    TAX_HTML,
+)
 from cadrumo.adapters.persistence.operations.secure_references import (
     operation_secure_reference_repository,
 )
@@ -57,6 +64,7 @@ def _test_censal_operation_definition():
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=build_censal_fetch_port(),
+        provider_preflight=lambda _profile_id, _operation: None,
     )
 
 
@@ -103,6 +111,11 @@ def _operand() -> CensalReviewedOperand:
         domicilio_notificacion=_domicilio(notification=True),
         captured_at=_NOW,
         source_url=aeat_url("sede", "/censo/consulta"),
+        consultations=(
+            parse_censal_table(ACTIVITIES_HTML, kind="actividades", source_url=aeat_url("www6", "/consulta")),
+            parse_censal_tax_status(TAX_HTML, source_url=aeat_url("www6", "/consulta")),
+            parse_censal_table(OBLIGATIONS_HTML, kind="obligaciones", source_url=aeat_url("www6", "/consulta")),
+        ),
     )
     record = _create_profile_record_for_test(
         profile_id="11111111-1111-4111-8111-111111111111",
@@ -165,6 +178,25 @@ def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -
         with pytest.raises(ValidationError, match="canonical adoptable"):
             CensalReviewedOperand.model_validate_json(json.dumps(payload), strict=True)
     assert tuple(item.path for item in operand.field_intents) == CENSAL_ADOPTABLE_PATHS
+
+
+def test_historical_review_preimage_without_consultations_keeps_its_digest() -> None:
+    from cadrumo.core.hashing import content_hash_hex
+
+    payload = _operand().model_dump(mode="json", exclude={"proposed_effect_digest"})
+    del payload["observation"]["consultations"]
+    historical_digest = content_hash_hex(payload)
+    payload["proposed_effect_digest"] = historical_digest
+    restored = CensalReviewedOperand.model_validate_json(json.dumps(payload), strict=True)
+    assert restored.proposed_effect_digest == historical_digest
+    assert restored.observation.consultations == ()
+
+
+def test_consultation_tampering_changes_the_existing_review_digest() -> None:
+    payload = _operand().model_dump(mode="json")
+    payload["observation"]["consultations"][0]["sections"][0]["rows"][0]["cells"][2]["text"] = "CHANGED"
+    with pytest.raises(ValidationError, match="proposed-effect digest"):
+        CensalReviewedOperand.model_validate_json(json.dumps(payload), strict=True)
 
 
 def test_reviewed_operand_real_secure_reference_round_trip_and_digest_corruption(tmp_path: Path) -> None:

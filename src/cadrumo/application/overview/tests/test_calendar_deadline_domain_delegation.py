@@ -25,7 +25,7 @@ import pytest
 from ....core.period import Period
 from ....domain.deadlines.engine import classify_obligation_status
 from ....domain.deadlines.models import ObligationStatus
-from ....domain.deadlines.plazo import resolve_filing_closes_on, resolve_filing_window
+from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calendar import _local_work_unit_status, _registry_window_for_work_unit
@@ -100,19 +100,13 @@ def test_overview_window_lookup_returns_the_domain_entry() -> None:
     )
 
 
-def test_domain_closes_on_projects_the_same_window_overview_reads() -> None:
-    """SUPPORTING: the two surfaces agree on the window they resolve.
-
-    This agreement held BEFORE the consolidation, so it cannot fail under the
-    mutation and is context rather than proof. It is retained because it pins
-    the projection contract: the extemporaneidad surface must expose exactly
-    the ``closes_on`` of the window overview reads for the same target.
-    """
+def test_overview_reads_the_published_first_quarter_close_date() -> None:
+    """The overview window retains the published M130 Q1 closing date."""
     unit = _work_unit()
     window = _registry_window_for_work_unit(unit)
     assert window is not None, "Modelo 130 2026 1T must have a bundled registry deadline window"
 
-    assert resolve_filing_closes_on(_MODELO, _FILING_YEAR, unit.period) == window.closes_on
+    assert window.closes_on == date(2026, 4, 20)
 
 
 def test_overview_keeps_its_local_period_fallback_when_no_window_exists() -> None:

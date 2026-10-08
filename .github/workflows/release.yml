@@ -315,10 +315,6 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-channel-artifacts
 
-      - name: Packaging performance contracts
-        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
-        run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
-
       - name: Future-directive policy
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
@@ -370,8 +366,13 @@ jobs:
         shell: bash
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          CADRUMO_GOOGLE_OAUTH_CLIENT_JSON: ${{ secrets.CADRUMO_GOOGLE_OAUTH_CLIENT_JSON }}
         run: |
           set -euo pipefail
+          if [ -z "$CADRUMO_GOOGLE_OAUTH_CLIENT_JSON" ]; then
+            echo "::error::CADRUMO_GOOGLE_OAUTH_CLIENT_JSON must be configured as a repository secret"
+            exit 1
+          fi
           uv run --no-sync python -m dev.packaging.release_cohort build \
             --output var/release-cohort \
             --source-tag "v${INPUT_VERSION#v}" \
@@ -384,7 +385,7 @@ jobs:
           set -euo pipefail
           mkdir -p var/release-dist
           cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz var/release-dist/
-          test "$(find var/release-dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 6
+          test "$(find var/release-dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 8
           uv run --no-sync python -m dev.packaging.distribution_cap --directory var/release-dist
 
       - name: Seal the release cohort
@@ -541,6 +542,8 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 210
+    env:
+      CADRUMO_HOMEBREW_PREFIX: ${{ matrix.prefix }}
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -552,6 +555,7 @@ jobs:
             expected_os: Darwin
             expected_arch: arm64
             brew: /opt/homebrew/bin/brew
+            prefix: /opt/homebrew
             row_id: homebrew-macos-arm64
             make_jobs: "2"
           - id: linux-x86_64
@@ -560,6 +564,7 @@ jobs:
             expected_os: Linux
             expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+            prefix: /home/linuxbrew/.linuxbrew
             row_id: homebrew-linux-x86-64
             make_jobs: "8"
           - id: linux-arm64
@@ -568,20 +573,10 @@ jobs:
             expected_os: Linux
             expected_arch: aarch64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+            prefix: /home/linuxbrew/.linuxbrew
             row_id: homebrew-linux-arm64
             make_jobs: "2"
     steps:
-      - name: Initialize current-run evidence root
-        id: initialize
-        env:
-          MATRIX_ID: ${{ matrix.id }}
-        run: |
-          root="${RUNNER_TEMP}/cadrumo-homebrew-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
-          rm -rf "$root"
-          mkdir -p "$root"
-          echo "CADRUMO_HOMEBREW_ROOT=$root" >> "$GITHUB_ENV"
-          echo "ready=true" >> "$GITHUB_OUTPUT"
-
       - name: Verify declared Homebrew release row
         env:
           BREW_PATH: ${{ matrix.brew }}
@@ -603,6 +598,17 @@ jobs:
         uses: ./.github/actions/setup
         with:
           authority-artifact: cadrumo-registry-authority
+
+      - name: Initialize current-run evidence root
+        id: initialize
+        env:
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          root="$(uv run --no-sync python -m dev.ci.storage_path homebrew)/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
+          mkdir -p "$root"
+          echo "CADRUMO_HOMEBREW_ROOT=$root" >> "$GITHUB_ENV"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -695,19 +701,9 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
+    env:
+      CADRUMO_SCOOP_INSTALL_ROOT: ${{ vars.CADRUMO_SCOOP_INSTALL_ROOT }}
     steps:
-      - name: Initialize current-run evidence root
-        id: initialize
-        shell: powershell
-        run: |
-          $root = Join-Path $env:RUNNER_TEMP "cadrumo-scoop-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
-          if (Test-Path -LiteralPath $root) {
-            Remove-Item -LiteralPath $root -Recurse -Force
-          }
-          New-Item -ItemType Directory -Force -Path $root | Out-Null
-          "CADRUMO_SCOOP_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
-          "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
-
       - name: Verify declared Windows native release row
         shell: powershell
         run: |
@@ -717,7 +713,10 @@ jobs:
           if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
             throw "scoop is unavailable to the lane user; install Scoop into this runner user's own profile"
           }
-          $scoopRoot = if ($env:SCOOP) { $env:SCOOP } else { Join-Path $env:USERPROFILE "scoop" }
+          if (-not $env:CADRUMO_SCOOP_INSTALL_ROOT) {
+            throw "declare CADRUMO_SCOOP_INSTALL_ROOT for the release lane's installed Scoop prefix"
+          }
+          $scoopRoot = [System.IO.Path]::GetFullPath($env:CADRUMO_SCOOP_INSTALL_ROOT)
           foreach ($required in @("apps", "buckets", "shims")) {
             if (-not (Test-Path -LiteralPath (Join-Path $scoopRoot $required) -PathType Container)) {
               throw "the lane user's Scoop profile is incomplete: missing '$required' under $scoopRoot"
@@ -755,6 +754,17 @@ jobs:
         with:
           authority-artifact: cadrumo-registry-authority
 
+      - name: Initialize current-run evidence root
+        id: initialize
+        shell: powershell
+        run: |
+          $base = uv run --no-sync python -m dev.ci.storage_path scoop
+          if ($LASTEXITCODE -ne 0) { throw "storage path resolution failed" }
+          $root = Join-Path $base "$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          "CADRUMO_SCOOP_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
+          "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
+
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -782,6 +792,7 @@ jobs:
           Copy-Item -LiteralPath "dev/packaging/__init__.py" -Destination (Join-Path $packaging "__init__.py")
           foreach ($file in @(
             "smoke_scoop.ps1",
+            "storage_paths.ps1",
             "command_execution.py",
             "constraint_effect.py",
             "installed_tax_oracle.py"
@@ -1023,6 +1034,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Checkout the release tag
+        id: release-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -1045,10 +1057,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INPUT_VERSION: ${{ inputs.version }}
           TAG_COMMIT: ${{ steps.locate.outputs.tag-commit }}
+          CHECKOUT_COMMIT: ${{ steps.release-checkout.outputs.commit }}
         run: |
           set -euo pipefail
           version="${INPUT_VERSION#v}"
-          test "$(git rev-parse HEAD)" = "$TAG_COMMIT"
+          test "$CHECKOUT_COMMIT" = "$TAG_COMMIT"
           (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
           mkdir -p var/release-cohort
           tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
@@ -1083,6 +1096,7 @@ jobs:
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
+        id: release-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -1108,7 +1122,7 @@ jobs:
           tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
           uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
           cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz dist/
-          test "$(find dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 6
+          test "$(find dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 8
           uv run --no-sync python -m dev.packaging.distribution_cap --directory dist
 
       - name: Compare the sealed bytes with the package index
@@ -1130,7 +1144,7 @@ jobs:
           uv run --no-sync python -m dev.release.version_identity \
             --version "${INPUT_VERSION#v}" \
             --repository "$GITHUB_REPOSITORY" \
-            --own-source-commit "$(git rev-parse HEAD)" \
+            --own-source-commit "$GITHUB_SHA" \
             --scope publish
 
       - name: Attest the sealed distributions
@@ -1177,6 +1191,7 @@ jobs:
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
+        id: release-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -1203,6 +1218,7 @@ jobs:
           uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
 
       - name: Checkout the tap
+        id: tap-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ env.TAP_REPOSITORY }}
@@ -1221,6 +1237,11 @@ jobs:
           version="${INPUT_VERSION#v}"
           incoming=var/release-cohort/homebrew/Formula/cadrumo.rb
           existing=var/homebrew-tap/Formula/cadrumo.rb
+          if [ -f "$existing" ]; then
+            echo "existed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existed=false" >> "$GITHUB_OUTPUT"
+          fi
           if [ -f "$existing" ] && cmp -s "$existing" "$incoming"; then
             echo "tap already serves cadrumo ${version} with this formula; nothing to publish"
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -1236,20 +1257,24 @@ jobs:
         if: steps.stage.outputs.changed == 'true'
         env:
           INPUT_VERSION: ${{ inputs.version }}
-          PUSH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          CHECKOUT_COMMIT: ${{ steps.tap-checkout.outputs.commit }}
+          CHECKOUT_REF: ${{ steps.tap-checkout.outputs.ref }}
+          EXISTED: ${{ steps.stage.outputs.existed }}
         run: |
           set -euo pipefail
-          auth="$(printf 'x-access-token:%s' "$PUSH_TOKEN" | base64 -w0)"
-          echo "::add-mask::${auth}"
-          export GIT_CONFIG_COUNT=1
-          export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
-          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}"
+          test -n "$CHECKOUT_COMMIT" && test -n "$CHECKOUT_REF"
           version="${INPUT_VERSION#v}"
-          git -C var/homebrew-tap config user.name "github-actions[bot]"
-          git -C var/homebrew-tap config user.email "github-actions[bot]@users.noreply.github.com"
-          git -C var/homebrew-tap add Formula/cadrumo.rb
-          git -C var/homebrew-tap commit -m "cadrumo ${version}"
-          git -C var/homebrew-tap push
+          branch="${CHECKOUT_REF#refs/heads/}"
+          sha=""
+          if [ "$EXISTED" = "true" ]; then
+            sha="$(gh api --method GET "repos/${TAP_REPOSITORY}/contents/Formula/cadrumo.rb" -f "ref=$CHECKOUT_COMMIT" --jq .sha)"
+          fi
+          jq -n --rawfile content var/homebrew-tap/Formula/cadrumo.rb --arg branch "$branch" --arg sha "$sha" --arg version "$version" \
+            '{message: ("cadrumo " + $version), content: ($content | @base64), branch: $branch} + (if $sha == "" then {} else {sha: $sha} end)' \
+            > "$RUNNER_TEMP/tap-publication-request.json"
+          gh api --method PUT "repos/${TAP_REPOSITORY}/contents/Formula/cadrumo.rb" \
+            --input "$RUNNER_TEMP/tap-publication-request.json" > /dev/null
 
   publish-scoop:
     name: "Build: Scoop bucket publication (Linux)"
@@ -1277,6 +1302,7 @@ jobs:
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
+        id: release-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -1303,6 +1329,7 @@ jobs:
           uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
 
       - name: Checkout the bucket
+        id: bucket-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ env.BUCKET_REPOSITORY }}
@@ -1321,6 +1348,11 @@ jobs:
           version="${INPUT_VERSION#v}"
           incoming=var/release-cohort/scoop/cadrumo.json
           existing=var/scoop-bucket/bucket/cadrumo.json
+          if [ -f "$existing" ]; then
+            echo "existed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existed=false" >> "$GITHUB_OUTPUT"
+          fi
           if [ -f "$existing" ] && cmp -s "$existing" "$incoming"; then
             echo "bucket already serves cadrumo ${version} with this manifest; nothing to publish"
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -1336,20 +1368,24 @@ jobs:
         if: steps.stage.outputs.changed == 'true'
         env:
           INPUT_VERSION: ${{ inputs.version }}
-          PUSH_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          GH_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          CHECKOUT_COMMIT: ${{ steps.bucket-checkout.outputs.commit }}
+          CHECKOUT_REF: ${{ steps.bucket-checkout.outputs.ref }}
+          EXISTED: ${{ steps.stage.outputs.existed }}
         run: |
           set -euo pipefail
-          auth="$(printf 'x-access-token:%s' "$PUSH_TOKEN" | base64 -w0)"
-          echo "::add-mask::${auth}"
-          export GIT_CONFIG_COUNT=1
-          export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
-          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}"
+          test -n "$CHECKOUT_COMMIT" && test -n "$CHECKOUT_REF"
           version="${INPUT_VERSION#v}"
-          git -C var/scoop-bucket config user.name "github-actions[bot]"
-          git -C var/scoop-bucket config user.email "github-actions[bot]@users.noreply.github.com"
-          git -C var/scoop-bucket add bucket/cadrumo.json
-          git -C var/scoop-bucket commit -m "cadrumo ${version}"
-          git -C var/scoop-bucket push
+          branch="${CHECKOUT_REF#refs/heads/}"
+          sha=""
+          if [ "$EXISTED" = "true" ]; then
+            sha="$(gh api --method GET "repos/${BUCKET_REPOSITORY}/contents/bucket/cadrumo.json" -f "ref=$CHECKOUT_COMMIT" --jq .sha)"
+          fi
+          jq -n --rawfile content var/scoop-bucket/bucket/cadrumo.json --arg branch "$branch" --arg sha "$sha" --arg version "$version" \
+            '{message: ("cadrumo " + $version), content: ($content | @base64), branch: $branch} + (if $sha == "" then {} else {sha: $sha} end)' \
+            > "$RUNNER_TEMP/bucket-publication-request.json"
+          gh api --method PUT "repos/${BUCKET_REPOSITORY}/contents/bucket/cadrumo.json" \
+            --input "$RUNNER_TEMP/bucket-publication-request.json" > /dev/null
 
   acquire-pypi:
     name: "Test: PyPI acquisition (Linux)"
@@ -1366,6 +1402,7 @@ jobs:
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
+        id: release-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -1401,6 +1438,8 @@ jobs:
     if: inputs.phase == 'publish'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
+    env:
+      CADRUMO_HOMEBREW_PREFIX: ${{ matrix.prefix }}
     permissions:
       actions: read
       contents: read
@@ -1411,15 +1450,18 @@ jobs:
           - os: Linux
             runner: [self-hosted, Linux, X64]
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+            prefix: /home/linuxbrew/.linuxbrew
           - os: macOS
             runner: [self-hosted, macOS, ARM64]
             brew: /opt/homebrew/bin/brew
+            prefix: /opt/homebrew
     steps:
       # The dispatched commit, which locate-cohort proved is the tag's commit.
       # A tag is mutable by anyone who can dispatch this workflow, so resolving
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
+        id: release-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -1458,6 +1500,8 @@ jobs:
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 136
+    env:
+      CADRUMO_SCOOP_INSTALL_ROOT: ${{ vars.CADRUMO_SCOOP_INSTALL_ROOT }}
     permissions:
       actions: read
       contents: read
@@ -1467,6 +1511,7 @@ jobs:
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
+        id: release-checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}

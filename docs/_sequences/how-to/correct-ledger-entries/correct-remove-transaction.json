@@ -29,7 +29,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
             "8b33ed95365478e1093bdc08e4960210b7eb3fda5fe8f7de1144c1a9c47a8688"
@@ -77,7 +85,7 @@
           "transaction_id": "1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -102,7 +110,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nID\t1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb\nRemoved\tFalse\nDRY RUN MODE\tTrue\n"
+      "text": "Bucket\t<profile-id>\nID\t1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb\nRemoved\tFalse\nDRY RUN MODE\tTrue\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -121,7 +129,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nID\t1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb\nRemoved\tTrue\nDRY RUN MODE\tFalse\n"
+      "text": "Bucket\t<profile-id>\nID\t1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb\nRemoved\tTrue\nDRY RUN MODE\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -159,14 +167,26 @@
           "category": "REFUSED",
           "code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
           "context": {
-            "prefix": "'1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb'"
+            "effect": "none",
+            "operation_id": "d329c60e2e3084d5e4ac18c5ee95ec35ffa91f1a2d628c1b082c4778344eb147",
+            "reason": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
+            "refusal_code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
+            "terminal_condition": "refused"
           },
-          "message": "no transaction matches id prefix '1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb'",
+          "message": "The transaction-id prefix matches zero or multiple transactions. Provide a longer prefix.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null
         },
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "schema_version": "2",
         "status": "error"
       },

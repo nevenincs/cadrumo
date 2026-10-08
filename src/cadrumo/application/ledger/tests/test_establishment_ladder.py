@@ -93,6 +93,8 @@ _ASSERTED_AT = datetime(2026, 5, 12, 9, 30, tzinfo=UTC)
 _LAS_PALMAS = "35001"
 _MADRID = "28013"
 _PARIS = "75001"
+# A real Marseille code whose prefix is also a Spanish province (13, Ciudad Real).
+_MARSEILLE = "13001"
 _BERLIN = "10115"
 _CEUTA = "51001"
 
@@ -206,17 +208,19 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
 ) -> None:
     """A French party is not read as Spanish, and the skipped rung would have said so.
 
-    ``75001`` is a real Paris code and a real Madrid-shaped one. The second
+    ``13001`` is a real Marseille code and a well-formed Spanish one. The second
     assertion is what makes this a test of ORDER: it establishes that the postal
     rung, had it been consulted, would have returned a different territory.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        resolved = _resolve(repository, country_name="France", postal_code=_PARIS, operation=operation)
+        resolved = _resolve(repository, country_name="France", postal_code=_MARSEILLE, operation=operation)
 
         assert resolved.scope == IvaTerritorialScope.from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
-        skipped_rung_answer = territorial_scope_for_spanish_postal_code(_PARIS, operation=_authority_operation_for_test)
+        skipped_rung_answer = territorial_scope_for_spanish_postal_code(
+            _MARSEILLE, operation=_authority_operation_for_test
+        )
         assert skipped_rung_answer == IvaTerritorialScope.from_registry("es_mainland")
         assert skipped_rung_answer is not resolved.scope
 

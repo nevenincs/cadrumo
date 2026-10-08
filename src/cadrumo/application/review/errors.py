@@ -17,6 +17,29 @@ class ReviewError(CadrumoError):
     """Base class for every error raised by :mod:`cadrumo.application.review`."""
 
 
+class UnknownReviewKindError(ReviewError):
+    """Raised when an operator selects a review kind outside the public vocabulary."""
+
+    def __init__(self, *, accepted_kinds: str) -> None:
+        """Build a safe selector refusal without retaining or echoing the submitted token."""
+        super().__init__(
+            message="unknown review kind",
+            translated_message="review.operator.errors.unknown_kind",
+            context={"accepted_kinds": accepted_kinds},
+        )
+
+
+class ReviewItemNotFoundError(ReviewError):
+    """Raised when an exact review item selector matches no visible row."""
+
+    def __init__(self) -> None:
+        """Build a refusal that does not expose the submitted item identity."""
+        super().__init__(
+            message="review item not found",
+            translated_message="review.operator.errors.item_not_found",
+        )
+
+
 class ReviewSourceLoadError(ReviewError):
     """Raised when a source disk file is present but cannot be parsed."""
 

@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#iva-workflow'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b50145d6d3f5e502c9578949f51a5b161e44d4a7bb35cb1cbfe48008fbeac0c1'
+body_hash: 'sha256:dd4b65d78cd097c0627beacc8125bfe7ae800e23b68736bc2009c3d2c1089909'
 related: []
 ---
 
@@ -51,16 +51,7 @@ success and field-attributed refusals, but is not a mixed-line invoice import
 surface. Neither the canonical invoice nor the creation event retains an
 import source-file/source-row locator; timestamps are not source provenance.
 
-The TUI invoice form's complete field list is at
-`src/cadrumo/entrypoints/tui/ledger/invoice_entry.py:20`; its entry model is at
-`src/cadrumo/entrypoints/tui/ledger/models.py:289`, and the persistence door calls
-the shared catalogue creator at `src/cadrumo/entrypoints/tui/ledger_doors.py:244`.
-The TUI supports one base/rate, invoice class, series and retention. It does not
-expose IVA category, operation type/date, rectification target, recargo or
-multiple lines. The two frontends therefore do not have equivalent invoice
-entry coverage. Its workspace injection also has add/import doors but no
-canonical invoice read/list/view door, so its fake-door tests cannot prove
-fresh-session persisted readback.
+The TUI supports one base/rate, invoice class, series and retention. It does not expose IVA category, operation type/date, rectification target, recargo or multiple lines. The two frontends therefore do not have equivalent invoice entry coverage. Its workspace injection also has add/import doors but no canonical invoice read/list/view door, so its fake-door tests cannot prove fresh-session persisted readback.
 
 ### Ledger ownership of Modelo 303 facts
 

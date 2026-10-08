@@ -1,66 +1,38 @@
-"""CLI commands for the ``aeat app overview`` subcommand group.
-
-Provides the ``status``, ``calendar``, ``agenda``, ``backlog``, ``explain``,
-``prepare``, and ``pipeline`` verbs. All verbs are local-only: they never
-contact AEAT and apply no mutations to stored state. Help strings are
-localized via :func:`tr`; the docstrings here document internal logic and are
-not surfaced as operator-facing CLI help.
-
-This module is the transport adapter over the application overview builders:
-:func:`build_overview_status_report`, :func:`build_overview_calendar`,
-:func:`build_overview_calendar_events`,
-:func:`calendar_events_from_modelo_records`,
-:func:`calendar_filing_evidence_from_sources`,
-:func:`~cadrumo.application.overview.data_prep.build_data_prep_walkthrough`, and
-:func:`~cadrumo.application.overview.pipeline_health.build_pipeline_health_report`. Each command
-emits a typed payload such as :class:`OverviewStatusResult`,
-:class:`OverviewCalendarResult`, :class:`OverviewAgendaResult`,
-:class:`OverviewBacklogResult`, :class:`OverviewExplainResult`,
-:class:`OverviewPrepareResult`, or :class:`OverviewPipelineResult` through
-:func:`emit_envelope`. The ``pipeline`` verb resolves each period work
-unit's current :class:`~CalculationRevision` to derive its
-readiness row.
-
-Core types:
-:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
-"""
+"""CLI transport for authenticated overview reads and pipeline health."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date as _date
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from uuid import UUID
 
 import typer
 
-from ...application.overview import status_report as _overview_application
-from ...application.overview.calendar import build_overview_calendar
-from ...application.overview.calendar_models import (
-    OverviewCalendar,
-    OverviewCalendarEvent,
-    OverviewCalendarFilingEvidence,
-    OverviewCalendarRange,
+from ...application.cli_exception_preconditions import (
+    CliExceptionPrecondition,
+    cli_exception_no_recovery_verdict,
 )
-from ...core.errors.hierarchy import InternalInvariantError
+from ...application.operations.public_period import PublicPeriod
+from ...application.operator_actions.models import ActionReference
+from ...application.overview.read_payload import (
+    OverviewAgendaRead,
+    OverviewBacklogRead,
+    OverviewCalendarRead,
+    OverviewExplainRead,
+    OverviewPrepareRead,
+    OverviewStatusRead,
+)
+from ...application.overview.read_projection import OverviewNoticeSnapshot
+from ...application.overview.read_request import OverviewReadKind, OverviewReadRequest
+from ...application.runtime.contracts import RuntimeRefusalCode
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as current_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, strict_round_trip
-from ...core.logging import get_logger
+from ...core.period import Period, PeriodError
 from ...core.time.clock import today_madrid
-from ...domain.modelos.work_unit import WorkUnit
 from ._date_parsing import _parse_iso_date
-from ._overview_evidence import (
-    live_censo_verified_profile_keys,
-    local_calendar_filing_evidence,
-    local_live_calendar_events,
-    local_modelo_record_calendar_events,
-    local_modelo_work_units,
-    overview_no_aeat_history_notice,
-)
-from ._overview_payloads import (
-    OverviewCalendarResult,
-    OverviewStatusResult,
-)
+from ._overview_payloads import OverviewCalendarResult, OverviewDraftPayload, OverviewStatusResult
 from ._overview_rendering import (
     overview_agenda_output,
     overview_backlog_output,
@@ -74,197 +46,92 @@ from ._overview_rendering import (
 )
 from .common import (
     activate_subcommand_output_language,
+    attach_cli_policy_verdict,
     bad,
-    current_workflow_state,
-    declared_tax_id,
     emit_envelope,
-    load_drafts,
-    load_invoices,
-    no_active_profile_refusal,
-    profile_grounding_index_for_operation,
-    profile_to_taxpayer,
-    transaction_catalogue_repo,
+    resolve_notice_action,
 )
+from .errors import CliRefusedBoundaryError
 from .period_parsing import _canonical_period
-from .state_projection_support import authority_operation
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from ...application.live.expedientes_ports import ExpedientesPortsFactory
-    from ...application.overview.calendar_models import CalendarWarning
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
-    from ...application.workflow.state_models import WorkflowState
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.deadlines.models import TaxpayerProfile
-    from ...domain.user_profile.schema import ProfileSchemaDefinition
-    from .errors import CliRefusedBoundaryError
-
-logger = get_logger(__name__)
+from .registered_operation_errors import submitted_operation_error
+from .runtime_overview import OverviewReadCompletion, read_overview
+from .runtime_overview_pipeline import read_overview_pipeline
 
 
-def _profile_grounding_index():
-    """Return grounded profile metadata from one pinned indexed operation."""
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
-
-    with bundled_indexed_authority().operation() as operation:
-        return profile_grounding_index_for_operation(operation)
-
-
-def _profile_schema_for_record(
-    record: object,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> ProfileSchemaDefinition:
-    """Return the schema pinned to the authenticated record operation."""
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...domain.user_profile.values import UserProfileRecord
-
-    if not isinstance(record, UserProfileRecord):
-        raise TypeError("overview profile schema requires an authenticated UserProfileRecord")
-    return ProfileRecordRepository.for_current_session(
-        record.profile_id,
-        profile_decode_context=operation.profile_decode_context(),
-    ).session.profile_decode_context.schema
+def _request(kind: OverviewReadKind, **fields: object) -> OverviewReadRequest:
+    """Bind one query to the selected profile and current output language."""
+    return OverviewReadRequest.model_validate(
+        {
+            "profile_id": UUID(require_active_bucket_id()),
+            "kind": kind,
+            "output_language": OutputLanguage(current_output_language()),
+            **fields,
+        }
+    )
 
 
-def _grounded_warning_summary(
-    warnings: Sequence[CalendarWarning],
-    *,
-    schema: ProfileSchemaDefinition,
-) -> str:
-    """Render calendar warnings as grounded profile requirements where possible.
-
-    A completeness warning's ``code`` is the profile field's declared selector
-    token, so the schema resolves it to the field's operator label and the
-    registry supplies its legal grounding - the same two facts the modelo work
-    readiness gate names when it refuses for the same missing field.
-
-    The warning stream also carries codes that are not profile fields at all
-    (censo enrolment, unverified justificante, AEAT evidence conflict). Those
-    resolve to nothing and pass through verbatim, which is what this surface
-    already showed for them.
-    """
-    from ...application.user_profile.preflight import format_profile_selector_requirements
-
-    return ", ".join(
-        format_profile_selector_requirements(
-            (warning.code for warning in warnings),
-            schema=schema,
-            grounding_index=_profile_grounding_index(),
+def _notice(snapshot: OverviewNoticeSnapshot) -> Notice:
+    """Materialise a declared action against the live CLI only after disclosure."""
+    return Notice(
+        severity=snapshot.severity,
+        code=snapshot.code,
+        message=snapshot.message,
+        context=dict(snapshot.context),
+        action=(
+            resolve_notice_action(action=ActionReference(action_id=snapshot.action_id))
+            if snapshot.action_id is not None
+            else None
         ),
     )
 
 
-def _incomplete_profile_refusal(
-    warnings: Sequence[CalendarWarning],
-    *,
-    schema: ProfileSchemaDefinition,
+def _emit_read[T](completed: OverviewReadCompletion, render: Callable[[], T]) -> T:
+    """Keep the successful worker receipt if local rendering or output fails."""
+    try:
+        return render()
+    except typer.Exit:
+        raise
+    except CliRefusedBoundaryError:
+        raise
+    except Exception:
+        receipt = completed.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None
+
+
+def _incomplete_refusal(
+    completed: OverviewReadCompletion, requirements: tuple[str, ...], *, undeclared: bool, warning_count: int
 ) -> CliRefusedBoundaryError:
-    """Return the refusal for a projection blocked by unanswered profile facts.
-
-    A profile fact the operator has not supplied is a workflow-state refusal,
-    not invalid operator input, so it is raised as a refusal rather than as a
-    parameter error: nothing the operator typed on this command line is wrong.
-
-    Calendar warnings may describe several independent authorities.  Their
-    aggregate does not bind one executable recovery action, so the refusal
-    carries a typed no-recovery outcome rather than selecting one warning's
-    command string.
-    """
-    from ...application.cli_exception_preconditions import (
-        CliExceptionPrecondition,
-        cli_exception_no_recovery_verdict,
-    )
-    from .common import attach_cli_policy_verdict
-    from .errors import CliRefusedBoundaryError
-
+    """Retain known operation identity while refusing an incomplete profile."""
+    receipt = completed.completion
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
-            translated_message="cli.overview.refused_incomplete_profile",
-            context={"requirements": _grounded_warning_summary(warnings, schema=schema)},
-        ),
-        verdict=cli_exception_no_recovery_verdict(
-            CliExceptionPrecondition.OVERVIEW_PROFILE_COMPLETE,
-            facts={"warning_count": len(warnings)},
-        ),
-    )
-
-
-#: The profile facts that together declare a taxpayer model, held as their
-#: declared selector tokens. A natural person additionally needs at least one
-#: IRPF income category; a legal or attribution entity is declared by its
-#: entity type alone, so the second token is conditional.
-_ENTITY_TYPE_SELECTOR = "taxpayer.entity_type"
-_IRPF_INCOME_CATEGORIES_SELECTOR = "taxpayer.irpf_income_categories"
-
-
-def _undeclared_taxpayer_model_refusal(
-    profile: TaxpayerProfile,
-    *,
-    schema: ProfileSchemaDefinition,
-) -> CliRefusedBoundaryError:
-    """Return the refusal for a projection blocked by an undeclared taxpayer model.
-
-    Applicability cannot be derived without an entity type, and for a natural
-    person without at least one IRPF income category, so the engine reports
-    incomplete rather than guessing autónomo. This names WHICH of those two
-    facts is absent instead of stating only that the model is undeclared.
-
-    Only the genuinely absent facts are named: a natural person who declared
-    an entity type but no income category is told about the income category,
-    not sent back to a field they already filled in.
-    """
-    from ...application.cli_exception_preconditions import (
-        CliExceptionPrecondition,
-        cli_exception_no_recovery_verdict,
-    )
-    from ...application.user_profile.preflight import format_profile_selector_requirements
-    from ...domain.contribuyente.entity_type import entity_type_natural_person_token
-    from .common import attach_cli_policy_verdict
-    from .errors import CliRefusedBoundaryError
-
-    missing: list[str] = []
-    if profile.entity_type is None:
-        missing.append(_ENTITY_TYPE_SELECTOR)
-    elif profile.entity_type == entity_type_natural_person_token() and not profile.irpf_income_categories:
-        missing.append(_IRPF_INCOME_CATEGORIES_SELECTOR)
-    return attach_cli_policy_verdict(
-        CliRefusedBoundaryError(
-            translated_message="cli.overview.refused_undeclared_taxpayer_model",
+            translated_message=(
+                "cli.overview.refused_undeclared_taxpayer_model"
+                if undeclared
+                else "cli.overview.refused_incomplete_profile"
+            ),
             context={
-                "requirements": ", ".join(
-                    format_profile_selector_requirements(
-                        missing,
-                        schema=schema,
-                        grounding_index=_profile_grounding_index(),
-                    ),
-                ),
+                "requirements": ", ".join(requirements),
+                "operation_id": str(receipt.operation_id),
+                "terminal_condition": receipt.terminal_condition.value,
+                "effect": receipt.effect.value,
             },
         ),
         verdict=cli_exception_no_recovery_verdict(
             CliExceptionPrecondition.OVERVIEW_PROFILE_COMPLETE,
-            facts={"missing_selector_count": len(missing)},
+            facts={"missing_selector_count" if undeclared else "warning_count": warning_count},
         ),
     )
 
 
-def _refuse_calendar_warnings(cal: OverviewCalendar, *, schema: ProfileSchemaDefinition) -> None:
-    raise _incomplete_profile_refusal(cal.warnings, schema=schema)
-
-
-def _require_profile_schema(schema: ProfileSchemaDefinition | None) -> ProfileSchemaDefinition:
-    """Refuse a schema-less profile operation before rendering grounded output."""
-    if schema is None:
-        raise InternalInvariantError("profile overview requires a schema pinned to the authenticated operation")
-    return schema
-
-
-def _overview_status_period(period: str, *, year: int | None):
-    """Resolve ``overview status --period`` through the registry-token union."""
-    from ...core.period import Period, PeriodError
-
+def _overview_status_period(period: str, *, year: int | None) -> Period:
+    """Resolve a period status selector through the canonical period union."""
     token = period.strip()
     if not token:
         raise bad(tr("cli.common.errors.period_empty"))
@@ -276,161 +143,52 @@ def _overview_status_period(period: str, *, year: int | None):
         raise bad(tr("cli.common.errors.period_unrecognised", raw=period)) from exc
 
 
-def _emit_period_overview_status(
-    ctx: typer.Context,
-    *,
-    current: WorkflowState,
-    period: str,
-    year: int | None,
-    verbose: bool,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Emit the typed draft projection for one canonical filing period."""
-    drafts = load_drafts(operation=operation)
-    canonical = _overview_status_period(period, year=year)
-    wanted = (canonical.filing_year, canonical.registry_token)
-
-    def _draft_matches(draft_period: object) -> bool:
-        # Drafts persist typed periods; compare their separate filing-year and
-        # registry-token fields to the operator's ``--year``/``--period`` pair.
-        filing_year = getattr(draft_period, "filing_year", None)
-        registry_token = getattr(draft_period, "registry_token", None)
-        return (
-            isinstance(filing_year, int)
-            and filing_year == wanted[0]
-            and isinstance(registry_token, str)
-            and registry_token == wanted[1]
-        )
-
-    per_modelo_drafts = [d for d in drafts if _draft_matches(d.period)]
-    from ._overview_payloads import OverviewDraftPayload
-
-    period_display = str(canonical)
-    typed_period = OverviewStatusResult(
-        period=period_display,
-        drafts=[
-            OverviewDraftPayload(draft_id=d.draft_id, modelo=d.modelo, status=d.status.value) for d in per_modelo_drafts
-        ],
-        verbose=verbose,
-    )
-    period_lines = [
-        f"{tr('cli.overview.period')}\t{period_display}",
-        f"{tr('cli.overview.drafts')}\t{len(per_modelo_drafts)}",
-        *(f"{d.modelo}\t{d.draft_id}\t{d.status.value}" for d in per_modelo_drafts),
-    ]
-    emit_envelope(ctx, command="overview.status", result=typed_period, lines=period_lines)
-
-
-def _overview_status_coverage(
-    current: WorkflowState | None,
-    *,
-    raw_values: Mapping[str, object] | None,
-    operation: PinnedAuthorityOperation,
-) -> tuple[list[str], list[Notice]]:
-    """Build the obligation-coverage lines and notices for status output."""
-    if current is None or current.active_profile_bucket_id() is None:
-        return [], []
-
-    status_today = today_madrid()
-    status_cal = build_overview_calendar(
-        profile_to_taxpayer(current),
-        OverviewCalendarRange(
-            from_date=_date(status_today.year, 1, 1),
-            to_date=_date(status_today.year, 12, 31),
-        ),
-        operation=operation,
-        today=status_today,
-        raw_values=raw_values,
-    )
-    coverage_lines: list[str] = []
-    status_notices: list[Notice] = []
-    for notice in overview_coverage_notices(status_cal.coverage):
-        status_notices.append(notice)
-        coverage_lines.append(f"coverage_advised\t{len(status_cal.coverage.advised)}\t{notice.message}")
-
-    from ...domain.calculations.registry.applicability import derive_tax_route
-
-    history_notice = overview_no_aeat_history_notice(
-        tax_route=derive_tax_route(profile_to_taxpayer(current)),
-    )
-    if history_notice is not None:
-        status_notices.append(history_notice)
-    return coverage_lines, status_notices
-
-
 def overview_status(
-    ctx: typer.Context,
-    period: str | None = None,
-    year: int | None = None,
-    verbose: bool = False,
+    ctx: typer.Context, period: str | None = None, year: int | None = None, verbose: bool = False
 ) -> None:
-    """Emit the overview status payload for readiness or per-period detail.
+    """Render the selected profile's recorded workspace or exact period status."""
+    query = _request(
+        OverviewReadKind.STATUS,
+        **(
+            {"period": PublicPeriod.from_period(_overview_status_period(period, year=year)), "verbose": verbose}
+            if period is not None
+            else {"verbose": verbose}
+        ),
+    )
+    completed = read_overview(ctx, request=query)
 
-    The deadline-calendar surface that used to live behind `--calendar`
-    is now the first-class `aeat app overview calendar` verb. No alternate
-    flag path remains; callers must use the dedicated verb. The full-status branch projects
-    :func:`build_overview_status_report`; the period branch emits only the
-    matching draft rows.
-    """
-    from ...application.user_profile.projections import record_to_values
-    from ...core.bucket_pointer import resolve_active_bucket_id
-    from .state_projection_support import (
-        certificate_secret_backend_factory,
-        operator_probe_ports,
-        operator_scope_ports,
-        state_projection_read_ports,
-    )
+    def render() -> None:
+        payload = completed.payload
+        if not isinstance(payload, OverviewStatusRead):
+            raise ValueError("overview status projection has the wrong kind")
+        if payload.period_report is not None:
+            exact = payload.period_report
+            canonical = exact.period.to_period()
+            drafts = [
+                OverviewDraftPayload(draft_id=row.draft_id, modelo=row.modelo, status=row.status)
+                for row in exact.drafts
+            ]
+            typed = OverviewStatusResult(period=str(canonical), drafts=drafts, verbose=exact.verbose)
+            lines = [
+                f"{tr('cli.overview.period')}\t{canonical}",
+                f"{tr('cli.overview.drafts')}\t{len(drafts)}",
+                *(f"{row.modelo}\t{row.draft_id}\t{row.status}" for row in drafts),
+            ]
+            emit_envelope(ctx, command="overview.status", result=typed, lines=lines)
+            return
+        if payload.report is None:
+            raise ValueError("overview full status report is missing")
+        report = payload.report.to_report()
+        typed = strict_round_trip(OverviewStatusResult, report)
+        lines, notices = overview_status_output(report)
+        if payload.coverage is not None:
+            for notice in overview_coverage_notices(payload.coverage):
+                notices.append(notice)
+                lines.append(f"coverage_advised\t{payload.coverage_advised_count}\t{notice.message}")
+        notices.extend(_notice(item) for item in payload.notices)
+        emit_envelope(ctx, command="overview.status", result=typed, lines=lines, notices=notices)
 
-    current = current_workflow_state() if resolve_active_bucket_id() is not None else None
-    operation = authority_operation(ctx)
-    if period is not None:
-        if current is None:
-            raise no_active_profile_refusal()
-        _emit_period_overview_status(
-            ctx,
-            current=current,
-            period=period,
-            year=year,
-            verbose=verbose,
-            operation=operation,
-        )
-        return
-    profile_record = current.active_profile_record() if current is not None else None
-    profile_schema = (
-        _profile_schema_for_record(profile_record, operation=operation) if profile_record is not None else None
-    )
-    raw_values = (
-        record_to_values(profile_record, schema=profile_schema)
-        if profile_record is not None and profile_schema is not None
-        else None
-    )
-    report = _overview_application.build_overview_status_report(
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_probe_ports=operator_probe_ports(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-        state=current,
-        raw_values=raw_values,
-        read_ports=state_projection_read_ports(ctx),
-        operation=operation,
-    )
-    typed_status = strict_round_trip(OverviewStatusResult, report)
-    status_lines, status_notices = overview_status_output(report)
-    # ``status`` is a "what must I file" surface too: reconcile the active
-    # profile's obligation coverage over the current year and surface the same
-    # default advisory the calendar does, so status never reads as complete while
-    # obligations go unscoped. The coverage report rides the Notice channel.
-    coverage_lines, coverage_notices = _overview_status_coverage(
-        current,
-        raw_values=raw_values,
-        operation=operation,
-    )
-    emit_envelope(
-        ctx,
-        command="overview.status",
-        result=typed_status,
-        lines=[*status_lines, *coverage_lines],
-        notices=[*status_notices, *coverage_notices],
-    )
+    _emit_read(completed, render)
 
 
 def overview_calendar(
@@ -442,391 +200,78 @@ def overview_calendar(
     all_profiles: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Emit the overview calendar payload over the supplied date window.
-
-    The command builds an :class:`OverviewCalendarRange`, enriches it with
-    persisted :class:`OverviewCalendarEvent` and filing-evidence rows, and then
-    delegates the legal calendar projection to :func:`build_overview_calendar`.
-    """
-    from ...application.user_profile.projections import record_to_values
-
+    """Render a captured deadline calendar or public locked-profile survey."""
     activate_subcommand_output_language(ctx, output_language)
-
-    rng = OverviewCalendarRange(
+    query = _request(
+        OverviewReadKind.CALENDAR,
         from_date=_parse_iso_date(from_date, label="--from"),
         to_date=_parse_iso_date(to_date, label="--to"),
-    )
-    operation = authority_operation(ctx)
-
-    if all_profiles:
-        _overview_calendar_all_profiles(
-            ctx,
-            rng=rng,
-            allow_incomplete=allow_incomplete,
-            show_suppressed=show_suppressed,
-            operation=operation,
-        )
-        return
-
-    current = current_workflow_state()
-    record = current.active_profile_record()
-    profile_schema = _profile_schema_for_record(record, operation=operation) if record is not None else None
-    raw_values = (
-        record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
-    )
-    bucket_id = current.active_profile_bucket_id()
-    if bucket_id is None:
-        raise no_active_profile_refusal()
-    workflow_profile = profile_to_taxpayer(current)
-    # The evidence matchers compare the operator's NIF against the authenticated
-    # identity on each filed artefact, and every one of them fails OPEN on an
-    # empty expected value and CLOSED on a non-empty mismatching one. The
-    # taxpayer projection substitutes a synthetic placeholder NIF for an absent
-    # identity, which is non-empty and matches nothing real, so feeding it here
-    # inverts that design: an operator who has not yet declared a NIF would have
-    # every genuinely filed obligation silently dropped and redisplayed as
-    # unfiled. Read the declared identity instead, so absence stays absence.
-    expected_tax_id = declared_tax_id(record)
-    from .state_projection_support import expedientes_ports_factory
-
-    evidence_notices: list[Notice] = []
-    calendar_today = today_madrid()
-    live_events, live_notice = local_live_calendar_events(
-        bucket_id,
-        rng,
-        as_of=calendar_today,
-        expected_tax_id=expected_tax_id,
-        expedientes_ports=expedientes_ports_factory(ctx)(bucket_id=bucket_id),
-    )
-    modelo_record_events, modelo_events_notice = local_modelo_record_calendar_events(
-        bucket_id,
-        rng,
-        expected_tax_id=expected_tax_id,
-    )
-    events = (*live_events, *modelo_record_events)
-    filing_evidence, filing_evidence_notice = local_calendar_filing_evidence(
-        bucket_id,
-        events,
-        operation=operation,
-        expected_tax_id=expected_tax_id,
-    )
-    work_units, work_units_notice = local_modelo_work_units(bucket_id)
-    from ...domain.calculations.registry.applicability import derive_tax_route
-
-    # Without this, a row's "not observed" AEAT state cannot be told apart from
-    # a store that has never captured any AEAT history at all.
-    history_notice = overview_no_aeat_history_notice(tax_route=derive_tax_route(workflow_profile))
-    evidence_notices = [
-        notice
-        for notice in (live_notice, modelo_events_notice, filing_evidence_notice, work_units_notice, history_notice)
-        if notice is not None
-    ]
-    cal: OverviewCalendar = build_overview_calendar(
-        workflow_profile,
-        rng,
-        operation=operation,
-        today=calendar_today,
-        raw_values=raw_values,
+        allow_incomplete=allow_incomplete,
         show_suppressed=show_suppressed,
-        events=events,
-        filing_evidence=filing_evidence,
-        work_units=work_units,
-        live_censo_verified_profile_keys=live_censo_verified_profile_keys(record),
+        all_profiles=all_profiles,
     )
-    if not cal.taxpayer_model_declared:
-        # The taxpayer model is undeclared — the engine refuses
-        # to guess. Surface the "declare your taxpayer type first"
-        # guidance instead of an empty calendar with no explanation.
-        raise _undeclared_taxpayer_model_refusal(
-            profile_to_taxpayer(current),
-            schema=_require_profile_schema(profile_schema),
-        )
-    if cal.warnings and not allow_incomplete:
-        _refuse_calendar_warnings(cal, schema=_require_profile_schema(profile_schema))
-    from ._payer_fact_migration_notice import pending_payer_fact_notices
+    completed = read_overview(ctx, request=query)
 
-    typed_cal, lines, calendar_notices = overview_calendar_output(
-        cal,
-        rng,
-        evidence_notices=[*evidence_notices, *pending_payer_fact_notices(record)],
-    )
-    emit_envelope(
-        ctx,
-        command="overview.calendar",
-        result=typed_cal,
-        lines=lines,
-        notices=calendar_notices,
-    )
-
-
-@dataclass(frozen=True)
-class _ProfileCalendarInputs:
-    """Everything one profile's calendar is built from, read in one session.
-
-    Carries the profile's :class:`TaxpayerProfile` snapshot alongside its
-    calendar events, filing evidence, and work units.
-    """
-
-    taxpayer: TaxpayerProfile
-    schema: ProfileSchemaDefinition
-    raw_values: Mapping[str, object]
-    events: tuple[OverviewCalendarEvent, ...]
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...]
-    work_units: tuple[WorkUnit, ...]
-    live_censo_verified_profile_keys: tuple[str, ...] | None
-
-
-def _profile_calendar_inputs(
-    repository: ProfileRecordRepository,
-    bucket_id: str,
-    *,
-    rng: OverviewCalendarRange,
-    as_of: _date,
-    label: str,
-    expedientes_ports_factory: ExpedientesPortsFactory,
-    operation: PinnedAuthorityOperation,
-) -> _ProfileCalendarInputs | None:
-    """Read one profile's calendar inputs, or ``None`` when the bucket is unreadable.
-
-    An unreadable bucket is skipped with a warning rather than aborting the
-    scan, so one damaged profile does not deny every other profile its
-    calendar. The per-loader degradation notices are dropped here: the
-    multi-profile view already degrades per profile and renders many
-    calendars in one payload, and each loader still returns schedule-only
-    evidence rather than raising.
-    """
-    from ...application.user_profile.projections import projection_for_taxpayer, record_to_values
-
-    try:
-        record = repository.load(bucket_id)
-        schema = repository.session.profile_decode_context.schema
-        taxpayer = projection_for_taxpayer(record, schema=schema)
-        live_events, _ = local_live_calendar_events(
-            bucket_id,
-            rng,
-            as_of=as_of,
-            expected_tax_id=taxpayer.tax_id,
-            expedientes_ports=expedientes_ports_factory(bucket_id=bucket_id),
-        )
-        modelo_record_events, _ = local_modelo_record_calendar_events(
-            bucket_id,
-            rng,
-            expected_tax_id=taxpayer.tax_id,
-        )
-        events = (*live_events, *modelo_record_events)
-        filing_evidence, _ = local_calendar_filing_evidence(
-            bucket_id,
-            events,
-            operation=operation,
-            expected_tax_id=taxpayer.tax_id,
-        )
-        work_units, _ = local_modelo_work_units(bucket_id)
-        return _ProfileCalendarInputs(
-            taxpayer=taxpayer,
-            schema=schema,
-            raw_values=record_to_values(record, schema=schema),
-            events=events,
-            filing_evidence=filing_evidence,
-            work_units=work_units,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys(record),
-        )
-    except typer.BadParameter:
-        raise
-    except Exception:
-        logger.warning("overview calendar: skipping unreadable profile %s (%s)", bucket_id, label, exc_info=True)
-        return None
-
-
-def _calendar_profile_groups(
-    buckets: Mapping[str, _ProfileBucketPointer],
-    *,
-    active_bucket_id: str | None,
-    operation: PinnedAuthorityOperation,
-) -> tuple[dict[str, _ProfileBucketPointer], list[_ProfileBucketPointer], list[_ProfileBucketPointer]]:
-    """Classify registered profiles without treating labels as readiness authority."""
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ...domain.user_profile.values import ProfileSetupState
-
-    active: dict[str, _ProfileBucketPointer] = {}
-    setup_incomplete: list[_ProfileBucketPointer] = []
-    locked: list[_ProfileBucketPointer] = []
-    for bucket_id, pointer in buckets.items():
-        if bucket_id != active_bucket_id:
-            locked.append(pointer)
-            continue
-        try:
-            record = ProfileRecordRepository.for_current_session(
-                bucket_id,
-                profile_decode_context=operation.profile_decode_context(),
-            ).load(bucket_id)
-        except ProfileNotFoundError:
-            locked.append(pointer)
-            continue
-        if record.setup_state is ProfileSetupState.COMPLETE:
-            active[bucket_id] = pointer
+    def render() -> None:
+        payload = completed.payload
+        if not isinstance(payload, OverviewCalendarRead):
+            raise ValueError("overview calendar projection has the wrong kind")
+        if payload.calendar is not None:
+            calendar = payload.calendar.to_calendar()
+            if not calendar.taxpayer_model_declared or (calendar.warnings and not allow_incomplete):
+                raise _incomplete_refusal(
+                    completed,
+                    payload.refusal_requirements,
+                    undeclared=not calendar.taxpayer_model_declared,
+                    warning_count=len(calendar.warnings)
+                    if calendar.taxpayer_model_declared
+                    else len(payload.refusal_requirements),
+                )
+            typed, lines, notices = overview_calendar_output(
+                calendar,
+                calendar.range,
+                evidence_notices=tuple(_notice(row) for row in payload.notices),
+                deemed_served_legal_ref=payload.deemed_served_legal_ref,
+            )
         else:
-            setup_incomplete.append(pointer)
-    setup_incomplete.sort(key=lambda pointer: pointer.label)
-    locked.sort(key=lambda pointer: pointer.label)
-    return active, setup_incomplete, locked
+            typed, lines, notices = _overview_calendar_survey_output(completed, payload, allow_incomplete)
+        emit_envelope(ctx, command="overview.calendar", result=typed, lines=lines, notices=notices)
 
-
-def _profile_calendar_projection(
-    bucket_id: str,
-    pointer: _ProfileBucketPointer,
-    *,
-    rng: OverviewCalendarRange,
-    as_of: _date,
-    allow_incomplete: bool,
-    show_suppressed: bool,
-    expedientes_ports_factory: ExpedientesPortsFactory,
-    operation: PinnedAuthorityOperation,
-) -> tuple[dict[str, object], list[str], list[Notice]] | None:
-    """Build one profile calendar block, or return ``None`` for a skipped bucket."""
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-
-    inputs = _profile_calendar_inputs(
-        ProfileRecordRepository.for_current_session(
-            bucket_id,
-            profile_decode_context=operation.profile_decode_context(),
-        ),
-        bucket_id,
-        rng=rng,
-        as_of=as_of,
-        label=pointer.label,
-        expedientes_ports_factory=expedientes_ports_factory,
-        operation=operation,
-    )
-    if inputs is None:
-        return None
-    cal = build_overview_calendar(
-        inputs.taxpayer,
-        rng,
-        operation=operation,
-        today=as_of,
-        raw_values=inputs.raw_values,
-        show_suppressed=show_suppressed,
-        events=inputs.events,
-        filing_evidence=inputs.filing_evidence,
-        work_units=inputs.work_units,
-        live_censo_verified_profile_keys=inputs.live_censo_verified_profile_keys,
-    )
-    if cal.warnings and not allow_incomplete:
-        _refuse_calendar_warnings(cal, schema=inputs.schema)
-    return overview_calendar_profile_output(bucket_id=bucket_id, label=pointer.label, cal=cal)
-
-
-def _overview_calendar_all_profiles(
-    ctx: typer.Context,
-    *,
-    rng: OverviewCalendarRange,
-    allow_incomplete: bool,
-    show_suppressed: bool,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Emit the deadline calendar for every registered active profile.
-
-    Iterates :func:`list_profile_buckets` and reads only the already
-    authenticated active capsule. Other profiles remain locked projections.
-    The combined JSON payload uses the single
-    :class:`OverviewCalendarResult` schema declared for
-    ``overview.calendar``.
-    """
-    from ...application.workflow.profile_bucket_scan import list_profile_buckets
-    from ...core.bucket_pointer import resolve_active_bucket_id
-    from .state_projection_support import expedientes_ports_factory
-
-    today = today_madrid()
-    buckets = list_profile_buckets()
-    active_buckets, setup_incomplete, locked = _calendar_profile_groups(
-        buckets,
-        active_bucket_id=resolve_active_bucket_id(),
-        operation=operation,
-    )
-
-    all_lines: list[str] = [
-        f"from\t{rng.from_date.isoformat()}",
-        f"to\t{rng.to_date.isoformat()}",
-        f"profiles\t{len(active_buckets)}",
-    ]
-    for pointer in locked:
-        all_lines.append(f"profile\t{pointer.bucket_id}\t{pointer.label}")
-        all_lines.append(f"profile_locked\t{pointer.bucket_id}\t{pointer.label}")
-    all_lines.extend(f"profile_setup_incomplete\t{pointer.bucket_id}\t{pointer.label}" for pointer in setup_incomplete)
-    all_coverage_notices: list[Notice] = []
-    all_calendars: list[dict[str, object]] = []
-    ports_factory = expedientes_ports_factory(ctx)
-
-    for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
-        projection = _profile_calendar_projection(
-            bucket_id,
-            pointer,
-            rng=rng,
-            as_of=today,
-            allow_incomplete=allow_incomplete,
-            show_suppressed=show_suppressed,
-            expedientes_ports_factory=ports_factory,
-            operation=operation,
-        )
-        if projection is None:
-            all_lines.append(f"profile_skipped\t{bucket_id}\t{pointer.label}")
-            continue
-        profile_payload, profile_lines, profile_notices = projection
-        all_lines.extend(profile_lines)
-        all_coverage_notices.extend(profile_notices)
-        all_calendars.append(profile_payload)
-
-    typed_all = OverviewCalendarResult.model_validate({"profiles": all_calendars})
-    emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines, notices=all_coverage_notices)
+    _emit_read(completed, render)
 
 
 def overview_agenda(
-    ctx: typer.Context,
-    as_of: str | None = None,
-    horizon_days: int = 14,
-    allow_incomplete: bool = False,
+    ctx: typer.Context, as_of: str | None = None, horizon_days: int = 14, allow_incomplete: bool = False
 ) -> None:
-    """Emit the overview agenda payload with next-due cohort breakdowns.
-
-    The command delegates obligation ranking to :func:`build_overview_agenda`
-    and only adapts the application DTO to the CLI envelope and tabular text
-    lines.
-    """
-    from ...application.overview.agenda import build_overview_agenda
-    from ...application.user_profile.projections import record_to_values
-
-    current = current_workflow_state()
-    as_of_date = _parse_iso_date(as_of, label="--date") if as_of else today_madrid()
+    """Render canonical next-due cohorts captured in the worker."""
     if horizon_days <= 0:
-        raise bad(
-            tr(
-                "cli.overview.agenda.errors.invalid_horizon",
-            ),
-        )
-    record = current.active_profile_record()
-    operation = authority_operation(ctx)
-    profile_schema = _profile_schema_for_record(record, operation=operation) if record is not None else None
-    raw_values = (
-        record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
-    )
-    agenda = build_overview_agenda(
-        profile_to_taxpayer(current),
-        as_of=as_of_date,
-        operation=operation,
+        raise bad(tr("cli.overview.agenda.errors.invalid_horizon"))
+    query = _request(
+        OverviewReadKind.AGENDA,
+        as_of=_parse_iso_date(as_of, label="--date") if as_of else today_madrid(),
         horizon_days=horizon_days,
-        raw_values=raw_values,
+        allow_incomplete=allow_incomplete,
     )
-    if not agenda.taxpayer_model_declared and not allow_incomplete:
-        raise _undeclared_taxpayer_model_refusal(
-            profile_to_taxpayer(current),
-            schema=_require_profile_schema(profile_schema),
-        )
-    if agenda.warnings and not allow_incomplete:
-        raise _incomplete_profile_refusal(agenda.warnings, schema=_require_profile_schema(profile_schema))
+    completed = read_overview(ctx, request=query)
 
-    typed_agenda, lines, coverage_notices = overview_agenda_output(agenda)
-    emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines, notices=coverage_notices)
+    def render() -> None:
+        payload = completed.payload
+        if not isinstance(payload, OverviewAgendaRead):
+            raise ValueError("overview agenda projection has the wrong kind")
+        agenda = payload.agenda.to_agenda()
+        if (not agenda.taxpayer_model_declared or agenda.warnings) and not allow_incomplete:
+            raise _incomplete_refusal(
+                completed,
+                payload.refusal_requirements,
+                undeclared=not agenda.taxpayer_model_declared,
+                warning_count=len(agenda.warnings)
+                if agenda.taxpayer_model_declared
+                else len(payload.refusal_requirements),
+            )
+        typed, lines, notices = overview_agenda_output(agenda)
+        emit_envelope(ctx, command="overview.agenda", result=typed, lines=lines, notices=notices)
+
+    _emit_read(completed, render)
 
 
 def overview_backlog(
@@ -835,248 +280,101 @@ def overview_backlog(
     to_date: str | None = None,
     allow_incomplete: bool = False,
 ) -> None:
-    """Emit the overview backlog payload for past-due obligations.
+    """Render canonical past-due rows captured in the worker."""
+    fields: dict[str, object] = {"allow_incomplete": allow_incomplete}
+    if from_date is not None:
+        fields["from_date"] = _parse_iso_date(from_date, label="--from")
+    if to_date is not None:
+        fields["to_date"] = _parse_iso_date(to_date, label="--to")
+    completed = read_overview(ctx, request=_request(OverviewReadKind.BACKLOG, **fields))
 
-    The command delegates read-model assembly to
-    :func:`build_overview_backlog`; it does not resume or mutate modelo
-    workflows.
-    """
-    from ...application.overview.backlog import build_overview_backlog
-    from ...application.user_profile.projections import record_to_values
+    def render() -> None:
+        payload = completed.payload
+        if not isinstance(payload, OverviewBacklogRead):
+            raise ValueError("overview backlog projection has the wrong kind")
+        backlog = payload.backlog.to_backlog()
+        if not backlog.taxpayer_model_declared or (backlog.warnings and not allow_incomplete):
+            raise _incomplete_refusal(
+                completed,
+                payload.refusal_requirements,
+                undeclared=not backlog.taxpayer_model_declared,
+                warning_count=len(backlog.warnings)
+                if backlog.taxpayer_model_declared
+                else len(payload.refusal_requirements),
+            )
+        notice = _notice(payload.notices[0]) if payload.notices else None
+        typed, lines, notices = overview_backlog_output(backlog, work_units_notice=notice)
+        emit_envelope(ctx, command="overview.backlog", result=typed, lines=lines, notices=notices)
 
-    current = current_workflow_state()
-    parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None
-    parsed_to = _parse_iso_date(to_date, label="--to") if to_date else None
-    record = current.active_profile_record()
-    operation = authority_operation(ctx)
-    profile_schema = _profile_schema_for_record(record, operation=operation) if record is not None else None
-    raw_values = (
-        record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
-    )
-    bucket_id = current.active_profile_bucket_id()
-    if bucket_id is None:
-        raise no_active_profile_refusal()
-    work_units, work_units_notice = local_modelo_work_units(bucket_id)
-    backlog = build_overview_backlog(
-        profile_to_taxpayer(current),
-        operation=operation,
-        from_date=parsed_from,
-        to_date=parsed_to,
-        raw_values=raw_values,
-        work_units=work_units,
-    )
-    if not backlog.taxpayer_model_declared:
-        raise _undeclared_taxpayer_model_refusal(
-            profile_to_taxpayer(current),
-            schema=_require_profile_schema(profile_schema),
+    _emit_read(completed, render)
+
+
+def overview_explain(ctx: typer.Context, modelo: str, year: int | None = None) -> None:
+    """Render canonical applicability with its already-disclosed profile facts."""
+    fields: dict[str, object] = {"modelo": modelo}
+    if year is not None:
+        fields["year"] = year
+    completed = read_overview(ctx, request=_request(OverviewReadKind.EXPLAIN, **fields))
+
+    def render() -> None:
+        payload = completed.payload
+        if not isinstance(payload, OverviewExplainRead):
+            raise ValueError("overview explanation projection has the wrong kind")
+        typed, lines = overview_explain_output(payload.explanation.to_explain())
+        emit_envelope(
+            ctx,
+            command="overview.explain",
+            result=typed,
+            lines=lines,
+            notices=tuple(_notice(row) for row in payload.notices),
         )
-    if backlog.warnings and not allow_incomplete:
-        raise _incomplete_profile_refusal(backlog.warnings, schema=_require_profile_schema(profile_schema))
 
-    typed_backlog, lines, backlog_notices = overview_backlog_output(
-        backlog,
-        work_units_notice=work_units_notice,
-    )
-    emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines, notices=backlog_notices)
+    _emit_read(completed, render)
 
 
-def overview_explain(
-    ctx: typer.Context,
-    modelo: str,
-    year: int | None = None,
-) -> None:
-    """Emit the overview explain payload for one modelo applicability verdict.
-
-    The explanation comes from :func:`build_overview_explain`; this adapter only
-    maps application errors to CLI validation and renders the typed envelope.
-    """
-    from ...application.overview.errors import OverviewExplainError
-    from ...application.overview.explain import build_overview_explain
-    from ...domain.calculations.registry.applicability import ApplicabilityVerdict
-    from ._payer_fact_migration_notice import pending_payer_fact_notices
-
-    current = current_workflow_state()
-    try:
-        result = build_overview_explain(
-            profile_to_taxpayer(current),
-            modelo=modelo,
-            year=year,
-        )
-    except OverviewExplainError as exc:
-        raise bad(str(exc)) from exc
-    typed_explain, lines = overview_explain_output(result)
-    notices = (
-        pending_payer_fact_notices(current.active_profile_record(), modelo=result.modelo)
-        if result.verdict is ApplicabilityVerdict.INCOMPLETE
-        else ()
-    )
-    emit_envelope(
+def overview_prepare(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
+    """Render the canonical exact-period preparation checklist."""
+    canonical = _canonical_period(period, year=year)
+    completed = read_overview(
         ctx,
-        command="overview.explain",
-        result=typed_explain,
-        lines=lines,
-        notices=notices,
+        request=_request(OverviewReadKind.PREPARE, modelo=modelo, period=PublicPeriod.from_period(canonical)),
     )
 
+    def render() -> None:
+        payload = completed.payload
+        if not isinstance(payload, OverviewPrepareRead):
+            raise ValueError("overview preparation projection has the wrong kind")
+        typed, lines, notices = overview_prepare_output(payload.preparation.to_walkthrough())
+        emit_envelope(ctx, command="overview.prepare", result=typed, lines=lines, notices=notices)
 
-def overview_prepare(
-    ctx: typer.Context,
-    modelo: str,
-    year: int,
-    period: str,
-) -> None:
-    """Emit the ordered data-prep walkthrough for one (modelo, period) scope.
-
-    Delegates the readiness composition to
-    :func:`~cadrumo.application.overview.data_prep.build_data_prep_walkthrough`; this
-    adapter resolves the active bucket, validates the modelo/period against
-    the registry, loads the ledger/invoice/evidence/work-unit state, and
-    renders the typed envelope plus per-step next-command notices.
-    """
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
-    from ...application.ledger.preflight import preflight_ledger_tax_readiness
-    from ...application.modelo.registry_discovery import registry_describe_modelo_for_scope
-    from ...application.overview.data_prep import build_data_prep_walkthrough
-    from ...domain.calculations.registry.errors import RegistrySnapshotError
-    from ..ledger_action_composition import compose_ledger_action_ports
-    from .state_projection_support import authority_operation, ledger_evidence_ports_factory
-
-    current = current_workflow_state()
-    bucket_id = current.active_profile_bucket_id()
-    if bucket_id is None:
-        raise no_active_profile_refusal()
-
-    canonical_period = _canonical_period(period, year=year)
-    try:
-        registry_describe_modelo_for_scope(modelo, period=canonical_period, operation=authority_operation(ctx))
-    except (ValueError, RegistrySnapshotError) as exc:
-        raise bad(
-            tr(
-                "cli.overview.prepare.modelo_period_error",
-                message=str(exc),
-            ),
-        ) from exc
-
-    transaction_repository = transaction_catalogue_repo(current)
-    ledger_action_ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx))
-    invoice_catalogue = load_invoices()
-    evidence_records = PurchaseInvoiceEvidenceService(
-        ports=ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id),
-    ).list_all(bucket_id=bucket_id)
-    preflight_report = preflight_ledger_tax_readiness(
-        bucket_id=bucket_id,
-        period=canonical_period,
-        transaction_repository=transaction_repository,
-        usage_ratio_profile_loader=ledger_action_ports.usage_ratio_profile_loader,
-        operation=authority_operation(ctx),
-    )
-    work_unit_catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
-
-    walkthrough = build_data_prep_walkthrough(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        period=canonical_period,
-        transaction_repository=transaction_repository,
-        invoice_catalogue=invoice_catalogue,
-        evidence_records=evidence_records,
-        preflight_report=preflight_report,
-        work_unit_catalogue=work_unit_catalogue,
-    )
-
-    typed_result, lines, notices = overview_prepare_output(walkthrough)
-    emit_envelope(ctx, command="overview.prepare", result=typed_result, lines=lines, notices=notices)
+    _emit_read(completed, render)
 
 
-def overview_pipeline(
-    ctx: typer.Context,
-    year: int,
-    period: str,
-) -> None:
-    """Emit the cross-domain pipeline health report for one (filing_year, period) scope.
-
-    Delegates the readiness composition to
-    :func:`~cadrumo.application.overview.pipeline_health.build_pipeline_health_report`; this
-    adapter resolves the active bucket, loads the period-scoped ledger status
-    report, the period's modelo work units, their current calculation
-    revisions, and the latest verification report per revision, then renders
-    the typed envelope plus outstanding-finding notices.
-    """
-    from ...application.ledger.actions_manual import summarize_manual_transactions
-    from ...application.modelo.calculation_actions import get_calculation_revision
-    from ...application.modelo.filing_actions import list_verification_reports
-    from ...application.modelo.work_lifecycle import list_work_units
-    from ...application.overview.pipeline_health import build_pipeline_health_report
-    from ...domain.modelos.calculation_revision import CalculationRevision
-    from ...domain.modelos.verification_report import VerificationReport
-    from ..ledger_action_composition import compose_ledger_action_ports
+def overview_pipeline(ctx: typer.Context, year: int, period: str) -> None:
+    """Render one authenticated profile worker's pipeline-health snapshot."""
     from ._ledger_payloads import LedgerStatusResult
-    from .state_projection_support import (
-        authority_operation,
-        calculation_action_ports_factory,
-        filing_action_ports_factory,
-    )
-
-    current = current_workflow_state()
-    bucket_id = current.active_profile_bucket_id()
-    if bucket_id is None:
-        raise no_active_profile_refusal()
 
     canonical_period = _canonical_period(period, year=year)
-    ledger_report = summarize_manual_transactions(
-        bucket_id=bucket_id,
-        period=canonical_period,
-        ports=compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx)),
+    completed = read_overview_pipeline(
+        ctx, period=canonical_period, output_language=OutputLanguage(current_output_language())
     )
-
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=bucket_id,
-        operation=authority_operation(ctx),
-    )
-    all_work_units = list_work_units(
-        bucket_id=bucket_id,
-        include_discarded=False,
-        ports=calculation_ports.work_lifecycle_ports,
-    )
-    work_units = tuple(
-        unit
-        for unit in all_work_units
-        if unit.filing_year == canonical_period.filing_year
-        and unit.period.registry_token == canonical_period.registry_token
-    )
-
-    filing_ports = filing_action_ports_factory(ctx)(bucket_id=bucket_id)
-    revisions_by_id: dict[str, CalculationRevision] = {}
-    reports_by_revision_id: dict[str, tuple[VerificationReport, ...]] = {}
-    for unit in work_units:
-        if unit.current_calculation_revision_id is None:
-            continue
-        revision = get_calculation_revision(
-            unit.current_calculation_revision_id,
-            ports=calculation_ports,
+    try:
+        report = completed.report.to_report()
+        typed_result, lines, notices = overview_pipeline_output(
+            report, ledger=strict_round_trip(LedgerStatusResult, report.ledger)
         )
-        revisions_by_id[revision.calculation_revision_id] = revision
-        reports_by_revision_id[revision.calculation_revision_id] = list_verification_reports(
-            ports=filing_ports,
-            calculation_revision_id=revision.calculation_revision_id,
-            operation=authority_operation(ctx),
-        )
-
-    report = build_pipeline_health_report(
-        bucket_id=bucket_id,
-        filing_year=canonical_period.filing_year,
-        period=canonical_period,
-        ledger_report=ledger_report,
-        work_units=work_units,
-        revisions_by_id=revisions_by_id,
-        reports_by_revision_id=reports_by_revision_id,
-    )
-
-    typed_result, lines, notices = overview_pipeline_output(
-        report,
-        ledger=strict_round_trip(LedgerStatusResult, report.ledger),
-    )
-    emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)
+        emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)
+    except typer.Exit:
+        raise
+    except Exception:
+        receipt = completed.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None
 
 
 __all__ = [
@@ -1088,3 +386,49 @@ __all__ = [
     "overview_prepare",
     "overview_status",
 ]
+
+
+def _overview_calendar_survey_output(
+    completed: OverviewReadCompletion, payload: OverviewCalendarRead, allow_incomplete: bool
+) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
+    """Render locked and active profiles with the existing incomplete-calendar refusals."""
+    survey = payload.survey
+    if survey is None:
+        raise ValueError("overview calendar survey is missing")
+    lines = [
+        f"from\t{survey.from_date.isoformat()}",
+        f"to\t{survey.to_date.isoformat()}",
+        f"profiles\t{int(survey.active_calendar is not None)}",
+    ]
+    for pointer in survey.locked:
+        lines.extend(
+            (
+                f"profile\t{pointer.profile_id}\t{pointer.label}",
+                f"profile_locked\t{pointer.profile_id}\t{pointer.label}",
+            )
+        )
+    lines.extend(
+        f"profile_setup_incomplete\t{pointer.profile_id}\t{pointer.label}" for pointer in survey.setup_incomplete
+    )
+    profiles: list[dict[str, object]] = []
+    notices: list[Notice] = []
+    if survey.active_calendar is not None and survey.active_profile_id and survey.active_label:
+        calendar = survey.active_calendar.to_calendar()
+        if calendar.warnings and not allow_incomplete:
+            raise _incomplete_refusal(
+                completed,
+                payload.refusal_requirements,
+                undeclared=False,
+                warning_count=len(calendar.warnings),
+            )
+        profile, profile_lines, profile_notices = overview_calendar_profile_output(
+            bucket_id=survey.active_profile_id,
+            label=survey.active_label,
+            cal=calendar,
+            deemed_served_legal_ref=payload.deemed_served_legal_ref,
+        )
+        profiles.append(profile)
+        lines.extend(profile_lines)
+        notices.extend(profile_notices)
+    typed = OverviewCalendarResult.model_validate({"profiles": profiles})
+    return typed, lines, notices

@@ -46,7 +46,7 @@ from ...ledger.workspace import (
     LedgerWorkspaceSource,
     LedgerWorkspaceStatus,
 )
-from ...modelo.declarations_workspace import (
+from ...modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceCalculationRevisionRefV1,
@@ -64,7 +64,7 @@ from ...modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceResolvedTargetV1,
 )
-from ..installed_workbench import InstalledWorkbenchSearchInputsV1, assemble_installed_workbench_search_snapshot
+from ..installed_workbench import assemble_installed_workbench_search_snapshot
 from ..workbench import (
     WorkbenchDestinationAdmission,
     WorkbenchDestinationAdmissionState,
@@ -261,7 +261,7 @@ def _modelo() -> ModeloWorkspaceProjectionV1:
 
 def test_snapshot_has_one_redacted_document_per_current_searchable_projection() -> None:
     """Current workspace rows become safe documents without retaining private IDs."""
-    inputs = InstalledWorkbenchSearchInputsV1(
+    snapshot = assemble_installed_workbench_search_snapshot(
         ledger=_ledger(),
         declarations=_declarations(),
         aeat_sync=_aeat_sync(),
@@ -270,7 +270,6 @@ def test_snapshot_has_one_redacted_document_per_current_searchable_projection() 
         declarations_admission=_admission("workbench.declarations"),
         aeat_sync_admission=_admission("workbench.aeat_sync"),
     )
-    snapshot = inputs.snapshot()
 
     assert tuple(document.kind for document in snapshot.documents) == (
         WorkbenchSearchKind.LEDGER_ENTRY,
@@ -304,6 +303,37 @@ def test_snapshot_rejects_a_destination_admission_from_another_area() -> None:
             declarations_admission=_admission("workbench.declarations"),
             aeat_sync_admission=_admission("workbench.aeat_sync"),
         )
+
+
+def test_distinct_reconciliation_evidence_at_one_period_has_unique_search_identities() -> None:
+    from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_projection as _projection
+    from ...aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from ...modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+
+    receipt = _record()
+    declaration = receipt.model_copy(
+        update={
+            "source_kind": ModeloReconciliationEvidenceKind.DECLARATION,
+            "bucket_event_id": "c" * 64,
+        }
+    )
+    other_work = declaration.model_copy(update={"work_unit_id": "d" * 64, "bucket_event_id": "e" * 64})
+    other_calculation = declaration.model_copy(
+        update={"calculation_revision_id": "f" * 64, "bucket_event_id": "1" * 64}
+    )
+    projection = _projection((receipt, declaration, other_work, other_calculation))
+    snapshot = assemble_installed_workbench_search_snapshot(
+        ledger=_ledger(),
+        declarations=_declarations(),
+        aeat_sync=projection,
+        modelo=(),
+        ledger_admission=_admission("workbench.ledger"),
+        declarations_admission=_admission("workbench.declarations"),
+        aeat_sync_admission=_admission("workbench.aeat_sync"),
+    )
+    response = snapshot.service().search(WorkbenchSearchRequest(query="reconciliation"))
+    assert response.total_matches == 4
+    assert len({result.stable_id for result in response.results}) == 4
 
 
 def test_snapshot_projects_modelo_availability_from_the_existing_capability_answer() -> None:
@@ -355,7 +385,7 @@ def test_an_entry_is_findable_by_the_words_the_operator_would_actually_recall() 
     addressing, nobody types 64 hex characters, and it remains a secret
     identity basis excluded from serialization.
     """
-    inputs = InstalledWorkbenchSearchInputsV1(
+    service = assemble_installed_workbench_search_snapshot(
         ledger=_ledger(),
         declarations=_declarations(),
         aeat_sync=_aeat_sync(),
@@ -363,8 +393,7 @@ def test_an_entry_is_findable_by_the_words_the_operator_would_actually_recall() 
         ledger_admission=_admission("workbench.ledger"),
         declarations_admission=_admission("workbench.declarations"),
         aeat_sync_admission=_admission("workbench.aeat_sync"),
-    )
-    service = inputs.snapshot().service()
+    ).service()
 
     for query in ("Suministros Delta SL", "Material de oficina", "1250.00"):
         response = service.search(WorkbenchSearchRequest(query=query))

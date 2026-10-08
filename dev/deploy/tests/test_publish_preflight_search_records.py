@@ -1,4 +1,6 @@
-"""Publish preflight: a pages-only search index must not reach S3.
+"""Publish preflight: the site's one search index, and what must not reach S3.
+
+A pages-only search index must not reach S3.
 
 The defect this pins shipped for weeks and was caught by reading, not by any
 gate. The deploy environment selected the pages-only contract, the published
@@ -23,6 +25,9 @@ defect lived on.
 from __future__ import annotations
 
 import contextlib
+import gzip
+import json
+import re
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -30,36 +35,35 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, UTF_8
+from dev.docs.build_paths import docs_html_root
 from dev.docs.pagefind_index import (
     DECIDED_INJECTED_RECORD_KINDS,
     InjectCallback,
     build_search_index,
+    build_shared_search_index,
     injected_record_kinds_in_index,
 )
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-from ..docs_static_site import (
-    _language_site_url,
-    _require_search_index,
-    _validate_language_roots,
-    localized_languages,
-)
+from ..docs_site_build import _write_apex_sitemap, indexed_roots
+from ..docs_site_languages import _language_site_url, _write_language_entry, localized_languages
+from ..docs_site_preflight import _require_search_index, _validate_built_site, _validate_language_roots
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 # dev/deploy/tests -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
-_BUILT_HTML = _REPO_ROOT / "docs" / "_build" / "html"
-_PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
+_BUILT_HTML = docs_html_root(_REPO_ROOT)
+_UTF_8 = UTF_8
 
 _PAGES = 3
 
 
 def _page_corpus(tmp_path: Path, name: str) -> Path:
-    """Copy a few real built pages plus the real ``pagefind.yml`` into ``name``."""
+    """Copy a few real built pages into ``name``."""
     if not _BUILT_HTML.is_dir():
         pytest.fail(
             f"no built documentation HTML at {_BUILT_HTML}; this preflight reads a real "
@@ -72,7 +76,6 @@ def _page_corpus(tmp_path: Path, name: str) -> Path:
     site.mkdir(parents=True)
     for source in pages:
         (site / source.name).write_bytes(source.read_bytes())
-    shutil.copy(_PAGEFIND_YML, site / "pagefind.yml")
     return site
 
 
@@ -179,24 +182,25 @@ def test_an_empty_index_is_still_refused(tmp_path: Path) -> None:
     assert "no substantive generated index data" in str(excinfo.value)
 
 
-def test_a_localized_root_is_refused_and_named(tmp_path: Path, pages_only_site: Path) -> None:
-    """The localized call site refuses too, and says WHICH root.
+def test_the_whole_site_is_refused_on_one_record_free_index(tmp_path: Path, pages_only_site: Path) -> None:
+    """The site-level call site refuses too, with every language root complete.
 
-    Exercises ``_validate_language_roots`` itself rather than asserting that it
+    Exercises ``_validate_built_site`` itself rather than asserting that it
     routes to the shared check -- routing is a decision, and a decision is not
-    the surface a reader's search runs against.
+    the surface a reader's search runs against. Every root here carries its
+    complete artifact set and a canonically-rooted sitemap, so the ONLY defect
+    is the site's one index, which is what must stop the publish: with one index
+    a record-free index is every language's search gone at once.
     """
     languages = localized_languages()
-    assert languages, "no localized roots configured; this test would prove nothing"
+    assert languages, "no published roots configured; this test would prove nothing"
 
     html_root = tmp_path / "html"
+    shutil.copytree(pages_only_site / "pagefind", html_root / "pagefind")
     for language in languages:
         root = html_root / language
-        shutil.copytree(pages_only_site, root)
+        root.mkdir(parents=True)
         (root / "index.html").write_text("<html lang='x'><body>root</body></html>", encoding="utf-8")
-        # The complete required-artifact set is satisfied except for the
-        # record-carrying search index: this test isolates the record-kind
-        # refusal, not the (separately-gated) artifact-presence refusal.
         (root / "404.html").write_text("<html lang='x'><body>not found</body></html>", encoding="utf-8")
         canonical_root = f"{_language_site_url(language)}/"
         (root / "sitemap.xml").write_text(
@@ -206,13 +210,91 @@ def test_a_localized_root_is_refused_and_named(tmp_path: Path, pages_only_site: 
             "</urlset>\n",
             encoding="utf-8",
         )
+    _write_language_entry(html_root)
+    _write_apex_sitemap(html_root)
+    (html_root / "404.html").write_text("<html lang='en'><body>not found</body></html>", encoding="utf-8")
+
+    _validate_language_roots(html_root)  # the roots themselves are complete
 
     with pytest.raises(SystemExit) as excinfo:
-        _validate_language_roots(html_root)
+        _validate_built_site(html_root)
 
     message = str(excinfo.value)
-    assert any(f"{language!r}" in message for language in languages), message
+    assert "documentation site" in message, message
     assert "concept" in message
+
+
+def _retargeted_page_corpus(apex: Path, language: str, *, subdirectory: str = "") -> Path:
+    """Copy real built pages into ``apex/<language>``, rendered in that language.
+
+    The built pages are English, and the index pass refuses a page whose
+    rendered ``<html lang>`` is not the language its root is indexed as -- that
+    disagreement would strand the whole root behind the language filter. The
+    attribute is therefore retargeted, which is the only signal the pass reads;
+    the prose stays English, and prose is not the property under test here.
+
+    ``subdirectory`` places the pages deeper inside the root, which is how the
+    English full-scope root carries its API reference tree.
+    """
+    root = apex / language
+    destination = root / subdirectory if subdirectory else root
+    destination.mkdir(parents=True, exist_ok=True)
+    for source in scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]:
+        text = source.read_text(encoding=_UTF_8, errors="replace")
+        retargeted, replaced = re.subn(r'(<html[^>]*?)\blang="[^"]*"', rf'\1lang="{language}"', text, count=1)
+        assert replaced == 1, f"built page {source.name} carries no <html lang> attribute to retarget"
+        (destination / source.name).write_text(retargeted, encoding=_UTF_8)
+    return root
+
+
+def _indexed_pages(apex: Path) -> dict[str, set[str]]:
+    """Return ``{language filter value: indexed page URLs}`` read from the written index.
+
+    The artefact, not the pass's report: each fragment is gzipped JSON behind a
+    short marker, carrying the page's indexed URL and the filter values a
+    reader's search narrows by.
+    """
+    pages: dict[str, set[str]] = {}
+    for fragment in scan_directory(apex / "pagefind" / "fragment", pattern="*.pf_fragment", recursive=True):
+        text = gzip.decompress(fragment.read_bytes()).decode(_UTF_8, errors="replace")
+        payload = json.loads(text[text.find("{") :])
+        for value in payload.get("filters", {}).get("language", []):
+            pages.setdefault(value, set()).add(payload["url"])
+    return pages
+
+
+def test_the_site_index_addresses_every_root_by_the_directory_it_is_served_from(tmp_path: Path) -> None:
+    """One REAL index over two roots: each page is addressed and filtered by its root.
+
+    The published layout's own shape, proven on real Pagefind output. Two
+    properties carry the site: a page's indexed URL is its address on the site
+    (``/<language>/...``), so a result opens where the page actually is, and a
+    page's language is a FILTER, so a reader of one language is answered with
+    that language's pages. The English root also carries pages the others do not
+    -- it is the full-scope build, which holds the API reference -- so the
+    corpus is deliberately ragged here, and an API page must be addressed and
+    filtered like any other English page.
+    """
+    apex = tmp_path / "html"
+    english = _retargeted_page_corpus(apex, "en")
+    _retargeted_page_corpus(apex, "en", subdirectory="api")
+    spanish = _retargeted_page_corpus(apex, "es")
+
+    with contextlib.chdir(tmp_path):
+        build_shared_search_index(indexed_roots({"en": english, "es": spanish}), apex)
+
+    assert (apex / "pagefind" / "pagefind-entry.json").is_file(), "the one index was not written at the apex"
+    for root in (english, spanish):
+        assert not (root / "pagefind").exists(), f"{root} carries an index of its own"
+
+    pages = _indexed_pages(apex)
+    assert sorted(pages) == ["en", "es"], f"the index does not filter by both roots' languages: {sorted(pages)}"
+    assert all(url.startswith("/en/") for url in pages["en"]), pages["en"]
+    assert all(url.startswith("/es/") for url in pages["es"]), pages["es"]
+    assert any(url.startswith("/en/api/") for url in pages["en"]), (
+        f"the full-scope root's API pages are not addressed inside it: {sorted(pages['en'])}"
+    )
+    assert len(pages["en"]) > len(pages["es"]), "the ragged corpus is not ragged; the test proves nothing"
 
 
 def test_decided_kinds_match_the_canonical_enum() -> None:

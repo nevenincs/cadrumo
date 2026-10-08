@@ -1,0 +1,1389 @@
+[[revisions.2023.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+
+[[revisions.2023.export_layouts.records]]
+id = 'modelo-714-page-08'
+record_type = '714-08'
+order = 7
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-open'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '714'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-page'
+offset = 6
+length = 5
+kind = 'literal'
+literal = '08000'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-close'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-complementaria-slot'
+offset = 12
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.indicador-de-pagina-complementaria-714-08'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-reserved-1'
+offset = 13
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-14'
+offset = 14
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-porcentaje-titularidad-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-1'
+offset = 19
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-1'
+offset = 81
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-1'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-94'
+offset = 94
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-porcentaje-titularidad-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-2'
+offset = 99
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-2'
+offset = 161
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-2'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-174'
+offset = 174
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-porcentaje-titularidad-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-3'
+offset = 179
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-3'
+offset = 241
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-3'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-20'
+offset = 254
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-20'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-1'
+offset = 267
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-descripcion-1'
+offset = 272
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-descripcion-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-valor-1'
+offset = 334
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-valor-1'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-2'
+offset = 347
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-descripcion-2'
+offset = 352
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-descripcion-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-valor-2'
+offset = 414
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-valor-2'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-3'
+offset = 427
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-descripcion-3'
+offset = 432
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-descripcion-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-p-opciones-contractuales-valor-3'
+offset = 494
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-valor-3'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-21'
+offset = 507
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-21'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-1'
+offset = 520
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-1'
+offset = 521
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-1'
+offset = 526
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1'
+offset = 588
+length = 24
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 9
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-1'
+offset = 612
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-2'
+offset = 625
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-2'
+offset = 626
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-2'
+offset = 631
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2'
+offset = 693
+length = 24
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 9
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-2'
+offset = 717
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-3'
+offset = 730
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-3'
+offset = 731
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-3'
+offset = 736
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3'
+offset = 798
+length = 24
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 9
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-3'
+offset = 822
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-46'
+offset = 835
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-46'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-1'
+offset = 848
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-1'
+offset = 849
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-1'
+offset = 854
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-1'
+offset = 916
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-1'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-2'
+offset = 929
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-2'
+offset = 930
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-2'
+offset = 935
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-2'
+offset = 997
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-2'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-3'
+offset = 1010
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-3'
+offset = 1011
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-3'
+offset = 1016
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-3'
+offset = 1078
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-3'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-4'
+offset = 1091
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-4'
+offset = 1092
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-4'
+offset = 1097
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-4'
+offset = 1159
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-4'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-5'
+offset = 1172
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-5'
+offset = 1173
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-5'
+offset = 1178
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-5'
+offset = 1240
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-5'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-22'
+offset = 1253
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-22'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-1'
+offset = 1266
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-1'
+offset = 1271
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-1'
+offset = 1291
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-otro-pais-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-descripcion-1'
+offset = 1292
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-descripcion-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-valor-1'
+offset = 1354
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-valor-1'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-2'
+offset = 1367
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-2'
+offset = 1372
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-2'
+offset = 1392
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-otro-pais-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-descripcion-2'
+offset = 1393
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-descripcion-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-valor-2'
+offset = 1455
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-valor-2'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-3'
+offset = 1468
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-3'
+offset = 1473
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-3'
+offset = 1493
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-otro-pais-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-descripcion-3'
+offset = 1494
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-descripcion-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-valor-3'
+offset = 1556
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-valor-3'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-4'
+offset = 1569
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-4'
+offset = 1574
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-4'
+offset = 1594
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-otro-pais-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-descripcion-4'
+offset = 1595
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-descripcion-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-valor-4'
+offset = 1657
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-valor-4'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-5'
+offset = 1670
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-5'
+offset = 1675
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-5'
+offset = 1695
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-otro-pais-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-descripcion-5'
+offset = 1696
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-descripcion-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-valor-5'
+offset = 1758
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-valor-5'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-porcentaje-titularidad-6'
+offset = 1771
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-nie-persona-o-entidad-acreedora-6'
+offset = 1776
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-nif-otro-pais-6'
+offset = 1796
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-nif-otro-pais-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-08-declared-deudas-deducibles-descripcion-6'
+offset = 1797
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-08.deudas-deducibles-descripcion-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[revisions.2023.export_layouts.records.row_field_casilla_ids]

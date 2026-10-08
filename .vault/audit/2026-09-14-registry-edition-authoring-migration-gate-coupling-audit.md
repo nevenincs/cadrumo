@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-edition-authoring'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6fc57cb10f88b26920de3d449345766e278260bdd3457db8562bed53392ee8cc'
+body_hash: 'sha256:fdbeb605105ca01bd63cf4ad16ba9afa12bc96e70f741d1c0beb2f7902dd3b80'
 related: []
 ---
 # `registry-edition-authoring` audit: `migration gate coupling`
@@ -22,7 +22,7 @@ Open. `dev/registry/edition_delta_migration.py:1045` compares complete casillas 
 
 ### lineage-gates-storage | high | One unannotated predecessor row blocks the entire edition
 
-Open. `_choose_drops` rejects the edition if any inherited row lacks `continuidad_id`, before considering independently identical payload. `dev/registry/compiler/_loader_internals.py:949` couples casilla inheritance to continuity identity. `dev/registry/tests/test_revision_edition_materialisation.py:308` explicitly expects a collision without lineage to fail. The focused command `uv run --no-sync pytest -q dev/registry/tests/test_revision_edition_materialisation.py -k collision-without-lineage` passed: 1 test, exit 0. This confirms the current refusal contract, not its suitability for storage deduplication. A storage reference need not assert legally grounded continuity.
+The focused command `uv run --no-sync pytest -q dev/registry/tests/test_revision_edition_materialisation.py -k collision-without-lineage` passed: 1 test, exit 0. This confirms the current refusal contract, not its suitability for storage deduplication. A storage reference need not assert legally grounded continuity.
 
 ### technical-failure-as-root | high | Tool limitations are persisted as no-predecessor declarations
 
@@ -34,7 +34,7 @@ Open. `dev/registry/edition_delta_migration.py:840` plans all ordered revisions 
 
 ### capability-storage-coupling | high | A capability downgrade forbids storage inheritance
 
-Open. `_choose_predecessor` rejects a lower authority grade; `dev/registry/compiler/_loader_internals.py:842` enforces the corresponding loader restriction. `dev/registry/tests/test_edition_delta_migration.py:394` locks this behavior. Sharing an unchanged payload need not promote the successor's capability. Grade preservation belongs to the hydrated result and filing eligibility, not a blanket prohibition on storage reuse. This is a broader restriction, not the reproduced first Modelo 100 blocker.
+Sharing an unchanged payload need not promote the successor's capability. Grade preservation belongs to the hydrated result and filing eligibility, not a blanket prohibition on storage reuse. This is a broader restriction, not the reproduced first Modelo 100 blocker.
 
 ### claim-pins-row | medium | Continuity evidence can force unrelated values to remain repeated
 

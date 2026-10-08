@@ -35,6 +35,7 @@ class AccountActionV1(StrEnum):
     APPEARANCE = auto()
     PROFILE = auto()
     CHANGE_USER = auto()
+    ACCESS = auto()
     PASSWORD = auto()
     SIGN_OUT = auto()
 
@@ -65,6 +66,10 @@ class TuiAccountHostV1(Protocol):
     @property
     def account_actions_available(self) -> bool:
         """Whether the account controls can act from the screen now in front."""
+        ...
+
+    def account_action_available(self, action: AccountActionV1, /) -> bool:
+        """Whether this exact action has an installed door on the current root."""
         ...
 
     @property
@@ -167,6 +172,10 @@ class AccountChromeScreen(TypedAppAccess, Screen[None]):
     @on(events.Mount)
     def _mount_account_chrome(self) -> None:
         """Add the account bar and, where missing, the key footer."""
+        # A screen dismissed, or an app exiting, before this handler ran is no
+        # longer attached; it needs no chrome and Textual refuses to mount into it.
+        if not self.is_attached:
+            return
         self.mount(AccountBar(id="account-bar"), before=0)
         # Compact, so every account key still fits an eighty-column terminal.
         footers = self.query(Footer)

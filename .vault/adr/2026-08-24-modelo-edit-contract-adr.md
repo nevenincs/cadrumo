@@ -3,16 +3,17 @@ tags:
   - '#adr'
   - '#modelo-edit-contract'
 date: '2026-08-24'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:1bd28757f53b0e379a99e1ae0a15ceb047f3437a969560fbc53658c8cf06ead5'
+body_hash: 'sha256:70069f58dc84a078cd6f11d45317ed52cb91b3a53ac3c33495549f473578c16a'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
   - '[[2026-08-11-tui-architecture-adr]]'
-  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
+  - '[[2026-09-30-modelo-editor-workbench-adr]]'
+  - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 ---
 
 # `modelo-edit-contract` adr: `Versioned Modelo edit and mutation contract` | (**status:** `accepted`)
@@ -640,3 +641,7 @@ reading another ADR's receipt. This does not relax any item in the list above,
 and the required-predecessor relationship itself -- C3 cannot be presented as
 open before its Workspace C2 and operation predecessors are each independently
 true -- is unchanged; only where that relationship is recorded moved.
+
+## Amendment 2026-09-30: operator layer, renewable baseline and work-unit coordinates
+
+`2026-09-30-modelo-editor-workbench-operator-layer-adr` implements D4's absence-means-unchanged rule with a persisted operator layer and a replayed caller context, and amends D2's concurrency coordinates: the baseline is admitted lazily, renewed silently when only its issue and expiry times changed, and scoped to the edited work unit's record and calculation head rather than to whole-catalogue digests. Binding overrides are writable for manual-input bindings and for the carry sources the precedence ladder classifies; other source kinds stay read-only until their override policy is grounded.

@@ -27,6 +27,7 @@ import typer
 from pydantic import SecretStr
 
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
+from ....core.descriptor_write import write_all
 from ....core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -67,11 +68,7 @@ def validated_recovery_descriptors(
     if handoff_fd is None or verification_fd is None:
         return None
     descriptors = (handoff_fd, verification_fd)
-    if any(descriptor < 0 or descriptor in {0, 1, 2} for descriptor in descriptors):
-        raise CliRefusedBoundaryError(translated_message="cli.config.profile.recovery.descriptor_reserved")
-    occupied = {descriptor for descriptor in (passphrase_fd,) if descriptor is not None}
-    if descriptors[0] == descriptors[1] or any(descriptor in occupied for descriptor in descriptors):
-        raise CliRefusedBoundaryError(translated_message="cli.config.profile.recovery.descriptor_collision")
+    _require_recovery_descriptor_admission(descriptors, passphrase_fd)
     return descriptors
 
 
@@ -90,13 +87,7 @@ def _write_recovery_handoff(descriptor: int, code: str) -> None:
     try:
         if len(raw) > _RECOVERY_HANDOFF_MAX_BYTES:
             raise CliRefusedBoundaryError(translated_message="cli.config.profile.recovery.handoff_too_large")
-        view = memoryview(raw)
-        written = 0
-        while written < len(view):
-            count = os.write(descriptor, view[written:])
-            if count <= 0:
-                raise OSError("recovery handoff descriptor accepted no bytes")
-            written += count
+        write_all(descriptor, raw)
     except OSError as exc:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.recovery.handoff_unwritable") from exc
     finally:
@@ -289,14 +280,14 @@ def profile_recovery_status(
 ) -> None:
     """Report whether the active profile has a recovery code enrolled."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.recovery_custody import profile_recovery_status as _status
     from ..config_payloads import ConfigProfileRecoveryStatusResult
+    from .runtime_recovery_status import read_recovery_status
 
-    status = _status(profile_id=_active_profile_id())
+    status = read_recovery_status(ctx)
     emit_envelope(
         ctx,
         command="config.profile.recovery.status",
-        result=ConfigProfileRecoveryStatusResult(profile_id=status.profile_id, enrolled=status.enrolled),
+        result=ConfigProfileRecoveryStatusResult(profile_id=str(status.profile_id), enrolled=status.enrolled),
         lines=[f"enrolled\t{'yes' if status.enrolled else 'no'}"],
     )
 
@@ -311,3 +302,12 @@ __all__ = [
     "recovery_handover",
     "validated_recovery_descriptors",
 ]
+
+
+def _require_recovery_descriptor_admission(descriptors: tuple[int, int], passphrase_fd: int | None) -> None:
+    """Reject reserved or colliding handoff channels before consuming either descriptor."""
+    if any(descriptor < 0 or descriptor in {0, 1, 2} for descriptor in descriptors):
+        raise CliRefusedBoundaryError(translated_message="cli.config.profile.recovery.descriptor_reserved")
+    occupied = {descriptor for descriptor in (passphrase_fd,) if descriptor is not None}
+    if descriptors[0] == descriptors[1] or any(descriptor in occupied for descriptor in descriptors):
+        raise CliRefusedBoundaryError(translated_message="cli.config.profile.recovery.descriptor_collision")

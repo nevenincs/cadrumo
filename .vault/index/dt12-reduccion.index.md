@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#dt12-reduccion'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7caeb66c6860cdd32ad00035c44ea11e7e4ed84c653c24a4af71f0556a5721cb'
+body_hash: 'sha256:cdc0ab0ab1d565b4a0ef745c692fb7ab18b1bcd601d00fde16861ebe8a342201'
 related:
-  - '[[2026-06-04-dt12-reduccion-adr]]'
   - '[[2026-06-04-dt12-reduccion-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#dt12-reduccion`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-dt12-reduccion-adr` - `dt12-reduccion` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

@@ -22,6 +22,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.authority import compiled_bundled_authority
 from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS
+from ..pipeline.export_fragment_provenance import load_export_fragment_provenance_manifest
 from ..pipeline.render_check import revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -64,7 +65,12 @@ def _generated_bindings() -> dict[str, tuple[list[str], list[str]]]:
             )
             if not (export_root / "_generation.provenance.json").is_file():
                 continue
-            inputs = revision_render_inputs(authority, modelo=str(modelo.id), revision=str(revision.id))
+            receipt = load_export_fragment_provenance_manifest(
+                (export_root / "_generation.provenance.json").read_bytes()
+            )
+            inputs = revision_render_inputs(
+                authority, modelo=str(modelo.id), revision=str(revision.id), source_ref=str(receipt.source_ref)
+            )
             bindings = [
                 (
                     str(field.semantic_entry.export_field_id),

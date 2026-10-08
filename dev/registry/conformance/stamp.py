@@ -1128,8 +1128,24 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
     newline = "\r\n" if "\r\n" in text else "\n"
     lines = text.splitlines()
     header = f'[revisions."{revision}"]'
+    start = _revision_table_start(lines, header)
+
+    end = _revision_table_end(lines, start)
+    body = _without_governance_assignments(lines[start + 1 : end])
+    while body and not body[-1].strip():
+        body.pop()
+    body.extend(_render_governance_assignment(key, rendered[key]) for key in GOVERNANCE_KEYS if key in rendered)
+
+    rebuilt = [*lines[:start], lines[start], *body, "", *lines[end:]]
+    while rebuilt and not rebuilt[-1].strip():
+        rebuilt.pop()
+    return newline.join(rebuilt) + newline
+
+
+def _revision_table_start(lines: list[str], header: str) -> int:
+    """Find the exact manifest header line, refusing equivalent TOML spellings."""
     try:
-        start = next(index for index, line in enumerate(lines) if line.strip() == header)
+        return next(index for index, line in enumerate(lines) if line.strip() == header)
     except StopIteration as exc:
         # REACHABLE, and it used to carry a pragma claiming otherwise on the
         # ground that ``_declared_governance`` proves the table exists. That
@@ -1147,17 +1163,6 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
             f"or space-padded header parses to the same table and loads cleanly, but cannot be located "
             f"here. Rewrite the header line in the canonical form and stamp again.",
         ) from exc
-
-    end = _revision_table_end(lines, start)
-    body = _without_governance_assignments(lines[start + 1 : end])
-    while body and not body[-1].strip():
-        body.pop()
-    body.extend(_render_governance_assignment(key, rendered[key]) for key in GOVERNANCE_KEYS if key in rendered)
-
-    rebuilt = [*lines[:start], lines[start], *body, "", *lines[end:]]
-    while rebuilt and not rebuilt[-1].strip():
-        rebuilt.pop()
-    return newline.join(rebuilt) + newline
 
 
 def _revision_table_end(lines: list[str], start: int) -> int:

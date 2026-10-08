@@ -34,8 +34,8 @@ from ..values import (
     UserProfileSnapshot,
     _derive_canonical_hash,
     create_user_profile_record,
-    new_profile_snapshot_id,
 )
+from .snapshot_factory import create_user_profile_snapshot, new_profile_snapshot_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
@@ -110,7 +110,7 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
     over the overridden metadata leaves the identity claim as the one thing
     wrong with the payload.
     """
-    raw_payload = UserProfileSnapshot.from_profile(
+    raw_payload = create_user_profile_snapshot(
         _record(),
         context=_profile_creation_context_for_test(),
         snapshot_id=new_profile_snapshot_id(_PROFILE_ID),

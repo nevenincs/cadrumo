@@ -20,10 +20,13 @@ uv run --no-sync python -m dev.tui viewports          # the geometries a render 
 uv run --no-sync python -m dev.tui inventory          # every interface, and its coverage
 uv run --no-sync python -m dev.tui render             # every surface, default matrix
 uv run --no-sync python -m dev.tui render -s status -v tall -t dark
+uv run --no-sync python -m dev.tui render --sequence modelo-303-first-quarter
 uv run --no-sync python -m dev.tui runs               # the review runs on disk, newest first
 uv run --no-sync python -m dev.tui snapshot baseline  # keep the current review under a name
 uv run --no-sync python -m dev.tui rasterise --run latest --cell-height 32
 uv run --no-sync python -m dev.tui diff baseline --against latest
+uv run --no-sync python -m dev.tui serve              # browse the runs live from the tailnet
+uv run --no-sync python -m dev.tui notes --json       # the notes left while browsing
 ```
 
 `rasterise` repaints an existing run's PNGs from the SVGs it already holds,
@@ -56,6 +59,35 @@ from. `--cell-height` raises the output resolution without changing the grid.
 harness's own text reading -- and writes side-by-side highlight images plus
 unified text diffs for the frames that moved. It exits non-zero when anything
 changed, so it works as a review gate as well as a report.
+
+## Modelo workbench from documentation sequences
+
+The Modelo workbench shows its figures only for a declaration that has been
+created and calculated through the registry, which no fixture surface can
+supply. A
+sequence scenario borrows that state from the documentation: it names a
+`cli-sequence` whose committed golden already records the real CLI chain
+(profile, ledger, evidence, create, calculate, verify, file), runs it once in
+the documentation engine's hermetic sandbox, and checks the result against
+that golden. The installed workbench is then composed over the sandbox the
+way `aeat app tui` composes it, and each capture walks the operator's path on
+a freshly built app: Declarations, the declaration's row, which opens its
+workbench, then the keys that reach each further page (`s` for the sources
+view).
+
+Each scenario captures the Declarations list, the workbench and its sources
+view, at each requested viewport and appearance, as surfaces named
+`seq-<sequence>--<page>`. The manifest records, per frame, the sequence,
+its documentation page, the golden's digest, and whether the run still
+reproduced that golden; a frame from a run that did not says so in the index
+and in the review page. Scenarios render in the sandbox's pinned English.
+
+`render` with no filter renders the surfaces and then every scenario.
+`--sequence` narrows it to the named scenarios (`all` for every scenario and
+no surfaces), just as `--surface` narrows it to surfaces. The scenario table
+lives in `dev/tui/harness/sequences.py`; a scenario is a sequence id plus the
+modelo whose declaration it opens, and the page table there names each page's
+screen and the keys that reach it.
 
 ## How the render loop handles failure
 
@@ -98,6 +130,64 @@ gave up on is indistinguishable from a run that was never asked for it.
   left in it would mark every frame changed on every run.
 - The `form` surface is declared SYNTHETIC by the harness. Do not read
   findings off its field content.
+
+## Reviewing from another device
+
+`serve` starts a small web server for looking at the runs from a phone or
+another machine on the tailnet. It asks the local `tailscale` client for this
+machine's tailnet address and binds that and nothing else, because the tailnet
+is its only access control; it refuses to start when Tailscale is not running
+rather than fall back to the local network.
+`--host 127.0.0.1` keeps it on this machine, `--port` moves it off 8740, and a
+wildcard address is refused.
+
+It does not wait for a render to finish. A render writes each PNG as it goes
+and the manifest only at the end, so the server watches the `png/` directory
+of every run and pushes a change to the open page as each frame lands. A frame
+appears once its file has stopped changing, never half written. Start `serve`
+first, then `render` in another terminal, and the page fills in over the run.
+
+The page reviews elements, not images. A render holds each element once per
+state, viewport and appearance, so its thousand-odd frames reduce to a few
+dozen elements, each reviewed once:
+
+- a workbench fixture surface, such as `home` or `ledger-overview`, across
+  its fixture states (`ready`, `empty`, `stale`, `unavailable`, and the
+  failing ones);
+- a Modelo page from the sequence scenarios, such as `workbench` or
+  `sources`, across the documentation sequences whose declarations it shows;
+- a single-state screen, such as `login`.
+
+The grid shows one card per element. Filter by review status (to review,
+changed since sign-off, reviewed, open notes), by kind, by state, or by name;
+the size and theme selectors choose which frame each card previews. Open an
+element to flip its frame by state, size and theme -- arrow keys or a swipe
+for the state, `v` for the size, `t` for the theme -- or pick any frame from
+the sheet of every frame below it. `j` and `k` move between elements, and
+`Reviewed, next` signs one off and opens the next in one tap on a phone.
+
+A note belongs to the element. By default it also points at the frame on
+screen when it was written, so a remark about one state at one size leads
+straight back to that frame.
+
+Notes and sign-offs are stored by the server in
+`.tui-review/notes.sqlite3` (gitignored), outside the run tree, so they
+survive the server stopping, a re-render and `snapshot --replace`. A note
+records the element's digest over every frame it held, and the pointed
+frame's image digest; a sign-off records the digest of every frame it
+covered. When any frame of an element is re-rendered, added or removed, its
+sign-off lapses, the element is listed as changed, and the frames that moved
+are outlined so only they need a second look; nothing reads as approval of
+pixels nobody has seen. The server also refuses a sign-off sent from a page
+that had not yet shown the element's latest frames.
+
+A store written before notes were kept per element is refused with a message
+naming both schema versions; move it aside to start a new one.
+
+`notes` prints the open notes grouped by element, flagging any whose element
+or pointed frame has been re-rendered since; `--all` includes resolved ones
+and `--json` gives a form another tool can read. `--run` names the run the
+notes are compared with, `current` by default.
 
 ## Coverage
 

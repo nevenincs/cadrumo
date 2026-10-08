@@ -3,22 +3,25 @@ tags:
   - '#audit'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6d7cc3ee9e36507d84949a304c4492dda3480470266639b56e7de243aa1b1d24'
+body_hash: 'sha256:c41031aa01b8e37c9d480f968afb7a63896341bca87a12ca19c796285c2a11d2'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
-
 # `profile-requirement-grounding` audit: `the per-operation requirement axis is empty and absent profile facts silently default`
 
+## Scope
+
 Two structural findings from a swarm sweep, both verified against the loaded schema and the real call graph rather than taken from sub-agent output. The first falsifies a premise the accepted ADR rests on; the second is the concrete mechanism by which an incomplete profile produces confident wrong output instead of a refusal.
+
+## Findings
 
 ### The per-operation `model_selectors` axis has zero `modelo_` entries, so the preflight filter can never match
 
 **Pathway:** blocking gate / `config profile preflight` / `app modelo readiness`.
 
-`src/cadrumo/application/user_profile/_preflight.py:164` builds the target prefix `f"modelo_{modelo.strip()}"`, and `:168-172` keeps a field only when one of its `model_selectors` starts with that prefix. Loading the shipped schema through `load_user_profile_schema()` measures **161 fields, 15 required, 143 `model_selectors` values, and exactly 0 beginning with `modelo_`**. The single selector containing the substring is `withholding.modelo_111_no_retenciones_periods` (`_data/registry/cadrumo/user_profile/schema.toml:1124`), which is a field path, not an operation token — it does not start with `modelo_`.
+The retired module built the target prefix `f"modelo_{modelo.strip()}"`, and `:168-172` keeps a field only when one of its `model_selectors` starts with that prefix. Loading the shipped schema through `load_user_profile_schema()` measures **161 fields, 15 required, 143 `model_selectors` values, and exactly 0 beginning with `modelo_`**. The single selector containing the substring is `withholding.modelo_111_no_retenciones_periods` (`_data/registry/cadrumo/user_profile/schema.toml:1124`), which is a field path, not an operation token — it does not start with `modelo_`.
 
 The per-modelo branch of `ProfilePreflightService.report()` is therefore unreachable for every modelo. The codebase already records the behaviour without naming it a defect: `application/user_profile/tests/test_services.py:172` is called `test_preflight_returns_ready_when_no_modelo_selectors_match`.
 
@@ -30,7 +33,7 @@ The per-modelo branch of `ProfilePreflightService.report()` is therefore unreach
 
 **Pathway:** every CLI command reading the active profile through the shared adapter.
 
-`src/cadrumo/application/user_profile/_projections.py:248` declares `tax_id_default: str = "00000000T"` alongside `iva_regime_default: IVARegime = IVARegime.GENERAL`. `src/cadrumo/entrypoints/cli/_common.py:667-673` reaches it with an empty mapping whenever no profile record exists:
+The retired module declared `tax_id_default: str = "00000000T"` alongside `iva_regime_default: IVARegime = IVARegime.GENERAL`. the retired module reaches it with an empty mapping whenever no profile record exists:
 
 ```python
 record = state.active_profile_record()
@@ -199,3 +202,7 @@ The implemented branch is what this section specified, including the part flagge
 Locale parity confirmed across all four catalogues — `profile_readiness_setup_incomplete_missing` carries a real translated string in `en`, `es`, `ca` and `hu`, with the `%{missing}` placeholder present and no self-referencing scaffold placeholder. That is the check most likely to be skipped on a change like this, since the gate only bites once something sweeps the working copy.
 
 Worth noting for the standing goal: this closes one of the last refusals in the profile surface that named a lifecycle STATUS instead of a field gap. The remaining generic ones (`no_active_profile`, `no_active_bucket`) stay generic on purpose — with no profile at all, "create a profile" is the exact missing information.
+
+## Recommendations
+
+Resolve the unreachable per-modelo selector axis and make missing required profile facts refuse explicitly before declaring the accepted preflight design implemented.

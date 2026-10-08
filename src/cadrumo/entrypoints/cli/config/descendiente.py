@@ -13,19 +13,14 @@ module closes that gap with three flag verbs mounted under ``config profile desc
 ``remove`` (drop one descendant by 0-based index).
 
 Invoked with no subcommand (``aeat config profile descendiente``), the group opens the
-paged descendant door: a deep link onto the setup flow's descendant repeating group
-(:func:`~application.wizard.descendant_door.run_descendant_door`) that seeds from the profile's existing
-``renta_family.descendiente.*`` facts, lets the operator add / edit / remove rows on the
-best frontend the host supports, and commits the reviewed set back through one atomic
-write (:func:`~application.wizard.descendant_door.persist_descendant_door_answers`). The three flag verbs
-remain the flag-driven automation contract for non-interactive callers, unchanged.
+paged descendant door on the same verified runtime profile view and registered
+family-replacement operation as the flag verbs.
 
 Every verb rewrites the FULL declared descendant set on the active profile: a partial
 patch of only the changed index would leave stale higher-index facts behind after a
-``remove`` shrinks the set. ``descendant_list_from_facts`` reconstructs the current set,
-the verb mutates the in-memory tuple, and ``descendant_facts_from_list`` re-derives the
-canonical fact rows, which are published through one authenticated
-revision-bound replacement command.
+``remove`` shrinks the set. The verified FACTS view reconstructs the current set,
+the verb mutates that tuple, and the registered operation publishes one
+revision-bound replacement.
 
 See Also:
     :mod:`~application.modelo.profile_binding`:
@@ -55,65 +50,6 @@ if TYPE_CHECKING:
 
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer
     from ....core.json_contract import Notice
-    from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
-
-
-def _load_descendientes(bucket_id: str) -> tuple[DescendantInfo, ...]:
-    """Return the active profile's declared descendants, oldest fact-order preserved."""
-    from ....domain.contribuyente.descendant_facts import descendant_list_from_facts
-    from ....domain.user_profile.errors import ProfileNotFoundError
-    from ._profile_readiness import _read_profile_record
-
-    try:
-        record = _read_profile_record(profile_id=bucket_id, bucket_id=bucket_id)
-    except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.no_active_profile",
-        ) from exc
-    facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
-    return descendant_list_from_facts(facts)
-
-
-def _write_descendientes(
-    bucket_id: str,
-    descendientes: tuple[DescendantInfo, ...],
-    *,
-    profile_decode_context: ProfileDecodeContext,
-) -> None:
-    """Rewrite the active profile's full descendiente fact set, clearing stale rows.
-
-    Clears every ``renta_family.descendiente.{n}.*`` and the count/aggregate facts
-    before rewriting, so a ``remove`` that shrinks the set never leaves a stale
-    higher-index fact behind for :func:`descendant_list_from_facts` to re-discover.
-    """
-    from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
-    from ....domain.user_profile.errors import ProfileNotFoundError
-    from ....domain.user_profile.values import UserProfileFact
-    from ._profile_readiness import _read_profile_record
-
-    try:
-        record = _read_profile_record(profile_id=bucket_id, bucket_id=bucket_id)
-    except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.no_active_profile",
-        ) from exc
-    stale_paths = {
-        fact.path
-        for fact in record.facts
-        if fact.path.startswith("renta_family.descendiente.") or fact.path == "renta_family.descendientes_count"
-    }
-    new_pairs = dict(descendant_facts_from_list(descendientes))
-    clears = tuple(UserProfileFact(path=path, value=None) for path in stale_paths if path not in new_pairs)
-    upserts = tuple(UserProfileFact(path=path, value=value) for path, value in new_pairs.items())
-
-    from ....application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-
-    apply_profile_fact_changes(
-        profile_id=bucket_id,
-        changes=(*clears, *upserts),
-        door=ProfileFactWriteDoor.CLI_DESCENDIENTE,
-        profile_decode_context=profile_decode_context,
-    )
 
 
 def _tri(value: bool | None) -> str:
@@ -315,14 +251,11 @@ def descendiente_door(
 
 def _run_descendant_door(ctx: typer.Context) -> None:
     """Drive the descendant application flow through its line-mode frontend."""
-    from ....application.wizard.descendant_door import run_descendant_door
-    from ....application.workflow.persistence import workflow_state_repository
-    from ..state_projection_support import authority_operation
+    from .runtime_descendant_door import run_runtime_descendant_door
 
-    workflow_state_repository().load()
     pointer = _active_profile_pointer()
-    _state, _projection, _persisted = run_descendant_door(operation=authority_operation(ctx))
-    _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
+    rows = run_runtime_descendant_door(ctx)
+    _emit_descendiente_list(ctx, pointer, rows)
 
 
 def descendiente_add(
@@ -344,11 +277,16 @@ def descendiente_add(
     the stored rows are validated against the same authority: the governed-fact
     scope dispatch opens for this command.
     """
+    from uuid import UUID
+
     from pydantic import ValidationError
 
     from ....core.errors.hierarchy import ProfileAnswerTypeError
     from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
+    from ..runtime_profile_binding import require_profile_client
     from ..state_projection_support import authority_operation
+    from ._runtime_profile_mutation import mutation_deadline
+    from .runtime_descendants import read_runtime_descendants, replace_runtime_descendants
 
     _activate_subcommand_output_language(ctx, output_language)
     pointer = _active_profile_pointer()
@@ -356,7 +294,9 @@ def descendiente_add(
     # governed facts, so reading and parsing need the command's pinned
     # authority, not only the write.
     authority = authority_operation(ctx)
-    existing = _load_descendientes(pointer.bucket_id)
+    client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
+    deadline = mutation_deadline()
+    baseline, existing = read_runtime_descendants(client, operation=authority, deadline=deadline)
 
     new_rows: list[DescendantInfo] = []
     for raw in descendiente:
@@ -402,10 +342,12 @@ def descendiente_add(
             ) from exc
 
     combined = (*existing, *new_rows)
-    _write_descendientes(
-        pointer.bucket_id,
-        combined,
-        profile_decode_context=authority.profile_decode_context(),
+    committed = replace_runtime_descendants(
+        client,
+        baseline=baseline,
+        descendants=combined,
+        operation=authority,
+        deadline=deadline,
     )
 
     from .._config_descendiente_payloads import ConfigProfileDescendienteAddResult
@@ -413,7 +355,7 @@ def descendiente_add(
     result = ConfigProfileDescendienteAddResult(
         profile=pointer.label,
         added=len(new_rows),
-        total=len(combined),
+        total=len(committed),
     )
     ambiguous_indices = _ambiguous_relacion_indices(new_rows, index_offset=len(existing))
     emit_envelope(
@@ -423,8 +365,8 @@ def descendiente_add(
         lines=(
             f"profile\t{pointer.label}",
             f"added\t{len(new_rows)}",
-            f"total\t{len(combined)}",
-            *_descendiente_row_lines(combined),
+            f"total\t{len(committed)}",
+            *_descendiente_row_lines(committed),
         ),
         notices=[_ambiguous_relacion_notice(ambiguous_indices)] if ambiguous_indices else None,
     )
@@ -435,14 +377,18 @@ def descendiente_list(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List every ``DescendantInfo`` row declared on the active profile."""
-    _activate_subcommand_output_language(ctx, output_language)
-    from ..state_projection_support import authority_operation
+    from time import monotonic
+    from uuid import UUID
 
+    from ..runtime_profile_binding import require_profile_client
+    from ..state_projection_support import authority_operation
+    from .runtime_descendants import read_runtime_descendants
+
+    _activate_subcommand_output_language(ctx, output_language)
     pointer = _active_profile_pointer()
-    # Stored rows validate against governed vocabularies, so decoding them needs
-    # the command's pinned authority.
-    authority_operation(ctx)
-    _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
+    client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
+    _baseline, rows = read_runtime_descendants(client, operation=authority_operation(ctx), deadline=monotonic() + 60)
+    _emit_descendiente_list(ctx, pointer, rows)
 
 
 def descendiente_remove(
@@ -451,6 +397,12 @@ def descendiente_remove(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Remove the descendant at ``index`` and re-index the remaining rows."""
+    from uuid import UUID
+
+    from ..runtime_profile_binding import require_profile_client
+    from ._runtime_profile_mutation import mutation_deadline
+    from .runtime_descendants import read_runtime_descendants, replace_runtime_descendants
+
     _activate_subcommand_output_language(ctx, output_language)
     from ..state_projection_support import authority_operation
 
@@ -458,17 +410,21 @@ def descendiente_remove(
     # Stored rows validate against governed vocabularies, so decoding them needs
     # the command's pinned authority, not only the write.
     authority = authority_operation(ctx)
-    existing = _load_descendientes(pointer.bucket_id)
+    client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
+    deadline = mutation_deadline()
+    baseline, existing = read_runtime_descendants(client, operation=authority, deadline=deadline)
     if index < 0 or index >= len(existing):
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.descendiente.index_out_of_range",
             context={"index": str(index), "total": str(len(existing))},
         )
     remaining = tuple(d for i, d in enumerate(existing) if i != index)
-    _write_descendientes(
-        pointer.bucket_id,
-        remaining,
-        profile_decode_context=authority.profile_decode_context(),
+    committed = replace_runtime_descendants(
+        client,
+        baseline=baseline,
+        descendants=remaining,
+        operation=authority,
+        deadline=deadline,
     )
 
     from .._config_descendiente_payloads import ConfigProfileDescendienteRemoveResult
@@ -476,7 +432,7 @@ def descendiente_remove(
     result = ConfigProfileDescendienteRemoveResult(
         profile=pointer.label,
         removed_index=index,
-        total=len(remaining),
+        total=len(committed),
     )
     emit_envelope(
         ctx,
@@ -485,7 +441,7 @@ def descendiente_remove(
         lines=(
             f"profile\t{pointer.label}",
             f"removed_index\t{index}",
-            f"total\t{len(remaining)}",
+            f"total\t{len(committed)}",
         ),
     )
 

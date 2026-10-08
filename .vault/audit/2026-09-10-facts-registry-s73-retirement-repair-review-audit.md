@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:6c8ed5d4daff96753c4fecc994409f5656656f341cb99e38aa781d0456e1d1fb'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 
 # `facts-registry` audit: `S73 adapter-retirement repair review`

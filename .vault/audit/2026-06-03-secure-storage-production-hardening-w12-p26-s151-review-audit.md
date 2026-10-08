@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:93f02a21bd151ad5890f30720858dc926d5c63b1348d00ad1f01c7f32357fff9'
+modified: '2026-10-03'
+body_hash: 'sha256:f183e39aa73b0288c3bd6591c3bad49c9850009a84460173081057e379ecb58c'
 related: []
 ---
 
@@ -26,8 +26,8 @@ The added warning test creates a real malformed envelope file under a private-lo
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_rotation.py -k "rotation or rotate or malformed_envelope_warning"` passed with 24 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/_rotation.py src/aeat/adapters/persistence/storage/test_rotation.py` passed.
+- The historical check passed with 24 tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Case-sensitive touched-file hygiene scan found no broad exception catches, suppressing pragmas, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw UTF-8 literals, or local `Path("db://secure_objects")` construction.
 - Subagent reviewer James reported no findings. Residual scope note: the path marker is unsalted truncated SHA-256, so it is linkable and guessable by an actor who already knows likely path candidates; S151 treats it as a diagnostic marker, not a keyed privacy token.

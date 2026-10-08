@@ -24,9 +24,8 @@ from ..authority_artifact import (
     ModeloRevisionComponentQuery,
     ReferenceComponentQuery,
     SnapshotGlobalsComponentQuery,
-    decode_authority_component,
-    encode_authority_component,
 )
+from ..authority_component_codec import decode_authority_component, encode_authority_component
 from ..errors import RegistryValidationError
 from ..governed_fact_scope import validating_governed_facts
 from ..schema import ModeloDefinition, RegistryCatalogues, SnapshotGlobalCatalogues

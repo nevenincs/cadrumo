@@ -2,10 +2,10 @@
 
 The mirrors exist so a detail-row edit can cross an operation payload, which
 means the only thing that makes them safe is that nothing changes on the way
-across. Each of the six is built from a real row, translated back, and compared
+across. Each of the five is built from a real row, translated back, and compared
 field by field against the row it came from.
 
-The registry codes are the part worth guarding. Two of the six row types hydrate
+The registry codes are the part worth guarding. Two of the five row types hydrate
 their codes through validator metadata, and the mirrors deliberately carry those
 codes unhydrated so the row type's own hydration runs during translation. That
 only holds while there is exactly one hydration: the refusal parity below fails
@@ -20,32 +20,35 @@ from decimal import Decimal
 from typing import Annotated
 
 import pytest
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ....domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
 )
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ...operations.registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
-from ..edit_models import ModeloEditDetailRowIntentKind
-from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
-from ..operation_definitions import (
+from ..edit_apply_contracts import (
+    ModeloEditApplyDetailRowAddressV1,
+    ModeloEditApplyDetailRowIntentV1,
+    ModeloEditApplySubmissionV1,
+)
+from ..edit_apply_row_contracts import (
+    Modelo156AfiliadoRowWireV1,
+    Modelo156MonthlyContributionWireV1,
     Modelo184MemberRowWireV1,
     Modelo210AgrupacionRentaRowWireV1,
     Modelo232VinculadaRowWireV1,
-    Modelo347ContraparteRowWireV1,
     Modelo349OperadorRowWireV1,
     Modelo349RectificacionRowWireV1,
-    ModeloEditApplyDetailRowAddressV1,
-    ModeloEditApplyDetailRowIntentV1,
-    ModeloEditApplyOperationRequestV1,
-    ModeloEditApplySubmissionV1,
 )
+from ..edit_models import ModeloEditDetailRowIntentKind
+from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
 
 _M210_EFFECTIVE_DATE = date(2025, 1, 1)
 _SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
@@ -161,31 +164,6 @@ def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo3
     return mirror, row
 
 
-def _m347_pair() -> tuple[Modelo347ContraparteRowWireV1, Modelo347ContraparteRow]:
-    """Build one M347 contraparte row with all four quarterly amounts set."""
-    mirror = Modelo347ContraparteRowWireV1(
-        nif="A12345674",
-        nombre="CONTRAPARTE SA",
-        importe_Q1="1000.01",
-        importe_Q2="2000.02",
-        importe_Q3="3000.03",
-        importe_Q4="4000.04",
-        clave_operacion="B",
-        pais_codigo="PT",
-    )
-    row = Modelo347ContraparteRow(
-        nif="A12345674",
-        nombre="CONTRAPARTE SA",
-        importe_Q1=Decimal("1000.01"),
-        importe_Q2=Decimal("2000.02"),
-        importe_Q3=Decimal("3000.03"),
-        importe_Q4=Decimal("4000.04"),
-        clave_operacion="B",
-        pais_codigo="PT",
-    )
-    return mirror, row
-
-
 def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210AgrupacionRentaRow]:
     """Build one M210 agrupación row and its wire mirror."""
     mirror = Modelo210AgrupacionRentaRowWireV1(
@@ -211,12 +189,42 @@ def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210Agrupacion
     return mirror, row
 
 
+def _m156_pair() -> tuple[Modelo156AfiliadoRowWireV1, Modelo156AfiliadoRow]:
+    mirror = Modelo156AfiliadoRowWireV1(
+        nif="12345678Z",
+        nombre="Persona ficticia",
+        numero_afiliacion="001234567890",
+        cotizaciones=tuple(
+            Modelo156MonthlyContributionWireV1(
+                month=month,
+                status="S" if month == 1 else None,
+                amount="10.50" if month == 1 else None,
+            )
+            for month in range(1, 13)
+        ),
+    )
+    expected = Modelo156AfiliadoRow(
+        nif="12345678Z",
+        nombre="Persona ficticia",
+        numero_afiliacion="001234567890",
+        cotizaciones=tuple(
+            Modelo156MonthlyContribution(
+                month=month,
+                status="S" if month == 1 else None,
+                amount=Decimal("10.50") if month == 1 else None,
+            )
+            for month in range(1, 13)
+        ),
+    )
+    return mirror, expected
+
+
 _PAIRS = {
+    "m156_afiliado": _m156_pair,
     "m184_miembro": _m184_pair,
     "m232_vinculada": _m232_pair,
     "m349_operador": _m349_operador_pair,
     "m349_rectificacion": _m349_rectificacion_pair,
-    "m347_contraparte": _m347_pair,
     "m210_agrupacion_renta": _m210_pair,
 }
 
@@ -379,7 +387,7 @@ def test_the_credential_free_check_still_refuses_a_free_form_key_field() -> None
     """
 
     class AddressCarryingTheJoinedKey(BaseModel):
-        model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+        model_config = STRICT_FROZEN_CONFIG
 
         natural_key: Annotated[str, Field(min_length=1, max_length=256)]
 
@@ -387,10 +395,14 @@ def test_the_credential_free_check_still_refuses_a_free_form_key_field() -> None
         validate_credential_free_schema(strict_model_json_schema(AddressCarryingTheJoinedKey))
 
 
-def test_the_admitted_request_type_carries_the_detail_row_family() -> None:
-    """The real registered request type is admitted WITH detail rows on it."""
-    schema = strict_model_json_schema(ModeloEditApplyOperationRequestV1)
+def test_the_public_request_is_amount_free_and_the_operator_input_carries_detail_rows() -> None:
+    """Native input has the batch; only safe coordinates enter the public request."""
+    from ..edit_operation_requests import ModeloEditApplyOperationRequestV2
+
+    schema = strict_model_json_schema(ModeloEditApplyOperationRequestV2)
     validate_credential_free_schema(schema)
 
+    assert isinstance(schema["properties"], dict)
+    assert "submission" not in schema["properties"]
     submission = ModeloEditApplySubmissionV1.model_fields
     assert "detail_row_intents" in submission

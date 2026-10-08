@@ -17,29 +17,18 @@ commits the count answer first (revealing the instance pages) and then seeds eac
 instance answer — the one seeding channel that re-instantiates the group from
 persisted facts.
 
-Lifecycle of one door invocation:
-
-* **seed** — :func:`build_descendant_door` reads the active
-  :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`, re-projects its
-  ``renta_family.descendiente.{n}.*`` facts to a page-keyed answer map through
-  :func:`~cadrumo.application.wizard.persistence.descendant_answers_from_record`,
-  and resumes a MODIFY-mode :class:`~cadrumo.application.flows.engine.FlowState` over the
-  door definition so the operator opens on their existing descendants.
-* **commit** — :func:`persist_descendant_door_answers` projects the submitted
-  answers back through
-  :func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`
-  and clears the orphaned rows a shrunk count leaves behind through
-  :func:`~cadrumo.application.wizard._checkpoint_store.descendant_clearing_facts`,
-  in one revision-bound record command. The door only commits to an
-  already-registered, authenticated profile.
+The caller seeds the flow from the authorized profile facts through
+:func:`~cadrumo.application.flows.resume.resume_flow`, whose walk commits the
+count answer first and then seeds each instance answer, and projects the
+submitted answers back through
+:func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`.
 
 The door declares checkpointing UNAVAILABLE in both modes: the commit is owned
-here, not by a frontend save-and-exit, so no checkpoint store is wired.
+by the caller, not by a frontend save-and-exit, so no checkpoint store is wired.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
@@ -48,24 +37,15 @@ from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..flows.definition import FlowDefinition, FlowSection
 from ..flows.definition import locale_copy_ref as _locale_ref
-from ..flows.engine import FlowState
-from ..flows.resume import resume_flow
-from ._checkpoint_store import descendant_clearing_facts
 from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 from .descendant_group import (
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
     build_descendant_count_page,
     build_descendant_group,
 )
-from .persistence import descendant_answers_from_record, descendant_facts_from_answers
 
 if TYPE_CHECKING:
-    from prompt_toolkit.input import Input
-    from prompt_toolkit.output import Output
-
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.user_profile.values import UserProfileRecord
-    from ..flows.review import ReviewProjection
 
 #: The door's flow and familia section ids.
 DESCENDANT_DOOR_FLOW_ID = "descendiente-door"
@@ -128,128 +108,8 @@ def build_descendant_door_definition(*, operation: PinnedAuthorityOperation) -> 
     )
 
 
-def build_descendant_door(
-    record: UserProfileRecord | None,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> tuple[FlowDefinition, FlowState]:
-    """Return the door definition and a MODIFY-mode state seeded from ``record``.
-
-    Re-projects the record's ``renta_family.descendiente.{n}.*`` facts into the
-    page-keyed answer map through
-    :func:`~cadrumo.application.wizard.persistence.descendant_answers_from_record`,
-    then resumes a fresh :class:`~cadrumo.application.flows.engine.FlowState` over the
-    door definition: :func:`~cadrumo.application.flows.resume.resume_flow` commits the
-    seeded count answer first (revealing the instance pages) and then seeds each
-    instance answer against the current definition, so the operator opens on their
-    existing descendants. A childless record seeds an empty map and opens on the
-    count page's zero default.
-
-    Args:
-        record: The :class:`UserProfileRecord` whose descendant facts seed the
-            resumed flow state, or ``None`` for a childless record.
-        operation: Caller-owned pinned authority operation used to compose and
-            seed the descendant surface.
-    """
-    definition = build_descendant_door_definition(operation=operation)
-    seed = descendant_answers_from_record(record, operation=operation)
-    resume_state = resume_flow(definition, seed, mode=FlowMode.MODIFY)
-    return definition, resume_state
-
-
-def load_active_descendant_record(*, operation: PinnedAuthorityOperation) -> UserProfileRecord:
-    """Load the authoritative record that one descendant-door run will edit."""
-    from ...core.bucket_pointer import require_active_bucket_id
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
-
-    profile_id = require_active_bucket_id()
-    return ProfileRecordRepository.for_current_session(
-        profile_id,
-        profile_decode_context=operation.profile_decode_context(),
-    ).load(profile_id)
-
-
-def persist_descendant_door_answers(
-    answers: Mapping[str, str],
-    *,
-    baseline: UserProfileRecord,
-    operation: PinnedAuthorityOperation,
-) -> UserProfileRecord:
-    """Commit the door's submitted answers as the full descendant fact set.
-
-    Projects the committed page-keyed answers into the canonical
-    ``renta_family.descendiente.{n}.*`` facts and aggregates through
-    :func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`,
-    and clears every on-record descendant path the fresh projection no longer
-    covers (a shrunk count, a removed optional field) through
-    :func:`~cadrumo.application.wizard._checkpoint_store.descendant_clearing_facts`,
-    in one authenticated compare-and-swap command. The clearing reads the
-    authoritative current record before constructing the replacement, so a
-    count-shrink never strands a descendant index above the answered count.
-
-    Core types:
-    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
-    """
-    from ...core.bucket_pointer import require_active_bucket_id
-    from ...domain.user_profile.values import UserProfileFact
-    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-
-    profile_id = require_active_bucket_id()
-    if str(baseline.profile_id) != profile_id:
-        raise ValueError("descendant door baseline does not belong to the active profile")
-    facts = tuple(
-        UserProfileFact(path=path, value=value)
-        for path, value in descendant_facts_from_answers(answers, operation=operation)
-    )
-    clearing = descendant_clearing_facts(baseline, answers, operation=operation)
-    return apply_profile_fact_changes(
-        profile_id=profile_id,
-        changes=(*facts, *clearing),
-        door=ProfileFactWriteDoor.DESCENDANTS,
-        expected_record=baseline,
-        profile_decode_context=operation.profile_decode_context(),
-    )
-
-
-def run_descendant_door(
-    *,
-    operation: PinnedAuthorityOperation,
-    input: Input | None = None,
-    output: Output | None = None,
-) -> tuple[FlowState, ReviewProjection, UserProfileRecord]:
-    """Drive and persist one descendant door invocation through the real line frontend.
-
-    The door resolves and loads the authenticated active profile itself before
-    prompting, binding the submitted write to that exact revision and digest.
-    Headless callers bind prompt-toolkit devices,
-    which exercises the same production frontend and the same atomic profile
-    writer without replacing either boundary with a test callback.
-    """
-    from ..flows.line_frontend import LineFlowFrontend
-
-    # The caller owns the operation span across loading, seeding, the
-    # interactive walk, and the compare-and-swap write. No relationship or
-    # disability catalogue value can outlive the generation that admitted it.
-    baseline = load_active_descendant_record(operation=operation)
-    definition, resume_state = build_descendant_door(baseline, operation=operation)
-    state, projection = LineFlowFrontend(
-        definition,
-        input=input,
-        output=output,
-    ).run(
-        mode=FlowMode.MODIFY,
-        resume_state=resume_state,
-    )
-    persisted = persist_descendant_door_answers(state.answers, baseline=baseline, operation=operation)
-    return state, projection, persisted
-
-
 __all__ = [
     "DESCENDANT_DOOR_FLOW_ID",
     "DescendantDoorAnswers",
-    "build_descendant_door",
     "build_descendant_door_definition",
-    "load_active_descendant_record",
-    "persist_descendant_door_answers",
-    "run_descendant_door",
 ]

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cli-root-verb-homes'
 date: '2026-08-26'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc8fe589dc231f46f0eec3d3281f3747db8d00e25c6bb63f4c7721a31d339f0f'
+body_hash: 'sha256:edf4fa0857745487e02b89cdba7ee751292afa93c44e8dc5e6bec4da5caa41d6'
 related:
   - "[[2026-08-26-cli-root-verb-homes-plan]]"
   - "[[2026-08-26-cli-root-verb-homes-adr]]"
@@ -85,7 +85,7 @@ which makes the previously anomalous `config profile censo pull` and `config
 provision pull` conformant by definition. That is a legitimate resolution, but it
 is a redefinition, and a reader should know the tokens did not move.
 
-### the-tracked-benchmark-census-is-stale | open | `dev/benchmarks/cli/baseline.census.json` does not match the live command set, and this campaign did not refresh it.
+### the-tracked-benchmark-census-is-stale | open |  does not match the live command set, and this campaign did not refresh it.
 
 It was already stale before the campaign: `app ledger evidence attachment-queue`,
 `evidence attachment-view`, `inventory closing-authority-record` and `app modelo

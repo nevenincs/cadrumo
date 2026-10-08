@@ -12,19 +12,17 @@ from pathlib import Path
 import pytest
 import yaml
 
+from cadrumo.domain.calculations.registry.modelo_localization import binding_locale_key
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     CasillaEvolutionKind,
 )
 
-from ..modelo_casilla_catalogue import (
-    CasillaOccurrence,
-    CollapseVerificationError,
-    ModeloCasillaCatalogue,
-    _segments,
-    load_casilla_values,
-    resume_install,
-)
+from ..casilla_catalogue_install import resume_install
+from ..casilla_catalogue_models import CasillaOccurrence, CollapseVerificationError
+from ..casilla_source_inventory import load_casilla_values
+from ..casilla_text_comparison import _segments
+from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -125,6 +123,29 @@ def test_null_leaves_orphans_and_derived_help_are_delete_targets() -> None:
     assert findings.derived_help["es"] == (derived,)
     assert {_OCC_2024, orphan, derived} <= plan.removals["es"].keys()
     assert not findings.pure
+
+
+def test_declared_binding_text_survives_casilla_collapse_but_unknown_binding_text_does_not() -> None:
+    declared = binding_locale_key("999", "field.with punctuation", "label")
+    unknown = binding_locale_key("999", "undeclared field", "label")
+    catalogue = ModeloCasillaCatalogue(
+        _chains(),
+        {
+            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible", declared: "Nombre", unknown: "Huérfana"},
+            "en": {_OCC_2023: "Tax base", _OCC_2024: "Tax base", declared: "Name", unknown: "Orphan"},
+        },
+        binding_presentation_keys=frozenset({declared}),
+    )
+
+    findings = catalogue.findings()
+    plan = catalogue.collapse_plan()
+
+    assert findings.orphan_keys == {"en": (unknown,), "es": (unknown,)}
+    assert all(declared in leaves and unknown not in leaves for leaves in plan.working.values())
+    assert plan.plan.removals["es"][unknown] == "orphan"
+    assert plan.plan.removals["en"][unknown] == "orphan"
+    assert _OCC_2024 not in plan.working["es"]
+    assert catalogue.resolution(plan.working) == plan.baseline
 
 
 def test_a_placeholder_is_reported_and_a_clean_surface_is_pure() -> None:

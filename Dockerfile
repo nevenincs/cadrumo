@@ -122,7 +122,6 @@ USER ${USERNAME}
 ENV PATH="/home/${USERNAME}/.local/bin:/workspace/.venv/bin:${PATH}" \
     UV_LINK_MODE=copy \
     PLAYWRIGHT_BROWSERS_PATH=/home/${USERNAME}/.cache/ms-playwright \
-    CADRUMO_BROWSER_CHANNEL=chromium \
     CADRUMO_BROWSER_HEADLESS=true
 
 
@@ -136,7 +135,7 @@ ARG USER_GID=1000
 COPY --chown=${USERNAME}:${USERNAME} . .
 
 # Pre-warm the dependency set (runtime + workbook extra + dev group), matching
-# the `[unix] install` justfile recipe exactly. `[workbook-windows]` resolves
+# the `uv sync` in the `setup` justfile recipe exactly. `[workbook-windows]` resolves
 # to nothing on Linux (its sole dependency is `sys_platform == 'win32'`
 # marker-gated) but is requested for parity with that recipe.
 RUN --mount=type=cache,target=/home/${USERNAME}/.cache/uv,uid=${USER_UID},gid=${USER_GID} \

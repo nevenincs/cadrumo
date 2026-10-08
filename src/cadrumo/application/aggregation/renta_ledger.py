@@ -40,7 +40,10 @@ from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_exento_token, require_iva_regime
+from ...domain.calculations.registry.iva_regime_vocabulary import (
+    iva_regime_exento_token,
+    require_iva_regime,
+)
 from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.categories.profile import CategoryProfile
@@ -393,22 +396,14 @@ def resolve_iva_deduction_ratio(
     percentage_divisor = Decimal(
         _required_renta_ledger_declaration(ratio_policy, "percentage.unit_divisor"),
     )
-
-    record = profile_record
-    if record is None:
-        try:
-            record = ProfileRecordRepository.for_current_session(
-                bucket_id,
-                profile_decode_context=profile_decode_context,
-            ).load(bucket_id)
-        except ProfileNotFoundError:
-            record = None
-    if record is not None:
-        raw_regime = fact_value(record, "iva.regime")
-        if raw_regime is not None:
-            regime = require_iva_regime(str(raw_regime).strip().upper())
-            if regime == iva_regime_exento_token():
-                return exempt_ratio
+    profile_exempt_ratio = _profile_exempt_iva_ratio(
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+        exempt_ratio=exempt_ratio,
+    )
+    if profile_exempt_ratio is not None:
+        return profile_exempt_ratio
 
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load(), operation=operation)
     entry = register.entry_for(ejercicio, sector_id=None)
@@ -418,6 +413,31 @@ def resolve_iva_deduction_ratio(
     if resolution.percentage is None:
         return None
     return resolution.percentage / percentage_divisor
+
+
+def _profile_exempt_iva_ratio(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None,
+    profile_decode_context: ProfileDecodeContext,
+    exempt_ratio: Decimal,
+) -> Decimal | None:
+    record = profile_record
+    if record is None:
+        try:
+            record = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=profile_decode_context,
+            ).load(bucket_id)
+        except ProfileNotFoundError:
+            return None
+    raw_regime = fact_value(record, "iva.regime")
+    if raw_regime is None:
+        return None
+    regime = require_iva_regime(str(raw_regime).strip().upper())
+    if regime == iva_regime_exento_token():
+        return exempt_ratio
+    return None
 
 
 def aggregate_renta_ledger_expenses_from_repositories(

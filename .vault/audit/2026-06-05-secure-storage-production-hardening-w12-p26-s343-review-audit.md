@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:b4bcee8fd3e76daec7027f0e46b015dd5dbbf6be85712cf365c7ec38c86eb61b'
+modified: '2026-10-03'
+body_hash: 'sha256:a53e3011e72339255d247b2e9ee61a023177513a0e9c0384a5d2571cb156fab5'
 related: []
 ---
 
@@ -36,8 +36,8 @@ stubs, monkeypatches, skips, or mirrored business logic.
 
 ## S343-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/invoices/_repository.py src/aeat/domain/invoices/test_repository.py src/aeat/domain/invoices/test_secure_storage_roundtrip.py src/aeat/application/invoices/test_linking.py src/aeat/application/invoices/test_queries.py src/aeat/application/invoices/test_reconciliation.py src/aeat/application/invoices/test_source_resolver.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/invoices/test_repository.py src/aeat/domain/invoices/test_secure_storage_roundtrip.py src/aeat/application/invoices/test_linking.py src/aeat/application/invoices/test_queries.py src/aeat/application/invoices/test_reconciliation.py src/aeat/application/invoices/test_source_resolver.py` passed with 22 tests.
+- the historical check passed.
+- the historical check passed with 22 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with the known PLAN022 warning.
 - `uv run --no-sync vaultspec-rag search "InvoiceCatalogueRepository inspect_bucket_storage_runtime secure object runtime active bucket financial envelope" --type code --port 8766 --max-results 8` returned runtime factory and invoice repository evidence.

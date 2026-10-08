@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#m100-marriage-date-axis'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:320b028df16c4fa266436c858595d675f876d77166b7e7d5e491e10de703f753'
+body_hash: 'sha256:fcf53bb7ad39f9af92193bccc33c336e8da6f5e41afa6f1c350cbcedf4aa139a'
 related:
-  - '[[2026-06-04-m100-marriage-date-axis-adr]]'
   - '[[2026-06-04-m100-marriage-date-axis-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#m100-marriage-date-axis`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-m100-marriage-date-axis-adr` - `m100-marriage-date-axis` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

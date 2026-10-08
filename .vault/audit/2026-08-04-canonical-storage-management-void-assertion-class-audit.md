@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d109160f0cfa6a20f49b4ea64cc5574b42bf1bd9e872db1558fae7be9068dabf'
-related:
-  - "[[2026-08-03-canonical-storage-management-plan]]"
+body_hash: 'sha256:af5255f51c79f861bc7a85c1b8c5fd4afae29962c7f13a7db76940d5369b469a'
+related: []
 ---
 
 # `canonical-storage-management` audit: `void assertion class`
@@ -123,7 +122,7 @@ Ten of sixteen remain **undeclared** — no `PINNED_TAXONOMY_LITERALS` in the mo
   independently mutation-tested: `adapters/persistence/storage/sql/tests/test_engine.py:194`,
   `adapters/persistence/storage/tests/test_cadrumo_state_identity_acceptance.py:96`,
   `entrypoints/cli/tests/test_root_fallback_write_guard.py:201,272`,
-  `tests/test_secure_sql.py:154` (the undeclared remainder of the `cadrumo.db`
+  The retired test (the undeclared remainder of the `cadrumo.db`
   refusal-guard shape once the two declared `test_storage_route_classification.py` lines are
   removed), plus `core/tests/test_token_dir_state_root.py:77` (`cadrumo_token_dir !=
   storage_root / "tokens"`, the same override-precedence-negation shape as the `SECRETS`

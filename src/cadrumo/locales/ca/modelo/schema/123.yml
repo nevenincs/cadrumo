@@ -34,6 +34,46 @@ modelo:
           i l'IRNR d'establiments permanents. Determinats rendiments del capital mobiliari
           o determinades rendes.
         title: Retencions sobre capital mobiliari
+      form:
+        column:
+          base: Base de retencions i ingressos a compte
+          dividendos: Dividends i altres rendes de participació en fons propis d’entitats
+          ingresos-anteriores: Ingressos d’exercicis anteriors
+          numero-perceptores: Nombre de perceptors
+          otras-rentas: Resta de rendes
+          regularizacion: Regularització
+          retenciones: Retencions i ingressos a compte
+          totales: Totals
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          nombre-completo: Cognoms i nom o raó social
+          periodo: Període
+        page:
+          dr-12301:
+            heading: Retencions sobre rendiments del capital mobiliari i determinades
+              rendes
+        row:
+          base: Base de retencions i ingressos a compte
+          numero-rentas: Nombre de rendes
+          periodificacion: Periodificació
+          retenciones: Retencions i ingressos a compte
+        section:
+          complementaria:
+            heading: Complementària (6)
+          devengo:
+            heading: Meritació (2)
+          identificacion:
+            heading: Identificació (1)
+          ingreso:
+            heading: Ingrés (4)
+          liquidacion:
+            heading: Liquidació (3)
       revision:
         2019-2023:
           casilla:

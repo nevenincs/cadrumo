@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8d1b3e9eb3bd1dc26fdd9e6ed822e8247d81546317023618a8c8f51490ac3077'
+body_hash: 'sha256:026eaceb8dc22bf5a39425c9f9cc1c627999ffc291a740d5fa80b14d9bbd21ec'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
+
 # `tui-architecture` audit: `S37 live facade review`
 
 ## Scope
@@ -25,14 +25,7 @@ and the absence of plan-state mutation.
 
 No Critical, High, Medium, or Low S37 findings.
 
-The filed-history definition identity, strict request model, and composed
-definition builder each have exactly one implementation owner in
-`src/cadrumo/application/live/_filed_history_operation.py`. Their only public
-route is the owning package facade in `src/cadrumo/application/live/__init__.py`:
-the three names appear exactly once in the literal lazy manifest and exactly
-once in `__all__`, with typing-only aliases naming the same owner. No second
-definition, non-`__init__` re-export, compatibility forwarder, mirror, or
-cross-package private import exists for the surface.
+Their only public route is the owning package facade in `src/cadrumo/application/live/__init__.py`: the three names appear exactly once in the literal lazy manifest and exactly once in `__all__`, with typing-only aliases naming the same owner. No second definition, non-`__init__` re-export, compatibility forwarder, mirror, or cross-package private import exists for the surface.
 
 The manifest replaces the former per-module branch ladder with one name-to-owner
 table and one shared resolver. A fresh-process probe found all 27 lazy names,

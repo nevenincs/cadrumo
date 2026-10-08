@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -22,7 +22,8 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.overview.home import HomeAccountSession, HomeSessionPosture
-from ...application.workbench_generation import SecureProfileWorkbenchGenerationReadDoorV1, WorkbenchGenerationInputsV1
+from ...application.workbench_generation_contracts import WorkbenchGenerationInputsV1
+from ...application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
@@ -43,11 +44,17 @@ _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 @dataclass
 class _Store[ValueT]:
     value: ValueT
+    revisioned_operations: list[PinnedAuthorityOperation | None] = field(default_factory=list)
 
     def load(self, *_args: object) -> ValueT:
         return self.value
 
-    def load_revisioned(self) -> tuple[ValueT, str]:
+    def load_revisioned(
+        self,
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> tuple[ValueT, str]:
+        self.revisioned_operations.append(operation)
         return self.value, "revision-1"
 
 
@@ -127,12 +134,13 @@ def _door(
         setup_state=ProfileSetupState.INCOMPLETE,
         facts=(),
     )
+    calculation_store = _Store(CalculationRevisionCatalogue())
     return SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_BUCKET_ID,
         operation=operation,
         profile_repository=cast(Any, _Store(record)),
         work_unit_repository=cast(Any, _Store(WorkUnitCatalogue())),
-        calculation_repository=cast(Any, _Store(CalculationRevisionCatalogue())),
+        calculation_repository=cast(Any, calculation_store),
         filing_repository=cast(Any, _Store(ModeloRecordCatalogue())),
         clock=lambda: _NOW,
         account_session_reader=account_session_reader
@@ -154,11 +162,14 @@ def test_a_quiet_capture_decodes_each_ledger_catalogue_once(
         TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(TransactionCatalogue.from_transactions((_row("a"),)))
         door = _door(operation)
         captured: list[WorkbenchGenerationInputsV1] = []
+        calculation_store = cast(_Store[CalculationRevisionCatalogue], door.calculation_repository)
         counts = _calls(
             (_TRANSACTION_LOAD, _INVOICE_LOAD), lambda: captured.append(door.read_workbench_generation_inputs())
         )
 
     assert counts == {_TRANSACTION_LOAD: 1, _INVOICE_LOAD: 1}
+    assert calculation_store.revisioned_operations
+    assert all(passed is operation for passed in calculation_store.revisioned_operations)
     (inputs,) = captured
     assert inputs.ledger.value is not None
 
@@ -169,9 +180,12 @@ def test_the_counter_detects_the_second_decode_without_revisions(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(TransactionCatalogue.from_transactions((_row("a"),)))
         door = _door(operation, withhold_revisions=True)
+        calculation_store = cast(_Store[CalculationRevisionCatalogue], door.calculation_repository)
         counts = _calls((_TRANSACTION_LOAD, _INVOICE_LOAD), door.read_workbench_generation_inputs)
 
     assert counts == {_TRANSACTION_LOAD: 2, _INVOICE_LOAD: 2}
+    assert calculation_store.revisioned_operations
+    assert all(passed is operation for passed in calculation_store.revisioned_operations)
 
 
 def test_a_ledger_write_during_capture_refuses_the_generation(
@@ -198,5 +212,8 @@ def test_a_ledger_write_during_capture_refuses_the_generation(
             )
 
         door = _door(operation, account_session_reader=session_then_write)
+        calculation_store = cast(_Store[CalculationRevisionCatalogue], door.calculation_repository)
         with pytest.raises(InternalInvariantError, match="changed during capture"):
             door.read_workbench_generation_inputs()
+        assert calculation_store.revisioned_operations
+        assert all(passed is operation for passed in calculation_store.revisioned_operations)

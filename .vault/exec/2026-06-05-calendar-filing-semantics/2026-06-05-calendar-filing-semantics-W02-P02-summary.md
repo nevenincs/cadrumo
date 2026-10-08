@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#calendar-filing-semantics'
 date: '2026-06-05'
-modified: '2026-07-17'
-body_hash: 'sha256:7e8e1dbd549affd11167f1b676238a2b07d43e9a26fe038d887aa3f6a6a5493e'
+modified: '2026-10-03'
+body_hash: 'sha256:2859eb4edcb883033baf7db4784e0dc9cc29f0f1924f681655c238d0c8708266'
 related:
   - '[[2026-06-05-calendar-filing-semantics-plan]]'
 ---
@@ -13,8 +13,6 @@ related:
 
 Completed proof, live verification, and review closeout for the calendar filing semantics hardening.
 
-- Modified: `src/aeat/application/overview/tests/test_calendar.py`
-- Modified: `src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`
 - Modified: `.vault/audit/2026-06-05-calendar-filing-semantics-code-review-audit.md`
 - Created: `.vault/exec/2026-06-05-calendar-filing-semantics/2026-06-05-calendar-filing-semantics-W02-P02-S04.md`
 

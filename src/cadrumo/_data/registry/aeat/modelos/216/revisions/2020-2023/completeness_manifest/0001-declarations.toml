@@ -1,0 +1,18 @@
+# Calculation closure only: supplied withholdings and prior declarations feed
+# the amount payable. Other declared casillas remain visible operator inputs.
+[revisions."2020-2023".completeness_manifest]
+source_ref = "aeat-dr-216-2020-2023"
+legal_refs = ["orden-eha-3290-2008:art-1"]
+source_refs = ["aeat-dr-216-2020-2023", "boe-2008-18497-modelo-216-calculation-guidance"]
+
+[[revisions."2020-2023".completeness_manifest.casillas]]
+casilla_id = "3"
+number = "3"
+
+[[revisions."2020-2023".completeness_manifest.casillas]]
+casilla_id = "6"
+number = "6"
+
+[[revisions."2020-2023".completeness_manifest.casillas]]
+casilla_id = "7"
+number = "7"

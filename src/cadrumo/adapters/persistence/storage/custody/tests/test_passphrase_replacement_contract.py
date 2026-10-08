@@ -24,10 +24,11 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
-    resume_profile_session,
 )
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import (
     evaluate_login_throttle,
     record_login_failure,
@@ -35,6 +36,7 @@ from cadrumo.adapters.persistence.storage.master_key.login_throttle import (
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile import recovery_custody
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
@@ -48,11 +50,11 @@ from cadrumo.application.user_profile.custody_ports import unlock_profile_custod
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.user_profile.login_session import (
     ProfileLoginThrottledError,
-    login_profile,
-    logout_active_profile,
+    authenticate_profile_for_invocation,
 )
 from cadrumo.application.user_profile.passphrase_rotation import (
     ProfilePassphraseReplacementProof,
+    ProfilePassphraseRotationError,
     rotate_profile_passphrase,
 )
 from cadrumo.application.user_profile.profile_record_repository import require_profile_record_session
@@ -128,7 +130,7 @@ def _rotate(profile_id: UUID) -> None:
 def _replacement_proofs(profile_id: UUID, *, passphrase: str) -> list[str | None]:
     """Log in under ``passphrase`` and read every replacement event's recorded proof."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    login_profile(
+    authenticate_profile_for_invocation(
         name=_LABEL,
         passphrase_callback=lambda: passphrase,
         profile_decode_context=_profile_decode_context_for_test,
@@ -140,7 +142,7 @@ def _replacement_proofs(profile_id: UUID, *, passphrase: str) -> list[str | None
             )
         ).history()
     finally:
-        logout_active_profile()
+        reset_test_profile_session()
     return [
         event.payload.get("proof")
         for event in history
@@ -212,7 +214,7 @@ def test_a_throttled_profile_refuses_a_reset_before_any_key_derivation(
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         bucket_id = str(profile_id)
         # Five failures owe a 32-second wait: far longer than this test runs.
         for _ in range(5):
@@ -240,7 +242,7 @@ def test_a_failed_recovery_proof_counts_against_the_login_backoff(tmp_path: Path
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         bucket_id = str(profile_id)
         assert (
             evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=_now()).consecutive_failures
@@ -261,7 +263,7 @@ def test_a_failed_recovery_proof_counts_against_the_login_backoff(tmp_path: Path
         # The login door now waits on the reset door's failure.
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         with frozen_clock(refused_at + timedelta(seconds=1)), pytest.raises(ProfileLoginThrottledError):
-            login_profile(
+            authenticate_profile_for_invocation(
                 name=_LABEL,
                 passphrase_callback=lambda: _CURRENT,
                 profile_decode_context=_profile_decode_context_for_test,
@@ -272,7 +274,7 @@ def test_a_proven_recovery_code_clears_the_backoff_as_a_login_does(tmp_path: Pat
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         bucket_id = str(profile_id)
         # A failure old enough that its wait has elapsed: counted, not throttling.
         record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=_now() - timedelta(minutes=10))
@@ -299,7 +301,7 @@ def test_a_session_receipt_minted_before_a_reset_is_refused_at_resume(tmp_path: 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         material = load_committed_profile_password_material(profile_id)
         dek = unlock_profile_custody_password(material, password=_CURRENT).dek
         issued = _now()
@@ -312,11 +314,14 @@ def test_a_session_receipt_minted_before_a_reset_is_refused_at_resume(tmp_path: 
             now=issued,
             idle_minutes=15,
             absolute_minutes=240,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=committed_sign_in(storage_root, profile_id),
+            generation=committed_sign_in(storage_root, profile_id).establish().current,
         )
         try:
             # The control: before the reset the same receipt resumes, so the
             # refusal below is the reset's doing and nothing else's.
-            control, control_dek = resume_profile_session(
+            control, control_dek = resume_receipt_as_runtime(
                 storage_root=storage_root,
                 profile_id=profile_id,
                 custody_generation=material.envelope.password_generation,
@@ -329,7 +334,7 @@ def test_a_session_receipt_minted_before_a_reset_is_refused_at_resume(tmp_path: 
             _reset(profile_id, code)
             current = load_committed_profile_password_material(profile_id).envelope
 
-            outcome, resumed = resume_profile_session(
+            outcome, resumed = resume_receipt_as_runtime(
                 storage_root=storage_root,
                 profile_id=profile_id,
                 custody_generation=current.password_generation,
@@ -355,7 +360,7 @@ def test_an_archive_exported_before_a_reset_restores_under_the_old_passphrase(tm
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         archive = tmp_path / "before-reset.cadrumo-bucket.tar.gz"
         export_profile_capsule_archive(profile_id=profile_id, target=archive)
 
@@ -386,21 +391,21 @@ def test_an_archive_exported_before_a_reset_restores_under_the_old_passphrase(tm
             unlock_profile_custody_password(material, password=_REPLACEMENT)
 
 
-def test_logging_out_leaves_the_failed_attempt_backoff_in_place(tmp_path: Path) -> None:
-    """A backoff any caller can reset between guesses protects nothing: logout ends sessions only."""
+def test_selection_changes_leave_the_failed_attempt_backoff_in_place(tmp_path: Path) -> None:
+    """Selecting or clearing a pointer does not authorize another password guess."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
         code = _enroll(profile_id)
-        logout_active_profile()
+        reset_test_profile_session()
         bucket_id = str(profile_id)
         # Five failures owe a 32-second wait: far longer than this test runs.
         for _ in range(5):
             record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=_now())
 
-        # Selecting a profile needs no secret, and logout revokes whatever is
-        # selected: exactly the sequence a guesser could run between guesses.
+        # Selection needs no credential. Clearing the fixture's selection also
+        # leaves the durable authentication attempts intact.
         ProfileCapsuleLifecycle().select(bucket_id)
-        logout_active_profile()
+        reset_test_profile_session()
 
         assert (
             evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=_now()).consecutive_failures
@@ -408,10 +413,43 @@ def test_logging_out_leaves_the_failed_attempt_backoff_in_place(tmp_path: Path) 
         )
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         with pytest.raises(ProfileLoginThrottledError):
-            login_profile(
+            authenticate_profile_for_invocation(
                 name=_LABEL,
                 passphrase_callback=lambda: _CURRENT,
                 profile_decode_context=_profile_decode_context_for_test,
             )
         with pytest.raises(ProfileLoginThrottledError):
             _reset(profile_id, code)
+
+
+@pytest.mark.parametrize("proof", ["password", "recovery"])
+def test_replacement_fences_sign_in_only_after_successful_proof(tmp_path: Path, proof: str) -> None:
+    """Both real lifecycle doors preserve failed proof and durably revoke success."""
+    _, decode = _profile_contexts_for_test()
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        profile_id = _register()
+        code = _enroll(profile_id)
+        custody = committed_sign_in(root, profile_id)
+        captured = custody.establish().current
+        if proof == "password":
+            with pytest.raises(ProfilePassphraseRotationError):
+                rotate_profile_passphrase(
+                    profile_id=profile_id,
+                    current_passphrase=_CURRENT + "-wrong",
+                    new_passphrase=_REPLACEMENT,
+                    new_passphrase_confirmation=_REPLACEMENT,
+                    profile_decode_context=decode,
+                )
+        else:
+            with pytest.raises((ProfileRecoveryError, ProfileAuthenticationRefusedError)):
+                _reset(profile_id, _wrong(code))
+        assert custody.observe().current == captured
+        if proof == "password":
+            _rotate(profile_id)
+        else:
+            with frozen_clock(_now() + timedelta(minutes=2)):
+                _reset(profile_id, code)
+        advanced = custody.observe().current
+        assert advanced is not None
+        assert advanced.lineage == captured.lineage
+        assert advanced.generation == captured.generation + 1

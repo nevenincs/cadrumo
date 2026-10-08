@@ -7,14 +7,16 @@ tier: L3
 related:
   - '[[2026-08-26-cli-root-verb-homes-adr]]'
   - '[[2026-08-25-cli-root-verb-homes-audit]]'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: body-v2
-body_hash: 'sha256:24a27b9e78cf4e98b2294658766c387e09c3cdcc07ecb9e9ce96019c069a4433'
+body_hash: 'sha256:f846ae76008b7b724d18dc67a60f2943beab07a8ffcb516b560a2401d77c4d6e'
 ---
 
 # `cli-root-verb-homes` plan
 
 ## Description
+
+Conform the CLI tree to the approved root-placement and verb grammar: declare transport loci, move command families to their governing homes, retire duplicate surfaces, and enforce placement, spelling and verb checks with bite-proved gates. The governing decision is recorded in the related ADR.
 
 ## Steps
 
@@ -27,7 +29,7 @@ Add the ParameterSpec annotation the D3 spelling gate requires. Until a paramete
 Define the closed locus and shape enums in core and carry them on the parameter spec, validated at spec construction.
 
 - [x] `W01.P01.S01` - Define TransportLocus and TransportShape closed enums; `src/cadrumo/core/`.
-- [x] `W01.P01.S02` - Carry locus and shape on OptionSpec and ArgumentSpec, validated at construction; `src/cadrumo/entrypoints/cli/_command_spec.py`.
+- [x] `W01.P01.S02` - Carry locus and shape on OptionSpec and ArgumentSpec, validated at construction; `src/cadrumo/entrypoints/cli/_command_parameter_contracts.py`.
 
 ### Phase `W01.P02` - Locus declaration sweep
 
@@ -180,4 +182,8 @@ Verify every surface the conformance gates do not scan, and run the full suite s
 
 ## Parallelization
 
+The plan sequences its five waves. W05 builds its spelling gate on the W01 transport-locus declarations; W04 retirements depend on their named preconditions. No within-wave parallel assignments are recorded.
+
 ## Verification
+
+The acceptance checks are the bite proofs and live-tree sweeps in the final wave: planted defects must be rejected by the placement and spelling gates, the verb-grammar gate must reject retired tokens, and W05.P14.S67 verifies D1 through D7 against the current tree. S68 through S70 reconcile the close-review findings. The plan closes when every Step is closed and its final review passes.

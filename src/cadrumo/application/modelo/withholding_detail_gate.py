@@ -367,7 +367,7 @@ def withholding_detail_absence_finding(
             legal_refs=legal_refs,
             source_refs=source_refs,
         )
-    if absence.absence_is_proven:
+    if absence.is_filing_grade:
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.ADVISORY,
             severity=ModeloVerificationFindingSeverity.WARNING,

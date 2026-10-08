@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f4247ff9799cc457f7afa0ce817665c2346a2fe76947c183ddf4af1c9a12465f'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 
 # `deadline-window-revision-authority` audit: `Modelo 353 deadline evidence and canonical ownership review`

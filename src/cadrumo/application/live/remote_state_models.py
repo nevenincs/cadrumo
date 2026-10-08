@@ -138,6 +138,29 @@ class FiledCasillaSkipRow(BaseModel):
     reason: str
 
 
+class FiledCapturePairOutcome(BaseModel):
+    """Actual register and capture facts for one planned modelo/year pair."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: str = Field(min_length=1, max_length=8)
+    year: int
+    walk_attempted: bool
+    walk_completed: bool
+    row_count: int = Field(ge=0)
+    reached_count: int = Field(ge=0)
+    captured_count: int = Field(ge=0)
+
+    def require_consistent(self) -> None:
+        """Refuse counters that cannot follow from the recorded walk facts."""
+        if self.walk_completed and not self.walk_attempted:
+            raise ValueError("a completed filed register walk must have been attempted")
+        if not self.walk_completed and (self.row_count or self.reached_count or self.captured_count):
+            raise ValueError("an incomplete filed register walk cannot report row or capture counts")
+        if self.reached_count > self.row_count or self.captured_count > self.reached_count:
+            raise ValueError("filed pair capture counts exceed the rows actually reached")
+
+
 class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     """Read-only bulk filed-declaration capture report."""
 
@@ -146,6 +169,7 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     year_from: int
     year_to: int
     failed_count: int
+    pair_outcomes: tuple[FiledCapturePairOutcome, ...]
     sync_run_ref: SyncRunRecordReference | None = None
     failures: tuple[FiledDataCaptureFailureRow, ...] = ()
     skipped_casillas: tuple[FiledCasillaSkipRow, ...] = ()
@@ -155,6 +179,57 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     #: True when the sweep ran as a preview: it read AEAT and computed the
     #: recapture advisories above, and wrote nothing.
     dry_run: bool = False
+
+    def require_consistent(self) -> None:
+        """Require exact pair identities and totals independent of calculation-key deduplication."""
+        _require_bulk_year_range(self)
+        _require_bulk_pair_scope(self)
+        _require_bulk_pair_totals(self)
+        _require_bulk_observation_paths(self)
+        _require_bulk_preview_is_unpersisted(self)
+
+
+def _require_bulk_year_range(report: BulkFiledDataCaptureReport) -> None:
+    if report.year_from > report.year_to:
+        raise ValueError("filed bulk accounting has an inverted year range")
+
+
+def _require_bulk_pair_scope(report: BulkFiledDataCaptureReport) -> None:
+    coordinates: set[tuple[str, int]] = set()
+    for pair in report.pair_outcomes:
+        pair.require_consistent()
+        coordinate = (pair.modelo, pair.year)
+        if coordinate in coordinates:
+            raise ValueError("filed bulk accounting repeats a modelo/year coordinate")
+        coordinates.add(coordinate)
+    expected = tuple(
+        (modelo, year) for modelo in report.modelos for year in range(report.year_to, report.year_from - 1, -1)
+    )
+    actual = tuple((pair.modelo, pair.year) for pair in report.pair_outcomes)
+    if actual != expected:
+        raise ValueError("filed bulk accounting does not match its complete planned scope and order")
+
+
+def _require_bulk_pair_totals(report: BulkFiledDataCaptureReport) -> None:
+    if sum(pair.reached_count for pair in report.pair_outcomes) != report.reached_count:
+        raise ValueError("filed bulk reached count disagrees with its pair accounting")
+    if sum(pair.captured_count for pair in report.pair_outcomes) != report.captured_count:
+        raise ValueError("filed bulk captured count disagrees with its pair accounting")
+
+
+def _require_bulk_observation_paths(report: BulkFiledDataCaptureReport) -> None:
+    if report.captured_count != len(report.observation_paths):
+        raise ValueError("filed bulk captured count disagrees with its persisted observation paths")
+
+
+def _require_bulk_preview_is_unpersisted(report: BulkFiledDataCaptureReport) -> None:
+    if report.dry_run and (
+        report.captured_count
+        or report.sync_run_ref is not None
+        or report.calculation_observation_count
+        or report.calculation_observation_keys
+    ):
+        raise ValueError("filed bulk preview cannot report persisted observations or provenance")
 
 
 class ExpedientesBulkCaptureFailureRow(BaseModel):
@@ -180,6 +255,7 @@ class ExpedientesBulkCaptureReport(BaseModel):
     captured_snapshot_count: int
     declaration_count: int
     snapshot_ids: tuple[str, ...]
+    newly_persisted: bool = False
     failures: tuple[ExpedientesBulkCaptureFailureRow, ...] = ()
 
 
@@ -424,6 +500,7 @@ __all__ = [
     "BulkFiledDataCaptureReport",
     "ExpedientesBulkCaptureFailureRow",
     "ExpedientesBulkCaptureReport",
+    "FiledCapturePairOutcome",
     "FiledCasillaSkipRow",
     "FiledDataCaptureFailureRow",
     "FiledDataCaptureReport",

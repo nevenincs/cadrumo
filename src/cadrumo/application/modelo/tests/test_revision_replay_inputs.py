@@ -198,6 +198,21 @@ def test_revision_replay_never_turns_a_text_casilla_placeholder_into_zero_text()
     assert _M390_TIPO_DECLARACION_CASILLA not in replay_inputs
 
 
+def test_revision_replay_preserves_a_stated_date_and_omits_an_absent_date_placeholder() -> None:
+    """M347's unfilled signature date never becomes an invalid filed date ``0``."""
+    work_unit = _work_unit(modelo="347", filing_year=2025, period_code="0A")
+    signature_date = validated_casilla_id("firma-fecha")
+    absent = _revision(work_unit, casilla_values={signature_date: Decimal("0")})
+    stated = _revision(
+        work_unit,
+        input_values_by_casilla_id={signature_date: "2026-02-01"},
+        casilla_values={signature_date: Decimal("0")},
+    )
+
+    assert signature_date not in revision_filing_replay_inputs(revision=absent, work_unit=work_unit)
+    assert revision_filing_replay_inputs(revision=stated, work_unit=work_unit)[signature_date] == "2026-02-01"
+
+
 def test_revision_replay_inputs_do_not_replay_required_manual_defaults() -> None:
     work_unit = _work_unit(modelo="180", filing_year=2024, period_code="0A")
     revision = _resolved_revision(modelo="180", filing_year=2024, period_code="0A")
@@ -490,7 +505,17 @@ def _parsed_field_values(parsed, field_id: str) -> tuple[object, ...]:
     return tuple(field.value for field in parsed.fields if field.field_id == field_id)
 
 
-def test_persisted_m180_row_bindings_export_two_records_with_control_totals(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("first_withholding", "second_withholding", "expected_total", "expected_fraction"),
+    (("570", "380", Decimal("950"), Decimal("0")), ("570.25", "380.50", Decimal("950.75"), Decimal("75"))),
+)
+def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
+    tmp_path: Path,
+    first_withholding: str,
+    second_withholding: str,
+    expected_total: Decimal,
+    expected_fraction: Decimal,
+) -> None:
     """The canonical exporter carries two persisted property rows to disk."""
     rows = {
         "modelo-180-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
@@ -499,7 +524,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(tmp_
         "modelo-180-perceptor-row-modality": {"1": "1", "2": "1"},
         "modelo-180-perceptor-row-base": {"1": "3000", "2": "2000"},
         "modelo-180-perceptor-row-withholding-percentage": {"1": "19", "2": "19"},
-        "modelo-180-perceptor-row-retenciones": {"1": "570", "2": "380"},
+        "modelo-180-perceptor-row-retenciones": {"1": first_withholding, "2": second_withholding},
         "modelo-180-perceptor-row-accrual-year": {"1": "2025", "2": "2025"},
         "modelo-180-perceptor-row-property-situation": {"1": "1", "2": "1"},
         "modelo-180-perceptor-row-cadastral-reference": {
@@ -514,13 +539,13 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(tmp_
         scalar_bindings={
             "modelo-180-115-perceptores-anual": Decimal("2"),
             "modelo-180-115-base-anual": Decimal("5000"),
-            "modelo-180-115-retenciones-anual": Decimal("950"),
+            "modelo-180-115-retenciones-anual": expected_total,
         },
         row_binding_values=rows,
         expected_values={
             validated_casilla_id("decl.total-perceptores"): Decimal("2"),
             validated_casilla_id("decl.base-total"): Decimal("5000"),
-            validated_casilla_id("decl.retenciones-total"): Decimal("950"),
+            validated_casilla_id("decl.retenciones-total"): expected_total,
         },
     )
     output_path = tmp_path / "modelo-180.txt"
@@ -538,10 +563,15 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(tmp_
     assert _parsed_field_values(parsed, "modelo-180-perc-nif") == ("B12345674", "B12345674")
     assert _parsed_field_values(parsed, "modelo-180-decl-total-perceptores") == (Decimal("2"),)
     assert _parsed_field_values(parsed, "modelo-180-decl-base-total") == (Decimal("5000.00"),)
-    assert _parsed_field_values(parsed, "modelo-180-decl-retenciones-total") == (Decimal("950.00"),)
+    # Both contiguous components declare one total, so each parsed slot carries
+    # the reconstructed amount. The independent wire check retains DR180's
+    # positions 161-173 (euros) and 174-175 (cents).
+    assert _parsed_field_values(parsed, "modelo-180-decl-retenciones-total-integer-part") == (expected_total,)
+    assert _parsed_field_values(parsed, "modelo-180-decl-retenciones-total-fractional-part") == (expected_total,)
+    assert output_path.read_bytes()[160:175] == f"{950:013d}{int(expected_fraction):02d}".encode("ascii")
 
 
-def test_persisted_m190_row_bindings_export_optional_blank_rows_with_control_totals(tmp_path: Path) -> None:
+def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_control_totals(tmp_path: Path) -> None:
     """Optional annual-detail slots remain absent without breaking read-back."""
     rows = {
         "modelo-190-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
@@ -582,10 +612,20 @@ def test_persisted_m190_row_bindings_export_optional_blank_rows_with_control_tot
 
     assert receipt.byte_size == output_path.stat().st_size == 1500
     assert _parsed_field_values(parsed, "modelo-190-perc-nif") == ("B12345674", "B12345674")
-    assert _parsed_field_values(parsed, "modelo-190-perc-descendientes-menores-3-total") == (None, None)
+    # This optional unsigned-integer slot uses zero fill, and zero is a valid
+    # count. The wire alone cannot distinguish absent input from measured zero.
+    assert _parsed_field_values(parsed, "modelo-190-perc-descendientes-menores-3-total") == (
+        Decimal("0"),
+        Decimal("0"),
+    )
+    assert output_path.read_bytes()[722:723] == output_path.read_bytes()[1222:1223] == b"0"
     assert _parsed_field_values(parsed, "modelo-190-decl-total-percepciones") == (Decimal("2"),)
     assert _parsed_field_values(parsed, "modelo-190-decl-percepciones-total") == (Decimal("600.00"),)
-    assert _parsed_field_values(parsed, "modelo-190-decl-retenciones-total") == (Decimal("110.00"),)
+    # DR190's contiguous euros (161-173) and cents (174-175) slots declare one
+    # total. Parsing reconstructs it in both slots while preserving wire bytes.
+    assert _parsed_field_values(parsed, "modelo-190-decl-retenciones-total-integer-part") == (Decimal("110.00"),)
+    assert _parsed_field_values(parsed, "modelo-190-decl-retenciones-total-fractional-digits") == (Decimal("110.00"),)
+    assert output_path.read_bytes()[160:175] == f"{110:013d}00".encode("ascii")
 
 
 _M190_2022_TEXT_CONTACT_FIELDS: dict[str, CasillaId] = {
@@ -700,7 +740,11 @@ def test_populated_m190_2022_text_contact_fields_round_trip_through_the_fichero(
     assert {_M190_2022_TEXT_CONTACT_FIELDS[field_id]: value for field_id, (_raw, value) in parsed.items()} == supplied
 
 
-def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(tmp_path: Path) -> None:
+@pytest.mark.parametrize("missing_row", ("1", "2"))
+@pytest.mark.parametrize("missing_value", (None, "", " "))
+def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(
+    tmp_path: Path, missing_row: str, missing_value: str | None
+) -> None:
     """A required property field cannot become an accepted blank wire slot."""
     rows = {
         "modelo-180-perceptor-row-nif": {"1": "B12345674"},
@@ -714,23 +758,43 @@ def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(t
         "modelo-180-perceptor-row-cadastral-reference": {"1": "1234567VK4713C0001XY"},
         "modelo-180-perceptor-row-postal-code": {"1": "28001"},
     }
+    # A province in the other row cannot discharge this row's requirement.
+    rows = {binding_id: {"1": values["1"], "2": values["1"]} for binding_id, values in rows.items()}
+    rows["modelo-180-perceptor-row-cadastral-reference"]["2"] = "9872023VH5797S0001WX"
+    rows["modelo-180-perceptor-row-postal-code"]["2"] = "28002"
+    rows["modelo-180-perceptor-row-property-province"] = {"2" if missing_row == "1" else "1": "28"}
+    if missing_value is not None:
+        rows["modelo-180-perceptor-row-property-province"][missing_row] = missing_value
     draft, provider = _replayed_annual_draft(
         modelo="180",
         scalar_bindings={
-            "modelo-180-115-perceptores-anual": Decimal("1"),
-            "modelo-180-115-base-anual": Decimal("3000"),
-            "modelo-180-115-retenciones-anual": Decimal("570"),
+            "modelo-180-115-perceptores-anual": Decimal("2"),
+            "modelo-180-115-base-anual": Decimal("6000"),
+            "modelo-180-115-retenciones-anual": Decimal("1140"),
         },
         row_binding_values=rows,
         expected_values={
-            validated_casilla_id("decl.total-perceptores"): Decimal("1"),
-            validated_casilla_id("decl.base-total"): Decimal("3000"),
-            validated_casilla_id("decl.retenciones-total"): Decimal("570"),
+            validated_casilla_id("decl.total-perceptores"): Decimal("2"),
+            validated_casilla_id("decl.base-total"): Decimal("6000"),
+            validated_casilla_id("decl.retenciones-total"): Decimal("1140"),
         },
     )
     output_path = tmp_path / "modelo-180-incomplete.txt"
+    snapshot = provider.get_snapshot("180")
+    province = next(
+        casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "payee_inmueble_provincia"
+    )
+    assert province.required
+    # Refusal must honor the casilla, even though the generated wire slot is optional.
+    field = next(
+        field
+        for record in provider.get_subview("180").export_layouts[0].records
+        for field in record.fields
+        if field.id == "modelo-180-perc-inmueble-provincia"
+    )
+    assert not field.required
 
-    with pytest.raises(FilingExportValidationError, match="modelo-180-perc-inmueble-provincia"):
+    with pytest.raises(FilingExportValidationError, match="modelo-180-perc-inmueble-provincia") as exc_info:
         export_draft(
             draft,
             output_path=output_path,
@@ -738,6 +802,7 @@ def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(t
             schema_provider=provider,
         )
 
+    assert f"binding-row {missing_row}" in str(exc_info.value)
     assert not output_path.exists()
 
 

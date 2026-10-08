@@ -17,10 +17,11 @@ application_link_source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-pro
 # runs the design states, now emitted as filler so the record goes out at the
 # length AEAT reads.
 #
-# This revision's layout is BINDING-DERIVED rather than generated, so it carries
-# no fresh-render reproduction evidence and this stamp claims none. Its formulas
-# family is dispositioned inapplicable: the declaration reports holdings and
-# settles no tax, so there is no computed figure to check.
+# The canonical source-pinned generator replaced the binding-derived layout on
+# 2026-10-04. Its committed manifest and current-target receipt prove fresh-render
+# reproduction; the existing agent review stamp does not claim operator review.
+# The formulas family is dispositioned inapplicable: the declaration reports
+# holdings and settles no tax, so there is no computed figure to check.
 #
 # What it does NOT establish: that the figures a filing produces are correct
 # against AEAT. That is a tax review against official sources, and it is what an

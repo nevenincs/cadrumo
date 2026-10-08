@@ -71,7 +71,7 @@ See Also:
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition-stage primitive that turns a text-native PDF into the
         reading-order transcription the semantic reader is handed.
-    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.persist_prepared_invoice_confirmation`
         Non-interactive confirm step that re-extracts, applies overrides, and
         delegates the catalogue write.
     :mod:`~llm.evidence_draft_vision`
@@ -434,6 +434,69 @@ def _proposed_supply_nature(
     return proposal
 
 
+def _label_read_after_reader_unavailable(
+    labels: LabelReading | None,
+    error: InvoiceDraftReaderUnavailableError,
+) -> tuple[InvoiceDraft, LabelReadingFallback]:
+    """Keep a partial label result, but refuse when no field has an anchor."""
+    if labels is None or not labels.read_fields:
+        _refuse_a_text_read_with_no_reader(error.cause)
+    return labels.draft, _label_reading_fallback(
+        labels,
+        cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
+        reader_error=error.cause,
+        failed_condition_id=None,
+    )
+
+
+def _label_read_after_admission_refusal(
+    labels: LabelReading | None,
+    error: InvoiceDraftReaderHeadroomRefusedError | InvoiceDraftReaderBusyRefusedError,
+) -> tuple[InvoiceDraft, LabelReadingFallback]:
+    """Retain partial rule facts, or preserve admission control's own refusal."""
+    if labels is None or not labels.read_fields:
+        raise error.cause from None
+    cause = (
+        LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED
+        if isinstance(error, InvoiceDraftReaderHeadroomRefusedError)
+        else LabelReadingFallbackCause.INFERENCE_SLOT_BUSY
+    )
+    return labels.draft, _label_reading_fallback(
+        labels,
+        cause=cause,
+        reader_error=error.cause,
+        failed_condition_id=error.failed_condition_id,
+    )
+
+
+def _read_transcription_fields(
+    transcription: DocumentTranscription,
+    *,
+    settings: Settings,
+    off_host_provider: LLMProvider | None,
+    consent_token: EvidenceConsentProof | None,
+    authority_values: object,
+    operation: PinnedAuthorityOperation,
+    ports: InvoiceDraftExtractionPorts,
+) -> tuple[InvoiceDraft, LabelReadingFallback | None]:
+    """Read labels first, filling only missing text-layer fields with the model."""
+    labels = (
+        read_invoice_fields_by_labels(transcription, operation=operation)
+        if transcription.transcriber.origin is FieldOrigin.TEXT_LAYER
+        else None
+    )
+    if labels is not None and labels.complete:
+        return labels.draft, None
+    try:
+        model_read = ports.read_text(transcription, settings, off_host_provider, consent_token, authority_values)
+    except InvoiceDraftReaderUnavailableError as exc:
+        return _label_read_after_reader_unavailable(labels, exc)
+    except (InvoiceDraftReaderHeadroomRefusedError, InvoiceDraftReaderBusyRefusedError) as exc:
+        return _label_read_after_admission_refusal(labels, exc)
+    read = model_read if labels is None else merge_label_reading_with_model_draft(labels, model_read)
+    return read, None
+
+
 def _read_transcription_semantically(
     evidence: EvidenceInput,
     transcription: DocumentTranscription,
@@ -522,54 +585,15 @@ def _read_transcription_semantically(
     # under the same values, which a per-prompt resolution does not guarantee.
     authority_values = resolve_invoice_extraction_authority_values(period=authority_period, operation=operation)
 
-    # The label rules read a text layer only. A vision transcription is itself a
-    # model's output, so rule-reading it would stamp model text as rule-read.
-    labels = (
-        read_invoice_fields_by_labels(transcription, operation=operation)
-        if transcription.transcriber.origin is FieldOrigin.TEXT_LAYER
-        else None
+    read, fallback = _read_transcription_fields(
+        transcription,
+        settings=settings,
+        off_host_provider=off_host_provider,
+        consent_token=consent_token,
+        authority_values=authority_values,
+        operation=operation,
+        ports=ports,
     )
-    fallback: LabelReadingFallback | None = None
-    if labels is not None and labels.complete:
-        read = labels.draft
-    else:
-        try:
-            model_read = ports.read_text(transcription, settings, off_host_provider, consent_token, authority_values)
-        except InvoiceDraftReaderUnavailableError as exc:
-            if labels is None or not labels.read_fields:
-                # Nothing to stand on. See the refusal's own docstring for why
-                # this does not fall through to vision.
-                _refuse_a_text_read_with_no_reader(exc.cause)
-            # The rule reading stands; the fields it could not read stay empty
-            # and confirm asks the operator for them.
-            read = labels.draft
-            fallback = _label_reading_fallback(
-                labels,
-                cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
-                reader_error=exc.cause,
-                failed_condition_id=None,
-            )
-        except (InvoiceDraftReaderHeadroomRefusedError, InvoiceDraftReaderBusyRefusedError) as exc:
-            if labels is None or not labels.read_fields:
-                # The model read was the whole read, not a fill, so the refusal
-                # stands exactly as admission control raised it.
-                raise exc.cause from None
-            # The model fill was optional: the refusal is respected by leaving
-            # the model unloaded, and the rule reading stands as it does for an
-            # unavailable reader.
-            read = labels.draft
-            fallback = _label_reading_fallback(
-                labels,
-                cause=(
-                    LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED
-                    if isinstance(exc, InvoiceDraftReaderHeadroomRefusedError)
-                    else LabelReadingFallbackCause.INFERENCE_SLOT_BUSY
-                ),
-                reader_error=exc.cause,
-                failed_condition_id=exc.failed_condition_id,
-            )
-        else:
-            read = model_read if labels is None else merge_label_reading_with_model_draft(labels, model_read)
     grounded_input = read.model_copy(
         update={
             "transcription_sha256": transcription.source_content_sha256,

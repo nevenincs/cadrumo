@@ -63,6 +63,8 @@ from ._profile_cli_support import (
 from ._profile_cli_support import (
     edit_quiet_profile as _edit_profile,
 )
+from ._profile_cli_support import invoke_protected_profile
+from ._profile_cli_support import native_profile_runtime as native_profile_runtime
 from ._profile_cli_support import (
     profile_rows as _profile_rows,
 )
@@ -144,6 +146,8 @@ def test_non_resident_irnr_create_guides_to_setup_before_work_creation() -> None
     assert "modelo work create" not in result.output
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_profile_runtime")
 def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
     """A branch-changing edit must not persist a legal entity without legal name."""
 
@@ -183,6 +187,8 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
     assert rows["identity.surnames"] == "Operator"
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_profile_runtime")
 def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
     """Surnames remain a modelo-specific filing requirement, not setup state."""
 
@@ -224,7 +230,7 @@ def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
     assert rows["identity.name"] == "Branch"
     assert "identity.surnames" not in rows
 
-    completion = invoke_cached_cli(["config", "profile", "complete-setup"])
+    completion = invoke_protected_profile("branch-to-natural", "complete-setup")
     assert completion.exit_code == 0, completion.output
 
 

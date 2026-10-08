@@ -29,7 +29,7 @@ from ..language_resolver import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_KEY = "tui.local_reader.title"
+_KEY = "tui.home.title"
 
 
 @pytest.fixture

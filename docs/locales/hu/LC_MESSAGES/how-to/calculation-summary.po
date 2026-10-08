@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:28+0200\n"
+"POT-Creation-Date: 2026-10-02 00:01+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -19,59 +19,62 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: ../../how-to/calculation-summary.md:1
-msgid "Share and verify a calculation summary"
+#: ../../how-to/calculation-summary.md:2
+msgid "Share and check a calculation summary"
 msgstr "Számítási összesítő megosztása és ellenőrzése"
 
-#: ../../how-to/calculation-summary.md:3
+#: ../../how-to/calculation-summary.md:4
 msgid ""
-"This page covers the calculation summary: a PDF of a verified or filed "
-"calculation that an accountant can read, that carries its own data, and "
-"that anyone can check for changes. You write it with one command, hand it"
-" on, and later confirm that a copy still matches what your encrypted "
-"store holds. The same command writes a plain CSV table instead when you "
-"choose `--document-format csv`."
+"This page covers the calculation summary: a PDF of a calculation that has"
+" passed the check or been recorded as filed, which an accountant can "
+"read, that carries its own data, and that anyone can check for changes. "
+"You write it with one command, hand it on, and later confirm that a copy "
+"still matches what your encrypted store holds. The same command writes a "
+"plain CSV table instead when you choose `--document-format csv`."
 msgstr ""
-"Ez az oldal a számítási összesítőt mutatja be: egy ellenőrzött vagy "
-"benyújtott számítás PDF-jét, amelyet egy könyvelő el tud olvasni, amely a"
-" saját adatait is magában hordozza, és amelyről bárki ellenőrizheti, hogy"
-" változott-e. Egyetlen paranccsal elkészíted, továbbadod, később pedig "
-"megerősítheted, hogy egy példány még mindig egyezik azzal, amit a "
-"titkosított tárolód tartalmaz. Ugyanez a parancs egyszerű CSV-táblázatot "
-"ír, ha a `--document-format csv` kapcsolót választod."
+"Ez az oldal a számítási összesítőt mutatja be: egy olyan számítás PDF-"
+"jét, amely átment az ellenőrzésen vagy benyújtottként rögzítették, "
+"amelyet egy könyvelő el tud olvasni, amely a saját adatait is magában "
+"hordozza, és amelyről bárki ellenőrizheti, hogy változott-e. Egyetlen "
+"paranccsal elkészíted és továbbadod, később pedig megerősíted, hogy egy "
+"példány még mindig egyezik azzal, amit a titkosított tárolód tartalmaz. "
+"Ugyanez a parancs egyszerű CSV-táblázatot ír, amikor a `--document-format"
+" csv` formátumot választod."
 
-#: ../../how-to/calculation-summary.md:10
+#: ../../how-to/calculation-summary.md:11
 msgid ""
-"A summary is a local calculation, not evidence from the Agencia Estatal "
-"de Administración Tributaria (AEAT). The official proof of a filing is "
-"the AEAT receipt (justificante), the filed-declarations lookup, or the "
-"Código Seguro de Verificación check at the AEAT portal. The summary says "
-"so on its first page and in every footer."
+"A summary is a local calculation, not proof from the Agencia Estatal de "
+"Administración Tributaria (AEAT). The official proof of a filing is the "
+"AEAT receipt (justificante), the filed-declarations lookup, or the Código"
+" Seguro de Verificación check at the AEAT portal. The summary says so on "
+"its first page and in every footer."
 msgstr ""
 "Az összesítő helyi számítás, nem az Agencia Estatal de Administración "
-"Tributaria (AEAT) által kiállított bizonyíték. Egy benyújtás hivatalos "
-"bizonyítéka az AEAT bizonylata (justificante), a benyújtott bevallások "
+"Tributaria (AEAT) által kiállított igazolás. Egy benyújtás hivatalos "
+"igazolása az AEAT-igazolás (justificante), a benyújtott bevallások "
 "lekérdezése vagy a Código Seguro de Verificación ellenőrzése az AEAT-"
 "portálon. Az összesítő ezt az első oldalán és minden láblécében kimondja."
 
-#: ../../how-to/calculation-summary.md:16
+#: ../../how-to/calculation-summary.md:17
 msgid "Before you start"
 msgstr "Mielőtt hozzákezdesz"
 
-#: ../../how-to/calculation-summary.md:18
+#: ../../how-to/calculation-summary.md:19
 msgid ""
-"**Requirement:** a calculation that has passed verification or been "
-"filed. See [Verify a filing](verification-reports.md). The command "
-"refuses a calculation that is still a draft. The profile must also "
-"declare your NIF and name, because the report names the filer in full."
+"**Requirement:** a calculation that has passed the check or been recorded"
+" as filed. See [Check a draft declaration and act on the issues"
+"](verification-reports.md). The command refuses a calculation that is "
+"still a draft. The profile must also declare your NIF and name, because "
+"the report names the filer in full."
 msgstr ""
-"**Követelmény:** egy ellenőrzésen átment vagy benyújtott számítás. Lásd: "
-"[Egy benyújtás ellenőrzése](verification-reports.md). A parancs "
-"elutasítja a még piszkozat állapotú számítást. A profilnak tartalmaznia "
-"kell a NIF-edet és a nevedet is, mert a jelentés teljes egészében "
+"**Követelmény:** egy számítás, amely átment az ellenőrzésen, vagy amelyet"
+" benyújtottként rögzítettek. Lásd: [Bevallás-piszkozat ellenőrzése és "
+"teendők a problémák alapján](verification-reports.md). A parancs "
+"elutasítja a még piszkozat állapotú számítást. A profilnak az NIF-edet és"
+" a nevedet is tartalmaznia kell, mert a jelentés teljes egészében "
 "megnevezi a benyújtót."
 
-#: ../../how-to/calculation-summary.md:23
+#: ../../how-to/calculation-summary.md:24
 msgid ""
 "Writing a PDF summary needs the optional `pdf` extra. The CSV format and "
 "checking a summary do not."
@@ -79,7 +82,7 @@ msgstr ""
 "A PDF-összesítő elkészítéséhez a nem kötelező `pdf` kiegészítő szükséges."
 " A CSV formátumhoz és az összesítő ellenőrzéséhez nem."
 
-#: ../../how-to/calculation-summary.md:30
+#: ../../how-to/calculation-summary.md:31
 msgid ""
 "Without the extra, the command refuses before it reads your data and "
 "names the extra to install."
@@ -87,19 +90,19 @@ msgstr ""
 "A kiegészítő nélkül a parancs még az adataid beolvasása előtt megtagadja "
 "a futást, és megnevezi a telepítendő kiegészítőt."
 
-#: ../../how-to/calculation-summary.md:33
+#: ../../how-to/calculation-summary.md:34
 msgid "Write a summary"
 msgstr "Összesítő készítése"
 
-#: ../../how-to/calculation-summary.md:35
+#: ../../how-to/calculation-summary.md:36
 msgid ""
-"Address the work unit the way `aeat app modelo work review` does, and "
+"Address the declaration the way `aeat app modelo work review` does, and "
 "choose the `pdf` document format:"
 msgstr ""
-"A munkaegységet ugyanúgy add meg, mint az `aeat app modelo work review` "
+"A bevallást ugyanúgy add meg, mint az `aeat app modelo work review` "
 "parancsnál, és válaszd a `pdf` dokumentumformátumot:"
 
-#: ../../how-to/calculation-summary.md:42
+#: ../../how-to/calculation-summary.md:43
 msgid ""
 "`--output` is required. `--document-format` defaults to `csv`, which "
 "writes the same calculation as a table without pages or a signature. The "
@@ -109,7 +112,7 @@ msgstr ""
 "ugyanazt a számítást táblázatként írja ki, oldalak és aláírás nélkül. A "
 "`pdf` formátum az ezen az oldalon leírt aláírt összesítőt írja."
 
-#: ../../how-to/calculation-summary.md:46
+#: ../../how-to/calculation-summary.md:47
 msgid ""
 "The summary is written in the language the command runs in; add "
 "`--output-language en` (or `es`, `ca`, `hu`) to choose another. An "
@@ -121,7 +124,7 @@ msgstr ""
 "Meglévő fájlt a program csak akkor ír felül, ha megadod a `--replace` "
 "kapcsolót, és a kimenet szülőmappájának előre léteznie kell."
 
-#: ../../how-to/calculation-summary.md:51
+#: ../../how-to/calculation-summary.md:52
 msgid ""
 "The result reports the file's SHA-256, the report's own SHA-256 and the "
 "fingerprint of the key the summary is signed with. Writing the same "
@@ -132,71 +135,72 @@ msgstr ""
 "összesítőt aláírták. Ugyanannak a számításnak az újbóli kiírása "
 "ugyanazzal az exportálási időponttal ugyanazokat a bájtokat adja."
 
-#: ../../how-to/calculation-summary.md:55
+#: ../../how-to/calculation-summary.md:56
 msgid "Read the summary"
 msgstr "Az összesítő olvasása"
 
-#: ../../how-to/calculation-summary.md:57
+#: ../../how-to/calculation-summary.md:58
 msgid ""
 "The first page states that the document is a local calculation and names "
 "the software identity the filing file would carry. For the development "
 "identity (program `0000`, developer NIF `00000000T`) it says that file "
 "cannot be presented at AEAT. For a modelo whose layout Cadrumo does not "
 "fill with a software identity, such as Modelo 130, it says so instead. A "
-"table then shows the calculation's state, its verification, whether a "
-"filing is recorded, the export instant, and your NIF and name."
+"table then shows the calculation's state, its check, whether a filing is "
+"recorded, the export instant, and your NIF and name."
 msgstr ""
 "Az első oldal kimondja, hogy a dokumentum helyi számítás, és megnevezi "
 "azt a szoftverazonosítót, amelyet a benyújtási fájl hordozna. A "
 "fejlesztői azonosító esetén (program `0000`, fejlesztői NIF `00000000T`) "
 "azt közli, hogy a fájl nem nyújtható be az AEAT-nál. Ha a Cadrumo a "
-"modelo elrendezését nem tölti ki szoftverazonosítóval, például a Modelo "
-"130 esetében, ezt közli helyette. Ezután egy táblázat mutatja a számítás "
-"állapotát, az ellenőrzését, azt, hogy rögzítettek-e benyújtást, az "
-"exportálás időpontját, valamint a NIF-edet és a neved."
+"nyomtatvány elrendezését nem tölti ki szoftverazonosítóval, például a "
+"Modelo 130 esetében, ezt közli helyette. Ezután egy táblázat mutatja a "
+"számítás állapotát, az ellenőrzését, azt, hogy rögzítettek-e benyújtást, "
+"az exportálás időpontját, valamint az NIF-edet és a nevedet."
 
-#: ../../how-to/calculation-summary.md:64
+#: ../../how-to/calculation-summary.md:65
 msgid ""
-"Each registry section follows as a table of casilla, concept and amount. "
-"Three states read differently:"
+"Each section of the modelo follows as a table of box, concept and amount."
+" Three states read differently:"
 msgstr ""
-"Ezután minden nyilvántartási szakasz táblázatként következik casillával, "
+"Ezután a nyomtatvány minden szakasza táblázatként következik, rovattal, "
 "megnevezéssel és összeggel. Három állapot eltérően olvasandó:"
 
-#: ../../how-to/calculation-summary.md:67
+#: ../../how-to/calculation-summary.md:68
 msgid "a figure, including a zero, is a calculated value;"
 msgstr "egy szám, a nullát is beleértve, számított érték;"
 
-#: ../../how-to/calculation-summary.md:68
+#: ../../how-to/calculation-summary.md:69
 msgid "`sin dato` (`no data`) means the calculation recorded no value;"
 msgstr ""
 "a `sin dato` (angolul `no data`, magyar összesítőben „nincs adat”) azt "
 "jelenti, hogy a számítás nem rögzített értéket;"
 
-#: ../../how-to/calculation-summary.md:69
+#: ../../how-to/calculation-summary.md:70
 msgid ""
-"`n/a · no aplicable` (`n/a · not applicable`) means the registry proves "
-"the casilla does not apply to the period."
+"`n/a · no aplicable` (`n/a · not applicable`) means the official rules "
+"show that the box does not apply to the period."
 msgstr ""
 "az „n/a · nem alkalmazandó” (spanyolul `n/a · no aplicable`, angolul `n/a"
-" · not applicable`) azt jelenti, hogy a nyilvántartás igazolja: a casilla"
-" az adott időszakra nem alkalmazandó."
+" · not applicable`) azt jelenti, hogy a hivatalos szabályok szerint a "
+"rovat az adott időszakra nem alkalmazandó."
 
 #: ../../how-to/calculation-summary.md:72
 msgid ""
 "Subtotals are set in bold and the result row is shaded. The last section,"
-" Traceability and integrity, prints every identifier in full: the "
-"calculation revision, work unit, verification report, filing record, "
-"registry snapshot and authority generation, the ledger snapshot "
-"fingerprint, the report and CSV digests, and the signing key's "
-"fingerprint."
+" Traceability and integrity, prints every identifier in full: the saved "
+"calculation, the declaration, the check report, the filing record, the "
+"tax rules snapshot and its published version, the fingerprint of the "
+"snapshot of your records, the report and CSV digests, and the signing "
+"key's fingerprint."
 msgstr ""
 "A részösszegek félkövérek, az eredménysor árnyékolt. Az utolsó szakasz, a"
 " Nyomonkövethetőség és sértetlenség, minden azonosítót teljes egészében "
-"kiír: a számítási revíziót, a munkaegységet, az ellenőrzési jelentést, a "
-"benyújtási nyilvántartást, a nyilvántartási pillanatképet és az "
-"autoritásgenerációt, a ledger-pillanatkép ujjlenyomatát, a jelentés és a "
-"CSV kivonatát, valamint az aláírókulcs ujjlenyomatát."
+"kiír: a mentett számítást, a bevallást, az ellenőrzési jelentést, a "
+"benyújtási nyilvántartást, az adószabályok pillanatképét és annak "
+"közzétett változatát, a nyilvántartásaidról készült pillanatkép "
+"ujjlenyomatát, a jelentés és a CSV kivonatát, valamint az aláírókulcs "
+"ujjlenyomatát."
 
 #: ../../how-to/calculation-summary.md:78
 msgid "What travels inside the file"
@@ -223,11 +227,11 @@ msgstr ""
 #: ../../how-to/calculation-summary.md:84
 msgid ""
 "`cadrumo-calculation-report.csv`, the same table the CSV format writes, "
-"with one row per casilla and a `value_state` of `value`, `absent`, or "
+"with one row per box and a `value_state` of `value`, `absent`, or "
 "`not_applicable`;"
 msgstr ""
 "`cadrumo-calculation-report.csv`: ugyanaz a táblázat, amelyet a CSV "
-"formátum ír, casillánként egy sorral és `value`, `absent` vagy "
+"formátum ír, rovatonként egy sorral és `value`, `absent` vagy "
 "`not_applicable` `value_state` értékkel;"
 
 #: ../../how-to/calculation-summary.md:87
@@ -245,7 +249,7 @@ msgid ""
 "document metadata, which carries only identifiers, digests, codes and the"
 " signing public key. Third parties, such as the perceptors behind a "
 "withholding, appear only as keyed digests. The filing file and your "
-"evidence documents are not embedded."
+"supporting documents are not embedded."
 msgstr ""
 "A NIF-ed és a neved szerepel az oldalakon, valamint a beágyazott JSON-ban"
 " és CSV-ben, mert az összesítő a saját dokumentumod. A dokumentum "
@@ -253,7 +257,7 @@ msgstr ""
 " kódokat és az aláíró nyilvános kulcsot tartalmazzák. Harmadik felek, "
 "például a visszatartással (retención) érintett kifizetések "
 "kedvezményezettjei (perceptores), csak kulcsolt kivonatként jelennek meg."
-" A benyújtási fájl és a bizonyítékdokumentumaid nincsenek beágyazva."
+" A benyújtási fájl és a bizonylataid nincsenek beágyazva."
 
 #: ../../how-to/calculation-summary.md:96
 msgid "What the signature means"
@@ -264,17 +268,16 @@ msgid ""
 "The summary is signed with your profile's key, the same key that signs "
 "your review packages. A valid signature means that this key declared "
 "that, at the export instant by this computer's clock, the named "
-"calculation, verification, registry snapshot and authority produced "
-"exactly this report, CSV and pages."
+"calculation, check and official rules data produced exactly this report, "
+"CSV and pages."
 msgstr ""
 "Az összesítőt a profilod kulcsa írja alá, ugyanaz a kulcs, amely az "
 "áttekintési csomagjaidat is aláírja. Az érvényes aláírás azt jelenti, "
 "hogy ez a kulcs kijelentette: az exportálás időpontjában, e számítógép "
-"órája szerint, a megnevezett számítás, ellenőrzés, nyilvántartási "
-"pillanatkép és autoritás pontosan ezt a jelentést, CSV-t és oldalakat "
-"állította elő."
+"órája szerint, a megnevezett számítás, ellenőrzés és hivatalos "
+"szabályadatok pontosan ezt a jelentést, CSV-t és oldalakat állította elő."
 
-#: ../../how-to/calculation-summary.md:103
+#: ../../how-to/calculation-summary.md:102
 msgid ""
 "It does not mean that AEAT accepted or received a filing, that the "
 "calculation is legally correct, that the inputs were true, or that the "
@@ -289,10 +292,10 @@ msgstr ""
 "mutatnak aláírásjelzést: az ellenőrzés a Cadrumóval vagy az alább leírt "
 "módon az OpenSSL-lel történik. A címzett úgy bízhat meg a kulcsban, hogy "
 "az utolsó oldalra nyomtatott ujjlenyomatát összeveti egy olyannal, "
-"amelyet tőled más csatornán kapott."
+"amelyet tőled, egy másik csatornán kapott."
 
 #: ../../how-to/calculation-summary.md:110
-msgid "Verify a summary with Cadrumo"
+msgid "Check a summary with Cadrumo"
 msgstr "Összesítő ellenőrzése a Cadrumóval"
 
 #: ../../how-to/calculation-summary.md:112
@@ -353,14 +356,14 @@ msgstr ""
 "Ha csak a dokumentumot szeretnéd ellenőrizni a tárolód megnyitása nélkül,"
 " add meg a `--document-only` kapcsolót. Bárki hamisíthat következetes "
 "dokumentumot a saját kulcsával, ezért a csak a dokumentumra kiterjedő "
-"ellenőrzés eredménye `valid_unpinned`, hacsak meg nem adod azt a kulcsot "
-"is, amelyben megbízol:"
+"ellenőrzés eredménye `valid_unpinned`, hacsak meg nem nevezed azt a "
+"kulcsot is, amelyben megbízol:"
 
-#: ../../how-to/calculation-summary.md:139
-msgid "Verify a summary without Cadrumo"
+#: ../../how-to/calculation-summary.md:140
+msgid "Check a summary without Cadrumo"
 msgstr "Összesítő ellenőrzése Cadrumo nélkül"
 
-#: ../../how-to/calculation-summary.md:141
+#: ../../how-to/calculation-summary.md:142
 msgid ""
 "A recipient with OpenSSL 3 can check the signature. First save the four "
 "embedded files into one folder, from the attachments panel of a PDF "
@@ -378,18 +381,18 @@ msgstr ""
 "certification/v1` szöveg, egy NUL bájt és a nyilatkozatfájl együttesének "
 "SHA-256 értéke. A nyilvános kulcs a nyilatkozatban található "
 "`public_key_hex` érték; mielőtt megbíznál benne, vesd össze a SHA-256 "
-"értékét a kapott ujjlenyomattal. Az alábbiakban cseréld le a "
-"`PUBLIC_KEY_HEX` helyőrzőt erre az értékre."
+"értékét a kapott ujjlenyomattal. Alább cseréld le a `PUBLIC_KEY_HEX` "
+"helyőrzőt erre az értékre."
 
-#: ../../how-to/calculation-summary.md:149
+#: ../../how-to/calculation-summary.md:150
 msgid "On Linux or macOS:"
 msgstr "Linuxon vagy macOS-en:"
 
-#: ../../how-to/calculation-summary.md:159
+#: ../../how-to/calculation-summary.md:160
 msgid "In PowerShell 7:"
 msgstr "PowerShell 7-ben:"
 
-#: ../../how-to/calculation-summary.md:170
+#: ../../how-to/calculation-summary.md:171
 msgid ""
 "OpenSSL prints `Signature Verified Successfully` for an intact statement "
 "and `Signature Verification Failure` otherwise. The statement also lists "
@@ -407,4 +410,3 @@ msgstr ""
 "`Get-FileHash`, amely nagybetűkkel írja ki), és vesd össze őket, hogy "
 "megbizonyosodj arról, hogy az adatok nem változtak. Annak ellenőrzéséhez,"
 " hogy maguk az oldalak egyeznek-e a nyilatkozattal, a Cadrumo szükséges."
-

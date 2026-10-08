@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#descendant-axis'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4a795954e153f5436daed6309e85c5a41223c7df32eb2a49868b502c9f529e32'
+body_hash: 'sha256:43b763b32edc61fcc0b4527632dc32df5164695c21a65c7f078a118a2ea19c44'
 related:
-  - '[[2026-06-04-descendant-axis-adr]]'
   - '[[2026-06-04-descendant-axis-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#descendant-axis`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-descendant-axis-adr` - `descendant-axis` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

@@ -4,63 +4,57 @@ modelo:
       casilla:
         continuidad:
           a-deducir-23:
-            label: Elszámolás (8) - Levonandó [23]
+            label: Elszámolás - Levonandó [23]
           adjudicatario-apellidos:
-            label: Vevő (4) - Vezetéknév vagy cégnév
+            label: Odaítélés kedvezményezettje - Vezetéknév vagy cégnév
           adjudicatario-nif:
-            label: Vevő (4) - NIF
+            label: Odaítélés kedvezményezettje - NIF
           adjudicatario-nombre:
-            label: Vevő (4) - Utónév
+            label: Odaítélés kedvezményezettje - Utónév
           aeronave-ano:
-            label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
+            label: Jellemzők és műszaki adatok - Légi járművek - Gyártási év
           aeronave-fabricante:
-            label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
+            label: Jellemzők és műszaki adatok - Légi járművek - Gyártó
           aeronave-marca:
-            label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
-              - Modell
+            label: Jellemzők és műszaki adatok - Légi járművek - Márka - Típus - Modell
           aeronave-peso:
-            label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb felszállótömeg
+            label: Jellemzők és műszaki adatok - Légi járművek - Legnagyobb felszállótömeg
               (kg)
           aeronave-serie:
-            label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
+            label: Jellemzők és műszaki adatok - Légi járművek - Sorozatszám
+          cuota-a-ingresar:
+            label: Befizetendő összeg
           cuota-devengada-22:
-            label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
-              [22]
+            label: Összes fizetendő áfa
           declaracion-complementaria:
-            label: Kiegészítő bevallás (9)
+            label: Kiegészítő bevallás
           declaracion-periodo-309:
             label: Esedékesség. Időszak
           declaracion-tipo-309:
             label: Bevallás típusa
           declarante-nombre-309:
-            label: Azonosítás (1) - Utónév
+            label: Azonosítás - Utónév
           embarcacion-eslora:
-            label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb hossz
+            label: Jellemzők és műszaki adatok - Vízi járművek - Legnagyobb hajóhossz
           embarcacion-fabricante:
-            label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
+            label: Jellemzők és műszaki adatok - Vízi járművek - Gyártó
           embarcacion-tipo:
-            label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
+            label: Jellemzők és műszaki adatok - Vízi járművek - Típus-Modell
           filing-year:
             label: Az adóbevallás vonatkozási éve
           hecho-imponible:
-            label: 'Adóköteles tényállás (6):'
+            label: 'Adóköteles tényállás:'
           hecho-imponible-adquisicion-intracomunitaria:
-            help: A 309-es nyomtatvány 94-94. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: termékek Közösségen belüli beszerzése'
           hecho-imponible-entrega-inversion-inmobiliaria:
-            help: A 309-es nyomtatvány 97-97. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: ingatlan jellegű beruházási javak értékesítése'
           hecho-imponible-inversion-sujeto-pasivo:
-            help: A 309-es nyomtatvány 96-96. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: fordított adózás'
           hecho-imponible-medios-transporte-nuevos:
-            help: A 309-es nyomtatvány 95-95. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: új közlekedési eszközök Közösségen belüli beszerzése'
           hecho-imponible-otros:
-            help: A 309-es nyomtatvány 99-99. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: egyéb, nem szabályozott esetek'
           hecho-imponible-procedimiento-administrativo-judicial:
-            help: A 309-es nyomtatvány 98-98. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: termékértékesítések és szolgáltatásnyújtások
               közigazgatási és bírósági eljárásokban'
           iva-cuota-autorepercutida-intracomunitaria:
@@ -73,558 +67,286 @@ modelo:
             label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
               felár keretében (utasoknak járó visszatérítés)
           justificante-anterior:
-            label: Az előző bevallás igazolószáma (9)
+            label: Az előző bevallás igazolószáma
           letras-etiqueta-persona-fisica:
-            help: A 309-es nyomtatvány 15-18. mezője, 2004-2015. adóév.
             label: Az azonosító címke betűi
+          m309-papel-ccc-cuenta:
+            label: 'CCC: számlaszám'
+          m309-papel-ccc-dc:
+            label: 'CCC: ellenőrző számjegyek'
+          m309-papel-ccc-entidad:
+            label: 'CCC: bank'
+          m309-papel-ccc-oficina:
+            label: 'CCC: bankfiók'
+          m309-papel-complementaria:
+            label: Kiegészítő bevallás
+          m309-papel-domicilio-codigo-postal:
+            label: Irányítószám
+          m309-papel-domicilio-escalera:
+            label: Lépcsőház
+          m309-papel-domicilio-municipio:
+            label: Település
+          m309-papel-domicilio-numero:
+            label: Házszám
+          m309-papel-domicilio-piso:
+            label: Emelet
+          m309-papel-domicilio-provincia:
+            label: Tartomány
+          m309-papel-domicilio-puerta:
+            label: Ajtó
+          m309-papel-domicilio-telefono:
+            label: Telefonszám
+          m309-papel-domicilio-tipo-via:
+            label: Közterület típusa
+          m309-papel-domicilio-via:
+            label: 'Adóügyi cím: közterület'
+          m309-papel-nombre-completo:
+            label: Vezetéknév és utónév vagy cégnév
           motivo-declaracion-no-periodica:
-            label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
-              szabályozás / egyenértékűségi felár / végrehajtási eljárás)
+            label: A nem időszakos bevallás oka
           mtn-embarcacion-identificacion:
-            label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás (építési
+            label: Jellemzők és műszaki adatok - Vízi járművek - Azonosítás (építési
               szám)
           observaciones-presentacion:
-            help: A 309-es nyomtatvány 951-1300. mezője, 2004-2015. adóév.
             label: Megjegyzések
+          papel-firma:
+            help: A nyomtatvány aláírásának helye. Az ide beírt név nem elektronikus
+              aláírás és nem jelent benyújtást.
+            label: Aláírás
+          papel-firma-fecha:
+            help: A nyomtatványon szereplő dátum; nem igazolja a benyújtást.
+            label: Aláírás dátuma
+          papel-firma-lugar:
+            help: A nyomtatvány aláírási részén feltüntetett hely.
+            label: Aláírás helye
+          papel-forma-pago:
+            help: A nyomtatványon feltüntetett fizetési mód. Nem igazol befizetést
+              és nem helyettesíti a bevallás típusát.
+            label: Fizetési mód
           re-base-10:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
+            label: Elszámolás - Egyenértékűségi felár - Adóalap [10]
           re-base-13:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
+            label: Elszámolás - Egyenértékűségi felár - Adóalap [13]
           re-base-16:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
+            label: Elszámolás - Egyenértékűségi felár - Adóalap [16]
           re-base-19:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
+            label: Elszámolás - Egyenértékűségi felár - Adóalap [19]
           re-cuota-12:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
+            label: Elszámolás - Egyenértékűségi felár - Adóösszeg [12]
           re-cuota-15:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
+            label: Elszámolás - Egyenértékűségi felár - Adóösszeg [15]
           re-cuota-18:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
+            label: Elszámolás - Egyenértékűségi felár - Adóösszeg [18]
           re-cuota-21:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
+            label: Elszámolás - Egyenértékűségi felár - Adóösszeg [21]
           re-tipo-11:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
+            label: Elszámolás - Egyenértékűségi felár - Adókulcs % [11]
           re-tipo-14:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
+            label: Elszámolás - Egyenértékűségi felár - Adókulcs % [14]
           re-tipo-17:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
+            label: Elszámolás - Egyenértékűségi felár - Adókulcs % [17]
           re-tipo-20:
-            label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
-          resultado-24:
-            label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
+            label: Elszámolás - Egyenértékűségi felár - Adókulcs % [20]
           rg-base-01:
-            label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
+            label: Elszámolás - Általános szabályozás - Adóalap [01]
           rg-base-04:
-            label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
+            label: Elszámolás - Általános szabályozás - Adóalap [04]
           rg-base-07:
-            label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
+            label: Elszámolás - Általános szabályozás - Adóalap [07]
           rg-base-25:
-            help: A 309-es nyomtatvány 692-708. mezője, 2023. és az azt követő adóévek.
-            label: Elszámolás (8) - Általános szabályozás - Adóalap [25]
+            label: Elszámolás - Általános szabályozás - Adóalap [25]
           rg-cuota-03:
-            label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
+            label: Elszámolás - Általános szabályozás - Adóösszeg [03]
           rg-cuota-06:
-            label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
+            label: Elszámolás - Általános szabályozás - Adóösszeg [06]
           rg-cuota-09:
-            label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
+            label: Elszámolás - Általános szabályozás - Adóösszeg [09]
           rg-cuota-27:
-            help: A 309-es nyomtatvány 714-730. mezője, 2023. és az azt követő adóévek.
-            label: Elszámolás (8) - Általános szabályozás - Adóösszeg [27]
+            label: Elszámolás - Általános szabályozás - Adóösszeg [27]
           rg-tipo-02:
-            label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
+            label: Elszámolás - Általános szabályozás - Adókulcs % [02]
           rg-tipo-05:
-            label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
+            label: Elszámolás - Általános szabályozás - Adókulcs % [05]
           rg-tipo-08:
-            label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
+            label: Elszámolás - Általános szabályozás - Adókulcs % [08]
           rg-tipo-26:
-            help: A 309-es nyomtatvány 709-713. mezője, 2023. és az azt követő adóévek.
-            label: Elszámolás (8) - Általános szabályozás - Adókulcs % [26]
+            label: Elszámolás - Általános szabályozás - Adókulcs % [26]
           situacion-tributaria:
-            label: 'Adójogi helyzet (5):'
+            label: 'Adójogi helyzet:'
           situacion-tributaria-agricola:
-            help: A 309-es nyomtatvány 88-88. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: a mezőgazdasági, állattenyésztési és halászati
               különös rendszer alanya'
           situacion-tributaria-otras:
-            help: A 309-es nyomtatvány 93-93. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: egyéb, nem szabályozott esetek'
           situacion-tributaria-persona-fisica-no-empresario:
-            help: A 309-es nyomtatvány 92-92. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
               végző természetes személy'
           situacion-tributaria-persona-juridica-no-empresario:
-            help: A 309-es nyomtatvány 91-91. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
               végző jogi személy'
           situacion-tributaria-recargo-equivalencia:
-            help: A 309-es nyomtatvány 89-89. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: az egyenértékűségi felár különös rendszerének
               alanya'
           situacion-tributaria-sin-derecho-deduccion:
-            help: A 309-es nyomtatvány 90-90. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: levonási jog nélküli adóalany'
           transmitente-apellidos:
-            label: Átruházó (3) - Vezetéknév vagy cégnév
+            label: Átruházó - Vezetéknév vagy cégnév
           transmitente-apellidos-nombre-razon-social:
             label: Átruházó - Vezetéknév és utónév vagy cégnév
           transmitente-nif:
-            label: Átruházó (3) - NIF
+            label: Átruházó - NIF
           transmitente-nif-iva:
-            label: Átruházó (3) - NIF-IVA
+            label: Átruházó - NIF-IVA
           transmitente-nombre:
-            label: Átruházó (3) - Utónév
+            label: Átruházó - Utónév
           transmitente-pais:
-            help: A 309-es nyomtatvány 198-199. mezője, 2016-2017. adóév.
-            label: Átruházó (3) - Ország
+            label: Átruházó - Ország
           vehiculo-bastidor:
-            label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
+            label: Jellemzők és műszaki adatok - Járművek - Azonosító szám (alvázszám)
           vehiculo-clasificacion:
-            label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
+            label: Jellemzők és műszaki adatok - Járművek - Besorolás
           vehiculo-marca:
-            label: Jellemzők és műszaki adatok (7) - Járművek - Márka
+            label: Jellemzők és műszaki adatok - Járművek - Márka
           vehiculo-modelo:
-            label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
+            label: 'Jellemzők és műszaki adatok - Járművek - Modell (kereskedelmi
               megnevezés):'
           vehiculo-tipo:
-            label: Jellemzők és műszaki adatok (7) - Járművek - Típus
+            label: Jellemzők és műszaki adatok - Járművek - Típus
+      construct:
+        modelo-309-papel-domicilio-cuenta:
+          field:
+            title: Lakcím és bankszámla
+        modelo-309-papel-identificacion-complementaria:
+          field:
+            title: Kiegészítő azonosítás
       field:
         official_name: Modelo 309. Hozzáadottérték-adó. Nem rendszeres bevallás-elszámolás.
         title: IVA. Nem rendszeres bevallás-elszámolás
+      form:
+        choice:
+          hecho-1:
+            heading: Közösségen belüli termékbeszerzés
+          hecho-2:
+            heading: Új közlekedési eszköz Közösségen belüli beszerzése
+          hecho-3:
+            heading: Fordított adózás
+          hecho-4:
+            heading: Ingatlan jellegű beruházási javak értékesítése
+          hecho-5:
+            heading: Termékértékesítés és szolgáltatásnyújtás közigazgatási vagy bírósági
+              végrehajtási eljárásban
+          hecho-6:
+            heading: Fent nem felsorolt egyéb ügyletek
+          situacion-1:
+            heading: Mezőgazdasági, állattenyésztési és halászati különös rendszer
+          situacion-2:
+            heading: Kiegyenlítő pótlék különös rendszere
+          situacion-3:
+            heading: Levonási jog nélküli adóalany (áfatörvény 14. cikk, első rész,
+              2. pont)
+          situacion-4:
+            heading: Vállalkozási vagy szakmai tevékenységet nem végző jogi személy
+          situacion-5:
+            heading: Vállalkozási vagy szakmai tevékenységet nem végző magánszemély
+          situacion-6:
+            heading: Fent nem felsorolt egyéb adózási helyzetek
+        context:
+          contacto:
+            heading: Kapcsolattartó
+          nif:
+            heading: Adózó adóazonosítója
+          nombre:
+            heading: Vezetéknév vagy cégnév
+          telefono:
+            heading: Kapcsolattartó telefonszáma
+        page:
+          m30901:
+            heading: Áfa · Nem időszakos bevallás
+        row:
+          re:
+            heading: Kiegyenlítő pótlék
+          rg:
+            heading: Általános rendszer
+        section:
+          adjudicatario:
+            heading: Nyertes ajánlattevő (4)
+          aeronave:
+            heading: Műszaki adatok (7) · Légi járművek
+          complementaria:
+            heading: Kiegészítő bevallás (9)
+          datos-presentacion:
+            heading: Benyújtási adatok
+          devengo:
+            heading: Adómegállapítási időszak (2)
+          embarcacion:
+            heading: Műszaki adatok (7) · Vízi járművek
+          firma:
+            heading: Aláírás (11)
+          hecho:
+            heading: Adóköteles ügylet (6)
+          identificacion:
+            heading: Azonosítás (1)
+          ingreso:
+            heading: Befizetés (10)
+          legacy-aeronave:
+            heading: 6. Műszaki adatok (7) · Légi járművek
+          legacy-complementaria:
+            heading: 8. Kiegészítő bevallás (9)
+          legacy-devengo:
+            heading: 2. Adómegállapítási időszak (2)
+          legacy-embarcacion:
+            heading: 6. Műszaki adatok (7) · Vízi járművek
+          legacy-firma:
+            heading: 9. Aláírás (11)
+          legacy-hecho:
+            heading: 5. Adóköteles ügylet (6)
+          legacy-identificacion:
+            heading: 1. Azonosítás (1)
+          legacy-ingreso:
+            heading: 10. Befizetés (10)
+          legacy-liquidacion:
+            heading: 7. Adóelszámolás (8)
+          legacy-situacion:
+            heading: 4. Adózási helyzet (5)
+          legacy-transmitente:
+            heading: 3. Átruházó (3)
+          legacy-vehiculo:
+            heading: 6. Műszaki adatok (7) · Járművek
+          liquidacion:
+            heading: Adóelszámolás (8)
+          situacion:
+            heading: Adózási helyzet (5)
+          transmitente:
+            heading: Átruházó (3)
+          vehiculo:
+            heading: Műszaki adatok (7) · Járművek
       revision:
         2004-2015:
-          casilla:
-            x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es nyomtatvány 792-804. mezője, 2004-2015. adóév.
-            x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es nyomtatvány 546-549. mezője, 2004-2015. adóév.
-            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es nyomtatvány 426-465. mezője, 2004-2015. adóév.
-            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es nyomtatvány 466-505. mezője, 2004-2015. adóév.
-            x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es nyomtatvány 550-561. mezője, 2004-2015. adóév.
-            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es nyomtatvány 506-545. mezője, 2004-2015. adóév.
-            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es nyomtatvány 779-791. mezője, 2004-2015. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es nyomtatvány 420-425. mezője, 2004-2015. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es nyomtatvány 300-339. mezője, 2004-2015. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es nyomtatvány 380-419. mezője, 2004-2015. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es nyomtatvány 340-379. mezője, 2004-2015. adóév.
-            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es nyomtatvány 818-830. mezője, 2004-2015. adóév.
-            x-chim6r1ee1in4qbfchng:
-              help: A 309-es nyomtatvány 23-24. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es nyomtatvány 655-667. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es nyomtatvány 686-698. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es nyomtatvány 717-729. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es nyomtatvány 748-760. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es nyomtatvány 673-685. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es nyomtatvány 704-716. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es nyomtatvány 735-747. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es nyomtatvány 766-778. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es nyomtatvány 668-672. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es nyomtatvány 699-703. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es nyomtatvány 730-734. mezője, 2004-2015. adóév.
-            x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es nyomtatvány 761-765. mezője, 2004-2015. adóév.
-            x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es nyomtatvány 805-817. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es nyomtatvány 562-574. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es nyomtatvány 593-605. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es nyomtatvány 624-636. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es nyomtatvány 580-592. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es nyomtatvány 611-623. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es nyomtatvány 642-654. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es nyomtatvány 575-579. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es nyomtatvány 606-610. mezője, 2004-2015. adóév.
-            x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es nyomtatvány 637-641. mezője, 2004-2015. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es nyomtatvány 25-33. mezője, 2004-2015. adóév.
-            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es nyomtatvány 220-259. mezője, 2004-2015. adóév.
-            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es nyomtatvány 260-299. mezője, 2004-2015. adóév.
-            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es nyomtatvány 100-139. mezője, 2004-2015. adóév.
-            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es nyomtatvány 180-219. mezője, 2004-2015. adóév.
-            x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es nyomtatvány 140-179. mezője, 2004-2015. adóév.
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: 'Történeti 309-es nyomtatvány: nem időszakos önadóbevallás
+                title: 'Történeti Modelo 309 nyomtatvány: nem időszakos önadóbevallás
                   (2004-2015)'
           field:
             label: 309-es modelo, 2004-2015. adóévek
         2016-2017:
-          casilla:
-            x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es nyomtatvány 943-959. mezője, 2016-2017. adóév.
-            x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es nyomtatvány 639-642. mezője, 2016-2017. adóév.
-            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es nyomtatvány 497-536. mezője, 2016-2017. adóév.
-            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es nyomtatvány 537-616. mezője, 2016-2017. adóév.
-            x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es nyomtatvány 643-652. mezője, 2016-2017. adóév.
-            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es nyomtatvány 617-638. mezője, 2016-2017. adóév.
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es nyomtatvány 977-977. mezője, 2016-2017. adóév.
-            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es nyomtatvány 926-942. mezője, 2016-2017. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es nyomtatvány 492-496. mezője, 2016-2017. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es nyomtatvány 350-389. mezője, 2016-2017. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es nyomtatvány 470-491. mezője, 2016-2017. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es nyomtatvány 390-469. mezője, 2016-2017. adóév.
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es nyomtatvány 201-201. mezője, 2016-2017. adóév.
-            x-chim6r1ed5h62rg:
-              help: A 309-es nyomtatvány 991-1024. mezője, 2016-2017. adóév.
-            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es nyomtatvány 978-990. mezője, 2016-2017. adóév.
-            x-chim6r1edpnmqojick:
-              help: A 309-es nyomtatvány 83-102. mezője, 2016-2017. adóév.
-            x-chim6r1ee1in4qbfchng:
-              help: A 309-es nyomtatvány 107-108. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es nyomtatvány 770-786. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es nyomtatvány 809-825. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es nyomtatvány 848-864. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es nyomtatvány 887-903. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es nyomtatvány 792-808. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es nyomtatvány 831-847. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es nyomtatvány 870-886. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es nyomtatvány 909-925. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es nyomtatvány 787-791. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es nyomtatvány 826-830. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es nyomtatvány 865-869. mezője, 2016-2017. adóév.
-            x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es nyomtatvány 904-908. mezője, 2016-2017. adóév.
-            x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es nyomtatvány 960-976. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es nyomtatvány 653-669. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es nyomtatvány 692-708. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es nyomtatvány 731-747. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es nyomtatvány 675-691. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es nyomtatvány 714-730. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es nyomtatvány 753-769. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es nyomtatvány 670-674. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es nyomtatvány 709-713. mezője, 2016-2017. adóév.
-            x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es nyomtatvány 748-752. mezője, 2016-2017. adóév.
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es nyomtatvány 200-200. mezője, 2016-2017. adóév.
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es nyomtatvány 13-13. mezője, 2016-2017. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es nyomtatvány 118-177. mezője, 2016-2017. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es nyomtatvány 109-117. mezője, 2016-2017. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es nyomtatvány 178-197. mezője, 2016-2017. adóév.
-            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es nyomtatvány 322-343. mezője, 2016-2017. adóév.
-            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es nyomtatvány 344-349. mezője, 2016-2017. adóév.
-            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es nyomtatvány 202-241. mezője, 2016-2017. adóév.
-            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es nyomtatvány 282-321. mezője, 2016-2017. adóév.
-            x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es nyomtatvány 242-281. mezője, 2016-2017. adóév.
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: '309-es nyomtatvány: nem időszakos áfa-bevallás és elszámolás'
+                title: 'Modelo 309 nyomtatvány: nem időszakos áfa-bevallás és elszámolás'
           field:
             label: 309-es modelo, 2016-2017. adóévek
         2018-2022:
-          casilla:
-            x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es nyomtatvány 943-959. mezője, 2018-2022. adóév.
-            x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
-              help: A 309-es nyomtatvány 1049-1108. mezője, 2018-2022. adóév.
-            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
-              help: A 309-es nyomtatvány 1040-1048. mezője, 2018-2022. adóév.
-            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
-              help: A 309-es nyomtatvány 1109-1128. mezője, 2018-2022. adóév.
-            x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es nyomtatvány 639-642. mezője, 2018-2022. adóév.
-            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es nyomtatvány 497-536. mezője, 2018-2022. adóév.
-            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es nyomtatvány 537-616. mezője, 2018-2022. adóév.
-            x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es nyomtatvány 643-652. mezője, 2018-2022. adóév.
-            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es nyomtatvány 617-638. mezője, 2018-2022. adóév.
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es nyomtatvány 977-977. mezője, 2018-2022. adóév.
-            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es nyomtatvány 926-942. mezője, 2018-2022. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es nyomtatvány 492-496. mezője, 2018-2022. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es nyomtatvány 350-389. mezője, 2018-2022. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es nyomtatvány 470-491. mezője, 2018-2022. adóév.
-            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es nyomtatvány 390-469. mezője, 2018-2022. adóév.
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es nyomtatvány 201-201. mezője, 2018-2022. adóév.
-            x-chim6r1ed5h62rg:
-              help: A 309-es nyomtatvány 991-1024. mezője, 2018-2022. adóév.
-            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es nyomtatvány 978-990. mezője, 2018-2022. adóév.
-            x-chim6r1edpnmqojick:
-              help: A 309-es nyomtatvány 83-102. mezője, 2018-2022. adóév.
-            x-chim6r1ee1in4qbfchng:
-              help: A 309-es nyomtatvány 107-108. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es nyomtatvány 770-786. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es nyomtatvány 809-825. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es nyomtatvány 848-864. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es nyomtatvány 887-903. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es nyomtatvány 792-808. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es nyomtatvány 831-847. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es nyomtatvány 870-886. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es nyomtatvány 909-925. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es nyomtatvány 787-791. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es nyomtatvány 826-830. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es nyomtatvány 865-869. mezője, 2018-2022. adóév.
-            x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es nyomtatvány 904-908. mezője, 2018-2022. adóév.
-            x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es nyomtatvány 960-976. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es nyomtatvány 653-669. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es nyomtatvány 692-708. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es nyomtatvány 731-747. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es nyomtatvány 675-691. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es nyomtatvány 714-730. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es nyomtatvány 753-769. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es nyomtatvány 670-674. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es nyomtatvány 709-713. mezője, 2018-2022. adóév.
-            x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es nyomtatvány 748-752. mezője, 2018-2022. adóév.
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es nyomtatvány 200-200. mezője, 2018-2022. adóév.
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es nyomtatvány 13-13. mezője, 2018-2022. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es nyomtatvány 118-177. mezője, 2018-2022. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es nyomtatvány 109-117. mezője, 2018-2022. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
-              help: A 309-es nyomtatvány 1025-1039. mezője, 2018-2022. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es nyomtatvány 178-197. mezője, 2018-2022. adóév.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es nyomtatvány 198-199. mezője, 2018-2022. adóév.
-            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es nyomtatvány 322-343. mezője, 2018-2022. adóév.
-            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es nyomtatvány 344-349. mezője, 2018-2022. adóév.
-            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es nyomtatvány 202-241. mezője, 2018-2022. adóév.
-            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es nyomtatvány 282-321. mezője, 2018-2022. adóév.
-            x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es nyomtatvány 242-281. mezője, 2018-2022. adóév.
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: '309-es nyomtatvány: nem időszakos áfa-bevallás és elszámolás'
+                title: 'Modelo 309 nyomtatvány: nem időszakos áfa-bevallás és elszámolás'
           field:
             label: 309-es modelo, 2018-2022. adóévek
         2023-y-siguientes:
-          casilla:
-            x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es nyomtatvány 982-998. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
-              help: A 309-es nyomtatvány 1088-1147. mezője, 2023. és az azt követő
-                adóévek.
-            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
-              help: A 309-es nyomtatvány 1079-1087. mezője, 2023. és az azt követő
-                adóévek.
-            x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
-              help: A 309-es nyomtatvány 1148-1167. mezője, 2023. és az azt követő
-                adóévek.
-            x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es nyomtatvány 639-642. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es nyomtatvány 497-536. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es nyomtatvány 537-616. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es nyomtatvány 643-652. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es nyomtatvány 617-638. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es nyomtatvány 1016-1016. mezője, 2023. és az azt követő
-                adóévek.
-            x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es nyomtatvány 965-981. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es nyomtatvány 492-496. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es nyomtatvány 350-389. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es nyomtatvány 470-491. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es nyomtatvány 390-469. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es nyomtatvány 201-201. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ed5h62rg:
-              help: A 309-es nyomtatvány 1030-1063. mezője, 2023. és az azt követő
-                adóévek.
-            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es nyomtatvány 1017-1029. mezője, 2023. és az azt követő
-                adóévek.
-            x-chim6r1edpnmqojick:
-              help: A 309-es nyomtatvány 83-102. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee1in4qbfchng:
-              help: A 309-es nyomtatvány 107-108. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es nyomtatvány 809-825. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es nyomtatvány 848-864. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es nyomtatvány 887-903. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es nyomtatvány 926-942. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es nyomtatvány 831-847. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es nyomtatvány 870-886. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es nyomtatvány 909-925. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es nyomtatvány 948-964. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es nyomtatvány 826-830. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es nyomtatvány 865-869. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es nyomtatvány 904-908. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es nyomtatvány 943-947. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es nyomtatvány 999-1015. mezője, 2023. és az azt követő
-                adóévek.
-            x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es nyomtatvány 653-669. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es nyomtatvány 731-747. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es nyomtatvány 770-786. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es nyomtatvány 675-691. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es nyomtatvány 753-769. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es nyomtatvány 792-808. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es nyomtatvány 670-674. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es nyomtatvány 748-752. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es nyomtatvány 787-791. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es nyomtatvány 200-200. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es nyomtatvány 13-13. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es nyomtatvány 118-177. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es nyomtatvány 109-117. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
-              help: A 309-es nyomtatvány 1064-1078. mezője, 2023. és az azt követő
-                adóévek.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es nyomtatvány 178-197. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es nyomtatvány 198-199. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es nyomtatvány 322-343. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es nyomtatvány 344-349. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es nyomtatvány 202-241. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es nyomtatvány 282-321. mezője, 2023. és az azt követő adóévek.
-            x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es nyomtatvány 242-281. mezője, 2023. és az azt követő adóévek.
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: '309-es nyomtatvány: nem időszakos áfa-bevallás és elszámolás'
+                title: 'Modelo 309 nyomtatvány: nem időszakos áfa-bevallás és elszámolás'
           field:
             label: 309-es modelo, 2023. adóévtől

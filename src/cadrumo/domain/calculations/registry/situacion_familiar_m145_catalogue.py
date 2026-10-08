@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
-from ....core.time.clock import today_madrid
 from ...contribuyente.renta_codes import SituacionFamiliarM145
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.declared_token import require_declared_registry_token
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    BooleanTokenCase,
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    required_mapping_boolean,
+    unique_mapping_legal_refs,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "Modelo 145 family-situation vocabulary"
@@ -54,25 +60,13 @@ class SituacionFamiliarM145Catalogue:
 
     def require(self, value: object) -> SituacionFamiliarM145:
         """Project one token only when the selected authority declares it."""
-        if isinstance(value, SituacionFamiliarM145):
-            token = value
-        elif isinstance(value, str):
-            raw = value.strip()
-            if not raw:
-                raise RegistryValidationError("Modelo 145 family-situation token must be non-empty")
-            try:
-                token = SituacionFamiliarM145.from_registry(raw)
-            except (TypeError, ValueError) as exc:
-                raise RegistryValidationError(
-                    "Modelo 145 family-situation token must be a non-empty string",
-                ) from exc
-        else:
-            raise RegistryValidationError("Modelo 145 family-situation token must be a string token")
-        if token not in self.all_situaciones:
-            raise RegistryValidationError(
-                f"Modelo 145 family-situation token {str(token)!r} is not declared by fact {_FACT_ID!r}",
-            )
-        return token
+        return require_declared_registry_token(
+            value,
+            token_type=SituacionFamiliarM145,
+            declared=self.all_situaciones,
+            subject="Modelo 145 family-situation",
+            fact_id=_FACT_ID,
+        )
 
     def definition(self, value: object) -> SituacionFamiliarM145Definition:
         """Return the complete legal definition for one declared token."""
@@ -80,76 +74,10 @@ class SituacionFamiliarM145Catalogue:
         return next(item for item in self.definitions if item.token == token)
 
 
-def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(
-            f"Modelo 145 family-situation vocabulary {key!r} must contain unique legal references",
-        )
-    return values
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
-    if value not in {"true", "false"}:
-        raise RegistryValidationError(
-            f"Modelo 145 family-situation vocabulary {key!r} must be true or false",
-        )
-    return value == "true"
-
-
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError(
-                "Modelo 145 family-situation entries must be string-to-string",
-            )
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate Modelo 145 family-situation key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
-
-
-def _resolve_mapping_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("Modelo 145 family-situation vocabulary must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError(
-        "Modelo 145 family-situation catalogue requires an explicit authority operation or scope"
-    )
-
-
-def _selected_mapping_entries(
-    *,
-    effective_date: date | None,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is not None:
-        return _resolve_mapping_entries(effective_date=coordinate, authority=selected)
-    return _bundled_mapping_entries(coordinate)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def resolve_situacion_familiar_m145_catalogue(
@@ -158,7 +86,7 @@ def resolve_situacion_familiar_m145_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> SituacionFamiliarM145Catalogue:
     """Resolve the dated Modelo 145 vocabulary through the facts authority."""
-    entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
     definitions: list[SituacionFamiliarM145Definition] = []
     for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         try:
@@ -176,8 +104,13 @@ def resolve_situacion_familiar_m145_catalogue(
             SituacionFamiliarM145Definition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}{_DESCRIPTION_SUFFIX}", subject=_ENTRY_SUBJECT),
-                legal_refs=_refs(entries, f"{prefix}{_LEGAL_REFS_SUFFIX}"),
-                supplementary_reduction_eligible=_boolean(entries, f"{prefix}{_ELIGIBLE_SUFFIX}"),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}{_LEGAL_REFS_SUFFIX}", subject=_ENTRY_SUBJECT),
+                supplementary_reduction_eligible=required_mapping_boolean(
+                    entries,
+                    f"{prefix}{_ELIGIBLE_SUFFIX}",
+                    subject=_ENTRY_SUBJECT,
+                    case=BooleanTokenCase.CASE_INSENSITIVE,
+                ),
             ),
         )
     catalogue = SituacionFamiliarM145Catalogue(definitions=tuple(definitions))

@@ -1,0 +1,13 @@
+[[revisions.2022.export_layouts]]
+id = 'modelo-189-fichero-2022'
+format = 'fixed_width'
+source_refs = [
+    'aeat-dr-189-2021-2022',
+    'boe-modelo-189-base-order',
+]
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-115-2022:df-primera',
+    'orden-hfp-1351-2021:art-sexto',
+]
+dictionary_path_overrides = []

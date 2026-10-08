@@ -18,7 +18,6 @@ from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operations.capabilities import (
@@ -38,26 +37,25 @@ from cadrumo.application.user_profile.custody_ports import (
     ProfileCustodySecureObjectRepositoryPort,
     profile_custody_secure_object_repository,
 )
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.operations import (
+    USER_PROFILE_OPERATION_DEFINITIONS,
+    build_user_profile_operation_registrations,
+)
+from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
-    PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
-    USER_PROFILE_OPERATION_DEFINITIONS,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationResult,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowMutationOperationResult,
     ProfileRepeatableRowValue,
-    build_profile_logout_operation_request,
-    build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -115,7 +113,7 @@ def _register_profile() -> UUID:
             profile_create_context=authority_operation.profile_create_context(),
             profile_decode_context=authority_operation.profile_decode_context(),
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=outcome.profile_id,
             passphrase_callback=lambda: _PROFILE_CREDENTIAL_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),
@@ -196,12 +194,11 @@ def test_profile_operation_families_have_one_secure_registered_definition_each()
         public_registrations=build_user_profile_operation_registrations(USER_PROFILE_OPERATION_DEFINITIONS),
     )
     definition_ids = tuple(definition.definition_id for definition in USER_PROFILE_OPERATION_DEFINITIONS)
-    assert definition_ids == (
+    assert {
         PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
         PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
         PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
-        PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-    )
+    } <= set(definition_ids)
     assert len(set(definition_ids)) == len(definition_ids)
     assert all(
         registry.lookup(definition_id).capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
@@ -228,6 +225,7 @@ def test_profile_operation_families_have_one_secure_registered_definition_each()
 def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_store(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
+        baseline = _load_profile(profile_id)
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
             terminal, operands = _start_operation(
                 root,
@@ -237,6 +235,8 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
                     subject_ref=f"profile:{profile_id}",
                     payload=ProfileFieldMutationOperationRequest(
                         profile_id=profile_id,
+                        expected_revision=baseline.record_revision,
+                        expected_content_digest=baseline.content_digest,
                         path=PROFILE_OUTPUT_LANGUAGE_PATH,
                         value="es",
                     ),
@@ -260,6 +260,7 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
 def test_repeatable_row_mutation_allocates_and_persists_one_real_schema_row(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
+        baseline = _load_profile(profile_id)
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
             terminal, operands = _start_operation(
                 root,
@@ -269,6 +270,8 @@ def test_repeatable_row_mutation_allocates_and_persists_one_real_schema_row(tmp_
                     subject_ref=f"profile:{profile_id}",
                     payload=ProfileRepeatableRowMutationOperationRequest(
                         profile_id=profile_id,
+                        expected_revision=baseline.record_revision,
+                        expected_content_digest=baseline.content_digest,
                         section_key="activities",
                         values=(ProfileRepeatableRowValue(field_key="description", value="Consultoria"),),
                     ),
@@ -327,36 +330,7 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
         _assert_not_durable(root, _PROFILE_CREDENTIAL_INPUT.encode("utf-8"))
 
 
-def test_profile_logout_strong_closes_real_custody_after_secure_request_resolution(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        profile_id = _register_profile()
-        live_session = current_active_bucket_session()
-        assert live_session is not None
-        assert read_pointer(root).bucket_id is not None
-        with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
-
-            async def _run_strong_close() -> OperationPersistedSnapshot:
-                with bundled_indexed_authority().operation() as authority_operation:
-                    supervisor, _operands = _supervisor(
-                        root,
-                        profile_objects=profile_objects,
-                        owner_id="7" * 64,
-                        lease_token="8" * 64,
-                        authority_operation=authority_operation,
-                    )
-                    created = await supervisor.submit(
-                        build_profile_logout_operation_request(profile_id),
-                        operation_id="d" * 64,
-                    )
-                    terminal = await run_to_settlement(supervisor, created)
-                    return terminal
-
-            terminal = asyncio.run(_run_strong_close())
-
-        assert terminal.lifecycle is OperationLifecycle.TERMINAL
-        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert terminal.effect is OperationEffect.UPDATED
-        assert terminal.terminal_receipt is not None
-        assert terminal.terminal_receipt.result_ref == f"profile:{profile_id}"
-        assert read_pointer(root).bucket_id is None
-        assert live_session.sealed is True
+def test_legacy_profile_logout_is_not_an_operation() -> None:
+    registry = OperationRegistry(definitions=USER_PROFILE_OPERATION_DEFINITIONS)
+    with pytest.raises(KeyError, match="unknown operation"):
+        registry.lookup("user-profile.logout")

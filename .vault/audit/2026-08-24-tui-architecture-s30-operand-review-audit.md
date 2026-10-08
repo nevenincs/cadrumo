@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5f5512438a66b47bdbb8d1c96c567aa06e38c6ede65b63004d3939df0bfedd55'
+body_hash: 'sha256:60f4230e80cdbed4c29185ee45b1d56b36b6070d726c2ccda6d3c1686f80ebe1'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]"
 ---
 
@@ -27,27 +26,11 @@ test integrity.
 
 ### intent-totality | high | The reviewed operand accepts missing canonical field decisions
 
-`CensalReviewedOperand.field_intents` has no minimum length or total-set
-validator. It checks only that supplied paths are individually adoptable and
-non-duplicated. A production construction with an empty tuple validates and
-receives a proposed-effect digest, while the shipped fixture covers only two of
-the three `CENSAL_ADOPTABLE_PATHS`. The contract therefore cannot distinguish a
-deliberate preserve decision from an omitted decision and does not implement
-the Step's one adopt-or-preserve intent per canonical path requirement.
-`src/cadrumo/application/user_profile/_censal_operation.py:67` and
-`src/cadrumo/application/user_profile/tests/test_censal_operation_operand.py:99`.
+`CensalReviewedOperand.field_intents` has no minimum length or total-set validator. It checks only that supplied paths are individually adoptable and non-duplicated. A production construction with an empty tuple validates and receives a proposed-effect digest, while the shipped fixture covers only two of the three `CENSAL_ADOPTABLE_PATHS`.
 
 ### outbound-dto-ownership | high | The application operand gains a forbidden runtime dependency on an outbound adapter
 
-The persisted application-owned operand types its observation directly as
-`CensalDatosResult` imported from `cadrumo.adapters.outbound.aeat.sede`. This is
-a runtime Pydantic dependency from application to a concrete adapter, whereas
-the neighboring censo application service deliberately confines the same type
-to `TYPE_CHECKING`. The architecture gate explicitly reports
-`cadrumo.application.user_profile._censal_operation ->
-cadrumo.adapters.outbound.aeat.sede` as a broken layered-architecture edge.
-Persisting the adapter DTO also makes the durable operand schema change whenever
-the parser adapter changes. `src/cadrumo/application/user_profile/_censal_operation.py:10`.
+The persisted application-owned operand types its observation directly as `CensalDatosResult` imported from `cadrumo.adapters.outbound.aeat.sede`. This is a runtime Pydantic dependency from application to a concrete adapter, whereas the neighboring censo application service deliberately confines the same type to `TYPE_CHECKING`. The architecture gate explicitly reports `cadrumo.application.user_profile._censal_operation -> cadrumo.adapters.outbound.aeat.sede` as a broken layered-architecture edge.
 
 ### intent-totality-resolution | high | Resolved: strict hydration requires the full canonical ordered path tuple
 
@@ -69,12 +52,7 @@ original HIGH finding is closed.
 
 ### parser-static-gate | medium | The remediated outbound parser remains red under BasedPyright
 
-The focused parser and operand behavior is green, but BasedPyright reports
-three `reportUnnecessaryIsInstance` errors in the now-modified
-`src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py` at the current lines
-225, 318, and 320. The errors do not invalidate the canonical observation or
-intent semantics, but the touched remediation surface does not yet satisfy the
-project's no-skip type-check gate.
+The errors do not invalidate the canonical observation or intent semantics, but the touched remediation surface does not yet satisfy the project's no-skip type-check gate.
 
 ### parser-static-gate-resolution | medium | Resolved: object-boundary validation is fail-closed and the focused type gate is green
 

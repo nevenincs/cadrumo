@@ -18,6 +18,7 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
@@ -34,6 +35,12 @@ from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -69,19 +76,19 @@ M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-genera
 _M303_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
 _M303_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("71")
 _M303_DECLARATION_TYPE_N = ObservedHeaderFact(
-    header_key="declaration_type",
+    header_key="filing.result_disposition",
     value="N",
     source_artefact_kind="submitted_file",
     source_locator="submitted-file:declaration-type",
 )
 M303_DECLARATION_TYPE_C = ObservedHeaderFact(
-    header_key="declaration_type",
+    header_key="filing.result_disposition",
     value="C",
     source_artefact_kind="submitted_file",
     source_locator="submitted-file:declaration-type",
 )
 M303_DECLARATION_TYPE_I = ObservedHeaderFact(
-    header_key="declaration_type",
+    header_key="filing.result_disposition",
     value="I",
     source_artefact_kind="submitted_file",
     source_locator="submitted-file:declaration-type",
@@ -352,7 +359,8 @@ def _seed_current_filing(
     external_evidence: ExternalEvidence | None = None,
 ) -> ModeloRecord:
     period = Period.from_year_and_code(2026, "1T")
-    revision_id = hashlib.sha256(f"{bucket_id}:{modelo}:2026:1T".encode()).hexdigest()
+    snapshot = published_snapshot(modelo, filing_year=2026, period="1T")
+    revision_id = snapshot.revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -373,15 +381,47 @@ def _seed_current_filing(
     )
     work_unit_repo = WorkUnitCatalogueRepository()
     work_unit_repo.save(upsert_work_unit(work_unit_repo.load(), work_unit))
-    filing_id = derive_filing_record_id(
+    calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        calculation_revision_id=revision_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        source_provenance=(),
+        filing_instance_evidence=None,
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=snapshot.snapshot_ref,
+        source_provenance=(),
+        filing_instance_evidence=None,
+        state=CalculationRevisionState.PRESENTADO,
+        created_at=CAPTURED_AT,
+        updated_at=CAPTURED_AT,
+        verified_at=CAPTURED_AT,
+        verified_by="operator",
+        filed_at=CAPTURED_AT,
         filed_by="operator",
     )
+    calculations = CalculationRevisionCatalogueRepository()
+    calculations.save(upsert_calculation_revision(calculations.load(), revision))
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        filed_by="operator",
+    )
+    work_unit = work_unit.model_copy(
+        update={
+            "current_calculation_revision_id": calculation_revision_id,
+            "filed_calculation_revision_id": calculation_revision_id,
+            "current_filing_record_id": filing_id,
+        }
+    )
+    work_unit_repo.save(upsert_work_unit(work_unit_repo.load(), work_unit))
     filing = ModeloRecord(
         filing_record_id=filing_id,
         work_unit_id=work_unit_id,
-        calculation_revision_id=revision_id,
+        calculation_revision_id=calculation_revision_id,
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=2026,

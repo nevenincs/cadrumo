@@ -3,14 +3,16 @@ tags:
   - '#research'
   - '#iva-catalogue-prose-grounding'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:3fa943501a34327a673544d4321ebc32dceb10e6d171a14e730ee3fcffc872a1'
+body_hash: 'sha256:b70d5f90e79b47320ad5fb884f1f7b354b524786a35a184472f30dedc341d86b'
 related: []
 ---
 # `iva-catalogue-prose-grounding` research: where catalogue prose goes, and who reads it
 
-## What was measured
+## Findings
+
+### What was measured
 
 The bundled IVA catalogue declares twenty categories. Every one routes its
 operator-facing text through translation keys rather than storing the text:
@@ -34,7 +36,7 @@ The second line is the one that dates the condition. `domestic_general_21` is a
 long-standing category, not part of any recent change, and it degrades
 identically. The catalogue has always rendered this way.
 
-## Why nothing caught it
+### Why nothing caught it
 
 Two independent mechanisms both read as enforcement and neither can fire.
 
@@ -51,7 +53,7 @@ so what it validates is the fallback string, never the key. A guard that
 inspects `'Label'` and finds it non-empty cannot fail, and has never guarded
 anything.
 
-## Who actually reads this prose
+### Who actually reads this prose
 
 Consumers were enumerated rather than assumed.
 
@@ -69,7 +71,7 @@ so they cannot serve as hints, and that curated one-liners are the
 authoritative prompt descriptions instead. That workaround is itself evidence:
 the defect was noticed, worked around locally, and never recorded as a defect.
 
-## The severity is not uniform, and that is the finding
+### The severity is not uniform, and that is the finding
 
 For `label`, `description`, `triggers_when` and `iva_treatment` the consequence
 is documentation-grade. Nothing renders them, so nothing is currently wrong for
@@ -86,13 +88,13 @@ unverified.
 That distinction is what makes this more than a cleanup. Twenty categories
 carry citations that assert a legal basis and supply no text to support it.
 
-## What the corpus can support
+### What the corpus can support
 
 All twenty-four cited articles resolve in the bundled consolidated LIVA text.
 No corpus work is a prerequisite: the verbatim text needed to ground every one
 of the thirty-nine citations is already present in the repository.
 
-## The two shapes available
+### The two shapes available
 
 Keep the indirection and enrol the keys. Scaffold discovery would have to be
 extended to the catalogue TOMLs first, after which roughly a hundred and twenty
@@ -109,7 +111,7 @@ translation key means the record no longer carries its own evidence, whatever
 the key resolves to. No amount of locale authoring restores that property,
 because the property is about where the text lives rather than what it says.
 
-## Adjacent finding, separate owner
+### Adjacent finding, separate owner
 
 The classifier's curated hint table covers eighteen of the twenty categories.
 The two absent are the intra-community service categories added by in-flight
@@ -119,3 +121,13 @@ matters for a narrower reason: every other category carries a curated
 explanation of when it applies, and the fallback conveys everything except the
 services-versus-goods distinction that the new categories exist to draw. No
 gate asserts parity between the hint table and the category enum.
+
+## Sources
+
+- `src/cadrumo/_data/registry/aeat/iva/catalogues.toml` — the twenty IVA categories and their inline citations.
+- `src/cadrumo/domain/iva/schema.py` — the category and citation models and their content validation.
+- `dev/registry/conformance/iva_regulation_catalogue.py` — registry-build validation of the IVA regulation catalogue.
+- `dev/registry/conformance/tests/test_iva_regulation_catalogue.py` — the catalogue conformance check and its fallback behavior.
+- `src/cadrumo/core/i18n/render.py:378` — translation-key lookup and missing-key rendering.
+- `src/cadrumo/domain/transactions/llm.py` — the classifier prompt's curated category hints.
+- `src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html` — the bundled consolidated LIVA text cited by the catalogue.

@@ -3,10 +3,10 @@ tags:
   - '#audit'
   - '#eliminate-shims'
 date: '2026-07-16'
-modified: '2026-07-16'
-body_hash: 'sha256:8aec57198bbbf675a68c8ad30249de6889953a3df0c535769ab31be8ad53b30f'
+modified: '2026-10-03'
+body_hash: 'sha256:ecaa9d21c65ebc0ba2bd0960d474f47edc6873b82bfc026da40c7ea10f1dad14'
 related:
-  - "[[2026-06-04-eliminate-shims-adr]]"
+  - '[[2026-07-09-compatibility-lifecycle-adr]]'
 ---
 
 # `eliminate-shims` audit: `CI closure code review`
@@ -23,7 +23,7 @@ no legacy authorities, no duplicate runtime paths, and no weakened tests.
 
 ### html-attribution-authority | high | Retired manifest remains an extractor dependency
 
-`dev/docs/preprocess/_html.py` still resolves the BOE permalink from a
+The retired module still resolves the BOE permalink from a
 `normatives/<stem>.json` sibling. Commit `b791f52011` deliberately deleted the
 last such file as a retired summary straggler, and the corpus gate prohibits
 restoring it. The real extractor test consequently loses the official URL and
@@ -86,7 +86,7 @@ permalink embedded by the authoritative Ley 37/1992 HTML.
 
 ### duplicate-example-extractor | medium | Test-only parser duplicated production logic
 
-`dev/docs/preprocess/_example.py` carried a second HTML tag parser, provenance
+The retired module carried a second HTML tag parser, provenance
 identifier, and attribution string solely for the sidecar contract tests. It
 also directed consumers to the retired sibling manifest.
 

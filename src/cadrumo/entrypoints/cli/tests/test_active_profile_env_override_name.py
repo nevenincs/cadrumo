@@ -29,8 +29,9 @@ from cadrumo.adapters.persistence.storage.custody.tests.support import forge_col
 
 from ....core.config import override_settings
 from ..common import cli_policy_refusal_projection
-from ..errors import CliRefusedBoundaryError, suspend_error_boundary
+from ..errors import CliRefusedBoundaryError
 from .cli_runner import cadrumo_click_command, invoke_cached_cli
+from .error_boundary_scope import suspend_error_boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

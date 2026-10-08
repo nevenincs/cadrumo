@@ -76,7 +76,7 @@ from ....application.calculations.iva_wallet_balance import query_iva_wallet_bal
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.live.filed_observation_persistence import persist_filed_calculation_observation
 from ....application.live.filed_observation_ports import FiledObservationPersistencePorts
-from ....application.modelo.filed_revision_observation import persist_filed_revision_observation
+from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
@@ -328,7 +328,7 @@ def _aeat_captured_303_observation(*, operation: PinnedAuthorityOperation) -> Fi
         casillas=observed,
         headers=(
             ObservedHeaderFact(
-                header_key="declaration_type",
+                header_key="filing.result_disposition",
                 value=ResultDisposition.COMPENSACION.value,
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:declaration-type",
@@ -396,10 +396,14 @@ def _persist_every_legitimate_row(
     )
 
 
-def _wallet_balance_census() -> _PathCensus:
+def _wallet_balance_census(*, operation: PinnedAuthorityOperation) -> _PathCensus:
     """Measure the rows the offline wallet-balance projection loads and folds."""
     rows = IvaCompensationHistoryRepository().list_periods()
-    report = query_iva_wallet_balance(as_of_year=_AS_OF_YEAR, repository=IvaCompensationHistoryRepository())
+    report = query_iva_wallet_balance(
+        as_of_year=_AS_OF_YEAR,
+        repository=IvaCompensationHistoryRepository(),
+        operation=operation,
+    )
     return _PathCensus(
         path="wallet-balance projection",
         entry_point="src/cadrumo/application/calculations/iva_wallet_balance.py:30",
@@ -516,19 +520,22 @@ def _carry_ingress_census(*, operation: PinnedAuthorityOperation) -> _PathCensus
 @pytest.fixture(scope="module")
 def population(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Population]:
     """Build the legitimate population once and measure all three paths over it."""
-    with isolated_runtime_profile(tmp_path=tmp_path_factory.mktemp("iva-provenance-population")) as runtime_profile:
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path_factory.mktemp("iva-provenance-population")) as runtime_profile,
+        bundled_indexed_authority().operation() as operation,
+    ):
         ports = compose_filed_observation_persistence_ports(
             bucket_id=runtime_profile.bucket_id,
             output_root=runtime_profile.settings.cadrumo_live_state_dir,
             objects=runtime_profile.repository,
+            operation=operation,
         )
-        with bundled_indexed_authority().operation() as operation:
-            _persist_every_legitimate_row(operation=operation, ports=ports)
-            yield _Population(
-                wallet_balance=_wallet_balance_census(),
-                binding_prefill=_binding_prefill_census(operation=operation),
-                carry_ingress=_carry_ingress_census(operation=operation),
-            )
+        _persist_every_legitimate_row(operation=operation, ports=ports)
+        yield _Population(
+            wallet_balance=_wallet_balance_census(operation=operation),
+            binding_prefill=_binding_prefill_census(operation=operation),
+            carry_ingress=_carry_ingress_census(operation=operation),
+        )
 
 
 def _provenance_token(provenance: object) -> str:

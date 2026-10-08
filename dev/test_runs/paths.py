@@ -1,9 +1,10 @@
 """Canonical paths for date-partitioned development run output.
 
-Run output is transient by construction: one invocation writes a directory here,
-nothing reads it back, and every base below is reclaimed. The word "evidence"
-does not appear in this module's vocabulary on purpose -- a finding that must
-outlive its run belongs in durable evidence, not in a path under ``.logs``.
+Run output is transient by construction: one invocation writes a directory
+under the configured Cadrumo storage root, nothing reads it back, and every
+base below is reclaimed. The word "evidence" does not appear in this module's
+vocabulary on purpose -- a finding that must outlive its run belongs in durable
+evidence, not in a path under ``.logs``.
 """
 
 from __future__ import annotations
@@ -20,6 +21,9 @@ from pathlib import Path
 from typing import Final
 from uuid import uuid4
 
+from cadrumo.core.storage_environment import prepare_temporary_directory, resolve_storage_path, storage_directory
+from dev._paths import REPO_ROOT
+
 LOGS_STEM = ".logs"
 """The one directory name every run family lives under, whatever the base."""
 
@@ -30,23 +34,19 @@ TEST_RUNS_FAMILY = "test-runs"
 def run_log_bases() -> tuple[Path, ...]:
     """Return every base directory that can hold a ``.logs`` run family.
 
-    Two bases, not one, and the second is why this function exists. Repository
-    tooling -- the audit report, the lane runner, the edition migration -- passes
-    its own checkout, so those families land under the worktree. A pytest
-    controller does not: ``conftest.py`` deliberately roots its run under
-    :func:`tempfile.gettempdir` to keep collection storage out of the checkout.
-
-    A reaper that knew only the repository base left the pytest base growing
-    without bound, which is the exact accrual :mod:`dev.env.temp_reaper` exists to
-    prevent and which its own docstring opens by describing. Both bases are
-    returned from here so that adding a third cannot be done in one place and
-    forgotten in the other.
+    The configured storage root is the active base. The repository and current
+    OS temp roots remain in the list so the reaper can find output made by older
+    versions while new writers use the overrideable root.
     """
-    # Imported here: the pytest run logger imports this module before the root
-    # conftest's environment setup, and ``dev._paths`` seeds process state on import.
-    from dev._paths import REPO_ROOT
+    current = test_log_root()
+    # Keep old bases in the reaper population while new writers use the
+    # configured Cadrumo log root.
+    return tuple(dict.fromkeys((current, REPO_ROOT, Path(tempfile.gettempdir()))))
 
-    return (REPO_ROOT, Path(tempfile.gettempdir()))
+
+def test_log_root() -> Path:
+    """Return the operator-controlled base for test and development run logs."""
+    return storage_directory("CADRUMO_TEST_LOG_ROOT", "development")
 
 
 def run_log_roots(family: str, *, bases: tuple[Path, ...] | None = None) -> tuple[Path, ...]:
@@ -118,43 +118,22 @@ SCRATCH_NAME: Final = re.compile(
 )
 """A run scratch name: prefix, owning PID, random token."""
 
-SCRATCH_PATH_BUDGET = 64
-"""The longest scratch path a run may hand its processes as ``TEMP``.
-
-Tools on Windows create Unix-domain sockets under ``TEMP``, and a socket path
-is capped near 108 bytes including the tool's own file name. semgrep-core's
-socketpair emulation is the measured case: a 79-character ``TEMP`` works and an
-80-character one fails the whole scan. Scratch therefore cannot live inside the
-date-partitioned run directory, which is already longer than that before the
-tool adds anything; it sits directly under the temp base instead, and this
-budget keeps headroom below the measured limit.
-"""
-
 
 def scratch_base() -> Path:
-    """Return the directory run scratch is allocated in: the pinned base, else the temp directory."""
+    """Return the controlled base for run scratch allocations."""
     inherited = os.environ.get(SCRATCH_BASE_ENV, "").strip()
-    return Path(inherited) if inherited else Path(tempfile.gettempdir())
+    return resolve_storage_path(inherited) if inherited else prepare_temporary_directory()
 
 
 def allocate_scratch_directory() -> Path:
-    """Create this process's run scratch, short enough to serve as ``TEMP``.
+    """Create this process's run scratch beneath the configured scratch base.
 
     The name carries the owning PID in the same position a run marker does, so
     the run reaper resolves its owner against the OS exactly as it does for run
     directories.
 
-    Raises:
-        RuntimeError: When the temp base is so deep that no scratch below it fits
-            :data:`SCRATCH_PATH_BUDGET`; handing tools a ``TEMP`` they cannot bind
-            sockets under fails later and far less legibly.
     """
     scratch = scratch_base() / SCRATCH_SEPARATOR.join((SCRATCH_PREFIX, str(os.getpid()), uuid4().hex[:6]))
-    if len(str(scratch)) > SCRATCH_PATH_BUDGET:
-        raise RuntimeError(
-            f"run scratch {scratch} exceeds the {SCRATCH_PATH_BUDGET}-character TEMP budget; "
-            f"point {SCRATCH_BASE_ENV} at a shorter directory"
-        )
     scratch.mkdir(parents=True)
     return scratch
 

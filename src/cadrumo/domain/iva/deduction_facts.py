@@ -214,6 +214,31 @@ def admits_iva_deduction_classification(
     return bool(_source_families_admitting(category, flow_direction, declarations))
 
 
+def deduction_evidence_authority_for_row(
+    *,
+    kind: IvaDeductionFactKind | None,
+    category: IvaCategory | None,
+) -> IvaDeductionEvidenceAuthority | None:
+    """Return the registry authority establishing this row's deduction, when unambiguous.
+
+    A declared kind governs its evidence. Without one, only a category whose
+    admitted source families agree on one authority answers; an unknown or
+    ambiguous category stays unresolved rather than guessing a document.
+    """
+    catalogue = resolve_iva_deduction_catalogue(effective_date=today_madrid())
+    if kind is not None:
+        return catalogue.required_authority(kind) if kind in catalogue.kinds else None
+    if category is None:
+        return None
+    authorities = {
+        catalogue.required_authority(candidate)
+        for family in _DEDUCTION_SOURCE_FAMILIES
+        if category.value in _declared_values(catalogue.declarations, f"category.{family}")
+        for candidate in catalogue.projection(f"kind.{family}")
+    }
+    return next(iter(authorities)) if len(authorities) == 1 else None
+
+
 def _validate_non_rectification_category(
     *,
     kind: IvaDeductionFactKind,
@@ -286,6 +311,7 @@ def validate_iva_deduction_fact(
 __all__ = [
     "IvaDeductionClassificationProvenance",
     "admits_iva_deduction_classification",
+    "deduction_evidence_authority_for_row",
     "required_deduction_evidence_authority",
     "validate_iva_deduction_fact",
 ]

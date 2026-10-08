@@ -53,7 +53,6 @@ _BOUNDED_CALLS = frozenset(
         "format_decimal",
         # Digests: one of the sanctioned remedies.
         *_HASHING_CALLS,
-        "_transaction_ids_digest",
         "_source_provenance_trace_sha256",
         # Explicitly shortens to the cap; that is its whole purpose.
         "_bounded_payload_reference",
@@ -87,7 +86,7 @@ def _emits_bucket_events(tree: ast.AST) -> bool:
     """Return whether a module builds bucket events at all.
 
     Scopes the gate to its actual subject. ``payload`` is a common name for
-    Sheets rows, LLM telemetry and CLI result bodies, none of which are
+    Sheets rows, LLM run records and CLI result bodies, none of which are
     written into the capped bucket-event slot, and none of which this gate
     has any business bounding.
     """

@@ -46,6 +46,13 @@
             },
             "message": "Input classification has no effect for ejercicio 2026: no special-prorrata election applies, so the input is deducted at the general percentage. Classification becomes operative only while a special-prorrata election applies.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {

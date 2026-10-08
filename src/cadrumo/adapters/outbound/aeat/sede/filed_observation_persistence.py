@@ -43,12 +43,13 @@ from .....application.modelo.filing_chain_reconciliation import (
     reconcile_aeat_register_entry,
 )
 from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.buckets.event import BucketEventHistoryCatalogue
 from .....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .....domain.justificante.protocols import JustificanteRepositoryProtocol
@@ -75,7 +76,6 @@ from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 if TYPE_CHECKING:
     from .....core.secure_object_write import SecureObjectWrite
-    from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
@@ -90,7 +90,7 @@ def _call_adapter[T](
     """Invoke one adapter and translate its exception at the app boundary."""
     try:
         return callback()
-    except LiveApplicationError:
+    except (LiveApplicationError, ProfileAccessRefusedError):
         raise
     except Exception as exc:
         translated_message = getattr(exc, "translated_message", None) or fallback_key
@@ -470,18 +470,19 @@ class FilingReconciliationAdapter(FiledFilingReconciliationPort):
         *,
         actor: str,
         clock: datetime,
+        authority_operation: PinnedAuthorityOperation | None = None,
     ) -> FilingReconciliationResult:
-        """Reconcile one AEAT register entry under the bundled authority."""
+        """Reconcile one AEAT register entry under the caller's retained authority."""
 
         def reconcile_with_authority() -> FilingReconciliationResult:
-            with bundled_indexed_authority().operation() as operation:
-                return reconcile_aeat_register_entry(
-                    entry,
-                    ports=self._ports,
-                    operation=operation,
-                    actor=actor,
-                    clock=clock,
-                )
+            if authority_operation is None:
+                with bundled_indexed_authority().operation() as operation:
+                    return reconcile_aeat_register_entry(
+                        entry, ports=self._ports, operation=operation, actor=actor, clock=clock
+                    )
+            return reconcile_aeat_register_entry(
+                entry, ports=self._ports, operation=authority_operation, actor=actor, clock=clock
+            )
 
         return _call_adapter("reconcile_filed_register_entry", reconcile_with_authority)
 

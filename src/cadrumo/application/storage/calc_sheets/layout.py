@@ -44,12 +44,17 @@ from pydantic import BaseModel, Field
 
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....domain.calculations.record_row_membership import RecordRowMembership
+from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
+from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
+from ....domain.calculations.registry.form_context import resolve_form_context_field
 from ....domain.calculations.registry.ids import (
     BindingId,
     ParameterId,
     RelationId,
     RevisionId,
 )
+from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
@@ -57,6 +62,12 @@ from ....domain.calculations.registry.runtime_graph import (
     expression_parameter_refs,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.schema_form_layouts import (
+    FormBindingInputsBlock,
+    FormContextFieldBlock,
+    FormFieldBlock,
+    FormGridBlock,
+)
 from ....domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -85,6 +96,7 @@ class _BindingRow(BaseModel):
     tab: Literal[TabName.ENTRADAS]
     row: int = Field(ge=2)
     label: str
+    readonly: bool = False
 
 
 class BracketRanges(BaseModel):
@@ -122,6 +134,7 @@ class SheetLayout(BaseModel):
     calculos_cells: Mapping[CasillaId, SheetCellAddress]
     binding_cells: Mapping[BindingId, SheetCellAddress]
     date_binding_cells: Mapping[BindingId, SheetCellAddress] = Field(default_factory=dict)
+    record_rows: Mapping[BindingId, RecordRowMembership] = Field(default_factory=dict, exclude=True, repr=False)
     filing_year: int = 0
     parameter_cells: Mapping[ParameterId, ParameterCell]
     relation_cells: Mapping[RelationId, SheetCellAddress]
@@ -316,6 +329,7 @@ def plan_layout(
         revision,
         value_column=value_column,
         entradas_row_start=casilla_plan.entradas_next_row,
+        existing_inputs=casilla_plan.entradas_cells,
     )
     parameter_plan = _layout_parameters(
         revision,
@@ -442,6 +456,7 @@ def _layout_bindings(
     *,
     value_column: int,
     entradas_row_start: int,
+    existing_inputs: Mapping[CasillaId, SheetCellAddress],
 ) -> _BindingPlan:
     """Assign each referenced binding a row in the Entradas tab below the casilla block.
 
@@ -450,13 +465,12 @@ def _layout_bindings(
     Date bindings (e.g. taxpayer birth_date, consumed by the
     ``age_at_year_end`` op) take their own Entradas rows below the
     numeric bindings so the operator can enter the source date and the
-    translator can compile ``YEAR(cell)``. Bindings referenced by
-    formulas but not declared on the revision are silently skipped —
-    registry validation already refused those.
+    translator can compile ``YEAR(cell)``. Declared scalar manual form inputs
+    follow these operands; all undeclared references are refused.
     """
     binding_cells: dict[BindingId, SheetCellAddress] = {}
     binding_rows: list[_BindingRow] = []
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     entradas_row = entradas_row_start
     for binding_id in _referenced_bindings(revision):
         if binding_id not in bindings_by_id:
@@ -475,7 +489,86 @@ def _layout_bindings(
         date_binding_cells[binding_id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
         binding_rows.append(_BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id))
         entradas_row += 1
+    # Printed manual fields need editable sources even when they do not feed
+    # an arithmetic expression (an activity code is a typical example).
+    # Append these after formula operands to retain the existing graph's A1
+    # addresses; never flatten a repeating record into a scalar input.
+    for binding_id in _form_input_bindings(revision):
+        binding = bindings_by_id.get(binding_id)
+        if binding is None:
+            raise _undeclared_layout_reference("form_binding")
+        if binding.value.channel is BindingValueChannel.ROW_SET:
+            raise CalcSheetsEngineError("scalar form input cannot address a row-set binding")
+        if binding_id in binding_cells or binding_id in date_binding_cells:
+            continue
+        if not isinstance(binding.provider, ManualInputProvider):
+            raise CalcSheetsEngineError("form-only scalar input requires a manual-input provider")
+        owners = [casilla.id for casilla in revision.casillas if casilla.binding == binding_id]
+        if binding.provider.casilla_id is not None:
+            owners.append(binding.provider.casilla_id)
+        if any(key not in existing_inputs for key in owners):
+            raise CalcSheetsEngineError("manual form binding target is not an editable casilla")
+        addresses = {existing_inputs[key].qualified(): existing_inputs[key] for key in owners if key in existing_inputs}
+        if len(addresses) > 1:
+            raise CalcSheetsEngineError("form binding has ambiguous existing casilla input cells")
+        address = (
+            next(iter(addresses.values()))
+            if addresses
+            else SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
+        )
+        target = date_binding_cells if binding.value.channel is BindingValueChannel.DATE else binding_cells
+        target[binding_id] = address
+        if not addresses:
+            binding_rows.append(
+                _BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id)
+            )
+            entradas_row += 1
+    # Declared summary owners need a backing cell even when no arithmetic
+    # expression consumes them. These are immutable source snapshots, not
+    # additional operator inputs. Existing formula/input cells are reused.
+    for binding_id in _form_summary_bindings(revision):
+        if binding_id in binding_cells or binding_id in date_binding_cells:
+            continue
+        binding = bindings_by_id[binding_id]
+        target = date_binding_cells if binding.value.channel is BindingValueChannel.DATE else binding_cells
+        target[binding_id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
+        binding_rows.append(
+            _BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id, readonly=True)
+        )
+        entradas_row += 1
     return _BindingPlan(binding_cells=binding_cells, binding_rows=binding_rows, date_binding_cells=date_binding_cells)
+
+
+def _form_summary_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Resolve exact scalar context owners before allocating readonly rows."""
+    bindings: set[BindingId] = set()
+    for layout in revision.form_layouts:
+        for page in layout.pages:
+            for section in page.sections:
+                for block in section.blocks:
+                    if isinstance(block, FormContextFieldBlock):
+                        field = resolve_form_context_field(revision, block)
+                        if field.binding is not None:
+                            bindings.add(field.binding)
+    return tuple(sorted(bindings))
+
+
+def _form_input_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Collect explicitly declared scalar form inputs, excluding repeating groups."""
+    bindings: set[BindingId] = set()
+    for layout in revision.form_layouts:
+        for page in layout.pages:
+            for section in page.sections:
+                for block in section.blocks:
+                    if isinstance(block, FormFieldBlock) and block.binding_id is not None:
+                        bindings.add(block.binding_id)
+                    elif isinstance(block, FormGridBlock):
+                        bindings.update(
+                            cell.binding_id for row in block.rows for cell in row.cells if cell.binding_id is not None
+                        )
+                    elif isinstance(block, FormBindingInputsBlock):
+                        bindings.update(block.binding_ids)
+    return tuple(sorted(bindings))
 
 
 @dataclass(frozen=True, slots=True)

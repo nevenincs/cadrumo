@@ -17,8 +17,9 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT
+from dev.first_party_source import HARNESS_PACKAGE, PRODUCT_PACKAGE
 
-SRC_DIR: Final[Path] = REPO_ROOT / "src" / "cadrumo"
+SRC_DIR: Final[Path] = REPO_ROOT / PRODUCT_PACKAGE
 LOCALES_DIR: Final[Path] = SRC_DIR / "locales"
 
 #: Roots outside the package that legitimately reference catalogue keys.
@@ -41,7 +42,7 @@ DOCS_SRC_DIR: Final[Path] = REPO_ROOT / "dev" / "docs"
 #: deliberately unlocalized English). A scan that stopped at ``src/cadrumo``
 #: would report every one of its catalogue keys as an extra key with no
 #: codebase site, for exactly the reason :data:`DOCS_SRC_DIR` exists.
-HARNESS_SRC_DIR: Final[Path] = REPO_ROOT / "src" / "cadrumo_harness"
+HARNESS_SRC_DIR: Final[Path] = REPO_ROOT / HARNESS_PACKAGE
 
 #: Verified staged catalogue awaiting installation by the casilla collapse.
 #: Its presence means an install was interrupted and must be resumed before any

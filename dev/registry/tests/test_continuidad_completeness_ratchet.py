@@ -17,12 +17,16 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import CasillaRowKey, lineage_totality
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.lineage_totality import is_total
 
 from ..analysis.casilla_lineage_ledger import load_ledger_refusals
 from ..analysis.casilla_lineage_partition import load_partitioned_corpus, partitioned_lineage_totality
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_cache import discover_modelo_sources
-from ..compiler.validate_cross_revision_lineage_origin import lineage_origin_continuity_failures
+from ..compiler.validate_cross_revision_lineage_origin import (
+    lineage_origin_continuity_failures,
+    role_exempt_occurrences,
+)
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -116,14 +120,14 @@ def _modelo(
 def test_unclassified_reused_number_requires_a_named_exception(tmp_path: Path) -> None:
     modelo = _modelo(tmp_path, successor=_row(2025, chain=None))
     assert lineage_totality((modelo,), ()).uncovered == (_KEY,)
-    assert lineage_totality((modelo,), {_KEY}).is_total
+    assert is_total(lineage_totality((modelo,), {_KEY}))
     assert not _origin_failures({"999": modelo})
 
 
 @pytest.mark.parametrize("origin", ["new_on_form", "predecessor_edition_silent", "not_on_form"])
 def test_adjudicated_absence_is_not_a_partially_stamped_numeric_chain(tmp_path: Path, origin: str) -> None:
     modelo = _modelo(tmp_path, successor=_row(2025, chain=None, origin=origin))
-    assert lineage_totality((modelo,), ()).is_total
+    assert is_total(lineage_totality((modelo,), ()))
     assert not _origin_failures({"999": modelo})
     assert lineage_totality((modelo,), {_KEY}).stale == (_KEY,)
 
@@ -131,7 +135,7 @@ def test_adjudicated_absence_is_not_a_partially_stamped_numeric_chain(tmp_path: 
 def test_grounded_claim_cannot_cover_a_nonexistent_predecessor(tmp_path: Path) -> None:
     modelo = _modelo(tmp_path, successor=_row(2025, chain="different-concept", origin="grounded"))
     # Totality sees the claim; the independently required origin validator refuses it.
-    assert lineage_totality((modelo,), ()).is_total
+    assert is_total(lineage_totality((modelo,), ()))
     assert any("does not carry continuidad_id" in failure for failure in _origin_failures({"999": modelo}))
 
 
@@ -145,15 +149,27 @@ def test_inherited_rows_and_target_attestations_are_materialized_before_judgemen
     assert len(successor) == 1
     expected = CasillaLineageOrigin.GROUNDED if attestation else None
     assert successor[0].continuidad_origin is expected
-    assert lineage_totality((modelo,), ()).is_total
+    assert is_total(lineage_totality((modelo,), ()))
     assert not _origin_failures({"999": modelo})
 
 
 def test_seeded_is_admissible_inference_not_grounding(tmp_path: Path) -> None:
     modelo = _modelo(tmp_path, successor=_row(2025, chain="base-general", origin="seeded"))
     assert modelo.revisions["2025"].casillas[0].continuidad_origin is CasillaLineageOrigin.SEEDED
-    assert lineage_totality((modelo,), ()).is_total
+    assert is_total(lineage_totality((modelo,), ()))
     assert not _origin_failures({"999": modelo})
+
+
+def test_role_exemption_requires_every_link_touching_an_occurrence_to_be_grounded(tmp_path: Path) -> None:
+    grounded_root = tmp_path / "grounded"
+    grounded_root.mkdir()
+    grounded = _modelo(grounded_root, successor=_row(2025, chain="base-general", origin="grounded"))
+    assert role_exempt_occurrences(grounded) == frozenset({("2024", "0001"), ("2025", "0001")})
+
+    seeded_root = tmp_path / "seeded"
+    seeded_root.mkdir()
+    seeded = _modelo(seeded_root, successor=_row(2025, chain="base-general", origin="seeded"))
+    assert role_exempt_occurrences(seeded) == frozenset()
 
 
 def test_seeded_role_drift_is_refused(tmp_path: Path) -> None:

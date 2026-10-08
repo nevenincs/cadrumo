@@ -41,6 +41,7 @@ from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.evidence_consent.record import EvidenceConsentLedgerEntry
+from ....persistence.llm import consent_ledger as consent_ledger_module
 from ....persistence.llm.consent_ledger import EvidenceConsentLedger
 from ....persistence.storage.master_key.active_session import close_active_bucket_session
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -138,6 +139,59 @@ def test_a_consented_off_host_dispatch_reaches_the_adapter_and_lands_one_entry(
     assert entry.model == "claude-sonnet-4-6"
     assert entry.surface == _SURFACE
     assert entry.profile_bucket_id
+
+
+def test_save_custody_surrounds_the_real_append_and_ends_before_dispatch(
+    secure_object_test_profile: object,
+) -> None:
+    """A runtime may mark the exact audit write without holding model inference."""
+    _ = secure_object_test_profile
+    observed: list[tuple[str, bool | None]] = []
+    ledger = EvidenceConsentLedger(
+        before_save=lambda: observed.append(("before", None)),
+        after_save=lambda saved: observed.append(("after", saved)),
+    )
+    client = _CapturingClient(settings=_consented_settings(), consent_ledger=ledger)
+
+    asyncio.run(client.complete(_evidence_request()))
+
+    assert observed == [("before", None), ("after", True)]
+    assert len(EvidenceConsentLedger().load_entries()) == 1
+    assert len(client.adapter.dispatched) == 1
+
+
+def test_save_failure_reports_unknown_extent_and_refuses_dispatch(
+    secure_object_test_profile: object, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failing save releases custody but cannot claim no write happened."""
+    _ = secure_object_test_profile
+    observed: list[tuple[str, bool | None]] = []
+
+    class _FailingRepository:
+        def save(self, **_kwargs: object) -> None:
+            raise OSError("synthetic storage failure")
+
+    monkeypatch.setattr(
+        consent_ledger_module,
+        "secure_object_repository_for_active_bucket",
+        lambda: _FailingRepository(),
+    )
+    ledger = EvidenceConsentLedger(
+        before_save=lambda: observed.append(("before", None)),
+        after_save=lambda saved: observed.append(("after", saved)),
+    )
+    client = _CapturingClient(settings=_consented_settings(), consent_ledger=ledger)
+
+    with pytest.raises(LLMConsentError):
+        asyncio.run(client.complete(_evidence_request()))
+
+    assert observed == [("before", None), ("after", False)]
+    assert client.adapter.dispatched == []
+
+
+def test_save_custody_requires_both_callbacks() -> None:
+    with pytest.raises(ValueError, match="both save callbacks"):
+        EvidenceConsentLedger(before_save=lambda: None)
 
 
 def test_an_on_host_or_unmarked_request_records_nothing(client: _CapturingClient) -> None:

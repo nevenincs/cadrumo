@@ -22,27 +22,23 @@ one.
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import contextmanager
-from contextvars import ContextVar
-from typing import Protocol
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.config import Settings
-from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
+from . import extraction_draft_repository
 from .invoice_draft_records import InvoiceDraft, LabelReadingFallback
+
+if TYPE_CHECKING:
+    from ...core.config import Settings
 
 __all__ = [
     "ExtractionDraftDocument",
-    "ExtractionDraftRepositoryFactory",
-    "ExtractionDraftRepositoryProtocol",
     "StoredExtractionDraft",
-    "bind_extraction_draft_repository_factory",
     "extraction_draft_object_key",
     "load_extraction_drafts",
     "read_extraction_draft",
@@ -112,54 +108,9 @@ def extraction_draft_object_key(document: ExtractionDraftDocument) -> str:
     return document.bucket_id
 
 
-class ExtractionDraftRepositoryProtocol(Protocol):
-    """Persistence operations required by extraction-draft application policy."""
-
-    def load(self, identifier: str) -> ExtractionDraftDocument | None:
-        """Load the document stored under ``identifier``, when present."""
-        ...
-
-    def save(self, payload: ExtractionDraftDocument) -> None:
-        """Persist one complete extraction-draft document."""
-        ...
-
-
-class ExtractionDraftRepositoryFactory(Protocol):
-    """Construct a repository port for one bucket and storage configuration."""
-
-    def __call__(self, *, bucket_id: str, settings: Settings) -> ExtractionDraftRepositoryProtocol:
-        """Return the encrypted repository for ``bucket_id``."""
-        ...
-
-
-_BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY: ContextVar[ExtractionDraftRepositoryFactory] = ContextVar(
-    "cadrumo_extraction_draft_repository_factory"
-)
-
-
-@contextmanager
-def bind_extraction_draft_repository_factory(
-    factory: ExtractionDraftRepositoryFactory,
-) -> Generator[ExtractionDraftRepositoryFactory]:
-    """Bind one outward-composed repository factory for the host context."""
-    token = _BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY.set(factory)
-    try:
-        yield factory
-    finally:
-        _BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY.reset(token)
-
-
-def _repository(bucket_id: str, settings: Settings) -> ExtractionDraftRepositoryProtocol:
-    try:
-        factory = _BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY.get()
-    except LookupError as error:
-        raise InternalInvariantError("extraction-draft persistence has not been composed") from error
-    return factory(bucket_id=bucket_id, settings=settings)
-
-
 def load_extraction_drafts(bucket_id: str, settings: Settings) -> ExtractionDraftDocument:
     """Load a bucket's pending drafts, or an empty document when none exist."""
-    document = _repository(bucket_id, settings).load(bucket_id)
+    document = extraction_draft_repository.extraction_draft_repository(bucket_id, settings).load(bucket_id)
     return document if document is not None else ExtractionDraftDocument(bucket_id=bucket_id)
 
 
@@ -213,5 +164,5 @@ def write_extraction_draft(
             ),
         ),
     )
-    _repository(bucket_id, settings).save(updated)
+    extraction_draft_repository.extraction_draft_repository(bucket_id, settings).save(updated)
     return updated

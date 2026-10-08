@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:9e242b28e59d7b1c11ff4d35d7593c94bd6b71ccf467fd721090289044b73460'
+modified: '2026-10-03'
+body_hash: 'sha256:28046b15b8c0bccb91b09a40c865a36a9015f60a69cd43c65cd08fa6c2eccd2f'
 related: []
 ---
 
@@ -36,8 +36,8 @@ The sensitive production writer inventory now classifies the centralized materia
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/secret_store/test_secret_store.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py` passed with 24 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/secret_store/_secret_store.py src/aeat/adapters/persistence/storage/secret_store/test_secret_store.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py` passed.
+- the historical check passed with 24 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Scoped hygiene scans found no `contextlib.suppress`, silent pass, naked environment access, monkeypatch/fake/stub shortcuts, skips/xfails, or ignore pragmas.
 

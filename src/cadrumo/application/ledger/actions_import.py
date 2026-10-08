@@ -12,6 +12,8 @@ records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -19,9 +21,13 @@ from pathlib import Path
 from typing import Final, NamedTuple
 
 from ...core.directory_scan import DirectoryEntryKind, scan_directory
+from ...core.errors.severity import BaseSeverity
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXTENSION
 from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
-from ...core.i18n.render import tr
+from ...core.i18n.render import tr as render_translation
+from ...core.i18n.translatable import Translatable as tr
+from ...core.iban import normalise_iban
+from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_events
 from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
@@ -36,19 +42,28 @@ from ...domain.transactions.models import (
     derive_transaction_id,
     existing_transaction_import_fingerprints,
 )
+from ...domain.transactions.own_accounts import (
+    OwnAccountRegister,
+    OwnBankAccount,
+)
 from ...domain.transactions.raw_transaction import RawTransaction
 from ...domain.transactions.repository import ImportSummary
-from ..transactions.diagnostics import LedgerImportDiagnostic
+from ..transactions.diagnostics import (
+    LedgerImportDiagnostic,
+    LedgerImportDiagnosticKind,
+    build_ledger_import_diagnostic,
+)
 from ..transactions.import_classification import classify_import_row
 from ..transactions.import_diagnostics import import_ledger_with_diagnostics
 from .actions_common import (
     build_ledger_bucket_event,
     normalise_timestamp,
+    require_registered_own_account,
     resolve_bucket_event_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
 )
-from .import_ports import LedgerImportPorts
+from .import_ports import LedgerImportPorts, LedgerParsedRow
 from .models import (
     LedgerImportDiagnosticReport,
     LedgerImportOperationResult,
@@ -65,18 +80,23 @@ from .protocols import (
     TransactionCatalogueCoCommitWriterProtocol,
 )
 
+#: Refusal message of a statement that names another own account than the chosen one.
+OWN_ACCOUNT_MISMATCH_MESSAGE: Final[str] = "errors.transaction.ledger_import_own_account_mismatch"
+
 
 class LedgerProviderID(StrEnum):
-    """Canonical provider ID strings accepted by the ledger import dispatch."""
+    """Canonical provider ID strings accepted by the ledger import dispatch.
+
+    Each token names the parser it selects: ``auto`` is the only token that
+    runs detection, and a format token never stands for another format.
+    """
 
     AUTO = "auto"
     CSV = "csv"
     OFX = "ofx"
     QFX = "qfx"
     XLSX = "xlsx"
-    EXCEL = "excel"
-    N26 = "n26"
-    PDF = "pdf"
+    XLS = "xls"
     PDF_N26 = "pdf-n26"
 
 
@@ -110,6 +130,20 @@ class _LoadedSourceCatalogue(NamedTuple):
     catalogue: TransactionCatalogue
 
 
+@dataclass(frozen=True, slots=True, repr=False)
+class PreparedLedgerSourceImport:
+    """One parsed statement held in memory until the caller authorizes commit.
+
+    Parsed transaction facts are excluded from ``repr`` and are never a
+    persistence format. The exact rows prepared from the source path are the
+    rows later committed, even if that path changes in between.
+    """
+
+    command: LedgerSourceImportCommand = dataclass_field(repr=False)
+    ports: LedgerImportPorts = dataclass_field(repr=False)
+    source: _PreparedSourceImport = dataclass_field(repr=False)
+
+
 def _source_jurisdiction_from_raw_fields(raw_fields: Mapping[str, str]) -> str | None:
     """Read canonical source-jurisdiction provenance from provider raw fields."""
     for header, value in raw_fields.items():
@@ -135,7 +169,7 @@ def _apply_fx_conversion(
         return (None, None, None, None)
     rate_date = raw.value_date or raw.booked_date
     result = currency_normalizer.normalize(MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date)
-    if result.status is not CurrencyNormalizationStatus.NORMALIZED or result.rate is None:
+    if result.status is not CurrencyNormalizationStatus.NORMALIZED or result.rate is None or result.eur_amount is None:
         return (None, None, None, None)
     # value_in_eur is the non-negative EUR magnitude; flow is carried solely by
     # direction (Transaction.value_in_eur rejects negatives).
@@ -183,8 +217,12 @@ def evaluate_import_rows(
     batch_day_keys: set[str] = set()
     for parsed in parsed_rows:
         raw = parsed.raw
-        fingerprint = derive_import_fingerprint(raw, direction=parsed.direction)
-        transaction_id = derive_transaction_id(raw)
+        fingerprint = derive_import_fingerprint(
+            raw,
+            direction=parsed.direction,
+            own_account_id=parsed.own_account_id,
+        )
+        transaction_id = derive_transaction_id(raw, own_account_id=parsed.own_account_id)
         # Re-import dedup keys on the persisted catalogue only: a fingerprint
         # already stored is the same movement seen before (re-importing the same
         # statement, or the same movement re-exported in another file format), so
@@ -216,6 +254,7 @@ def evaluate_import_rows(
         transaction = Transaction.model_validate(
             {
                 "raw": raw,
+                "own_account_id": parsed.own_account_id,
                 "direction": parsed.direction,
                 "import_fingerprint": fingerprint,
                 "fx_rate": fx_rate,
@@ -251,18 +290,96 @@ def _prepare_source_import(
     command: LedgerSourceImportCommand,
     *,
     ports: LedgerImportPorts,
+    own_accounts: OwnAccountRegister,
 ) -> _PreparedSourceImport:
     """Validate, resolve, and ingest one source before touching a repository."""
     _require_readable_source(command.path)
     provider = _resolve_financial_provider(command.provider, command.path, ports=ports)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
-    parsed_rows = tuple(provider.ingest(command.path))
+    parsed_rows = _bind_own_accounts(
+        _rows_in_period(tuple(provider.ingest(command.path)), command.period),
+        own_accounts=own_accounts,
+        own_account_id=command.own_account_id,
+    )
     return _PreparedSourceImport(
         parsed_rows=parsed_rows,
         validation=validation,
         source_verification=source_verification,
     )
+
+
+#: Raw field in which a provider records the statement's own account identifier.
+#: OFX ``ACCTID`` is the only identifier a supported format carries today.
+_ACCOUNT_IDENTIFIER_FIELD: Final[str] = "ACCTID"
+
+
+def _account_matches(account: OwnBankAccount, identifier: str) -> bool:
+    """Whether a statement's account identifier names ``account``.
+
+    The identifier matches the full IBAN, or the domestic account number an
+    IBAN carries after its country code and check digits.
+    """
+    canonical = normalise_iban(identifier)
+    return canonical in {account.iban, account.iban[4:]}
+
+
+def _bind_own_accounts(
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
+    *,
+    own_accounts: OwnAccountRegister,
+    own_account_id: str | None,
+) -> tuple[ParsedLedgerRowProtocol, ...]:
+    """Bind each row to the operator's chosen own account, or to the one its statement names.
+
+    With a chosen account, a row whose statement carries an account identifier
+    must name that account. Without one, a row binds only when its identifier
+    names exactly one registered account; every other row stays unassigned.
+
+    Raises:
+        TransactionValidationError: When the chosen account is not registered,
+            or a statement names a different account than the chosen one.
+    """
+    chosen = None if own_account_id is None else require_registered_own_account(own_accounts, own_account_id)
+    bound: list[ParsedLedgerRowProtocol] = []
+    for parsed in parsed_rows:
+        identifier = parsed.raw.raw_fields.get(_ACCOUNT_IDENTIFIER_FIELD, "").strip()
+        if chosen is not None:
+            if identifier and not _account_matches(chosen, identifier):
+                raise TransactionValidationError(
+                    translated_message=OWN_ACCOUNT_MISMATCH_MESSAGE,
+                    context={"own_account_id": chosen.own_account_id},
+                )
+            account_id: str | None = chosen.own_account_id
+        else:
+            matches = [
+                account for account in own_accounts.accounts if identifier and _account_matches(account, identifier)
+            ]
+            account_id = matches[0].own_account_id if len(matches) == 1 else None
+        bound.append(LedgerParsedRow(raw=parsed.raw, direction=parsed.direction, own_account_id=account_id))
+    return tuple(bound)
+
+
+def _rows_in_period(
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
+    period: Period | None,
+) -> tuple[ParsedLedgerRowProtocol, ...]:
+    """Keep the rows whose effective date falls in ``period``, or all rows without one.
+
+    The effective date is the value date, else the booking date, the same
+    date every other ledger period scope reads.
+
+    Raises:
+        TransactionValidationError: When ``period`` has no calendar date span.
+    """
+    if period is None:
+        return parsed_rows
+    if not period.has_date_span():
+        raise TransactionValidationError(
+            translated_message="errors.transaction.ledger_import_period_without_span",
+            context={"period": str(period)},
+        )
+    return tuple(parsed for parsed in parsed_rows if period.contains(parsed.raw.value_date or parsed.raw.booked_date))
 
 
 def _load_source_catalogue(
@@ -284,20 +401,36 @@ def _source_import_diagnostics(
     command: LedgerSourceImportCommand,
     parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
     existing_catalogue: TransactionCatalogue,
+    source_verification: LedgerSourceVerificationReport,
 ) -> tuple[tuple[LedgerImportDiagnostic, ...], tuple[LedgerImportDiagnosticReport, ...]]:
-    """Run optional verification and return raw facts plus safe report rows."""
+    """Run optional verification from staged facts and return raw/report rows."""
     if not command.verify:
         return (), ()
     result = import_ledger_with_diagnostics(
         command.path,
         tuple(parsed.raw for parsed in parsed_rows),
         existing_catalogue,
-        original_source_path=command.source,
+        # ``original_source_path`` probes and reopens a caller-controlled path.
+        # Source verification was already completed during preparation; never
+        # repeat that read inside the commit fence.
+        original_source_path=None,
         import_fingerprints=tuple(
-            derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows
+            derive_import_fingerprint(parsed.raw, direction=parsed.direction, own_account_id=parsed.own_account_id)
+            for parsed in parsed_rows
         ),
+        own_account_ids=tuple(parsed.own_account_id for parsed in parsed_rows),
     )
-    raw_diagnostics = result.diagnostics
+    raw_diagnostics = list(result.diagnostics)
+    if source_verification.path is not None and source_verification.sha256 is not None:
+        raw_diagnostics.append(
+            build_ledger_import_diagnostic(
+                kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
+                severity=BaseSeverity.INFO,
+                message=tr("transactions.import.verified"),
+                source_path=Path(source_verification.path),
+            ),
+        )
+    raw_diagnostics = tuple(raw_diagnostics)
     return raw_diagnostics, tuple(_diagnostic_report(diagnostic) for diagnostic in raw_diagnostics)
 
 
@@ -366,7 +499,9 @@ def _persist_source_import(
         bucket_id=bucket_id,
         import_batch_id=result.import_batch_id,
         diagnostics=raw_diagnostics,
-        transaction_ids=tuple(derive_transaction_id(parsed.raw) for parsed in parsed_rows),
+        transaction_ids=tuple(
+            derive_transaction_id(parsed.raw, own_account_id=parsed.own_account_id) for parsed in parsed_rows
+        ),
         actor=command.actor,
         source_command=command.source_command,
     )
@@ -446,7 +581,9 @@ def import_ledger_transactions(
     import_batch_id = _import_batch_id(
         bucket_id=bucket_id,
         source_command=source_command,
-        imported_transaction_ids=tuple(derive_transaction_id(parsed.raw) for parsed in rows),
+        imported_transaction_ids=tuple(
+            derive_transaction_id(parsed.raw, own_account_id=parsed.own_account_id) for parsed in rows
+        ),
     )
     summary = ImportSummary(
         imported=len(imported_refs),
@@ -492,24 +629,44 @@ def import_ledger_transactions(
     )
 
 
-def import_ledger_source(
+def prepare_ledger_source_import(
     command: LedgerSourceImportCommand,
     *,
     ports: LedgerImportPorts,
+    own_accounts: OwnAccountRegister | None = None,
+) -> PreparedLedgerSourceImport:
+    """Read, validate, and parse one source without loading or changing a ledger.
+
+    Callers that need an authorization fence can prepare every source first,
+    then pass each returned value to :func:`persist_prepared_ledger_source_import`
+    inside a fresh fence. The immutable parsed rows remain pinned to these exact
+    source bytes, so persistence never has to reopen an untrusted path.
+    ``own_accounts`` is the profile's own-account register the rows bind
+    against; without one every row stays account-unassigned.
+    """
+    return PreparedLedgerSourceImport(
+        command=command,
+        ports=ports,
+        source=_prepare_source_import(command, ports=ports, own_accounts=own_accounts or OwnAccountRegister()),
+    )
+
+
+def persist_prepared_ledger_source_import(
+    staged: PreparedLedgerSourceImport,
+    *,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> LedgerSourceImportResult:
-    """Validate, ingest, and optionally persist one ledger source file.
-
-    Returns a :class:`~cadrumo.application.ledger.models.LedgerSourceImportResult`.
-    """
-    prepared = _prepare_source_import(command, ports=ports)
+    """Evaluate and persist a previously parsed source without reopening it."""
+    command = staged.command
+    prepared = staged.source
     loaded = _load_source_catalogue(command, transaction_repository)
     raw_diagnostics, diagnostics = _source_import_diagnostics(
         command=command,
         parsed_rows=prepared.parsed_rows,
         existing_catalogue=loaded.catalogue,
+        source_verification=prepared.source_verification,
     )
     if command.dry_run:
         return _build_dry_run_source_result(
@@ -530,7 +687,7 @@ def import_ledger_source(
     return _persist_source_import(
         command=command,
         bucket_id=command.bucket_id,
-        ports=ports,
+        ports=staged.ports,
         parsed_rows=prepared.parsed_rows,
         repository=repository,
         event_repository=event_repository,
@@ -540,8 +697,8 @@ def import_ledger_source(
         source_verification=prepared.source_verification,
         diagnostics=diagnostics,
         # The catalogue this source was diagnosed against is the one it is
-        # imported into; loading it again decrypted and validated every stored
-        # row a second time per imported file.
+        # imported into; loading it again would make the persisted plan differ
+        # from the exact snapshot used for diagnosis.
         catalogue=loaded.catalogue,
     )
 
@@ -580,7 +737,7 @@ def _validate_import_source(provider: FinancialProviderProtocol, path: Path) -> 
     _require_readable_source(path)
     validation = provider.validate_source(path)
     if not validation.is_valid:
-        reason = "; ".join(validation.warnings) or tr("errors.transaction.import_source_invalid")
+        reason = "; ".join(validation.warnings) or render_translation("errors.transaction.import_source_invalid")
         raise TransactionValidationError(
             translated_message="errors.transaction.ledger_import_failed",
             context={"reason": reason},
@@ -607,7 +764,7 @@ def _unsupported_import_source(path: Path) -> TransactionValidationError:
     return TransactionValidationError(
         translated_message="errors.transaction.ledger_import_failed",
         context={
-            "reason": f"{tr('errors.transaction.import_source_invalid')}: {path}",
+            "reason": f"{render_translation('errors.transaction.import_source_invalid')}: {path}",
             "path": str(path),
         },
     )
@@ -694,12 +851,26 @@ def _import_batch_id(
 apply_fx_conversion = _apply_fx_conversion
 
 
+def _require_one_import_context(results: Sequence[LedgerSourceImportResult]) -> LedgerSourceImportResult:
+    """Return the first result after proving all files describe one invocation."""
+    if not results:
+        raise TransactionValidationError("cannot aggregate an empty set of import results")
+    first = results[0]
+    for field in ("dry_run", "verify", "period", "bucket_id"):
+        values = {getattr(result, field) for result in results}
+        if len(values) > 1:
+            raise TransactionValidationError(
+                f"import results disagree on {field!r}, so they are not one import: {sorted(map(str, values))}"
+            )
+    return first
+
+
 def aggregate_ledger_import_results(
     results: Sequence[LedgerSourceImportResult],
 ) -> LedgerSourceImportResult:
     """Fold the per-file results of a directory import into one result.
 
-    :func:`import_ledger_source` produces one result per file, so a directory
+    :func:`persist_prepared_ledger_source_import` produces one result per file, so a directory
     import holds several and the operator is owed a single answer. Summing them
     is a statement about what an import IS -- which counts add, which references
     concatenate, and which fields may not differ between files -- so it belongs
@@ -724,15 +895,7 @@ def aggregate_ledger_import_results(
         TransactionValidationError: If ``results`` is empty, or if the results
             disagree on a field that describes the invocation.
     """
-    if not results:
-        raise TransactionValidationError("cannot aggregate an empty set of import results")
-    first = results[0]
-    for field in ("dry_run", "verify", "period", "bucket_id"):
-        values = {getattr(result, field) for result in results}
-        if len(values) > 1:
-            raise TransactionValidationError(
-                f"import results disagree on {field!r}, so they are not one import: {sorted(map(str, values))}"
-            )
+    first = _require_one_import_context(results)
 
     def _concat[T](select: Callable[[LedgerSourceImportResult], tuple[T, ...]]) -> tuple[T, ...]:
         # Selected by accessor rather than by field NAME: a stringly-typed
@@ -818,8 +981,10 @@ def plan_ledger_import_sources(path: Path) -> tuple[Path, ...]:
 __all__ = [
     "IMPORTABLE_SOURCE_EXTENSIONS",
     "LedgerProviderID",
+    "PreparedLedgerSourceImport",
     "aggregate_ledger_import_results",
-    "import_ledger_source",
     "import_ledger_transactions",
+    "persist_prepared_ledger_source_import",
     "plan_ledger_import_sources",
+    "prepare_ledger_source_import",
 ]

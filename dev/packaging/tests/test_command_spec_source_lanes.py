@@ -42,7 +42,7 @@ from cadrumo.entrypoints.cli.command_schema import command_schema_refs, command_
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
-from cadrumo.entrypoints.cli.command_spec import SchemaState
+from cadrumo.entrypoints.cli.command_shared_contracts import SchemaState
 
 app = cli_main.app
 nodes = COMMAND_GRAPH.nodes()

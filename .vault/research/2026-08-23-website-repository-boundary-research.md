@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#website-repository-boundary'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:3399a923ce1fb532213a5c3ca732a414f515892d66f4b83818b39e719081d67c'
+body_hash: 'sha256:a5bf72f984b05a9da2510ffb4b4f70fa67843271c03c786786634d63bef15fa3'
 related:
   - "[[2026-08-05-cadrumo-frontend-launch-product-page-vs-docs-landing-boundary-audit]]"
 ---
@@ -17,7 +17,7 @@ The repository boundary is already materially split: the product repository no l
 
 ### The website implementation and its operational surface have already moved as one unit
 
-Commit `87625a433d9fd3784c88c7ddbf64cc0669e26cd0` removes `frontend/`, `dev/deploy/frontend_static_site.py`, its deploy tests, `.github/workflows/frontend.yml`, and the `frontend-deploy` Just recipe from the product repository. It also removes the `frontend/**` product-CI carve-outs and replaces positive ownership gates with inverse no-website gates. Follow-up commit `ab5b9e4aefa1164d53c764307b34cf4b93039425` makes that inverse gate test the tracked ownership marker `frontend/package.json`, so ignored build residue does not masquerade as returned source (`dev/ci/tests/test_change_class_tiers.py:202`).
+Commit `87625a433d9fd3784c88c7ddbf64cc0669e26cd0` removes `frontend/`, the former source file, its deploy tests, `.github/workflows/frontend.yml`, and the `frontend-deploy` Just recipe from the product repository. It also removes the `frontend/**` product-CI carve-outs and replaces positive ownership gates with inverse no-website gates. Follow-up commit `ab5b9e4aefa1164d53c764307b34cf4b93039425` makes that inverse gate test the tracked ownership marker `frontend/package.json`, so ignored build residue does not masquerade as returned source (`dev/ci/tests/test_change_class_tiers.py:202`).
 
 The receiving merge `e69990d2aac4b6d5110f18d9586ee4a399f063da` preserves the website subtree's 34-commit history. Commit `f0f3d8680c472bf3b2d749e75e084c79317a5d29` makes the marketing repository itself the site: root-level source, package manifests, a local Just surface, a self-contained publisher, and `.github/workflows/ci.yml` (`Y:/code/cadrumo-marketing-worktrees/main/README.md:3`).
 
@@ -35,7 +35,7 @@ The accepted canonical-release-pipeline ADR names the removed publisher and depl
 
 The accepted ci-discipline ADR creates `T1-frontend` in the product repository and binds `frontend.yml` to `frontend/**` (`.vault/adr/2026-07-21-ci-discipline-adr.md:103`; `:114`). Current code implements the inverse: product CI declares no website source or lane (`.github/workflows/ci.yml:30`), while marketing CI owns all site changes (`Y:/code/cadrumo-marketing-worktrees/main/.github/workflows/ci.yml:8`).
 
-`RELEASING.md` should preserve product documentation publication while eliminating any implication that the marketing site participates in product release. Residual migration-history comments appear in `justfile:999`, `.github/workflows/ci.yml:30`, `src/cadrumo-harness/NOTICE:17`, and `dev/audit/duplication_dispositions.toml:69`. CLI and TUI uses of Ã¢â‚¬Å“frontend" name application presentation boundaries and are unrelated to the website.
+`RELEASING.md` should preserve product documentation publication while eliminating any implication that the marketing site participates in product release. Residual migration-history comments appear in `justfile:999`, `.github/workflows/ci.yml:30`, `src/cadrumo-harness/NOTICE:17`, and the former source file. CLI and TUI uses of Ã¢â‚¬Å“frontend" name application presentation boundaries and are unrelated to the website.
 
 ### Option 1: keep the website in the product repository
 
@@ -61,7 +61,7 @@ The remaining work under this option is corpus and prose reconciliation: update 
 - `RELEASING.md:29`
 - `justfile:999`
 - `src/cadrumo-harness/NOTICE:17`
-- `dev/audit/duplication_dispositions.toml:69`
+
 - `Y:/code/cadrumo-marketing-worktrees/main/README.md:3`
 - `Y:/code/cadrumo-marketing-worktrees/main/justfile:14`
 - `Y:/code/cadrumo-marketing-worktrees/main/.github/workflows/ci.yml:37`

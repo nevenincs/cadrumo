@@ -3,7 +3,7 @@
 # cannot sweep them.
 
 # Modelo 194 sources — resumen anual de retenciones sobre capital mobiliario y
-# transmisión/amortización de activos, governed by the bundled Orden EHA/3377/2011.
+# transmisión/amortización de activos, approved by Orden de 18 de noviembre de 1999.
 [sources."aeat-modelo-194-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

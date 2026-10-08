@@ -157,29 +157,20 @@ class RowSetGroupingKind(StrEnum):
 
     This is the **row-assembly grouping axis** consumed in the application layer
     (`_row_set_assembly.py`), a separate concept from the binding ``source``
-    token enumerated by :class:`BindingSourceKind`. For the three detail-record
-    families whose grouping member differs from the binding source token, the
+    token enumerated by :class:`BindingSourceKind`. Where a detail-record
+    family's grouping member differs from its binding source token, the
     correspondence is intentional and explicit; see
     :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE`:
 
     - ``BindingSourceKind.WITHHOLDING`` (``"withholding"``) ↔ ``WITHHOLDING``
     - ``BindingSourceKind.FOREIGN_ASSET`` (``"foreign_asset"``) ↔ ``FOREIGN_ASSET``
-    - ``BindingSourceKind.RELATED_PARTY_OPERATION`` (``"related_party_operation"``)
-      ↔ ``RELATED_PARTY`` (``"related_party"``)
     - ``BindingSourceKind.ATRIBUCION_MEMBER`` (``"atribucion_member"``)
       ↔ ``ATRIBUCION`` (``"atribucion"``)
-    - ``BindingSourceKind.REFUND_OPERATION`` (``"refund_operation"``)
-      ↔ ``REFUND`` (``"refund"``)
-    - ``BindingSourceKind.DONATIVO_DONOR`` (``"donativo_donor"``)
-      ↔ ``DONATIVO`` (``"donativo"``)
     """
 
     WITHHOLDING = "withholding"
-    RELATED_PARTY = "related_party"
     FOREIGN_ASSET = "foreign_asset"
     ATRIBUCION = "atribucion"
-    REFUND = "refund"
-    DONATIVO = "donativo"
     GASTO193 = "gasto193"
     WITHHOLDING296 = "withholding296"
 
@@ -330,46 +321,39 @@ class BindingSourceKind(StrEnum):
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
     # Modelo 347 "operaciones con terceras personas" combined-direction source.
-    # RD 1065/2007 art. 33.1 defines the declared population as one
-    # undifferentiated concept before any direction split: "tendran la
-    # consideracion de operaciones tanto las entregas de bienes y
-    # prestaciones de servicios como las adquisiciones de los mismos" -- a
-    # sale and a purchase are the SAME "operacion" concept the annual
-    # declaration reports, not two. A binding that declares one direction
-    # (payable or collectible) while its resolver reads both is untruthful
-    # about what it consumes; this member names the combined population the
-    # law itself already treats as singular, for bindings whose selector
-    # spans both invoice directions (the M347 declarante-summary totals and
-    # the per-counterparty contraparte_clave row family). It is invoice-
-    # shaped (a member of INVOICE_BINDING_SOURCE_KINDS) and resolved by the
-    # same InvoiceCatalogueSourceResolver as PAYABLE_INVOICE/COLLECTIBLE_INVOICE;
-    # each underlying InvoiceObservation still carries its own true
-    # PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction as its own source_kind, so
-    # per-invoice direction (art. 33.1's quarterly separate accounting of
-    # entregas y adquisiciones) is never lost, only the BINDING's declared
-    # source is honest about spanning both.
+    # RD 1065/2007 art. 33.1 counts both directions as operations ("tendran la
+    # consideracion de operaciones tanto las entregas de bienes y prestaciones
+    # de servicios como las adquisiciones de los mismos") and reports them in
+    # one type 2 record stream, so a binding that declared one direction
+    # while its resolver read both would be untruthful about what it
+    # consumes. Sharing one stream does NOT merge the directions for the
+    # floor: art. 33.1 also says "se computaran de forma separada las entregas
+    # y las adquisiciones", which the clave threshold buckets apply. It is
+    # invoice-shaped (a member of INVOICE_BINDING_SOURCE_KINDS) and resolved
+    # by the same InvoiceCatalogueSourceResolver as
+    # PAYABLE_INVOICE/COLLECTIBLE_INVOICE; each underlying InvoiceObservation
+    # keeps its own direction as its source_kind.
     M347_THIRD_PARTY_OPERATION = "m347_third_party_operation"
+    # The Modelo 349 operador and rectificacion records are likewise ONE
+    # population across both invoice directions: record design type 2 pos. 133
+    # admits claves E,M,H,T,S,R,D,C from supplies and A,I,T from acquisitions,
+    # with one record per operator, clave and period (RIVA arts. 79-80). Each
+    # underlying InvoiceObservation keeps its own PAYABLE_INVOICE /
+    # COLLECTIBLE_INVOICE source_kind.
+    M349_INTRACOMMUNITY_OPERATION = "m349_intracommunity_operation"
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
-    # RowSetGroupingKind value; the other four carry their distinct
-    # source-token value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
+    # RowSetGroupingKind value; the others carry their own source-token
+    # value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
     WITHHOLDING = RowSetGroupingKind.WITHHOLDING.value
     FOREIGN_ASSET = RowSetGroupingKind.FOREIGN_ASSET.value
-    RELATED_PARTY_OPERATION = "related_party_operation"
     ATRIBUCION_MEMBER = "atribucion_member"
-    REFUND_OPERATION = "refund_operation"
-    # Modelo 182 (Ley 49/2002 art. 24, Orden EHA/3021/2007) per-donor register:
-    # the "registro tipo 2" detail row carrying the donor's NIF, importe
-    # donado, porcentaje de deducción aplicable, and the recurrencia flag
-    # (donativo plurianual a la misma entidad, LIRPF art. 68.3 / LIS art. 20).
-    # The row family is currently produced by the Sheets pull surface. A
-    # calculate request refuses these bindings until an executable route owns
-    # the source.
-    DONATIVO_DONOR = "donativo_donor"
+    # Explicit member identity and independent monthly contribution facts (M156).
+    AFILIADO_COTIZACION = "afiliado_cotizacion"
     # Modelo 193 hoja-anexo gastos relationship rows (NIF del contribuyente
-    # plus the annual gastos de administracion y deposito amount), the same
-    # Sheets-pull row shape matching the donativo family.
+    # plus the annual gastos de administracion y deposito amount), produced by
+    # the Sheets pull surface in the detail-record row shape.
     GASTO193_CONTRIBUTOR = "gasto193_contributor"
     # Modelo 296 perceptor rows (IRNR retenciones): its own clave
     # vocabulary (numeric renta claves) cannot ride the shared
@@ -382,20 +366,17 @@ ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGrou
     {
         BindingSourceKind.WITHHOLDING: RowSetGroupingKind.WITHHOLDING,
         BindingSourceKind.FOREIGN_ASSET: RowSetGroupingKind.FOREIGN_ASSET,
-        BindingSourceKind.RELATED_PARTY_OPERATION: RowSetGroupingKind.RELATED_PARTY,
         BindingSourceKind.ATRIBUCION_MEMBER: RowSetGroupingKind.ATRIBUCION,
-        BindingSourceKind.REFUND_OPERATION: RowSetGroupingKind.REFUND,
-        BindingSourceKind.DONATIVO_DONOR: RowSetGroupingKind.DONATIVO,
         BindingSourceKind.GASTO193_CONTRIBUTOR: RowSetGroupingKind.GASTO193,
         BindingSourceKind.WITHHOLDING296: RowSetGroupingKind.WITHHOLDING296,
     },
 )
 """Explicit detail-record binding-source ↔ row-assembly grouping correspondence.
 
-The binding ``source`` token (e.g. ``"related_party_operation"``) and the
-row-assembly :class:`RowSetGroupingKind` value (e.g. ``"related_party"``) are
-distinct strings for the three families whose source token carries the
-``_operation`` / ``_member`` suffix; this mapping makes the relationship
+The binding ``source`` token (e.g. ``"atribucion_member"``) and the
+row-assembly :class:`RowSetGroupingKind` value (e.g. ``"atribucion"``) are
+distinct strings where the source token carries a suffix such as ``_member``
+or ``_contributor``; this mapping makes the relationship
 explicit so a reader is not misled into assuming the two axes share a value.
 """
 
@@ -406,6 +387,7 @@ INVOICE_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
     },
 )
 """Invoice-shaped binding source kinds, derived from :class:`BindingSourceKind`."""

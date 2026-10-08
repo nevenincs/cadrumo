@@ -28,7 +28,8 @@ from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from .._paths import LOCALES_DIR
 from ..cli import app
-from ..manager import LocaleManager, LocaleNode
+from ..locale_nodes import LocaleNode
+from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

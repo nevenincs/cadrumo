@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#fichero-boe-parity-gate'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:14d542c9947fb1e5f065a68bb6579409be117efeeff28e7df3800c60dbe3a84b'
+body_hash: 'sha256:1fc930442a0c23adb7b5a6fd6a0f3016c273ad41ce373ad60357cc245dda3f0e'
 related:
   - '[[2026-07-01-fichero-boe-parity-gate-adr]]'
-  - '[[2026-07-01-fichero-boe-parity-gate-ledger]]'
-  - '[[2026-07-01-fichero-boe-parity-gate-plan]]'
   - '[[2026-07-01-fichero-boe-parity-gate-research]]'
   - '[[2026-07-02-fichero-boe-parity-gate-audit]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#fichero-boe-parity-gate`.
 ### audit
 
 - `2026-07-02-fichero-boe-parity-gate-audit` - `fichero-boe-parity-gate` audit: `fichero-BOE parity gate execution status`
-
-### exec
-
-- `2026-07-01-fichero-boe-parity-gate-ledger` - `fichero-boe-parity-gate` ledger
-
-### plan
-
-- `2026-07-01-fichero-boe-parity-gate-plan` - `fichero-boe-parity-gate` plan
 
 ### research
 

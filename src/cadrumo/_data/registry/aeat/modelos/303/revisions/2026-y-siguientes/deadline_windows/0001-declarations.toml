@@ -1,14 +1,4 @@
 [[revisions.2026-y-siguientes.deadline_windows]]
-id = "modelo-303-2026-1t"
-filing_year = 2026
-period = "2026 1T"
-period_kind = "quarterly"
-opens_on = 2026-04-01
-closes_on = 2026-04-20
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
-source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
-
-[[revisions.2026-y-siguientes.deadline_windows]]
 id = "modelo-303-2026-2t"
 filing_year = 2026
 period = "2026 2T"
@@ -45,22 +35,6 @@ source_refs = [
 # Monthly deadline windows for SII-enrolled taxpayers (Art. 62.6 RD 1624/1992,
 # Orden HFP/187/2017). The supported filing-year horizon materialises all
 # twelve monthly coordinates; 2024 and 2025 predate that completeness gate.
-[[revisions.2026-y-siguientes.deadline_windows]]
-id = "modelo-303-2026-01-mensual"
-filing_year = 2026
-period = "2026 01"
-period_kind = "monthly"
-opens_on = 2026-02-01
-closes_on = 2026-03-02
-payment_cutoff_on = 2026-02-25
-legal_refs = ["rd-1624-1992:art-71"]
-source_refs = [
-    "boe-modelo-303-2008-form",
-    "aeat-modelo-303-procedure",
-    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
-    "aeat-calendario-contribuyente-2026-domiciliacion",
-]
-
 [[revisions.2026-y-siguientes.deadline_windows]]
 id = "modelo-303-2026-12-mensual"
 filing_year = 2026

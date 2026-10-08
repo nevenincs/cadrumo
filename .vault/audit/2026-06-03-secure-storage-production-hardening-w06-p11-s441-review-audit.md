@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:733b7af0459d2c1ad7cedb463ed01eb99f2d3e830299acb859c0c0c2a00af224'
+modified: '2026-10-03'
+body_hash: 'sha256:4be027a50bdda4a315dcb378ed017023ddf00a12282f892c36545dcd40921cdb'
 related: []
 ---
 
@@ -22,4 +22,4 @@ The focused non-live tests remain real-behavior tests. The review scan found no 
 
 ## S441-002 | INFO | Lint repair did not change behavior
 
-No finding. The current tree contains the docstring argument-description repair in `src/aeat/application/calculations/_iva_wallet_reconciliation.py`, which allowed targeted Ruff to pass on the IVA wallet calculation refactor. The impacted IVA wallet regression file passed with 19 tests, and the broader calc-sheets/export regression batch passed with 49 tests.
+No finding. The current tree contains the docstring argument-description repair in the retired module, which allowed targeted Ruff to pass on the IVA wallet calculation refactor. The impacted IVA wallet regression file passed with 19 tests, and the broader calc-sheets/export regression batch passed with 49 tests.

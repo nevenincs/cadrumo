@@ -37,6 +37,7 @@ from ....core.decimal.constants import ONE, ZERO
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...period import calculation_filing_date
+from ..record_row_membership import ClosedRecordRowSet, resolve_closed_record_rows
 from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_m131 as _m131
 from . import formula_runtime_m100 as _m100
@@ -341,6 +342,14 @@ class _ResolvedCalculationInputs:
     resolved_date_bindings: Mapping[BindingId, date]
     resolved_boolean_bindings: Mapping[BindingId, bool]
     resolved_text_inputs: Mapping[CasillaId, str]
+    record_row_occupancy: Mapping[BindingId, bool]
+
+
+@dataclass(frozen=True, slots=True)
+class _ResolvedDecimalBindingChannels:
+    supplied_bindings: Mapping[BindingId, Decimal]
+    resolved_bindings: Mapping[BindingId, Decimal]
+    resolved_relations: Mapping[RelationId, Decimal]
 
 
 @dataclass(slots=True)
@@ -419,6 +428,7 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
     date_binding_values: Mapping[BindingId, date] | None,
     boolean_binding_values: Mapping[BindingId, bool] | None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...],
 ) -> _ResolvedCalculationInputs:
     """Validate and normalize all external channels before formula traversal."""
     revision = snapshot.revision
@@ -433,28 +443,16 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
         else date(snapshot.filing_year, 12, 31)
     )
     resolved_date_context.setdefault("filing_period", default_filing_date)
-    empty_bindings: dict[BindingId, Decimal] = {}
-    supplied_bindings: Mapping[BindingId, Decimal] = binding_values if binding_values is not None else empty_bindings
-    _reject_non_decimal(supplied_bindings, "binding")
-    resolved_relations = relation_values or {}
-    _reject_non_decimal(resolved_relations, "relation")
-    # Relation-prefill values are keyed by the provider binding id after the
-    # schema cut. Keep the dedicated relation channel for source-resolution
-    # diagnostics, but project its numeric values into the canonical binding
-    # channel before initial casilla assembly and formula traversal.
-    supplied_bindings = _merge_relation_values_into_bindings(supplied_bindings, resolved_relations)
-    resolved_bindings = _binding_values_with_absent_by_design_defaults(
-        revision,
-        supplied_bindings,
-        target_period=snapshot.period,
+    decimal_channels = _resolve_decimal_binding_channels(
+        snapshot,
+        revision=revision,
+        binding_values=binding_values,
+        relation_values=relation_values,
+        unresolved_relation_ids=unresolved_relation_ids,
     )
-    # A relation the source resolution reported unresolved has required source
-    # filings that are missing, so its slot is not structurally blank; a relation
-    # id is its binding's id, so the binding channel must not default it either.
-    for unresolved_id in unresolved_relation_ids:
-        if unresolved_id not in supplied_bindings:
-            resolved_bindings.pop(unresolved_id, None)
-    _reject_non_decimal(resolved_bindings, "binding")
+    supplied_bindings = decimal_channels.supplied_bindings
+    resolved_bindings = decimal_channels.resolved_bindings
+    resolved_relations = decimal_channels.resolved_relations
     resolved_enum_bindings = enum_binding_values or {}
     _reject_non_string(resolved_enum_bindings, "enum_binding")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
@@ -479,6 +477,54 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
         resolved_date_bindings=resolved_date_bindings,
         resolved_boolean_bindings=resolved_boolean_bindings,
         resolved_text_inputs=resolved_text_inputs,
+        record_row_occupancy={
+            binding_id: row.occupied
+            for binding_id, row in resolve_closed_record_rows(
+                snapshot,
+                closed_record_row_sets,
+                supplied_binding_ids=frozenset(supplied_bindings)
+                | frozenset(resolved_enum_bindings)
+                | frozenset(resolved_date_bindings)
+                | frozenset(resolved_boolean_bindings),
+            ).items()
+        },
+    )
+
+
+def _resolve_decimal_binding_channels(
+    snapshot: RegistrySnapshot,
+    *,
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    unresolved_relation_ids: tuple[RelationId, ...],
+) -> _ResolvedDecimalBindingChannels:
+    empty_bindings: dict[BindingId, Decimal] = {}
+    supplied_bindings: Mapping[BindingId, Decimal] = binding_values if binding_values is not None else empty_bindings
+    _reject_non_decimal(supplied_bindings, "binding")
+    resolved_relations = relation_values or {}
+    _reject_non_decimal(resolved_relations, "relation")
+    # Relation-prefill values are keyed by the provider binding id after the
+    # schema cut. Keep the dedicated relation channel for source-resolution
+    # diagnostics, but project its numeric values into the canonical binding
+    # channel before initial casilla assembly and formula traversal.
+    supplied_bindings = _merge_relation_values_into_bindings(supplied_bindings, resolved_relations)
+    resolved_bindings = _binding_values_with_absent_by_design_defaults(
+        revision,
+        supplied_bindings,
+        target_period=snapshot.period,
+    )
+    # A relation the source resolution reported unresolved has required source
+    # filings that are missing, so its slot is not structurally blank; a relation
+    # id is its binding's id, so the binding channel must not default it either.
+    for unresolved_id in unresolved_relation_ids:
+        if unresolved_id not in supplied_bindings:
+            resolved_bindings.pop(unresolved_id, None)
+    _reject_non_decimal(resolved_bindings, "binding")
+    return _ResolvedDecimalBindingChannels(
+        supplied_bindings=supplied_bindings,
+        resolved_bindings=resolved_bindings,
+        resolved_relations=resolved_relations,
     )
 
 
@@ -558,6 +604,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     date_binding_values: Mapping[BindingId, date] | None = None,
     boolean_binding_values: Mapping[BindingId, bool] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas for a registry snapshot.
 
@@ -624,6 +671,9 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             the point of use.
         text_inputs: Optional string-valued operator inputs keyed by casilla
             id; consumed by text-routed ops.
+        closed_record_row_sets: Admitted source evidence for complete fixed
+            record tables. Only its positively unused rows can make the
+            record_row_unused predicate true; absent evidence remains unknown.
     """
     resolved = _resolve_calculation_inputs(
         snapshot,
@@ -637,6 +687,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         date_binding_values=date_binding_values,
         boolean_binding_values=boolean_binding_values,
         text_inputs=text_inputs,
+        closed_record_row_sets=closed_record_row_sets,
     )
     state = _prepare_calculation_state(snapshot, resolved)
     _evaluate_formulas(snapshot, resolved, state)
@@ -686,6 +737,7 @@ def _evaluate_formula_target(
             filing_year=snapshot.filing_year,
             text_values=state.resolved_text_inputs,
             text_casilla_ids=state.text_casilla_ids,
+            record_row_occupancy=resolved.record_row_occupancy,
         )
     except _UnresolvedFormulaOutcomeError as exc:
         state.unresolved_casilla_ids.add(target)
@@ -858,6 +910,7 @@ def evaluate_expression(
     filing_year: int = 0,
     text_values: Mapping[CasillaId, str] | None = None,
     text_casilla_ids: frozenset[CasillaId] = frozenset(),
+    record_row_occupancy: Mapping[BindingId, bool] | None = None,
 ) -> Decimal:
     """Build the shared :class:`EvalContext` for one formula tree and evaluate it.
 
@@ -891,6 +944,7 @@ def evaluate_expression(
         filing_year=filing_year,
         text_values=resolved_text_values,
         text_casilla_ids=text_casilla_ids,
+        record_row_occupancy=record_row_occupancy or {},
     )
     return evaluate_with_context(expression, ctx)
 
@@ -930,6 +984,7 @@ class EvalContext:
     #: fall back to, so an operand reader must consult this set rather than infer
     #: text-ness from the value it happens to find.
     text_casilla_ids: frozenset[CasillaId] = frozenset()
+    record_row_occupancy: Mapping[BindingId, bool] = field(default_factory=dict[BindingId, bool], repr=False)
 
 
 def evaluate_with_context(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
@@ -1141,6 +1196,67 @@ def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: 
     return result
 
 
+def _evaluate_record_row_unused(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
+    """Return true only for a positively unused fixed row, never for a blank.
+
+    A supplied value proves occupation even without a complete source set.
+    Without that value or membership evidence the predicate stays unresolved.
+    Missing fields in an occupied row are still checked by its chosen branch.
+    """
+    binding_id = expression.args[0].binding
+    if binding_id is None:
+        raise RegistryValidationError("record_row_unused requires one binding leaf")
+    supplied = (
+        binding_id in ctx.binding_values
+        or binding_id in ctx.date_binding_values
+        or binding_id in ctx.boolean_binding_values
+        or bool(ctx.enum_binding_values.get(binding_id))
+    )
+    occupied = ctx.record_row_occupancy.get(binding_id)
+    if occupied is False:
+        if supplied:
+            raise RegistryValidationError("an unused record row contains a supplied value")
+        result = ONE
+    elif occupied is True or supplied:
+        result = ZERO
+    else:
+        raise _UnresolvedFormulaDependencyError((binding_id,))
+    ctx.operand_refs.append(binding_id)
+    ctx.operand_values.append(result)
+    return result
+
+
+def _evaluate_text_equal(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
+    """Compare two explicit text channels without numeric or case coercion."""
+    texts: list[str] = []
+    for arg in expression.args:
+        if arg.binding is not None:
+            key = arg.binding
+            if key in ctx.unresolved_binding_ids:
+                raise _UnresolvedFormulaDependencyError((key,))
+            if key in ctx.binding_values or key in ctx.boolean_binding_values or key in ctx.date_binding_values:
+                raise RegistryValidationError("text_equal operand has a non-text or ambiguous channel")
+            value = ctx.enum_binding_values.get(key)
+            ctx.operand_refs.append(key)
+        elif arg.casilla_id is not None:
+            if arg.casilla_id in ctx.unresolved_casilla_ids:
+                raise _UnresolvedFormulaDependencyError((arg.casilla_id,))
+            if arg.casilla_id not in ctx.text_casilla_ids or arg.casilla_id in ctx.values:
+                raise RegistryValidationError("text_equal operand is not a text casilla")
+            value = ctx.text_values.get(arg.casilla_id)
+            ctx.operand_casilla_refs.append(arg.casilla_id)
+        elif arg.text_literal is not None:
+            value = arg.text_literal
+        else:
+            raise RegistryValidationError("text_equal requires binding, casilla, or text_literal leaves")
+        if not isinstance(value, str) or not value:
+            raise RegistryValidationError("text_equal requires populated text operands")
+        texts.append(value)
+    result = ONE if texts[0] == texts[1] else ZERO
+    ctx.operand_values.append(result)
+    return result
+
+
 def _evaluate_if_then_else(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     """Short-circuit: evaluate the predicate first, then only the selected branch.
 
@@ -1153,6 +1269,16 @@ def _evaluate_if_then_else(expression: FormulaExpression, ctx: EvalContext) -> D
     predicate_value = evaluate_with_context(expression.args[0], ctx)
     selected_branch = expression.args[1] if predicate_value != ZERO else expression.args[2]
     return evaluate_with_context(selected_branch, ctx)
+
+
+def _evaluate_require_condition(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
+    """Require a true predicate before reading the value's dependencies."""
+    if len(expression.args) != 2:
+        raise RegistryValidationError("formula op 'require_condition' expects 2 args")
+    predicate = evaluate_with_context(expression.args[0], ctx)
+    if not predicate.is_finite() or predicate == ZERO:
+        raise RegistryValidationError("formula precondition was not satisfied")
+    return evaluate_with_context(expression.args[1], ctx)
 
 
 def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
@@ -1237,6 +1363,8 @@ def _reject_date_binding_leaf(binding_id: BindingId) -> None:
 
 
 def _evaluate_leaf(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
+    if expression.text_literal is not None:
+        raise RegistryValidationError("text_literal may only be an operand of text_equal")
     if expression.literal is not None:
         return expression.literal
     if expression.casilla_id is not None:
@@ -1263,6 +1391,9 @@ SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
     "lookup_parameter_by_entity_type": _evaluate_lookup_parameter_by_entity_type,
     "lookup_bracket_by_entity_type": _evaluate_lookup_bracket_by_entity_type,
     "if_then_else": _evaluate_if_then_else,
+    "require_condition": _evaluate_require_condition,
+    "text_equal": _evaluate_text_equal,
+    "record_row_unused": _evaluate_record_row_unused,
     "age_at_year_end": _evaluate_age_at_year_end,
     "m131_resolve_modulos_previo": _m131.evaluate_m131_resolve_modulos_previo,
     "m131_resolve_modulos_minoracion_empleo": _m131.evaluate_m131_resolve_modulos_minoracion_empleo,

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:e34d79a058eaba1aa19e43567d2e4f428dbeb996fee28e66a566dcfb0bdef2a7'
+body_hash: 'sha256:933ed777ca533e6e5234e52bd9f9869dd7553bb5724883de14bee8562120c6f3'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-closure-statement-reference]]'
@@ -231,8 +231,8 @@ into a call, or lies inert.
 It discriminates in principle. It fails in practice, and on a different control:
 
 - **One member of 27 reports `WRITES`** — `SECRETS`.
-- **Eleven report `NO-READ`**, including `LOGS`, `RUNS`, `TOKENS`,
-  `LLM_CACHE`, `MCP_TELEMETRY`. Those are demonstrably written: the write-site
+- **Ten report `NO-READ`**, including `LOGS`, `RUNS`, `TOKENS`,
+  `LLM_CACHE`. Those are demonstrably written: the write-site
   census attributes real writes to `runs_dir` and `log_file`, and
   `observability/_store.py` writes `runs_dir / run_id` in as many words.
 - The remaining fifteen report `ESCAPES-ONLY`, almost all into `Path(...)` or a

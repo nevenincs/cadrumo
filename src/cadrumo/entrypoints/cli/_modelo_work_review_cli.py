@@ -6,16 +6,15 @@ import json
 
 import typer
 
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...application.modelo.work_review import build_modelo_work_review
+from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.external_constants import OutputLanguage
-from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
+from ...domain.modelos.codes import ModeloCode
 from ._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
 from .common import activate_subcommand_output_language, emit_envelope
+from .registered_operation_errors import submitted_operation_error
+from .runtime_modelo_metadata import read_modelo_work_unit
+from .runtime_modelo_work_review import read_modelo_work_review
 
 
 def _review_lines(result: WorkReviewResult) -> list[str]:
@@ -70,28 +69,51 @@ def work_review(
 ) -> None:
     """Emit the canonical application review for one persisted work target."""
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    unit = resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
-    )
-    work_repository = WorkUnitCatalogueRepository()
-    calculation_repository = CalculationRevisionCatalogueRepository()
-    with bundled_indexed_authority().operation() as operation:
-        review = build_modelo_work_review(
-            unit.bucket_id,
-            unit.modelo,
-            unit.filing_year,
-            unit.period,
-            operation=operation,
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            verification_repository=VerificationReportCatalogueRepository(),
-        )
-    result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
-    emit_envelope(
+    unit = read_modelo_work_unit(
         ctx,
-        command="modelo.work.review",
-        result=result,
-        lines=_review_lines(result),
-        notices=verification_findings_notices(review.findings),
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
     )
+    reviewed = read_modelo_work_review(ctx, unit=unit)
+    review = reviewed.review
+    try:
+        result = WorkReviewResult(
+            review=WorkReviewPayload(
+                bucket_id=review.bucket_id,
+                modelo=ModeloCode(review.modelo),
+                filing_year=review.filing_year,
+                period=review.period.to_period(),
+                registry_revision_id=review.registry_revision_id,
+                work_unit_id=review.work_unit_id,
+                calculation_revision_id=review.calculation_revision_id,
+                lifecycle_state=review.lifecycle_state,
+                verification_outcome=review.verification_outcome,
+                progress=review.progress.to_progress(),
+                casilla_count=review.casilla_count,
+                findings=tuple(item.to_finding() for item in review.findings),
+                blockers=tuple(item.to_blocker() for item in review.blockers),
+                row_source_fingerprint_count=review.row_source_fingerprint_count,
+            )
+        )
+        lines = _review_lines(result)
+        notices = verification_findings_notices(result.review.findings)
+        emit_envelope(
+            ctx,
+            command="modelo.work.review",
+            result=result,
+            lines=lines,
+            notices=notices,
+        )
+    except Exception:
+        receipt = reviewed.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None

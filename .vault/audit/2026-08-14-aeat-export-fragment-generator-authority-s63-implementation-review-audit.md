@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:45dbb6c4a3d70f2e15377ade14498ad45158e33c265828321b2a257b707f8165'
+body_hash: 'sha256:9cf13bb32cee14c32d690afb35165c31a84aa105755f0aac94ba5e8932160c59'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
 ---
@@ -24,7 +24,7 @@ No remaining findings. The four prior findings are closed:
 3. Applicable projection requires one immutable calculation result before selecting any endpoint; the stale declared-quantity fixture now builds its real S76 result.
 4. The five calculated fact members select only their matching immutable result; all other fact declarations correctly remain immutable row evidence. The amended ADR/TOML owner census confirms no annual-Orden fact partition exists; annual values remain on the module axis.
 
-## Verification
+### Verification
 
 - Core projection-reference tests: 28 passed.
 - Filing S63 tests: 6 passed.
@@ -32,6 +32,6 @@ No remaining findings. The four prior findings are closed:
 - S63 path-scoped Ruff: passed.
 - Diff whitespace check: passed.
 
-## Conclusion
+## Recommendations
 
-Approved. The S63 implementation conforms to the reviewed ADR amendment within this review scope.
+No further changes are recommended within S63’s reviewed scope; the implementation conforms to the reviewed ADR amendment.

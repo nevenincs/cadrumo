@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s49-contextual-tests'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-10-03'
 body_hash: 'sha256:aa363df8a8e2690f701b46dc7a5e947f3f23619ec38c6b0bbbb3c64d65ac7c79'
 related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
 ---
 

@@ -25,7 +25,8 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedGovernedFact,
     resolve_governed_fact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from dev._paths import REPO_ROOT
 
@@ -117,63 +118,84 @@ def _reaches(start: str, target: str, edges: Mapping[str, tuple[str, ...]]) -> b
 
 
 def _fact_findings(provider_id: str, fact: GovernedFact) -> list[FactQualityFinding]:
-    findings: list[FactQualityFinding] = []
     edges = {variant.variant_id: variant.precedence_over for variant in fact.variants}
+    findings: list[FactQualityFinding] = []
     for variant in fact.variants:
-        if _reaches(variant.variant_id, variant.variant_id, edges):
-            findings.append(
-                FactQualityFinding(
-                    FactQualityKind.INVALID_PRECEDENCE,
-                    provider_id,
-                    fact.fact_id,
-                    variant.variant_id,
-                    "precedence graph contains a cycle",
-                )
+        findings.extend(_variant_self_findings(provider_id, fact, variant, edges))
+    findings.extend(_variant_pair_findings(provider_id, fact, edges))
+    return findings
+
+
+def _variant_self_findings(
+    provider_id: str,
+    fact: GovernedFact,
+    variant: GovernedFactVariant,
+    edges: Mapping[str, tuple[str, ...]],
+) -> list[FactQualityFinding]:
+    findings: list[FactQualityFinding] = []
+    if _reaches(variant.variant_id, variant.variant_id, edges):
+        findings.append(
+            FactQualityFinding(
+                FactQualityKind.INVALID_PRECEDENCE,
+                provider_id,
+                fact.fact_id,
+                variant.variant_id,
+                "precedence graph contains a cycle",
             )
-        cited = {citation.source_ref for citation in variant.source_citations}
-        source_lane_declared = bool(variant.source_refs or variant.source_citations)
-        source_lane_complete = bool(variant.source_refs) and cited == set(variant.source_refs)
-        legal_lane_complete = bool(variant.legal_refs)
-        if (source_lane_declared and not source_lane_complete) or (
-            not source_lane_declared and not legal_lane_complete
-        ):
-            findings.append(
-                FactQualityFinding(
-                    FactQualityKind.MISSING_PROVENANCE,
-                    provider_id,
-                    fact.fact_id,
-                    variant.variant_id,
-                    "declare a legal_refs lane or a complete source_refs/source_citations lane",
-                )
+        )
+    if _provenance_is_missing(variant):
+        findings.append(
+            FactQualityFinding(
+                FactQualityKind.MISSING_PROVENANCE,
+                provider_id,
+                fact.fact_id,
+                variant.variant_id,
+                "declare a legal_refs lane or a complete source_refs/source_citations lane",
             )
+        )
+    return findings
+
+
+def _provenance_is_missing(variant: GovernedFactVariant) -> bool:
+    cited = {citation.source_ref for citation in variant.source_citations}
+    source_lane_declared = bool(variant.source_refs or variant.source_citations)
+    source_lane_complete = bool(variant.source_refs) and cited == set(variant.source_refs)
+    return (source_lane_declared and not source_lane_complete) or (not source_lane_declared and not variant.legal_refs)
+
+
+def _variant_pair_findings(
+    provider_id: str,
+    fact: GovernedFact,
+    edges: Mapping[str, tuple[str, ...]],
+) -> list[FactQualityFinding]:
+    findings: list[FactQualityFinding] = []
     for index, left in enumerate(fact.variants):
         for right in fact.variants[index + 1 :]:
-            overlaps = _overlap(fact, left, right)
-            ordered = _reaches(left.variant_id, right.variant_id, edges) or _reaches(
-                right.variant_id, left.variant_id, edges
-            )
-            directly_ordered = right.variant_id in edges[left.variant_id] or left.variant_id in edges[right.variant_id]
-            if overlaps and not ordered:
-                findings.append(
-                    FactQualityFinding(
-                        FactQualityKind.TEMPORAL_AMBIGUITY,
-                        provider_id,
-                        fact.fact_id,
-                        left.variant_id,
-                        f"overlaps {right.variant_id!r} without explicit precedence",
-                    )
-                )
-            elif directly_ordered and not overlaps:
-                findings.append(
-                    FactQualityFinding(
-                        FactQualityKind.INVALID_PRECEDENCE,
-                        provider_id,
-                        fact.fact_id,
-                        left.variant_id,
-                        f"declares precedence with non-overlapping variant {right.variant_id!r}",
-                    )
-                )
+            finding = _variant_pair_finding(provider_id, fact, left, right, edges)
+            if finding is not None:
+                findings.append(finding)
     return findings
+
+
+def _variant_pair_finding(
+    provider_id: str,
+    fact: GovernedFact,
+    left: GovernedFactVariant,
+    right: GovernedFactVariant,
+    edges: Mapping[str, tuple[str, ...]],
+) -> FactQualityFinding | None:
+    overlaps = _overlap(fact, left, right)
+    ordered = _reaches(left.variant_id, right.variant_id, edges) or _reaches(right.variant_id, left.variant_id, edges)
+    directly_ordered = right.variant_id in edges[left.variant_id] or left.variant_id in edges[right.variant_id]
+    if overlaps and not ordered:
+        kind = FactQualityKind.TEMPORAL_AMBIGUITY
+        detail = f"overlaps {right.variant_id!r} without explicit precedence"
+    elif directly_ordered and not overlaps:
+        kind = FactQualityKind.INVALID_PRECEDENCE
+        detail = f"declares precedence with non-overlapping variant {right.variant_id!r}"
+    else:
+        return None
+    return FactQualityFinding(kind, provider_id, fact.fact_id, left.variant_id, detail)
 
 
 def facts_catalogue_findings(
@@ -184,62 +206,112 @@ def facts_catalogue_findings(
     """Return every provider, identity, precedence and provenance defect."""
     frozen = tuple(registrations)
     findings: list[FactQualityFinding] = []
-    try:
-        validate_fact_provider_registrations(frozen)
-    except RegistryValidationError as error:
-        findings.append(FactQualityFinding(FactQualityKind.INVALID_PROVIDER, "", detail=str(error)))
+    findings.extend(_provider_registration_findings(frozen))
+    findings.extend(_unowned_directory_findings(frozen, governed_directories))
+    findings.extend(_provider_result_findings(frozen, facts_by_provider))
+    findings.extend(_catalogue_identity_findings(facts_by_provider))
+    return tuple(sorted(set(findings)))
 
+
+def _provider_registration_findings(registrations: tuple[FactProviderRegistration, ...]) -> list[FactQualityFinding]:
+    try:
+        validate_fact_provider_registrations(registrations)
+    except RegistryValidationError as error:
+        return [FactQualityFinding(FactQualityKind.INVALID_PROVIDER, "", detail=str(error))]
+    return []
+
+
+def _unowned_directory_findings(
+    registrations: tuple[FactProviderRegistration, ...],
+    governed_directories: Iterable[str],
+) -> list[FactQualityFinding]:
     ownership = {
-        PurePosixPath(directory).as_posix(): registration.provider_id
-        for registration in frozen
+        PurePosixPath(directory).as_posix()
+        for registration in registrations
         for directory in registration.owned_directories
     }
-    for directory in sorted(set(governed_directories)):
-        if PurePosixPath(directory).as_posix() not in ownership:
-            findings.append(FactQualityFinding(FactQualityKind.UNOWNED_DIRECTORY, "", detail=directory))
+    return [
+        FactQualityFinding(FactQualityKind.UNOWNED_DIRECTORY, "", detail=directory)
+        for directory in sorted(set(governed_directories))
+        if PurePosixPath(directory).as_posix() not in ownership
+    ]
 
+
+def _provider_result_findings(
+    registrations: tuple[FactProviderRegistration, ...],
+    facts_by_provider: Mapping[str, tuple[GovernedFact, ...]],
+) -> list[FactQualityFinding]:
+    registered_ids = {registration.provider_id for registration in registrations}
+    missing = [
+        FactQualityFinding(
+            FactQualityKind.INVALID_PROVIDER,
+            provider_id,
+            detail="registered provider has no compiled facts result",
+        )
+        for provider_id in sorted(registered_ids - set(facts_by_provider))
+    ]
+    extra = [
+        FactQualityFinding(
+            FactQualityKind.INVALID_PROVIDER,
+            provider_id,
+            detail="compiled facts have no provider",
+        )
+        for provider_id in sorted(set(facts_by_provider) - registered_ids)
+    ]
+    return [*missing, *extra]
+
+
+def _catalogue_identity_findings(
+    facts_by_provider: Mapping[str, tuple[GovernedFact, ...]],
+) -> list[FactQualityFinding]:
+    findings: list[FactQualityFinding] = []
     fact_owners: dict[str, str] = {}
     variant_owners: dict[str, tuple[str, str]] = {}
-    registered_ids = {registration.provider_id for registration in frozen}
-    for provider_id in sorted(registered_ids - set(facts_by_provider)):
+    for provider_id in sorted(facts_by_provider):
+        for fact in facts_by_provider[provider_id]:
+            _append_fact_identity_findings(findings, fact_owners, variant_owners, provider_id, fact)
+            findings.extend(_fact_findings(provider_id, fact))
+    return findings
+
+
+def _append_fact_identity_findings(
+    findings: list[FactQualityFinding],
+    fact_owners: dict[str, str],
+    variant_owners: dict[str, tuple[str, str]],
+    provider_id: str,
+    fact: GovernedFact,
+) -> None:
+    previous = fact_owners.get(fact.fact_id)
+    if previous:
+        findings.append(
+            FactQualityFinding(FactQualityKind.DUPLICATE_FACT_ID, provider_id, fact.fact_id, detail=previous)
+        )
+    else:
+        fact_owners[fact.fact_id] = provider_id
+    for variant in fact.variants:
+        _append_variant_identity_finding(findings, variant_owners, provider_id, fact, variant)
+
+
+def _append_variant_identity_finding(
+    findings: list[FactQualityFinding],
+    variant_owners: dict[str, tuple[str, str]],
+    provider_id: str,
+    fact: GovernedFact,
+    variant: GovernedFactVariant,
+) -> None:
+    previous = variant_owners.get(variant.variant_id)
+    if previous:
         findings.append(
             FactQualityFinding(
-                FactQualityKind.INVALID_PROVIDER,
+                FactQualityKind.DUPLICATE_VARIANT_ID,
                 provider_id,
-                detail="registered provider has no compiled facts result",
+                fact.fact_id,
+                variant.variant_id,
+                f"already owned by {previous[0]}/{previous[1]}",
             )
         )
-    for provider_id in sorted(facts_by_provider):
-        if provider_id not in registered_ids:
-            findings.append(
-                FactQualityFinding(
-                    FactQualityKind.INVALID_PROVIDER,
-                    provider_id,
-                    detail="compiled facts have no provider",
-                )
-            )
-        for fact in facts_by_provider[provider_id]:
-            if previous := fact_owners.get(fact.fact_id):
-                findings.append(
-                    FactQualityFinding(FactQualityKind.DUPLICATE_FACT_ID, provider_id, fact.fact_id, detail=previous)
-                )
-            else:
-                fact_owners[fact.fact_id] = provider_id
-            for variant in fact.variants:
-                if previous_variant := variant_owners.get(variant.variant_id):
-                    findings.append(
-                        FactQualityFinding(
-                            FactQualityKind.DUPLICATE_VARIANT_ID,
-                            provider_id,
-                            fact.fact_id,
-                            variant.variant_id,
-                            f"already owned by {previous_variant[0]}/{previous_variant[1]}",
-                        )
-                    )
-                else:
-                    variant_owners[variant.variant_id] = (provider_id, fact.fact_id)
-            findings.extend(_fact_findings(provider_id, fact))
-    return tuple(sorted(set(findings)))
+    else:
+        variant_owners[variant.variant_id] = (provider_id, fact.fact_id)
 
 
 def resolved_fact_provenance_findings(results: Iterable[ResolvedGovernedFact]) -> tuple[FactQualityFinding, ...]:
@@ -304,10 +376,22 @@ def migration_retirement_findings(
     landed, and the ledger entry now describes nothing. A hold whose entry is
     absent is simply retired.
     """
+    tables = _remaining_tables(iva_ledger, "remaining_structured_tables", "data_path")
+    findings = _table_hold_findings(tables, repository_root)
+    findings.extend(_technical_vocabulary_findings(tables))
+    findings.extend(_unowned_table_findings(tables))
+    findings.extend(_lane_hold_findings(iva_ledger))
+    return tuple(sorted(set(findings)))
+
+
+def _remaining_tables(iva_ledger: Mapping[str, object], key: str, id_key: str) -> dict[str, Mapping[str, object]]:
+    raw_entries = iva_ledger.get(key)
+    entries = raw_entries if isinstance(raw_entries, (list, tuple)) else ()
+    return {str(entry.get(id_key, "")): entry for entry in entries if isinstance(entry, Mapping)}
+
+
+def _table_hold_findings(tables: dict[str, Mapping[str, object]], repository_root: Path) -> list[FactQualityFinding]:
     findings: list[FactQualityFinding] = []
-    remaining_tables = iva_ledger.get("remaining_structured_tables")
-    table_entries = remaining_tables if isinstance(remaining_tables, (list, tuple)) else ()
-    tables = {str(table.get("data_path", "")): table for table in table_entries if isinstance(table, Mapping)}
     for data_path in sorted(_TABLE_HOLDS):
         table = tables.pop(data_path, None)
         if table is None:
@@ -321,13 +405,7 @@ def migration_retirement_findings(
                 )
             )
             continue
-        complete = (
-            table.get("classification") == "needs_typed_schema_and_fact_migration"
-            and table.get("decision") == "retain_until_lossless_replacement"
-            and bool(table.get("direct_readers"))
-            and bool(table.get("safe_next_scope"))
-        )
-        if not complete:
+        if not _table_hold_is_complete(table):
             findings.append(
                 FactQualityFinding(
                     FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
@@ -335,34 +413,51 @@ def migration_retirement_findings(
                     detail=f"hold {data_path!r} lacks its lossless-replacement contract",
                 )
             )
-    technical = tables.pop(_TECHNICAL_IVA_VOCABULARY, None)
-    if technical is None or technical.get("classification") != "technical_non_legal_canonical_vocabulary":
-        findings.append(
-            FactQualityFinding(
-                FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
-                "iva-retirement",
-                detail="country_names.toml must remain the explicitly technical IVA vocabulary",
-            )
-        )
-    for data_path in sorted(tables):
-        findings.append(
-            FactQualityFinding(
-                FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
-                "iva-retirement",
-                detail=f"unowned remaining IVA table {data_path!r}",
-            )
-        )
+    return findings
 
-    remaining_lanes = iva_ledger.get("lanes")
-    lane_entries = remaining_lanes if isinstance(remaining_lanes, (list, tuple)) else ()
-    lanes = {
-        str(lane.get("lane_id", "")): lane for lane in lane_entries if isinstance(lane, Mapping) and "status" in lane
-    }
+
+def _table_hold_is_complete(table: Mapping[str, object]) -> bool:
+    return (
+        table.get("classification") == "needs_typed_schema_and_fact_migration"
+        and table.get("decision") == "retain_until_lossless_replacement"
+        and bool(table.get("direct_readers"))
+        and bool(table.get("safe_next_scope"))
+    )
+
+
+def _technical_vocabulary_findings(tables: dict[str, Mapping[str, object]]) -> list[FactQualityFinding]:
+    technical = tables.pop(_TECHNICAL_IVA_VOCABULARY, None)
+    if technical is not None and technical.get("classification") == "technical_non_legal_canonical_vocabulary":
+        return []
+    return [
+        FactQualityFinding(
+            FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
+            "iva-retirement",
+            detail="country_names.toml must remain the explicitly technical IVA vocabulary",
+        )
+    ]
+
+
+def _unowned_table_findings(tables: Mapping[str, Mapping[str, object]]) -> list[FactQualityFinding]:
+    return [
+        FactQualityFinding(
+            FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
+            "iva-retirement",
+            detail=f"unowned remaining IVA table {data_path!r}",
+        )
+        for data_path in sorted(tables)
+    ]
+
+
+def _lane_hold_findings(iva_ledger: Mapping[str, object]) -> list[FactQualityFinding]:
+    lanes = _remaining_tables(iva_ledger, "lanes", "lane_id")
+    lanes = {lane_id: lane for lane_id, lane in lanes.items() if "status" in lane}
+    findings: list[FactQualityFinding] = []
     for lane_id in sorted(_LANE_HOLDS):
         lane = lanes.pop(lane_id, None)
-        if lane is None:
-            continue
-        if not str(lane.get("status", "")).startswith("blocked_pending") or not lane.get("blocker"):
+        if lane is not None and (
+            not str(lane.get("status", "")).startswith("blocked_pending") or not lane.get("blocker")
+        ):
             findings.append(
                 FactQualityFinding(
                     FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
@@ -378,7 +473,7 @@ def migration_retirement_findings(
                 detail=f"unowned pending retirement lane {lane_id!r}",
             )
         )
-    return tuple(sorted(set(findings)))
+    return findings
 
 
 def live_facts_catalogue_findings(
@@ -387,40 +482,10 @@ def live_facts_catalogue_findings(
 ) -> tuple[FactQualityFinding, ...]:
     """Compile every live registered provider and evaluate its owned directories."""
     frozen = tuple(registrations)
-    compiled: dict[str, tuple[GovernedFact, ...]] = {}
-    compile_findings: list[FactQualityFinding] = []
-    for registration in frozen:
-        try:
-            compiled[registration.provider_id] = registration.compile(registry_root)
-        except Exception as error:
-            compile_findings.append(
-                FactQualityFinding(
-                    FactQualityKind.INVALID_PROVIDER,
-                    registration.provider_id,
-                    detail=f"compile failed: {type(error).__name__}: {error}",
-                )
-            )
+    compiled, compile_findings = _compile_live_providers(frozen, registry_root)
     governed_directories = tuple(directory for registration in frozen for directory in registration.owned_directories)
     support = load_shared_catalogues(registry_root).require_supported_filing_years()
-    if any(registration.project_modelos is not None for registration in frozen):
-        try:
-            modelos, _catalogues = load_registry_tree(registry_root)
-            provenance_facts = compile_registered_fact_providers(registry_root, modelos=modelos).facts.values()
-            resolved_findings = resolved_fact_provenance_findings(
-                resolved for resolved in _resolved_variants(provenance_facts, support)
-            )
-        except Exception as error:
-            resolved_findings = (
-                FactQualityFinding(
-                    FactQualityKind.INVALID_PROVIDER,
-                    "facts-provenance-resolution",
-                    detail=f"compiled projection provenance failed: {type(error).__name__}: {error}",
-                ),
-            )
-    else:
-        resolved_findings = resolved_fact_provenance_findings(
-            resolved for facts in compiled.values() for resolved in _resolved_variants(facts, support)
-        )
+    resolved_findings = _resolved_provenance_findings(frozen, registry_root, compiled, support)
     return tuple(
         sorted(
             {
@@ -452,3 +517,46 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def _compile_live_providers(
+    registrations: tuple[FactProviderRegistration, ...], registry_root: Path
+) -> tuple[dict[str, tuple[GovernedFact, ...]], list[FactQualityFinding]]:
+    compiled: dict[str, tuple[GovernedFact, ...]] = {}
+    failures: list[FactQualityFinding] = []
+    for registration in registrations:
+        try:
+            compiled[registration.provider_id] = registration.compile(registry_root)
+        except Exception as error:
+            failures.append(
+                FactQualityFinding(
+                    FactQualityKind.INVALID_PROVIDER,
+                    registration.provider_id,
+                    detail=f"compile failed: {type(error).__name__}: {error}",
+                )
+            )
+    return compiled, failures
+
+
+def _resolved_provenance_findings(
+    registrations: tuple[FactProviderRegistration, ...],
+    registry_root: Path,
+    compiled: Mapping[str, tuple[GovernedFact, ...]],
+    support: SupportedFilingYearsCatalogue,
+) -> tuple[FactQualityFinding, ...]:
+    if not any(registration.project_modelos is not None for registration in registrations):
+        return resolved_fact_provenance_findings(
+            resolved for facts in compiled.values() for resolved in _resolved_variants(facts, support)
+        )
+    try:
+        modelos, _catalogues = load_registry_tree(registry_root)
+        provenance_facts = compile_registered_fact_providers(registry_root, modelos=modelos).facts.values()
+        return resolved_fact_provenance_findings(resolved for resolved in _resolved_variants(provenance_facts, support))
+    except Exception as error:
+        return (
+            FactQualityFinding(
+                FactQualityKind.INVALID_PROVIDER,
+                "facts-provenance-resolution",
+                detail=f"compiled projection provenance failed: {type(error).__name__}: {error}",
+            ),
+        )

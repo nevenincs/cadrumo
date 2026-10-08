@@ -4,32 +4,26 @@ tags:
   - '#index'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-18'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:85d9138e19e1b3981763899b20c6048ad54862b8f9990557141f436b197bdbf8'
+body_hash: 'sha256:59542eeabccfe9c701eb86aebb9f2b0a7e836fcc7e681810a18cac3341225f00'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-sub-year-epoch-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr]]'
-  - '[[2026-08-08-aeat-design-relayout-boundary-ledger]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
-  - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
   - '[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]'
   - '[[2026-08-13-aeat-design-relayout-boundary-audit]]'
   - '[[2026-08-13-aeat-design-relayout-boundary-blocked-waves-carry-forward-audit]]'
   - '[[2026-08-14-aeat-design-relayout-boundary-modelo-200-verification-reconciliation-audit]]'
   - '[[2026-08-14-aeat-design-relayout-boundary-row-disposition-carry-forward-audit]]'
   - '[[2026-08-18-aeat-design-relayout-boundary-audit]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W03-P06-summary]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-ledger]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-plan]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-research]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-m200-qualified-identity-admission-reference]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-w02-p03-source-rebind-review-audit]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-w02-p04-identity-review-audit]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-w03-p05-legal-review-audit]]'
-  - '[[2026-09-03-aeat-design-relayout-boundary-w04-p07-qualified-export-audit]]'
 ---
 
 # `aeat-design-relayout-boundary` feature index
@@ -55,18 +49,6 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-09-03-aeat-design-relayout-boundary-w02-p03-source-rebind-review-audit` - `modelo-200-semantic-crosswalk` audit: `W02.P03 source-rebind review`
 - `2026-09-03-aeat-design-relayout-boundary-w02-p04-identity-review-audit` - `modelo-200-semantic-crosswalk` audit: `W02 P04 identity review`
 - `2026-09-03-aeat-design-relayout-boundary-w03-p05-legal-review-audit` - `aeat-design-relayout-boundary` audit: `w03 p05 legal review`
-- `2026-09-03-aeat-design-relayout-boundary-w04-p07-qualified-export-audit` - `aeat-design-relayout-boundary` audit: `W04 P07 qualified identity and export-reference boundary review`
-
-### exec
-
-- `2026-08-08-aeat-design-relayout-boundary-ledger` - `aeat-design-relayout-boundary` ledger
-- `2026-09-02-aeat-design-relayout-boundary-ledger` - `aeat-design-relayout-boundary` ledger
-- `2026-09-02-aeat-design-relayout-boundary-W03-P06-summary` - `aeat-design-relayout-boundary` `W03.P06` summary
-
-### plan
-
-- `2026-08-08-aeat-design-relayout-boundary-plan` - `aeat-design-relayout-boundary` plan
-- `2026-09-02-aeat-design-relayout-boundary-plan` - `modelo-200-semantic-crosswalk` plan
 
 ### reference
 

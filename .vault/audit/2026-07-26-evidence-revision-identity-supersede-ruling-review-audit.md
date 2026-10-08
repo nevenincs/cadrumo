@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#evidence-revision-identity'
 date: '2026-07-26'
-modified: '2026-07-26'
-body_hash: 'sha256:212151aa7029c8503b993eee24103e91ee657b85783f253246b4c56b47d0ebb1'
+modified: '2026-10-03'
+body_hash: 'sha256:1f1d70834db39b47e72bdaecc02a7655cd8e732fe1fd57b704ff82bac7580152'
 related:
   - "[[2026-07-24-evidence-revision-identity-adr]]"
   - "[[2026-07-26-evidence-revision-identity-adr]]"
@@ -38,7 +38,7 @@ negative claim rests on it.
 
 The finding is correct, verified from the schema outward rather than by
 re-running either prior investigation. `derive_calculation_revision_id`
-(`src/cadrumo/domain/modelos/_calculation_revision.py`) takes exactly thirteen
+ takes exactly thirteen
 parameters; `ledger_filing_snapshot` and `ledger_filing_evidence` are not among
 them, and the field comments on `CalculationRevision` state that exclusion as
 deliberate, three times, in matching words. The model validator

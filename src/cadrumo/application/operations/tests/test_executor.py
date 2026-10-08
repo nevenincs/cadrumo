@@ -16,12 +16,6 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEffect
 from ..capabilities import OperationOwnedResource
 from ..events import OperationLogSeverity
-from ..financial_operand import (
-    OperationTransientFinancialOperandAccess,
-    OperationTransientFinancialOperandDeclaration,
-    OperationTransientFinancialOperandRequirement,
-)
-from ..financial_operand_submission import OperationFinancialOperandContextAccess
 from ..models import OperationIdentity
 from ..owner import (
     OperationCancellationScope,
@@ -34,6 +28,7 @@ from ..owner import (
     OperationSecureOperandLookup,
 )
 from ..secret_submission import OperationEphemeralSecretAccess
+from ..typed_financial_operand_context import BoundTypedFinancialOperandAccess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -76,7 +71,7 @@ class EventEmitter:
 
     async def effect(self, effect: OperationEffect) -> None: ...
 
-    async def notice(self, notice_code: str) -> None: ...
+    async def notice(self, notice_code: str, *, display_code: str | None = None) -> None: ...
 
     async def diagnostic(self, diagnostic_ref: str) -> None: ...
 
@@ -134,27 +129,6 @@ class EphemeralSecretAccess:
             value[:] = b"\x00" * len(value)
 
 
-class FinancialOperandAccess:
-    def declare_requirement(
-        self,
-        declaration: OperationTransientFinancialOperandDeclaration,
-    ) -> OperationTransientFinancialOperandRequirement:
-        return OperationTransientFinancialOperandRequirement(
-            identity=OperationIdentity(operation_id="a" * 64, definition_id="profile.sync", subject_ref="profile:1"),
-            interaction_id="b" * 64,
-            revision=0,
-            operand_kind=declaration.operand_kind,
-            expires_at=datetime.now(UTC) + declaration.lifetime,
-        )
-
-    def grant_access(
-        self,
-        requirement: OperationTransientFinancialOperandRequirement,
-    ) -> OperationTransientFinancialOperandAccess:
-        del requirement
-        raise NotImplementedError
-
-
 class ExecutorContext:
     def __init__(self) -> None:
         self.identity = OperationIdentity(operation_id="a" * 64, definition_id="profile.sync", subject_ref="profile:1")
@@ -165,7 +139,7 @@ class ExecutorContext:
         self.events = EventEmitter()
         self.operands = SecureOperandLookup()
         self.ephemeral_secret = EphemeralSecretAccess()
-        self.financial_operand = FinancialOperandAccess()
+        self.typed_financial_operand = BoundTypedFinancialOperandAccess(broker=None, declaration=None, requirement=None)
         self.cleanup = CleanupOwner()
         self.interactions = InteractionAccess()
 
@@ -183,7 +157,6 @@ def test_public_protocols_accept_complete_structural_implementations() -> None:
     assert isinstance(context.events, OperationEventEmitter)
     assert isinstance(context.operands, OperationSecureOperandLookup)
     assert isinstance(context.ephemeral_secret, OperationEphemeralSecretAccess)
-    assert isinstance(context.financial_operand, OperationFinancialOperandContextAccess)
     assert isinstance(context.cleanup, OperationCleanupOwner)
     assert isinstance(context.interactions, OperationInteractionAccess)
     assert isinstance(context, OperationExecutorContext)

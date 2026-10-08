@@ -1,6 +1,13 @@
 modelo:
   schema:
     '216':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Resultado a ingresar
+          irnr-retencion-resultados-anteriores:
+            label: Resultados a ingresar de anteriores declaraciones por el mismo
+              concepto, ejercicio y período
       construct:
         modelo-216-calculation-construct:
           field:
@@ -13,23 +20,60 @@ modelo:
           obtenidas sin mediación de establecimiento permanente. Retenciones e ingresos
           a cuenta. Declaración-documento de ingreso.
         title: IRNR retenciones e ingresos a cuenta
+      form:
+        column:
+          base: Base de retenciones e ingresos a cuenta
+          numero-rentas: Número de rentas
+          retenciones: Retenciones e ingresos a cuenta
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la autoliquidación anterior
+          nif: NIF
+          nombre: Nombre
+          nombre-completo: Apellidos y nombre o razón social
+          periodo: Período
+        page:
+          pag-1:
+            heading: Impuesto sobre la Renta de no Residentes · Retenciones e ingresos
+              a cuenta
+        row:
+          base-historica: Base de retenciones e ingresos a cuenta / Importe de las
+            rentas
+          dividendos: Dividendos y otras rentas de participación en fondos propios
+            de entidades
+          otras-rentas: Resto de rentas
+          totales: Totales
+        section:
+          complementaria:
+            heading: Complementaria
+          devengo:
+            heading: Devengo
+          identificacion:
+            heading: Identificación
+          ingreso:
+            heading: Ingreso
+          liquidacion:
+            heading: Liquidación
+          no-sometidas:
+            heading: II. Rentas no sometidas a retención o ingreso a cuenta
+          sometidas:
+            heading: I. Rentas sometidas a retención o ingreso a cuenta
       revision:
         2020-2023:
           casilla:
             '1':
-              label: Liquidación. Partida 1. Número de rentas
+              label: Número de rentas sujetas a retención
             '2':
-              label: Liquidación. Partida 2. Base de retenciones e ingresos a cuenta
+              label: Base de retenciones e ingresos a cuenta
             '3':
-              label: Liquidación. Partida 3. Retenciones e ingresos a cuenta
+              label: Retenciones e ingresos a cuenta
             '4':
-              label: Liquidación. Partida 4. Número de rentas
+              label: Número de rentas no sujetas a retención
             '5':
-              label: Liquidación. Partida 5. Base de retenciones e ingresos a cuenta
-            '6':
-              label: Liquidación. Partida 6. Resultado a ingresar de anteriores declaraciones
-            '7':
-              label: Liquidación. Partida 7. Resultado a ingresar
+              label: Importe de las rentas no sujetas a retención
           field:
             label: Orden EHA/3290/2008, ejercicios 2020 a 2023
         2024-y-siguientes:
@@ -73,10 +117,5 @@ modelo:
                 de rentas
             '19':
               label: Rentas no sometidas a retención o ingreso a cuenta. Base. Total
-            '20':
-              label: Resultados a ingresar de anteriores declaraciones por el mismo
-                concepto, ejercicio y período
-            '21':
-              label: Resultado a ingresar
           field:
             label: Orden HAC/56/2024, ejercicios 2024 y siguientes

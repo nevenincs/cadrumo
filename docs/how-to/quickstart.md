@@ -9,9 +9,9 @@ Spanish tax forms. It does not submit filings to AEAT. You remain responsible
 for reviewing and filing through official AEAT channels.
 
 This page follows one complete path: create a profile, add two transactions,
-then calculate, verify, and file a Modelo 130 for the first quarter of 2026.
-Every command below is run in order. It links to deeper guides whenever a step
-has tax-specific setup or review choices.
+then calculate a Modelo 130 for the first quarter of 2026, check it, and record
+it as filed. Every command below is run in order. It links to deeper guides
+whenever a step has tax-specific setup or review choices.
 
 **Requirement:** a valid taxpayer profile. Step 1 below creates one; if you
 already have a profile, skip it. [Set up your taxpayer
@@ -54,7 +54,7 @@ own details:
 ```
 
 The wizard collects the name and surnames that filing requires and the activity
-start date that scopes out prior periods. The profile is published with its
+start date that scopes out prior periods. The profile is created with its
 passphrase as its only door; recovery is offered afterwards and is optional.
 
 Confirm the active profile is configured and ready:
@@ -70,21 +70,18 @@ an existing profile.
 
 ## 2. Add your transactions
 
-The tax calculation uses the income and expense records in your ledger. There
-are two ways to add them.
+The tax calculation uses your income and expense records. There are two ways to
+add them.
 
 The simplest is to add each row directly with its tax fields. `--amount` is the
-gross total (taxable base plus IVA); an expense row also needs a `--category-id`
+gross total (taxable base plus VAT); an expense row also needs a `--category-id`
 from the recognised expense families. The `--idempotency-key` on each row makes
-it safe to re-run without adding a duplicate.
+it safe to re-run without adding a duplicate:
 
-The expense claims deductible IVA, so it needs its supplier invoice. Register
-the invoice first, then pass the `evidence_id` it returns to the expense row
-with `--purchase-invoice-evidence-id`. The invoice takes its IVA rate as a
-percentage (`--iva-rate 21`), while `ledger add` takes a decimal (`0.21`):
+The expense claims deductible VAT, so it needs its supplier invoice. Register the invoice first, then pass the `evidence_id` it returns to the expense row with `--purchase-invoice-evidence-id`. The invoice takes its VAT rate as a percentage (`--iva-rate 21`), while `ledger add` takes a decimal (`0.21`):
 
 ```{cli-sequence} quickstart-transactions
-:verify: Confirm the invoice registers and both classified rows land in the ledger.
+:verify: Confirm the invoice registers and both classified rows land in the records.
 ```
 
 List the recognised expense categories any time:
@@ -102,8 +99,7 @@ Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
 2026-02-11;2026-02-11;compra;-605,00;605,00;EUR
 ```
 
-Preview the import, then run it for real (shown as a display-only example,
-since running it here would duplicate the two rows added above):
+Preview the import, then run it for real (shown as an example that is not run, since running it here would duplicate the two rows added above):
 
 ```{cli-sequence} quickstart-import
 ```
@@ -124,7 +120,7 @@ spending, or a mix of both. Take the transaction id from the row's output, then
 classify it and check the quarter is ready:
 
 ```{cli-sequence} quickstart-classify
-:verify: Confirm the classified quarter passes the ledger preflight.
+:verify: Confirm the classified quarter passes the check of your records.
 ```
 
 `preflight` reports whether the quarter's rows are ready to calculate.
@@ -133,40 +129,35 @@ Use [Classify transactions](classify-transactions.md) for the detailed review
 path, including manual classification, bulk CSV classification, mixed-use
 allocation, tax fields, and optional LLM suggestions.
 
-## 4. Create, calculate, and verify the draft
+(4-create-calculate-and-verify-the-draft)=
+## 4. Create, calculate, and check the draft
 
-With the profile and a classified ledger in place, prepare the Modelo 130 draft
-for the first quarter of 2026, calculate it, and verify it. A modelo is a
-Spanish tax form, and the year plus period identify the filing you are
-preparing.
+With the profile and classified records in place, prepare the Modelo 130 draft
+for the first quarter of 2026, calculate it, and check it. A modelo is a Spanish
+tax form, and the year plus period identify the filing you are preparing.
 
 ```{cli-sequence} quickstart-modelo-130
-:verify: Confirm the draft passed verification before you file it.
+:verify: Confirm the draft passed the check before you file it.
 ```
 
-Read the frames in order:
+Read the steps in order:
 
-- Create the draft. The command creates your filing workspace for that form if
-  one does not exist yet; running it again returns the existing workspace.
+- Create the draft. The command creates the declaration for that modelo if one
+  does not exist yet; running it again returns the existing declaration.
   `--period 1T` means the first quarter (primer trimestre). Other period codes
   are `2T`, `3T`, `4T` for subsequent quarters and `0A` for an annual filing.
 - Calculate the values. Modelo 130 needs three prior-period figures; for a first
-  filing they are all zero, passed as bindings so the calculation has no missing
-  inputs. The tool fills the boxes from your ledger: casilla `01` is the
-  quarter's income (`1000`, the taxable base, since IVA is never part of your
-  income), casilla `03` the net yield (`500.00`), and casilla `04` the
-  instalment (`100.00`, twenty percent of the net).
-- Verify the draft. Verification is a local check. It does not send anything to
-  AEAT. When the draft is complete the report reads `completeness_status
-  complete` and `granted_verificado_completo true`. The report also carries two
-  advisories, which do not block filing. One notes that the earlier Modelo 100
-  is set aside because your activity started in 2026. The other notes that the
-  income row has no supporting evidence.
+  filing they are all zero, supplied by you so the calculation has no missing
+  inputs. The tool fills the boxes from your records: box `01` is the quarter's
+  income (`1000`, the taxable base, since VAT is never part of your income),
+  box `03` the net yield (`500.00`), and box `04` the instalment (`100.00`,
+  twenty percent of the net).
+- Check the draft. The check is local. It does not send anything to AEAT. When the draft is complete the report reads `completeness_status complete` and `granted_verificado_completo true`. The report also carries two advisories, which do not block filing. One notes that the earlier Modelo 100 is set aside because your activity started in 2026. The other notes that the income row has no supporting document.
 
 Review every saved box with:
 
 ```{cli-sequence} quickstart-revision
-:verify: Confirm the saved revision shows the calculated boxes.
+:verify: Confirm the saved calculation shows the calculated boxes.
 ```
 
 If a value is missing or a modelo needs a value you must enter by hand, see
@@ -175,27 +166,20 @@ covers entering missing box values and handling figures carried forward from
 earlier quarters. For how the tool organises filing work behind the scenes, see
 [The filing workflow](filing-spine.md).
 
-## 5. Export the verified draft
+(5-export-the-verified-draft)=
+## 5. Export the checked draft
 
-Export the verified Modelo 130 fichero-BOE artefact:
+Export the checked Modelo 130 fichero-BOE file:
 
 ```{cli-sequence} quickstart-export
-:verify: Confirm the export succeeds and writes a fichero-BOE file.
+:verify: Confirm the export succeeds and writes a file in the official record format.
 ```
 
-The exported file is a local artefact, not evidence that AEAT accepted the
-return. Present it through the AEAT portal, as step 7 describes. Export refuses
-to overwrite an existing file unless you add `--replace`. It also refuses when
-the output directory does not exist.
+The exported file is a local file, not proof that AEAT accepted the return. Present it through the AEAT portal, as step 7 describes. Export refuses to overwrite an existing file unless you add `--replace`. It also refuses when the output directory does not exist.
 
-Step 2 linked the purchase invoice before you calculated. Verification refuses
-a deducted IVA row that carries no invoice (the message reads `Deductible IVA
-ledger rows require linked purchase invoice evidence`).
+Step 2 linked the purchase invoice before you calculated. The check refuses a deducted VAT row that carries no invoice (the message reads `Deductible IVA ledger rows require linked purchase invoice evidence`).
 
-A draft bundles its evidence when you verify it, so an invoice attached
-afterwards does not reach a draft that is already verified. [Attach invoices and
-receipts](ledger-evidence.md) and [Prepare a Modelo 303 IVA
-filing](modelo-303.md) walk through the evidence workflow end to end.
+A draft collects its supporting documents when you check it, so an invoice attached afterwards does not reach a draft that is already checked. [Attach invoices and receipts to transactions](ledger-evidence.md) and [Prepare a Modelo 303 VAT filing](modelo-303.md) walk through the supporting-document workflow end to end.
 
 ## 6. Check what else is due (optional)
 
@@ -219,37 +203,36 @@ The final filing step is outside `aeat`:
 
 1. Log in to the official AEAT electronic filing portal.
 2. Open the Modelo 130 form for the relevant year and period.
-3. Enter the box values the calculation produced. The command card below reads
-   them back before it records the local filing marker.
-4. Review, sign, and keep the justificante AEAT issues after filing.
+3. Enter the box values the calculation produced. The step below reads them back before it records the filing.
+4. Review, sign, and keep the AEAT receipt (justificante) that AEAT issues after
+   filing.
 
 The full handoff checklist is in
 [File your modelo at the AEAT portal](file-at-aeat.md).
 
-After a real filing, record the local filing marker:
+After a real filing, record it as filed:
 
 ```{cli-sequence} quickstart-file
-:verify: Confirm the local filed marker recorded.
+:verify: Confirm the filing is recorded in Cadrumo.
 ```
 
-`work file` refuses a deducted IVA row whose invoice is not linked
-(`Deductible IVA ledger rows require linked purchase invoice evidence`). The
-draft verified in step 4 already carries its invoice, so the marker records.
+`work file` refuses a deducted VAT row whose invoice is not linked (`Deductible IVA ledger rows require linked purchase invoice evidence`). The draft checked in step 4 already carries its invoice, so the filing is recorded.
 
-This only records the action on your own computer. It does not contact AEAT.
-To compare your local record with the AEAT receipt, see
-[Reconcile a filed modelo against its justificante](reconcile.md).
+This only records the action on your own computer. It does not contact AEAT. To
+compare your local record with the AEAT receipt, see [Reconcile a filed modelo against its AEAT receipt](reconcile.md).
 
 ## Next steps
 
 - [Set up your taxpayer profile](profile-setup.md) if profile facts are still
   incomplete.
-- [Import and manage transactions](import-bank-statements.md) when your ledger is
-  not ready yet.
+- [Import and manage transactions](import-bank-statements.md) when your records
+  are not ready yet.
 - [Classify transactions](classify-transactions.md) before calculating from
   imported rows.
-- [How your records become tax figures](../explanation/from-records-to-figures.md) - understand the transaction-to-box pipeline.
+- [How your records become tax
+  figures](../explanation/from-records-to-figures.md): understand the
+  transaction-to-box pipeline.
 - [Review and supply calculation inputs](review-calculation-values.md) when a
-  modelo needs manual values, offsets, or binding review.
+  modelo needs manual values, offsets, or a review of calculated values.
 - [Diagnose and repair your local setup](troubleshooting.md) if a command stops
   or the local state looks wrong.

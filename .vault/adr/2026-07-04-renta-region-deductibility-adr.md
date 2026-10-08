@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#renta-region-deductibility'
 date: '2026-07-04'
-modified: '2026-08-25'
-body_hash: 'sha256:55fabda3e82cdb114e1840aa1935670e3a77dfbc71bb1229e635a6578852d86e'
+modified: '2026-10-03'
+body_hash: 'sha256:c0088ad432cd5fb50c106dea75d65a6f46e4f5458135d9c1526abc8be4e882a4'
 related:
   - '[[2026-07-04-autonomic-deduccion-framework-adr]]'
   - '[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]'
@@ -22,7 +22,7 @@ decision ("Phase 7: harden Renta region context. If category deductibility is
 region-specific, key category profiles by filing year plus CCAA or regime, and
 carry the selected region in the deductibility context"). Today the expense
 deductibility surface is region-blind: `RentaDeductibilityContext`
-(`src/aeat/domain/renta/_ledger_expenses.py`) carries `profile_year`, usage ratios,
+ carries `profile_year`, usage ratios,
 statutory-cap axes and `exclusive_use_confirmed` but no comunidad-autonoma field;
 `evaluate_renta_deductibility` and `build_renta_deductible_expense_observation`
 resolve deductibility of business expenses (gastos fiscalmente deducibles) into the

@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
@@ -111,11 +111,7 @@ def _resolved_scalar_fact(
     from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
     from ..calculations.registry.schema_base import DateAxis
 
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise TransactionValidationError(
-            "retención fact resolution requires an explicit authority operation or scope",
-        )
+    authority = require_governed_fact_authority(authority, subject="retención fact resolution")
     try:
         resolved = authority.resolve_governed_fact(
             ScalarFactQuery(
@@ -169,7 +165,9 @@ def load_retencion_actividades_rates(
     Raises:
         TransactionValidationError: If any expected fact id is absent,
             carries no string value, or does not parse as a ``Decimal``, or if
-            fact authority cannot be resolved.
+            the supplied authority cannot resolve it.
+        InternalInvariantError: When no authority is supplied and no
+            validation scope is active.
     """
     coordinate = effective_date
     return RirpfArt95RetencionRates(
@@ -306,7 +304,9 @@ def load_administrador_retencion_rates(
     Raises:
         TransactionValidationError: If any expected fact id is absent,
             carries no string value, or does not parse as a ``Decimal``, or if
-            fact authority cannot be resolved.
+            the supplied authority cannot resolve it.
+        InternalInvariantError: When no authority is supplied and no
+            validation scope is active.
     """
     coordinate = effective_date
     return AdministradorRetencionRates(

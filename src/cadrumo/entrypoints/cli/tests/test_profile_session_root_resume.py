@@ -1,29 +1,14 @@
-"""Root-callback session resume: silent when valid, instructive when not.
+"""Explicit local credentials and runtime-owned receipt admission.
 
-The CLI root callback no longer implicitly unlocks the profile. It
-resumes the persisted session ``aeat config login`` minted, or refuses
-naming that verb. These tests drive the REAL CLI against a REAL bucket
-created through current credential registration, with real records, real
-AEAD wraps, and real files.
-
-"Fresh process" is simulated by evicting the active-session context
-variable between invocations, which is exactly what a new ``aeat``
-process starts with — the persisted artefacts are then the only thing
-that can unlock the profile.
-
-The two halves have different host requirements, deliberately. The
-refusal branches — absent, idle-elapsed, absolute-elapsed — are decided
-before the OS keychain is ever consulted, so they run anywhere and are
-asserted by refusal-reason name. Silent RESUME genuinely needs the
-keychain, because unwrapping the record's DEK requires the session key
-held there; on a host with no usable credential store those tests fail
-at an explicit precondition naming that cause rather than misreporting a
-resume defect.
+CLI discovery and headless refusal cases exercise real commands. Receipt cases
+exercise the runtime candidate owner with synthetic login binding and real OS
+keyring custody; they are not native observer or packaged acceptance evidence.
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Iterator
 from datetime import timedelta
 from pathlib import Path
@@ -42,6 +27,11 @@ from ....adapters.persistence.storage.custody.acceleration_receipt import (
     profile_session_path,
 )
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.tests.receipt_sign_in import (
+    RECEIPT_LOGIN_ID,
+    committed_sign_in,
+    persist_signed_in_receipt,
+)
 from ....adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
@@ -53,8 +43,10 @@ from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
 from ....tests.os_keychain_hook import require_os_credential_store
 from ..common import cli_policy_refusal_projection
-from ..errors import CliRefusedBoundaryError, suspend_error_boundary
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
+from ..errors import CliRefusedBoundaryError
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
+from .error_boundary_scope import suspend_error_boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -106,10 +98,11 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
 def _login(label: str | None = None) -> None:
     """Establish the session through the application login door, for ``label`` or the active profile."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    from ....application.user_profile.login_session import login_profile
+    from ....application.user_profile.login_session import authenticate_profile_for_invocation
+    from ....core.bucket_pointer import require_active_bucket_id
 
-    login_profile(
-        name=label,
+    authenticate_profile_for_invocation(
+        name=label if label is not None else require_active_bucket_id(),
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,
     )
@@ -123,20 +116,47 @@ def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
     without this precondition a cross-process resume test would fail later with
     a misleading "you are not logged in" refusal that reads like a resume
     defect. Asserting it here pins the failure on the missing custody instead.
+
+    The in-process login mints no receipt, so the receipt is published after it
+    through the runtime worker's own step, as a persisted sign-in does.
     """
     _login()
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    persist_signed_in_receipt(
+        storage_root,
+        UUID(bucket_id),
+        _CREDENTIAL_INPUT,
+        profile_decode_context=_profile_decode_context_for_test,
+    )
     assert profile_session_path(storage_root=storage_root, profile_id=UUID(bucket_id)).is_file(), (
         "login did not persist a session record, so cross-process resume cannot be exercised; "
         "this host has no usable OS keychain to custody the session key"
     )
 
 
-def _resume(bucket_id: str) -> ProfileSessionRefusalReason | None:
-    """Drive the shared resume authority the root callback itself calls."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    from ....application.user_profile.login_session import bind_resumed_profile_session
+def _resume(bucket_id: str, *, storage_root: Path) -> ProfileSessionRefusalReason | None:
+    """Exercise runtime receipt admission without binding a frontend DEK."""
+    from ....application.user_profile.login_session import (
+        ProfileReceiptRefusedError,
+        borrow_profile_receipt_key,
+        resume_profile_candidate,
+    )
 
-    return bind_resumed_profile_session(bucket_id=bucket_id, profile_decode_context=_profile_decode_context_for_test)
+    _, decode = _profile_contexts_for_test()
+    try:
+        with (
+            borrow_profile_receipt_key(bucket_id=UUID(bucket_id)) as proof,
+            resume_profile_candidate(
+                bucket_id=UUID(bucket_id),
+                receipt_key=proof,
+                profile_decode_context=decode,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in_binding=committed_sign_in(storage_root, UUID(bucket_id)).binding,
+            ),
+        ):
+            return None
+    except ProfileReceiptRefusedError as error:
+        return error.reason
 
 
 def _invoke_decrypting_verb_without_the_secret_channel():
@@ -160,61 +180,35 @@ def _invoke_with_root_profile_secret(arguments: list[str]):
 
 
 @pytest.mark.os_keychain
-class TestSilentResume:
-    """A valid persisted session unlocks later invocations with no prompt.
+class TestRuntimeReceiptOwnership:
+    """Only runtime proof admission may decrypt or retire a receipt."""
 
-    Custody-bound end to end: resuming means unwrapping the record's DEK
-    under the session key the OS credential store holds, so a host that
-    cannot custody one cannot exhibit a silent resume at all. The
-    fail-closed refusals below are the keychain-free half and stay in the
-    default lane -- they are decided BEFORE any credential call.
-    """
-
-    def test_valid_session_resumes_with_no_authentication(self, _isolated_root: Path) -> None:
+    def test_noninteractive_command_does_not_borrow_saved_sign_in(self, _isolated_root: Path) -> None:
         require_os_credential_store()
         bucket_id = _create_profile()
         _login_and_require_persistence(_isolated_root, bucket_id)
-
-        # Fresh process: nothing in memory, only the persisted artefacts.
+        receipt = profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id))
+        before = receipt.read_bytes()
         close_active_bucket_session()
+
+        result = _invoke_decrypting_verb_without_the_secret_channel()
+
+        assert result.exit_code != 0
         assert current_active_bucket_session() is None
+        assert receipt.read_bytes() == before
 
-        result = _invoke_decrypting_verb_without_the_secret_channel()
-
-        assert result.exit_code == 0, result.output
-        output = semantic_cli_output(result)
-        assert "aeat config login" not in output
-        # The verb decrypted its read model, so the session really opened.
-        assert "rows" in output
-
-    def test_resume_advances_the_idle_deadline(self, _isolated_root: Path) -> None:
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    def test_receipt_admission_neither_binds_frontend_custody_nor_extends_receipt(self, _isolated_root: Path) -> None:
         require_os_credential_store()
         bucket_id = _create_profile()
         _login_and_require_persistence(_isolated_root, bucket_id)
-        session = current_active_bucket_session()
-        assert session is not None
-        original_idle_deadline = session.idle_deadline
-        original_absolute = session.absolute_deadline
-
+        receipt = profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id))
+        before = receipt.read_bytes()
         close_active_bucket_session()
-        result = _invoke_decrypting_verb_without_the_secret_channel()
-        assert result.exit_code == 0, result.output
 
-        from ....application.user_profile.login_session import bind_resumed_profile_session
+        assert _resume(bucket_id, storage_root=_isolated_root) is None
 
-        close_active_bucket_session()
-        assert (
-            bind_resumed_profile_session(bucket_id=bucket_id, profile_decode_context=_profile_decode_context_for_test)
-            is None
-        )
-        resumed = current_active_bucket_session()
-        assert resumed is not None
-        # The sliding window rolled forward, while the absolute cap - fixed at
-        # the original login - is untouched, so activity cannot extend a session
-        # past its lifetime.
-        assert resumed.idle_deadline >= original_idle_deadline
-        assert resumed.absolute_deadline == original_absolute
+        assert current_active_bucket_session() is None
+        assert receipt.read_bytes() == before
 
 
 class TestProfileDiscoveryStaysReachableWhileLoggedOut:
@@ -267,11 +261,13 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
 class TestFailClosedRefusals:
     """Absent and expired sessions refuse, naming the verb that fixes it."""
 
-    def test_unnamed_validate_is_gated_as_an_active_profile_read(self) -> None:
+    @pytest.mark.windows_only
+    @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile runtime")
+    def test_unnamed_validate_is_gated_as_an_active_profile_read(self, _isolated_root: Path) -> None:
         _create_profile()
         close_active_bucket_session()
 
-        with override_settings(cadrumo_secret_passphrase=None):
+        with override_settings(cadrumo_secret_passphrase=None), native_profile_view_server(_isolated_root):
             result = invoke_cached_cli(["--format", "json", "config", "profile", "validate"])
 
         assert result.exit_code != 0
@@ -279,13 +275,16 @@ class TestFailClosedRefusals:
         assert document["error"]["context"]["reason"] == "absent", document
         assert document["error"]["category"] == "REFUSED", document
 
-    def test_explicit_validate_is_not_preempted_by_the_active_profile_gate(self) -> None:
+    @pytest.mark.windows_only
+    @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile runtime")
+    def test_explicit_validate_is_not_preempted_by_the_active_profile_gate(self, _isolated_root: Path) -> None:
         _create_profile()
         close_active_bucket_session()
 
-        result = _invoke_with_root_profile_secret(
-            ["--format", "json", "config", "profile", "validate", _LABEL],
-        )
+        with native_profile_view_server(_isolated_root):
+            result = _invoke_with_root_profile_secret(
+                ["--format", "json", "config", "profile", "validate", _LABEL],
+            )
 
         document = json.loads(semantic_cli_output(result))
         assert document["command"] == "config.profile.validate", document
@@ -470,7 +469,7 @@ class TestFailClosedRefusals:
 
         # The elapsed sliding window is what refuses, and the lapsed record is
         # deleted rather than left to be retried.
-        assert _resume(bucket_id) is ProfileSessionRefusalReason.EXPIRED_IDLE, (
+        assert _resume(bucket_id, storage_root=_isolated_root) is ProfileSessionRefusalReason.EXPIRED_IDLE, (
             "an elapsed idle deadline must refuse on the idle branch"
         )
         assert not profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
@@ -481,8 +480,7 @@ class TestFailClosedRefusals:
         result = _invoke_decrypting_verb_without_the_secret_channel()
 
         assert result.exit_code != 0
-        assert "aeat config login" in semantic_cli_output(result)
-        assert not profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
+        assert profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
 
     @pytest.mark.os_keychain
     def test_absolute_cap_refuses(self, _isolated_root: Path) -> None:
@@ -497,7 +495,7 @@ class TestFailClosedRefusals:
             idle_minutes=600,
         )
 
-        assert _resume(bucket_id) is ProfileSessionRefusalReason.EXPIRED_ABSOLUTE, (
+        assert _resume(bucket_id, storage_root=_isolated_root) is ProfileSessionRefusalReason.EXPIRED_ABSOLUTE, (
             "a session past its absolute cap must refuse on the absolute branch"
         )
         assert not profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
@@ -512,8 +510,7 @@ class TestFailClosedRefusals:
         result = _invoke_decrypting_verb_without_the_secret_channel()
 
         assert result.exit_code != 0
-        assert "aeat config login" in semantic_cli_output(result)
-        assert not profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
+        assert profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
 
     @classmethod
     def _aged_session_material(
@@ -563,6 +560,9 @@ class TestFailClosedRefusals:
             now=_now() - timedelta(minutes=minutes),
             idle_minutes=idle_minutes,
             absolute_minutes=absolute_minutes,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=committed_sign_in(storage_root, profile_id),
+            generation=committed_sign_in(storage_root, profile_id).establish().current,
         )
 
 

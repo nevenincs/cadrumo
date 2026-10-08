@@ -42,7 +42,7 @@ from ....tests.llm_vision_evidence_support import (
     png_image,
     run_against_loopback_ollama,
 )
-from ..ledger_llm_composition import TextReader, VisionReader, compose_ledger_llm
+from ...ledger_llm_composition import TextReader, VisionReader, compose_ledger_llm
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

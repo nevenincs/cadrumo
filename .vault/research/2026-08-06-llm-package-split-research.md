@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f4bbf7726ebea996663d31e8bdc310a77aa9bcdcd89020c36565b2fb3b242e11'
+body_hash: 'sha256:fa1ea4b6edf9d1b333a5d61ade4fcf2229f17508f8a7283253398e6fdc796d44'
 related:
   - "[[2026-08-06-llm-invoice-read-reconciliation-research]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
@@ -62,7 +62,7 @@ Classifying the candidate set by what each module actually does:
 - **Mixed inference and core orchestration** (the split line):
   `application/ledger/_llm_classification.py`, 1606 lines. It holds inference call sites
   (`rasterise_pdf_pages_to_base64_png`, `LocalVisionLLMClassifier`, subprocess classifier
-  and split proposer, `LLMRunTelemetryRecorder`) *and* core writes — `set_classification`,
+  and split proposer) *and* core writes — `set_classification`,
   `BucketEventHistoryRepository` (`:53-54`), `AttachmentStore` over
   `secure_object_repository_for_bucket` (`:261`), the consent gate
   (`cloud_evidence_read_permitted`, `:275`), and split persistence
@@ -73,24 +73,14 @@ Classifying the candidate set by what each module actually does:
   `_llm_diagnostics.py` (`:43-46`, reads `UsageRecord`/`UsageRecorder` plus the
   transaction catalogue).
 
-Three adapter modules are inference-scoped but write core persistence through
+Two adapter modules are inference-scoped but write core persistence through
 `secure_object_repository_for_active_bucket`: `_cache.py:20` (read `:123`, write `:205`),
-`_run_telemetry.py:55` (write `:153`), `_usage.py:20` (write `:119`). They cannot move
+`_usage.py:20` (write `:119`). They cannot move
 without either moving a persistence dependency across the boundary or leaving the writes
 behind.
 
-### One hard non-ledger consumer blocks a clean lift of the telemetry stores
-
-`application/diagnostics_run_health.py:71` imports `LLMRunRecord` and
-`LLMRunTelemetryRecorder` directly. That module powers the general
-`aeat app diagnostics run-health / runs / latency / errors / llm-usage` verbs, which are
-not ledger-classification features. So the run-telemetry store has a core consumer
-independent of the inference path: moving it into an optional extension would make a
-core diagnostics surface conditional on an optional install.
-
-The remaining apparent couplings are not imports and do not force a package dependency:
-`core/telemetry/_producers.py`, `_schema.py`, `_http_sink.py` mention the recorder in
-docstrings only; `core/errors/registry/_adapters_part2.py:176-245` keys an error table by
+The apparent couplings that remain are not imports and do not force a package dependency:
+`core/errors/registry/_adapters_part2.py:176-245` keys an error table by
 string qualname; `core/paths.py`, `_storage_path_definitions.py` and
 `_namespace_registry.py` carry `owner="cadrumo.adapters.outbound.llm"` as a string label.
 These need re-pointing on a rename, not re-architecting.
@@ -110,7 +100,7 @@ restricts which functions may join onto the storage root.
 `test_ephemeral_key_hygiene.py:78-98` guards test-side key isolation.
 
 Every one of them derives its scan corpus from `SRC_CADRUMO`, defined as
-`Path(__file__).resolve().parents[1]` in `src/cadrumo/tests/_inventory.py:11` — literally
+`Path(__file__).resolve().parents[1]`  — literally
 `src/cadrumo`, walked via `package_python_files()` → `SRC_CADRUMO.rglob("*.py")`
 (`_inventory.py:98-109`). Code in a different top-level package under `src/` is outside
 that walk. A temp-file write, a plaintext side store, or an unreviewed `write_bytes` in
@@ -208,7 +198,7 @@ that refuses with the install hint if so, and raising
 `CliCommandGroupUnavailableError` if not. Non-`ModuleNotFoundError` failures deliberately
 propagate (`:924-926`). The shared test support records why this seam exists: `textual`
 became required while stale environments lacked it, and `app modelo` silently degraded to
-a placeholder for a day (`tests/_command_group_import_support.py:1-31`).
+a placeholder for a day .
 
 One precedent is a trap rather than a model: the `agent` extra is **not** registered in
 `OPTIONAL_EXTRAS`. It hand-writes its install hint at `entrypoints/mcp/_server.py:157`
@@ -554,35 +544,21 @@ core side rather than behind the extra.
   uv sources `:284-298`; `[tool.vaultspec-rag]` `:300-301`; dev group and torch
   `:302-311`; pillow `:342`
 - `.importlinter:2`
-- `src/cadrumo/tests/_inventory.py:11`, `:98-109`
-- `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py:24-57`,
+
   `:59-241`, `:349-369`, `:386-398`, `:411-449`
 - `src/cadrumo/tests/test_storage_provenance_gate.py:370-382`
 - `src/cadrumo/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py:78-98`
 - `src/cadrumo/adapters/persistence/storage/runtime_repository.py:36-41`, `:44-54`
-- `src/cadrumo/adapters/persistence/storage/envelope/_secure_repository.py:186-263`
+
 - `src/cadrumo/adapters/persistence/storage/attachment.py:108-127`, `:240-262`, `:394-415`
-- `src/cadrumo/application/ledger/_evidence_input.py:101`, `:118-146`, `:162-197`, `:165`, `:203`
-- `src/cadrumo/core/_models.py:39`
-- `src/cadrumo/domain/attachments/_protocols.py:18-57`
-- `src/cadrumo/core/_optional_extras.py:46-68`, `:74-81`, `:84-109`, `:112-131`, `:134-160`, `:163-177`
-- `src/cadrumo/core/_capabilities.py:36-45`
+
 - `src/cadrumo/entrypoints/cli/__init__.py:907-947`, `:1039-1060`
-- `src/cadrumo/entrypoints/cli/tests/_command_group_import_support.py:1-31`
-- `src/cadrumo/entrypoints/mcp/__init__.py:67-76`, `src/cadrumo/entrypoints/mcp/_server.py:157`
+
 - `src/cadrumo/application/provisioning.py:75-115`, `:220-246`, `:249-281`
 - `src/cadrumo/application/diagnostics_run_health.py:71`
-- `src/cadrumo/application/ledger/_llm_classification.py:53-54`, `:235-297`, `:261`,
+
   `:274-282`, `:380-423`
-- `src/cadrumo/application/ledger/_llm_diagnostics.py:43-46`
-- `src/cadrumo/application/ledger/_evidence_draft.py:457-459`, `:461-468`
-- `src/cadrumo/adapters/outbound/llm/_cache.py:20`, `:123`, `:205`
-- `src/cadrumo/adapters/outbound/llm/_run_telemetry.py:55`, `:153`
-- `src/cadrumo/adapters/outbound/llm/_usage.py:20`, `:119`
-- `src/cadrumo/adapters/outbound/llm/_providers/local.py:57-94`, `:86`, `:95-96`
-- `src/cadrumo/adapters/outbound/llm/_providers/anthropic.py:53-58`
-- `src/cadrumo/adapters/outbound/aeat/browser/_factory.py:317-321`
-- `src/cadrumo/adapters/inbound/financial/providers/_ofx.py:189`, `:320`
+
 - `packaging/cadrumo_data_manuals/pyproject.toml`, `packaging/cadrumo_data_official/pyproject.toml`
 - `.venv/Lib/site-packages/pypdfium2/_helpers/bitmap.py:250-270`; `pypdfium2@5.12.1`
   distribution metadata (no `Requires-Dist`)

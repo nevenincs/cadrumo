@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5efba8270df4aff619bb89affb00e77003595815685cf4ccd039ee02ed8c3714'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:447993fa89e0346585b302b7c85791b78e31ed8e7b1b65a44a182baa61b9b368'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `Modelo 721 structured message design and filing boundary`
 
 ## Summary
@@ -158,10 +158,7 @@ applicability-only and non-fileable.
   https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/declaraciones-informativas/modelo-721-decla-sobre-monedas-extranjero/preguntas-frecuentes-sobre-modelo-721/que-informacion-debe-suministrarse-modelo-721.html
 - `src/cadrumo/_data/registry/aeat/legal/monedas-virtuales.toml`
 - `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2023-y-siguientes/`
-- `src/cadrumo/core/_export_layout_format.py`
 - `src/cadrumo/application/filing/_export_xml_dictionary.py`
-- `src/cadrumo/core/_filing_producer_key.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_721_registry.py`
 - `2026-08-14-registry-temporal-coverage-plan`
 - `2026-08-22-source-casilla-integration-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

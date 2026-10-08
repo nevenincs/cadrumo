@@ -12,9 +12,8 @@ from ._app_ledger_rule_ratio_command_spec_support import (
     _RATIOS_OUTPUT_LANGUAGE_OPTION,
     _RATIOS_YEAR_OPTION,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from .command_parameter_contracts import ArgumentSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -24,6 +23,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec
 
 LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

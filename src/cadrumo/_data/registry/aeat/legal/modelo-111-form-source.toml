@@ -1,0 +1,12 @@
+# Printed Annex I supplies layout evidence, not a new filing or calculation claim.
+[sources."boe-2011-4948-modelo-111-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2011-4948-modelo-111.pdf"
+sha256 = "d082dfa133ce258b49b6aa689de9f7b10d680ef2d6eeeb06f9379009e31f7dae"
+bytes = 495375
+retrieved_at = 2026-10-05
+published_at = 2011-03-18
+source_url = "https://www.boe.es/buscar/pdf/2011/BOE-A-2011-4948-consolidado.pdf"
+review_status = "pending_review"

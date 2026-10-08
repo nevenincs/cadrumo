@@ -44,7 +44,7 @@ Post-repair measurement uses the complete canonical semantic join, including the
 | 2024 | 5,473 | 769 | 2,048 | 130 | 2,048 |
 | 2025-y-siguientes | 5,549 | 760 | 2,012 | 127 | 2,012 |
 
-The canonical joins pass at the retained calculation and filing grades respectively. The current candidate worklist retains sheet, source row, export field, casilla, printed description, label and screening classification. Each candidate still needs official concept adjudication; applied totals are not independent concepts merely because their descriptions differ. Receipts and the detailed worklist are in `C:/Users/hello/AppData/Local/Temp/modelo200-repair-01-10-2026-6ad7ab369bcf4d3d883bd8e7f21ae2a0/final-mapping-inventory.json` and `final-mapping-suspects.tsv`.
+The canonical joins pass at the retained calculation and filing grades respectively. The current candidate worklist retains sheet, source row, export field, casilla, printed description, label and screening classification. Each candidate still needs official concept adjudication; applied totals are not independent concepts merely because their descriptions differ. Receipts and the detailed worklist are in `<operator-home>/AppData/Local/Temp/modelo200-repair-01-10-2026-6ad7ab369bcf4d3d883bd8e7f21ae2a0/final-mapping-inventory.json` and `final-mapping-suspects.tsv`.
 
 The next paired-context checks can start with `aeat-dr-200-2025` DP200014B rows 70, 71 and 62. They print administrative-criterion discrepancy total 00031, its Estado amount 00032 and I+D+i abono Estado amount 00083, while their bare declarations are labelled capital-risk entities, regional industrial-development companies and emerging-company reduced-rate flags. These are explicit source/label pairs in the worklist, rather than an unexplained aggregate count. Confirm both official homes and each supported design's first appearance before authoring their independent identities; a latest-design match alone does not establish the baseline year.
 
@@ -120,7 +120,7 @@ The full-inventory quiet round completed with all 58 modelos minimal, zero redun
 - https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023/guia-principales-novedades/rendimiento-actividades-economicas.html
 - https://www.boe.es/buscar/act.php?id=BOE-A-2009-10326&p=20230612&tn=1 (art. 3.2 and anexo II)
 - https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2023_eu_es.pdf (domiciliation table)
-- Detailed source measurement and receipts: `C:/Users/hello/AppData/Local/Temp/registry-issues-0070e7903b324eddb6a3ebde2fb48c50/modelo200-investigation.json`; suspect-cell worklist: `modelo200-mapping-suspects.tsv` in the same directory. Command: `uv run --no-sync python .../measure_modelo200.py`, through the shared serial runner, exit 0 on 2026-10-01.
+- Detailed source measurement and receipts: `<operator-home>/AppData/Local/Temp/registry-issues-0070e7903b324eddb6a3ebde2fb48c50/modelo200-investigation.json`; suspect-cell worklist: `modelo200-mapping-suspects.tsv` in the same directory. Command: `uv run --no-sync python .../measure_modelo200.py`, through the shared serial runner, exit 0 on 2026-10-01.
 
 ## Fresh requested verification
 

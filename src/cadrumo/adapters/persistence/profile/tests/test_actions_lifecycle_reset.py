@@ -18,6 +18,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
+from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
@@ -182,3 +183,43 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
         if event.event_type is BucketEventType.LEDGER_TRANSACTION_REMOVED
     ]
     assert {event.object_id for event in removed_events} == set(created_ids)
+
+
+def test_reset_receipt_limit_refuses_before_catalogue_or_event_write(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("25.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="row retained after oversized receipt refusal",
+                idempotency_key="reset-receipt-bound",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+    before_transactions = transaction_repository.load()
+    before_events = event_repository.load()
+
+    with pytest.raises(TransactionValidationError, match="registered receipt limit"):
+        reset_ledger_catalogue(
+            bucket_id=_BUCKET_ID,
+            actor="operator-A",
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+            max_receipt_items=1,
+        )
+
+    assert transaction_repository.load() == before_transactions
+    assert event_repository.load() == before_events

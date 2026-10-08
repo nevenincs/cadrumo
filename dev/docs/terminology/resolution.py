@@ -51,6 +51,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from dev._paths import REPO_ROOT, UTF_8
+from dev.first_party_source import PRODUCT_PACKAGE
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .casilla_projection import project_casilla_search_records
@@ -277,6 +278,9 @@ class TargetResolver:
     or re-parsing per hit.
     """
 
+    _cli_records_by_locator: dict[tuple[str, tuple[str, ...]], tuple[SearchRecord, ...]]
+    _cli_projection_skipped_reason: str | None
+
     def __init__(
         self,
         authority: ValidatedRegistryAuthority | None = None,
@@ -313,23 +317,7 @@ class TargetResolver:
         # Index the exact unified records consumed by Pagefind injection. A
         # CLI family source page may resolve only to an actually emitted
         # record; the resolver must not invent a family-level record.
-        if search_record_projection is None:
-            from ..pagefind_inject import materialise_search_records
-
-            cli_projection = materialise_search_records(_REPO_ROOT)
-        else:
-            cli_projection = search_record_projection
-        self._cli_records_by_locator: dict[tuple[str, tuple[str, ...]], tuple[SearchRecord, ...]] = {}
-        for record in cli_projection.records:
-            if record.kind is not SearchRecordKind.CLI:
-                continue
-            command_path = record.metadata.command_path
-            if command_path is None:
-                continue
-            locator = (command_path, record.metadata.option_names)
-            locator_records = self._cli_records_by_locator.get(locator, ())
-            self._cli_records_by_locator[locator] = (*locator_records, record)
-        self._cli_projection_skipped_reason = cli_projection.cli_skipped_reason
+        _index_cli_projection(self, search_record_projection)
 
         # Reverse index: a normatives corpus html path -> every legal id whose
         # corpus_ref points at it. The anchor is not present in a source hit,
@@ -425,48 +413,11 @@ class TargetResolver:
                 detail=f"no projected casilla records for modelo {modelo!r}",
             )
 
-        path = hit.posix_path.as_posix()
-        if not path.endswith(".toml"):
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=(
-                    f"casilla source {path!r} identifies modelo {modelo!r} only; "
-                    "no individual casilla locator is available"
-                ),
-            )
-        if hit.line_start < 1 or hit.line_end < hit.line_start:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"invalid casilla source line range {hit.line_start}-{hit.line_end} for {path!r}",
-            )
+        section = _casilla_source_section(hit, modelo)
+        if isinstance(section, DroppedHit):
+            return section
 
-        sections = _read_casilla_source_sections(path)
-        if sections is None:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"cannot read casilla source {path!r} to identify an individual record",
-            )
-        matching = tuple(
-            section for section in sections if section.start_line <= hit.line_end and hit.line_start <= section.end_line
-        )
-        if not matching:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"source lines {hit.line_start}-{hit.line_end} identify no casilla in {path!r}",
-            )
-        if len(matching) != 1:
-            ids = ", ".join(repr(section.casilla_id) for section in matching)
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=(f"source lines {hit.line_start}-{hit.line_end} overlap multiple casillas ({ids}) in {path!r}"),
-            )
-
-        casilla_id = matching[0].casilla_id
+        casilla_id = section.casilla_id
         matching_records = tuple(record for record in records if str(record.metadata.casilla_id) == casilla_id)
         if len(matching_records) != 1:
             return DroppedHit(
@@ -512,42 +463,11 @@ class TargetResolver:
         return self._legal_target(hit, legal_ids[0])
 
     def _resolve_legal_toml(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
-        path = hit.posix_path.as_posix()
-        if hit.line_start < 1 or hit.line_end < hit.line_start:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"invalid legal source line range {hit.line_start}-{hit.line_end} for {path!r}",
-            )
+        section = _legal_source_section(hit)
+        if isinstance(section, DroppedHit):
+            return section
 
-        sections = _read_legal_source_sections(path)
-        if sections is None:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"cannot read legal source {path!r} to identify an individual provision",
-            )
-        matching = tuple(
-            section for section in sections if section.start_line <= hit.line_end and hit.line_start <= section.end_line
-        )
-        if not matching:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"source lines {hit.line_start}-{hit.line_end} identify no legal provision in {path!r}",
-            )
-        if len(matching) != 1:
-            ids = ", ".join(repr(section.legal_id) for section in matching)
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=(
-                    f"source lines {hit.line_start}-{hit.line_end} overlap multiple legal provisions "
-                    f"({ids}) in {path!r}"
-                ),
-            )
-
-        legal_id = matching[0].legal_id
+        legal_id = section.legal_id
         if legal_id not in self._known_legal_ids:
             return DroppedHit(
                 hit=hit,
@@ -602,79 +522,13 @@ class TargetResolver:
         page, an unbounded range, or a range spanning more than one locator is
         not an entity and therefore remains dropped.
         """
-        source_path = hit.posix_path.as_posix()
-        if hit.line_start < 1 or hit.line_end < hit.line_start:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"invalid CLI source line range {hit.line_start}-{hit.line_end} for {source_path!r}",
-            )
-
         expected_page = f"cli/{page}"
-        locators = _read_cli_source_locators(source_path)
-        if locators is None:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"cannot read CLI reference source {source_path!r} to identify a command or option",
-            )
-        if hit.line_end > locators.line_count:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=(
-                    f"CLI source line range {hit.line_start}-{hit.line_end} exceeds the {source_path!r} "
-                    f"source length of {locators.line_count} lines"
-                ),
-            )
-        matching_locators = tuple(
-            locator
-            for locator in locators.locators
-            if locator.start_line <= hit.line_end and hit.line_start <= locator.end_line
-        )
-        if not matching_locators:
-            target = f"{expected_page}.html"
-            detail = (
-                f"source lines {hit.line_start}-{hit.line_end} identify no CLI command or option "
-                f"locator in {source_path!r}; no authoritative CLI search record was emitted for exact target "
-                f"{target!r}"
-            )
-            if self._cli_projection_skipped_reason is not None:
-                detail += f" (CLI projection skipped: {self._cli_projection_skipped_reason})"
-            return DroppedHit(hit=hit, reason=DropReason.NO_TARGET_ENTITY, detail=detail)
-        if len(matching_locators) != 1:
-            descriptions = ", ".join(
-                f"{locator.command_path!r}{locator.option_names!r}" for locator in matching_locators
-            )
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=(
-                    f"source lines {hit.line_start}-{hit.line_end} overlap multiple CLI source locators "
-                    f"({descriptions}) in {source_path!r}; no unambiguous command or option is available"
-                ),
-            )
-
-        (locator,) = matching_locators
-        command_path = tuple(locator.command_path.split())
-        from ..cli_reference import cli_reference_page_for_command
-
-        try:
-            routed_page = cli_reference_page_for_command(command_path)
-        except ValueError as exc:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"CLI source locator has no valid routed page: {exc}",
-            )
-        if routed_page != expected_page:
-            return DroppedHit(
-                hit=hit,
-                reason=DropReason.NO_TARGET_ENTITY,
-                detail=(
-                    f"CLI command {locator.command_path!r} routes to {routed_page!r}, not source page {expected_page!r}"
-                ),
-            )
+        locator = _cli_source_locator(self, hit, expected_page)
+        if isinstance(locator, DroppedHit):
+            return locator
+        routed_page = _cli_locator_page(hit, locator, expected_page)
+        if isinstance(routed_page, DroppedHit):
+            return routed_page
 
         matching = tuple(
             record
@@ -918,59 +772,7 @@ def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None
         _require_built_cli_reference(_REPO_ROOT)
         return None
 
-    command_headers = [(index, lines[index]) for index in range(len(lines)) if _is_cli_command_heading(lines, index)]
-    locators: list[_CliSourceLocator] = []
-    for position, (command_index, command_path) in enumerate(command_headers):
-        next_command_index = command_headers[position + 1][0] if position + 1 < len(command_headers) else len(lines)
-        # The command locator is deliberately only the explicit heading line. A
-        # range that also overlaps a parameter locator is ambiguous.
-        locators.append(
-            _CliSourceLocator(
-                command_path=command_path,
-                start_line=command_index + 1,
-                end_line=command_index + 1,
-            ),
-        )
-
-        parameters_index = next(
-            (
-                index
-                for index in range(command_index + 1, next_command_index)
-                if _CLI_PARAMETERS_HEADING_RE.fullmatch(lines[index]) is not None
-            ),
-            None,
-        )
-        if parameters_index is None:
-            continue
-        # A parameter is always exactly three lines: an unindented declaration,
-        # an indented (three-space) description, and an indented classification
-        # drawn from the fixed four-string set. The classification is the
-        # unambiguous anchor -- unlike the declaration or description text, it
-        # cannot collide with unrelated unindented prose (a following command
-        # heading, or a family page's trailing "Choose a command group"
-        # footer) that might otherwise be mistaken for a declaration.
-        parameter_lines = [
-            (index - 2, tuple(part.strip() for part in lines[index - 2].split(" / ")))
-            for index in range(parameters_index + 1, next_command_index)
-            if lines[index].strip() in _CLI_PARAMETER_CLASSIFICATIONS
-            and lines[index].startswith("   ")
-            and index - 2 > parameters_index
-            and not lines[index - 2].startswith(" ")
-        ]
-        for parameter_position, (parameter_index, option_names) in enumerate(parameter_lines):
-            next_parameter_index = (
-                parameter_lines[parameter_position + 1][0]
-                if parameter_position + 1 < len(parameter_lines)
-                else next_command_index
-            )
-            locators.append(
-                _CliSourceLocator(
-                    command_path=command_path,
-                    start_line=parameter_index + 1,
-                    end_line=next_parameter_index,
-                    option_names=option_names,
-                ),
-            )
+    locators = _cli_command_locators(lines)
     return _CliSourceLocators(line_count=len(lines), locators=tuple(locators))
 
 
@@ -1021,7 +823,7 @@ def _module_to_dotted(path: str) -> str | None:
     ``cadrumo.foo.bar`` and a package ``__init__.py`` to ``cadrumo.foo`` -- the stub
     filename (and built ``docs/api/<dotted>.html`` page) is named from this.
     """
-    if not path.startswith("src/cadrumo/") or not path.endswith(".py"):
+    if not path.startswith(f"{PRODUCT_PACKAGE}/") or not path.endswith(".py"):
         return None
     relative = path[len("src/") :]  # aeat/foo/bar.py
     parts = relative.split("/")
@@ -1036,3 +838,264 @@ def _module_to_dotted(path: str) -> str | None:
 
 def _plain_descriptions(text: str) -> dict[OutputLanguage, str]:
     return {OutputLanguage.ES: (text or "documentation").strip()[:240] or "documentation"}
+
+
+def _index_cli_projection(self: TargetResolver, search_record_projection: SearchRecordProjection | None) -> None:
+    """Index cli projection."""
+    if search_record_projection is None:
+        from ..pagefind_inject import materialise_search_records
+
+        cli_projection = materialise_search_records(_REPO_ROOT)
+    else:
+        cli_projection = search_record_projection
+    self._cli_records_by_locator = {}
+    for record in cli_projection.records:
+        if record.kind is not SearchRecordKind.CLI:
+            continue
+        command_path = record.metadata.command_path
+        if command_path is None:
+            continue
+        locator = (command_path, record.metadata.option_names)
+        locator_records = self._cli_records_by_locator.get(locator, ())
+        self._cli_records_by_locator[locator] = (*locator_records, record)
+    self._cli_projection_skipped_reason = cli_projection.cli_skipped_reason
+
+
+def _casilla_source_section(hit: ChunkHit, modelo: str) -> _CasillaSourceSection | DroppedHit:
+    """Casilla source section."""
+    path = hit.posix_path.as_posix()
+    if not path.endswith(".toml"):
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=(
+                f"casilla source {path!r} identifies modelo {modelo!r} only; no individual casilla locator is available"
+            ),
+        )
+    if _invalid_source_range(hit):
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"invalid casilla source line range {hit.line_start}-{hit.line_end} for {path!r}",
+        )
+
+    sections = _read_casilla_source_sections(path)
+    if sections is None:
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"cannot read casilla source {path!r} to identify an individual record",
+        )
+    matching = tuple(section for section in sections if _source_lines_overlap(section, hit))
+    if not matching:
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"source lines {hit.line_start}-{hit.line_end} identify no casilla in {path!r}",
+        )
+    if len(matching) != 1:
+        ids = ", ".join(repr(section.casilla_id) for section in matching)
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=(f"source lines {hit.line_start}-{hit.line_end} overlap multiple casillas ({ids}) in {path!r}"),
+        )
+    return matching[0]
+
+
+def _legal_source_section(hit: ChunkHit) -> _LegalSourceSection | DroppedHit:
+    """Legal source section."""
+    path = hit.posix_path.as_posix()
+    if _invalid_source_range(hit):
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"invalid legal source line range {hit.line_start}-{hit.line_end} for {path!r}",
+        )
+
+    sections = _read_legal_source_sections(path)
+    if sections is None:
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"cannot read legal source {path!r} to identify an individual provision",
+        )
+    matching = tuple(section for section in sections if _source_lines_overlap(section, hit))
+    if not matching:
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"source lines {hit.line_start}-{hit.line_end} identify no legal provision in {path!r}",
+        )
+    if len(matching) != 1:
+        ids = ", ".join(repr(section.legal_id) for section in matching)
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=(
+                f"source lines {hit.line_start}-{hit.line_end} overlap multiple legal provisions ({ids}) in {path!r}"
+            ),
+        )
+    return matching[0]
+
+
+def _cli_source_locator(self: TargetResolver, hit: ChunkHit, expected_page: str) -> _CliSourceLocator | DroppedHit:
+    """Cli source locator."""
+    source_path = hit.posix_path.as_posix()
+    if _invalid_source_range(hit):
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"invalid CLI source line range {hit.line_start}-{hit.line_end} for {source_path!r}",
+        )
+
+    locators = _read_cli_source_locators(source_path)
+    if locators is None:
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"cannot read CLI reference source {source_path!r} to identify a command or option",
+        )
+    if hit.line_end > locators.line_count:
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=(
+                f"CLI source line range {hit.line_start}-{hit.line_end} exceeds the {source_path!r} "
+                f"source length of {locators.line_count} lines"
+            ),
+        )
+    matching_locators = tuple(locator for locator in locators.locators if _source_lines_overlap(locator, hit))
+    if not matching_locators:
+        target = f"{expected_page}.html"
+        detail = (
+            f"source lines {hit.line_start}-{hit.line_end} identify no CLI command or option "
+            f"locator in {source_path!r}; no authoritative CLI search record was emitted for exact target "
+            f"{target!r}"
+        )
+        if self._cli_projection_skipped_reason is not None:
+            detail += f" (CLI projection skipped: {self._cli_projection_skipped_reason})"
+        return DroppedHit(hit=hit, reason=DropReason.NO_TARGET_ENTITY, detail=detail)
+    if len(matching_locators) != 1:
+        descriptions = ", ".join(f"{locator.command_path!r}{locator.option_names!r}" for locator in matching_locators)
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=(
+                f"source lines {hit.line_start}-{hit.line_end} overlap multiple CLI source locators "
+                f"({descriptions}) in {source_path!r}; no unambiguous command or option is available"
+            ),
+        )
+
+    (locator,) = matching_locators
+    return locator
+
+
+def _cli_locator_page(hit: ChunkHit, locator: _CliSourceLocator, expected_page: str) -> str | DroppedHit:
+    """Cli locator page."""
+    command_path = tuple(locator.command_path.split())
+    from ..cli_reference import cli_reference_page_for_command
+
+    try:
+        routed_page = cli_reference_page_for_command(command_path)
+    except ValueError as exc:
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=f"CLI source locator has no valid routed page: {exc}",
+        )
+    if routed_page != expected_page:
+        return DroppedHit(
+            hit=hit,
+            reason=DropReason.NO_TARGET_ENTITY,
+            detail=(
+                f"CLI command {locator.command_path!r} routes to {routed_page!r}, not source page {expected_page!r}"
+            ),
+        )
+    return routed_page
+
+
+def _cli_command_locators(lines: list[str]) -> tuple[_CliSourceLocator, ...]:
+    """Cli command locators."""
+    command_headers = [(index, lines[index]) for index in range(len(lines)) if _is_cli_command_heading(lines, index)]
+    locators: list[_CliSourceLocator] = []
+    for position, (command_index, command_path) in enumerate(command_headers):
+        next_command_index = command_headers[position + 1][0] if position + 1 < len(command_headers) else len(lines)
+        # The command locator is deliberately only the explicit heading line. A
+        # range that also overlaps a parameter locator is ambiguous.
+        locators.append(
+            _CliSourceLocator(
+                command_path=command_path,
+                start_line=command_index + 1,
+                end_line=command_index + 1,
+            ),
+        )
+
+        locators.extend(_cli_parameter_locators(lines, command_index, next_command_index, command_path))
+    return tuple(locators)
+
+
+def _cli_parameter_locators(
+    lines: list[str], command_index: int, next_command_index: int, command_path: str
+) -> tuple[_CliSourceLocator, ...]:
+    """Read one command's parameter declaration spans."""
+    locators: list[_CliSourceLocator] = []
+    parameters_index = next(
+        (
+            index
+            for index in range(command_index + 1, next_command_index)
+            if _CLI_PARAMETERS_HEADING_RE.fullmatch(lines[index]) is not None
+        ),
+        None,
+    )
+    if parameters_index is None:
+        return ()
+    # A parameter is always exactly three lines: an unindented declaration,
+    # an indented (three-space) description, and an indented classification
+    # drawn from the fixed four-string set. The classification is the
+    # unambiguous anchor -- unlike the declaration or description text, it
+    # cannot collide with unrelated unindented prose (a following command
+    # heading, or a family page's trailing "Choose a command group"
+    # footer) that might otherwise be mistaken for a declaration.
+    parameter_lines = [
+        (index - 2, tuple(part.strip() for part in lines[index - 2].split(" / ")))
+        for index in range(parameters_index + 1, next_command_index)
+        if _is_cli_parameter_classification(lines, index, parameters_index)
+    ]
+    for parameter_position, (parameter_index, option_names) in enumerate(parameter_lines):
+        next_parameter_index = (
+            parameter_lines[parameter_position + 1][0]
+            if parameter_position + 1 < len(parameter_lines)
+            else next_command_index
+        )
+        locators.append(
+            _CliSourceLocator(
+                command_path=command_path,
+                start_line=parameter_index + 1,
+                end_line=next_parameter_index,
+                option_names=option_names,
+            ),
+        )
+    return tuple(locators)
+
+
+def _source_lines_overlap(
+    section: _CasillaSourceSection | _LegalSourceSection | _CliSourceLocator, hit: ChunkHit
+) -> bool:
+    """Keep the inclusive source overlap rule shared by each surface."""
+    return section.start_line <= hit.line_end and hit.line_start <= section.end_line
+
+
+def _invalid_source_range(hit: ChunkHit) -> bool:
+    """Reject an empty or reversed source range before reading its source."""
+    return hit.line_start < 1 or hit.line_end < hit.line_start
+
+
+def _is_cli_parameter_classification(lines: list[str], index: int, parameters_index: int) -> bool:
+    """Recognize the fixed classification line and its declaration boundary."""
+    return (
+        lines[index].strip() in _CLI_PARAMETER_CLASSIFICATIONS
+        and lines[index].startswith("   ")
+        and index - 2 > parameters_index
+        and not lines[index - 2].startswith(" ")
+    )

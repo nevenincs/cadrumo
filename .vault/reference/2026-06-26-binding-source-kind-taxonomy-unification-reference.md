@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-07-17'
-body_hash: 'sha256:ca0aa5d4957bec05b581151e5f32b85c4d57d60eaa6d35d31379dbbbdf80559d'
+modified: '2026-10-03'
+body_hash: 'sha256:b869ccdb2e6436e901f891774f8898ce7fbdea61683a50787ea2b90cb6928ce9'
 related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
@@ -24,7 +24,7 @@ the line as a hint.
 
 ### 1. The source-kind declarations (the four-plus parallel taxonomies)
 
-All in `src/aeat/core/aggregation.py` unless noted:
+All in `src/cadrumo/core/aggregation.py` unless noted:
 
 - `BindingSourceKind` (StrEnum, ~line 182) — the declared-canonical registry set,
   **19 members**: `PROFILE`, `PREVIOUS_FILING`, `RELATION_PREFILL`, `MANUAL_INPUT`,
@@ -114,7 +114,6 @@ Each is a `ModeloSourceResolver` declaring its owned source as a bare-string tup
 
 ### 5. The parity gate to extend, and the homonyms to leave alone
 
-- Extend `src/aeat/domain/calculations/registry/tests/test_binding_source_kind_taxonomy.py`
   (today: enum↔registry parity) with an enum↔mesh half — every owned/deferred/
   resolver-owned source is a `BindingSourceKind` member, and every member is
   enrolled, pre-mesh-handled, deferred, or explicitly reserved-undeclared.

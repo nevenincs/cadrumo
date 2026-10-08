@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#ci-lane-deconflation'
 date: '2026-08-16'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fe8e0a68aed753b6b88ed74694be884e01515e978e2a20e79e227792f552d29'
+body_hash: 'sha256:71477676033beba4796e073ea4aae7cdc53ac4394fecad41b9577408f3363cf3'
 related:
   - '[[2026-08-05-ci-lane-deconflation-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-exec-verification-evidence-adr]]'
-  - '[[2026-08-05-ci-lane-deconflation-ledger]]'
   - '[[2026-08-05-ci-lane-deconflation-overview-calendar-payload-adr]]'
-  - '[[2026-08-05-ci-lane-deconflation-plan]]'
   - '[[2026-08-05-ci-lane-deconflation-schema-size-instrument-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
   - '[[2026-08-06-ci-lane-deconflation-close-honesty-review-audit]]'
@@ -321,11 +319,3 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-31-ci-lane-deconflation-s58-implementation-review-audit` - `ci-lane-deconflation` audit: `P02.S58 implementation review`
 - `2026-08-31-ci-lane-deconflation-s60-record-review-audit` - `ci-lane-deconflation` audit: `P02.S60 execution record review`
 - `2026-08-31-ci-lane-deconflation-s68-code-review-audit` - `ci-lane-deconflation` audit: `P02.S68 code review`
-
-### exec
-
-- `2026-08-05-ci-lane-deconflation-ledger` - `ci-lane-deconflation` ledger
-
-### plan
-
-- `2026-08-05-ci-lane-deconflation-plan` - `ci-lane-deconflation` plan

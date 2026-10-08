@@ -509,3 +509,43 @@ class TestAccruedDateAuthority:
         assert observation.accrued_on == "2026-03-01"
         aggregation = aggregate_retenciones_111((observation,), period=Period.from_year_and_code(2026, "1T"))
         assert aggregation.total_perceptors == 1
+
+
+class TestModelo180ProvinceAndPostcodeShape:
+    """The diseño's provincia fields carry the closed 01-52 table, not any two digits."""
+
+    @staticmethod
+    def _address(**overrides: str) -> Modelo180StructuredAddress:
+        fields = {
+            "province_code": "28",
+            "municipality_code": "079",
+            "municipality": "Madrid",
+            "locality": "Madrid",
+            "postal_code": "28001",
+            "street_type": "CL",
+            "street_name": "Ejemplo",
+            "number_type": "NUM",
+            "house_number": "1",
+        }
+        return Modelo180StructuredAddress.model_validate({**fields, **overrides})
+
+    @pytest.mark.parametrize("province", ["01", "09", "10", "49", "50", "52"])
+    def test_every_boundary_province_is_admitted(self, province: str) -> None:
+        assert self._address(province_code=province, postal_code=f"{province}001").province_code == province
+
+    @pytest.mark.parametrize("province", ["00", "53", "99", "٢٨", "2", "028"])
+    def test_a_province_outside_the_table_is_refused(self, province: str) -> None:
+        with pytest.raises(ValidationError, match="province_code"):
+            self._address(province_code=province)
+
+    @pytest.mark.parametrize("postcode", ["00001", "53001", "99999", "2800", "٢٨٠٠١"])
+    def test_a_postcode_outside_the_province_table_is_refused(self, postcode: str) -> None:
+        with pytest.raises(ValidationError, match="postal_code"):
+            self._address(postal_code=postcode)
+
+    @pytest.mark.parametrize("province", ["00", "53", "99"])
+    def test_a_recipient_province_outside_the_table_is_refused(self, province: str) -> None:
+        with pytest.raises(ValidationError, match="recipient_province_code"):
+            Modelo180PropertyEvidence.model_validate(
+                {**_property("p1", "1234567AB1234C0001DE").model_dump(), "recipient_province_code": province}
+            )

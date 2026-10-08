@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:8d265f0dbb06316e55b3bc60df83ed1d99f5e6df385160c1991eb5c140ddceee'
+body_hash: 'sha256:aba7163bbfbb86671f52df79c18412946254ab883d87fe654a8cc34d5cc7b176'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-corpus-structure-hardening-reference]]"
@@ -168,6 +168,10 @@ removed from S86. Static Modelo 390 generation may follow S87 through inspection
 filing rendering and final publication depend on S91. The Modelo 390 annual-summary
 handoff S84 depends on S91 and therefore transitively on the split and every human
 gate; it may never consume the inspection projection.
+
+### Clarification: fictional workbook template previews (2026-10-06)
+
+The development-only fictional template previews defined in 2026-06-03-modelo-export-workbook-parity-adr are a distinct presentation artifact. They do not widen RegistryRevisionInspection or construct a RegistrySnapshot outside its admission gates. Their separate typed source and preview identity may use validated historical declarations to exercise the shared workbook compiler with explicit fictional fixtures. They cannot enter production calculation, filing-instance rendering, handoff, publication or remote-input ingestion. All inspection restrictions, support-envelope checks and human-review requirements in this decision remain in force. The user's all-enrolled-template exercise authorizes this bounded presentation work; it does not supply legal attestation or historical filing capability.
 
 ## Rationale
 

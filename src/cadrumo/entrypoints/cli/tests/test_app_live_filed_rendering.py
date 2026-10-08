@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from ....application.live.remote_state_models import (
     BulkFiledDataCaptureReport,
+    FiledCapturePairOutcome,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,
     IvaCompensationHistoryCaptureReport,
@@ -70,6 +71,26 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
         message="bounded register timeout",
     )
     report = BulkFiledDataCaptureReport(
+        pair_outcomes=(
+            FiledCapturePairOutcome(
+                modelo="303",
+                year=2026,
+                walk_attempted=True,
+                walk_completed=False,
+                row_count=0,
+                reached_count=0,
+                captured_count=0,
+            ),
+            FiledCapturePairOutcome(
+                modelo="390",
+                year=2026,
+                walk_attempted=False,
+                walk_completed=False,
+                row_count=0,
+                reached_count=0,
+                captured_count=0,
+            ),
+        ),
         output_root="filed-declarations",
         modelos=("303", "390"),
         year_from=2026,
@@ -104,6 +125,13 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
     assert "year_from=2026" in lines
     assert "year_to=2026" in lines
     assert "failed_count=1" in lines
+    assert "pair_count=2" in lines
+    assert any(
+        "303\t2026" in line and "walk_attempted=True" in line and "walk_completed=False" in line for line in lines
+    )
+    assert any(
+        "390\t2026" in line and "walk_attempted=False" in line and "walk_completed=False" in line for line in lines
+    )
     assert any(line.startswith("failure=303\t2026\t2T\t202620013522222B\tValueError\t") for line in lines)
 
 

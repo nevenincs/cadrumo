@@ -2,9 +2,8 @@
 
 The spelling convention for local-path options is only checkable if something
 says which parameters carry local paths. Nothing else in the graph can answer
-that. Type cannot: ``app ledger classify --file`` and ``app ledger evidence
-pull-all --folder`` are both ``str``, and one is a file on the operator's disk while the
-other is a Drive identifier. Spelling cannot either, because a gate that reads
+that. Type cannot: a filesystem name and a business identifier can both be ``str``.
+Spelling cannot either, because a gate that reads
 the option's name to decide whether the option's name is correct proves nothing.
 
 So the locus is declared, and this module is what makes the declaration
@@ -13,8 +12,8 @@ evidence of a filesystem path, so leaving one at :attr:`TransportLocus.NONE` is
 an author who did not fill the field in, and it is refused here.
 
 The converse is deliberately NOT gated. A ``str`` parameter may be a local path
-(``evidence add`` takes one positionally), a remote handle (``pull-folder``), or
-neither, and no mechanical signal separates those. Declaring them is author
+(``evidence add`` takes one positionally) or a value, and no mechanical signal
+separates those. Declaring them is author
 discipline; only the ``Path``-typed subset has a tell this gate can key on.
 Claiming to enforce more than that would be the name list this design exists to
 avoid.
@@ -30,7 +29,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_spec import CommandSpecNode, ParameterSpec
+from ..command_parameter_contracts import ParameterSpec
+from ..command_spec import CommandSpecNode
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -92,18 +92,6 @@ def test_each_verb_declares_at_most_one_primary_per_locus_and_shape(locus: Trans
     assert not offenders, f"verbs declaring more than one {locus.value} primary per shape: " + "; ".join(
         sorted(offenders)
     )
-
-
-def test_a_remote_handle_declares_neither_shape_nor_role() -> None:
-    """A counterparty's identifier has no filesystem shape to declare."""
-    offenders = [
-        f"{' '.join(node.path)} :: {parameter.name}"
-        for node in _leaves()
-        for parameter in node.spec.parameters
-        if parameter.transport_locus is TransportLocus.REMOTE_HANDLE
-        and parameter.transport_role is not TransportRole.NOT_APPLICABLE
-    ]
-    assert not offenders, "remote handles carrying a role: " + "; ".join(sorted(offenders))
 
 
 def test_the_declaration_is_actually_reaching_the_live_graph() -> None:

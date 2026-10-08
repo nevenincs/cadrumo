@@ -7,6 +7,8 @@ per-country admission policy.
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 
 from .....core.identity.documents import IdentityError, validate_identity
@@ -173,3 +175,36 @@ def test_an_authority_missing_the_catalogue_over_redacts_without_raising(printed
     with validating_governed_facts(_AuthorityWithoutComponents()):
         assert admission.admits_nif_iva(printed_identity) is None
         assert _redacts(printed_identity), f"{printed_identity!r} leaked when the catalogue was unavailable"
+
+
+@pytest.mark.parametrize("candidate", ["SIGN", "CODE", "NO", "XI", "", "ALPHABETIC"])
+def test_no_digit_candidate_refuses_without_querying_authority(candidate: str) -> None:
+    class UnexpectedCatalogueLookup(_AuthorityWithoutComponents):
+        @override
+        def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+            raise AssertionError("alphabetic candidate attempted authority lookup")
+
+    with validating_governed_facts(UnexpectedCatalogueLookup()):
+        assert RegistryTaxIdentityAdmission().admits_nif_iva(candidate) is False
+
+
+@pytest.mark.parametrize("candidate", ["RO12", "XIGD003", "XIHA003"])
+def test_short_governed_digit_formats_remain_admitted_and_redacted(candidate: str) -> None:
+    spec = nif_iva_format_for_country(candidate[:2])
+    assert spec is not None
+    assert spec.pattern.fullmatch(candidate) is not None
+    assert RegistryTaxIdentityAdmission().admits_nif_iva(candidate) is True
+    assert _redacts(candidate)
+
+
+def test_unicode_decimal_digits_still_reach_the_governed_format() -> None:
+    candidate = "RO\u0661\u0662"
+    spec = nif_iva_format_for_country("RO")
+    assert spec is not None
+    assert spec.pattern.fullmatch(candidate) is not None
+    assert RegistryTaxIdentityAdmission().admits_nif_iva(candidate) is True
+
+
+def test_nondecimal_digit_keeps_the_unavailable_authority_answer() -> None:
+    with validating_governed_facts(_AuthorityWithoutComponents()):
+        assert RegistryTaxIdentityAdmission().admits_nif_iva("RO²") is None

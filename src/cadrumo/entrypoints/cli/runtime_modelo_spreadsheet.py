@@ -1,0 +1,258 @@
+"""Submit local XLSX export for one bound profile."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Never
+
+import typer
+from pydantic import BaseModel
+
+from ...application.modelo.modelo_spreadsheet_operation_contracts import (
+    MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
+    ModeloSpreadsheetExportOutcome,
+    ModeloSpreadsheetExportRequest,
+    ModeloSpreadsheetRequest,
+    SpreadsheetOutputPathRefusal,
+    SpreadsheetRefusal,
+)
+from ...application.modelo.modelo_spreadsheet_operation_projections import (
+    ModeloSpreadsheetExportProjection,
+    ModeloSpreadsheetProjection,
+)
+from ...application.operations.public_period import PublicPeriod
+from ...application.runtime.contracts import RuntimeRefusalCode
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .errors import CliRecordedOperationError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error, submitted_operation_error
+from .runtime_profile_binding import bound_profile_client, require_profile_client
+from .runtime_registered_operation import run_registered_operation
+
+_OUTPUT_PATH_REFUSAL_CODE = "REFUSED_MODELO_EXPORT_OUTPUT_PATH"
+_OUTPUT_PATH_REASONS = {
+    "empty": "path is empty",
+    "existing_directory": "path is an existing directory",
+    "existing_file": "path is an existing file",
+    "missing_parent": "parent directory does not exist",
+    "parent_not_directory": "parent path is not a directory",
+    "publication_failed": "file publication failed",
+}
+type ModeloSpreadsheetRegisteredOutcome = ModeloSpreadsheetExportOutcome
+
+
+def _submit[ProjectionT: BaseModel](
+    ctx: typer.Context,
+    request: ModeloSpreadsheetRequest,
+    *,
+    definition_id: str,
+    result_type: type[ProjectionT],
+) -> RegisteredOperationCompletion[ProjectionT]:
+    client = require_profile_client(ctx, expected_profile_id=request.profile_id)
+    return run_registered_operation(
+        client,
+        request,
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        result_type=result_type,
+        request_version=1,
+        result_version=1,
+        timeout=120,
+        allow_refusal_detail=True,
+    )
+
+
+def _refuse_from_correlated_outcome(
+    outcome: ModeloSpreadsheetRegisteredOutcome,
+    *,
+    operation_id: str,
+    refusal_code: str,
+    effect: OperationEffect,
+) -> Never:
+    """Translate only closed refusal facts that match their terminal receipt."""
+    refusal = outcome.refusal
+    context: dict[str, object]
+    translated_message: str
+    if isinstance(refusal, SpreadsheetOutputPathRefusal):
+        if outcome.operation != "export" or refusal_code != _OUTPUT_PATH_REFUSAL_CODE:
+            raise submitted_operation_error(
+                operation_id,
+                RuntimeRefusalCode.INVALID_FRAME.value,
+                terminal_condition=OperationTerminalCondition.REFUSED,
+                effect=effect,
+                refusal_code=refusal_code,
+            )
+        context = {
+            "output_path": refusal.output_path,
+            "reason": _OUTPUT_PATH_REASONS[refusal.reason],
+        }
+        translated_message = "application.modelo.errors.export_output_path_invalid"
+    else:
+        raise submitted_operation_error(
+            operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=OperationTerminalCondition.REFUSED,
+            effect=effect,
+            refusal_code=refusal_code,
+        )
+    raise CliRecordedOperationError(
+        refusal_code,
+        context=context,
+        translated_message=translated_message,
+    )
+
+
+def _correlate[OutcomeT: ModeloSpreadsheetRegisteredOutcome, ProjectionT: ModeloSpreadsheetProjection](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    *,
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+    projection_type: type[ProjectionT],
+    expected_effect: OperationEffect,
+) -> ProjectionT:
+    outcome = completed.projection
+    _require_spreadsheet_identity(completed, request, operation)
+    result = outcome.result
+    if outcome.outcome == "succeeded":
+        return _spreadsheet_success(completed, request, projection_type, expected_effect)
+
+    refusal = outcome.refusal
+    if (
+        outcome.outcome != "refused"
+        or result is not None
+        or refusal is None
+        or completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.refusal_code is None
+        or completed.effect not in {OperationEffect.NONE, OperationEffect.UNKNOWN}
+    ):
+        raise invalid_completion_error(completed)
+    _require_spreadsheet_refusal(completed, request, operation, refusal)
+    _refuse_from_correlated_outcome(
+        outcome,
+        operation_id=str(completed.operation_id),
+        refusal_code=completed.refusal_code,
+        effect=completed.effect,
+    )
+
+
+def export_modelo_spreadsheet(
+    ctx: typer.Context,
+    *,
+    modelo: str,
+    period: PublicPeriod,
+    output: Path,
+    replace_existing: bool,
+    prefill_relations: bool,
+) -> ModeloSpreadsheetExportProjection:
+    """Publish an export workbook through the exact-profile worker."""
+    client = bound_profile_client(ctx)
+    absolute_output = output.absolute()
+    request = ModeloSpreadsheetExportRequest(
+        profile_id=client.profile_id,
+        modelo=modelo,
+        period=period,
+        output_path=str(absolute_output),
+        replace_existing=replace_existing,
+        prefill_relations=prefill_relations,
+    )
+    completed = _submit(
+        ctx,
+        request,
+        definition_id=MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
+        result_type=ModeloSpreadsheetExportOutcome,
+    )
+    projection = _correlate(
+        completed,
+        request=request,
+        operation="export",
+        projection_type=ModeloSpreadsheetExportProjection,
+        expected_effect=OperationEffect.UPDATED,
+    )
+    if projection.output_path != request.output_path or projection.prefill_relations != request.prefill_relations:
+        raise invalid_completion_error(completed)
+    return projection
+
+
+__all__ = [
+    "export_modelo_spreadsheet",
+]
+
+
+def _require_spreadsheet_identity[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+) -> None:
+    """Correlate the exact profile, modelo, period, and operation identity."""
+    outcome = completed.projection
+    if (
+        outcome.profile_id != request.profile_id
+        or outcome.modelo != request.modelo
+        or outcome.period != request.period
+        or outcome.operation != operation
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _spreadsheet_success[OutcomeT: ModeloSpreadsheetRegisteredOutcome, ProjectionT: ModeloSpreadsheetProjection](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    projection_type: type[ProjectionT],
+    expected_effect: OperationEffect,
+) -> ProjectionT:
+    """Require the successful result and its registered terminal receipt."""
+    outcome = completed.projection
+    result = outcome.result
+    if (
+        _invalid_spreadsheet_success_terminal(completed, expected_effect)
+        or result is None
+        or outcome.refusal is not None
+        or (not isinstance(result, projection_type))
+        or (result.profile_id != request.profile_id)
+        or (result.modelo != request.modelo)
+        or (result.revision != outcome.revision)
+        or (result.period != request.period)
+    ):
+        raise invalid_completion_error(completed)
+    return result
+
+
+def _invalid_spreadsheet_success_terminal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT], expected_effect: OperationEffect
+) -> bool:
+    """Correlate the successful terminal condition, effect, and refusal absence."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not expected_effect
+        or completed.refusal_code is not None
+    )
+
+
+def _require_output_path_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+    refusal: SpreadsheetOutputPathRefusal,
+) -> None:
+    """Correlate this refusal with its request and admitted effects."""
+    if (
+        operation != "export"
+        or not isinstance(request, ModeloSpreadsheetExportRequest)
+        or refusal.output_path != request.output_path
+        or completed.refusal_code != _OUTPUT_PATH_REFUSAL_CODE
+        or completed.effect not in {OperationEffect.NONE, OperationEffect.UNKNOWN}
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _require_spreadsheet_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+    refusal: SpreadsheetRefusal,
+) -> None:
+    """Dispatch a correlated refusal to its closed typed contract."""
+    if isinstance(refusal, SpreadsheetOutputPathRefusal):
+        _require_output_path_refusal(completed, request, operation, refusal)
+    else:
+        raise invalid_completion_error(completed)

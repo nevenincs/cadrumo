@@ -4,16 +4,13 @@ tags:
   - '#index'
   - '#data-output-standardization'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d44be467521fa7488b7592ece3f107827ad56ea8119999f8310be83b6ebb89c'
+body_hash: 'sha256:a8def97175b9dc9064191a0d3a35996ed38a150acd96e0d7854f41c8aa4baa57'
 related:
-  - '[[2026-07-13-data-output-standardization-W06-P10-summary]]'
   - '[[2026-07-13-data-output-standardization-adr]]'
   - '[[2026-07-13-data-output-standardization-audit]]'
   - '[[2026-07-13-data-output-standardization-env-var-ownership-audit]]'
-  - '[[2026-07-13-data-output-standardization-ledger]]'
-  - '[[2026-07-13-data-output-standardization-plan]]'
   - '[[2026-07-13-data-output-standardization-research]]'
   - '[[2026-07-14-data-output-standardization-audit]]'
 ---
@@ -33,15 +30,6 @@ Auto-generated index of all documents tagged with `#data-output-standardization`
 - `2026-07-13-data-output-standardization-audit` - `data-output-standardization` audit: `financial catalogue dir liveness`
 - `2026-07-13-data-output-standardization-env-var-ownership-audit` - `data-output-standardization` audit: `AEAT env-var ownership adjudication`
 - `2026-07-14-data-output-standardization-audit` - `data-output-standardization` audit: `campaign close honesty review`
-
-### exec
-
-- `2026-07-13-data-output-standardization-ledger` - `data-output-standardization` ledger
-- `2026-07-13-data-output-standardization-W06-P10-summary` - `data-output-standardization` `W06.P10` summary
-
-### plan
-
-- `2026-07-13-data-output-standardization-plan` - `data-output-standardization` plan
 
 ### research
 

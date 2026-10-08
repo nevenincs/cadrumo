@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-from ..calendar_ccaa_catalogue import _catalogue, _resolve_entries, resolve_calendar_ccaa_catalogue
+from ..calendar_ccaa_catalogue import _ENTRIES_FACT, _catalogue, resolve_calendar_ccaa_catalogue
 from ..ccaa_catalogue import resolve_ccaa_catalogue
 from ..errors import RegistryValidationError
 
@@ -41,7 +41,7 @@ _ISO_3166_2_ES = {
 
 def _published_entries() -> dict[str, str]:
     with bundled_indexed_authority().operation() as operation:
-        return dict(_resolve_entries(effective_date=_EFFECTIVE, authority=operation))
+        return dict(_ENTRIES_FACT.resolve_scoped_entries(effective_date=_EFFECTIVE, authority=operation))
 
 
 def test_every_declared_tax_residence_relates_to_its_iso_territory() -> None:

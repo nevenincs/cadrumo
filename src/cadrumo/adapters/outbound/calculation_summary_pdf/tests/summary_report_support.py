@@ -37,6 +37,7 @@ from .....application.modelo.review_package_signing import ReviewPackageSigningK
 from .....core.calculation_report_format import CalculationReportDocumentFormat
 from .....core.external_constants import OutputLanguage
 from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.filing.schema import ModeloValueKind
@@ -206,14 +207,15 @@ def render_summary(
     keypair: ReviewPackageSigningKeypair | None = None,
 ) -> CalculationReportDocument:
     """Render ``report`` as a summary PDF through the one serialiser entry point."""
-    return serialize_calculation_report(
-        report,
-        document_format=CalculationReportDocumentFormat.PDF,
-        pdf_rendering=CalculationSummaryPdfRendering(
-            writer=write_calculation_summary_pdf,
-            keypair=synthetic_keypair() if keypair is None else keypair,
-        ),
-    )
+    with bundled_indexed_authority().operation():
+        return serialize_calculation_report(
+            report,
+            document_format=CalculationReportDocumentFormat.PDF,
+            pdf_rendering=CalculationSummaryPdfRendering(
+                writer=write_calculation_summary_pdf,
+                keypair=synthetic_keypair() if keypair is None else keypair,
+            ),
+        )
 
 
 __all__ = [

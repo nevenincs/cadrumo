@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d15d12858c3aeec13ba1709c03d6526ec3e6b46223bbbe7d23d099f6634c7265'
+modified: '2026-10-03'
+body_hash: 'sha256:d2281eafcfc4d9f274fec359f091bb88938b7a97a6f66a73ff9b0d2644894925'
 related: []
 ---
 
@@ -33,9 +33,9 @@ The locale leaves were scaffolded and set with `python -m aeat.locales`.
 
 ## S228-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/live/_expedientes.py src/aeat/application/live/test_expedientes.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/live/test_expedientes.py` passed with 14 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "expedientes or s85_runtime"` passed with 1 selected runtime-migration test.
+- the historical check passed.
+- the historical check passed with 14 tests.
+- the historical check passed with 1 selected runtime-migration test.
 - `uv run --no-sync python -m aeat.locales audit` passed.
 
 Reviewer note: locale catalogue updates were performed through

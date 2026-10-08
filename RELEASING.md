@@ -83,6 +83,108 @@ Confirm the repository configuration used by the destinations that are enabled:
 - variable `HOMEBREW_TAP_REPO` and secret `HOMEBREW_TAP_TOKEN`
 - the `release-alert` repository label, or the configured webhook fallback
 
+## Google OAuth and desktop publisher setup
+
+These checks belong to the publisher, not to each Cadrumo user. Keep the bundled
+Desktop OAuth client metadata public. Do not replace it with a Web client, hide
+it in build secrets, or bypass repository push protection to publish it.
+
+On 2026-10-05, the publisher confirmed that the Google client is already a
+Desktop client, verified and published. Its metadata is tracked at
+`src/cadrumo/_data/google/oauth_client.json`. Console setup is complete by
+publisher confirmation; the OAuth review did not independently inspect the
+authenticated Console. No client recreation or repeat verification is pending.
+
+When changing that Google Cloud project's configuration in future:
+
+1. Open **Google Auth Platform > Clients** and confirm the client is of type
+   **Desktop app** and its ID matches the bundled installation metadata.
+2. Under **Branding**, check the application name, support contact, homepage,
+   privacy policy and authorized domains. Complete the verification requested
+   by Google. Under **Audience**, confirm whether this is a test or production
+   application and add the designated test account when testing requires it.
+3. Under **Data Access**, retain only `openid`,
+   `https://www.googleapis.com/auth/userinfo.email`, and
+   `https://www.googleapis.com/auth/drive.file`. Enable the Drive and Sheets
+   APIs in the project's API Library. Do not add whole-Drive access to fix a
+   failed test.
+
+See Google's [native application setup](https://developers.google.com/identity/protocols/oauth2/native-app)
+and [brand verification instructions](https://developers.google.com/identity/protocols/oauth2/production-readiness/brand-verification).
+Local tests cannot establish live provider acceptance of a changed application.
+
+Before publishing, use a designated Google account and a disposable Cadrumo
+profile containing synthetic data, from an interactive desktop terminal:
+
+For a source checkout, first select its published authority in that same
+PowerShell terminal. The development recipe sets the path for its own process;
+it cannot set the calling terminal's environment:
+
+```powershell
+Set-Location Y:\code\cadrumo-worktrees\tui
+just registry-publish-authority-if-authority-stale
+$env:CADRUMO_AUTHORITY_ROOT = Join-Path (Get-Location) '.authority'
+uv run --no-sync aeat config google status
+```
+
+Use your own checkout path in the first line. Continue only when the status
+command reaches the application successfully. `runtime_unavailable` is a
+separate runtime admission/startup failure, not an OAuth or Google Console
+failure. The CLI connects to the runtime; it does not start it. The runtime
+must serve the same storage root from the operator's interactive desktop.
+An installed distribution carries its authority and does not need this
+checkout override. For the commands below, a checkout uses
+`uv run --no-sync aeat` in place of bare `aeat`.
+
+1. Run `aeat config google login`. Confirm that the system browser opens and
+   that consent requests only identity/email and files used by the app.
+2. Deny consent on one attempt and close the browser on another. Confirm no
+   session is saved; an abandoned callback must expire within five minutes.
+3. Complete consent, then use the documented
+   [Sheets export and readback workflow](docs/how-to/review-with-google-sheets.md)
+   with synthetic figures. Confirm no unrelated Drive files are touched.
+4. Remove Cadrumo's access in the test account's
+   [connections](https://myaccount.google.com/connections). Restart Cadrumo to
+   discard its in-memory access token, then repeat an operation that requires
+   Google. Confirm it refuses or requires sign-in instead of reporting success.
+5. Sign in again and run `aeat config google logout`. Confirm the local session
+   is removed and the folder/workbook remain. Delete the synthetic files in
+   Drive yourself when finished.
+
+Record the tested commit, platform, date and pass/fail outcomes with the release
+evidence. Do not copy callback URLs, tokens, authorization codes or profile keys.
+A successful login alone does not establish all of these controls.
+
+The current desktop release plan is unsigned: the publisher has no code-signing
+certificate and is deferring trusted signing. Do not describe these artifacts
+as publisher-signed or ask users to trust a self-signed certificate as proof of
+Cadrumo's identity. A self-signed certificate may exercise a development signing
+pipeline, but it is not a production trust anchor. No signing certificate is
+required to complete the Google OAuth setup above.
+
+The release workflow already declares build-provenance attestations for Python
+distributions and PyPI Trusted Publishing. Confirm their actual production run
+before claiming verified provenance. They do not establish the publisher of a
+native executable on the user's machine. When trusted desktop signing is
+introduced, the remaining setup for each platform is:
+
+- Windows: provision a publisher code-signing identity, protect its signing
+  access, and sign and timestamp the executables and installer.
+- macOS: configure Developer ID signing and notarization for the shipped app.
+- Linux: authenticate the chosen package/repository channel and its metadata.
+
+Release engineering must then wire those identities into the actual distribution
+path and test modified-artifact and wrong-signer rejection. Any updater must
+verify authenticated metadata and artifacts against trusted publisher keys,
+with an explicit rollback policy. Checksums supplied alongside an untrusted
+download do not establish publisher identity. Signing configuration and updater
+acceptance were not live-verified by the OAuth review.
+
+PKCE and local Drive ownership checks do not authenticate the distributed app.
+A counterfeit program can reuse the public client ID and initiate its own
+valid authorization flow. Publisher verification helps users obtain authentic
+software; it does not prevent the counterfeit from calling Google directly.
+
 ## Per-release preflight
 
 Both workflows run on hosted runners, so no self-hosted runner needs to be online to

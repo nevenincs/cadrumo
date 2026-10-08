@@ -42,7 +42,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.m036.list",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "declaration_count": 1,
@@ -61,7 +69,7 @@
           "operation": "modelo.m036.list"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -84,7 +92,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.m036.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "declaration_id": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7",
@@ -97,7 +113,7 @@
           "sede_justificante": "ACUSE-036-2026"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

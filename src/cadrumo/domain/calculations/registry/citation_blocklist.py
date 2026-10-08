@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol, TypeIs, runtime_checkable
 
@@ -9,7 +10,7 @@ from ....core.i18n.translatable import Translatable as tr
 from ....core.text_fold import fold_diacritics
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 if TYPE_CHECKING:
@@ -114,38 +115,36 @@ def _known_bad_citations(
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("known-bad citation catalogue must resolve as a mapping fact")
     declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    identifiers = _known_bad_citation_identifiers(declarations)
+    return tuple(_known_bad_citation(identifier, declarations) for identifier in identifiers)
+
+
+def _known_bad_citation_identifiers(declarations: Mapping[str, str]) -> tuple[str, ...]:
     raw_ids = declarations.get("catalogue.ids", "")
     identifiers = tuple(identifier.strip() for identifier in raw_ids.split(",") if identifier.strip())
     if not identifiers:
         raise RegistryValidationError("known-bad citation catalogue is empty")
     if len(set(identifiers)) != len(identifiers):
         raise RegistryValidationError("known-bad citation catalogue contains duplicate identifiers")
+    return identifiers
 
-    citations: list[KnownBadCitation] = []
-    for identifier in identifiers:
-        prefix = f"citation.{identifier}"
-        try:
-            source = declarations[f"{prefix}.source"]
-            article = declarations[f"{prefix}.article"]
-            role_substring = declarations[f"{prefix}.role_substring"]
-            reason = declarations[f"{prefix}.reason"]
-        except KeyError as exc:
-            raise RegistryValidationError(
-                f"known-bad citation catalogue is missing declaration {exc.args[0]!r}",
-            ) from exc
-        if not _is_citation_source(source):
-            raise RegistryValidationError(f"known-bad citation catalogue has unknown source {source!r}")
-        if not article or not role_substring or not reason:
-            raise RegistryValidationError(f"known-bad citation catalogue has an empty field for {identifier!r}")
-        citations.append(
-            KnownBadCitation(
-                source,
-                article,
-                tr(role_substring),
-                reason,
-            ),
-        )
-    return tuple(citations)
+
+def _known_bad_citation(identifier: str, declarations: Mapping[str, str]) -> KnownBadCitation:
+    prefix = f"citation.{identifier}"
+    try:
+        source = declarations[f"{prefix}.source"]
+        article = declarations[f"{prefix}.article"]
+        role_substring = declarations[f"{prefix}.role_substring"]
+        reason = declarations[f"{prefix}.reason"]
+    except KeyError as exc:
+        raise RegistryValidationError(
+            f"known-bad citation catalogue is missing declaration {exc.args[0]!r}",
+        ) from exc
+    if not _is_citation_source(source):
+        raise RegistryValidationError(f"known-bad citation catalogue has unknown source {source!r}")
+    if not article or not role_substring or not reason:
+        raise RegistryValidationError(f"known-bad citation catalogue has an empty field for {identifier!r}")
+    return KnownBadCitation(source, article, tr(role_substring), reason)
 
 
 def find_known_bad(
@@ -185,9 +184,7 @@ def find_known_bad(
         The matching :class:`KnownBadCitation` entry, or ``None`` if the citation
         is not on the blocklist.
     """
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("known-bad citation lookup requires an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="known-bad citation lookup")
     if not _is_citation_source(source):
         raise RegistryValidationError(f"known-bad citation lookup has unknown source {source!r}")
     if not isinstance(authority, _FilingYearFloorSource):
@@ -195,14 +192,38 @@ def find_known_bad(
             "known-bad citation lookup requires an authority that publishes its supported filing years"
         )
     floor = authority.supported_filing_years().date_envelope().floor
+    evaluation_date = _citation_catalogue_evaluation_date(effective_date, effective_to, floor)
+    if evaluation_date is None:
+        return None
+    return _first_matching_known_bad_citation(source, article, role_text, authority, evaluation_date)
+
+
+def _citation_catalogue_evaluation_date(
+    effective_date: date,
+    effective_to: date | None,
+    floor: date,
+) -> date | None:
     if effective_to is not None and effective_to < floor:
         return None
-    evaluation_date = max(effective_date, floor)
+    return max(effective_date, floor)
+
+
+def _first_matching_known_bad_citation(
+    source: str,
+    article: str,
+    role_text: str,
+    authority: GovernedFactSource,
+    effective_date: date,
+) -> KnownBadCitation | None:
     folded = _fold_diacritics(role_text)
-    for entry in _known_bad_citations(authority=authority, effective_date=evaluation_date):
-        if entry.source == source and entry.article == article and _fold_diacritics(entry.role_substring) in folded:
+    for entry in _known_bad_citations(authority=authority, effective_date=effective_date):
+        if _citation_matches(entry, source, article, folded):
             return entry
     return None
+
+
+def _citation_matches(entry: KnownBadCitation, source: str, article: str, folded_role: str) -> bool:
+    return entry.source == source and entry.article == article and _fold_diacritics(entry.role_substring) in folded_role
 
 
 __all__ = ["CitationSource", "KnownBadCitation", "find_known_bad"]

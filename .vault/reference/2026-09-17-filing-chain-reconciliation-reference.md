@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#filing-chain-reconciliation'
 date: '2026-09-17'
-modified: '2026-09-19'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:723e1acd06c9a2cde5db6a9f99079a02c1d6f2d59b9fff960caf18f212d9ddb7'
+body_hash: 'sha256:354e47877aa79c95439890177d3771c8f802528e0f1c0adeac3318a6c865e38b'
 related: []
 ---
 
@@ -32,7 +32,6 @@ Code map for how Cadrumo records filings, local corrections, AEAT evidence and m
 
 ### Guard and refusals
 
-- `_refuse_official_evidence_displacement` (`calculation_observations.py:226`) refuses any non-official write into a slot holding official evidence unless `replace_official_evidence=True`. That flag overwrites the official row permanently. Error: `ObservationEvidenceDisplacementError` (`src/cadrumo/application/calculations/errors.py:141`). Tests: `src/cadrumo/adapters/persistence/profile/tests/test_observation_evidence_displacement_guard.py`.
 - The clean-state gate turns a non-official current observation into `LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE` and evaluates the chain through `history_for` (`cross_period_clean_state.py:1374`).
 
 ### Defects this map establishes

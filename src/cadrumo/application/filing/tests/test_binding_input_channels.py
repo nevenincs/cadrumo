@@ -21,6 +21,7 @@ valid year.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date, datetime
 
 import pytest
 
@@ -72,6 +73,16 @@ class TestFamiliesTheLiteralChainHandled:
     def test_decimal_families_parse(self, data_type: str) -> None:
         assert str(_binding_input("b", "12.34", _binding(data_type))) == "12.34"
 
+    @pytest.mark.parametrize("data_type", ("integer", "decimal", "money"))
+    @pytest.mark.parametrize("value", (None, ""))
+    def test_empty_numeric_binding_preserves_absence(self, data_type: str, value: object) -> None:
+        assert _binding_input("b", value, _binding(data_type)) is None
+
+    @pytest.mark.parametrize("data_type", ("integer", "decimal", "money"))
+    def test_whitespace_is_not_a_canonical_empty_numeric_binding(self, data_type: str) -> None:
+        with pytest.raises(ModeloBuilderError):
+            _binding_input("b", " ", _binding(data_type))
+
 
 class TestFamiliesTheLiteralChainRejected:
     """Specific text families the registry declares but filing refused."""
@@ -111,3 +122,20 @@ class TestUnknownDataType:
     def test_fixture_default_exercises_the_decimal_channel(self) -> None:
         """Keep the helper fixture's omitted argument on its explicit decimal case."""
         assert str(_binding_input("b", "5", _binding())) == "5"
+
+
+class TestCalendarDateBindings:
+    """Calendar dates survive filing values and reject ambiguous scalar inputs."""
+
+    @pytest.mark.parametrize("value", (date(2024, 2, 29), "2024-02-29", "20240229"))
+    def test_calendar_date_round_trips(self, value: date | str) -> None:
+        assert _binding_input("b", value, _binding("date")) == date(2024, 2, 29)
+
+    def test_absence_remains_absent(self) -> None:
+        assert _binding_input("b", None, _binding("date")) is None
+
+    @pytest.mark.parametrize("value", ("2023-02-29", "", 20240229, True, datetime(2024, 2, 29)))
+    def test_invalid_dates_and_non_calendar_types_refuse(self, value: object) -> None:
+        with pytest.raises(ModeloBuilderError) as excinfo:
+            _binding_input("b", value, _binding("date"))
+        assert excinfo.value.translated_message == "application.filing.build_draft.errors.date_binding_not_iso"

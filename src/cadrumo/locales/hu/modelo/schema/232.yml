@@ -1,6 +1,344 @@
 modelo:
   schema:
     '232':
+      binding:
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjdc5q74qbq5ln6ipg:
+          label: 'Anyavállalat: azonosító szám'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjdc5q74qbq5lp62ujfdomn6rr3d5gmo:
+          label: 'Anyavállalat: cégnév'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqpjads:
+          label: 'Kapcsolt féllel kötött ügylet 1: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqqbde1nn4t35:
+          label: 'Kapcsolt féllel kötött ügylet 1: az ügylet összege'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqrj9co:
+          label: 'Kapcsolt féllel kötött ügylet 1: a kapcsolt fél NIF-je'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqs3idtr6irj3d5giqs31d5pg:
+          label: 'Kapcsolt féllel kötött ügylet 1: tartomány- vagy országkód'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqsj1f9nmsbbjdthmiobc:
+          label: 'Kapcsolt féllel kötött ügylet 1: családnév és utónév, vagy cégnév'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqt39e1niqtj9dphnar31cdkmurg:
+          help: '1. sor: adja meg a kapcsolattípusok hivatalos táblázatának kulcsát
+            (A-tól H-ig), például D-t ugyanazon csoporthoz tartozó két társaság esetén.'
+          label: 'Kapcsolt féllel kötött ügylet 1: a kapcsolat típusa'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qpjads:
+          label: 'Kapcsolt féllel kötött ügylet 2: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qqbde1nn4t35:
+          label: 'Kapcsolt féllel kötött ügylet 2: az ügylet összege'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qrj9co:
+          label: 'Kapcsolt féllel kötött ügylet 2: a kapcsolt fél NIF-je'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qs3idtr6irj3d5giqs31d5pg:
+          label: 'Kapcsolt féllel kötött ügylet 2: tartomány- vagy országkód'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qsj1f9nmsbbjdthmiobc:
+          label: 'Kapcsolt féllel kötött ügylet 2: családnév és utónév, vagy cégnév'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qt39e1niqtj9dphnar31cdkmurg:
+          help: '2. sor: adja meg a kapcsolattípusok hivatalos táblázatának kulcsát
+            (A-tól H-ig), például D-t ugyanazon csoporthoz tartozó két társaság esetén.'
+          label: 'Kapcsolt féllel kötött ügylet 2: a kapcsolat típusa'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqpjads:
+          label: 'Kapcsolt féllel kötött ügylet 3: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqqbde1nn4t35:
+          label: 'Kapcsolt féllel kötött ügylet 3: az ügylet összege'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqrj9co:
+          label: 'Kapcsolt féllel kötött ügylet 3: a kapcsolt fél NIF-je'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqs3idtr6irj3d5giqs31d5pg:
+          label: 'Kapcsolt féllel kötött ügylet 3: tartomány- vagy országkód'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqsj1f9nmsbbjdthmiobc:
+          label: 'Kapcsolt féllel kötött ügylet 3: családnév és utónév, vagy cégnév'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqt39e1niqtj9dphnar31cdkmurg:
+          help: '3. sor: adja meg a kapcsolattípusok hivatalos táblázatának kulcsát
+            (A-tól H-ig), például D-t ugyanazon csoporthoz tartozó két társaság esetén.'
+          label: 'Kapcsolt féllel kötött ügylet 3: a kapcsolat típusa'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 1: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 1: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb6d9ng:
+          label: 'Adóparadicsomos ügylet 1: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 1: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 1: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dcdm62tj55lo62qbj:
+          label: 'Adóparadicsomos ügylet 10: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dchin6orid5o66qbfdo:
+          label: 'Adóparadicsomos ügylet 10: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dcpl6u:
+          label: 'Adóparadicsomos ügylet 10: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dd5mn0rriehig:
+          label: 'Adóparadicsomos ügylet 10: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1de1in4srfdpgg:
+          label: 'Adóparadicsomos ügylet 10: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dcdm62tj55lo62qbj:
+          label: 'Adóparadicsomos ügylet 11: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dchin6orid5o66qbfdo:
+          label: 'Adóparadicsomos ügylet 11: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dcpl6u:
+          label: 'Adóparadicsomos ügylet 11: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dd5mn0rriehig:
+          label: 'Adóparadicsomos ügylet 11: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9de1in4srfdpgg:
+          label: 'Adóparadicsomos ügylet 11: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdcdm62tj55lo62qbj:
+          label: 'Adóparadicsomos ügylet 12: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdchin6orid5o66qbfdo:
+          label: 'Adóparadicsomos ügylet 12: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdcpl6u:
+          label: 'Adóparadicsomos ügylet 12: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdd5mn0rriehig:
+          label: 'Adóparadicsomos ügylet 12: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chde1in4srfdpgg:
+          label: 'Adóparadicsomos ügylet 12: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 2: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 2: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb6d9ng:
+          label: 'Adóparadicsomos ügylet 2: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 2: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 2: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 3: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 3: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb6d9ng:
+          label: 'Adóparadicsomos ügylet 3: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 3: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 3: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 4: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 4: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb6d9ng:
+          label: 'Adóparadicsomos ügylet 4: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 4: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 4: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 5: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 5: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb6d9ng:
+          label: 'Adóparadicsomos ügylet 5: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 5: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 5: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 6: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 6: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb6d9ng:
+          label: 'Adóparadicsomos ügylet 6: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 6: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 6: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 7: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 7: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb6d9ng:
+          label: 'Adóparadicsomos ügylet 7: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 7: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 7: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 8: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 8: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb6d9ng:
+          label: 'Adóparadicsomos ügylet 8: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 8: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 8: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb3dhgncp9de1gmiso:
+          label: 'Adóparadicsomos ügylet 9: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb4clpm6sj9e1hmirre:
+          label: 'Adóparadicsomos ügylet 9: az ügylet leírása'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb6d9ng:
+          label: 'Adóparadicsomos ügylet 9: a személy típusa (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb9dlo6usjkck:
+          label: 'Adóparadicsomos ügylet 9: összeg'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibbgclp76rrec4:
+          label: 'Adóparadicsomos ügylet 9: ott illetőségű személy vagy szervezet'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 1: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 1: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 1: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dehkn0ro:
+          help: '1. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 1: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 1: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lhmoobmckmn0ob9ec:
+          label: 'Adóparadicsomi értékpapír 10: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5limst39chgm8:
+          label: 'Adóparadicsomi értékpapír 10: részesedéssel bíró vagy kibocsátó
+            cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Adóparadicsomi értékpapír 10: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lq6is3f:
+          help: '10. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 10: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Adóparadicsomi értékpapír 10: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lhmoobmckmn0ob9ec:
+          label: 'Adóparadicsomi értékpapír 11: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5limst39chgm8:
+          label: 'Adóparadicsomi értékpapír 11: részesedéssel bíró vagy kibocsátó
+            cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Adóparadicsomi értékpapír 11: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lq6is3f:
+          help: '11. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 11: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Adóparadicsomi értékpapír 11: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lhmoobmckmn0ob9ec:
+          label: 'Adóparadicsomi értékpapír 12: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5limst39chgm8:
+          label: 'Adóparadicsomi értékpapír 12: részesedéssel bíró vagy kibocsátó
+            cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Adóparadicsomi értékpapír 12: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lq6is3f:
+          help: '12. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 12: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Adóparadicsomi értékpapír 12: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 2: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 2: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 2: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdehkn0ro:
+          help: '2. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 2: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 2: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 3: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 3: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 3: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdehkn0ro:
+          help: '3. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 3: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 3: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 4: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 4: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 4: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dehkn0ro:
+          help: '4. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 4: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 4: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 5: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 5: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 5: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dehkn0ro:
+          help: '5. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 5: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 5: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 6: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 6: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 6: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdehkn0ro:
+          help: '6. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 6: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 6: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 7: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 7: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 7: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdehkn0ro:
+          help: '7. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 7: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 7: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 8: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 8: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 8: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dehkn0ro:
+          help: '8. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 8: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 8: szerzési érték'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dcdm62tj55lo62qbj:
+          label: 'Adóparadicsomi értékpapír 9: az ország vagy terület kódja'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dcln78qb4c5i0:
+          label: 'Adóparadicsomi értékpapír 9: részesedéssel bíró vagy kibocsátó cég'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Adóparadicsomi értékpapír 9: a részesedés százaléka'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dehkn0ro:
+          help: '9. sor: adja meg a hivatalos táblázat kulcsát: A az e területeken
+            illetőségű társaságok saját tőkét megtestesítő értékpapírjai, B az ott
+            létrehozott kollektív befektetési intézmények értékpapírjai, C az ottani
+            másodlagos piacokon jegyzett kamatozó értékpapírok.'
+          label: 'Adóparadicsomi értékpapír 9: típus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Adóparadicsomi értékpapír 9: szerzési érték'
       casilla:
         continuidad:
           actividad-cnae:
@@ -8,108 +346,155 @@ modelo:
           filing-year:
             label: Az adóztatandó esemény adóéve
           related-party-fjo-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-fjo-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-fjo-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-fjo-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-fjo-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-importe-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-importe-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-importe-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-importe-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-importe-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-ingreso-pago-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-ingreso-pago-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-ingreso-pago-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-ingreso-pago-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-ingreso-pago-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-location-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-location-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-location-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-location-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-location-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-metodo-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-metodo-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-metodo-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-metodo-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-metodo-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-name-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-name-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-name-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-name-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-name-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-nif-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-nif-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-nif-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-nif-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-nif-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-tipo-operacion-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-tipo-operacion-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-tipo-operacion-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-tipo-operacion-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-tipo-operacion-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           tipo-ejercicio-232:
             label: Adóév típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
               rövidebb)
       construct:
         modelo-232-informative:
           field:
-            title: '232-es nyomtatvány: a kapcsolt vállalkozási ügyletekről és adóparadicsomi
-              kapcsolatokról szóló adatszolgáltatás'
+            title: 'Modelo 232 nyomtatvány: a kapcsolt vállalkozási ügyletekről és
+              adóparadicsomi kapcsolatokról szóló adatszolgáltatás'
       field:
         official_name: Modelo 232. A kapcsolt felek közötti ügyletek, valamint az
           adóparadicsomnak minősített országokkal vagy területekkel kapcsolatos ügyletek
           és helyzetek adatszolgáltatási bevallása.
         title: Kapcsolt felek közötti ügyletek és adóparadicsomok (éves adatszolgáltatás)
+      form:
+        authored:
+          acquisition: Beszerzési érték
+          amendment: Kiegészítő vagy helyettesítő bevallás
+          amount: Ügylet összege
+          amount_ex_vat: Áfa nélküli összeg (€)
+          country: Ország- vagy területkód
+          description: Ügylet leírása
+          direction: 'I: bevétel · P: kifizetés'
+          fjo: 'Személytípus: F magánszemély · J jogi személy · O egyéb'
+          given: Utónév
+          haven: Adóparadicsomokkal kötött ügyletek
+          identity: Azonosítás
+          income_before_reduction: Jövedelem a csökkentés előtt, áfa nélkül (€)
+          intangibles: Immateriális javakból származó jövedelem csökkentése
+          issuer: Részesedés tárgyát képező vagy kibocsátó szervezet
+          kind: Értékpapír típusa
+          link: Kapcsolat típusa
+          marker: Kiegészítő vagy helyettesítő bevallás típusa
+          method: Értékelési módszer
+          name: Vezetéknevek vagy cégnév
+          nif: Adóazonosító
+          operation: Ügylet típusa
+          page1: Kapcsolt ügyletek
+          page2: Adóparadicsomi ügyletek és értékpapírok
+          party: Teljes név / Cégnév
+          percentage: Részesedési arány
+          period: Bevallási időszak
+          period_end: Bevallási időszak vége
+          period_start: Bevallási időszak kezdete
+          province: Tartomány- vagy országkód
+          receipt: Az előző bevallás igazolási száma
+          related: Kapcsolt személyekkel vagy szervezetekkel kötött ügyletek
+          resident: Illetőséggel rendelkező személy vagy szervezet
+          row1: '1'
+          row10: '10'
+          row11: '11'
+          row12: '12'
+          row2: '2'
+          row3: '3'
+          row4: '4'
+          row5: '5'
+          row6: '6'
+          row7: '7'
+          row8: '8'
+          row9: '9'
+          securities: Adóparadicsomokban tartott értékpapírok
       revision:
         2016-2017:
           casilla:

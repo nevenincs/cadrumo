@@ -12,11 +12,8 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.contribuyente.inventory.records import (
-    InventoryClosingAuthorityRecord,
-    InventoryLedger,
-    InventoryLedgerDocument,
-)
+from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
+from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, MovementRecord
 
 
 class InventoryLedgerServiceRepositoryProtocol(Protocol):
@@ -26,12 +23,19 @@ class InventoryLedgerServiceRepositoryProtocol(Protocol):
         """Load the bucket's inventory document."""
         ...
 
-    def save(self, document: InventoryLedgerDocument) -> None:
-        """Persist a validated inventory document."""
-        ...
-
     def create(self, ledger: InventoryLedger) -> InventoryLedgerDocument:
         """Atomically create one activity/year ledger."""
+        ...
+
+    def record_movement(
+        self,
+        actividad_id: str,
+        movement: MovementRecord,
+        *,
+        year: int,
+        validate_candidate: Callable[[InventoryLedger], None],
+    ) -> InventoryLedger:
+        """Append one movement after validating the latest guarded candidate."""
         ...
 
     def record_closing_authority(
@@ -40,13 +44,22 @@ class InventoryLedgerServiceRepositoryProtocol(Protocol):
         authority_record: InventoryClosingAuthorityRecord,
         *,
         year: int,
-    ) -> InventoryLedger:
-        """Atomically record one closing-authority record."""
+        validate_candidate: Callable[[InventoryLedger], InventoryLedger],
+    ) -> InventoryClosingAuthorityWrite:
+        """Validate and atomically record one latest-candidate closing authority."""
         ...
 
     def remove(self, actividad_id: str, *, year: int) -> InventoryLedger:
         """Atomically remove one activity/year ledger."""
         ...
+
+
+@dataclass(frozen=True, slots=True)
+class InventoryClosingAuthorityWrite:
+    """Actual closing-authority state returned by the revision-guarded repository."""
+
+    ledger: InventoryLedger
+    changed: bool
 
 
 InventoryRepositoryFactory = Callable[[str], InventoryLedgerServiceRepositoryProtocol]
@@ -69,6 +82,7 @@ class InventoryServicePortsFactory(Protocol):
 
 
 __all__ = [
+    "InventoryClosingAuthorityWrite",
     "InventoryLedgerServiceRepositoryProtocol",
     "InventoryRepositoryFactory",
     "InventoryServicePorts",

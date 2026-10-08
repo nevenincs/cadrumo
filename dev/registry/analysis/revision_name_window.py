@@ -122,33 +122,29 @@ def _declared_window(revision: ModeloRevision) -> tuple[int | None, int | None, 
     return revision.valid_from.year, closing, "valid_from"
 
 
-def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[RevisionNameFinding, ...]:
-    """Compare one revision's name tokens with the window it declares."""
-    name = str(revision.id)
+def _selection_window_findings(
+    revision: ModeloRevision,
+    *,
+    modelo_id: str,
+) -> tuple[list[RevisionNameFinding], bool]:
+    """Report selector/window disagreement and whether the open window is unselectable."""
+    selector = revision.period_selector
     findings: list[RevisionNameFinding] = []
-    opening, closing, source = _declared_window(revision)
-
-    selector_from = revision.period_selector.year_from
-    if selector_from is not None and revision.valid_from.year != selector_from:
+    if selector.year_from is not None and revision.valid_from.year != selector.year_from:
         findings.append(
             RevisionNameFinding(
                 modelo=modelo_id,
-                revision=name,
+                revision=str(revision.id),
                 kind="window_sources_disagree",
-                detail=f"valid_from={revision.valid_from.year} period_selector.year_from={selector_from}",
+                detail=f"valid_from={revision.valid_from.year} period_selector.year_from={selector.year_from}",
             )
         )
-
-    selector = revision.period_selector
-    # An open-ended `valid_to` beside a selector carrying neither bound does not
-    # select beyond the named year, so such a revision's single-year name is
-    # ACCURATE and must not also be reported as understating its reach.
-    window_unselectable = revision.valid_to is None and selector.year_from is None and selector.year_to is None
-    if window_unselectable:
+    unselectable = revision.valid_to is None and selector.year_from is None and selector.year_to is None
+    if unselectable:
         findings.append(
             RevisionNameFinding(
                 modelo=modelo_id,
-                revision=name,
+                revision=str(revision.id),
                 kind="open_ended_window_not_selectable",
                 detail=(
                     "valid_to is unset, which reads as open-ended, while the period selector "
@@ -156,6 +152,132 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
                 ),
             )
         )
+    return findings, unselectable
+
+
+def _opening_name_findings(
+    *,
+    name: str,
+    years: list[int],
+    opening: int | None,
+    source: str,
+    modelo_id: str,
+) -> list[RevisionNameFinding]:
+    """Report a named opening-year disagreement, if the name carries a year."""
+    if not years or opening is None or years[0] == opening:
+        return []
+    claimed_open = years[0]
+    return [
+        RevisionNameFinding(
+            modelo=modelo_id,
+            revision=name,
+            kind="name_opens_after_window" if claimed_open > opening else "name_opens_before_window",
+            detail=f"name claims {claimed_open}; {source} declares {opening}",
+        )
+    ]
+
+
+def _closing_name_findings(
+    *,
+    name: str,
+    years: list[int],
+    closing: int | None,
+    window_unselectable: bool,
+    modelo_id: str,
+) -> list[RevisionNameFinding]:
+    """Report disagreement between the name's closing claim and declared window."""
+    findings: list[RevisionNameFinding] = []
+    for finding in (
+        _open_ended_name_finding(name=name, closing=closing, modelo_id=modelo_id),
+        _single_year_name_finding(
+            name=name,
+            years=years,
+            closing=closing,
+            window_unselectable=window_unselectable,
+            modelo_id=modelo_id,
+        ),
+        _misstated_closing_name_finding(
+            name=name,
+            years=years,
+            closing=closing,
+            modelo_id=modelo_id,
+        ),
+    ):
+        if finding is not None:
+            findings.append(finding)
+    return findings
+
+
+def _open_ended_name_finding(
+    *,
+    name: str,
+    closing: int | None,
+    modelo_id: str,
+) -> RevisionNameFinding | None:
+    """Build the refusal to reconcile an open-ended name with a closed window."""
+    if not name.endswith(_OPEN_ENDED) or closing is None:
+        return None
+    return RevisionNameFinding(
+        modelo=modelo_id,
+        revision=name,
+        kind="name_claims_open_ended",
+        detail=f"name claims open-ended; declared window closes {closing}",
+    )
+
+
+def _single_year_name_finding(
+    *,
+    name: str,
+    years: list[int],
+    closing: int | None,
+    window_unselectable: bool,
+    modelo_id: str,
+) -> RevisionNameFinding | None:
+    """Build the finding for a single-year name on a selectable open window."""
+    if name.endswith(_OPEN_ENDED) or len(years) != 1 or closing is not None or window_unselectable:
+        return None
+    return RevisionNameFinding(
+        modelo=modelo_id,
+        revision=name,
+        kind="name_claims_single_year",
+        detail=f"name claims {years[0]} alone; declared window is open-ended",
+    )
+
+
+def _misstated_closing_name_finding(
+    *,
+    name: str,
+    years: list[int],
+    closing: int | None,
+    modelo_id: str,
+) -> RevisionNameFinding | None:
+    """Build the finding for a named closing year that differs from the window."""
+    if name.endswith(_OPEN_ENDED) or len(years) < 2 or closing is None:
+        return None
+    claimed_close = years[1]
+    if claimed_close == closing:
+        return None
+    return RevisionNameFinding(
+        modelo=modelo_id,
+        revision=name,
+        kind="name_misstates_closing",
+        detail=f"name claims through {claimed_close}; declared window closes {closing}",
+    )
+
+
+def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[RevisionNameFinding, ...]:
+    """Compare one revision's name tokens with the window it declares."""
+    name = str(revision.id)
+    findings: list[RevisionNameFinding] = []
+    opening, closing, source = _declared_window(revision)
+    # An open-ended `valid_to` beside a selector carrying neither bound does not
+    # select beyond the named year, so such a revision's single-year name is
+    # ACCURATE and must not also be reported as understating its reach.
+    selection_findings, window_unselectable = _selection_window_findings(
+        revision,
+        modelo_id=modelo_id,
+    )
+    findings.extend(selection_findings)
 
     years = [int(match) for match in _YEAR.findall(name)]
     if not years:
@@ -169,46 +291,24 @@ def name_window_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[R
         )
         return tuple(findings)
 
-    claimed_open = years[0]
-    if opening is not None and claimed_open != opening:
-        findings.append(
-            RevisionNameFinding(
-                modelo=modelo_id,
-                revision=name,
-                kind=("name_opens_after_window" if claimed_open > opening else "name_opens_before_window"),
-                detail=f"name claims {claimed_open}; {source} declares {opening}",
-            )
+    findings.extend(
+        _opening_name_findings(
+            name=name,
+            years=years,
+            opening=opening,
+            source=source,
+            modelo_id=modelo_id,
         )
-
-    open_ended = name.endswith(_OPEN_ENDED)
-    claimed_close = years[1] if len(years) > 1 and not open_ended else None
-    if open_ended and closing is not None:
-        findings.append(
-            RevisionNameFinding(
-                modelo=modelo_id,
-                revision=name,
-                kind="name_claims_open_ended",
-                detail=f"name claims open-ended; declared window closes {closing}",
-            )
+    )
+    findings.extend(
+        _closing_name_findings(
+            name=name,
+            years=years,
+            closing=closing,
+            window_unselectable=window_unselectable,
+            modelo_id=modelo_id,
         )
-    elif not open_ended and claimed_close is None and closing is None and len(years) == 1 and not window_unselectable:
-        findings.append(
-            RevisionNameFinding(
-                modelo=modelo_id,
-                revision=name,
-                kind="name_claims_single_year",
-                detail=f"name claims {claimed_open} alone; declared window is open-ended",
-            )
-        )
-    elif claimed_close is not None and closing is not None and claimed_close != closing:
-        findings.append(
-            RevisionNameFinding(
-                modelo=modelo_id,
-                revision=name,
-                kind="name_misstates_closing",
-                detail=f"name claims through {claimed_close}; declared window closes {closing}",
-            )
-        )
+    )
     return tuple(findings)
 
 

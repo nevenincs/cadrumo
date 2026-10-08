@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s76-residue'
 date: '2026-07-14'
-modified: '2026-07-17'
-body_hash: 'sha256:295ee9aeae7f3e6d7e901fdbbd4bf914feb0ca62688ba389cc561fce3f1f9fa7'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:7487f3cf1b2bc4382ac4bc80ff2981988bdad316b3673f23d87492abddd9beaf'
+related: []
 ---
 
 # `cadrumo-product-rename-s76-residue` audit: `S76 aeat token residue classification`
@@ -44,7 +43,7 @@ needed for this class set.
 
 ### S76-3 stale-envvar-docstring | low | `AeatTimeoutSettings` docstring cited a wrong (pre-rename) env-var prefix — fixed
 
-`src/cadrumo/core/_config_timeouts.py` carried a stale module docstring
+The retired module carried a stale module docstring
 claiming its fields "still read the same ``AEAT_*`` environment variable by
 field name," while every field in the class (`cadrumo_browser_navigation_timeout_ms`,
 `cadrumo_live_iva_surface_timeout_ms`, etc.) is `cadrumo_*`-prefixed and reads a

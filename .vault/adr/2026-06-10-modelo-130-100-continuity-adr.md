@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-130-100-continuity'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:f748d834b2a0f689ecd9567245b94c5511474cab936a8ea0ba40ebf0912d7d7d'
+modified: '2026-10-03'
+body_hash: 'sha256:19086e8d3a45ce9d4b0568a4ae31828fc3f413244ba06c5db5b2070a8d2d53b1'
 related:
   - '[[2026-06-10-modelo-130-100-continuity-research]]'
 ---
@@ -18,7 +18,3 @@ The annual Modelo 100 must fold in the quarterly Modelo 130 pagos fraccionados t
 ## Decision
 
 Model the M100-from-M130 annual fold-in as a relation feeding the engine's relation channel (the canonical cross-modelo mechanism per the aggregation taxonomy), not as a duplicate previous_filing binding. The work proceeds once the calculation-engine foundations ADRs land.
-
-## Status
-
-Accepted.

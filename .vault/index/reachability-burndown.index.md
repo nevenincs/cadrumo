@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-09-15'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb778a32a9fd0f68e66c6a4286936a0ecdfa4da5283c0c339469780a205af7f0'
+body_hash: 'sha256:514c4b1f4b0bef92a37605ff80177173d698bc0de9afc61450709a20339664e6'
 related:
   - '[[2026-09-04-reachability-burndown-adr]]'
-  - '[[2026-09-04-reachability-burndown-ledger]]'
-  - '[[2026-09-04-reachability-burndown-plan]]'
   - '[[2026-09-04-reachability-burndown-reference]]'
   - '[[2026-09-08-reachability-burndown-s184-declaration-capture-owner-audit]]'
   - '[[2026-09-08-reachability-burndown-s185-cotejo-view-residue-audit]]'
@@ -60,8 +58,9 @@ related:
   - '[[2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit]]'
-  - '[[2026-09-08-reachability-burndown-s232-borrador-100-namespace-alias-withdrawal-audit]]'
   - '[[2026-09-09-reachability-burndown-zero-closure-review-audit]]'
+  - '[[2026-10-04-reachability-burndown-ledger]]'
+  - '[[2026-10-04-reachability-burndown-plan]]'
 ---
 
 # `reachability-burndown` feature index
@@ -124,16 +123,15 @@ Auto-generated index of all documents tagged with `#reachability-burndown`.
 - `2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit` - 2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit
 - `2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit` - 2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit
 - `2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit` - 2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit
-- `2026-09-08-reachability-burndown-s232-borrador-100-namespace-alias-withdrawal-audit` - `reachability-burndown` audit: `S232 Borrador 100 namespace alias withdrawal review`
 - `2026-09-09-reachability-burndown-zero-closure-review-audit` - `reachability-burndown` audit: `exact zero closure review`
 
 ### exec
 
-- `2026-09-04-reachability-burndown-ledger` - `reachability-burndown` ledger
+- `2026-10-04-reachability-burndown-ledger` - `reachability-burndown` ledger
 
 ### plan
 
-- `2026-09-04-reachability-burndown-plan` - `reachability-burndown` plan
+- `2026-10-04-reachability-burndown-plan` - `reachability-burndown` plan
 
 ### reference
 

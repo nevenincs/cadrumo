@@ -11,12 +11,15 @@ from typing import Final
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
-    MappingFactQuery,
-    ResolvedMappingFact,
     unique_mapping_tokens,
 )
-from ..calculations.registry.facts.schema import FactSelector
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from ..calculations.registry.facts.variants import FactSelector
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .spending_category import SpendingCategory, SpendingCategoryFamily
 
@@ -86,29 +89,12 @@ class SpendingCategoryCatalogue:
         raise RegistryValidationError(f"spending category {token.value!r} has no declared family")
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("spending category catalogue entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate spending category catalogue key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-            selectors=(_SCOPE_SELECTOR,),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("spending category catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
+_ENTRIES_FACT = StringMappingFact(
+    fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY, selectors=(_SCOPE_SELECTOR,)
+)
 
 
 def resolve_spending_category_catalogue(
@@ -118,15 +104,27 @@ def resolve_spending_category_catalogue(
 ) -> SpendingCategoryCatalogue:
     """Resolve and validate the dated spending-category catalogue."""
     coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("spending category catalogue requires an explicit authority operation or scope")
-    entries = _resolve_entries(effective_date=coordinate, authority=selected)
+    selected = require_governed_fact_authority(authority, subject="spending category catalogue")
+    entries = _ENTRIES_FACT.resolve_entries(selected, effective_date=coordinate)
+    categories = _spending_categories(entries)
+    family_members = _spending_category_families(entries, categories)
+    return SpendingCategoryCatalogue(
+        categories=categories,
+        family_members=MappingProxyType(family_members),
+    )
+
+
+def _spending_categories(entries: Mapping[str, str]) -> tuple[SpendingCategory, ...]:
     raw_categories = unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
     try:
-        categories = tuple(SpendingCategory.from_registry(raw) for raw in raw_categories)
+        return tuple(SpendingCategory.from_registry(raw) for raw in raw_categories)
     except (TypeError, ValueError) as exc:
         raise RegistryValidationError("spending category catalogue contains an invalid token") from exc
+
+
+def _spending_category_families(
+    entries: Mapping[str, str], categories: tuple[SpendingCategory, ...]
+) -> dict[SpendingCategoryFamily, tuple[SpendingCategory, ...]]:
     category_by_value = {category.value: category for category in categories}
     family_members: dict[SpendingCategoryFamily, tuple[SpendingCategory, ...]] = {}
     seen: set[SpendingCategory] = set()
@@ -145,10 +143,7 @@ def resolve_spending_category_catalogue(
     if seen != set(categories):
         missing = sorted(category.value for category in set(categories) - seen)
         raise RegistryValidationError(f"spending category catalogue leaves categories unmapped: {missing!r}")
-    return SpendingCategoryCatalogue(
-        categories=categories,
-        family_members=MappingProxyType(family_members),
-    )
+    return family_members
 
 
 def require_spending_category(

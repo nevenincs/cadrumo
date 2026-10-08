@@ -12,7 +12,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, Field, NonNegativeInt, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, ValidationInfo, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
@@ -26,7 +26,7 @@ from .binding_selector_utils import (
     provider_member,
 )
 from .errors import RegistryValidationError
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
 
@@ -48,7 +48,9 @@ __all__ = [
 # provider remains generic so adding a governed row field does not require a
 # second catalogue in this mechanics module.
 _WithholdingRowField = str
-WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave", "per_perceptor_clave_devengo"]
+WithholdingGrouping = Literal[
+    "per_perceptor", "per_perceptor_clave", "per_perceptor_clave_devengo", "per_source_allocation"
+]
 
 # These fields carry an economic amount for a repeated payment.  A Modelo 190
 # type-2 record is annual and keyed by the recipient/clave/subclave, so every
@@ -135,9 +137,7 @@ def _retencion_clave_declarations(
     from .facts.resolution import MappingFactQuery, ResolvedMappingFact
     from .schema_base import DateAxis
 
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("retencion clave catalogue requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="retencion clave catalogue")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_RETENCION_CLAVE_FACT_ID,
@@ -177,31 +177,49 @@ def resolve_retencion_clave(
         raise RegistryValidationError("retencion clave requires a filing-period date")
 
     declarations = _retencion_clave_declarations(effective_date, authority=authority)
+    order = _retencion_clave_order(declarations)
+    if value not in order:
+        raise RegistryValidationError(f"retencion clave {value!r} is not declared by the selected catalogue")
+    applicable_models = _retencion_clave_models_for_order(value, order, declarations)
+    if modelo is not None and modelo not in applicable_models:
+        raise RegistryValidationError(
+            f"retencion clave {value!r} is not applicable to Modelo {modelo!r}",
+        )
+    return RetencionClave.from_registry(value)
+
+
+def _retencion_clave_order(declarations: Mapping[str, str]) -> tuple[str, ...]:
     order_text = declarations.get("clave_order")
     if order_text is None:
         raise RegistryValidationError("retencion clave catalogue is missing clave_order")
     order = tuple(token.strip() for token in order_text.split(",") if token.strip())
     if not order or len(order) != len(set(order)):
         raise RegistryValidationError("retencion clave catalogue has an invalid clave_order")
-    if value not in order:
-        raise RegistryValidationError(f"retencion clave {value!r} is not declared by the selected catalogue")
+    return order
 
+
+def _retencion_clave_models_for_order(
+    selected_value: str,
+    order: tuple[str, ...],
+    declarations: Mapping[str, str],
+) -> tuple[str, ...]:
     applicable_models: tuple[str, ...] = ()
     for token in order:
-        declared_value = declarations.get(f"clave.{token}.value")
-        if declared_value != token:
-            raise RegistryValidationError(f"retencion clave {token!r} has no matching canonical value declaration")
-        model_text = declarations.get(f"clave.{token}.modelos")
-        models = tuple(item.strip() for item in (model_text or "").split(",") if item.strip())
-        if not models or len(models) != len(set(models)):
-            raise RegistryValidationError(f"retencion clave {token!r} has invalid model applicability")
-        if token == value:
+        models = _retencion_clave_declared_models(token, declarations)
+        if token == selected_value:
             applicable_models = models
-    if modelo is not None and modelo not in applicable_models:
-        raise RegistryValidationError(
-            f"retencion clave {value!r} is not applicable to Modelo {modelo!r}",
-        )
-    return RetencionClave.from_registry(value)
+    return applicable_models
+
+
+def _retencion_clave_declared_models(token: str, declarations: Mapping[str, str]) -> tuple[str, ...]:
+    declared_value = declarations.get(f"clave.{token}.value")
+    if declared_value != token:
+        raise RegistryValidationError(f"retencion clave {token!r} has no matching canonical value declaration")
+    model_text = declarations.get(f"clave.{token}.modelos")
+    models = tuple(item.strip() for item in (model_text or "").split(",") if item.strip())
+    if not models or len(models) != len(set(models)):
+        raise RegistryValidationError(f"retencion clave {token!r} has invalid model applicability")
+    return models
 
 
 class WithholdingObservation(BaseModel):
@@ -422,6 +440,28 @@ class WithholdingObservation(BaseModel):
     codigo_cuenta: str | None = Field(default=None, max_length=20)
     """Modelo 193 codigo cuenta valores / numero operacion prestamo (positions
     97-116), recorded only when a financial entity manages the valores."""
+    financial_asset_origin: Literal["A", "B", "C", "D", "E"] | None = None
+    """Modelo 194 origin at position 78, supplied by the transaction evidence.
+
+    A transfer, B redemption, C exchange/conversion, D the specified pre-coupon
+    transfer, or E a temporary transfer with repurchase. Never inferred from
+    whether the transaction generated a gain or loss.
+    """
+    financial_asset_acquisition_value: Decimal | None = Field(default=None, ge=Decimal("0"), allow_inf_nan=False)
+    """Modelo 194 acquisition/subscription value (118-130), before incidental costs.
+
+    Unknown and inapplicable remain absent. In particular, origin D does not
+    supply this field; its filing zero is a transport rule, not an observed
+    acquisition at zero cost. This transaction detail is not an annual sum.
+    """
+    financial_asset_disposal_value: Decimal | None = Field(default=None, ge=Decimal("0"), allow_inf_nan=False)
+    """Modelo 194 transfer/redemption/exchange value (131-143), before incidental costs.
+
+    This is supplied independently from acquisition value and the declared tax
+    base. The source's special cases preclude inferring one from the other two.
+    """
+    financial_asset_related_entity: Literal["V", ""] | None = None
+    """Modelo 194 related-entity indicator at 187: V, explicitly blank, or unknown."""
     pendiente_flag: str | None = Field(default=None, max_length=1)
     """Modelo 193 'X' flag (position 117) marking percepciones devengadas but
     not yet paid because the holder did not claim them."""
@@ -431,7 +471,7 @@ class WithholdingObservation(BaseModel):
     reducciones: Decimal = Decimal("0")
     """Modelo 193 art. 26.2 reductions (positions 139-151) applied when the
     perceptor is an IRPF contribuyente; the design's own zeros when none."""
-    base_retenciones: Decimal
+    base_retenciones: Decimal = Field(allow_inf_nan=False)
     porcentaje_retencion: Percentage = PERCENTAGE_MIN
     """Modelo 193 retention/ingreso-a-cuenta percentage applied (positions
     165-168), generally 19 with the design's clave-naturaleza specific rates;
@@ -510,7 +550,6 @@ class WithholdingObservation(BaseModel):
         "foral_retention_gipuzkoa",
         "foral_retention_bizkaia",
         "reducciones",
-        "base_retenciones",
         "penalizaciones",
         "compensaciones",
         "garantias",
@@ -521,6 +560,31 @@ class WithholdingObservation(BaseModel):
         if value < Decimal("0"):
             raise RegistryValidationError("withholding amounts must be non-negative")
         return value
+
+    @field_validator("base_retenciones")
+    @classmethod
+    @pydantic_validation_boundary
+    def _withholding_base(cls, value: Decimal, info: ValidationInfo) -> Decimal:
+        """Only an identified financial-asset operation may carry a signed base.
+
+        Modelo 194 type 2 positions 157-169 explicitly encode negative bases.
+        Other withholding observations retain their nonnegative contract.
+        """
+        if value < 0 and info.data.get("financial_asset_origin") is None:
+            raise RegistryValidationError("negative withholding base requires a financial-asset origin")
+        return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _financial_asset_conditions(self) -> WithholdingObservation:
+        """Preserve the source design's absent amounts and negative-base rule."""
+        if self.financial_asset_origin == "D" and (
+            self.financial_asset_acquisition_value is not None or self.financial_asset_disposal_value is not None
+        ):
+            raise RegistryValidationError("financial-asset origin D requires absent acquisition and disposal values")
+        if self.financial_asset_origin is not None and self.base_retenciones < 0 and self.retencion_practicada != 0:
+            raise RegistryValidationError("a negative financial-asset withholding base requires zero withholding")
+        return self
 
 
 class WithholdingProvider(BaseModel):
@@ -538,6 +602,8 @@ class WithholdingProvider(BaseModel):
     claves: tuple[str, ...] = ()
     row_field: _WithholdingRowField | None = None
     grouping: WithholdingGrouping | None = None
+    base_sign: Literal["positive", "nonpositive"] | None = None
+    """Select emitted records by their resolved base, after grouping observations."""
     record: str | None = Field(default=None, min_length=1, max_length=64)
     data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
@@ -569,9 +635,26 @@ def validate_withholding_binding_selector_shape(binding: BindingDefinition) -> l
 
 def _validated_withholding_selector(binding: BindingDefinition) -> WithholdingProvider:
     selector = _withholding_selector(binding)
+    if selector.base_sign is not None and selector.fact not in {
+        _WithholdingFactKind.GROUPED_ROW_COUNT,
+        _WithholdingFactKind.GROUPED_ROW_SUM,
+    }:
+        raise RegistryValidationError(f"binding {binding.id!r} base_sign requires a grouped scalar fact")
     if selector.fact not in _WITHHOLDING_FACTS:
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}")
     op = binding_aggregation_op(binding)
+    _validate_basic_withholding_selector(binding, selector, op)
+    _validate_row_field_withholding_selector(binding, selector, op)
+    _validate_grouped_count_withholding_selector(binding, selector, op)
+    _validate_grouped_sum_withholding_selector(binding, selector, op)
+    return selector
+
+
+def _validate_basic_withholding_selector(
+    binding: BindingDefinition,
+    selector: WithholdingProvider,
+    op: BindingAggregationOp,
+) -> None:
     if selector.fact in {"perceptor_count", "percepcion_count"} and op != BindingAggregationOp.COUNT_DISTINCT:
         raise RegistryValidationError(
             f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'count_distinct'",
@@ -579,6 +662,13 @@ def _validated_withholding_selector(binding: BindingDefinition) -> WithholdingPr
     sum_facts = {"percibido_sum", "retencion_sum", "retenciones_ingresadas_sum"}
     if selector.fact in sum_facts and op != BindingAggregationOp.SUM:
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
+
+
+def _validate_row_field_withholding_selector(
+    binding: BindingDefinition,
+    selector: WithholdingProvider,
+    op: BindingAggregationOp,
+) -> None:
     if selector.fact == "row_field":
         if op != BindingAggregationOp.ROWS:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
@@ -588,6 +678,13 @@ def _validated_withholding_selector(binding: BindingDefinition) -> WithholdingPr
             )
         if selector.grouping is None:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
+
+
+def _validate_grouped_count_withholding_selector(
+    binding: BindingDefinition,
+    selector: WithholdingProvider,
+    op: BindingAggregationOp,
+) -> None:
     if selector.fact == _WithholdingFactKind.GROUPED_ROW_COUNT:
         if op != BindingAggregationOp.COUNT_DISTINCT:
             raise RegistryValidationError(
@@ -601,6 +698,13 @@ def _validated_withholding_selector(binding: BindingDefinition) -> WithholdingPr
             raise RegistryValidationError(
                 f"binding {binding.id!r} fact 'grouped_row_count' counts rows and must not declare a 'row_field'",
             )
+
+
+def _validate_grouped_sum_withholding_selector(
+    binding: BindingDefinition,
+    selector: WithholdingProvider,
+    op: BindingAggregationOp,
+) -> None:
     if selector.fact == _WithholdingFactKind.GROUPED_ROW_SUM:
         if op != BindingAggregationOp.SUM:
             raise RegistryValidationError(
@@ -615,7 +719,6 @@ def _validated_withholding_selector(binding: BindingDefinition) -> WithholdingPr
                 f"binding {binding.id!r} fact 'grouped_row_sum' requires an additive monetary 'row_field', "
                 f"not {selector.row_field!r}",
             )
-    return selector
 
 
 def _filter_withholding_observations(
@@ -698,9 +801,7 @@ def _withholding_role_declarations(
     from .facts.resolution import MappingFactQuery, ResolvedMappingFact
     from .schema_base import DateAxis
 
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("withholding role catalogue requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="withholding role catalogue")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-190-193-withholding-binding-catalogue",
@@ -712,15 +813,23 @@ def _withholding_role_declarations(
         raise TypeError("withholding role declarations must resolve as a mapping fact")
     declarations: dict[str, tuple[str, ...]] = {}
     for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise TypeError("withholding role declarations must be string mappings")
-        tokens = tuple(token.strip() for token in entry.value.split(",") if token.strip())
-        if not tokens:
-            raise RegistryValidationError(f"withholding role declaration {entry.key!r} is empty")
-        if entry.key in declarations:
-            raise RegistryValidationError(f"duplicate withholding role declaration {entry.key!r}")
-        declarations[entry.key] = tokens
+        _add_withholding_role_declaration(declarations, entry.key, entry.value)
     return declarations
+
+
+def _add_withholding_role_declaration(
+    declarations: dict[str, tuple[str, ...]],
+    key: object,
+    value: object,
+) -> None:
+    if not isinstance(key, str) or not isinstance(value, str):
+        raise TypeError("withholding role declarations must be string mappings")
+    tokens = tuple(token.strip() for token in value.split(",") if token.strip())
+    if not tokens:
+        raise RegistryValidationError(f"withholding role declaration {key!r} is empty")
+    if key in declarations:
+        raise RegistryValidationError(f"duplicate withholding role declaration {key!r}")
+    declarations[key] = tokens
 
 
 def _required_withholding_role(
@@ -802,23 +911,45 @@ def resolve_withholding_binding_values(
         if selector.fact == "row_field":
             continue
         scope_filtered = tuple(_filter_withholding_observations(available, selector))
-        if selector.fact == "perceptor_count":
-            resolved[binding.id] = Decimal(len({obs.perceptor_tax_id for obs in scope_filtered}))
-        elif selector.fact == "percepcion_count":
-            resolved[binding.id] = Decimal(len(distinct_percepcion_keys(scope_filtered)))
-        elif selector.fact == "percibido_sum":
-            resolved[binding.id] = percibido_total(scope_filtered)
-        elif selector.fact == "retencion_sum":
-            resolved[binding.id] = retencion_total(scope_filtered)
-        elif selector.fact == _WithholdingFactKind.GROUPED_ROW_COUNT:
-            resolved[binding.id] = _grouped_row_count(selector, scope_filtered)
-        elif selector.fact == _WithholdingFactKind.GROUPED_ROW_SUM:
-            resolved[binding.id] = _grouped_row_sum(selector, scope_filtered)
-        elif selector.fact == "retenciones_ingresadas_sum":
-            if role_declarations is None:
-                role_declarations = _withholding_role_declarations(revision.valid_from, authority=authority)
-            resolved[binding.id] = _retenciones_ingresadas_total(
-                scope_filtered,
+        resolved_value, role_declarations = _resolve_scalar_withholding_fact(
+            selector,
+            scope_filtered,
+            binding_id=binding.id,
+            revision=revision,
+            authority=authority,
+            role_declarations=role_declarations,
+        )
+        resolved[binding.id] = resolved_value
+    return resolved
+
+
+def _resolve_scalar_withholding_fact(
+    selector: WithholdingProvider,
+    observations: tuple[WithholdingObservation, ...],
+    *,
+    binding_id: BindingId,
+    revision: ModeloRevision,
+    authority: GovernedFactSource | None,
+    role_declarations: dict[str, tuple[str, ...]] | None,
+) -> tuple[Decimal, dict[str, tuple[str, ...]] | None]:
+    if selector.fact == "perceptor_count":
+        return Decimal(len({obs.perceptor_tax_id for obs in observations})), role_declarations
+    if selector.fact == "percepcion_count":
+        return Decimal(len(distinct_percepcion_keys(observations))), role_declarations
+    if selector.fact == "percibido_sum":
+        return percibido_total(observations), role_declarations
+    if selector.fact == "retencion_sum":
+        return retencion_total(observations), role_declarations
+    if selector.fact == _WithholdingFactKind.GROUPED_ROW_COUNT:
+        return _grouped_row_count(selector, observations), role_declarations
+    if selector.fact == _WithholdingFactKind.GROUPED_ROW_SUM:
+        return _grouped_row_sum(selector, observations), role_declarations
+    if selector.fact == "retenciones_ingresadas_sum":
+        if role_declarations is None:
+            role_declarations = _withholding_role_declarations(revision.valid_from, authority=authority)
+        return (
+            _retenciones_ingresadas_total(
+                observations,
                 payment_claves=_required_withholding_role(
                     role_declarations,
                     "identification_block_claves",
@@ -831,10 +962,10 @@ def resolve_withholding_binding_values(
                     role_declarations,
                     "retenciones_ingresadas.payment_values",
                 ),
-            )
-        else:  # pragma: no cover - guarded by validator
-            raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact")
-    return resolved
+            ),
+            role_declarations,
+        )
+    raise RegistryValidationError(f"binding {binding_id!r} declares unsupported withholding fact")
 
 
 def _withholding_row_cohorts(
@@ -865,6 +996,11 @@ def _withholding_row_group_key(
     """Return the registry-declared annual record identity for one observation."""
     if grouping == "per_perceptor":
         return (str(observation.perceptor_tax_id),)
+    if grouping == "per_source_allocation":
+        # A transaction-oriented record preserves source identity even when
+        # its recipient, security and amounts happen to match another record.
+        # The selected registry declares when this grouping is appropriate.
+        return (str(observation.perceptor_tax_id), observation.source_id, observation.source_allocation_id)
     perceptor, clave, subclave = _percepcion_key(observation)
     if grouping == "per_perceptor_clave":
         # Exactly the ``distinct_percepcion_keys`` key.  The Modelo 190 header
@@ -892,7 +1028,13 @@ def _group_withholding_observations(
     """Group active observations into deterministic annual record cohorts."""
     grouped: dict[tuple[str, ...], list[WithholdingObservation]] = {}
     for observation in observations:
-        grouped.setdefault(_withholding_row_group_key(grouping, observation), []).append(observation)
+        key = _withholding_row_group_key(grouping, observation)
+        if grouping == "per_source_allocation" and key in grouped:
+            raise RegistryValidationError(
+                "withholding transaction row repeats its source allocation; "
+                "resolve duplicate evidence before materialising the return",
+            )
+        grouped.setdefault(key, []).append(observation)
     return tuple(
         tuple(
             sorted(
@@ -921,11 +1063,18 @@ def _resolve_withholding_row_field(
     """Project one row field without silently choosing contradictory detail."""
     values = tuple(getattr(observation, row_field) for observation in observations)
     if row_field in _WITHHOLDING_ADDITIVE_ROW_FIELDS:
-        amounts = tuple(value for value in values if isinstance(value, Decimal))
-        if len(amounts) != len(values):
-            raise RegistryValidationError(f"withholding row amount field {row_field!r} is not monetary evidence")
-        return sum(amounts, Decimal("0"))
+        return _sum_withholding_row_amounts(values, row_field)
+    return _single_withholding_row_detail(values, row_field)
 
+
+def _sum_withholding_row_amounts(values: tuple[object, ...], row_field: str) -> Decimal:
+    amounts = tuple(value for value in values if isinstance(value, Decimal))
+    if len(amounts) != len(values):
+        raise RegistryValidationError(f"withholding row amount field {row_field!r} is not monetary evidence")
+    return sum(amounts, Decimal("0"))
+
+
+def _single_withholding_row_detail(values: tuple[object, ...], row_field: str) -> Decimal | str | int | bool | None:
     supplied = tuple(value for value in values if not _withholding_row_value_is_absent(value))
     if not supplied:
         return None
@@ -954,7 +1103,25 @@ def _grouped_row_count(
     observations: Iterable[WithholdingObservation],
 ) -> Decimal:
     """Count the rows the selector's grouping emits: one per type-2 record, not per NIF."""
-    return Decimal(len(_group_withholding_observations(_selector_grouping(selector), observations)))
+    return Decimal(len(_selected_grouped_rows(selector, observations)))
+
+
+def _selected_grouped_rows(
+    selector: WithholdingProvider,
+    observations: Iterable[WithholdingObservation],
+) -> tuple[tuple[WithholdingObservation, ...], ...]:
+    """Partition actual emitted rows, preserving duplicate and grouping refusals."""
+    rows = _group_withholding_observations(_selector_grouping(selector), observations)
+    if selector.base_sign is None:
+        return rows
+    selected: list[tuple[WithholdingObservation, ...]] = []
+    for row in rows:
+        base = _resolve_withholding_row_field(row, row_field="base_retenciones")
+        if not isinstance(base, Decimal):
+            raise RegistryValidationError("withholding base-sign selection requires a monetary base")
+        if (base > 0) == (selector.base_sign == "positive"):
+            selected.append(row)
+    return tuple(selected)
 
 
 def _grouped_row_sum(
@@ -973,7 +1140,7 @@ def _grouped_row_sum(
             f"withholding fact {selector.fact!r} requires an additive monetary 'row_field', not {row_field!r}",
         )
     total = Decimal("0")
-    for row in _group_withholding_observations(_selector_grouping(selector), observations):
+    for row in _selected_grouped_rows(selector, observations):
         amount = _resolve_withholding_row_field(row, row_field=row_field)
         if not isinstance(amount, Decimal):
             raise RegistryValidationError(f"withholding row amount field {row_field!r} is not monetary evidence")

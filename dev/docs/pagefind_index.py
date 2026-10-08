@@ -1,10 +1,23 @@
 """Post-build Pagefind index pass over the built documentation HTML.
 
-Runs AFTER Sphinx has emitted ``docs/_build/html``: it indexes the built
+Runs AFTER Sphinx has emitted the configured docs HTML root: it indexes the built
 pages with Pagefind's bundled (vendored, offline) binary, producing the
-chunked, per-language search index into the build output. The index is an
-uncommitted build artifact - it is regenerated on every docs build, exactly
-like the generated CLI reference, and never committed.
+chunked search index into the build output. The index is an uncommitted build
+artifact - it is regenerated on every docs build, exactly like the generated CLI
+reference, and never committed.
+
+The site carries ONE index for every language, written once at the site's apex
+(:func:`build_shared_search_index`). Pagefind's default behaviour is one index
+per detected ``<html lang>``, and the reader's bundle loads only the split
+matching the page it is on; under that behaviour a record shared by every
+language -- a concept, casilla, legal or CLI record, whose content already
+carries all four languages' text -- had to be injected once per split to stay
+reachable, which is what put the same casilla corpus in the index four times.
+:data:`SHARED_INDEX_LANGUAGE` forces a single split instead, so every record is
+searched together and each is indexed once. A page then declares its own
+language as a Pagefind FILTER, and the reader's search controller narrows by the
+language of the page it runs on; a shared record declares every language's filter
+value and so matches whichever language is being read.
 
 This pass is deliberately a STANDALONE step, not a Sphinx ``setup()`` hook:
 it must run after the build, and wiring it into ``conf.py`` would couple it
@@ -28,7 +41,7 @@ and the write, never the record content.
 
 Orama fallback trigger: Pagefind is the chosen backend because it is the only
 surveyed engine that satisfies every hard constraint at once - MIT, offline,
-native es/ca/hu/en stemming with per-language index splits, lazy chunked
+native es/ca/hu/en stemming, lazy chunked
 scaling, and a first-class custom-record API. The documented fallback is
 Orama (Apache-2.0, pure JS). Switch to Orama ONLY if the Pagefind binary
 proves unvendorable for the offline-hermetic build - i.e. if the
@@ -49,7 +62,7 @@ import gzip
 import json
 import re
 import zlib
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -75,7 +88,58 @@ InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
 _PAGEFIND_EXCLUDED_SUBDIRS: Final[tuple[str, ...]] = ("_generated/casillas",)
 _UTF_8: Final[str] = UTF_8
 
+#: What a page's record leaves out of the page. The index is built through the
+#: Pagefind service, which reads no configuration file, so the selectors are
+#: given to it here. The navigation, header and footer are the same on every
+#: page and would answer any query that names a section with every page; a
+#: recorded JSON envelope is machine output whose keys match almost anything.
+#: The command line and the human-readable output beside it stay indexed.
+PAGE_EXCLUDED_SELECTORS: Final[tuple[str, ...]] = (
+    ".sidebar-drawer",
+    ".toc-drawer",
+    ".announcement",
+    ".mobile-header",
+    ".skip-to-content",
+    ".cadrumo-breadcrumbs",
+    ".related-pages",
+    "footer",
+    ".back-to-top",
+    ".content-icon-container",
+    ".headerlink",
+    "a.copybtn",
+    'pre.cadrumo-frame-output[data-format="json"]',
+)
+
 _BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefind-ignore\b)")
+
+#: The one language Pagefind builds the whole site's index under.
+#:
+#: Pagefind splits an index per detected page language and a reader's bundle
+#: loads one split; forcing a single language is what makes every language's
+#: pages and the records they share one searchable index. The forced value also
+#: selects the ONE stemmer applied to the whole corpus, at indexing and at query
+#: time alike, so the choice is Spanish: the documentation's subject is Spanish
+#: tax filing, and every casilla label, legal title and concept id in the shared
+#: records is Spanish text. The other languages keep exact-form matching and
+#: lose only their own morphological folding - the price the one index costs.
+SHARED_INDEX_LANGUAGE: Final[str] = "es"
+
+#: The language a single-root pass stamps its pages with when the caller names
+#: none: English, the language the documentation's prose is authored in.
+_DEFAULT_PAGE_LANGUAGE: Final[str] = "en"
+
+#: The ``<html lang="...">`` a built page declares. Read to refuse a root whose
+#: rendered pages contradict the language the build says it produced: that
+#: disagreement would make the whole root unreachable through the language
+#: filter, with every page still present in the index.
+_HTML_LANG_RE: Final[re.Pattern[str]] = re.compile(r"<html\b[^>]*\blang=\"([A-Za-z0-9-]+)\"")
+
+#: A built page's opening ``<body>`` tag, which is where the index-facing
+#: attributes are stamped, and the stamps a previous pass left on it.
+_BODY_OPEN_RE: Final[re.Pattern[str]] = re.compile(r"<body\b[^>]*>")
+_EXISTING_STAMP_RE: Final[re.Pattern[str]] = re.compile(
+    r'\s+data-pagefind-(?:meta="display_class:[^"]*"|filter="language:[^"]*")'
+)
 
 #: The injected record kinds a shipped index must carry.
 #:
@@ -93,15 +157,6 @@ _BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefi
 #: would then refuse a correct publish, and a false RED at publish time is its
 #: own outage. When a new injector ships, add its kind here in the same change.
 DECIDED_INJECTED_RECORD_KINDS: Final[frozenset[str]] = frozenset({"concept", "casilla", "legal", "cli"})
-
-#: A ``<body>`` tag that is neither excluded from the index nor already carrying
-#: a Pagefind meta attribute. The two negative lookaheads keep the display-class
-#: stamping idempotent (a second pass matches nothing) and skip every page the
-#: exclusion pass tagged ``data-pagefind-ignore`` (those are covered by the
-#: injected casilla records, so they must NOT gain a ``display_class``).
-_BODY_UNSTAMPED_RE: Final[re.Pattern[str]] = re.compile(
-    r"<body\b(?![^>]*\bdata-pagefind-ignore\b)(?![^>]*\bdata-pagefind-meta=)"
-)
 
 
 def injected_record_kinds_in_index(html_root: Path) -> frozenset[str]:
@@ -240,38 +295,84 @@ def _page_display_class(rel_path: str) -> str:
     return derive_display_class(probe).value
 
 
-def _mark_page_display_classes(html_root: Path) -> int:
-    """Stamp ``data-pagefind-meta="display_class:<class>"`` on every indexed page.
+def _mark_indexed_pages(html_root: Path, language: str) -> int:
+    """Stamp the display class and the page's own language on every indexed page.
 
     Runs AFTER :func:`_mark_excluded_pages` and BEFORE the directory pass, so a
     page already tagged ``data-pagefind-ignore`` (the injected-record-covered
-    casilla pages) is skipped by the regex lookahead and never gains a class.
-    Every other built page carries its path-derived class into the index as a
-    ``display_class`` meta ONLY -- deliberately NOT a ``weight`` key, so the
-    weight-sorted card pass keeps dropping full-text pages (they must not
-    pollute the injected-card band). The JS reads the class to order
-    full-text pages within their band (user docs above dev machinery) and to
-    render the per-class icon. Idempotent and a no-op when the tree is absent.
+    casilla pages) is skipped by the regex lookahead and gains neither
+    attribute. Every other built page carries two body attributes into the
+    index:
+
+    - ``data-pagefind-meta="display_class:<class>"``, its path-derived display
+      class, and deliberately NOT a ``weight`` key, so the weight-sorted card
+      pass keeps dropping full-text pages (they must not pollute the
+      injected-card band). The search controller reads the class to order
+      full-text pages within their band (user docs above dev machinery) and to
+      render the per-class icon.
+    - ``data-pagefind-filter="language:<code>"``, the language of the root this
+      page belongs to. The site has one index for every language
+      (:data:`SHARED_INDEX_LANGUAGE`), so what keeps a reader on one language's
+      pages is this filter and not a separate index. A page carrying no value
+      is reachable by no language, so the stamping is what makes a root
+      searchable at all.
+
+    A stamp a previous pass left is REPLACED rather than treated as already
+    correct. Sphinx rewrites only the pages a build changed, so an incremental
+    build leaves pages carrying the stamps of the build before it; skipping
+    those, which is all idempotence would require, would leave a page indexed
+    under a language or a display class that is no longer its own -- and a page
+    stamped before the language filter existed would carry none at all and be
+    reachable from no language, while every other page of its root was fine.
+
+    Args:
+        html_root: The built root to stamp.
+        language: The language the build produced this root in.
 
     Returns:
         The number of pages stamped.
+
+    Raises:
+        PagefindLanguageMismatchError: When a page declares an ``<html lang>``
+            other than ``language``.
     """
     tagged = 0
     for page in scan_directory(html_root, pattern="*.html", recursive=True):
-        rel_path = page.relative_to(html_root).as_posix()
         html = page.read_text(encoding=_UTF_8)
-        if not _BODY_UNSTAMPED_RE.search(html):
+        body = _BODY_OPEN_RE.search(html)
+        if body is None or "data-pagefind-ignore" in body.group(0):
             continue
-        display_class = _page_display_class(rel_path)
-        new_html, count = _BODY_UNSTAMPED_RE.subn(
-            lambda match, cls=display_class: f'{match.group(0)} data-pagefind-meta="display_class:{cls}"',
-            html,
-            count=1,
+        _require_page_language(page, html, language)
+        display_class = _page_display_class(page.relative_to(html_root).as_posix())
+        attributes = _EXISTING_STAMP_RE.sub("", body.group(0))[:-1].rstrip()
+        stamped = (
+            f'{attributes} data-pagefind-meta="display_class:{display_class}"'
+            f' data-pagefind-filter="language:{language}">'
         )
-        if count:
-            page.write_text(new_html, encoding=_UTF_8, newline="\n")
-            tagged += 1
+        if stamped == body.group(0):
+            continue
+        page.write_text(html[: body.start()] + stamped + html[body.end() :], encoding=_UTF_8, newline="\n")
+        tagged += 1
     return tagged
+
+
+def _require_page_language(page: Path, html: str, language: str) -> None:
+    """Refuse a page whose rendered language is not the one the build declared.
+
+    The declared language and the rendered ``<html lang>`` come from the same
+    build setting, so they agree or the build is misconfigured. The consequence
+    of a disagreement is silent and total: the page is indexed under the filter
+    value the build named while the reader's controller narrows by the value the
+    page renders, so every page of that root is present in the index and
+    reachable from no language. A page that declares no language at all keeps
+    the build's value, which is the only authority available.
+    """
+    declared = _HTML_LANG_RE.search(html)
+    if declared is not None and declared.group(1).lower() != language.lower():
+        raise PagefindLanguageMismatchError(
+            f"{page} renders lang={declared.group(1)!r} while its root is being indexed as {language!r}; "
+            "the language filter would make every page of this root unreachable",
+        )
 
 
 class PagefindUnavailableError(RuntimeError):
@@ -285,6 +386,14 @@ class PagefindUnavailableError(RuntimeError):
 
 class PagefindIndexWriteError(RuntimeError):
     """Raised when Pagefind reported the index written but its entry never became complete."""
+
+
+class PagefindLanguageMismatchError(RuntimeError):
+    """Raised when a built page's rendered language is not the one its root is indexed as."""
+
+
+class PagefindRootPrefixError(RuntimeError):
+    """Raised when a root's address in the site cannot be derived from its directory."""
 
 
 _ENTRY_FILE_NAME: Final[str] = "pagefind-entry.json"
@@ -323,11 +432,37 @@ async def await_complete_pagefind_entry(
 
 @dataclass(frozen=True)
 class SearchIndexResult:
-    """Outcome of a Pagefind index pass."""
+    """Outcome of a Pagefind index pass.
+
+    Attributes:
+        html_root: The root the index was written into. For a site of several
+            language roots that is the apex, not any one language's root.
+        page_count: The pages indexed, across every root of the pass.
+        output_subdir: The index directory's name under ``html_root``.
+    """
 
     html_root: Path
     page_count: int
     output_subdir: str
+
+
+@dataclass(frozen=True)
+class IndexedRoot:
+    """One built language root and the address its pages have in the final site.
+
+    Attributes:
+        html_root: The built root holding that language's pages.
+        language: The language the build produced it in; the value its pages
+            carry as their ``language`` filter.
+        url_prefix: The root's own path inside the served site, ``""`` at the
+            apex and ``"<directory>/"`` under a directory. It is what makes a
+            page's indexed URL its address in the final site rather than its
+            address inside the build tree, which the staging step rearranges.
+    """
+
+    html_root: Path
+    language: str
+    url_prefix: str = ""
 
 
 def _require_pagefind() -> ModuleType:
@@ -348,66 +483,178 @@ def _require_pagefind() -> ModuleType:
         ) from exc
 
 
-async def _run_index(
-    html_root: Path,
-    *,
-    inject: InjectCallback | None,
-) -> int:
-    """Index ``html_root`` with Pagefind and write the per-language index.
+async def _add_root(index: PagefindIndex, root: IndexedRoot) -> int:
+    """Add one language root's pages under the address they have in the site.
 
-    The output path is configured on the index rather than passed to an explicit
-    ``write_files`` call, because ``PagefindIndex.__aexit__`` writes the index
-    itself on a clean exit. An explicit write PLUS the context exit produced TWO
-    writes: the intended one, and a second with no path, which Pagefind resolves
-    against the process working directory. A docs build run from the repository
-    root therefore deposited a full second copy of the index -- roughly ten
-    thousand files -- at the repo root on every run. It was gitignored, which
-    hid the symptom without fixing the cause; the rule barring a committed
-    search index exists because such a tree was once committed from exactly that
-    path.
+    Pagefind derives a page's indexed URL from its path relative to the
+    directory it was added from, and offers no way to prefix it. A root served
+    at the apex is therefore added directly, while a root served under a
+    directory is added from its PARENT, narrowed to that directory by a glob --
+    which is what makes the indexed URL ``/<prefix>/page.html``. The alternative,
+    handing Pagefind each page's bytes with an explicit URL, would ship a
+    hundred and fifty megabytes of HTML through the service pipe to buy the same
+    addresses.
 
-    Returns:
-        The number of pages Pagefind indexed from the directory pass.
+    Raises:
+        PagefindRootPrefixError: When the prefix is not the root directory's own
+            name, since the glob could then not select it.
     """
-    from .pagefind_service import ResponsivePagefindService
-
-    _mark_excluded_pages(html_root)
-    _mark_page_display_classes(html_root)
-    output_path = html_root / "pagefind"
-    # One explicit write, into <html_root>/pagefind/, so the built site serves
-    # the index alongside its pages (an uncommitted artifact) and nothing lands
-    # in the process working directory. The index is not used as a context
-    # manager, whose exit would write a second time.
-    async with ResponsivePagefindService() as service:
-        index = await service.create_index({"output_path": str(output_path)})
-        response = await index.add_directory(str(html_root))
-        if inject is not None:
-            # Injection seam: the custom-record step adds the unified search
-            # records and relevance weights here, before the index is written.
-            await inject(index)
-        await index.write_files(output_path=str(output_path))
-        await await_complete_pagefind_entry(output_path / _ENTRY_FILE_NAME)
+    if not root.url_prefix:
+        response = await index.add_directory(str(root.html_root))
+    else:
+        directory = root.url_prefix.rstrip("/")
+        if directory != root.html_root.name:
+            raise PagefindRootPrefixError(
+                f"the root at {root.html_root} is served at {root.url_prefix!r}, which is not its "
+                "directory name; Pagefind addresses a page by its path under the directory it is added from",
+            )
+        response = await index.add_directory(str(root.html_root.parent), glob=f"{directory}/**/*.{{html}}")
     # The directory-pass response is a dict carrying the indexed page count.
     if isinstance(response, dict):
         return int(response.get("page_count", 0) or 0)
     return int(getattr(response, "page_count", 0) or 0)
 
 
+async def _run_index(
+    roots: Sequence[IndexedRoot],
+    output_path: Path,
+    *,
+    inject: InjectCallback | None,
+) -> int:
+    """Index every root with Pagefind and write the one index.
+
+    The output path is configured on the index AND passed to one explicit
+    ``write_files`` call, while the index is deliberately not used as a context
+    manager: ``PagefindIndex.__aexit__`` writes the index itself on a clean
+    exit, so an explicit write plus the context exit produced TWO writes -- the
+    intended one, and a second with no path, which Pagefind resolves against the
+    process working directory. A docs build run from the repository root
+    therefore deposited a full second copy of the index -- roughly ten thousand
+    files -- at the repo root on every run. It was gitignored, which hid the
+    symptom without fixing the cause; the rule barring a committed search index
+    exists because such a tree was once committed from exactly that path.
+
+    Returns:
+        The number of pages Pagefind indexed, across every root.
+    """
+    from .pagefind_service import ResponsivePagefindService
+
+    for root in roots:
+        _mark_excluded_pages(root.html_root)
+        _mark_indexed_pages(root.html_root, root.language)
+    pages = 0
+    async with ResponsivePagefindService() as service:
+        index = await service.create_index(
+            {
+                "output_path": str(output_path),
+                "force_language": SHARED_INDEX_LANGUAGE,
+                "exclude_selectors": list(PAGE_EXCLUDED_SELECTORS),
+            },
+        )
+        for root in roots:
+            pages += await _add_root(index, root)
+        if inject is not None:
+            # Injection seam: the custom-record step adds the unified search
+            # records and relevance weights here, before the index is written.
+            await inject(index)
+        await index.write_files(output_path=str(output_path))
+        await await_complete_pagefind_entry(output_path / _ENTRY_FILE_NAME)
+    return pages
+
+
+def _require_disjoint_roots(roots: Sequence[IndexedRoot]) -> None:
+    """Refuse roots where one contains another.
+
+    The roots are indexed as they are BUILT, where each language is its own
+    directory beside the others, and the URL prefixes are what give their pages
+    the addresses of the SERVED site, which nests them. Handed the served layout
+    instead, the apex root's directory pass would walk straight into every other
+    language's root: those pages would be indexed twice and stamped with the
+    apex language, and a reader of them would be answered in the wrong language.
+    Nothing downstream could tell that from a correct index, so it is refused
+    here.
+
+    Raises:
+        PagefindRootPrefixError: When one root is inside another.
+    """
+    resolved = [(root, root.html_root.resolve()) for root in roots]
+    for outer, outer_path in resolved:
+        for inner, inner_path in resolved:
+            if inner is not outer and inner_path.is_relative_to(outer_path):
+                raise PagefindRootPrefixError(
+                    f"the {inner.language} root at {inner.html_root} is inside the {outer.language} root at "
+                    f"{outer.html_root}; index the roots as they are built, each beside the others, and let "
+                    "the url prefixes address them in the served site",
+                )
+
+
+def build_shared_search_index(
+    roots: Sequence[IndexedRoot],
+    output_root: Path,
+    *,
+    inject: InjectCallback | None = None,
+) -> SearchIndexResult:
+    """Build the site's ONE Pagefind index over every language root.
+
+    Each root's pages are indexed under the address they have in the final site
+    (:class:`IndexedRoot`) and carry their own language as a filter, and the
+    whole corpus lands in a single split (:data:`SHARED_INDEX_LANGUAGE`) so a
+    record shared by every language is indexed once and searched from all of
+    them.
+
+    Args:
+        roots: The built language roots to index, in any order.
+        output_root: The directory the ``pagefind/`` index is written into. In
+            the served site this is the apex, which every language's pages
+            resolve the bundle against.
+        inject: Optional custom-record injection callback (the custom-record
+            step supplies it). Called with the open index after every root's
+            directory pass and before the index is written.
+
+    Returns:
+        A :class:`SearchIndexResult` with the pages indexed across all roots.
+
+    Raises:
+        PagefindUnavailableError: If the vendored Pagefind package is absent.
+        FileNotFoundError: If no root was given, or a root does not exist.
+    """
+    _require_pagefind()
+    if not roots:
+        raise FileNotFoundError("the shared search index needs at least one built root to index")
+    for root in roots:
+        if not root.html_root.is_dir():
+            raise FileNotFoundError(f"built HTML root not found: {root.html_root}")
+    _require_disjoint_roots(roots)
+    output_root.mkdir(parents=True, exist_ok=True)
+    page_count = asyncio.run(_run_index(roots, output_root / "pagefind", inject=inject))
+    return SearchIndexResult(
+        html_root=output_root,
+        page_count=page_count,
+        output_subdir="pagefind",
+    )
+
+
 def build_search_index(
     html_root: Path,
     *,
     inject: InjectCallback | None = None,
+    language: str = _DEFAULT_PAGE_LANGUAGE,
 ) -> SearchIndexResult:
-    """Run the post-build Pagefind index pass over the built HTML.
+    """Run the post-build Pagefind index pass over ONE built root.
+
+    The single-root case of :func:`build_shared_search_index`: a root that is
+    its own site, carrying the index beside its pages. A build of several
+    language roots calls the shared builder instead, once, after they are all
+    built.
 
     Args:
-        html_root: The Sphinx HTML output directory (``docs/_build/html``).
-            Pagefind reads ``pagefind.yml`` from this root for the
-            root/exclude selectors and writes the chunked index into
-            ``<html_root>/pagefind/``.
+        html_root: The Sphinx HTML output directory. The chunked index is
+            written into ``<html_root>/pagefind/``.
         inject: Optional custom-record injection callback (the custom-record
             step supplies it). Called with the open index after the directory
             pass and before the index is written.
+        language: The language the build produced this root in, which its pages
+            carry as their ``language`` filter.
 
     Returns:
         A :class:`SearchIndexResult` with the indexed page count.
@@ -416,12 +663,8 @@ def build_search_index(
         PagefindUnavailableError: If the vendored Pagefind package is absent.
         FileNotFoundError: If ``html_root`` does not exist.
     """
-    _require_pagefind()
-    if not html_root.is_dir():
-        raise FileNotFoundError(f"built HTML root not found: {html_root}")
-    page_count = asyncio.run(_run_index(html_root, inject=inject))
-    return SearchIndexResult(
-        html_root=html_root,
-        page_count=page_count,
-        output_subdir="pagefind",
+    return build_shared_search_index(
+        [IndexedRoot(html_root=html_root, language=language)],
+        html_root,
+        inject=inject,
     )

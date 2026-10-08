@@ -41,10 +41,7 @@ from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyTransactionCorruptError,
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from cadrumo.application.user_profile.profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-)
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.bucket_pointer import read_pointer
@@ -55,7 +52,10 @@ from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ......application.user_profile.tests.record_session_scope import bound_profile_record_session
+from ......application.user_profile.tests.unlocked_profile_probe import load_unlocked
 from ......domain.calculations.registry.tests.published_authority import published_profile_schema
+from .label_head_probe import begin_advance, load_current
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -116,11 +116,7 @@ def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -
             label_revision=current.label_revision + 1,
             previous_label_digest=current.content_digest,
         )
-        heads.begin_advance(
-            current_head=current_head,
-            current_label=current,
-            replacement_label=replacement,
-        )
+        begin_advance(heads, current_head=current_head, current_label=current, replacement_label=replacement)
         replace_test_profile_custody_label_file(
             profile_id,
             replacement.canonical_json_bytes(),
@@ -434,11 +430,11 @@ def test_real_crash_between_label_and_head_recovers_the_durable_advance(tmp_path
         args=(str(tmp_path), str(_PROFILE_ID)),
     )
     child.start()
-    child.join(30)
+    child.join(None)
     assert child.exitcode == 97
 
     recovered = CommittedProfileRepository(root=tmp_path).load(_PROFILE_ID)
-    recovered_head = ProfileLabelHeadRepository(root=tmp_path).load_current(_PROFILE_ID)
+    recovered_head = load_current(ProfileLabelHeadRepository(root=tmp_path), _PROFILE_ID)
     assert recovered.label == "Recovered after crash"
     assert recovered.label_revision == before.label_revision + 1
     assert recovered.label_source_witness == recovered_head.self_digest
@@ -475,9 +471,9 @@ def test_committed_profile_view_keeps_facts_locked_until_the_current_session_aut
     assert locked.label_self_digest
     assert locked.label_source_witness
     with pytest.raises(ProfileNotFoundError, match="authenticated session"):
-        repository.load_unlocked(_PROFILE_ID)
+        load_unlocked(repository, _PROFILE_ID)
     with bound_profile_record_session(session):
-        unlocked = repository.load_unlocked(_PROFILE_ID)
+        unlocked = load_unlocked(repository, _PROFILE_ID)
     assert unlocked.fact_summary.availability == "AVAILABLE_UNLOCKED"
     assert unlocked.fact_summary.setup_state is ProfileSetupState.INCOMPLETE
     assert unlocked.fact_summary.fact_count == 1

@@ -14,6 +14,7 @@ from ....application.actividad_asset.history import ActivityAssetHistory, Activi
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
+from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ..storage.secure_object_namespaces import PROFILE_ACTIVIDAD_ASSET_HISTORY_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
@@ -74,17 +75,28 @@ class ActividadAssetHistoryRepository:
         """Atomically append one immutable revision under the secure-object CAS guard."""
         return self._storage.mutate(lambda current: current.append_revision(revision))
 
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
-        """Atomically record, replay, or refuse one claim without plaintext fallback."""
+    def record_claim(
+        self,
+        claim: AmortizationClaim,
+        *,
+        expected_history: ActivityAssetHistory | None = None,
+    ) -> ActivityAssetHistoryClaimResult:
+        """Atomically record a claim against its optional forecast history."""
         current = self.load()
         replay = current.record_claim(claim)
         if replay.reused_existing_claim:
             return replay
+        if expected_history is not None and current != expected_history:
+            raise ActividadAssetClaimConflictError("activity asset history changed after the forecast; forecast again")
 
         mutation_result: list[ActivityAssetHistoryClaimResult] = []
 
         def _record(history: ActivityAssetHistory) -> ActivityAssetHistory:
             result = history.record_claim(claim)
+            if expected_history is not None and history != expected_history and not result.reused_existing_claim:
+                raise ActividadAssetClaimConflictError(
+                    "activity asset history changed after the forecast; forecast again",
+                )
             mutation_result[:] = [result]
             return result.history
 

@@ -17,6 +17,7 @@ from pydantic import TypeAdapter, ValidationError
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ..calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
+from ..errors import RegistryValidationError
 from ..schema_scalars import (
     BicString,
     CalendarDate,
@@ -26,6 +27,7 @@ from ..schema_scalars import (
     PersonOrEntityName,
     PostalCode,
     ProvinceCode,
+    validate_registry_text_scalar,
 )
 from ..schema_surfaces import CasillaDefinition
 
@@ -93,15 +95,39 @@ class TestNifIvaString:
             ("FR12345678901", "FR12345678901"),
             ("DE123456789", "DE123456789"),
             ("  es-b58818501  ", "ESB58818501"),
+            ("BE 0123.456.789", "BE0123456789"),
+            ("\tbe.12 \t", "BE12"),
+            ("BE123456789012", "BE123456789012"),
         )
 
         for raw, canonical in cases:
             assert _NIFIVA.validate_python(raw) == canonical, raw
 
     def test_rejected(self) -> None:
-        for raw in ("", "E", "ES", "ES1", "1234567890", "@@" + "1" * 8):
+        for raw in (
+            "",
+            "E",
+            "ES",
+            "ES1",
+            "1234567890",
+            "@@" + "1" * 8,
+            "BE1234567890123",
+            "BE12\t34",
+            "BE\n12",
+            "BE12!34",
+            123,
+        ):
             with pytest.raises(ValidationError):
                 _NIFIVA.validate_python(raw)
+
+    def test_direct_registry_scalar_uses_canonical_normalisation_and_keeps_direct_error(self) -> None:
+        assert validate_registry_text_scalar("nif_iva", " BE 0123.456.789 ") == "BE0123456789"
+
+        with pytest.raises(RegistryValidationError, match="followed by 2-12 alphanumeric characters"):
+            validate_registry_text_scalar("nif_iva", "BE12!34")
+
+        with pytest.raises(RegistryValidationError, match="nif_iva value must be a string, got int"):
+            validate_registry_text_scalar("nif_iva", 123)
 
 
 # ---- ccaa_code -----------------------------------------------------------

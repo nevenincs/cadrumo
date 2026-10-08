@@ -207,9 +207,7 @@ def build_measurement_report(
         live_submit_attempts_total=sum(len(score.invariants.live_submit_attempts) for score in scores),
         handoff_faithfulness_blocks_total=sum(len(score.invariants.handoff_faithfulness_blocks) for score in scores),
         tool_errors_total=sum(len(score.tool_errors) for score in scores),
-        unfaithful_narrations_total=sum(
-            sum(1 for check in score.narration_checks if not check.faithful) for score in scores
-        ),
+        unfaithful_narrations_total=_unfaithful_narration_count(scores),
         rows=rows,
     )
 
@@ -253,3 +251,8 @@ __all__ = [
     "build_measurement_report",
     "render_measurement_report_markdown",
 ]
+
+
+def _unfaithful_narration_count(scores: tuple[LiveScenarioScore, ...]) -> int:
+    """Count unfaithful narration evidence after the other report totals."""
+    return sum(sum(1 for check in score.narration_checks if not check.faithful) for score in scores)

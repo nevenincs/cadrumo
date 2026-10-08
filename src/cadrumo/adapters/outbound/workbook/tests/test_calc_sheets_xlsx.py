@@ -32,6 +32,8 @@ from .....application.storage.calc_sheets.records import (
     SheetExportMetadata,
     SheetExportPlan,
     SheetGuideContent,
+    SheetTemplatePreviewMetadata,
+    SheetValueCell,
     TabName,
 )
 from .....application.storage.calc_sheets.theme import ROLE_STYLES, WORKBOOK_FONT_FAMILY, StyleRole
@@ -65,6 +67,33 @@ def _m130_snapshot() -> RegistrySnapshot:
     return published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
+def test_fictional_preview_materializes_without_filing_identity_or_technical_cells() -> None:
+    plan = SheetExportPlan[SheetTemplatePreviewMetadata](
+        metadata=SheetTemplatePreviewMetadata(
+            kind="template_preview",
+            modelo_id="232",
+            revision_id="2016-2017",
+            preview_year=2017,
+            preview_period="0A",
+            template_digest="a" * 64,
+            engine_version="test",
+            title="Modelo 232 · Ejemplo ficticio 2017",
+            exported_at=datetime(2026, 10, 6, tzinfo=UTC),
+        ),
+        human_presentation=True,
+        tabs=(TabName.FORM,),
+        value_cells=(
+            SheetValueCell(address=SheetCellAddress.at(TabName.FORM, 1, 1), value="Ejemplo ficticio", role="label"),
+        ),
+        guide=SheetGuideContent(title="Ejemplo ficticio", paragraphs=("No válido para presentar.",)),
+    )
+    book = _loaded(materialize_export_plan(plan))
+    assert book.properties.title == plan.metadata.title
+    assert book.sheetnames == [TabName.FORM.value]
+    assert book[TabName.FORM.value]["A1"].value == "Ejemplo ficticio"
+    assert not cast("_WorkbookCustomProperties", book).custom_doc_props.props
+
+
 def _m303_snapshot() -> RegistrySnapshot:
     return published_snapshot("303", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
@@ -88,9 +117,10 @@ def _cell_at(book: Workbook, address: SheetCellAddress) -> Cell:
 
 
 def test_workbook_carries_every_plan_tab_in_plan_order() -> None:
-    book = _loaded(materialize_export_plan(_m130_plan()))
+    plan = _m130_plan()
+    book = _loaded(materialize_export_plan(plan))
 
-    assert book.sheetnames == [tab.value for tab in TabName]
+    assert book.sheetnames == [tab.value for tab in plan.tabs]
 
 
 def test_computed_casilla_arrives_as_a_live_formula_with_its_number_format() -> None:
@@ -106,7 +136,7 @@ def test_computed_casilla_arrives_as_a_live_formula_with_its_number_format() -> 
     # the engine already computed, which is what makes it a live workbook.
     assert written.data_type == "f"
     assert written.value == f"={formula_cell.formula}"
-    assert written.number_format == pattern
+    assert written.number_format == "[$-C0A]" + pattern
 
 
 def test_seeded_money_input_arrives_as_a_number_under_its_declared_format() -> None:
@@ -137,7 +167,7 @@ def test_seeded_money_input_arrives_as_a_number_under_its_declared_format() -> N
     # floats, so the comparison goes through Decimal rather than asserting a type.
     assert written.data_type == "n"
     assert Decimal(str(written.value)) == Decimal("1234.56")
-    assert written.number_format == "#,##0.00"
+    assert written.number_format == '[$-C0A]#,##0.00" €"'
 
 
 def test_header_band_renders_the_shared_palette_and_font() -> None:
@@ -179,7 +209,7 @@ def test_only_the_declared_tabs_are_protected_and_inputs_stay_editable() -> None
     declared = {region.tab for region in plan.protected_ranges}
 
     book = _loaded(materialize_export_plan(plan))
-    protected = {tab for tab in TabName if book[tab.value].protection.sheet}
+    protected = {tab for tab in plan.tabs if book[tab.value].protection.sheet}
 
     assert protected == declared
     # Entradas is the operator's own surface: the plan declares no protected

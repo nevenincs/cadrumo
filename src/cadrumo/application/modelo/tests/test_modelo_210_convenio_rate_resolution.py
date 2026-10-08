@@ -40,7 +40,7 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
-from ....domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
+from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.contribuyente.renta_codes import FiscalResidency
@@ -49,12 +49,12 @@ from ....domain.modelos.verification_report import ModeloVerificationFinding, Mo
 from .._m210_convenio_facts import resolve_m210_convenio_override
 from .._m210_rate import resolve_m210_rate
 from ..action_errors import ModeloApplicabilityFilterError
-from ..verification_actions import m210_unresolved_outcome_findings
 from ..verification_predicates import (
     _evaluate_applicability_filter,
     evaluate_predicate_expression,
     evaluate_verification_predicates,
 )
+from ..verification_report_facts import m210_unresolved_outcome_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -22,17 +22,23 @@ from textual.screen import Screen
 from textual.widgets import Footer, Static
 
 from ...application.overview.home import HomeSessionPosture
+from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
-from ...core.operations import OperationTerminalCondition
+from ...core.time.clock import now
 from .account import (
+    AccountDirectSessionActionV1,
     AccountFactoriesV1,
     AccountRecomposeReasonV1,
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
+    AccountSessionReaderV1,
+    AccountSessionRetired,
+    RuntimeUpgradePending,
     WorkbenchAccountProviderV1,
 )
+from .app_navigation import RootNavigationMixin
 from .components.account_chrome import (
     AccountActionV1,
     AccountBar,
@@ -41,28 +47,23 @@ from .components.account_chrome import (
     account_key_label,
 )
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
-from .declarations.controller import calendar_address_focus_key
 from .home import (
     HomeBackRequested,
     HomeScreen,
     HomeTarget,
     HomeTargetSelected,
-    home_target_action_id,
-    home_target_agenda_address,
-    home_target_work_unit_id,
 )
 from .navigation import (
-    NavigationContractError,
     TuiDestinationCatalogueV1,
     TuiFocusIdentityV1,
     TuiNavigationTargetV1,
     TuiScreenContextV1,
 )
-from .operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
+from .runtime_access_management import RuntimeAccessManagementScreen
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
+from .secret.passphrase import PassphraseScreen
 
 if TYPE_CHECKING:
-    from ...application.operations.composition import OperationComposedServices
     from ...application.overview.home import HomeAccountSession, HomeProjectionV1
 
 
@@ -72,6 +73,7 @@ _ACCOUNT_KEYS: Final[dict[str, AccountActionV1]] = {
     "f4": AccountActionV1.PROFILE,
     "f5": AccountActionV1.CHANGE_USER,
     "f6": AccountActionV1.PASSWORD,
+    "f7": AccountActionV1.ACCESS,
     "f10": AccountActionV1.SIGN_OUT,
 }
 """The key for each account control, reachable from every destination."""
@@ -79,7 +81,18 @@ _ACCOUNT_KEYS: Final[dict[str, AccountActionV1]] = {
 _SESSION_WATCH_SECONDS: Final = 30.0
 """How often the root checks whether the session has lapsed."""
 
-type HomeRefreshDoorV1 = Callable[[], HomeProjectionV1]
+
+@dataclass(frozen=True, slots=True)
+class RootPresentationV1:
+    """One captured Home and its matching destination, search, and account doors."""
+
+    home: HomeProjectionV1
+    destination_catalogue: TuiDestinationCatalogueV1
+    workbench_search_service: WorkbenchSearchDoorV1 | None
+    account_factories: AccountFactoriesV1
+
+
+type HomeRefreshDoorV1 = Callable[[], HomeProjectionV1 | RootPresentationV1]
 type WorkbenchSearchRefreshDoorV1 = Callable[[], WorkbenchSearchDoorV1]
 type DestinationCatalogueRefreshDoorV1 = Callable[[], TuiDestinationCatalogueV1]
 
@@ -94,14 +107,17 @@ class RootBindingV1:
     refresh_workbench_search: WorkbenchSearchRefreshDoorV1 | None
     refresh_destination_catalogue: DestinationCatalogueRefreshDoorV1 | None
     account_factories: AccountFactoriesV1
-    read_account_session: Callable[[], HomeAccountSession] | None
+    read_account_session: AccountSessionReaderV1 | None
 
 
 type RootLoaderV1 = Callable[[], RootBindingV1]
 
 
-class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
+class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None]):
     """Host one composed TUI session and whichever areas are joinable."""
+
+    _active_destination_catalogue: TuiDestinationCatalogueV1 | None
+    _workbench_search_service: WorkbenchSearchDoorV1 | None
 
     CSS = tokenised(
         BASE_CSS
@@ -132,24 +148,22 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def __init__(
         self,
         *,
-        services: OperationComposedServices,
         destination_catalogue: TuiDestinationCatalogueV1 | None = None,
         refresh_home: HomeRefreshDoorV1 | None = None,
         workbench_search_service: WorkbenchSearchDoorV1 | None = None,
         refresh_workbench_search: WorkbenchSearchRefreshDoorV1 | None = None,
         refresh_destination_catalogue: DestinationCatalogueRefreshDoorV1 | None = None,
         account_factories: AccountFactoriesV1 | None = None,
-        read_account_session: Callable[[], HomeAccountSession] | None = None,
+        read_account_session: AccountSessionReaderV1 | None = None,
         load_root: RootLoaderV1 | None = None,
     ) -> None:
-        """Bind the root to the operation services composed for this session.
+        """Bind the shell to caller-owned doors.
 
-        ``load_root`` replaces the individual doors: the shell renders first,
-        and the doors arrive from a worker thread that builds the first
-        generation, so opening the workbench never freezes the terminal.
+        ``load_root`` replaces the individual doors. The shell renders first,
+        and a worker thread builds the first generation so opening the
+        workbench never freezes the terminal.
         """
         super().__init__()
-        self._services = services
         self._destination_catalogue = destination_catalogue
         self._active_destination_catalogue = destination_catalogue
         self._refresh_home = refresh_home
@@ -161,10 +175,14 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         """Whether a Home rebuild is reading its projection off the event loop."""
         self._home_request: HomeTarget | None = None
         """The row the next rebuilt Home restores; the latest request wins."""
+        self._navigation_revision = 0
+        self._home_navigation_revision = 0
         self._load_root = load_root
         """Builds the workbench root off the event loop once the shell has rendered."""
         self._refresh_destination_catalogue = refresh_destination_catalogue
         self._account_factories = account_factories
+        self._unsubscribe_retirement: Callable[[], None] | None = None
+        self._unsubscribe_notices: Callable[[], None] | None = None
         self._home_refresh_refusal_code: str | None = None
         """Why the last Home refresh was refused, or ``None`` when it succeeded."""
         self._workbench_search_refusal_code: str | None = (
@@ -176,16 +194,14 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._onboarding_offered = False
         """Whether this session has already opened the setup walk once."""
         self._read_account_session = read_account_session
+        self._account_session_polling = False
         """Checks the live session's deadline without touching it, or ``None``.
 
         Kept apart from the Home refresh on purpose: that refresh opens secure
         objects, and every open rolls the idle deadline forward, so a timer
         that refreshed Home would keep an idle session alive forever."""
-
-    @property
-    def services(self) -> OperationComposedServices:
-        """The composed operation services an area receives when it mounts."""
-        return self._services
+        self._password_screen: PassphraseScreen | None = None
+        self._recomposition_pending = False
 
     @property
     def destination_catalogue(self) -> TuiDestinationCatalogueV1:
@@ -200,11 +216,6 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         if self._workbench_search_service is None:
             raise InternalInvariantError("the root has no composed workbench search service")
         return self._workbench_search_service
-
-    @property
-    def home_refresh_refusal_code(self) -> str | None:
-        """Expose only a sanitized refusal code for host presentation."""
-        return self._home_refresh_refusal_code
 
     @property
     def workbench_search_refusal_code(self) -> str | None:
@@ -235,7 +246,20 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
 
     async def _open_root(self, load_root: RootLoaderV1) -> None:
         """Build the workbench root on a worker thread, then bind it on the loop."""
-        binding = await asyncio.to_thread(load_root)
+        try:
+            binding = await await_cancellation_complete(asyncio.to_thread(load_root), task_name="tui-root-load")
+        except AccountSessionExpiredError:
+            if self._load_root is load_root and self.is_running:
+                self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+            return
+        except Exception:
+            if self._load_root is load_root and self.is_running:
+                self._home_refresh_refusal_code = "workbench.home.refresh_unavailable"
+                self.query_one("#root-updating", Static).display = False
+                self._refuse_account_action()
+            return
+        if self._load_root is not load_root or not self.is_running:
+            return
         self._bind_root(binding)
         opening = self.query_one("#root-updating", Static)
         opening.display = False
@@ -256,6 +280,11 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         )
 
     def _start_session(self) -> None:
+        factories = self._account_factories
+        if factories is not None and factories.subscribe_notices is not None:
+            self._unsubscribe_notices = factories.subscribe_notices(self._post_upgrade_notice)
+        if factories is not None and factories.subscribe_retirement is not None:
+            self._unsubscribe_retirement = factories.subscribe_retirement(self._post_session_retired)
         if self._read_account_session is not None:
             self.set_interval(_SESSION_WATCH_SECONDS, self._watch_account_session)
         self._describe_account_keys()
@@ -263,6 +292,32 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             self._refuse_account_action()
         if self._destination_catalogue is not None and self._refresh_home is not None:
             self._show_home(None)
+
+    def _post_session_retired(self) -> None:
+        self.post_message(AccountSessionRetired())
+
+    def on_account_session_retired(self, _: AccountSessionRetired) -> None:
+        """Clear on the UI thread; the transport callback never waits for rendering."""
+        self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+
+    def on_runtime_upgrade_pending(self, _: RuntimeUpgradePending) -> None:
+        """Render a manager upgrade notice on the existing UI thread."""
+        self.notify(tr("common.manager.update_pending"), timeout=10)
+
+    def _post_upgrade_notice(self, _notice: object) -> None:
+        self.post_message(RuntimeUpgradePending())
+
+    def on_unmount(self) -> None:
+        """Release the event subscription when this profile-bound root leaves."""
+        self._stop_session_events()
+
+    def _stop_session_events(self) -> None:
+        unsubscribe_notice, self._unsubscribe_notices = self._unsubscribe_notices, None
+        if unsubscribe_notice is not None:
+            unsubscribe_notice()
+        unsubscribe, self._unsubscribe_retirement = self._unsubscribe_retirement, None
+        if unsubscribe is not None:
+            unsubscribe()
 
     @property
     def account_actions_available(self) -> bool:
@@ -272,6 +327,17 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         open, so the palette withholds them exactly where the keys are hidden.
         """
         return self._account_factories is not None and self._account_controls_apply()
+
+    def account_action_available(self, action: AccountActionV1, /) -> bool:
+        """Offer only account controls backed by this root's installed doors."""
+        factories = self._account_factories
+        if factories is None or not self._account_controls_apply():
+            return False
+        if action is AccountActionV1.PASSWORD:
+            return factories.password is not None
+        if action is AccountActionV1.ACCESS:
+            return factories.access is not None
+        return True
 
     @property
     def account_session(self) -> HomeAccountSession | None:
@@ -284,15 +350,47 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         Any failure to confirm the session fails closed: a session that cannot
         be shown to be live is treated as expired, never as still open.
         """
+        if self._read_account_session is None or self._account_session is None or self._account_session_polling:
+            return
+        self._account_session_polling = True
+        self.run_worker(self._poll_account_session(), name="account-session-watch", exclusive=True)
+
+    async def _poll_account_session(self) -> None:
+        """Observe one session off the UI task and discard a stale root's result."""
         reader = self._read_account_session
-        if reader is None or self._account_session is None:
+        if reader is None:
+            self._account_session_polling = False
             return
         try:
-            session = reader()
+            session = await reader()
         except Exception:
-            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+            self._expire_if_reader_current(reader)
             return
-        if session.expires_at != self._account_session.expires_at:
+        finally:
+            self._account_session_polling = False
+        if self._session_expired(session):
+            self._expire_if_reader_current(reader)
+            return
+        self._renew_account_session(reader, session)
+
+    @staticmethod
+    def _session_expired(session: HomeAccountSession) -> bool:
+        return (
+            session.posture is not HomeSessionPosture.ACTIVE
+            or session.expires_at is None
+            or session.expires_at <= now()
+        )
+
+    def _expire_if_reader_current(self, reader: AccountSessionReaderV1) -> None:
+        if self._read_account_session is reader:
+            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+
+    def _renew_account_session(self, reader: AccountSessionReaderV1, session: HomeAccountSession) -> None:
+        if (
+            self._read_account_session is reader
+            and self._account_session is not None
+            and session.expires_at != self._account_session.expires_at
+        ):
             self._account_session = session
             self._refresh_account_bars()
 
@@ -326,7 +424,12 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """Hide the account keys wherever the controls would not act."""
         if action == "account":
-            return self._account_controls_apply()
+            if len(parameters) != 1 or not isinstance(parameters[0], str):
+                return False
+            try:
+                return self.account_action_available(AccountActionV1(parameters[0]))
+            except ValueError:
+                return False
         return True
 
     def _describe_account_keys(self) -> None:
@@ -344,7 +447,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
                 continue
             # Appearance stays bound and in the palette but leaves the footer:
             # the footer must hold the other five keys at eighty columns.
-            shown = action is not AccountActionV1.APPEARANCE and self._account_factories is not None
+            shown = action is not AccountActionV1.APPEARANCE and self.account_action_available(action)
             self._bindings.key_to_bindings[key] = [
                 replace(binding, description=account_key_label(action), show=shown) for binding in bindings
             ]
@@ -390,16 +493,26 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         differently.
         """
         factories = self._account_factories
-        if factories is None:
+        if factories is None or not self.account_action_available(action):
             self._refuse_account_action()
             return
-        if action is not AccountActionV1.APPEARANCE and not self._account_controls_apply():
-            return
+        self._dispatch_account_action(factories, action)
+
+    def _dispatch_account_action(self, factories: AccountFactoriesV1, action: AccountActionV1) -> None:
         match action:
             case AccountActionV1.CHANGE_USER:
-                self.push_screen(factories.change_user(), self._on_change_user_dismissed)
+                self._start_direct_session_action(
+                    factories.change_user(), expected=AccountRecomposeReasonV1.CHANGE_USER
+                )
             case AccountActionV1.PASSWORD:
-                self.push_screen(factories.password(), self._on_password_dismissed)
+                if factories.password is not None:
+                    password_screen = factories.password()
+                    self._password_screen = password_screen
+                    self.push_screen(password_screen, self._on_password_dismissed)
+            case AccountActionV1.ACCESS:
+                if factories.access is not None:
+                    access_screen = factories.access()
+                    self.push_screen(access_screen, lambda _: self._on_access_dismissed(access_screen))
             case AccountActionV1.PROFILE:
                 self.navigate_to(
                     TuiNavigationTargetV1(
@@ -417,52 +530,57 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
                 self._replace_destination(screen, return_to_home=True)
                 self.call_after_refresh(factories.language, screen)
             case AccountActionV1.SIGN_OUT:
-                self.run_worker(self._open_sign_out(), name="account-sign-out", exclusive=True)
+                self._dispatch_sign_out(factories)
 
-    def _on_change_user_dismissed(self, outcome: object | None) -> None:
-        """Accept only the real Login owner's non-secret authenticated result."""
-        from ...application.user_profile.login_session import ProfileLoginOutcome
-
-        if not isinstance(outcome, ProfileLoginOutcome):
+    def _dispatch_sign_out(self, factories: AccountFactoriesV1) -> None:
+        try:
+            sign_out = factories.sign_out()
+        except Exception:
+            self._refuse_account_action()
             return
-        self._request_recompose(
-            AccountRecomposeRequiredV1(
-                reason=AccountRecomposeReasonV1.CHANGE_USER,
-                profile_id=str(outcome.bucket_id),
-                profile_label=outcome.label,
-            )
-        )
+        self._start_direct_session_action(sign_out, expected=AccountRecomposeReasonV1.SIGNED_OUT)
+
+    def _on_access_dismissed(self, screen: Screen[None]) -> None:
+        """Retire known-lost access immediately; otherwise recheck live status."""
+        if isinstance(screen, RuntimeAccessManagementScreen) and screen.access_lost:
+            for private_screen in self.screen_stack[1:]:
+                private_screen.display = False
+            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+        else:
+            self._watch_account_session()
 
     def _on_password_dismissed(self, outcome: object | None) -> None:
         """Discard this root after an authenticated custody-generation change."""
         from ...application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 
+        self._password_screen = None
         if isinstance(outcome, ProfilePassphraseRotationOutcome):
             self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED))
 
-    async def _open_sign_out(self) -> None:
-        """Submit strong close and hand observation to the canonical modal."""
-        factories = self._account_factories
-        if factories is None:
-            self._refuse_account_action()
-            return
-        try:
-            controller = await factories.sign_out()
-        except Exception:
-            self._refuse_account_action()
-            return
-        self.push_screen(OperationModal(controller), self._on_sign_out_dismissed)
+    def _start_direct_session_action(
+        self, action: AccountDirectSessionActionV1, *, expected: AccountRecomposeReasonV1
+    ) -> None:
+        """Remove the old profile authority before starting a runtime effect."""
+        self._sever_profile_root()
+        for screen in self.screen_stack[1:]:
+            screen.display = False
+        self.run_worker(self._complete_direct_session_action(action, expected=expected), name="account-direct-action")
 
-    def _on_sign_out_dismissed(self, outcome: OperationModalOutcomeV1 | None) -> None:
-        """Rebootstrap only after the canonical operation reports success."""
-        if (
-            isinstance(outcome, OperationModalSettledOutcomeV1)
-            and outcome.view_model.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        ):
-            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT))
-            return
-        if outcome is not None:
-            self._refuse_account_action()
+    async def _complete_direct_session_action(
+        self, action: AccountDirectSessionActionV1, *, expected: AccountRecomposeReasonV1
+    ) -> None:
+        """Drain private screens and the effect even if this worker is cancelled."""
+        outcome = AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+        try:
+            while len(self.screen_stack) > 1:
+                await await_cancellation_complete(self.pop_screen(), task_name="account-direct-screen-pop")
+            completed = await await_cancellation_complete(action.complete(), task_name="account-direct-completion")
+            if completed.reason is expected:
+                outcome = completed
+        except (Exception, asyncio.CancelledError):
+            get_logger(__name__).warning("account direct action could not complete")
+        if self.is_running:
+            self.exit(outcome)
 
     def _refuse_account_action(self) -> None:
         """Expose one localized fail-closed message without exception details.
@@ -481,30 +599,6 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self.query_one("#root-navigation-refusal", Static).update(message)
         self.notify(message, severity="warning")
 
-    def navigate_to(self, target: TuiNavigationTargetV1, /) -> None:
-        """Mount only the current admitted destination with its semantic focus."""
-        catalogue = self.destination_catalogue
-        if target.destination == "workbench.home":
-            self._show_home(self._home_semantic_focus)
-            return
-        try:
-            screen = catalogue.create_screen(target)
-        except NavigationContractError:
-            self._refuse_navigation()
-            return
-        except Exception:
-            # A destination reads its sources as it opens, and the usual reason
-            # those reads fail is that the session lapsed while the operator
-            # sat on Home. Home's refresh is what tells expiry apart and
-            # returns to sign-in; any other failure stays a visible refusal
-            # rather than ending the session with a traceback.
-            get_logger(__name__).warning("destination %s could not open", target.destination, exc_info=True)
-            self._refuse_navigation()
-            self._show_home(self._home_semantic_focus)
-            return
-        self._active_target = target
-        self._replace_destination(screen, return_to_home=True)
-
     def on_home_target_selected(self, event: HomeTargetSelected) -> None:
         """Open what the selected Home row points at, and remember the row.
 
@@ -520,84 +614,31 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             return
         self.navigate_to(target)
 
-    def _home_row_target(self, row: HomeTarget) -> TuiNavigationTargetV1 | None:
-        """Translate one Home row into the admitted destination it belongs to."""
-        action_id = home_target_action_id(row)
-        if action_id is not None:
-            for route in self.destination_catalogue.routes:
-                if route.admission.state.value != "available":
-                    continue
-                if any(candidate.action_candidate_id == action_id for candidate in route.action_candidates):
-                    destination = route.descriptor.destination
-                    return TuiNavigationTargetV1(
-                        destination=destination,
-                        focus=TuiFocusIdentityV1(destination=destination, semantic_key=f"action.{action_id}"),
-                        action_candidate_id=action_id,
-                    )
-            return None
-        work_unit_id = home_target_work_unit_id(row)
-        if work_unit_id is not None:
-            try:
-                focus = TuiFocusIdentityV1(
-                    destination="workbench.declarations",
-                    semantic_key="declarations.work",
-                    restore_token=work_unit_id,
-                )
-            except ValueError:
-                # An identity the focus contract cannot carry still opens the
-                # declarations; only the row restore is lost.
-                focus = TuiFocusIdentityV1(destination="workbench.declarations", semantic_key="declarations.work")
-            return TuiNavigationTargetV1(destination="workbench.declarations", focus=focus)
-        address = home_target_agenda_address(row)
-        if address is not None:
-            return TuiNavigationTargetV1(
-                destination="workbench.declarations",
-                focus=TuiFocusIdentityV1(
-                    destination="workbench.declarations",
-                    semantic_key=calendar_address_focus_key(*address),
-                ),
-            )
-        return None
-
     def on_home_back_requested(self, _: HomeBackRequested) -> None:
         """Refresh Home after a completed or dismissed journey."""
         if self._refresh_home is not None:
             self._show_home(self._home_semantic_focus)
 
-    def _show_home(self, semantic_focus: HomeTarget | None) -> None:
-        """Rebuild Home off the event loop and restore its semantic row.
-
-        The Home read can take a whole generation capture. A request made while
-        one is out does not read again: it only replaces the row the rebuilt
-        Home restores, so the operator's latest position wins.
-        """
-        if self._refresh_home is None:
-            return
-        self._home_request = semantic_focus
-        if self._home_rebuilding:
-            return
-        self._home_rebuilding = True
-        self.query_one("#root-updating", Static).display = True
-        self.run_worker(self._rebuild_home(), group="root-home")
-
-    async def _rebuild_home(self) -> None:
-        try:
-            await self._show_home_now(self._home_request)
-        finally:
-            self._home_rebuilding = False
-            if self.is_running and not self._returning_home:
-                self.query_one("#root-updating", Static).display = False
-
-    async def _show_home_now(self, semantic_focus: HomeTarget | None) -> None:
+    async def _show_home_now(self, semantic_focus: HomeTarget | None, navigation_revision: int) -> None:
         """Read Home on a worker thread, then rebuild it on the loop."""
         refresh_home = self._refresh_home
-        if refresh_home is None:
+        if refresh_home is None or navigation_revision != self._navigation_revision:
             return
         try:
-            projection = await asyncio.to_thread(refresh_home)
+            refreshed = await self._read_home_refresh(refresh_home)
         except AccountSessionExpiredError:
-            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+            if self._refresh_home is refresh_home and self.is_running:
+                self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
             return
+        if refreshed is None or not self._home_refresh_is_current(refresh_home, navigation_revision):
+            return
+        self._apply_home_refresh(refreshed, semantic_focus)
+
+    async def _read_home_refresh(self, refresh_home: HomeRefreshDoorV1) -> RootPresentationV1 | HomeProjectionV1 | None:
+        try:
+            return await await_cancellation_complete(asyncio.to_thread(refresh_home), task_name="tui-home-refresh")
+        except AccountSessionExpiredError:
+            raise
         except Exception:
             # A refused refresh is an ordinary outcome, not a crash. The read
             # door refuses when a sibling process writes the profile mid-capture,
@@ -606,13 +647,33 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             # the refresh did not happen. The sibling search path already handles
             # its own refusal this way; letting this one escape would end the
             # session with a traceback over a concurrent write.
-            self._home_refresh_refusal_code = "workbench.home.refresh_unavailable"
-            self._refuse_account_action()
+            if self._refresh_home is refresh_home and self.is_running:
+                self._home_refresh_refusal_code = "workbench.home.refresh_unavailable"
+                self._refuse_account_action()
+            return None
+
+    def _home_refresh_is_current(self, refresh_home: HomeRefreshDoorV1, navigation_revision: int) -> bool:
+        # A severed session, a closing app, or a newer navigation invalidates
+        # the result that returned from the worker.
+        return (
+            self._refresh_home is refresh_home and self.is_running and navigation_revision == self._navigation_revision
+        )
+
+    def _apply_home_refresh(
+        self, refreshed: RootPresentationV1 | HomeProjectionV1, semantic_focus: HomeTarget | None
+    ) -> None:
+        projection = refreshed.home if isinstance(refreshed, RootPresentationV1) else refreshed
+        if projection.account.posture is HomeSessionPosture.EXPIRED:
+            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
             return
-        if self._refresh_home is not refresh_home or not self.is_running:
-            # The session was severed or the app is closing while the read was
-            # out; a Home built now would land on a root that is going away.
-            return
+        if isinstance(refreshed, RootPresentationV1):
+            self._destination_catalogue = refreshed.destination_catalogue
+            self._active_destination_catalogue = refreshed.destination_catalogue
+            self._workbench_search_service = refreshed.workbench_search_service
+            self._workbench_search_refusal_code = (
+                None if refreshed.workbench_search_service is not None else "workbench.search.unavailable"
+            )
+            self._account_factories = refreshed.account_factories
         self._home_refresh_refusal_code = None
         # Home is rebuilt after every return, including from a language
         # change, so this is where the footer catches up with the page.
@@ -620,9 +681,6 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._account_session = projection.account
         self._refresh_account_bars()
         self.query_one("#root-no-areas", Static).display = False
-        if projection.account.posture is HomeSessionPosture.EXPIRED:
-            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
-            return
         if self._destination_catalogue is not None:
             self._active_destination_catalogue = self._destination_catalogue
         self._active_target = None
@@ -635,122 +693,6 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             self._onboarding_offered = True
             self.call_next(self.run_account_action, AccountActionV1.PROFILE)
 
-    def _on_destination_dismissed(self, _: None) -> None:
-        """Return from a real child dismissal through the projection refresh door.
-
-        The refresh reads a whole new generation, which takes seconds on a real
-        profile, so it runs off the event loop and the rest of the return
-        continues on the loop once it lands. A second return while one is out
-        joins it rather than reading the store again.
-        """
-        if self._returning_home:
-            return
-        self._returning_home = True
-        self.query_one("#root-updating", Static).display = True
-        self.run_worker(self._return_home(), group="root-return-home")
-
-    async def _return_home(self) -> None:
-        try:
-            await self._rebuild_workbench_search()
-            self._rebuild_destination_catalogue()
-            await self._show_home_now(self._home_semantic_focus)
-        finally:
-            self._returning_home = False
-            if self.is_running:
-                self.query_one("#root-updating", Static).display = False
-
-    def _rebuild_destination_catalogue(self) -> None:
-        """Re-admit destinations against the generation the factories now read.
-
-        Availability is a property of the CURRENT capture, not of the first
-        one. A profile that declares its NIF mid-session makes AEAT Sync
-        readable, and one that clears it makes it unreadable again; a frozen
-        catalogue would keep offering a route whose projection is gone, or keep
-        refusing one that has since become available.
-        """
-        refresh = self._refresh_destination_catalogue
-        if refresh is None or self._destination_catalogue is None:
-            return
-        try:
-            refreshed = refresh()
-        except Exception:  # a refused re-admission must not end the session
-            self._workbench_search_refusal_code = "workbench.destinations.refresh_unavailable"
-            return
-        self._destination_catalogue = refreshed
-        self._active_destination_catalogue = refreshed
-
-    async def _rebuild_workbench_search(self) -> None:
-        """Replace search only after the owning child has authoritatively returned.
-
-        The capture behind the refresh reads a whole generation, so it runs on
-        a worker thread and only the replacement happens on the event loop.
-        """
-        refresh_workbench_search = self._refresh_workbench_search
-        if refresh_workbench_search is None:
-            return
-        try:
-            refreshed = await asyncio.to_thread(refresh_workbench_search)
-        except Exception:  # projection failures must not leak protected diagnostics
-            self._workbench_search_refusal_code = "workbench.search.refresh_unavailable"
-            return
-        self._workbench_search_service = refreshed
-        self._workbench_search_refusal_code = None
-
-    def replace_workspace_body(self, screen: Screen[None], /) -> None:
-        """Show another body of the destination the operator is already inside.
-
-        The destination does not change, so the return journey does not either:
-        the replacement keeps the same dismissal callback, and Escape from any
-        internal body returns to Home exactly as it does from the entry body.
-        The root never learns which body this is -- the workspace resolved it.
-
-        The swap is deferred onto this application's own message pump, and that
-        is load-bearing rather than tidiness. A screen's result callback is
-        dispatched through whichever pump was active when the screen was
-        pushed, so pushing directly from inside the outgoing screen's handler
-        registers the return journey against a screen that is about to be
-        popped. The callback then belongs to a stopped pump and never runs, and
-        Escape from an internal area strands the operator on an empty root with
-        no way back.
-        """
-        self.call_next(self._replace_destination_for_workspace, screen)
-
-    def _replace_destination_for_workspace(self, screen: Screen[None]) -> None:
-        """Swap the workspace body from the root's pump so the return survives."""
-        self._replace_destination(screen, return_to_home=True)
-
-    def _replace_destination(self, screen: Screen[None], *, return_to_home: bool = False) -> None:
-        """Discard the inactive destination before mounting exactly one replacement.
-
-        The swap runs on this application's pump and waits for each popped
-        screen to be removed before pushing. Popping only schedules removal, so
-        a replacement carrying the same id as the screen it replaces -- the
-        overview re-selected from its own navigation, Home rebuilt over Home --
-        was inserted beside it and refused as a duplicate, which ended the
-        operator on the empty root.
-        """
-        self.call_next(self._swap_destination, screen, return_to_home)
-
-    async def _swap_destination(self, screen: Screen[None], return_to_home: bool) -> None:
-        """Pop every destination, then push the replacement once they are gone."""
-        while len(self.screen_stack) > 1:
-            await self.pop_screen()
-        await self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
-
-    def _request_recompose(self, outcome: AccountRecomposeRequiredV1) -> None:
-        """Sever every profile-bound capability before returning to bootstrap."""
-        self._account_factories = None
-        self._destination_catalogue = None
-        self._active_destination_catalogue = None
-        self._refresh_home = None
-        self._workbench_search_service = None
-        self._refresh_workbench_search = None
-        self._refresh_destination_catalogue = None
-        self._active_target = None
-        self._home_semantic_focus = None
-        self._read_account_session = None
-        self.exit(outcome)
-
 
 __all__ = [
     "CadrumoTuiApp",
@@ -758,5 +700,6 @@ __all__ = [
     "HomeRefreshDoorV1",
     "RootBindingV1",
     "RootLoaderV1",
+    "RootPresentationV1",
     "WorkbenchSearchRefreshDoorV1",
 ]

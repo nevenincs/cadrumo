@@ -15,8 +15,14 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from cadrumo.adapters.persistence.storage.sql.secure_object_records import (
+    SecureObjectDeletion,
+    SecureObjectRevisionAssertion,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.ledger.persistence_ports import LedgerPersistenceConflictError
 from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -118,3 +124,60 @@ def test_a_listed_row_missing_from_storage_has_no_revision(tmp_path: Path) -> No
 
     assert before is not None
     assert after is None, "a listed row that is gone must not hash like a present one"
+
+
+@pytest.mark.usefixtures("operation")
+def test_full_snapshot_cas_assertions_catch_a_row_change_at_batch_commit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id, objects=objects)
+        parent, other = _transaction("split-parent"), _transaction("unrelated-row")
+        repository.save(_catalogue(parent, other))
+        snapshot, expected_revision = repository.load_revisioned()
+        current_parent = snapshot.get(parent.transaction_id)
+        current_other = snapshot.get(other.transaction_id)
+        assert current_parent is not None and current_other is not None
+        operation_parent = current_parent.model_copy(
+            update={"notes": "stale full-catalogue operation", "modified_at": datetime.now(UTC)},
+        )
+        operation_catalogue = _catalogue(operation_parent, current_other)
+        concurrent_other = current_other.model_copy(
+            update={"notes": "concurrent unrelated writer", "modified_at": datetime.now(UTC)},
+        )
+        concurrent_catalogue = _catalogue(current_parent, concurrent_other)
+
+        original_apply_batch = objects.apply_batch
+        race_triggered = False
+
+        def race_before_asserted_batch(
+            writes: tuple[SecureObjectWrite, ...],
+            deletions: tuple[SecureObjectDeletion, ...] = (),
+            *,
+            assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
+        ) -> None:
+            nonlocal race_triggered
+            if assertions and not race_triggered:
+                race_triggered = True
+                repository.save(concurrent_catalogue)
+            original_apply_batch(writes, deletions, assertions=assertions)
+
+        monkeypatch.setattr(objects, "apply_batch", race_before_asserted_batch)
+        with pytest.raises(LedgerPersistenceConflictError):
+            repository.save_if_revision_with_secure_object_writes(
+                operation_catalogue,
+                expected_revision_id=expected_revision,
+                extra_writes=(),
+            )
+
+        saved = repository.load()
+        saved_parent = saved.get(parent.transaction_id)
+        saved_other = saved.get(other.transaction_id)
+
+    assert race_triggered
+    assert saved_parent is not None
+    assert saved_parent.notes == current_parent.notes
+    assert saved_other is not None
+    assert saved_other.notes == "concurrent unrelated writer"

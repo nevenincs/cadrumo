@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#mcp-service-robustness'
 date: '2026-07-17'
-modified: '2026-07-17'
-body_hash: 'sha256:38cfa391e0af24491a03e8ba9d454f4d0d0af7cb31d22e7a1b45aab20f336aeb'
+modified: '2026-10-05'
+body_hash: 'sha256:b7d9e9caf87bbb4fdb8e3786d65deb52d273bd7daa67b260b0e12480eef0b1c9'
 related:
   - '[[2026-07-17-mcp-service-robustness-audit]]'
-  - '[[2026-07-15-distribution-installation-readiness-plan]]'
 ---
 
 # `mcp-service-robustness` research: `MCP serving-path robustness defects`
@@ -56,7 +55,7 @@ thrashes CPU/RAM on the host. Remedy belongs with the F2 decision.
 
 ### F4 (medium, open): MCPB session start runs `uv run` resolution every launch
 
-The MCPB manifest launches `uv run --directory ${__dirname} src/server.py`;
+The MCPB manifest launches `uv run --directory ${__dirname} the former source file`;
 each client session pays a UV resolve/sync check before the server accepts the
 initialize handshake, adding connect latency and occasional startup stalls on
 the Desktop/Cowork surface. Candidate remedy: pre-provisioned environment with
@@ -73,8 +72,7 @@ machines, risking false timeouts on a first read.
 
 ### Stdout hygiene: clean
 
-No stray stdout writers exist in the package; child output is piped, telemetry
-writes to files, `stdin` is `DEVNULL`-isolated, and encoding is explicit — the
+No stray stdout writers exist in the package; child output is piped, `stdin` is `DEVNULL`-isolated, and encoding is explicit — the
 JSON-RPC stream itself is not at risk from child output.
 
 ### Empirical latency decomposition (installed cohort, Windows workstation, 2026-07-17)

@@ -4,17 +4,15 @@ tags:
   - '#index'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-23'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8d9a0ed0682eab71c787c2ad53d37b8a9793e934c324a1abcf62d51e175f005a'
+body_hash: 'sha256:1186e15135d1571584eca57cdf7d13f46f3eb214164b02e7aadfa41f05d3a072'
 related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
   - '[[2026-09-07-tuimodelo-export-destinations-adr]]'
   - '[[2026-09-07-tuimodelo-filing-lifecycle-adr]]'
   - '[[2026-09-07-tuimodelo-form-projection-adr]]'
   - '[[2026-09-07-tuimodelo-inherited-gate-baseline-audit]]'
-  - '[[2026-09-07-tuimodelo-ledger]]'
-  - '[[2026-09-07-tuimodelo-plan]]'
   - '[[2026-09-07-tuimodelo-reconcile-verify-adr]]'
   - '[[2026-09-07-tuimodelo-reference]]'
   - '[[2026-09-07-tuimodelo-retired-mechanisms-audit]]'
@@ -45,14 +43,6 @@ Auto-generated index of all documents tagged with `#tuimodelo`.
 
 - `2026-09-07-tuimodelo-inherited-gate-baseline-audit` - `tuimodelo` audit: `the gate state this campaign starts from`
 - `2026-09-07-tuimodelo-retired-mechanisms-audit` - `tuimodelo` audit: `retired mechanisms a plan row may no longer assert`
-
-### exec
-
-- `2026-09-07-tuimodelo-ledger` - `tuimodelo` ledger
-
-### plan
-
-- `2026-09-07-tuimodelo-plan` - `tuimodelo` plan
 
 ### reference
 

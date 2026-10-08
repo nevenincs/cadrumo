@@ -53,7 +53,7 @@ _CALCULATION_REVISION_ID = "b" * 64
 #: ``test_overview_calendar_verb.py`` must address this same bucket id, or
 #: the strict per-bucket route binding (D10) refuses the call with
 #: ``the primary database route does not match the active bucket session``.
-PRIMARY_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+PRIMARY_PROFILE_ID: str = "11111111-1111-4111-8111-111111111111"
 
 
 #: Calendar strict-mode completeness gating reads these profile-fact paths
@@ -141,7 +141,7 @@ def _observed_casilla_observations(value: Decimal):
 def _modelo_record_with_external_justificante(
     *,
     csv: str,
-    bucket_id: str = PRIMARY_PROFILE_ID,
+    bucket_id: str | None = None,
     evidence_kind: ExternalEvidenceKind = ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
 ) -> ModeloRecord:
     filed_at = datetime(2025, 4, 16, 12, 0, tzinfo=UTC)
@@ -153,7 +153,7 @@ def _modelo_record_with_external_justificante(
         ),
         work_unit_id=_WORK_UNIT_ID,
         calculation_revision_id=_CALCULATION_REVISION_ID,
-        bucket_id=bucket_id,
+        bucket_id=PRIMARY_PROFILE_ID if bucket_id is None else bucket_id,
         modelo=ModeloCode("303"),
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),

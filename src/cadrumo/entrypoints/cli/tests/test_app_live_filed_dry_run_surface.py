@@ -2,8 +2,7 @@
 
 ``--dry-run`` promises the operator that a sweep left no trace. That promise is
 primary result data the command exists to produce, not an incidental diagnostic,
-so it rides ``result`` and never the notices channel -- the same shape the
-telemetry flush surface already uses for its own preview flag.
+so it rides ``result`` and never the notices channel.
 
 The single-modelo branch has no dry-run path at all. It is therefore refused
 rather than ignored: silently accepting the flag and performing a real write is
@@ -15,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.live.remote_state_models import BulkFiledDataCaptureReport
+from ....application.live.remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
 from .._app_live_filed_payloads import FiledCaptureResult
 from .._app_live_rendering import _filed_capture_lines
 
@@ -31,6 +30,7 @@ def test_dry_run_is_a_result_field_not_a_notice() -> None:
         dry_run=True,
         output_root="filed-declarations",
         captured_count=0,
+        reached_count=0,
         observation_paths=[],
         artefact_refs=[],
         casilla_count=0,
@@ -53,6 +53,7 @@ def test_dry_run_defaults_false_so_a_silent_omission_never_reads_as_a_preview() 
         mode="single",
         output_root="filed-declarations",
         captured_count=0,
+        reached_count=0,
         observation_paths=[],
         artefact_refs=[],
         casilla_count=0,
@@ -67,6 +68,17 @@ def test_dry_run_defaults_false_so_a_silent_omission_never_reads_as_a_preview() 
 def test_text_mode_agrees_with_the_result_field(dry_run: bool) -> None:
     """Text and JSON must not disagree about whether anything was written."""
     report = BulkFiledDataCaptureReport(
+        pair_outcomes=(
+            FiledCapturePairOutcome(
+                modelo="303",
+                year=2025,
+                walk_attempted=True,
+                walk_completed=True,
+                row_count=0,
+                reached_count=0,
+                captured_count=0,
+            ),
+        ),
         output_root="filed-declarations",
         modelos=("303",),
         year_from=2025,

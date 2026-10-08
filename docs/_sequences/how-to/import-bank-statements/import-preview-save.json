@@ -18,7 +18,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\nDRY RUN MODE\tYes\nNotice\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\nnotice\tledger.import.dry_run_preview\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\n"
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\nDRY RUN MODE\tYes\nNotice\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\nnotice\tledger.import.dry_run_preview\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -37,7 +37,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -53,7 +53,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "review_status": "pending",
@@ -98,7 +106,7 @@
           "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

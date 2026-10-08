@@ -1,10 +1,7 @@
 """Real-behavior gate for `just clean`.
 
-Every assertion runs against a real git repository with a real ``.gitignore``,
-real files on disk and a real removal pass. Nothing here mocks git, patches the
-classifier, or asserts against a hand-copied expectation of what the module
-already computed: the protection rules are the whole safety property of a
-command that deletes, and a protection proved by a stub is not proved.
+Every assertion runs against filesystem ignore rules, real files and a real
+removal pass. Cleanup must preserve source files and protected local state.
 
 The teeth are the pairs. Each protected family is written into a tree that also
 holds a genuine cache, then the removal is applied for real, and the test
@@ -15,13 +12,11 @@ A rule that spared everything would pass one half and fail the other.
 from __future__ import annotations
 
 import os
-import shutil
 from pathlib import Path
 
 import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.packaging.command_execution import run_command
 from dev.test_runs.reaper import PID_TRUST_CEILING_SECONDS
 
 from ..clean import (
@@ -33,9 +28,7 @@ from ..clean import (
     Verdict,
     assess,
     classify,
-    git_observations,
     holds_only_cache,
-    in_flight,
     main,
     reclaim,
 )
@@ -63,19 +56,6 @@ scratch/
 """
 
 
-def _git(repository: Path, *arguments: str) -> str:
-    executable = shutil.which("git")
-    assert executable is not None, "git must be on PATH for this gate to mean anything"
-    completed = run_command(
-        [executable, "-c", "user.email=gate@example.invalid", "-c", "user.name=gate", *arguments],
-        cwd=repository,
-        timeout_seconds=120,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(completed.stderr)
-    return completed.stdout
-
-
 def _write(path: Path, content: str = "x") -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
@@ -84,14 +64,11 @@ def _write(path: Path, content: str = "x") -> Path:
 
 @pytest.fixture
 def repository(tmp_path: Path) -> Path:
-    """A real git repository carrying this project's protection-relevant ignore rules."""
+    """A filesystem tree carrying the protection-relevant ignore rules."""
     root = tmp_path / "worktree"
     root.mkdir()
-    _git(root, "init", "--quiet")
     _write(root / ".gitignore", IGNORE_RULES)
     _write(root / "src" / "module.py", "value = 1\n")
-    _git(root, "add", "-A")
-    _git(root, "commit", "--quiet", "-m", "seed")
     return root
 
 
@@ -224,19 +201,6 @@ def test_a_directory_named_cache_is_reaped_wherever_it_is_not_protected(reposito
     assert protected_cache.exists(), "the cache rule reached inside a protected tree"
 
 
-def test_untracked_work_that_is_not_ignored_is_counted_and_never_touched(repository: Path) -> None:
-    """In-flight work is exactly what git reports in status, and none of it is this command's."""
-    draft = _write(repository / "src" / "draft_feature.py", "in progress\n")
-    _write(repository / "src" / "module.py", "value = 2\n")
-
-    untracked, changed = in_flight(repository)
-    reclaim(repository, assess(repository))
-
-    assert untracked == 1 and changed >= 1, f"in-flight work went uncounted: {untracked=} {changed=}"
-    assert draft.exists(), "an untracked, non-ignored file was removed"
-    assert (repository / "src" / "module.py").read_text(encoding="utf-8") == "value = 2\n"
-
-
 def test_an_orphaned_directory_of_pure_cache_is_reaped_but_one_holding_a_file_is_not(repository: Path) -> None:
     """The promotion is decided by looking inside, so a single non-cache file must block it."""
     _write(repository / "scratch" / "orphan" / "__pycache__" / "gone.pyc")
@@ -272,34 +236,6 @@ def test_include_promotes_a_flagged_entry_but_cannot_override_a_protection(repos
 
     assert scratch_verdict is Verdict.REAP
     assert secrets_verdict is Verdict.KEEP, f"--include overrode a protection: {secrets_reason}"
-
-
-def test_the_git_directory_is_reported_and_left_byte_identical(repository: Path) -> None:
-    """Every git remedy this command names is one it must not perform."""
-    git_dir = repository / ".git"
-    before = sorted(
-        (path.relative_to(git_dir).as_posix(), path.stat().st_size) for path in git_dir.rglob("*") if path.is_file()
-    )
-
-    observations = git_observations(repository)
-
-    after = sorted(
-        (path.relative_to(git_dir).as_posix(), path.stat().st_size) for path in git_dir.rglob("*") if path.is_file()
-    )
-    assert before == after, "the git directory was modified by a command that only reports on it"
-    assert any("objects:" in line for line in observations), f"the object-store census is missing: {observations}"
-
-
-def test_an_interrupted_git_operation_is_reported_and_preserved(repository: Path) -> None:
-    """A half-finished rebase is the state a git command resumes from, never a cleanup target."""
-    marker = _write(repository / ".git" / "MERGE_HEAD", "0" * 40)
-
-    observations = git_observations(repository)
-
-    assert any("MERGE_HEAD" in line for line in observations), (
-        f"an in-flight git operation went unreported: {observations}"
-    )
-    assert marker.exists()
 
 
 def test_the_command_exits_zero_on_a_clean_tree_and_on_a_dirty_one(

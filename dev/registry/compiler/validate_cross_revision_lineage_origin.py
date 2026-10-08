@@ -110,46 +110,110 @@ def role_exempt_occurrences(modelo: ModeloDefinition) -> frozenset[_OccurrenceKe
     grounded. A chain start with no earlier occurrence has no incoming link.
     """
     revisions = ordered_revisions(modelo)
+    first_position = _first_continuity_positions(revisions)
+    grounded_incoming, has_incoming, grounded_successors, ungrounded_successors = _continuity_link_facts(
+        modelo,
+        revisions,
+        first_position,
+    )
+    return frozenset(
+        key
+        for revision in revisions
+        for key in _role_exemptions_for_revision(
+            revision,
+            grounded_incoming=grounded_incoming,
+            has_incoming=has_incoming,
+            grounded_successors=grounded_successors,
+            ungrounded_successors=ungrounded_successors,
+        )
+    )
+
+
+def _first_continuity_positions(revisions: tuple[ModeloRevision, ...]) -> dict[str, int]:
+    """Record the first ordered revision carrying each continuity identifier."""
     position = {revision.id: index for index, revision in enumerate(revisions)}
     first_position: dict[str, int] = {}
     for revision in revisions:
         for casilla in revision.casillas:
             if casilla.continuidad_id is not None:
                 first_position.setdefault(casilla.continuidad_id, position[revision.id])
+    return first_position
 
+
+def _revision_continuity_link_facts(
+    modelo: ModeloDefinition,
+    revisions: tuple[ModeloRevision, ...],
+    index: int,
+    first_position: dict[str, int],
+) -> tuple[set[_OccurrenceKey], set[_OccurrenceKey], set[_OccurrenceKey], set[_OccurrenceKey]]:
+    """Collect incoming and successor link facts for one revision."""
+    revision = revisions[index]
+    predecessor_revision = judging_predecessor(modelo, revisions, index)
+    carriers = _lineage_carriers(predecessor_revision)
     grounded_incoming: set[_OccurrenceKey] = set()
     has_incoming: set[_OccurrenceKey] = set()
     grounded_successors: set[_OccurrenceKey] = set()
     ungrounded_successors: set[_OccurrenceKey] = set()
-    for index, revision in enumerate(revisions):
-        predecessor_revision = judging_predecessor(modelo, revisions, index)
-        carriers = _lineage_carriers(predecessor_revision)
-        for casilla in revision.casillas:
-            if casilla.continuidad_id is None:
-                continue
-            key = (revision.id, casilla.id)
-            if first_position[casilla.continuidad_id] < index:
-                has_incoming.add(key)
-            resolved = _resolve_predecessor(predecessor_revision, carriers, revision, casilla)
-            if isinstance(resolved, str):
-                continue
-            predecessor_key = (resolved.revision.id, resolved.casilla.id)
-            if _is_grounded_link(casilla):
-                grounded_incoming.add(key)
-                grounded_successors.add(predecessor_key)
-            else:
-                ungrounded_successors.add(predecessor_key)
+    for casilla in revision.casillas:
+        if casilla.continuidad_id is None:
+            continue
+        key = (revision.id, casilla.id)
+        if first_position[casilla.continuidad_id] < index:
+            has_incoming.add(key)
+        resolved = _resolve_predecessor(predecessor_revision, carriers, revision, casilla)
+        if isinstance(resolved, str):
+            continue
+        predecessor_key = (resolved.revision.id, resolved.casilla.id)
+        if _is_grounded_link(casilla):
+            grounded_incoming.add(key)
+            grounded_successors.add(predecessor_key)
+        else:
+            ungrounded_successors.add(predecessor_key)
+    return grounded_incoming, has_incoming, grounded_successors, ungrounded_successors
 
+
+def _continuity_link_facts(
+    modelo: ModeloDefinition,
+    revisions: tuple[ModeloRevision, ...],
+    first_position: dict[str, int],
+) -> tuple[set[_OccurrenceKey], set[_OccurrenceKey], set[_OccurrenceKey], set[_OccurrenceKey]]:
+    """Aggregate incoming and successor link facts across ordered revisions."""
+    grounded_incoming: set[_OccurrenceKey] = set()
+    has_incoming: set[_OccurrenceKey] = set()
+    grounded_successors: set[_OccurrenceKey] = set()
+    ungrounded_successors: set[_OccurrenceKey] = set()
+    for index, _revision in enumerate(revisions):
+        incoming, present, successors, ungrounded = _revision_continuity_link_facts(
+            modelo,
+            revisions,
+            index,
+            first_position,
+        )
+        grounded_incoming.update(incoming)
+        has_incoming.update(present)
+        grounded_successors.update(successors)
+        ungrounded_successors.update(ungrounded)
+    return grounded_incoming, has_incoming, grounded_successors, ungrounded_successors
+
+
+def _role_exemptions_for_revision(
+    revision: ModeloRevision,
+    *,
+    grounded_incoming: set[_OccurrenceKey],
+    has_incoming: set[_OccurrenceKey],
+    grounded_successors: set[_OccurrenceKey],
+    ungrounded_successors: set[_OccurrenceKey],
+) -> frozenset[_OccurrenceKey]:
+    """Return linked rows whose incoming and successor links are all grounded."""
     exempt: set[_OccurrenceKey] = set()
-    for revision in revisions:
-        for casilla in revision.casillas:
-            if casilla.continuidad_id is None:
-                continue
-            key = (revision.id, casilla.id)
-            incoming_ok = key in grounded_incoming or key not in has_incoming
-            touches_a_link = key in grounded_incoming or key in grounded_successors
-            if incoming_ok and touches_a_link and key not in ungrounded_successors:
-                exempt.add(key)
+    for casilla in revision.casillas:
+        if casilla.continuidad_id is None:
+            continue
+        key = (revision.id, casilla.id)
+        incoming_ok = key in grounded_incoming or key not in has_incoming
+        touches_a_link = key in grounded_incoming or key in grounded_successors
+        if incoming_ok and touches_a_link and key not in ungrounded_successors:
+            exempt.add(key)
     return frozenset(exempt)
 
 

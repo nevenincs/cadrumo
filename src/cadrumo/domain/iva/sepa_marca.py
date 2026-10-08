@@ -38,6 +38,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
+from ...core.iban import normalise_iban
 from .establishment import SPAIN_COUNTRY_CODE
 
 
@@ -123,7 +124,7 @@ def _account_country_code(*, iban: str | None, bank_country_code: str) -> str | 
     neither a country-prefixed IBAN nor a bank country code is available.
     """
     if iban:
-        canonical = iban.replace(" ", "").replace("-", "").upper()
+        canonical = normalise_iban(iban)
         if len(canonical) >= 2 and canonical[:2].isalpha():
             return canonical[:2]
     code = bank_country_code.strip().upper()

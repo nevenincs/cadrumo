@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
-    MappingFactQuery,
-    ResolvedMappingFact,
     required_mapping_entry,
     unique_mapping_tokens,
+)
+from ..calculations.registry.facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
 )
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
@@ -109,16 +110,9 @@ class OssIossRegimeCatalogue:
         return matches[0]
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    """Narrow a resolved mapping payload to a unique string-to-string map."""
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("OSS/IOSS regime entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate OSS/IOSS regime key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
+
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.TRANSACTION_DATE, policy=_ENTRIES_POLICY)
 
 
 def resolve_oss_ioss_regime_catalogue(
@@ -132,16 +126,7 @@ def resolve_oss_ioss_regime_catalogue(
         raise RegistryValidationError(
             "OSS/IOSS regime catalogue requires an explicit authority operation or scope",
         )
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.TRANSACTION_DATE,
-            effective_date=effective_date or today_madrid(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("Modelo 369 OSS/IOSS projection must resolve as a mapping fact")
-    entries = _mapping_entries(resolved)
+    entries = _ENTRIES_FACT.resolve_entries(authority, effective_date=effective_date or today_madrid())
     ordered_tokens = unique_mapping_tokens(
         entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
     )

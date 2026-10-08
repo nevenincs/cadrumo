@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s57-packaging-workflow'
 date: '2026-07-13'
-modified: '2026-07-17'
-body_hash: 'sha256:b3e4ba2efbbec701e6e576ce8c485ae31c1ad39f0e06a2e9b48e6cc7da65ca75'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:e21c1c6566931360e4be9253e1e1ab677f38b586aa8dbd9ee6323a267609b4b6'
+related: []
 ---
 
 # `cadrumo-product-rename-s57-packaging-workflow` audit: `Cadrumo product rename S57 packaging workflow audit`
@@ -38,7 +37,7 @@ the execution record.
 
 The execution Scope lists only `.github/workflows/packaging-smoke.yml`, which
 the target commit intentionally leaves unchanged. The changed implementation
-surface is `dev/packaging/tests/test_packaging_smoke_workflow.py`; omitting it
+surface is the retired test; omitting it
 makes the formal scope disagree with the delivery and its own testing claims.
 
 ### execution-modified-stamp-is-stale | low | The July 13 record mutation retains a July 12 modified date

@@ -4,12 +4,11 @@ tags:
   - '#index'
   - '#registry-narrow-mechanism-widening'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e16d4e4c5e31b662a42cff7bc9e344366fa06e1a5cd8177a626673a539916ce'
+body_hash: 'sha256:6d7ab922e38c0aa017462157d43ad17ab4dbec1f60ec1ee4dccb62e5b97e3318'
 related:
   - '[[2026-08-28-registry-narrow-mechanism-widening-adr]]'
-  - '[[2026-08-28-registry-narrow-mechanism-widening-plan]]'
   - '[[2026-08-28-registry-narrow-mechanism-widening-research]]'
 ---
 
@@ -22,10 +21,6 @@ Auto-generated index of all documents tagged with `#registry-narrow-mechanism-wi
 ### adr
 
 - `2026-08-28-registry-narrow-mechanism-widening-adr` - `registry-narrow-mechanism-widening` adr: `widen three narrow registry mechanisms by declaration, never by matcher` | (**status:** `accepted`)
-
-### plan
-
-- `2026-08-28-registry-narrow-mechanism-widening-plan` - `registry-narrow-mechanism-widening` plan
 
 ### research
 

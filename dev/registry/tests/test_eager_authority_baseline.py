@@ -16,13 +16,12 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
 )
-from cadrumo.domain.calculations.registry.facts.schema import (
-    GovernedFact,
-    GovernedFactCatalogue,
+from cadrumo.domain.calculations.registry.facts.payloads import (
     GovernedFactFamily,
     MappingFactEntry,
     MappingFactPayload,
 )
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 
 from ..eager_authority_baseline import (
     EagerAuthorityBaselineError,

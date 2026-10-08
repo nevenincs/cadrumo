@@ -129,6 +129,66 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.foreign_assets.register.ForeignAssetRegisterError",
+        ErrorCode(
+            code="ERROR_PROFILE_FOREIGN_ASSET_REGISTER_RECORD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_foreign_asset_register_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.foreign_assets.register.ForeignAssetRegisterValidationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_FOREIGN_ASSET_REGISTER_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_foreign_asset_register_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.transactions.own_accounts.OwnAccountRegisterError",
+        ErrorCode(
+            code="ERROR_LEDGER_OWN_ACCOUNT_REGISTER_RECORD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_ledger_own_account_register_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.transactions.own_accounts.OwnAccountRegisterValidationError",
+        ErrorCode(
+            code="REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_own_account_register_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.foreign_assets.record_join.ForeignAssetRecordJoinRefusedError",
+        ErrorCode(
+            code="REFUSED_FOREIGN_ASSET_RECORD_JOIN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_foreign_asset_record_join",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.foreign_assets.valuation.ForeignAssetValuationRefusedError",
+        ErrorCode(
+            code="REFUSED_FOREIGN_ASSET_VALUATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_foreign_asset_valuation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva.prorrata_especial_parameters.ProrrataEspecialMandatoryParameterError",
         ErrorCode(
             code="REFUSED_IVA_PRORRATA_ESPECIAL_MARGIN_UNGROUNDED",
@@ -179,7 +239,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.inventory.records.InventoryLedgerError",
+        "cadrumo.domain.contribuyente.inventory.closing_foundations.InventoryLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_INVENTORY_LEDGER",
             category=ErrorCategory.ERROR,
@@ -189,7 +249,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.inventory.records.InventoryValidationError",
+        "cadrumo.domain.contribuyente.inventory.closing_foundations.InventoryValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_INVENTORY_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -565,16 +625,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_349_country_prefix_context",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.modelos.row_models.Modelo347ThresholdError",
-        ErrorCode(
-            code="REFUSED_MODELO_347_THRESHOLD",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_347_threshold",
             retryable=False,
             runbook_id=None,
         ),

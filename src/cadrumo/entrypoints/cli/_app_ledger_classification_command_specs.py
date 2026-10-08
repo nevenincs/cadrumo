@@ -17,13 +17,10 @@ from ._app_ledger_command_spec_support import (
     _optional_text_option,
     irpf_category_option,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -31,6 +28,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

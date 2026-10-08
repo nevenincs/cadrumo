@@ -34,12 +34,12 @@ from ..config_state_root import (
     FormerProductStateError,
     StateRootInputs,
     refuse_former_product_database,
-    resolve_state_root,
 )
 from ..config_storage_route import classify_storage_route_for_settings
 from ..config_support import StorageRouteKind
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
+from .state_root_projection import resolve_state_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -102,7 +102,9 @@ def test_the_retired_database_refusal_still_finds_the_bucket_tree(tmp_path: Path
 
 
 def _synthetic_inputs(home: Path) -> StateRootInputs:
-    return StateRootInputs(platform="linux", environ={"XDG_DATA_HOME": str(home / "share")}, home=home)
+    return StateRootInputs(
+        platform="linux", environ={"XDG_DATA_HOME": str(home / "share")}, home=home, repository_root=home
+    )
 
 
 def test_root_resolution_is_a_pure_function_of_its_supplied_inputs(tmp_path: Path) -> None:
@@ -115,8 +117,8 @@ def test_root_resolution_is_a_pure_function_of_its_supplied_inputs(tmp_path: Pat
     """
     resolution = resolve_state_root(_synthetic_inputs(tmp_path))
 
-    assert resolution.storage_root == tmp_path / "share" / "cadrumo" / "storage"
-    assert resolution.platform_user_data_root == tmp_path / "share" / "cadrumo"
+    assert resolution.storage_root == tmp_path / "var" / "storage"
+    assert resolution.platform_user_data_root == tmp_path
 
 
 def test_the_resolver_reads_nothing_beyond_what_it_was_given(tmp_path: Path) -> None:

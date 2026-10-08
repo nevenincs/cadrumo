@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:db403c59af29194c4ae42f24c06e3156e1cb62d7baf20684ea3ab18915d3d979'
+modified: '2026-10-03'
+body_hash: 'sha256:af61118a9e52eaafbc642216b3b2241293557cfe11db28dbbef90f14449b333a'
 related: []
 ---
 
@@ -34,9 +34,9 @@ runtime profiles.
 
 ## S208-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/filing/_history_repository.py src/aeat/application/filing/test_history_repository.py src/aeat/application/filing/test_history_repository_roundtrip.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
-- `uv run --no-sync pytest src/aeat/application/filing/test_history_repository.py src/aeat/application/filing/test_history_repository_roundtrip.py -q` passed with 19 tests.
-- `uv run --no-sync pytest src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "filing_history or s85_runtime" -q` passed with 3 selected tests.
+- the historical check passed.
+- the historical check passed with 19 tests.
+- the historical check passed with 3 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S208

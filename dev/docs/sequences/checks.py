@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import argparse
 import math
-import os
 import re
 import subprocess
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -21,12 +22,14 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.tests.golden_comparison import canonicalise
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
+from dev.product_environment import ambient_product_settings_removed
 
 from .authority_currency import require_current_authority
-from .compare import check_transcript, evaluate_expectations
+from .compare import check_transcript, evaluate_expectations, validate_live_export_evidence
 from .contracts import read_sequence_contract
 from .errors import SequenceEngineError, SequenceParseError
 from .golden_store import (
@@ -251,67 +254,7 @@ def discover_sequences(
             problems.append(f"page {page!r} does not exist under {root}")
 
     for path in page_files:
-        docname = path.relative_to(root).with_suffix("").as_posix()
-        try:
-            text = path.read_text(encoding=_UTF_8)
-        except OSError as exc:
-            problems.append(f"page {docname!r}: cannot read ({exc})")
-            continue
-        raw_directives = _extract_directives(text, page=docname, problems=problems)
-        if raw_directives:
-            prerequisite_problem = _profile_prerequisite_problem(text, docname, raw_directives[0].line_number)
-            if prerequisite_problem is not None:
-                problems.append(prerequisite_problem)
-        for raw in raw_directives:
-            found_id = raw.sequence_id
-            if sequence_id is not None and found_id != sequence_id:
-                continue
-            if found_id in seen_ids:
-                problems.append(
-                    f"page {docname!r}: duplicate sequence id {found_id!r} "
-                    f"(already declared on page {seen_ids[found_id]!r}); sequence ids are "
-                    "globally unique",
-                )
-                continue
-            seen_ids[found_id] = docname
-            if raw.body.strip():
-                problems.append(
-                    f"page {docname!r} sequence {found_id!r}: cli-sequence directive bodies "
-                    "must be empty; commands and development metadata belong in the keyed "
-                    "private contract under docs/_sequences/contracts",
-                )
-                continue
-            private_public_options = sorted(set(raw.options) - {"verify"})
-            if private_public_options:
-                rendered = ", ".join(f":{key}:" for key in private_public_options)
-                problems.append(
-                    f"page {docname!r} sequence {found_id!r}: private option(s) {rendered} "
-                    "must live in the keyed sequence contract, not user-facing Markdown",
-                )
-                continue
-            try:
-                contract_options, contract_body = read_sequence_contract(
-                    docname,
-                    found_id,
-                    docs_root=root,
-                    contracts_root=contracts_root,
-                )
-                options = {**contract_options, **raw.options}
-                sequence = parse_sequence(sequence_id=found_id, options=options, body=contract_body)
-            except SequenceParseError as exc:
-                problems.extend(f"page {docname!r}: {problem}" for problem in exc.problems)
-                continue
-            except SequenceEngineError as exc:
-                problems.append(str(exc))
-                continue
-            discovered.append(
-                DiscoveredSequence(
-                    page=docname,
-                    sequence_id=found_id,
-                    line_number=raw.line_number,
-                    sequence=sequence,
-                ),
-            )
+        _discover_page_sequences(path, root, contracts_root, sequence_id, discovered, problems, seen_ids)
 
     if sequence_id is not None and not discovered and not problems:
         problems.append(f"no enrolled cli-sequence with id {sequence_id!r} was found under {root}")
@@ -394,13 +337,20 @@ def refresh_sequences(
         if not item.sequence.executed_frames:
             continue  # all-@static: nothing runs, so there is no golden to write
         try:
-            with _sequence_progress_scope(item.page):
-                transcript = _execute_in_fresh_sandbox(item.sequence)
+            with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
+                expectation_problems = evaluate_expectations(item.sequence, transcript, page=item.page)
+                if expectation_problems:
+                    all_problems.extend(expectation_problems)
+                    continue
+                evidence_problems = validate_live_export_evidence(transcript, page=item.page)
+                if evidence_problems:
+                    all_problems.extend(evidence_problems)
+                    continue
+                written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
+                advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
-        written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
-        advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
     return tuple(written), tuple(all_problems), tuple(advisories)
 
 
@@ -445,12 +395,11 @@ def check_sequences(
             continue
         advisories.extend(oversized_frame_advisories(item.page, golden))
         try:
-            with _sequence_progress_scope(item.page):
-                transcript = _execute_in_fresh_sandbox(item.sequence)
+            with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
+                all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
-        all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
     return tuple(all_problems), tuple(advisories)
 
 
@@ -467,7 +416,11 @@ def english_pinned_environment() -> dict[str, str]:
     composed its own environment would drift from this one and measure a
     differently-configured product.
     """
-    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
+    environment = ambient_product_settings_removed()
+    # This is the check runner's scratch allocation, not product configuration.
+    # Preserve its resolved location across children: a build-tree default can
+    # exceed the native Unix socket path bound before a sequence starts.
+    environment["CADRUMO_TEMP_DIR"] = str(prepare_temporary_directory())
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["PYTHONIOENCODING"] = _UTF_8
     environment["PYTHONUTF8"] = "1"
@@ -503,14 +456,16 @@ def _positive_finite_timeout(value: str) -> float:
     return timeout
 
 
-def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
+def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str, ...]:
     """Run one check child; return its report tuple (empty on a clean pass).
 
     Raises:
         SequenceEngineError: When the child cannot run the check surface
             (any exit other than 0 or 1).
     """
-    with TemporaryDirectory(prefix="cli-sequence-progress-", ignore_cleanup_errors=True) as tmp:
+    with TemporaryDirectory(
+        prefix="cli-sequence-progress-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+    ) as tmp:
         journal = Path(tmp) / "last-frame.json"
         environment = english_pinned_environment()
         environment[_PROGRESS_JOURNAL_ENV] = str(journal)
@@ -522,6 +477,8 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
                 timeout_seconds=timeout,
             )
         except subprocess.TimeoutExpired as exc:
+            if timeout is None:
+                raise
             raise SequenceEngineError(_timeout_progress_diagnostic(journal, timeout=timeout)) from exc
     if result.returncode == 0:
         return ()
@@ -556,7 +513,7 @@ def _check_pages_in_subprocesses(
     docs_root: Path | None,
     goldens_root: Path | None,
     jobs: int,
-    timeout: float,
+    timeout: float | None,
     coherence: bool = False,
 ) -> tuple[str, ...]:
     """Shard the unscoped check across page-scoped children, ``jobs`` at a time.
@@ -604,7 +561,7 @@ def check_sequences_in_subprocess(
     goldens_root: Path | None = None,
     page: str | None = None,
     sequence_id: str | None = None,
-    timeout: float = 3600,
+    timeout: float | None = None,
     jobs: int = 1,
 ) -> tuple[str, ...]:
     """Run the golden check in fresh English-pinned interpreter(s).
@@ -620,6 +577,9 @@ def check_sequences_in_subprocess(
     run as concurrent page-scoped children (each sequence keeps its own fresh
     hermetic sandbox, so execution is unchanged — only the scheduling is).
     A scoped call, or ``jobs=1``, keeps the single-child path.
+
+    Children run to completion unless the caller explicitly supplies an
+    elapsed-time deadline; correctness does not depend on host speed.
 
     Returns:
         An empty tuple on success, or the complete child diagnostic report(s)
@@ -655,7 +615,7 @@ def check_page_coherence_in_subprocess(
     *,
     docs_root: Path | None = None,
     page: str | None = None,
-    timeout: float = 3600,
+    timeout: float | None = None,
     jobs: int = 1,
 ) -> tuple[str, ...]:
     """Run the page-coherence tier in English-pinned child interpreter(s).
@@ -665,6 +625,9 @@ def check_page_coherence_in_subprocess(
     coherence is a strictly page-scoped property (one sandbox per page, state
     accumulating only within the page), so pages are independent and shard
     cleanly.
+
+    Children run to completion unless the caller explicitly supplies an
+    elapsed-time deadline.
 
     Returns:
         An empty tuple on success, or the complete diagnostic report(s).
@@ -691,10 +654,11 @@ def check_page_coherence_in_subprocess(
     )
 
 
-def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> SequenceTranscript:
-    """Run one sequence in a disposable sandbox directory."""
-    with TemporaryDirectory(prefix="cli-sequence-", ignore_cleanup_errors=True) as tmp:
-        return execute_sequence(sequence, sandbox_root=Path(tmp))
+@contextmanager
+def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Iterator[SequenceTranscript]:
+    """Keep disposable artifacts alive through their owning refresh/check."""
+    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
+        yield execute_sequence(sequence, sandbox_root=Path(tmp))
 
 
 def check_page_coherence(
@@ -737,24 +701,7 @@ def check_page_coherence(
         # An all-@static sequence runs nothing, so it produces no transcript;
         # only executable sequences take part in the cumulative page run and the
         # transcript alignment below.
-        executable = [item for item in items if item.sequence.executed_frames]
-        try:
-            with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
-                with _sequence_progress_scope(docname):
-                    transcripts = execute_page_sequences(
-                        [item.sequence for item in executable],
-                        label=docname,
-                        sandbox_root=Path(tmp),
-                    )
-                for item, transcript in zip(executable, transcripts, strict=True):
-                    all_problems.extend(
-                        f"{COHERENCE_TIER_PREFIX}: {problem}"
-                        for problem in evaluate_expectations(item.sequence, transcript, page=docname)
-                    )
-        except SequenceEngineError as exc:
-            all_problems.append(
-                f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {exc}",
-            )
+        _check_page_coherence_items(docname, items, all_problems)
     return tuple(all_problems)
 
 
@@ -811,3 +758,112 @@ def _owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | No
     except SequenceEngineError:
         return None
     return next((item.page for item in discovered if item.sequence_id == sequence_id), None)
+
+
+def _discover_page_sequences(
+    path: Path,
+    root: Path,
+    contracts_root: Path | None,
+    sequence_id: str | None,
+    discovered: list[DiscoveredSequence],
+    problems: list[str],
+    seen_ids: dict[str, str],
+) -> None:
+    """Discover page sequences."""
+    docname = path.relative_to(root).with_suffix("").as_posix()
+    try:
+        text = path.read_text(encoding=_UTF_8)
+    except OSError as exc:
+        problems.append(f"page {docname!r}: cannot read ({exc})")
+        return
+    raw_directives = _extract_directives(text, page=docname, problems=problems)
+    if raw_directives:
+        prerequisite_problem = _profile_prerequisite_problem(text, docname, raw_directives[0].line_number)
+        if prerequisite_problem is not None:
+            problems.append(prerequisite_problem)
+    for raw in raw_directives:
+        _discover_raw_sequence(raw, docname, root, contracts_root, sequence_id, discovered, problems, seen_ids)
+
+
+def _discover_raw_sequence(
+    raw: _RawDirective,
+    docname: str,
+    root: Path,
+    contracts_root: Path | None,
+    sequence_id: str | None,
+    discovered: list[DiscoveredSequence],
+    problems: list[str],
+    seen_ids: dict[str, str],
+) -> None:
+    """Discover raw sequence."""
+    found_id = raw.sequence_id
+    if sequence_id is not None and found_id != sequence_id:
+        return
+    if found_id in seen_ids:
+        problems.append(
+            f"page {docname!r}: duplicate sequence id {found_id!r} "
+            f"(already declared on page {seen_ids[found_id]!r}); sequence ids are "
+            "globally unique",
+        )
+        return
+    seen_ids[found_id] = docname
+    if raw.body.strip():
+        problems.append(
+            f"page {docname!r} sequence {found_id!r}: cli-sequence directive bodies "
+            "must be empty; commands and development metadata belong in the keyed "
+            "private contract under docs/_sequences/contracts",
+        )
+        return
+    private_public_options = sorted(set(raw.options) - {"verify"})
+    if private_public_options:
+        rendered = ", ".join(f":{key}:" for key in private_public_options)
+        problems.append(
+            f"page {docname!r} sequence {found_id!r}: private option(s) {rendered} "
+            "must live in the keyed sequence contract, not user-facing Markdown",
+        )
+        return
+    try:
+        contract_options, contract_body = read_sequence_contract(
+            docname,
+            found_id,
+            docs_root=root,
+            contracts_root=contracts_root,
+        )
+        options = {**contract_options, **raw.options}
+        sequence = parse_sequence(sequence_id=found_id, options=options, body=contract_body)
+    except SequenceParseError as exc:
+        problems.extend(f"page {docname!r}: {problem}" for problem in exc.problems)
+        return
+    except SequenceEngineError as exc:
+        problems.append(str(exc))
+        return
+    discovered.append(
+        DiscoveredSequence(
+            page=docname,
+            sequence_id=found_id,
+            line_number=raw.line_number,
+            sequence=sequence,
+        ),
+    )
+
+
+def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], all_problems: list[str]) -> None:
+    """Check page coherence items."""
+    executable = [item for item in items if item.sequence.executed_frames]
+    try:
+        with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
+            with _sequence_progress_scope(docname):
+                transcripts = execute_page_sequences(
+                    [item.sequence for item in executable],
+                    label=docname,
+                    sandbox_root=Path(tmp),
+                )
+            for item, transcript in zip(executable, transcripts, strict=True):
+                all_problems.extend(
+                    f"{COHERENCE_TIER_PREFIX}: {problem}"
+                    for problem in evaluate_expectations(item.sequence, transcript, page=docname)
+                )
+    except SequenceEngineError as exc:
+        all_problems.append(
+            f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {exc}",
+        )

@@ -55,6 +55,7 @@ from ......tests.aeat_literal_fixtures import (
 )
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .. import session_store as session_store
+from .._clave_provider_common import same_aeat_application_path
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
 from ..clave_permanente import ClavePermanenteAuthProvider
@@ -357,23 +358,17 @@ def test_the_landing_predicate_delegates_to_the_authenticated_landing_decision(
     )
 
 
-@_profiles()
-def test_the_application_path_comparison_matches_on_the_first_two_segments(
-    profile: _ProviderProfile,
-    tmp_path: Path,
-) -> None:
+def test_the_application_path_comparison_matches_on_the_first_two_segments() -> None:
     """A sibling page inside the same AEAT application counts as the target."""
-    provider = profile.build(tmp_path)
-
     assert (
-        provider._same_aeat_application_path(
+        same_aeat_application_path(
             landing_path=INWINVOC_LANDING_PATH_CANARY,
             target_path=INWINVOC_SIBLING_PATH_CANARY,
         )
         is True
     )
     assert (
-        provider._same_aeat_application_path(
+        same_aeat_application_path(
             landing_path=OTHERAPP_LANDING_PATH_CANARY,
             target_path=INWINVOC_TARGET_PATH_CANARY,
         )
@@ -381,39 +376,15 @@ def test_the_application_path_comparison_matches_on_the_first_two_segments(
     )
 
 
-@_profiles()
-def test_a_landing_outside_the_known_application_roots_is_refused(
-    profile: _ProviderProfile,
-    tmp_path: Path,
-) -> None:
+def test_a_landing_outside_the_known_application_roots_is_refused() -> None:
     """Only ``wlpl`` and ``sede`` roots participate; anything else fails closed."""
-    provider = profile.build(tmp_path)
-
-    assert (
-        provider._same_aeat_application_path(
-            landing_path="/unknown/root/page",
-            target_path="/unknown/root/page",
-        )
-        is False
-    )
+    assert same_aeat_application_path(landing_path="/unknown/root/page", target_path="/unknown/root/page") is False
 
 
-@_profiles()
-def test_a_single_segment_path_cannot_satisfy_the_comparison(
-    profile: _ProviderProfile,
-    tmp_path: Path,
-) -> None:
+def test_a_single_segment_path_cannot_satisfy_the_comparison() -> None:
     """Fewer than two segments on either side refuses, rather than index-erroring."""
-    provider = profile.build(tmp_path)
-
-    assert (
-        provider._same_aeat_application_path(landing_path="/wlpl", target_path=WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY)
-        is False
-    )
-    assert (
-        provider._same_aeat_application_path(landing_path=WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY, target_path="/wlpl")
-        is False
-    )
+    assert same_aeat_application_path(landing_path="/wlpl", target_path=WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY) is False
+    assert same_aeat_application_path(landing_path=WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY, target_path="/wlpl") is False
 
 
 # ── Encrypted session persistence ───────────────────────────────────────────

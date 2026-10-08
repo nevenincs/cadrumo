@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d6710634a6ed9a705ecbe45eebf1c486ec7056b557f216157084086238afead7'
+body_hash: 'sha256:83be1ed23cf2bd03ddb5e8c82a493092b7461e970358a0688c2685bc1a5945f7'
 related:
-  - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
 ---
 
@@ -15,15 +14,13 @@ related:
 
 ## Findings
 
-## Sources
+### Context
 
-## Context
-
-## Question (W01.P02.S78)
+### Question (W01.P02.S78)
 
 Establish how Modelo 200's existing 149-file export fragment tree (encoding 6,537 fields) was actually authored, since the design offers no unique field-to-slot key (per W01.P02.S77, only 36.7% of fields pair unambiguously against the published design). Read the commit that introduced it and its exec record first, then whether a mapping tool existed and was removed, then whether the fragments carry provenance beyond `source_refs`.
 
-## Answer
+### Answer
 
 The tree was authored by hand/agent transcription from the AEAT Diseno de Registros workbook, with no parsing tool in existence at the time, and it carries no per-field provenance beyond a bulk-stamped `source_refs`/`legal_refs` pair identical across every field.
 
@@ -48,3 +45,12 @@ What was never established is the EXTERNAL pairing to the design's own slot numb
 - A related defect surfaced in passing: `source_refs = ["aeat-dr-200-2025"]` sits on the `2024-y-siguientes` revision - the same design-year-versus-claimed-year mismatch `test_layout_design_applies_to_claimed_years` reports for modelo 303/390/720. The tree's sole provenance pointer names a design year the revision itself does not claim to cover. Likely belongs to that same revision-span family of findings rather than to S78 specifically, recorded here for traceability.
 
 Investigation stopped at the answer per the row's own instruction ("stop at the answer rather than exhausting the list").
+
+## Sources
+
+- `8938bde0` — the commit that split the original Modelo 200 registry file into fragments.
+- `cdcd5b11` — the commit that introduced the full Modelo 200 registry and bundled design workbooks.
+- `97dac2be7` — the commit that removed the earlier Modelo 303 design-ingestion tool.
+- `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx` — the bundled AEAT Modelo 200 design workbook.
+- `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export` — the current 149-fragment export tree.
+- `.vault/adr/2026-04-22-aeat-fichero-boe-export-adr.md` — the governing decision's statement that record specs were hand-authored.

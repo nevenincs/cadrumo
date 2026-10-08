@@ -28,7 +28,7 @@ import json
 import pytest
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ..errors import internal_record_fault_context
+from ....core.errors.record_fault import internal_record_fault_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

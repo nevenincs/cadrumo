@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:df0053b2736ecdc46c6155c871684cd6d943c96b5b10d18e06614b8370a1cfb5'
 related:
-  - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-sub-year-epoch-adr]]"
   - "[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]"
 ---

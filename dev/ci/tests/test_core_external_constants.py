@@ -424,7 +424,6 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/declarations.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/iva_compensation_wallet.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/parse.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/verify/__init__.py"),
     )
 
@@ -581,7 +580,6 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_browser_selector_probe_timeout_ms": 2_500,
         "cadrumo_browser_close_timeout_ms": 5_000,
         "cadrumo_live_iva_declaration_capture_timeout_ms": 120_000,
-        "cadrumo_live_iva_cli_watchdog_timeout_ms": 240_000,
         "cadrumo_browser_locale": "es-ES",
         "cadrumo_browser_timezone": "Europe/Madrid",
         "cadrumo_browser_viewport_width": 1366,
@@ -597,7 +595,6 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_log_file_level": "DEBUG",
         "cadrumo_log_root_level": "DEBUG",
         "cadrumo_google_drive_vault_folder_name": "cadrumo-vault",
-        "cadrumo_google_oauth_access_refresh_buffer_s": 300,
         "cadrumo_calc_sheets_recalc_delay_s": 2.0,
         "cadrumo_llm_default_max_tokens": 1024,
         "cadrumo_llm_default_temperature": 0.0,
@@ -608,7 +605,6 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         assert getattr(settings, field_name) == expected_value, field_name
 
     assert settings.cadrumo_live_iva_declaration_capture_timeout_ms < settings.cadrumo_live_iva_surface_timeout_ms
-    assert settings.cadrumo_live_iva_cli_watchdog_timeout_ms < 300_000
     # Host compared exactly rather than by URL prefix: a prefix check also
     # accepts ``https://api.openai.com.attacker.invalid/...``, which is a
     # different origin entirely.

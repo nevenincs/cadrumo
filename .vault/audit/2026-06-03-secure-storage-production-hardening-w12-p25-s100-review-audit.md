@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:69ad2779b64a2e7cf97eb1bcae95eb95dfb097b013a7b80628928e54d801e66f'
+modified: '2026-10-03'
+body_hash: 'sha256:5d463d4e28032303a4bf75ca21b84e016e9000cb631f5e29b2c53e716724750e'
 related:
   - '[[2026-06-02-secure-storage-production-hardening-w12-p25-s100-scanner-delta-audit]]'
 ---
@@ -49,7 +49,7 @@ monotonicity warning.
 S100-004 | PASS | New explicit-route regression was resolved instead of allowlisted
 
 The first guard rerun found one unapproved explicit database-route setup in
-`src/aeat/application/live/test_iva_wallet_capture_backend.py`. The test was migrated
+the retired test. The test was migrated
 to real runtime-profile storage and runtime-bound repository injection, preserving the
 S95/S100 policy that non-refusal tests should not gain new ad hoc `aeat_database_url`
 setup.

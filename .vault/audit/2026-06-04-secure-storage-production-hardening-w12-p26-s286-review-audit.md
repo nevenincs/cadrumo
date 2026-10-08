@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:6c66dc6eb2c8a5f6c18096057a47a6699ab4f718b5b66fcdfbdd677aff029a4e'
+modified: '2026-10-03'
+body_hash: 'sha256:089266d5868623d78819b8cd99fc2a2595b69ce881d9ce521614e822db7c7b4b'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S286-001 | PASS | Active-profile pointer value object
 
-`src/aeat/core/_bucket_pointer.py` defines the strict `BucketPointer` pydantic value
+The retired module defined the strict `BucketPointer` pydantic value
 object for the plaintext `active-profile` pointer. It models only `bucket_id` and
 `schema_version`; it does not read or write files, resolve settings, open manifests,
 touch secure-object repositories, route SQL, or handle master-key material.
@@ -28,7 +28,7 @@ real value-object tests.
 ## S286-003 | PASS | Separation from pointer I/O
 
 The active-profile pointer file, atomic write, read precedence, and settings-backed
-resolution are owned by `src/aeat/core/_bucket_pointer_io.py` and are tracked in the
+resolution are owned by the retired module and are tracked in the
 next row. This row is closed as the core value/serialization contract only.
 
 ## S286-004 | PASS | Duplication and validation
@@ -39,8 +39,8 @@ resolution sites. No duplicate active-profile pointer value object was found.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/_bucket_pointer.py src/aeat/core/test_bucket_pointer.py`
-- `uv run --no-sync pytest -q src/aeat/core/test_bucket_pointer.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "BucketPointer active profile pointer TOML value object bucket_id schema_version active-profile" --type code --port 8766 --max-results 10`
 

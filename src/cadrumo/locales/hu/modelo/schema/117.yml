@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-117-total-liquidacion-calculation:
           field:
-            title: '117-es nyomtatvány: teljes adóelszámolás / befizetendő eredmény'
+            title: 'Modelo 117 nyomtatvány: teljes adóelszámolás / befizetendő eredmény'
       field:
         official_name: Modelo 117. Adóelőleg-levonások és -befizetések. Kollektív
           befektetési formák részvényeinek és befektetési jegyeinek átruházásából
@@ -12,6 +12,43 @@ modelo:
         title: Adóelőleg-levonások és -befizetések - kollektív befektetési formák
           részvényeinek és befektetési jegyeinek átruházásából vagy visszaváltásából
           származó jövedelmek
+      form:
+        column:
+          derechos-suscripcion: Jegyzési jogok átruházása
+          inversion-colectiva: Kollektív befektetési intézmények részvényeinek és
+            befektetési jegyeinek átruházása vagy visszaváltása
+        context:
+          apellidos: Vezetéknév vagy cégnév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző önadózási bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          periodo: Időszak
+        page:
+          dr-11701:
+            heading: Kollektív befektetési intézmények és jegyzési jogok utáni levont
+              adó és adóelőleg
+        row:
+          base: A levont adó és az adóelőleg alapja
+          perceptores: Kedvezményezettek száma
+          retenciones: Levont adó és adóelőleg
+        section:
+          complementaria:
+            heading: Kiegészítő bevallás (6)
+          devengo:
+            heading: Adómegállapítási időszak (2)
+          identificacion:
+            heading: Azonosítás (1)
+          ingreso:
+            heading: Befizetés (4)
+          liquidacion:
+            heading: Adóelszámolás (3) · A) Levont adó és adóelőleg
+          pago-cuenta:
+            heading: B) Adóelőleg
+          total:
+            heading: Adóelszámolás összesen
       revision:
         2019-y-siguientes:
           casilla:

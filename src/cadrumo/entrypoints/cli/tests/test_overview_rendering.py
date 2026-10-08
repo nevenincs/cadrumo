@@ -261,7 +261,7 @@ def test_drafts_empty_line_does_not_read_as_lost_work_when_work_units_exist() ->
     lines, _ = overview_status_output(_report(work_units=3))
     joined = "\n".join(lines)
     # The zero-drafts line must reference the work units explicitly.
-    assert "work unit" in joined.lower()
+    assert "modelo declarations" in joined.lower()
     # The work-units line itself reassures the operator the work is saved.
     work_unit_line = next(line for line in lines if line.lstrip().startswith("3 modelo"))
     assert "saved" in work_unit_line.lower()
@@ -330,7 +330,7 @@ def test_empty_invoice_register_line_does_not_read_as_lost_ledger_work() -> None
     invoice_line = next(line for line in lines if "invoice" in line.lower())
     # The line names the separate store and rules out the misreading.
     assert "register" in invoice_line.lower()
-    assert "ledger" in invoice_line.lower()
+    assert "bank records" in invoice_line.lower()
 
 
 def test_invoice_register_line_with_records_names_the_register() -> None:

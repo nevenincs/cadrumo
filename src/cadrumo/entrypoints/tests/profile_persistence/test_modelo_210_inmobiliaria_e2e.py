@@ -6,7 +6,7 @@ Resolves deferral DFR-M210-INMOBILIARIA-E2E (feature ``modelo-verify-nonzero-gua
 hand-constructed ``casilla_values`` / ``text_values`` dicts fed directly to
 ``evaluate_verification_predicates``. This module proves the same advisory fires
 through the REAL operator pipeline instead: :func:`calculate_modelo_revision` (real
-registry formula engine, real persistence) followed by :func:`verify_modelo_revision`
+registry formula engine, real persistence) followed by :func:`verify_modelo_revision_with_preconditions`
 (real Layer-2 predicate evaluation reading the PERSISTED
 ``CalculationRevision.input_values_by_casilla_id`` as ``text_values`` — see
 ``_verification_actions.py`` around the ``target.input_values_by_casilla_id`` comment).
@@ -43,7 +43,7 @@ registry, though unused by the inmobiliaria branch of the base-imponible formula
 is intentionally left unsupplied here so the revision resolves to
 ``granted_verificado_completo=False`` (a real, coexisting ``missing_required_casilla``
 BLOCKING finding) — the post-grant workflow gate inside
-:func:`verify_modelo_revision` runs the filing-draft builder only ``if granted``, and
+:func:`verify_modelo_revision_with_preconditions` runs the filing-draft builder only ``if granted``, and
 that builder does not yet support ``data_type="text"`` casilla inputs like
 ``tipo_renta`` (a separate, pre-existing gap outside this module's scope). Leaving
 this required casilla unsupplied keeps the test scoped to the inmobiliaria advisory
@@ -78,7 +78,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculation_actions import calculate_modelo_revision
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
@@ -140,7 +140,7 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
     (``derive_modelo_applicability`` returns ``INCOMPLETE``, which is not one of
     the blocking verdicts), so the local-work applicability gate never refuses
     this profile regardless of declared fiscal residency. The
-    ``workflow_profile`` passed explicitly to :func:`verify_modelo_revision`
+    ``workflow_profile`` passed explicitly to :func:`verify_modelo_revision_with_preconditions`
     (not this stored bucket profile) is what the representante-fiscal and
     inmobiliaria advisory predicates actually evaluate against.
     """
@@ -202,7 +202,7 @@ def _calculate_and_verify_m210_inmobiliaria(
     Drives :func:`calculate_modelo_revision` directly (mirroring
     ``test_declaration_period_binding.py``) with a ``text_casilla_inputs`` entry
     for ``tipo_renta``, exercising the real registry formula engine rather than
-    hand-constructed ``casilla_values``, then :func:`verify_modelo_revision` over
+    hand-constructed ``casilla_values``, then :func:`verify_modelo_revision_with_preconditions` over
     the persisted revision. Both steps share one ``_secure_backend`` bucket
     session (mirroring ``test_modelo_200_first_year_cuota_e2e.py``'s
     ``secure_objects`` fixture pattern) rather than two separate
@@ -246,7 +246,7 @@ def _calculate_and_verify_m210_inmobiliaria(
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID)
         observation_repository = CalculationObservationRepository()
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 actor="system",
                 workflow_profile=_irnr_gbworkflow_profile(),
@@ -262,7 +262,7 @@ def _calculate_and_verify_m210_inmobiliaria(
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         return revision, report
 
 

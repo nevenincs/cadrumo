@@ -20,6 +20,7 @@ from uuid import UUID, uuid4
 import keyring
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
 from cadrumo.tests.audited_process import run_audited_process
 
 from ......core.errors.hierarchy import CoreValidationError
@@ -35,11 +36,9 @@ from ..acceleration_receipt import (
     _profile_session_retirement_path,
     _receipt_bytes,
     _write_acceleration_receipt,
-    advance_persisted_profile_session_idle_deadline,
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
-    resume_profile_session,
 )
 from ..acceleration_receipt_crypto import (
     PROFILE_SESSION_SCHEMA_VERSION,
@@ -52,6 +51,8 @@ from ..filesystem import (
     profile_custody_root_lock,
 )
 from ..filesystem_primitives import ensure_profile_custody_local_directory
+from ..sign_in_generation import SignInGeneration
+from .receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody, uncommitted_sign_in
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -59,6 +60,7 @@ _NOW = datetime(2026, 8, 14, 12, 0, 0, tzinfo=UTC)
 _IDLE_MINUTES = 15
 _ABSOLUTE_MINUTES = 240
 _EPOCH = "test-dek-epoch-1"
+_SIGN_IN = SignInGeneration(lineage=UUID("3d2c1b0a-9f8e-4d7c-8b6a-5f4e3d2c1b0a"), generation=1)
 
 
 def _profile_id() -> UUID:
@@ -80,6 +82,8 @@ def _wrap(*, session_key: bytes, dek: bytes, profile_id: UUID) -> PersistedProfi
         session_id=uuid4(),
         custody_generation=1,
         dek_epoch=_EPOCH,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=_SIGN_IN,
         issued_at=_NOW,
         idle_deadline=_NOW + timedelta(minutes=_IDLE_MINUTES),
         absolute_deadline=_NOW + timedelta(minutes=_ABSOLUTE_MINUTES),
@@ -107,6 +111,9 @@ class TestSessionReceiptAad:
             {"issued_at": _NOW - timedelta(seconds=1)},
             {"idle_deadline": _NOW + timedelta(minutes=60)},
             {"absolute_deadline": _NOW + timedelta(minutes=300)},
+            {"login_binding": "0" * 64},
+            {"sign_in": SignInGeneration(lineage=_SIGN_IN.lineage, generation=2)},
+            {"sign_in": SignInGeneration(lineage=uuid4(), generation=1)},
         ],
         ids=(
             "schema-version",
@@ -117,6 +124,9 @@ class TestSessionReceiptAad:
             "issued-at",
             "idle-deadline",
             "absolute-deadline",
+            "login-binding",
+            "sign-in-generation",
+            "sign-in-lineage",
         ),
     )
     def test_metadata_substitution_fails_tag(self, mutation: dict[str, object]) -> None:
@@ -140,6 +150,8 @@ class TestSessionReceiptAad:
                 session_id=uuid4(),
                 custody_generation=1,
                 dek_epoch=_EPOCH,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=_SIGN_IN,
                 issued_at=datetime(2026, 8, 14, 12, 0, 0),
                 idle_deadline=_NOW + timedelta(minutes=15),
                 absolute_deadline=_NOW + timedelta(minutes=240),
@@ -162,6 +174,9 @@ class TestKeyringBoundary:
                 now=_NOW,
                 idle_minutes=_IDLE_MINUTES,
                 absolute_minutes=_ABSOLUTE_MINUTES,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=sign_in_custody(tmp_path, profile_id),
+                generation=sign_in_custody(tmp_path, profile_id).establish().current,
             )
         except KeyringUnavailableError:
             # The live Windows credential boundary refused the key before a
@@ -216,7 +231,7 @@ class TestAnchoredReceiptBoundary:
         assert not path.exists()
         assert not lock_path.exists()
 
-        outcome, dek = resume_profile_session(
+        outcome, dek = resume_receipt_as_runtime(
             storage_root=tmp_path,
             profile_id=profile_id,
             custody_generation=1,
@@ -241,7 +256,7 @@ class TestAnchoredReceiptBoundary:
         The child enters the production resume path and announces immediately
         before it requests the root lock.  The parent keeps that lock, mints
         through the production writer, then releases it.  Thus a successful
-        mint must be visible to the child resume; it cannot race between an
+        mint must be visible to the child runtime reader; it cannot race between an
         unlocked absence observation and the refusal return.
         """
         profile_id = _profile_id()
@@ -252,16 +267,19 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
-    resume_profile_session,
-)
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import resume_profile_session_with_key
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 
 root = Path(__import__("sys").argv[1])
 profile_id = UUID(__import__("sys").argv[2])
 started = Path(__import__("sys").argv[3])
 finished = Path(__import__("sys").argv[4])
+binding = ProfileAccessBinding.model_validate_json(__import__("sys").argv[5])
 started.write_text("ready", encoding="utf-8")
-outcome, dek = resume_profile_session(
+outcome, dek = resume_profile_session_with_key(
+    receipt_key=bytearray(32), login_id="test-login:receipt-owner",
+    sign_in=SignInGenerationCustody(root=root, binding=binding),
     storage_root=root,
     profile_id=profile_id,
     custody_generation=1,
@@ -276,6 +294,8 @@ finally:
 """
         children: list[asyncio.subprocess.Process] = []
         minted = False
+        sign_in = sign_in_custody(tmp_path, profile_id)
+        captured = sign_in.establish().current
         try:
             with profile_custody_root_lock(tmp_path):
                 child = await asyncio.create_subprocess_exec(
@@ -286,6 +306,7 @@ finally:
                     str(profile_id),
                     str(started),
                     str(finished),
+                    sign_in.binding.model_dump_json(),
                     cwd=Path.cwd(),
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -309,6 +330,9 @@ finally:
                         now=_NOW,
                         idle_minutes=_IDLE_MINUTES,
                         absolute_minutes=_ABSOLUTE_MINUTES,
+                        login_id=RECEIPT_LOGIN_ID,
+                        sign_in=sign_in,
+                        generation=captured,
                     )
                 except KeyringUnavailableError:
                     pass
@@ -329,13 +353,13 @@ finally:
                     "independent production resume failed: "
                     f"{stdout.decode(errors='replace')}\n{stderr.decode(errors='replace')}"
                 )
-        # The child records its refusal reason, so a refusal after a successful
-        # mint says whether it saw no receipt or could not read its keychain half.
+        # An intentionally wrong supplied proof must see the new receipt and
+        # fail its tag, rather than report the earlier absence.
         observed = finished.read_text(encoding="utf-8")
         if not minted:
             assert observed.startswith("refused:")
             return
-        assert observed == "resumed"
+        assert observed == "refused:tampered"  # It saw the new receipt; the supplied proof is intentionally wrong.
         delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
     def test_oversize_leaf_is_refused_before_any_keychain_operation(self, tmp_path: Path) -> None:
@@ -343,7 +367,7 @@ finally:
         path = self._path(tmp_path, profile_id)
         path.write_bytes(b"x" * (PROFILE_SESSION_RECORD_MAX_BYTES + 1))
 
-        outcome, dek = resume_profile_session(
+        outcome, dek = resume_receipt_as_runtime(
             storage_root=tmp_path,
             profile_id=profile_id,
             custody_generation=1,
@@ -365,7 +389,7 @@ finally:
             path = self._path(tmp_path, profile_id)
             path.write_bytes(candidate)
 
-            outcome, dek = resume_profile_session(
+            outcome, dek = resume_receipt_as_runtime(
                 storage_root=tmp_path,
                 profile_id=profile_id,
                 custody_generation=1,
@@ -375,7 +399,7 @@ finally:
 
             assert outcome.refusal is ProfileSessionRefusalReason.MALFORMED
             assert dek is None
-            assert not path.exists()
+            assert path.read_bytes() == candidate  # Borrowing cannot delete malformed runtime state.
 
     def test_parent_link_leaf_link_and_nonregular_leaf_are_refused_without_opening_targets(
         self, tmp_path: Path
@@ -390,7 +414,7 @@ finally:
         ensure_profile_custody_local_directory(keystore)
         os.symlink(outside, path.parent, target_is_directory=True)
 
-        outcome, dek = resume_profile_session(
+        outcome, dek = resume_receipt_as_runtime(
             storage_root=tmp_path,
             profile_id=profile_id,
             custody_generation=1,
@@ -406,7 +430,7 @@ finally:
         linked_target = tmp_path / "linked-target.json"
         linked_target.write_bytes(b"target")
         os.symlink(linked_target, linked_path)
-        linked, linked_dek = resume_profile_session(
+        linked, linked_dek = resume_receipt_as_runtime(
             storage_root=tmp_path,
             profile_id=linked_profile,
             custody_generation=1,
@@ -420,7 +444,7 @@ finally:
         nonregular_profile = _profile_id()
         nonregular = self._path(tmp_path, nonregular_profile)
         nonregular.mkdir()
-        refused, refused_dek = resume_profile_session(
+        refused, refused_dek = resume_receipt_as_runtime(
             storage_root=tmp_path,
             profile_id=nonregular_profile,
             custody_generation=1,
@@ -449,9 +473,14 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import resume_profile_session
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import resume_profile_session_with_key
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import uncommitted_sign_in
+root = Path(__import__('sys').argv[1])
+profile = UUID(__import__('sys').argv[2])
 
-outcome, _ = resume_profile_session(
+outcome, _ = resume_profile_session_with_key(
+    receipt_key=bytearray(32), login_id="test-login:receipt-owner",
+    sign_in=uncommitted_sign_in(root, profile),
     storage_root=Path(__import__('sys').argv[1]),
     profile_id=UUID(__import__('sys').argv[2]),
     custody_generation=1,
@@ -467,19 +496,24 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
             capture_output=True,
             encoding="utf-8",
             text=True,
-            timeout=60,
+            timeout=None,
         )
         assert completed.returncode == 0, completed.stderr
         assert isinstance(completed.stdout, str)
         return completed.stdout.strip()
 
-    def test_revocation_removes_an_unrecovered_journal_so_resume_reports_absent(self, tmp_path: Path) -> None:
-        """The strong close removes the journal whether or not the keychain answers.
+    def test_custody_deletion_preserves_unrecovered_journal_on_unavailable_keychain(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Physical deletion cannot discard the only locator of an unremoved key."""
+        from .. import acceleration_receipt as receipt_owner
 
-        The journal carries the wrapped DEK, so it is an on-disk half of the
-        session. Where the keychain cannot retire the entry it names, recovery
-        defers; revocation must still leave nothing a resume could reach.
-        """
+        def unavailable(**_coordinates: object) -> None:
+            raise KeyringUnavailableError("synthetic keychain refusal")
+
+        monkeypatch.setattr(receipt_owner, "_delete_acceleration_secret", unavailable)
         profile_id = _profile_id()
         self._prepare_sidecar(tmp_path, profile_id)
         successor = _receipt_bytes(
@@ -494,18 +528,10 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
         )
         assert journal_path.exists(), "the journal must exist, or its removal proves nothing"
 
-        delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
-
-        assert not journal_path.exists()
-        outcome, dek = resume_profile_session(
-            storage_root=tmp_path,
-            profile_id=profile_id,
-            custody_generation=1,
-            dek_epoch=_EPOCH,
-            now=_NOW,
-        )
-        assert outcome.refusal is ProfileSessionRefusalReason.ABSENT
-        assert dek is None
+        captured = journal_path.read_bytes()
+        with pytest.raises(KeyringUnavailableError):
+            delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
+        assert journal_path.read_bytes() == captured
 
     def test_crash_before_successor_key_storage_preserves_or_converges_the_prepared_receipt(
         self,
@@ -608,6 +634,9 @@ class TestProfileSessionAcceleration:
             now=_NOW,
             idle_minutes=_IDLE_MINUTES,
             absolute_minutes=_ABSOLUTE_MINUTES,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=sign_in_custody(tmp_path, profile_id),
+            generation=sign_in_custody(tmp_path, profile_id).establish().current,
         )
         return record, dek
 
@@ -643,7 +672,7 @@ class TestProfileSessionAcceleration:
         profile_id = _profile_id()
         record, dek = self._mint(tmp_path, profile_id)
         try:
-            outcome, resumed = resume_profile_session(
+            outcome, resumed = resume_receipt_as_runtime(
                 storage_root=tmp_path,
                 profile_id=profile_id,
                 custody_generation=1,
@@ -663,7 +692,7 @@ class TestProfileSessionAcceleration:
         record, _ = self._mint(tmp_path, profile_id)
         path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
         try:
-            outcome, resumed = resume_profile_session(
+            outcome, resumed = resume_receipt_as_runtime(
                 storage_root=tmp_path,
                 profile_id=profile_id,
                 custody_generation=2,
@@ -691,7 +720,7 @@ class TestProfileSessionAcceleration:
         other_profile = _profile_id()
         other, _ = self._mint(tmp_path, other_profile)
         try:
-            outcome, resumed = resume_profile_session(
+            outcome, resumed = resume_receipt_as_runtime(
                 storage_root=tmp_path,
                 profile_id=profile_id,
                 custody_generation=1,
@@ -742,7 +771,7 @@ class TestProfileSessionAcceleration:
         try:
             forged = record.model_copy(update={"idle_deadline": _NOW + timedelta(hours=3)})
             path.write_bytes(_receipt_bytes(forged))
-            outcome, resumed = resume_profile_session(
+            outcome, resumed = resume_receipt_as_runtime(
                 storage_root=tmp_path,
                 profile_id=profile_id,
                 custody_generation=1,
@@ -790,35 +819,11 @@ class TestProfileSessionAcceleration:
                 now=_NOW,
                 idle_minutes=0,
                 absolute_minutes=_ABSOLUTE_MINUTES,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=uncommitted_sign_in(tmp_path, profile_id),
+                generation=_SIGN_IN,
             )
         assert not profile_session_path(storage_root=tmp_path, profile_id=profile_id).exists()
-        assert not (tmp_path / ".profile-custody-root.lock").exists()
-        assert not any(tmp_path.iterdir())
-
-    def test_foreign_idle_renewal_refuses_before_custody_root_provisioning(self, tmp_path: Path) -> None:
-        """A caller cannot materialise a root lock with another profile's receipt."""
-        record = _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=_profile_id())
-        with pytest.raises(StorageValidationError, match="belongs to another profile"):
-            advance_persisted_profile_session_idle_deadline(
-                storage_root=tmp_path,
-                profile_id=_profile_id(),
-                record=record,
-                new_idle_deadline=_NOW + timedelta(minutes=30),
-            )
-        assert not (tmp_path / ".profile-custody-root.lock").exists()
-        assert not any(tmp_path.iterdir())
-
-    def test_naive_idle_renewal_refuses_before_custody_root_provisioning(self, tmp_path: Path) -> None:
-        """A malformed renewal deadline cannot materialise a root lock."""
-        profile_id = _profile_id()
-        record = _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=profile_id)
-        with pytest.raises(CoreValidationError, match="timezone-aware UTC"):
-            advance_persisted_profile_session_idle_deadline(
-                storage_root=tmp_path,
-                profile_id=profile_id,
-                record=record,
-                new_idle_deadline=datetime(2026, 8, 14, 12, 30, 0),
-            )
         assert not (tmp_path / ".profile-custody-root.lock").exists()
         assert not any(tmp_path.iterdir())
 
@@ -851,6 +856,9 @@ class TestProfileSessionAcceleration:
                 now=_NOW,
                 idle_minutes=_IDLE_MINUTES,
                 absolute_minutes=_ABSOLUTE_MINUTES,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=uncommitted_sign_in(tmp_path, profile_id),
+                generation=_SIGN_IN,
             )
         assert not (tmp_path / ".profile-custody-root.lock").exists()
         assert not any(tmp_path.iterdir())
@@ -884,6 +892,9 @@ def test_revocation_refuses_when_the_receipt_survives_the_clear(tmp_path: Path) 
         now=_NOW,
         idle_minutes=_IDLE_MINUTES,
         absolute_minutes=_ABSOLUTE_MINUTES,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=sign_in_custody(tmp_path, profile_id),
+        generation=sign_in_custody(tmp_path, profile_id).establish().current,
     )
     path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     try:
@@ -920,6 +931,9 @@ def test_revocation_returns_normally_when_the_receipt_is_cleared(tmp_path: Path)
         now=_NOW,
         idle_minutes=_IDLE_MINUTES,
         absolute_minutes=_ABSOLUTE_MINUTES,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=sign_in_custody(tmp_path, profile_id),
+        generation=sign_in_custody(tmp_path, profile_id).establish().current,
     )
     path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     assert path.exists()

@@ -3,12 +3,13 @@ tags:
   - '#reference'
   - '#registry-edition-authoring'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:60d724a6e7dd42c0c95434b33f99eb5b1c1061801189ad7ef5b090ffb9587f58'
+body_hash: 'sha256:a01322d1ea590c664cb01b405b589e2214f0d8d49325d9237b4b34fb306d22e7'
 related:
   - "[[2026-09-09-registry-edition-authoring-adr]]"
 ---
+
 # `registry-edition-authoring` reference: `Signed composite export derivation`
 
 Read-only investigation of the Modelo 296 generation refusal, using the committed parser receipt, generation epicenter, reviewed-profile types, fixed-width codec, and target-publication implementation. This blueprint identifies implementation seams; it does not authorize a new interpretation of PDF prose.
@@ -21,7 +22,7 @@ The governing decision requires clarification before a direct prose recognizer i
 
 ## Exact source and failure
 
-The receipt in `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/_generation.provenance.json` carries the exact parser anchor: PDF record design, source row 177, ordinal 12, outer offset 145, length 15, Alfanumérico, source `aeat-dr-296-2024`. Its content states a compound value: sign at 145, numeric magnitude at 146–159, integer part at 146–157, decimal part at 158–159. The sign is N for a negative result and space otherwise; the magnitude has no embedded sign or decimal separator. The two component ranges exhaust the fourteen magnitude bytes.
+Its content states a compound value: sign at 145, numeric magnitude at 146–159, integer part at 146–157, decimal part at 158–159. The sign is N for a negative result and space otherwise; the magnitude has no embedded sign or decimal separator. The two component ranges exhaust the fourteen magnitude bytes.
 
 The same receipt emits `m296-2024.declarante.f013`, casilla `02`, as `text`, right-space padded, left justified, unsigned, with `text-an-v1`. This conflicts with a calculated monetary value and explains the export refusal. The receipt is evidence of the existing defect, not a replacement input for regeneration: the generator must reread the hash-verified official binary through the source catalogue.
 

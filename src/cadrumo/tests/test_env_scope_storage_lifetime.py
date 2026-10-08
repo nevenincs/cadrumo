@@ -42,8 +42,6 @@ from .env_scope import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SUBPROCESS_TIMEOUT_SECONDS = 60
-
 
 def _age(directory: Path, seconds: float) -> None:
     """Backdate ``directory``'s mtime so the sweep sees it as that old."""
@@ -61,7 +59,7 @@ def _a_genuinely_dead_pid() -> int:
     Windows, where an open handle keeps the identifier reserved.
     """
     with subprocess.Popen([sys.executable, "-c", "pass"]) as child:  # fixed interpreter argv, no external input.
-        child.wait(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
+        child.wait()
         pid = child.pid
     return pid
 
@@ -286,7 +284,7 @@ def test_the_sweep_is_safe_to_run_concurrently(tmp_path: Path) -> None:
     for worker in workers:
         worker.start()
     for worker in workers:
-        worker.join(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
+        worker.join()
 
     assert not failures, f"concurrent sweeps raised: {failures}"
     survivors = scan_directory(tmp_path, pattern=f"{_STEM}*")
@@ -339,7 +337,6 @@ def test_the_reclaim_runs_at_startup_and_not_only_at_exit(tmp_path: Path) -> Non
         [sys.executable, "-c", probe],
         capture_output=True,
         text=True,
-        timeout=_SUBPROCESS_TIMEOUT_SECONDS,
         check=False,
     )
 

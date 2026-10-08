@@ -3,15 +3,14 @@ tags:
   - '#research'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0024c5964145d37d5fd0d2dd66270bb2a23561abdd068b40368c02fd3d4a99ff'
+body_hash: 'sha256:cca4025a503314c0524138cea8f0bf8fa2979addcd4d1388837d5309d9c88818'
 related:
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]'
   - '[[2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
-  - '[[2026-08-05-modelo-parity-rollup-plan]]'
 ---
 # `modelo-parity-rollup` research: `S18 1481 activity oracle addendum`
 
@@ -23,7 +22,7 @@ The 2025 `1481` row must remain manual/open. The new oracle proves a necessary M
 
 ### Activity-level 2025 M131 capability is now independently exercised
 
-The new Luna Max/XHigh test at `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_2025_activity_oracle.py` runs the real 2025 M131 registry runtime for epigraphs `972.1` and `721.2` across `1T`, `2T`, `3T`, and `4T`.
+The new Luna Max/XHigh test  runs the real 2025 M131 registry runtime for epigraphs `972.1` and `721.2` across `1T`, `2T`, `3T`, and `4T`.
 
 It preserves separate activity keys and reproduces the independently grounded annual-base values `22,473.79` for `972.1` and `8,987.09` for `721.2` in every quarter. The test passed its focused pytest, Ruff, format, and basedpyright checks. It does not sum the activities and does not write or read an M100 `1481` relation.
 
@@ -39,13 +38,13 @@ The oracle proves that the 2025 M131 engine can preserve activity identity and t
 
 ## Sources
 
-- New real-runtime oracle: `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_2025_activity_oracle.py`.
+- New real-runtime oracle: the former source file.
 - Independent coefficient/support tables: `src/cadrumo/domain/calculations/registry/tests/_modelo_131_modulos_engine_support.py`.
 - 2025 M131 engine tests: `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine.py`.
 - Bundled M131 instructions: `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_131/files/modelo-131-instrucciones.html:74`.
 - 2025 official M100 declaration dictionary: `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/01-100-diccionario-declaracion-individual-ejercicio-2025-actualizado-14-04-2026-416-kb-otros-fi.properties:369-374`.
-- Existing M100 fold-in evidence: `src/cadrumo/application/modelo/tests/test_modelo_100_m131_modulos_fold_in_live.py`.
-- Current 2025 M100 relation guard: `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_2025_semantic_boundaries.py`.
+- Existing M100 fold-in evidence: the former source file.
+- Current 2025 M100 relation guard: the former source file.
 
 ## Required implementation gates
 

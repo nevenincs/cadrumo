@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-07-04'
-modified: '2026-08-26'
-body_hash: 'sha256:a0c2e0862844a542eebbb5b11dcdbf6f12ad7848da83a7cc02170bd3e39ae035'
-related:
-  - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:4a921d1a9924ae96026362d2d858c7ad987e26821e14376e563cdda6da80dbe3'
+related: []
 ---
 
 # `binding-vocabulary-cli-cohesion` audit: `S23/S24 evidence review`
@@ -23,7 +22,7 @@ The S23 record correctly states that the live CLI remains `aeat app modelo work 
 
 ### s23-gate-residual | low | documented-command conformance is now green after follow-up
 
-The S23 evidence is enough to avoid redoing the operator-surface rename work. Follow-up commit `d2dad2d789` reconciled the unrelated `aeat app agent` citations in `README.md` and `docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md`, and `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` now reports `58 passed`.
+The S23 evidence is enough to avoid redoing the operator-surface rename work. Follow-up commit `d2dad2d789` reconciled the unrelated `aeat app agent` citations in `README.md` and the retired document, and the historical check now reports `58 passed`.
 
 ### s24-blocker-record | low | verification blockers are recorded without claiming closure
 

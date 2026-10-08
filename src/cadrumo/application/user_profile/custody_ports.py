@@ -32,7 +32,6 @@ if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import CarriedSecureObject
-    from ...domain.user_profile.values import UserProfileSnapshot
 
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
@@ -283,22 +282,6 @@ class ProfileCustodySecureObjectRepositoryPort(Protocol):
         ...
 
 
-class ProfileSnapshotPersistencePort(Protocol):
-    """Encrypted persistence boundary for immutable filing-time snapshots."""
-
-    def exists(self, snapshot_id: str) -> bool:
-        """Report whether one immutable snapshot row exists."""
-        ...
-
-    def load(self, snapshot_id: str) -> UserProfileSnapshot | None:
-        """Load and decode one snapshot, or report its absence."""
-        ...
-
-    def save(self, snapshot: UserProfileSnapshot) -> None:
-        """Encode and persist one immutable snapshot."""
-        ...
-
-
 class ProfileCustodyEnvelopePort(Protocol):
     """Opaque password-envelope contract accepted by custody transactions."""
 
@@ -384,42 +367,12 @@ class ProfileCustodyLocalRecordStore(Protocol):
         """Read one bounded, no-follow local record."""
         ...
 
-    def read_optional(self, path: Path, *, maximum_bytes: int) -> bytes | None:
-        """Read one bounded local record or prove its anchored absence."""
-        ...
-
     def write(self, path: Path, payload: bytes, *, publish_once: bool) -> None:
         """Atomically persist one local record."""
         ...
 
     def clear(self, path: Path) -> None:
         """Remove one anchored local record without following its leaf."""
-        ...
-
-    def compare_and_replace(
-        self,
-        path: Path,
-        *,
-        expected: bytes | None,
-        replacement: bytes,
-        maximum_bytes: int,
-    ) -> None:
-        """CAS-replace one local record without a separate app-layer read."""
-        ...
-
-    def compare_and_replace_same_or_predecessor(
-        self,
-        path: Path,
-        *,
-        current: bytes,
-        predecessor: bytes | None,
-        maximum_bytes: int,
-    ) -> None:
-        """Idempotently CAS one local record without an app-layer read."""
-        ...
-
-    def compare_and_clear(self, path: Path, *, expected: bytes, maximum_bytes: int) -> None:
-        """CAS-clear one local record without a separate app-layer read."""
         ...
 
 
@@ -604,17 +557,6 @@ class ProfileRecordCryptoPort(Protocol):
         associated_data: bytes,
     ) -> ProfilePassphraseEncryptedRecord:
         """Derive a fresh passphrase key and seal one record under it."""
-        ...
-
-    def open_with_passphrase(
-        self,
-        blob: ProfileRecordEncryptedBlob,
-        *,
-        passphrase: bytes,
-        parameters: ProfilePassphraseKdfParameters,
-        associated_data: bytes,
-    ) -> bytes:
-        """Derive the persisted passphrase key and authenticate one record."""
         ...
 
 
@@ -1129,17 +1071,6 @@ class ProfileCustodyPort(Protocol):
         """Project portable rows and namespace coverage through persistence."""
         ...
 
-    def profile_snapshot_persistence(
-        self,
-        bucket_id: str,
-        *,
-        object_key: Callable[[str, str], str],
-        objects: ProfileCustodySecureObjectRepositoryPort | None = None,
-        profile_decode_context: ProfileDecodeContext,
-    ) -> ProfileSnapshotPersistencePort:
-        """Return immutable profile-snapshot persistence for one bucket."""
-        ...
-
     def record_crypto(self) -> ProfileRecordCryptoPort:
         """Return the profile-record AEAD adapter."""
         ...
@@ -1234,6 +1165,14 @@ class ProfileCustodyPort(Protocol):
         password: str,
     ) -> ProfileCustodyUnlockPort:
         """Authenticate one committed password envelope and sentinel."""
+        ...
+
+    def fence_human_sign_in(self, *, profile_id: UUID, root: Path) -> None:
+        """Durably fence existing human receipts before a custody transition."""
+        ...
+
+    def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
+        """Durably deny delegated custody; return whether optional cleanup finished."""
         ...
 
     def replace_password_envelope(
@@ -1630,7 +1569,6 @@ __all__ = [
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
     "ProfileRecoveryKeyPort",
-    "ProfileSnapshotPersistencePort",
     "bind_profile_custody_port",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",

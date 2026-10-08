@@ -6,9 +6,14 @@ from pathlib import Path
 
 import pytest
 
-import dev.registry.edition_delta_migration as migration
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from dev._paths import REPO_ROOT
+from dev.registry import edition_delta_assessment as delta_assessment
+from dev.registry import edition_delta_assessment_lineage as assessment_lineage
+from dev.registry import edition_delta_payload as delta_payload
+from dev.registry import edition_delta_row_delta_common as delta_row_delta_common
+from dev.registry import edition_delta_source as delta_source
+from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.conformance.loader_directory_mode_support import write_standard_manifest
 from dev.registry.tests.test_restated_family_merge import _build_modelo
 
@@ -31,34 +36,34 @@ def test_canonical_shape_reader_keeps_singletons_and_keyed_members_distinct() ->
     singleton = {"status": "complete", "gaps": []}
     keyed = [{"id": "a", "nested": {"enabled": False}}, {"id": "b"}]
 
-    assert migration._members({"completeness_manifest": singleton}, "completeness_manifest", singleton=True) == (
+    assert delta_source._members({"completeness_manifest": singleton}, "completeness_manifest", singleton=True) == (
         singleton,
     )
-    assert migration._members({"formulas": keyed}, "formulas") == tuple(keyed)
-    assert migration._members({"formulas": singleton}, "formulas") is None
+    assert delta_source._members({"formulas": keyed}, "formulas") == tuple(keyed)
+    assert delta_source._members({"formulas": singleton}, "formulas") is None
 
 
 def test_typed_comparison_preserves_false_zero_absence_empty_and_array_order() -> None:
-    assert not migration._typed_equal(False, 0)
-    assert not migration._typed_equal({}, [])
-    assert not migration._typed_equal(["a", "b"], ["b", "a"])
-    assert not migration._typed_equal({"present": []}, {})
-    assert migration._typed_equal({"present": [], "enabled": False}, {"present": [], "enabled": False})
+    assert not delta_payload._typed_equal(False, 0)
+    assert not delta_payload._typed_equal({}, [])
+    assert not delta_payload._typed_equal(["a", "b"], ["b", "a"])
+    assert not delta_payload._typed_equal({"present": []}, {})
+    assert delta_payload._typed_equal({"present": [], "enabled": False}, {"present": [], "enabled": False})
 
 
 def test_typed_comparison_reads_a_tables_keys_as_fields_not_as_a_sequence() -> None:
     """Key order is how a table was written, not what it means; member order in an array still is."""
-    assert migration._typed_equal({"enabled": False, "present": []}, {"present": [], "enabled": False})
-    assert migration._typed_equal([{"id": "a", "rate": 1}], [{"rate": 1, "id": "a"}])
-    assert not migration._typed_equal([{"id": "a"}, {"id": "b"}], [{"id": "b"}, {"id": "a"}])
-    assert not migration._typed_equal({"id": "a", "rate": 1}, {"id": "a", "rate": True})
+    assert delta_payload._typed_equal({"enabled": False, "present": []}, {"present": [], "enabled": False})
+    assert delta_payload._typed_equal([{"id": "a", "rate": 1}], [{"rate": 1, "id": "a"}])
+    assert not delta_payload._typed_equal([{"id": "a"}, {"id": "b"}], [{"id": "b"}, {"id": "a"}])
+    assert not delta_payload._typed_equal({"id": "a", "rate": 1}, {"id": "a", "rate": True})
 
 
 def test_typed_comparison_matches_an_authored_token_to_its_typed_enum() -> None:
     """Authored TOML states the token; the typed model holds the enum. Both are one fact."""
-    assert migration._typed_equal("computed", InputKind.COMPUTED)
-    assert migration._typed_equal(InputKind.BOUND, "bound")
-    assert not migration._typed_equal("bound", InputKind.COMPUTED)
+    assert delta_payload._typed_equal("computed", InputKind.COMPUTED)
+    assert delta_payload._typed_equal(InputKind.BOUND, "bound")
+    assert not delta_payload._typed_equal("bound", InputKind.COMPUTED)
 
 
 def test_only_converter_failure_roots_are_reassessed_against_the_adjacent_revision() -> None:
@@ -66,8 +71,8 @@ def test_only_converter_failure_roots_are_reassessed_against_the_adjacent_revisi
     technical = {"predecessor": {"none": {"cause": "predecessor_row_without_lineage", "reason": "..."}}}
     structural = {"predecessor": {"none": {"cause": "official_structure_differs", "reason": "..."}}}
 
-    assert migration.technical_root(technical)
-    assert not migration.technical_root(structural)
+    assert assessment_lineage.technical_root(technical)
+    assert not assessment_lineage.technical_root(structural)
 
 
 def test_a_roots_prose_never_decides_whether_it_is_reconsidered() -> None:
@@ -81,12 +86,12 @@ def test_a_roots_prose_never_decides_whether_it_is_reconsidered() -> None:
     quoting_a_cause = {"predecessor": {"none": {"reason": "migration hit predecessor_row_without_lineage here"}}}
     describing_one = {"predecessor": {"none": {"reason": "the earlier rows carry no lineage to chain to"}}}
 
-    assert not migration.technical_root(quoting_a_cause)
-    assert not migration.technical_root(describing_one)
+    assert not assessment_lineage.technical_root(quoting_a_cause)
+    assert not assessment_lineage.technical_root(describing_one)
 
 
 def test_nested_values_have_stable_leaf_counting_and_locations() -> None:
-    leaves = migration._leaf_values({"provider": {"options": {"enabled": False}}, "order": ["a", "b"]})
+    leaves = delta_payload._leaf_values({"provider": {"options": {"enabled": False}}, "order": ["a", "b"]})
 
     assert leaves == {
         ("provider", "options", "enabled"): False,
@@ -95,9 +100,9 @@ def test_nested_values_have_stable_leaf_counting_and_locations() -> None:
 
 
 def test_live_modelo_100_assessment_covers_singleton_scalars_and_is_read_only() -> None:
-    before = migration._file_fingerprints(_MODELO_100)
+    before = delta_assessment._file_fingerprints(_MODELO_100)
 
-    assessment = migration.assess_migration_state(_MODELO_100)
+    assessment = delta_assessment.assess_migration_state(_MODELO_100)
 
     completeness = [row for row in assessment.by_revision_family if row["family"] == "completeness_manifest"]
     scalars = [row for row in assessment.by_revision_family if row["family"] == "$scalars"]
@@ -106,13 +111,13 @@ def test_live_modelo_100_assessment_covers_singleton_scalars_and_is_read_only() 
     assert all(_positive(row["genuine_overrides"]) for row in completeness[1:])
     assert all(_positive(row["authored_payload_fields"]) for row in scalars)
     assert assessment.inputs_stable
-    assert assessment.input_fingerprints == before == migration._file_fingerprints(_MODELO_100)
+    assert assessment.input_fingerprints == before == delta_assessment._file_fingerprints(_MODELO_100)
     assert assessment.redundant_overrides == 0
     assert assessment.minimal
 
 
 def test_changed_captured_input_blocks_minimality(monkeypatch: pytest.MonkeyPatch) -> None:
-    original = migration._file_fingerprints
+    original = delta_assessment._file_fingerprints
     calls = 0
 
     def changing(path: Path) -> tuple[dict[str, str], ...]:
@@ -123,9 +128,9 @@ def test_changed_captured_input_blocks_minimality(monkeypatch: pytest.MonkeyPatc
             return captured
         return (*captured, {"path": "mutated", "sha256": "changed"})
 
-    monkeypatch.setattr(migration, "_file_fingerprints", changing)
+    monkeypatch.setattr(delta_assessment, "_file_fingerprints", changing)
 
-    assessment = migration.assess_migration_state(_MODELO_100)
+    assessment = delta_assessment.assess_migration_state(_MODELO_100)
 
     assert not assessment.inputs_stable
     assert any(item["reason"] == "inputs_changed_during_assessment" for item in assessment.blocked_work)
@@ -135,17 +140,17 @@ def test_changed_captured_input_blocks_minimality(monkeypatch: pytest.MonkeyPatc
 def test_real_loader_assessment_distinguishes_restatement_from_inheritance(tmp_path: Path) -> None:
     modelo = _build_modelo(tmp_path)
 
-    assessment = migration.assess_migration_state(modelo)
+    assessment = delta_assessment.assess_migration_state(modelo)
 
     formulas = next(
         row for row in assessment.by_revision_family if row["revision"] == "2025" and row["family"] == "formulas"
     )
-    loaded = migration.load_modelo_directory(modelo)
+    loaded = load_modelo_directory(modelo)
     inherited_formula = next(item for item in loaded.revisions["2024"].formulas if item.id == "modelo-999-cuota")
     inherited_fields = sum(
         1
-        for path in migration._leaf_values(migration._model_value(inherited_formula))
-        if path and path[0] not in migration._STRUCTURAL_FIELDS
+        for path in delta_payload._leaf_values(delta_payload._model_value(inherited_formula))
+        if path and path[0] not in delta_payload._STRUCTURAL_FIELDS
     )
     exact = [
         item
@@ -168,7 +173,7 @@ def test_nested_family_override_detector_is_independent_and_exact(
         'selector = { revision = "2024", id = "modelo-999-cuota" }\n'
         f'fields = {{ expression = {{ literal = "{literal}" }} }}\n'
     )
-    assessment = migration.assess_migration_state(_build_modelo(tmp_path, successor_extra=declaration))
+    assessment = delta_assessment.assess_migration_state(_build_modelo(tmp_path, successor_extra=declaration))
     matches = [
         item
         for item in assessment.unresolved_duplication
@@ -202,7 +207,7 @@ def test_removal_clearing_ordering_and_source_defaults_are_separate_operations(t
         path.unlink()
     successor_constructs.rmdir()
 
-    assessment = migration.assess_migration_state(modelo)
+    assessment = delta_assessment.assess_migration_state(modelo)
 
     formulas = next(
         row for row in assessment.by_revision_family if row["revision"] == "2025" and row["family"] == "formulas"
@@ -230,7 +235,7 @@ def test_evidence_difference_is_genuine_while_surrounding_restatement_remains_vi
         newline="\n",
     )
 
-    assessment = migration.assess_migration_state(modelo)
+    assessment = delta_assessment.assess_migration_state(modelo)
     recargo = next(
         item
         for item in assessment.unresolved_duplication
@@ -256,7 +261,7 @@ def test_unsupported_collection_shape_reports_incomplete_coverage_before_hydrati
         newline="\n",
     )
 
-    assessment = migration.assess_migration_state(modelo)
+    assessment = delta_assessment.assess_migration_state(modelo)
 
     assert not assessment.minimal
     assert assessment.by_revision_family == ()
@@ -273,8 +278,8 @@ def test_a_predecessor_row_an_authored_operation_claims_is_not_free_to_rename() 
         "casilla_removals": [{"selector": {"revision": "2021", "id": "0786"}}],
     }
 
-    assert migration._authored_override_selectors(manifest) == frozenset({"0800", "0786"})
-    assert migration._authored_override_selectors({}) == frozenset()
+    assert delta_row_delta_common.authored_override_selectors(manifest) == frozenset({"0800", "0786"})
+    assert delta_row_delta_common.authored_override_selectors({}) == frozenset()
 
 
 def test_a_row_override_states_exactly_one_source_reference_form() -> None:
@@ -282,12 +287,18 @@ def test_a_row_override_states_exactly_one_source_reference_form() -> None:
     stored_whole = {"id": "0001", "source_refs": ["a"]}
     stored_additions = {"id": "0001", "additional_source_refs": ["b"]}
 
-    assert migration._reconcile_source_removals({"additional_source_refs": ["c"]}, (), stored_whole) == ("source_refs",)
+    assert delta_row_delta_common.reconcile_source_removals({"additional_source_refs": ["c"]}, (), stored_whole) == (
+        "source_refs",
+    )
     assert (
-        migration._reconcile_source_removals({"source_refs": ["c"]}, ("additional_source_refs",), stored_additions)
+        delta_row_delta_common.reconcile_source_removals(
+            {"source_refs": ["c"]}, ("additional_source_refs",), stored_additions
+        )
         == ()
     )
-    assert migration._reconcile_source_removals({"additional_source_refs": ["c"]}, (), stored_additions) == ()
+    assert (
+        delta_row_delta_common.reconcile_source_removals({"additional_source_refs": ["c"]}, (), stored_additions) == ()
+    )
 
 
 def test_a_constraints_override_states_exactly_one_source_reference_form() -> None:
@@ -295,14 +306,17 @@ def test_a_constraints_override_states_exactly_one_source_reference_form() -> No
     stored_whole = {"id": "0001", "constraints": {"max_value": "9", "source_refs": ["a", "b"]}}
     stored_additions = {"id": "0001", "constraints": {"max_value": "9", "additional_source_refs": ["b"]}}
 
-    assert migration._reconcile_source_removals(
+    assert delta_row_delta_common.reconcile_source_removals(
         {"constraints": {"additional_source_refs": ["c"]}}, (), stored_whole
     ) == ("constraints.source_refs",)
-    assert migration._reconcile_source_removals({"constraints": {"source_refs": ["c"]}}, (), stored_additions) == (
-        "constraints.additional_source_refs",
+    assert delta_row_delta_common.reconcile_source_removals(
+        {"constraints": {"source_refs": ["c"]}}, (), stored_additions
+    ) == ("constraints.additional_source_refs",)
+    assert (
+        delta_row_delta_common.reconcile_source_removals({"constraints": {"source_refs": ["c"]}}, (), stored_whole)
+        == ()
     )
-    assert migration._reconcile_source_removals({"constraints": {"source_refs": ["c"]}}, (), stored_whole) == ()
-    assert migration._reconcile_source_removals(
+    assert delta_row_delta_common.reconcile_source_removals(
         {"constraints": {"source_refs": ["c"]}}, ("constraints.additional_source_refs",), stored_additions
     ) == ("constraints.additional_source_refs",)
 
@@ -367,7 +381,7 @@ _CAUSED_ROOT = (
 )
 
 
-def _root_restatement(assessment: migration.MigrationAssessment) -> list[str]:
+def _root_restatement(assessment: delta_assessment.MigrationAssessment) -> list[str]:
     return [
         field
         for item in assessment.unresolved_duplication
@@ -387,7 +401,7 @@ def test_an_explicit_root_restating_the_edition_before_it_is_not_minimal(tmp_pat
     own declaration, so every field it states is restatement. A root was never
     measured, and reported minimal however much it restated.
     """
-    assessment = migration.assess_migration_state(_root_fixture(tmp_path, successor_root=declaration))
+    assessment = delta_assessment.assess_migration_state(_root_fixture(tmp_path, successor_root=declaration))
 
     restated = _root_restatement(assessment)
     assert {"data_type", "formula", "input_kind", "number", "section"} <= set(restated)
@@ -400,7 +414,7 @@ def test_a_reference_to_another_lineage_is_a_genuine_difference_net_of_edition_t
         tmp_path, successor_root=_UNCAUSED_ROOT, successor_number="7", successor_formula="modelo-999-2025-recargo"
     )
 
-    restated = _root_restatement(migration.assess_migration_state(modelo_dir))
+    restated = _root_restatement(delta_assessment.assess_migration_state(modelo_dir))
 
     assert "formula" not in restated
     assert "number" not in restated
@@ -425,7 +439,7 @@ def test_a_root_whose_every_statement_differs_stays_minimal(tmp_path: Path) -> N
         newline="\n",
     )
 
-    assessment = migration.assess_migration_state(modelo_dir)
+    assessment = delta_assessment.assess_migration_state(modelo_dir)
 
     assert _root_restatement(assessment) == []
     assert assessment.minimal
@@ -435,4 +449,4 @@ def test_a_parallel_root_in_force_beside_the_edition_before_it_is_not_measured_a
     """A variant whose validity window meets its neighbour's is not the edition after it."""
     modelo_dir = _root_fixture(tmp_path, successor_root=_UNCAUSED_ROOT, successor_window=("2024-01-01", "2025-12-31"))
 
-    assert _root_restatement(migration.assess_migration_state(modelo_dir)) == []
+    assert _root_restatement(delta_assessment.assess_migration_state(modelo_dir)) == []

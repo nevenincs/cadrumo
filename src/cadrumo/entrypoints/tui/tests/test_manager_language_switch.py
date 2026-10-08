@@ -31,7 +31,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
@@ -124,7 +124,7 @@ def _ensure_logged_in() -> None:
     profile authority, so a read here meets a locked capsule without one.
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    login_profile(
+    authenticate_profile_for_invocation(
         name=_LABEL,
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,

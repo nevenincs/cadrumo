@@ -24,22 +24,32 @@ from cadrumo.application.operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
-from cadrumo.application.operations.registry import OperationDefinition
+from cadrumo.application.operator_actions.models import ActionReference
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import (
     CensalFieldIntent,
     CensalOperationAcquisition,
     CensalOperationExecutor,
+    CensalProfileBaseline,
     CensalReviewedFieldIntent,
+    CensalReviewedOperand,
     build_censal_operation_definition,
 )
 from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
-from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo, open_censo_divergences
+from cadrumo.application.user_profile.cotejo_apply import (
+    CensoDivergence,
+    apply_cotejo,
+    open_censo_divergences,
+)
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 from cadrumo.tests.inventory import FIXTURES_DIR
 
@@ -64,6 +74,9 @@ from ...adapters.persistence.operations.tests.test_censal_operation_executor imp
 from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
     wait_for_phase as _wait_for_phase,
 )
+from ...tests.aeat_literal_fixtures import (
+    CENSO_CONSULTATION_URL_FIXTURE,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -81,12 +94,17 @@ _VALUES = {
 }
 
 
+def test_censal_review_contract_joins_the_tui_profile_edit_action() -> None:
+    assert _test_censal_operation_definition().action_reference == ActionReference(action_id="operator.profile.edit")
+
+
 def _test_censal_operation_definition() -> OperationDefinition:
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=build_censal_fetch_port(),
+        provider_preflight=lambda _profile_id, _operation: None,
     )
 
 
@@ -199,6 +217,94 @@ def _apply_response(operation_id: str, pending):
     )
 
 
+def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence(tmp_path: Path) -> None:
+    _profile_create_context_for_test, decode_context = _profile_contexts_for_test()
+    with _subject(tmp_path) as (profile_id, _objects, _session):
+        apply_cotejo(
+            None,
+            adopted=(UserProfileFact(path="contact.postcode", value="28001"),),
+            divergences=(),
+            profile_decode_context=decode_context,
+        )
+        record = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context).load(
+            profile_id
+        )
+        html = (FIXTURES_DIR / "aeat-sede" / "censal-datos-mdcacceso.html").read_text(encoding="utf-8")
+        observation = parse_censal_datos(
+            html.replace("Y0000001Z", "12345678Z"),
+            source_url=CENSO_CONSULTATION_URL_FIXTURE,
+        )
+        proposal = CensalReviewedOperand(
+            observation=observation,
+            baseline=CensalProfileBaseline.from_record(record),
+            field_intents=tuple(
+                CensalReviewedFieldIntent(path=path, intent=CensalFieldIntent.PRESERVE) for path in _PATHS
+            ),
+        )
+
+        apply_cotejo(None, reviewed_proposal=proposal, profile_decode_context=decode_context)
+        updated = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context).load(
+            profile_id
+        )
+        divergences = open_censo_divergences(updated)
+
+        assert record_to_path_values(updated)["contact.postcode"] == "28001"
+        assert tuple(row.axis for row in divergences) == (
+            "contact.fiscal_address",
+            "contact.fiscal_address_cadastral_reference",
+        )
+
+
+def test_censal_operation_worker_preflight_refuses_before_any_remote_read(tmp_path: Path) -> None:
+    """The composed provider preflight runs for the exact profile before acquisition."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    acquisition = _LocalHttpCensalAcquisition()
+    preflight_profile_ids: list[str] = []
+
+    def provider_preflight(profile_id, _operation) -> None:
+        preflight_profile_ids.append(str(profile_id))
+        raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
+
+    with _subject(tmp_path) as (profile_id, objects, session):
+        before = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
+        history_before = ProfileRecordStore(session=session).history()
+        owner = _supervisor(
+            root=tmp_path / "operations",
+            objects=objects,
+            executor=CensalOperationExecutor(
+                certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                browser_session_factory=default_browser_session_factory,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                censal_fetch_port=build_censal_fetch_port(),
+                provider_preflight=provider_preflight,
+                acquire=acquisition,
+            ),
+            owner="1" * 64,
+            token="2" * 64,
+        )
+
+        async def run():
+            operation_id = await owner.submit(_request(profile_id, frozenset(_PATHS)), operation_id="3" * 64)
+            return await _start(owner, operation_id)
+
+        settled = asyncio.run(run())
+
+        assert preflight_profile_ids == [profile_id]
+        assert acquisition.calls == 0
+        assert settled.lifecycle is OperationLifecycle.TERMINAL
+        assert settled.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        assert settled.effect is OperationEffect.NONE
+        assert (
+            ProfileRecordRepository.for_current_session(
+                profile_id, profile_decode_context=_profile_decode_context_for_test
+            ).load(profile_id)
+            == before
+        )
+        assert ProfileRecordStore(session=session).history() == history_before
+
+
 async def _settle_when_stopped(supervisor, operation_id: str, receipt: OperationTerminalReceipt):
     """Return the terminal the resumed continuation settled, checked against the expected receipt.
 
@@ -233,6 +339,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             censal_fetch_port=build_censal_fetch_port(),
+            provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquisition,
         )
         owner = _supervisor(
@@ -272,7 +379,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.UPDATED,
                     settled_at=_NOW,
-                    result_ref=f"censo-review:{operation_id}:applied",
+                    result_ref=operation_id,
                 ),
             )
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -334,6 +441,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=build_censal_fetch_port(),
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquisition,
                 ),
                 owner="6" * 64,
@@ -365,7 +473,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.NONE,
                     settled_at=_NOW,
-                    result_ref=f"censo-review:{operation_id}:rejected",
+                    result_ref=operation_id,
                 ),
             )
             assert terminal.effect is OperationEffect.NONE
@@ -401,6 +509,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=build_censal_fetch_port(),
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquisition,
                     apply=competing_commit,
                 ),
@@ -437,6 +546,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             censal_fetch_port=build_censal_fetch_port(),
+            provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquisition,
         )
         owner = _supervisor(
@@ -483,7 +593,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.UPDATED,
                     settled_at=_NOW + timedelta(minutes=2),
-                    result_ref=f"censo-review:{operation_id}:applied",
+                    result_ref=operation_id,
                 ),
             )
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -531,6 +641,7 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
                 browser_session_factory=default_browser_session_factory,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=build_censal_fetch_port(),
+                provider_preflight=lambda _profile_id, _operation: None,
                 acquire=acquisition,
                 before_irreversible_section=boundary,
             ),

@@ -33,16 +33,11 @@ from ......core.identity.digest import ContentDigest
 from ......core.period import Period
 from ......tests.aeat_literal_fixtures import (
     ACCESO_DR_DETAIL_PATH_FIXTURE,
-    KATA_COTEJO_DOC_ID_PATH_FIXTURE,
-    KATA_COTEJO_ID_PATH_FIXTURE,
     aeat_url,
 )
 from ..schema import (
-    Expediente,
     FiledDeclaracionArtefact,
     IvaCompensationWalletObservation,
-    JustificanteRef,
-    SedeCapture,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -52,26 +47,6 @@ _CAPTURED_AT = datetime(2026, 1, 2, 12, 0, tzinfo=UTC)
 _EXPEDIENTE_ID = "202310013522456T"
 _DETAIL_URL = aeat_url("sede", ACCESO_DR_DETAIL_PATH_FIXTURE)
 
-_EXPEDIENTE = Expediente(
-    expediente_id=_EXPEDIENTE_ID,
-    modelo="100",
-    ejercicio=2023,
-    category_path=("Agencia Estatal de Administración Tributaria", "Modelo 100"),
-    detail_url=_DETAIL_URL,
-)
-_REF = JustificanteRef(
-    csv="ABCDEFGHIJKLMNOP",
-    expediente_id=_EXPEDIENTE_ID,
-    cotejo_url=aeat_url("sede", KATA_COTEJO_ID_PATH_FIXTURE),
-    pdf_url=aeat_url("sede", KATA_COTEJO_DOC_ID_PATH_FIXTURE),
-)
-
-_SEDE_CAPTURE_BASE: Mapping[str, Any] = {
-    "expediente": _EXPEDIENTE,
-    "ref": _REF,
-    "pdf_bytes": b"%PDF-1.4",
-    "captured_at": _CAPTURED_AT,
-}
 _ARTEFACT_BASE: Mapping[str, Any] = {
     "kind": "declaration_pdf",
     "source_url": _DETAIL_URL,
@@ -110,10 +85,6 @@ def _canonical(value: str) -> str | None:
     return _read(lambda raw: _CanonicalDigestHolder(digest=raw), "digest", value)
 
 
-def _sede_capture(value: str) -> str | None:
-    return _read(lambda raw: SedeCapture(**_SEDE_CAPTURE_BASE, pdf_sha256=raw), "pdf_sha256", value)
-
-
 def _artefact(value: str) -> str | None:
     return _read(lambda raw: FiledDeclaracionArtefact(**_ARTEFACT_BASE, sha256=raw), "sha256", value)
 
@@ -127,7 +98,6 @@ def _wallet(value: str) -> str | None:
 
 
 _FIELDS = (
-    pytest.param(_sede_capture, id="SedeCapture.pdf_sha256"),
     pytest.param(_artefact, id="FiledDeclaracionArtefact.sha256"),
     pytest.param(_wallet, id="IvaCompensationWalletObservation.raw_sha256"),
 )
@@ -168,7 +138,6 @@ def test_the_fixtures_accept_a_good_digest_at_all() -> None:
     that refused nothing — passing while measuring nothing.
     """
     assert _canonical(_DIGEST) == _DIGEST
-    assert _sede_capture(_DIGEST) == _DIGEST
     assert _artefact(_DIGEST) == _DIGEST
     assert _wallet(_DIGEST) == _DIGEST
 

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-26'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f0c2ded2017b3722cbefb2c3a8945855a7c0e125164e993a13db73d923b16055'
+body_hash: 'sha256:d1c01e8272247a7ece3b25f89151bff726e7871d2e594f72141fd9f64bdb8242'
 related: []
 ---
 
@@ -13,12 +13,9 @@ related: []
 
 ## Scope
 
+Check whether a narrowed repository-gate step closes the intended work across the execution records and plan-step mapping.
+
 ## Findings
-
-## Recommendations
-
-## Finding
-
 Sixty execution records under this feature state that no source change was
 needed. Audited against their own Step row text, five of those rows ask for
 more than the record delivered.
@@ -42,8 +39,7 @@ the architecture boundary forbids.
 missed PEP 695 `type X = ...` statements and counted a locally defined alias as
 borrowed.
 
-## Remediation
-
+## Recommendations
 S181, S191, S227, S229 and S232 now export only locally defined symbols. The one
 real cross-module borrow, `WithholdingObservation` reached through `bindings`,
 was repointed to its owner `withholding_bindings`. Removing the export lists let

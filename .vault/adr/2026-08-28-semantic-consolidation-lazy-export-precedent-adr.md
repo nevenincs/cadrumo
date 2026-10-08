@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#semantic-consolidation'
 date: '2026-08-28'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e98b172a3a361db75da07626cd87af99ff7b925f5e730a44cac184a522100a8'
+body_hash: 'sha256:01f16877f350a8c45cf0ccb0dfd04564c8f7f4e50815d10346f5b5fcbd5de255'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -43,6 +43,12 @@ site: `domain/user_profile/__init__.py` carries no `__getattr__` at all today.
 | `application/review` | 47 | 19 |
 | `adapters/persistence/storage/crypto` | 18 | 14 |
 | `tests` | 2 | 157 |
+
+## Considerations
+
+- The standing architecture rule prohibits package-level export maps; the earlier accepted ADR justified only a measured, single-symbol deferral.
+- The nine current maps differ in real-consumer cost, and storage also re-exports descendants through an ancestor map.
+- A package that defines production objects in __init__.py needs relocation work beyond deleting its map.
 
 ## Findings
 
@@ -319,6 +325,10 @@ onto callers who currently pay none of it. That is the only shape in which a pac
 `__getattr__` saves anything: the deferral must be realised by a consumer that imports the
 package for some OTHER reason. In the other eight, consumers stop importing the namespace
 entirely, so nothing is forced anywhere.
+
+## Rationale
+
+The exception follows measured benefit at a real call site, not the hypothetical cost of eagerly importing every target. That test retires maps that force consumers through a namespace without saving them work, preserves the two-entry test facade that genuinely defers unused targets, and keeps migration slices small enough to update ancestor references safely.
 
 ## Consequences
 

@@ -13,8 +13,10 @@ from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import now as _now
 from .....tests.os_keychain_hook import require_os_credential_store
 from ..custody.acceleration_receipt import PROFILE_SESSION_KEYCHAIN_SERVICE, mint_profile_session, profile_session_path
+from ..custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from ..master_key.active_session import has_active_bucket_session
 from ..sql.engine import get_engine
+from .profile_capsule_runtime import publish_test_profile_capsule
 from .secure_sql import (
     isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
@@ -77,6 +79,9 @@ def test_isolated_profile_storage_root_reaps_a_discovered_bucket_key(tmp_path: P
     profile_id = UUID("11111111-1111-4111-8111-111111111111")
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         storage_root.mkdir(parents=True)
+        # A mint stamps the sign-in generation of committed custody, so the
+        # profile capsule has to exist first.
+        publish_test_profile_capsule(profile_id, label="Reaped receipt profile", root=storage_root)
         record = mint_profile_session(
             storage_root=storage_root,
             profile_id=profile_id,
@@ -86,6 +91,9 @@ def test_isolated_profile_storage_root_reaps_a_discovered_bucket_key(tmp_path: P
             now=_now(),
             idle_minutes=15,
             absolute_minutes=240,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=committed_sign_in(storage_root, profile_id),
+            generation=committed_sign_in(storage_root, profile_id).establish().current,
         )
         account = f"{profile_id}:{record.session_id}"
         assert keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account) is not None

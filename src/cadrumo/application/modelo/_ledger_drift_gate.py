@@ -31,6 +31,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -39,6 +40,7 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.ledger_filing_snapshot import evaluate_ledger_filing_staleness
+from ..aggregation.ledger_membership import LedgerSourceMembership, ledger_transaction_ref_identity
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
@@ -55,17 +57,44 @@ LEDGER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
 )
 
 
+type _BlockingFindingObserver = Callable[
+    [ModeloVerificationFinding, bool, tuple[str, ...], tuple[str, ...], tuple[str, ...]], None
+]
+
+
+def _observe_drift_finding(
+    observer: _BlockingFindingObserver | None,
+    finding: ModeloVerificationFinding,
+    anchored: bool,
+    changed: tuple[str, ...],
+    removed: tuple[str, ...],
+    added: tuple[str, ...],
+) -> None:
+    """Publish the original identifier-only evidence when an observer is bound."""
+    if observer is not None:
+        observer(finding, anchored, changed, removed, added)
+
+
+def _draft_ledger_baseline(target: CalculationRevision) -> set[str]:
+    """Retain draft source identities and identified ledger-source issues."""
+    baseline = set(target.source_transaction_ids)
+    for issue in target.source_issues:
+        if issue.binding_source not in LEDGER_BINDING_SOURCE_KINDS:
+            continue
+        identity = ledger_transaction_ref_identity(issue.source_ref)
+        if identity is not None:
+            baseline.add(identity)
+    return baseline
+
+
 def ledger_drift_findings(
     *,
     target: CalculationRevision,
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    current_membership: LedgerSourceMembership,
     source_refs: tuple[str, ...] = (),
-    blocking_finding_observer: Callable[
-        [ModeloVerificationFinding, bool, tuple[str, ...], tuple[str, ...]],
-        None,
-    ]
-    | None = None,
+    blocking_finding_observer: _BlockingFindingObserver | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Refuse a draft whose contributing ledger rows moved since it was calculated.
 
@@ -91,19 +120,38 @@ def ledger_drift_findings(
     This never recomputes. A verify that quietly recalculated would mint values
     the operator never saw and file them under a report they never read.
     """
-    if not target.source_transaction_ids:
-        return []
     if target.state is not CalculationRevisionState.BORRADOR:
         return []
+    baseline = _draft_ledger_baseline(target)
+    added = tuple(sorted(set(current_membership.observed_transaction_ids) - baseline))
     tx_repo = transaction_repository
     anchor = target.ledger_filing_snapshot
+    if not current_membership.available:
+        finding = _drift_finding(
+            work_unit=work_unit,
+            source_refs=source_refs,
+            changed=0,
+            removed=0,
+            anchored=anchor is not None,
+            membership_available=False,
+        )
+        _observe_drift_finding(blocking_finding_observer, finding, anchor is not None, (), (), ())
+        return [finding]
     if anchor is None:
-        finding = _drift_finding(work_unit=work_unit, source_refs=source_refs, changed=0, removed=0, anchored=False)
-        if blocking_finding_observer is not None:
-            blocking_finding_observer(finding, False, (), ())
+        if not target.source_transaction_ids and not added:
+            return []
+        finding = _drift_finding(
+            work_unit=work_unit,
+            source_refs=source_refs,
+            changed=0,
+            removed=0,
+            anchored=False,
+            added=len(added),
+        )
+        _observe_drift_finding(blocking_finding_observer, finding, False, (), (), added)
         return [finding]
     verdict = evaluate_ledger_filing_staleness(anchor, tx_repo.load())
-    if not verdict.is_stale:
+    if not verdict.is_stale and not added:
         return []
     finding = _drift_finding(
         work_unit=work_unit,
@@ -111,9 +159,11 @@ def ledger_drift_findings(
         changed=len(verdict.changed),
         removed=len(verdict.removed),
         anchored=True,
+        added=len(added),
     )
-    if blocking_finding_observer is not None:
-        blocking_finding_observer(finding, True, tuple(verdict.changed), tuple(verdict.removed))
+    _observe_drift_finding(
+        blocking_finding_observer, finding, True, tuple(verdict.changed), tuple(verdict.removed), added
+    )
     return [finding]
 
 
@@ -124,24 +174,76 @@ def _drift_finding(
     changed: int,
     removed: int,
     anchored: bool,
+    added: int = 0,
+    membership_available: bool = True,
 ) -> ModeloVerificationFinding:
     """Build the blocking drift finding without persisting recovery prose.
 
     The locale-neutral presentation facts carry counts; the exact changed and
-    removed identities remain on the paired precondition evidence record.
+    removed identities remain on the paired precondition evidence record. The
+    sentence names only the counts that are not zero: entries changed, entries
+    removed, or both.
     """
+    facts = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "period": work_unit.period.registry_token,
+        "anchored": anchored,
+        "changed_count": changed,
+        "removed_count": removed,
+        "added_count": added,
+        "membership_available": membership_available,
+    }
+    if not membership_available:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.ledger_snapshot_membership_unavailable",
+            message_facts=facts,
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
+    if added and (changed or removed):
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.ledger_snapshot_drift_with_added",
+            message_facts=facts,
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
+    if added:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.ledger_snapshot_drift_added",
+            message_facts=facts,
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
+    if changed and not removed:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.ledger_snapshot_drift_changed",
+            message_facts=facts,
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
+    if removed and not changed:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.ledger_snapshot_drift_removed",
+            message_facts=facts,
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
     return ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        kind=ModeloVerificationFindingKind.STALE_CALCULATION,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message_locale_key="application.modelo.findings.ledger_snapshot_drift",
-        message_facts={
-            "modelo": str(work_unit.modelo),
-            "filing_year": work_unit.filing_year,
-            "period": work_unit.period.registry_token,
-            "anchored": anchored,
-            "changed_count": changed,
-            "removed_count": removed,
-        },
+        message_facts=facts,
         legal_refs=LEDGER_DRIFT_LEGAL_REFS,
         source_refs=source_refs,
     )

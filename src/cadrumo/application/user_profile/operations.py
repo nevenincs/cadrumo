@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Callable
 from datetime import timedelta
-from pathlib import Path
-from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, field_validator
+from pydantic import BaseModel
 
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
@@ -22,8 +16,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.operations import profile_operation_subject as _profile_subject
-from ...core.time.clock import now
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -32,302 +25,101 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import OperationRequest
-from ..operations.owner import OperationExecutorContext
+from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
+    OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
-from .bundle_export import export_profile_bundle
 from .bundle_export_contracts import (
-    ProfileBundleExportPurpose,
-    ProfileBundleExportRequest,
     ProfileBundleExportResult,
-    ProfileBundleExportTransport,
 )
-from .fact_write import apply_manager_profile_field_mutation
-from .login_session import logout_active_profile
-from .section_rows import add_profile_repeatable_section_row
-
-PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID = "user-profile.field-mutation"
-PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID = "user-profile.repeatable-row-mutation"
-PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID = "user-profile.bundle-export"
-PROFILE_LOGOUT_OPERATION_DEFINITION_ID = "user-profile.logout"
-
-_PROFILE_FIELD_MUTATION_PHASES = (
-    "user-profile.field-mutation.preflight",
-    "user-profile.field-mutation.execute",
-    "user-profile.field-mutation.settlement",
+from .profile_operation_access import (
+    resolve_profile_bundle_export_access,
+    resolve_profile_mutation_access,
+    resolve_profile_view_access,
 )
-_PROFILE_REPEATABLE_ROW_MUTATION_PHASES = (
-    "user-profile.repeatable-row-mutation.preflight",
-    "user-profile.repeatable-row-mutation.execute",
-    "user-profile.repeatable-row-mutation.settlement",
+from .profile_operation_contracts import (
+    PROFILE_BUNDLE_EXPORT_INPUT_KIND,
+    PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
+    PROFILE_BUNDLE_EXPORT_PHASES,
+    PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
+    PROFILE_COMPLETE_SETUP_PHASES,
+    PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
+    PROFILE_DESCENDANTS_PHASES,
+    PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+    PROFILE_FIELD_MUTATION_PHASES,
+    PROFILE_PATCH_OPERATION_DEFINITION_ID,
+    PROFILE_PATCH_PHASES,
+    PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
+    PROFILE_PLANTILLA_MEDIA_PHASES,
+    PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
+    PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
+    PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
+    PROFILE_REPEATABLE_ROW_REMOVE_PHASES,
+    PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
+    PROFILE_REPEATABLE_ROW_UPDATE_PHASES,
+    ProfileBundleExportOperationProjection,
+    ProfileBundleExportOperationRequest,
+    ProfileCompleteSetupOperationProjection,
+    ProfileCompleteSetupOperationRequest,
+    ProfileCompleteSetupOperationResult,
+    ProfileDescendantsOperationProjection,
+    ProfileDescendantsOperationRequest,
+    ProfileDescendantsOperationResult,
+    ProfileFieldMutationOperationRequest,
+    ProfileMutationOperationProjection,
+    ProfileMutationOperationResult,
+    ProfilePatchOperationProjection,
+    ProfilePatchOperationRequest,
+    ProfilePatchOperationResult,
+    ProfilePlantillaMediaOperationProjection,
+    ProfilePlantillaMediaOperationRequest,
+    ProfilePlantillaMediaOperationResult,
+    ProfileRepeatableRowChangeOperationProjection,
+    ProfileRepeatableRowChangeOperationResult,
+    ProfileRepeatableRowMutationOperationProjection,
+    ProfileRepeatableRowMutationOperationRequest,
+    ProfileRepeatableRowMutationOperationResult,
+    ProfileRepeatableRowRemoveOperationRequest,
+    ProfileRepeatableRowUpdateOperationRequest,
+    project_profile_bundle_export_result,
+    project_profile_mutation_result,
 )
-_PROFILE_BUNDLE_EXPORT_PHASES = (
-    "user-profile.bundle-export.preflight",
-    "user-profile.bundle-export.secret-consume",
-    "user-profile.bundle-export.execute",
-    "user-profile.bundle-export.settlement",
+from .profile_operation_execution import (
+    ProfileBundleExportOperationExecutor,
+    ProfileCompleteSetupOperationExecutor,
+    ProfileDescendantsOperationExecutor,
+    ProfileFieldMutationOperationExecutor,
+    ProfilePatchOperationExecutor,
+    ProfilePlantillaMediaOperationExecutor,
+    ProfileRepeatableRowMutationOperationExecutor,
+    ProfileRepeatableRowRemoveOperationExecutor,
+    ProfileRepeatableRowUpdateOperationExecutor,
+    ProfileViewOperationExecutor,
 )
-_PROFILE_BUNDLE_EXPORT_KIND = "profile.bundle-export.passphrase"
-_PROFILE_LOGOUT_PHASES = (
-    "user-profile.logout.preflight",
-    "user-profile.logout.execute",
-    "user-profile.logout.settlement",
+from .view_operation import (
+    PROFILE_VIEW_OPERATION_DEFINITION_ID,
+    PROFILE_VIEW_PHASES,
+    ProfileViewOperationProjection,
+    ProfileViewOperationRequest,
+    ProfileViewOperationResult,
+    project_profile_view_result,
 )
-
-
-class ProfileFieldMutationOperationRequest(BaseModel):
-    """One manager-style scalar field replacement for the active profile."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: UUID
-    path: str = Field(min_length=3, max_length=160)
-    value: str
-
-
-class ProfileRepeatableRowValue(BaseModel):
-    """One submitted value keyed by its field within a schema-declared row."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    field_key: str = Field(min_length=1, max_length=120)
-    value: str
-
-
-class ProfileRepeatableRowMutationOperationRequest(BaseModel):
-    """One atomic new-row request for a schema-declared repeatable section."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: UUID
-    section_key: str = Field(min_length=1, max_length=120)
-    values: tuple[ProfileRepeatableRowValue, ...] = Field(min_length=1)
-
-    @field_validator("values")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_distinct_field_keys(
-        cls, value: tuple[ProfileRepeatableRowValue, ...]
-    ) -> tuple[ProfileRepeatableRowValue, ...]:
-        keys = tuple(item.field_key for item in value)
-        if len(set(keys)) != len(keys):
-            raise ValueError("repeatable-row operation values must not repeat a field key")
-        if not any(item.value.strip() for item in value):
-            raise ValueError("repeatable-row operation must include at least one non-blank value")
-        return value
-
-
-class ProfileBundleExportOperationRequest(BaseModel):
-    """One active-profile bundle publication request retained in encrypted custody."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: UUID
-    destination: Path
-    purpose: ProfileBundleExportPurpose
-
-
-class ProfileMutationOperationResult(BaseModel):
-    """Safe revision witness for a completed profile-fact mutation."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: UUID
-    record_revision: int = Field(ge=1)
-    content_digest: ContentDigest
-
-
-class ProfileRepeatableRowMutationOperationResult(ProfileMutationOperationResult):
-    """Safe row identity and revision witness for a completed row mutation."""
-
-    section_key: str = Field(min_length=1, max_length=120)
-    row_index: NonNegativeInt
-
-
-class ProfileLogoutOperationResult(BaseModel):
-    """Declared result shape for a strong-close operation.
-
-    The executor returns its profile subject reference instead of persisting this
-    result after the strong close, because the active profile's encrypted
-    operand store is deliberately no longer available at that point.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: UUID
-    logged_out: bool
-
-
-class ProfileLogoutOperationRequest(BaseModel):
-    """One strong-close request for the exact active profile subject."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    profile_id: UUID
-
-
-def build_profile_logout_operation_request(
-    profile_id: UUID,
-) -> OperationRequest[ProfileLogoutOperationRequest]:
-    """Build the sole typed strong-close request for an active profile."""
-    return OperationRequest(
-        definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-        subject_ref=_profile_subject(str(profile_id)),
-        payload=ProfileLogoutOperationRequest(profile_id=profile_id),
-    )
-
-
-def _require_active_profile_subject[PayloadT: BaseModel](request: OperationRequest[PayloadT], profile_id: UUID) -> None:
-    """Bind every active-profile authority to exactly its secure operation subject."""
-    if request.subject_ref != _profile_subject(str(profile_id)):
-        raise ValueError("user-profile operation subject does not match its exact profile")
-    if require_active_bucket_id() != str(profile_id):
-        raise ValueError("user-profile operation requires its profile to be active")
-
-
-async def _result_reference(result: BaseModel, context: OperationExecutorContext) -> str:
-    """Persist a post-mutation result through the supervisor's encrypted operand store."""
-    return await context.operands.put(result, written_at=now())
-
-
-class ProfileFieldMutationOperationExecutor:
-    """Delegate one scalar replacement to the canonical profile-fact write door."""
-
-    async def execute(
-        self,
-        request: OperationRequest[ProfileFieldMutationOperationRequest],
-        context: OperationExecutorContext,
-    ) -> str:
-        payload = request.payload
-        _require_active_profile_subject(request, payload.profile_id)
-        await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[0])
-        await context.events.effect(OperationEffect.UNKNOWN)
-        await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[1])
-        record = await asyncio.to_thread(
-            apply_manager_profile_field_mutation,
-            profile_id=str(payload.profile_id),
-            path=payload.path,
-            value=payload.value,
-            profile_decode_context=context.authority_operation.profile_decode_context(),
-        )
-        result = ProfileMutationOperationResult(
-            profile_id=payload.profile_id,
-            record_revision=record.record_revision,
-            content_digest=record.content_digest,
-        )
-        result_ref = await _result_reference(result, context)
-        await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[2])
-        return result_ref
-
-
-class ProfileRepeatableRowMutationOperationExecutor:
-    """Delegate one whole repeatable row to the shared schema and fact-write authorities."""
-
-    async def execute(
-        self,
-        request: OperationRequest[ProfileRepeatableRowMutationOperationRequest],
-        context: OperationExecutorContext,
-    ) -> str:
-        payload = request.payload
-        _require_active_profile_subject(request, payload.profile_id)
-        await context.events.phase(_PROFILE_REPEATABLE_ROW_MUTATION_PHASES[0])
-        values = {item.field_key: item.value for item in payload.values}
-        await context.events.effect(OperationEffect.UNKNOWN)
-        await context.events.phase(_PROFILE_REPEATABLE_ROW_MUTATION_PHASES[1])
-        mutation = await asyncio.to_thread(
-            add_profile_repeatable_section_row,
-            profile_id=str(payload.profile_id),
-            section_key=payload.section_key,
-            values=values,
-            schema=context.authority_operation.profile_schema(),
-            profile_decode_context=context.authority_operation.profile_decode_context(),
-        )
-        result = ProfileRepeatableRowMutationOperationResult(
-            profile_id=payload.profile_id,
-            record_revision=mutation.record.record_revision,
-            content_digest=mutation.record.content_digest,
-            section_key=mutation.section_key,
-            row_index=mutation.row_index,
-        )
-        result_ref = await _result_reference(result, context)
-        await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase(_PROFILE_REPEATABLE_ROW_MUTATION_PHASES[2])
-        return result_ref
-
-
-class ProfileBundleExportOperationExecutor:
-    """Publish through the existing crash-reconcilable bundle export authority."""
-
-    async def execute(
-        self,
-        request: OperationRequest[ProfileBundleExportOperationRequest],
-        context: OperationExecutorContext,
-    ) -> str:
-        payload = request.payload
-        _require_active_profile_subject(request, payload.profile_id)
-        await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[0])
-        await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[1])
-        async with context.ephemeral_secret.consume() as secret:
-            passphrase = bytes(secret).decode("utf-8")
-            try:
-                await context.events.effect(OperationEffect.UNKNOWN)
-                await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[2])
-                result = await asyncio.to_thread(
-                    export_profile_bundle,
-                    ProfileBundleExportRequest(
-                        profile_name=None,
-                        destination=payload.destination,
-                        purpose=payload.purpose,
-                        transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
-                        passphrase=SecretStr(passphrase),
-                    ),
-                    profile_decode_context=context.authority_operation.profile_decode_context(),
-                )
-            finally:
-                passphrase = ""
-        result_ref = await _result_reference(result, context)
-        await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[3])
-        return result_ref
-
-
-class ProfileLogoutOperationExecutor:
-    """Strong-close through the one session-revocation authority."""
-
-    async def execute(
-        self,
-        request: OperationRequest[ProfileLogoutOperationRequest],
-        context: OperationExecutorContext,
-    ) -> str:
-        payload = request.payload
-        _require_active_profile_subject(request, payload.profile_id)
-        await context.events.phase(_PROFILE_LOGOUT_PHASES[0])
-        await context.events.effect(OperationEffect.UNKNOWN)
-        await context.events.phase(_PROFILE_LOGOUT_PHASES[1])
-        # The revocation takes the root pointer lock and deletes files; the session it
-        # closes is bound process-wide, so the worker thread sees and clears it.
-        signed_out = await asyncio.to_thread(logout_active_profile)
-        await context.events.effect(OperationEffect.UPDATED if signed_out is not None else OperationEffect.NONE)
-        await context.events.phase(_PROFILE_LOGOUT_PHASES[2])
-        return request.subject_ref
 
 
 def _definition(
     *,
     definition_id: str,
     request_type: type[BaseModel],
-    result_type: type[BaseModel],
+    result_type: type[BaseModel] | None,
     executor_type: type[object],
     phase_codes: tuple[str, ...],
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
+    permitted_effects: frozenset[OperationEffect] = EFFECTS_WITHOUT_PARTIAL_COMMIT,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -350,49 +142,90 @@ def _definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
+            permitted_effects=permitted_effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         ephemeral_secret=ephemeral_secret,
     )
 
 
 USER_PROFILE_OPERATION_DEFINITIONS = (
     _definition(
+        definition_id=PROFILE_VIEW_OPERATION_DEFINITION_ID,
+        request_type=ProfileViewOperationRequest,
+        result_type=ProfileViewOperationResult,
+        executor_type=ProfileViewOperationExecutor,
+        phase_codes=PROFILE_VIEW_PHASES,
+        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
+    ),
+    _definition(
         definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
         request_type=ProfileFieldMutationOperationRequest,
         result_type=ProfileMutationOperationResult,
         executor_type=ProfileFieldMutationOperationExecutor,
-        phase_codes=_PROFILE_FIELD_MUTATION_PHASES,
+        phase_codes=PROFILE_FIELD_MUTATION_PHASES,
+    ),
+    _definition(
+        definition_id=PROFILE_PATCH_OPERATION_DEFINITION_ID,
+        request_type=ProfilePatchOperationRequest,
+        result_type=ProfilePatchOperationResult,
+        executor_type=ProfilePatchOperationExecutor,
+        phase_codes=PROFILE_PATCH_PHASES,
+    ),
+    _definition(
+        definition_id=PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
+        request_type=ProfilePlantillaMediaOperationRequest,
+        result_type=ProfilePlantillaMediaOperationResult,
+        executor_type=ProfilePlantillaMediaOperationExecutor,
+        phase_codes=PROFILE_PLANTILLA_MEDIA_PHASES,
+    ),
+    _definition(
+        definition_id=PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
+        request_type=ProfileDescendantsOperationRequest,
+        result_type=ProfileDescendantsOperationResult,
+        executor_type=ProfileDescendantsOperationExecutor,
+        phase_codes=PROFILE_DESCENDANTS_PHASES,
     ),
     _definition(
         definition_id=PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
         request_type=ProfileRepeatableRowMutationOperationRequest,
         result_type=ProfileRepeatableRowMutationOperationResult,
         executor_type=ProfileRepeatableRowMutationOperationExecutor,
-        phase_codes=_PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
+        phase_codes=PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
+    ),
+    _definition(
+        definition_id=PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
+        request_type=ProfileRepeatableRowUpdateOperationRequest,
+        result_type=ProfileRepeatableRowChangeOperationResult,
+        executor_type=ProfileRepeatableRowUpdateOperationExecutor,
+        phase_codes=PROFILE_REPEATABLE_ROW_UPDATE_PHASES,
+    ),
+    _definition(
+        definition_id=PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
+        request_type=ProfileRepeatableRowRemoveOperationRequest,
+        result_type=ProfileRepeatableRowChangeOperationResult,
+        executor_type=ProfileRepeatableRowRemoveOperationExecutor,
+        phase_codes=PROFILE_REPEATABLE_ROW_REMOVE_PHASES,
+    ),
+    _definition(
+        definition_id=PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
+        request_type=ProfileCompleteSetupOperationRequest,
+        result_type=ProfileCompleteSetupOperationResult,
+        executor_type=ProfileCompleteSetupOperationExecutor,
+        phase_codes=PROFILE_COMPLETE_SETUP_PHASES,
     ),
     _definition(
         definition_id=PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
         request_type=ProfileBundleExportOperationRequest,
         result_type=ProfileBundleExportResult,
         executor_type=ProfileBundleExportOperationExecutor,
-        phase_codes=_PROFILE_BUNDLE_EXPORT_PHASES,
+        phase_codes=PROFILE_BUNDLE_EXPORT_PHASES,
         ephemeral_secret=OperationEphemeralSecretDeclaration(
-            secret_kind=_PROFILE_BUNDLE_EXPORT_KIND,
+            secret_kind=PROFILE_BUNDLE_EXPORT_INPUT_KIND,
             lifetime=timedelta(minutes=5),
         ),
-    ),
-    _definition(
-        definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-        request_type=ProfileLogoutOperationRequest,
-        result_type=ProfileLogoutOperationResult,
-        executor_type=ProfileLogoutOperationExecutor,
-        phase_codes=_PROFILE_LOGOUT_PHASES,
     ),
 )
 
@@ -402,39 +235,109 @@ def build_user_profile_operation_definitions() -> tuple[OperationDefinition, ...
     return USER_PROFILE_OPERATION_DEFINITIONS
 
 
+_PROFILE_MUTATION_REGISTRATION_IDS = frozenset(
+    {
+        PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+        PROFILE_PATCH_OPERATION_DEFINITION_ID,
+        PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
+        PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
+        PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
+        PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
+        PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
+        PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID,
+    }
+)
+_PROFILE_MUTATION_PROJECTION_TYPES: dict[str, type[BaseModel]] = {
+    PROFILE_PATCH_OPERATION_DEFINITION_ID: ProfilePatchOperationProjection,
+    PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID: ProfilePlantillaMediaOperationProjection,
+    PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID: ProfileDescendantsOperationProjection,
+    PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID: ProfileRepeatableRowMutationOperationProjection,
+    PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID: ProfileRepeatableRowChangeOperationProjection,
+    PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID: ProfileRepeatableRowChangeOperationProjection,
+    PROFILE_COMPLETE_SETUP_OPERATION_DEFINITION_ID: ProfileCompleteSetupOperationProjection,
+}
+
+
+def _profile_schema_binding(
+    definition: OperationDefinition,
+    schema_kind: str,
+    model_type: type[BaseModel],
+) -> OperationSchemaBindingV1:
+    return OperationSchemaBindingV1.bind(
+        schema_id=f"{definition.definition_id}.{schema_kind}",
+        schema_version=1,
+        model_type=model_type,
+    )
+
+
+def _public_profile_registration(
+    definition: OperationDefinition,
+    *,
+    result_type: type[BaseModel],
+    result_projector: Callable[[BaseModel, OperationTerminalReceipt], BaseModel],
+    access_resolver: Callable[[OperationRequest[BaseModel], OperationAccessContext], ResolvedOperationAccess],
+) -> OperationPublicDefinitionRegistrationV1:
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=_profile_schema_binding(definition, "request", definition.request_type),
+        result_schema=_profile_schema_binding(definition, "result", result_type),
+        result_projector=result_projector,
+        access_resolver=access_resolver,
+    )
+
+
+def _profile_view_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    return _public_profile_registration(
+        definition,
+        result_type=ProfileViewOperationProjection,
+        result_projector=project_profile_view_result,
+        access_resolver=resolve_profile_view_access,
+    )
+
+
+def _profile_mutation_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    projection_type = _PROFILE_MUTATION_PROJECTION_TYPES.get(
+        definition.definition_id, ProfileMutationOperationProjection
+    )
+    return _public_profile_registration(
+        definition,
+        result_type=projection_type,
+        result_projector=project_profile_mutation_result,
+        access_resolver=resolve_profile_mutation_access,
+    )
+
+
+def _profile_bundle_export_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    return _public_profile_registration(
+        definition,
+        result_type=ProfileBundleExportOperationProjection,
+        result_projector=project_profile_bundle_export_result,
+        access_resolver=resolve_profile_bundle_export_access,
+    )
+
+
+def _profile_operation_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    if definition.definition_id == PROFILE_VIEW_OPERATION_DEFINITION_ID:
+        return _profile_view_registration(definition)
+    if definition.definition_id in _PROFILE_MUTATION_REGISTRATION_IDS:
+        return _profile_mutation_registration(definition)
+    if definition.definition_id == PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID:
+        return _profile_bundle_export_registration(definition)
+    return OperationPublicDefinitionRegistrationV1.compose_request_only(
+        definition=definition, request_schema_id=f"{definition.definition_id}.request"
+    )
+
+
 def build_user_profile_operation_registrations(
     definitions: tuple[OperationDefinition, ...],
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
     """Bind profile-maintenance definitions to their stable public schemas."""
-    return tuple(
-        sorted(
-            (
-                OperationPublicDefinitionRegistrationV1.compose_request_only(
-                    definition=definition,
-                    request_schema_id=f"{definition.definition_id}.request",
-                )
-                for definition in definitions
-            ),
-            key=lambda item: item.contract.definition_id,
-        )
-    )
+    registrations = (_profile_operation_registration(definition) for definition in definitions)
+    return tuple(sorted(registrations, key=lambda item: item.contract.definition_id))
 
 
 __all__ = [
-    "PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID",
-    "PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID",
-    "PROFILE_LOGOUT_OPERATION_DEFINITION_ID",
-    "PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID",
     "USER_PROFILE_OPERATION_DEFINITIONS",
-    "ProfileBundleExportOperationRequest",
-    "ProfileFieldMutationOperationRequest",
-    "ProfileLogoutOperationRequest",
-    "ProfileLogoutOperationResult",
-    "ProfileMutationOperationResult",
-    "ProfileRepeatableRowMutationOperationRequest",
-    "ProfileRepeatableRowMutationOperationResult",
-    "ProfileRepeatableRowValue",
-    "build_profile_logout_operation_request",
     "build_user_profile_operation_definitions",
     "build_user_profile_operation_registrations",
 ]

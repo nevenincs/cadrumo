@@ -86,7 +86,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.corpus_text import normalise_corpus_text
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -105,7 +105,7 @@ _SUPPRESSION_VOCABULARY: Final = re.compile(r"suprim\w*|derog\w*|queda\s+sin\s+e
 #: "plazo" (deadline/window), a form of "presentar"/"presentacion", a specific
 #: "vencimiento" (expiry), or the "dias naturales" idiom AEAT deadlines are
 #: near-universally phrased in. Matched against normalised text (accent-folded,
-#: casefolded by :func:`~cadrumo.core.corpus_text.normalise_corpus_text`), so
+#: casefolded by :func:`~cadrumo.core.text_fold.normalise_corpus_text`), so
 #: no accent variants are needed here.
 _DEADLINE_VOCABULARY: Final = re.compile(r"plazo|presentaci\w*|vencimient\w*|dias?\s+natural")
 
@@ -198,17 +198,49 @@ def deadline_window_content_failures(
         empty otherwise, including when no such source is reachable (an
         unreachable corpus is a different, already-reported failure).
     """
-    osg_refs = [
+    osg_refs = _official_guidance_source_refs(window, source_refs)
+    if not osg_refs:
+        return _legal_clause_deadline_content_failure(prefix, window, legal_clause_texts)
+    return _official_source_deadline_content_failure(
+        prefix,
+        window,
+        osg_refs,
+        source_refs=source_refs,
+        evidence=evidence,
+    )
+
+
+def _official_guidance_source_refs(
+    window: DeadlineWindowDefinition,
+    source_refs: Mapping[str, SourceReference],
+) -> list[str]:
+    return [
         ref
         for ref in window.source_refs
         if (source := source_refs.get(ref)) is not None and source.evidence_tier == "official_source_guidance"
     ]
-    if not osg_refs:
-        if legal_clause_texts and not any(
-            _carries_deadline_content(normalise_corpus_text(text)) for text in legal_clause_texts
-        ):
-            return [f"{prefix}: deadline window {window.id!r} cites BOE clauses without filing deadline text"]
-        return []
+
+
+def _legal_clause_deadline_content_failure(
+    prefix: str,
+    window: DeadlineWindowDefinition,
+    legal_clause_texts: tuple[str, ...],
+) -> list[str]:
+    if legal_clause_texts and not any(
+        _carries_deadline_content(normalise_corpus_text(text)) for text in legal_clause_texts
+    ):
+        return [f"{prefix}: deadline window {window.id!r} cites BOE clauses without filing deadline text"]
+    return []
+
+
+def _official_source_deadline_content_failure(
+    prefix: str,
+    window: DeadlineWindowDefinition,
+    osg_refs: list[str],
+    *,
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+) -> list[str]:
     any_reachable = False
     for ref in osg_refs:
         text = evidence.source_text(source_refs[ref])

@@ -1,70 +1,52 @@
-"""Behavior handlers for the cross-period IVA prorrata register.
-
-The commands delegate register persistence to
-:class:`ProrrataRegisterService` and emit typed payloads from
-:mod:`._prorrata_register_payloads`. This is the operator ingress that reaches
-the LIVA art. 106 prorrata-especial apportionment and the arts. 9.1.c / 101
-per-sector apportionment on the live M303 aggregation path: ``elect-especial``
-writes an ``ESPECIAL`` :class:`~domain.prorrata_register.register.ProrrataRegisterEntry`
-so :func:`~application.aggregation.iva_ledger._apply_especial_apportionment` fires, and
-``declare-sector`` writes a :class:`~domain.prorrata_register.register.SectorDefinition`
-so the register becomes sectorized and
-:func:`~application.aggregation.iva_ledger._apply_sector_apportionment` fires. Fail-closed:
-a taxpayer who elects nothing keeps the whole-entity general apportionment the
-settlement auto-seed already produces.
-
-The percentage the operator supplies is the art. 106.Uno regla-3.ª common-use
-percentage (the art. 104.Dos general prorrata), applied to common-use inputs
-under especial and to common (no-sector) inputs under sectores; its provenance
-is the LIVA art. 105 ladder (carried prior definitive by default). The register
-is authoritative profile-scoped taxpayer state, not an AEAT filing surface.
-"""
+"""CLI request and presentation boundary for the profile prorrata register."""
 
 from __future__ import annotations
 
-import json
-from typing import NoReturn
+from collections.abc import Callable
+from decimal import Decimal
+from typing import Never
+from uuid import UUID
 
 import typer
-from pydantic import ValidationError
+from pydantic import BaseModel
 
-from ...application.calculations.observations_repository import CalculationObservationRepositoryProtocol
-from ...application.prorrata_register.sector_lifecycle import (
-    seed_sector_carried_definitive_from_register,
-    settle_sector_definitive,
+from ...application.operations.public_scalar import PublicDecimal
+from ...application.prorrata_register.operation_requests import (
+    PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID,
+    PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID,
+    PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
+    PRORRATA_LIST_OPERATION_DEFINITION_ID,
+    PRORRATA_REVOKE_ESPECIAL_OPERATION_DEFINITION_ID,
+    PRORRATA_SEED_OPERATION_DEFINITION_ID,
+    PRORRATA_SEED_SECTOR_OPERATION_DEFINITION_ID,
+    PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID,
+    ProrrataDeclareSectorRequest,
+    ProrrataElectEspecialRequest,
+    ProrrataElectGeneralRequest,
+    ProrrataListRequest,
+    ProrrataRevokeEspecialRequest,
+    ProrrataSeedRequest,
+    ProrrataSeedSectorRequest,
+    ProrrataSettleSectorRequest,
 )
-from ...application.prorrata_register.seed import (
-    ProrrataPriorDefinitivaSeed,
-    ProrrataSeedFinding,
-    cross_check_prorrata_entry_against_prior_observation,
-    evaluate_carried_prior_definitiva_seed,
+from ...application.prorrata_register.projection_contracts import (
+    ProrrataEntryProjection,
+    ProrrataFindingProjection,
+    ProrrataListProjection,
+    ProrrataMutationProjection,
+    ProrrataRefusalProjection,
+    ProrrataSectorDefinitionProjection,
+    ProrrataSeedSourceProjection,
 )
-from ...application.prorrata_register.service import ProrrataRegisterService
+from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.modelo import Modelo
 from ...core.prorrata_register import (
+    ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
-    ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.prorrata_register_catalogue import (
-    carried_prior_definitiva_prorrata_provenance,
-    especial_prorrata_register_regime,
-    general_prorrata_register_regime,
-    opcion_prorrata_transition,
-    prorrata_electable_provenances,
-    require_prorrata_provenance,
-    revocacion_prorrata_transition,
-)
-from ...domain.prorrata_register.register import (
-    ProrrataEspecialTransitionEvidence,
-    ProrrataRegister,
-    ProrrataRegisterEntry,
-    ProrrataRegisterValidationError,
-    SectorDefinition,
-)
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ._decimal_parsing import parse_decimal_amount
 from ._prorrata_register_payloads import (
     ProrrataDeclareSectorResult,
@@ -72,6 +54,7 @@ from ._prorrata_register_payloads import (
     ProrrataElectGeneralResult,
     ProrrataElectResult,
     ProrrataEntryPayload,
+    ProrrataEspecialTransitionPayload,
     ProrrataListResult,
     ProrrataRevokeEspecialResult,
     ProrrataSeedFindingPayload,
@@ -82,179 +65,326 @@ from ._prorrata_register_payloads import (
     SectorDefinitionPayload,
 )
 from .common import active_bucket_id_or_refuse as _register_bucket_id
-from .common import bad, emit_envelope
-from .state_projection_support import (
-    authority_operation,
-    calculation_action_ports_factory,
-    prorrata_register_repository_factory,
+from .common import emit_envelope
+from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import submitted_operation_error
+from .runtime_ledger_prorrata_register import (
+    submit_prorrata_list,
+    submit_prorrata_mutation,
+    validate_prorrata_list_completion,
+    validate_prorrata_mutation_completion,
 )
 
-#: Machine-readable notice codes for the carried-seed advisory channel. They are
-#: transport tokens, never localised presentation text.
 _SEED_LOCAL_AUTHORITY_NOTICE_CODE = "ledger.prorrata.seed.local_authority"
 _SEED_ADVISORY_NOTICE_CODE = "ledger.prorrata.seed.advisory"
 
-#: Stable authority identifier emitted on the seed source payload. The carried
-#: percentage is the taxpayer's own locally stored prior observation, never a
-#: value AEAT issued for the seeded ejercicio.
-_SEED_AUTHORITY = "local_prior_observation"
 
-#: The art. 105 provenances an operator may declare at election time. The
-#: art. 105.Cinco interrupted-activity percentage is computed by the seed walk
-#: over the register's own volumes, never operator-supplied.
+def _raise_provenance_refusal_if_present(
+    refusal: ProrrataRefusalProjection,
+    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
+    provenance: ProrrataProvisionalProvenance | None,
+    operation_id: str,
+    reason: str,
+) -> None:
+    """Raise provenance refusal if present."""
+    if reason == "validation":
+        _raise_prorrata_refusal(
+            "errors.refused.refused_profile_prorrata_register_validation",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            detail=refusal.detail,
+        )
+    if reason == "provenance_required":
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.provenance_requires_evidence",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            accepted=", ".join(refusal.accepted_provenances),
+        )
+    if reason == "provenance_not_electable":
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.provenance_not_electable",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            provenance=provenance.value if provenance is not None else "",
+            accepted=", ".join(refusal.accepted_provenances),
+        )
+    if reason == "reference_required":
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.reference_required",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            provenance=provenance.value if provenance is not None else "",
+        )
+    if reason == "reference_not_permitted":
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.reference_not_permitted",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+        )
 
-# Shared Typer option aliases for the two election verbs (``elect-especial`` and
-# ``elect-general``), which carry a byte-identical --ejercicio/--provenance/
-# --reference/--sector signature. Declared once so the help keys live in one home
-# and ``--help`` renders identically for both verbs. ``--percentage`` is kept
-# per-verb: its help key and copy diverge (especial cites art. 106.Uno regla 3.ª,
-# general cites art. 104.Uno + 105.Uno).
+
+def _raise_seed_refusal_if_present(
+    refusal: ProrrataRefusalProjection,
+    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
+    operation_id: str,
+    reason: str,
+) -> None:
+    """Raise seed refusal if present."""
+    if reason in {"seed_source_blocked", "seed_existing_blocked"}:
+        detail = " | ".join(f"[{finding.code}] {finding.message}" for finding in refusal.findings if finding.blocking)
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.seed_blocked",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            detail=detail or refusal.detail,
+        )
+    if reason == "seed_source_absent":
+        ejercicio = refusal.ejercicio
+        if ejercicio is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.seed_source_absent",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            prior_ejercicio=ejercicio - 1,
+            ejercicio=ejercicio,
+        )
+    if reason == "regulated_override_standing":
+        ejercicio = refusal.ejercicio
+        if ejercicio is None or refusal.existing_provenance is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.seed_regulated_override_standing",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            provenance=refusal.existing_provenance,
+            ejercicio=ejercicio,
+        )
 
 
-def _entry_payload(entry: ProrrataRegisterEntry) -> ProrrataEntryPayload:
-    """Project a register entry into its strict CLI payload.
+def _raise_sector_refusal_if_present(
+    refusal: ProrrataRefusalProjection,
+    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
+    operation_id: str,
+    reason: str,
+) -> None:
+    """Raise sector refusal if present."""
+    if reason == "sector_prior_definitive_absent":
+        ejercicio = refusal.ejercicio
+        if ejercicio is None or refusal.sector_id is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            prior_ejercicio=ejercicio - 1,
+            ejercicio=ejercicio,
+            sector_id=refusal.sector_id,
+        )
+    if reason == "sector_settlement_entry_absent":
+        ejercicio = refusal.ejercicio
+        if ejercicio is None or refusal.sector_id is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+        _raise_prorrata_refusal(
+            "cli.app.ledger.prorrata.settle_sector_entry_absent",
+            operation_id=operation_id,
+            refusal=refusal,
+            completion=completion,
+            ejercicio=ejercicio,
+            sector_id=refusal.sector_id,
+        )
 
-    The projection goes through a genuine JSON-text parse rather than
-    ``model_validate`` on the dumped mapping: under the strict
-    :class:`~core.json_contract.OutputSchema` config a ``StrEnum``-typed field
-    such as ``especial_transition.kind`` rejects the bare string that
-    ``model_dump(mode="json")`` renders, and only ``model_validate_json``
-    reconstructs the enum member. The emitted JSON still carries the stable
-    ``opcion`` / ``revocacion`` transport token.
-    """
-    data = entry.model_dump(mode="json")
-    for decimal_field in (
-        "provisional_percentage",
-        "definitive_percentage",
-        "definitive_volume_con_derecho",
-        "definitive_volume_sin_derecho",
-    ):
-        value = getattr(entry, decimal_field)
-        data[decimal_field] = str(value) if value is not None else None
-    return ProrrataEntryPayload.model_validate_json(json.dumps(data))
+
+def _profile_id() -> UUID:
+    return UUID(_register_bucket_id())
 
 
-def _sector_payload(definition: SectorDefinition) -> SectorDefinitionPayload:
-    return SectorDefinitionPayload(
-        sector_id=definition.sector_id,
-        letra=definition.letra.value,
-        member_activity_codes=list(definition.member_activity_codes),
+def _decimal_text(value: PublicDecimal | None) -> str | None:
+    return format(Decimal(value.decimal), "f") if value is not None else None
+
+
+def _entry_payload(entry: ProrrataEntryProjection) -> ProrrataEntryPayload:
+    """Map every registered entry field into the established CLI result schema."""
+    transition = entry.especial_transition
+    return ProrrataEntryPayload(
+        ejercicio=entry.ejercicio,
+        regime=entry.regime,
+        especial_transition=(
+            ProrrataEspecialTransitionPayload(
+                kind=ProrrataEspecialTransitionKind.from_registry(transition.kind),
+                evidence_reference=transition.evidence_reference,
+            )
+            if transition is not None
+            else None
+        ),
+        sector_id=entry.sector_id,
+        interrupted=entry.interrupted,
+        provisional_percentage=_decimal_text(entry.provisional_percentage),
+        provisional_provenance=entry.provisional_provenance,
+        authorisation_reference=entry.authorisation_reference,
+        definitive_percentage=_decimal_text(entry.definitive_percentage),
+        definitive_volume_con_derecho=_decimal_text(entry.definitive_volume_con_derecho),
+        definitive_volume_sin_derecho=_decimal_text(entry.definitive_volume_sin_derecho),
+        source_observation_ref=entry.source_observation_ref,
+        source_registry_snapshot_refs=tuple(
+            RegistrySnapshotRef.model_validate_json(reference.model_dump_json())
+            for reference in entry.source_registry_snapshot_refs
+        ),
+        schema_version=entry.schema_version,
     )
 
 
-def _declared_provenance(provenance: ProrrataProvisionalProvenance | None) -> ProrrataProvisionalProvenance:
-    """Require a provenance a manual election can evidence.
-
-    The carried prior-year definitive percentage must cite the filed
-    observation it comes from, which only ``seed`` can supply; a typed-in
-    percentage has to name its authorisation or proposal instead.
-    """
-    carried = carried_prior_definitiva_prorrata_provenance()
-    if provenance is None or provenance == carried:
-        accepted = "|".join(member.value for member in prorrata_electable_provenances() if member != carried)
-        raise bad(tr("cli.app.ledger.prorrata.provenance_requires_evidence", accepted=accepted))
-    return provenance
+def _sector_payload(definition: ProrrataSectorDefinitionProjection) -> SectorDefinitionPayload:
+    return SectorDefinitionPayload.model_validate_json(definition.model_dump_json())
 
 
-def _resolve_provenance(
-    raw: object, reference: str | None
-) -> tuple[
-    ProrrataProvisionalProvenance,
-    str | None,
-]:
-    """Check the election against art. 105, mapping each refusal to its message."""
-    raw = require_prorrata_provenance(raw)
-    from ...application.prorrata_register.election import (
-        ProrrataElectionError,
-        ProrrataElectionRefusal,
-        validate_prorrata_election,
-    )
-
-    try:
-        return validate_prorrata_election(provenance=raw, reference=reference)
-    except ProrrataElectionError as exc:
-        if exc.refusal is ProrrataElectionRefusal.PROVENANCE_NOT_ELECTABLE:
-            raise bad(
-                tr(
-                    "cli.app.ledger.prorrata.provenance_not_electable",
-                    provenance=raw.value,
-                    accepted=", ".join(member.value for member in prorrata_electable_provenances()),
-                ),
-            ) from exc
-        if exc.refusal is ProrrataElectionRefusal.REFERENCE_REQUIRED:
-            raise bad(
-                tr(
-                    "cli.app.ledger.prorrata.reference_required",
-                    provenance=raw.value,
-                ),
-            ) from exc
-        raise bad(
-            tr(
-                "cli.app.ledger.prorrata.reference_not_permitted",
-            ),
-        ) from exc
-
-
-def _elect(
-    ctx: typer.Context,
+def _raise_prorrata_refusal(
+    translated_message: str,
     *,
-    regime: ProrrataRegisterRegime,
-    ejercicio: int,
-    percentage_raw: str,
-    provenance: ProrrataProvisionalProvenance,
-    reference: str | None,
-    sector_id: str | None,
-    especial_transition: ProrrataEspecialTransitionEvidence | None,
+    operation_id: str,
+    refusal: ProrrataRefusalProjection,
+    completion: RegisteredOperationCompletion[ProrrataMutationProjection] | None = None,
+    **context_values: str | int,
+) -> Never:
+    context: dict[str, object] = {
+        "operation_id": str(completion.operation_id) if completion is not None else operation_id,
+        "reason": refusal.reason,
+    }
+    if completion is not None:
+        context.update(
+            {
+                "terminal_condition": completion.terminal_condition.value,
+                "effect": completion.effect.value,
+                "refusal_code": completion.refusal_code or "",
+            }
+        )
+    if refusal.ejercicio is not None:
+        context["ejercicio"] = refusal.ejercicio
+    if refusal.sector_id is not None:
+        context["sector_id"] = refusal.sector_id
+    context.update(context_values)
+    raise CliRefusedBoundaryError(translated_message=translated_message, context=context)
+
+
+def _raise_refusal(
+    refusal: ProrrataRefusalProjection,
+    *,
+    completion: RegisteredOperationCompletion[ProrrataMutationProjection],
+    provenance: ProrrataProvisionalProvenance | None = None,
+) -> Never:
+    operation_id = str(completion.operation_id)
+    reason = refusal.reason
+    _raise_provenance_refusal_if_present(refusal, completion, provenance, operation_id, reason)
+    _raise_seed_refusal_if_present(refusal, completion, operation_id, reason)
+    _raise_sector_refusal_if_present(refusal, completion, operation_id, reason)
+    _raise_prorrata_refusal(
+        "errors.refused.refused_profile_prorrata_register_validation",
+        operation_id=operation_id,
+        refusal=refusal,
+        completion=completion,
+    )
+
+
+def _run_mutation(
+    ctx: typer.Context,
+    request: BaseModel,
+    *,
+    definition_id: str,
+    operation_id: str,
+    provenance: ProrrataProvisionalProvenance | None = None,
+) -> tuple[RegisteredOperationCompletion[ProrrataMutationProjection], ProrrataMutationProjection]:
+    completed = submit_prorrata_mutation(ctx, request, definition_id=definition_id)
+    projection = validate_prorrata_mutation_completion(completed, operation_id=operation_id)
+    if projection.outcome == "refused":
+        refusal = projection.refusal
+        if refusal is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_refusal"})
+        _raise_refusal(refusal, completion=completed, provenance=provenance)
+    return completed, projection
+
+
+def _present_registered_operation[ProjectionT: BaseModel](
+    completed: RegisteredOperationCompletion[ProjectionT],
+    render: Callable[[], None],
+) -> None:
+    """Keep the settled worker receipt if local projection rendering fails."""
+    try:
+        render()
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        code = (
+            RuntimeRefusalCode.INVALID_FRAME.value
+            if isinstance(exc, CliRefusedBoundaryError)
+            else RuntimeRefusalCode.UNAVAILABLE.value
+        )
+        raise submitted_operation_error(
+            completed.operation_id,
+            code,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
+
+
+def _entry_from_projection(projection: ProrrataMutationProjection) -> ProrrataEntryPayload:
+    if projection.entry is None:
+        raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+    return _entry_payload(projection.entry)
+
+
+def _manual_election(
+    ctx: typer.Context,
+    request: BaseModel,
+    *,
+    definition_id: str,
+    operation_id: str,
+    provenance: ProrrataProvisionalProvenance | None,
     result_class: type[ProrrataElectResult],
     command: str,
 ) -> None:
-    bucket_id = _register_bucket_id()
-    resolved_provenance, resolved_reference = _resolve_provenance(provenance, reference)
-    percentage = parse_decimal_amount(percentage_raw, label="percentage", signed=False)
-    try:
-        entry = ProrrataRegisterEntry(
-            ejercicio=ejercicio,
-            regime=regime,
-            especial_transition=especial_transition,
-            sector_id=sector_id,
-            provisional_percentage=percentage,
-            provisional_provenance=resolved_provenance,
-            authorisation_reference=resolved_reference,
-            source_registry_snapshot_refs=(),
-        )
-    except (ProrrataRegisterValidationError, ValidationError) as exc:
-        raise bad(str(exc)) from exc
-    service = ProrrataRegisterService(
-        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
-        operation=authority_operation(ctx),
-    )
-    try:
-        register = (
-            service.declare_especial_transition(entry) if especial_transition is not None else service.declare(entry)
-        )
-    except (ProrrataRegisterValidationError, ValidationError) as exc:
-        raise bad(str(exc)) from exc
-    payload = result_class(
-        bucket_id=bucket_id,
-        entry=_entry_payload(entry),
-        count=len(register.entries),
-    )
-    emit_envelope(
+    profile_id = _profile_id()
+    completed, projection = _run_mutation(
         ctx,
-        command=command,
-        result=payload,
-        lines=(
-            f"bucket\t{bucket_id}",
-            f"ejercicio\t{entry.ejercicio}",
-            f"regime\t{entry.regime.value}",
-            f"sector_id\t{entry.sector_id or ''}",
-            f"provisional_percentage\t{entry.provisional_percentage}",
-            f"provisional_provenance\t{resolved_provenance.value}",
-            f"especial_transition\t{entry.especial_transition.kind.value if entry.especial_transition else ''}",
-            f"evidence_reference\t{entry.especial_transition.evidence_reference if entry.especial_transition else ''}",
-            f"count\t{len(register.entries)}",
-        ),
+        request,
+        definition_id=definition_id,
+        operation_id=operation_id,
+        provenance=provenance,
     )
+
+    def render() -> None:
+        entry = _entry_from_projection(projection)
+        payload = result_class(bucket_id=str(profile_id), entry=entry, count=int(projection.count or 0))
+        transition = entry.especial_transition
+        emit_envelope(
+            ctx,
+            command=command,
+            result=payload,
+            lines=(
+                f"bucket\t{profile_id}",
+                f"ejercicio\t{entry.ejercicio}",
+                f"regime\t{entry.regime}",
+                f"sector_id\t{entry.sector_id or ''}",
+                f"provisional_percentage\t{entry.provisional_percentage}",
+                f"provisional_provenance\t{entry.provisional_provenance or ''}",
+                f"especial_transition\t{transition.kind.value if transition else ''}",
+                f"evidence_reference\t{transition.evidence_reference if transition else ''}",
+                f"count\t{projection.count}",
+            ),
+        )
+
+    _present_registered_operation(completed, render)
 
 
 def prorrata_elect_especial(
@@ -266,27 +396,23 @@ def prorrata_elect_especial(
     reference: str | None = None,
     sector: str | None = None,
 ) -> None:
-    """Persist an ``ESPECIAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
-    # The regime, transition and provenance vocabularies are registry facts,
-    # so the invocation's authority lease is taken before any of them is read.
-    authority_operation(ctx)
-    provenance = _declared_provenance(provenance)
-    _elect(
-        ctx,
-        regime=especial_prorrata_register_regime(),
+    """Submit the special-prorrata election through its registered operation."""
+    profile_id = _profile_id()
+    request = ProrrataElectEspecialRequest(
+        profile_id=profile_id,
         ejercicio=ejercicio,
-        percentage_raw=percentage,
-        provenance=provenance,
+        percentage=PublicDecimal(decimal=str(parse_decimal_amount(percentage, label="percentage", signed=False))),
+        provenance=provenance.value if provenance is not None else None,
         reference=reference,
         sector_id=sector,
-        especial_transition=(
-            ProrrataEspecialTransitionEvidence(
-                kind=opcion_prorrata_transition(),
-                evidence_reference=evidence_reference,
-            )
-            if evidence_reference is not None
-            else None
-        ),
+        evidence_reference=evidence_reference,
+    )
+    _manual_election(
+        ctx,
+        request,
+        definition_id=PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID,
+        operation_id="elect_especial",
+        provenance=provenance,
         result_class=ProrrataElectEspecialResult,
         command="ledger.prorrata.elect_especial",
     )
@@ -300,25 +426,22 @@ def prorrata_elect_general(
     reference: str | None = None,
     sector: str | None = None,
 ) -> None:
-    """Persist a ``GENERAL`` :class:`ProrrataRegisterEntry` for the ejercicio.
-
-    A move *away* from an especial regime is the separate ``revoke-especial``
-    verb, which requires the revocation evidence: this verb records a plain
-    general election and never manufactures a transition.
-    """
-    # The regime, transition and provenance vocabularies are registry facts,
-    # so the invocation's authority lease is taken before any of them is read.
-    authority_operation(ctx)
-    provenance = _declared_provenance(provenance)
-    _elect(
-        ctx,
-        regime=general_prorrata_register_regime(),
+    """Submit the general-prorrata election through its registered operation."""
+    profile_id = _profile_id()
+    request = ProrrataElectGeneralRequest(
+        profile_id=profile_id,
         ejercicio=ejercicio,
-        percentage_raw=percentage,
-        provenance=provenance,
+        percentage=PublicDecimal(decimal=str(parse_decimal_amount(percentage, label="percentage", signed=False))),
+        provenance=provenance.value if provenance is not None else None,
         reference=reference,
         sector_id=sector,
-        especial_transition=None,
+    )
+    _manual_election(
+        ctx,
+        request,
+        definition_id=PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
+        operation_id="elect_general",
+        provenance=provenance,
         result_class=ProrrataElectGeneralResult,
         command="ledger.prorrata.elect_general",
     )
@@ -333,23 +456,23 @@ def prorrata_revoke_especial(
     reference: str | None = None,
     sector: str | None = None,
 ) -> None:
-    """Persist a typed prorrata-especial revocation for the ejercicio."""
-    # The regime, transition and provenance vocabularies are registry facts,
-    # so the invocation's authority lease is taken before any of them is read.
-    authority_operation(ctx)
-    provenance = _declared_provenance(provenance)
-    _elect(
-        ctx,
-        regime=general_prorrata_register_regime(),
+    """Submit an evidence-backed special-prorrata revocation."""
+    profile_id = _profile_id()
+    request = ProrrataRevokeEspecialRequest(
+        profile_id=profile_id,
         ejercicio=ejercicio,
-        percentage_raw=percentage,
-        provenance=provenance,
+        percentage=PublicDecimal(decimal=str(parse_decimal_amount(percentage, label="percentage", signed=False))),
+        provenance=provenance.value if provenance is not None else None,
         reference=reference,
         sector_id=sector,
-        especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=revocacion_prorrata_transition(),
-            evidence_reference=evidence_reference,
-        ),
+        evidence_reference=evidence_reference,
+    )
+    _manual_election(
+        ctx,
+        request,
+        definition_id=PRORRATA_REVOKE_ESPECIAL_OPERATION_DEFINITION_ID,
+        operation_id="revoke_especial",
+        provenance=provenance,
         result_class=ProrrataRevokeEspecialResult,
         command="ledger.prorrata.revoke_especial",
     )
@@ -361,42 +484,48 @@ def prorrata_declare_sector(
     letra: SectorDiferenciadoLetra,
     activity_code: tuple[str, ...] = (),
 ) -> None:
-    """Persist one :class:`SectorDefinition` onto the register partition."""
-    # The sector letter validates against the registry-declared vocabulary.
-    authority_operation(ctx)
-    bucket_id = _register_bucket_id()
-    try:
-        definition = SectorDefinition(
-            sector_id=sector_id,
-            letra=letra,
-            member_activity_codes=tuple(activity_code),
-        )
-    except ProrrataRegisterValidationError as exc:
-        raise bad(str(exc)) from exc
-    register = ProrrataRegisterService(
-        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
-        operation=authority_operation(ctx),
-    ).declare_sector(definition)
-    payload = ProrrataDeclareSectorResult(
-        bucket_id=bucket_id,
-        sector=_sector_payload(definition),
-        count=len(register.sector_definitions),
+    """Submit one differentiated-sector partition row."""
+    profile_id = _profile_id()
+    request = ProrrataDeclareSectorRequest(
+        profile_id=profile_id,
+        sector_id=sector_id,
+        letra=letra.value,
+        member_activity_codes=tuple(activity_code),
     )
-    emit_envelope(
+    completed, projection = _run_mutation(
         ctx,
-        command="ledger.prorrata.declare_sector",
-        result=payload,
-        lines=(
-            f"bucket\t{bucket_id}",
-            f"sector_id\t{definition.sector_id}",
-            f"letra\t{definition.letra.value}",
-            f"member_activity_codes\t{','.join(definition.member_activity_codes)}",
-            f"count\t{len(register.sector_definitions)}",
-        ),
+        request,
+        definition_id=PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID,
+        operation_id="declare_sector",
     )
 
+    def render() -> None:
+        definition = projection.sector_definition
+        if definition is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+        sector = _sector_payload(definition)
+        payload = ProrrataDeclareSectorResult(
+            bucket_id=str(profile_id),
+            sector=sector,
+            count=int(projection.count or 0),
+        )
+        emit_envelope(
+            ctx,
+            command="ledger.prorrata.declare_sector",
+            result=payload,
+            lines=(
+                f"bucket\t{profile_id}",
+                f"sector_id\t{sector.sector_id}",
+                f"letra\t{sector.letra}",
+                f"member_activity_codes\t{','.join(sector.member_activity_codes)}",
+                f"count\t{projection.count}",
+            ),
+        )
 
-def _seed_finding_payload(finding: ProrrataSeedFinding) -> ProrrataSeedFindingPayload:
+    _present_registered_operation(completed, render)
+
+
+def _seed_finding_payload(finding: ProrrataFindingProjection) -> ProrrataSeedFindingPayload:
     return ProrrataSeedFindingPayload(
         code=finding.code,
         blocking=finding.blocking,
@@ -409,54 +538,36 @@ def _seed_finding_payload(finding: ProrrataSeedFinding) -> ProrrataSeedFindingPa
     )
 
 
-def _refuse_blocking_findings(findings: tuple[ProrrataSeedFinding, ...]) -> None:
-    """Refuse the seed while any finding blocks trusting the carry.
-
-    The application layer's blocking findings are the point of the seed
-    evaluation, so every one of them is named in the refusal rather than being
-    collapsed into a single boolean outcome.
-    """
-    blocking = tuple(finding for finding in findings if finding.blocking)
-    if not blocking:
-        return
-    raise bad(
-        tr(
-            "cli.app.ledger.prorrata.seed_blocked",
-            detail=" | ".join(f"[{finding.code}] {finding.message}" for finding in blocking),
-        ),
-    )
-
-
-def _seed_source_payload(seed: ProrrataPriorDefinitivaSeed) -> ProrrataSeedSourcePayload:
+def _seed_source_payload(seed: ProrrataSeedSourceProjection) -> ProrrataSeedSourcePayload:
     return ProrrataSeedSourcePayload(
-        modelo=seed.source_modelo,
-        filing_year=seed.source_filing_year,
-        period=seed.source_period,
-        casilla_id=str(seed.source_casilla_id),
+        modelo=seed.modelo,
+        filing_year=seed.filing_year,
+        period=seed.period,
+        casilla_id=seed.casilla_id,
         stamped_revision_id=seed.stamped_revision_id,
-        authority=_SEED_AUTHORITY,
+        authority=seed.authority,
     )
 
 
 def _seed_notices(
-    seed: ProrrataPriorDefinitivaSeed,
-    advisories: tuple[ProrrataSeedFinding, ...],
+    seed: ProrrataSeedSourceProjection,
+    advisories: tuple[ProrrataFindingProjection, ...],
 ) -> tuple[Notice, ...]:
     origin = Notice(
         severity=NoticeSeverity.INFO,
         code=_SEED_LOCAL_AUTHORITY_NOTICE_CODE,
         message=tr(
             "cli.app.ledger.prorrata.seed_local_authority",
-            modelo=seed.source_modelo,
-            filing_year=seed.source_filing_year,
-            period=seed.source_period,
+            modelo=seed.modelo,
+            filing_year=seed.filing_year,
+            period=seed.period,
         ),
         context={
-            "source_modelo": seed.source_modelo,
-            "source_filing_year": str(seed.source_filing_year),
-            "source_period": seed.source_period,
+            "source_modelo": seed.modelo,
+            "source_filing_year": str(seed.filing_year),
+            "source_period": seed.period,
             "stamped_revision_id": seed.stamped_revision_id,
-            "authority": _SEED_AUTHORITY,
+            "authority": seed.authority,
         },
     )
     advisory_notices = tuple(
@@ -471,185 +582,107 @@ def _seed_notices(
     return (origin, *advisory_notices)
 
 
-def _refuse_missing_seed_source(ejercicio: int) -> NoReturn:
-    """Refuse a carry when no prior definitive observation can author it."""
-    raise bad(
-        tr(
-            "cli.app.ledger.prorrata.seed_source_absent",
-            prior_ejercicio=ejercicio - 1,
-            ejercicio=ejercicio,
-        ),
+def prorrata_seed(ctx: typer.Context, ejercicio: int, sector: str | None = None) -> None:
+    """Carry only the whole-entity prior definitive into an ejercicio."""
+    if sector is not None:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.app.ledger.prorrata.seed_sector_requires_route",
+            context={
+                "reason": "sector_requires_seed_sector",
+                "sector_id": sector,
+                "ejercicio": ejercicio,
+            },
+        )
+    profile_id = _profile_id()
+    request = ProrrataSeedRequest(profile_id=profile_id, ejercicio=ejercicio)
+    completed, projection = _run_mutation(
+        ctx,
+        request,
+        definition_id=PRORRATA_SEED_OPERATION_DEFINITION_ID,
+        operation_id="seed",
     )
 
+    def render() -> None:
+        entry = _entry_from_projection(projection)
+        seed_source = projection.seed_source
+        if seed_source is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+        findings = [_seed_finding_payload(item) for item in projection.findings]
+        payload = ProrrataSeedResult(
+            bucket_id=str(profile_id),
+            entry=entry,
+            source=_seed_source_payload(seed_source),
+            findings=findings,
+            count=int(projection.count or 0),
+        )
+        advisories = _seed_advisories(projection)
+        notices = _seed_notices(seed_source, advisories)
+        emit_envelope(
+            ctx,
+            command="ledger.prorrata.seed",
+            result=payload,
+            lines=(
+                f"bucket\t{profile_id}",
+                f"ejercicio\t{entry.ejercicio}",
+                f"sector_id\t{entry.sector_id or ''}",
+                f"provisional_percentage\t{entry.provisional_percentage}",
+                f"provisional_provenance\t{entry.provisional_provenance or ''}",
+                f"source\t{seed_source.modelo}:{seed_source.filing_year}:{seed_source.period}",
+                f"source_casilla_id\t{seed_source.casilla_id}",
+                f"stamped_revision_id\t{seed_source.stamped_revision_id}",
+                f"authority\t{seed_source.authority}",
+                f"findings\t{len(findings)}",
+                *(f"notice\t{notice.code}\t{notice.message}" for notice in notices),
+                f"count\t{projection.count}",
+            ),
+            notices=notices,
+        )
 
-def _seed_findings_with_existing_entry(
-    service: ProrrataRegisterService,
-    *,
-    ejercicio: int,
-    sector: str | None,
-    findings: tuple[ProrrataSeedFinding, ...],
-    observation_repository: CalculationObservationRepositoryProtocol,
-    operation: PinnedAuthorityOperation,
-) -> tuple[ProrrataSeedFinding, ...]:
-    """Cross-check an existing entry before allowing a carried seed to replace it."""
-    existing = service.get(ejercicio, sector_id=sector)
-    if existing is None:
-        return findings
+    _present_registered_operation(completed, render)
 
-    cross_findings = cross_check_prorrata_entry_against_prior_observation(
-        existing,
-        observation_repository=observation_repository,
-        operation=operation,
+
+def prorrata_seed_sector(ctx: typer.Context, ejercicio: int, sector_id: str) -> None:
+    """Carry one differentiated sector's own prior register definitive."""
+    profile_id = _profile_id()
+    request = ProrrataSeedSectorRequest(
+        profile_id=profile_id,
+        ejercicio=ejercicio,
+        sector_id=sector_id,
     )
-    _refuse_blocking_findings(cross_findings)
-    standing_provenance = existing.provisional_provenance
-    if standing_provenance is not None and standing_provenance != carried_prior_definitiva_prorrata_provenance():
-        raise bad(
-            tr(
-                "cli.app.ledger.prorrata.seed_regulated_override_standing",
-                ejercicio=ejercicio,
-                provenance=standing_provenance.value,
+    completed, projection = _run_mutation(
+        ctx,
+        request,
+        definition_id=PRORRATA_SEED_SECTOR_OPERATION_DEFINITION_ID,
+        operation_id="seed_sector",
+    )
+
+    def render() -> None:
+        entry = _entry_from_projection(projection)
+        if projection.prior_ejercicio is None:
+            raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+        payload = ProrrataSeedSectorResult(
+            bucket_id=str(profile_id),
+            entry=entry,
+            prior_ejercicio=projection.prior_ejercicio,
+            count=int(projection.count or 0),
+        )
+        emit_envelope(
+            ctx,
+            command="ledger.prorrata.seed_sector",
+            result=payload,
+            lines=(
+                f"bucket\t{profile_id}",
+                f"ejercicio\t{entry.ejercicio}",
+                f"sector_id\t{entry.sector_id or ''}",
+                f"prior_ejercicio\t{projection.prior_ejercicio}",
+                f"provisional_percentage\t{entry.provisional_percentage}",
+                f"provisional_provenance\t{entry.provisional_provenance or ''}",
+                f"source_observation_ref\t{entry.source_observation_ref or ''}",
+                f"count\t{projection.count}",
             ),
         )
-    return (*findings, *cross_findings)
 
-
-def prorrata_seed(
-    ctx: typer.Context,
-    ejercicio: int,
-    sector: str | None = None,
-) -> None:
-    """Seed the LIVA art. 105.Uno carried prior-definitive entry for an ejercicio.
-
-    The percentage is resolved by
-    :func:`~application.prorrata_register.seed.evaluate_carried_prior_definitiva_seed`
-    and any entry already standing at the key is cross-checked through
-    :func:`~application.prorrata_register.seed.cross_check_prorrata_entry_against_prior_observation`
-    before anything is written. A blocking finding refuses the command; an
-    absent prior observation refuses as absent rather than seeding a zero.
-    """
-    bucket_id = _register_bucket_id()
-    operation = authority_operation(ctx)
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=bucket_id,
-        operation=operation,
-    )
-    evaluation = evaluate_carried_prior_definitiva_seed(
-        ejercicio=ejercicio,
-        observation_repository=calculation_ports.observation_repository,
-        operation=operation,
-        sector_id=sector,
-    )
-    _refuse_blocking_findings(evaluation.findings)
-    seed = evaluation.seed
-    if seed is None:
-        _refuse_missing_seed_source(ejercicio)
-
-    service = ProrrataRegisterService(
-        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
-        operation=operation,
-    )
-    findings = _seed_findings_with_existing_entry(
-        service,
-        ejercicio=ejercicio,
-        sector=sector,
-        findings=evaluation.findings,
-        observation_repository=calculation_ports.observation_repository,
-        operation=operation,
-    )
-
-    try:
-        register = service.declare(seed.entry)
-    except (ProrrataRegisterValidationError, ValidationError) as exc:
-        raise bad(str(exc)) from exc
-
-    advisories = tuple(finding for finding in findings if finding.advisory)
-    payload = ProrrataSeedResult(
-        bucket_id=bucket_id,
-        entry=_entry_payload(seed.entry),
-        source=_seed_source_payload(seed),
-        findings=[_seed_finding_payload(finding) for finding in findings],
-        count=len(register.entries),
-    )
-    notices = _seed_notices(seed, advisories)
-    emit_envelope(
-        ctx,
-        command="ledger.prorrata.seed",
-        result=payload,
-        lines=(
-            f"bucket\t{bucket_id}",
-            f"ejercicio\t{seed.entry.ejercicio}",
-            f"sector_id\t{seed.entry.sector_id or ''}",
-            f"provisional_percentage\t{seed.entry.provisional_percentage}",
-            f"provisional_provenance\t{carried_prior_definitiva_prorrata_provenance().value}",
-            f"source\t{seed.source_modelo}:{seed.source_filing_year}:{seed.source_period}",
-            f"source_casilla_id\t{seed.source_casilla_id}",
-            f"stamped_revision_id\t{seed.stamped_revision_id}",
-            f"authority\t{_SEED_AUTHORITY}",
-            f"findings\t{len(findings)}",
-            *(f"notice\t{notice.code}\t{notice.message}" for notice in notices),
-            f"count\t{len(register.entries)}",
-        ),
-        notices=notices,
-    )
-
-
-def prorrata_seed_sector(
-    ctx: typer.Context,
-    ejercicio: int,
-    sector_id: str,
-) -> None:
-    """Seed one differentiated sector's provisional from its own prior definitive.
-
-    LIVA art. 105.Uno applied per sector (art. 101.Uno): the source is the
-    register's own ``(ejercicio - 1, sector_id)`` settled definitive, never the
-    whole-entity Modelo 303 observation.
-    """
-    bucket_id = _register_bucket_id()
-    service = ProrrataRegisterService(
-        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
-        operation=authority_operation(ctx),
-    )
-    register = service.list_all()
-    entry = seed_sector_carried_definitive_from_register(register, ejercicio=ejercicio, sector_id=sector_id)
-    if entry is None:
-        raise bad(
-            tr(
-                "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
-                sector_id=sector_id,
-                prior_ejercicio=ejercicio - 1,
-                ejercicio=ejercicio,
-            ),
-        )
-    try:
-        updated = service.declare(entry)
-    except (ProrrataRegisterValidationError, ValidationError) as exc:
-        raise bad(str(exc)) from exc
-    payload = ProrrataSeedSectorResult(
-        bucket_id=bucket_id,
-        entry=_entry_payload(entry),
-        prior_ejercicio=ejercicio - 1,
-        count=len(updated.entries),
-    )
-    emit_envelope(
-        ctx,
-        command="ledger.prorrata.seed_sector",
-        result=payload,
-        lines=(
-            f"bucket\t{bucket_id}",
-            f"ejercicio\t{entry.ejercicio}",
-            f"sector_id\t{entry.sector_id or ''}",
-            f"prior_ejercicio\t{ejercicio - 1}",
-            f"provisional_percentage\t{entry.provisional_percentage}",
-            f"provisional_provenance\t{carried_prior_definitiva_prorrata_provenance().value}",
-            f"source_observation_ref\t{entry.source_observation_ref or ''}",
-            f"count\t{len(updated.entries)}",
-        ),
-    )
-
-
-#: The quarterly Modelo 303 liquidation that closes the year (RD 1624/1992 art. 71.3).
-_YEAR_END_LIQUIDATION_PERIOD = "4T"
+    _present_registered_operation(completed, render)
 
 
 def prorrata_settle_sector(
@@ -659,97 +692,103 @@ def prorrata_settle_sector(
     con_derecho_volume: str,
     sin_derecho_volume: str,
 ) -> None:
-    """Settle one sector's year-end definitive from its own annual volumes.
-
-    LIVA art. 105.Cuatro applied per sector: the definitive percentage is
-    derived by
-    :func:`~application.prorrata_register.sector_lifecycle.settle_sector_definitive`
-    from the sector's own con-derecho / sin-derecho volumes, never re-derived
-    here.
-    """
-    bucket_id = _register_bucket_id()
-    con_derecho = parse_decimal_amount(con_derecho_volume, label="con-derecho-volume", signed=False)
-    sin_derecho = parse_decimal_amount(sin_derecho_volume, label="sin-derecho-volume", signed=False)
-    operation = authority_operation(ctx)
-    service = ProrrataRegisterService(
-        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
-        operation=operation,
-    )
-    entry = service.get(ejercicio, sector_id=sector_id)
-    if entry is None:
-        raise bad(
-            tr(
-                "cli.app.ledger.prorrata.settle_sector_entry_absent",
-                ejercicio=ejercicio,
-                sector_id=sector_id,
-            ),
-        )
-    try:
-        # The definitive is regularised in the year's last liquidation (LIVA
-        # art. 105.Cuatro), so that declaration's design is its producing coordinate.
-        settled = settle_sector_definitive(
-            entry,
-            con_derecho_volume=con_derecho,
-            sin_derecho_volume=sin_derecho,
-            producing_snapshot_ref=operation.snapshot(
-                Modelo("303").value,
-                filing_year=ejercicio,
-                period=_YEAR_END_LIQUIDATION_PERIOD,
-            ).snapshot_ref,
-        )
-        updated = service.declare(settled)
-    except (ProrrataRegisterValidationError, ValidationError) as exc:
-        raise bad(str(exc)) from exc
-    payload = ProrrataSettleSectorResult(
-        bucket_id=bucket_id,
-        entry=_entry_payload(settled),
-        count=len(updated.entries),
-    )
-    emit_envelope(
-        ctx,
-        command="ledger.prorrata.settle_sector",
-        result=payload,
-        lines=(
-            f"bucket\t{bucket_id}",
-            f"ejercicio\t{settled.ejercicio}",
-            f"sector_id\t{settled.sector_id or ''}",
-            f"definitive_percentage\t{settled.definitive_percentage}",
-            f"definitive_volume_con_derecho\t{settled.definitive_volume_con_derecho}",
-            f"definitive_volume_sin_derecho\t{settled.definitive_volume_sin_derecho}",
-            f"count\t{len(updated.entries)}",
+    """Settle one sector's year-end definitive from its annual volumes."""
+    profile_id = _profile_id()
+    request = ProrrataSettleSectorRequest(
+        profile_id=profile_id,
+        ejercicio=ejercicio,
+        sector_id=sector_id,
+        con_derecho_volume=PublicDecimal(
+            decimal=str(parse_decimal_amount(con_derecho_volume, label="con-derecho-volume", signed=False)),
+        ),
+        sin_derecho_volume=PublicDecimal(
+            decimal=str(parse_decimal_amount(sin_derecho_volume, label="sin-derecho-volume", signed=False)),
         ),
     )
+    completed, projection = _run_mutation(
+        ctx,
+        request,
+        definition_id=PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID,
+        operation_id="settle_sector",
+    )
+
+    def render() -> None:
+        entry = _entry_from_projection(projection)
+        payload = ProrrataSettleSectorResult(
+            bucket_id=str(profile_id),
+            entry=entry,
+            count=int(projection.count or 0),
+        )
+        emit_envelope(
+            ctx,
+            command="ledger.prorrata.settle_sector",
+            result=payload,
+            lines=(
+                f"bucket\t{profile_id}",
+                f"ejercicio\t{entry.ejercicio}",
+                f"sector_id\t{entry.sector_id or ''}",
+                f"definitive_percentage\t{entry.definitive_percentage}",
+                f"definitive_volume_con_derecho\t{entry.definitive_volume_con_derecho}",
+                f"definitive_volume_sin_derecho\t{entry.definitive_volume_sin_derecho}",
+                f"count\t{projection.count}",
+            ),
+        )
+
+    _present_registered_operation(completed, render)
 
 
 def prorrata_list(ctx: typer.Context) -> None:
-    """List the register via :class:`ProrrataRegisterService`."""
-    bucket_id = _register_bucket_id()
-    register: ProrrataRegister = ProrrataRegisterService(
-        repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
-        operation=authority_operation(ctx),
-    ).list_all()
-    entries = [_entry_payload(entry) for entry in register.entries]
-    sectors = [_sector_payload(definition) for definition in register.sector_definitions]
-    payload = ProrrataListResult(
-        bucket_id=bucket_id,
-        entries=entries,
-        sectors=sectors,
-        count=len(entries),
-    )
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(entries)}"]
-    for entry in register.entries:
-        lines.append(
-            f"{entry.ejercicio}\t{entry.regime.value}\tsector={entry.sector_id or ''}\t"
-            f"provisional={entry.provisional_percentage}\tdefinitive={entry.definitive_percentage}",
+    """Read every period and differentiated-sector row through the runtime."""
+    profile_id = _profile_id()
+    request = ProrrataListRequest(profile_id=profile_id)
+    completed: RegisteredOperationCompletion[ProrrataListProjection] = submit_prorrata_list(ctx, request)
+    projection = validate_prorrata_list_completion(completed)
+
+    def render() -> None:
+        entries = [_entry_payload(entry) for entry in projection.entries]
+        sectors = [_sector_payload(definition) for definition in projection.sectors]
+        payload = ProrrataListResult(
+            bucket_id=str(profile_id),
+            entries=entries,
+            sectors=sectors,
+            count=projection.count,
         )
-    for definition in register.sector_definitions:
-        lines.append(
-            f"sector\t{definition.sector_id}\tletra={definition.letra.value}\t"
-            f"codes={','.join(definition.member_activity_codes)}",
+        lines = [f"bucket\t{profile_id}", f"count\t{projection.count}"]
+        for entry in entries:
+            lines.append(
+                f"{entry.ejercicio}\t{entry.regime}\tsector={entry.sector_id or ''}\t"
+                f"provisional={entry.provisional_percentage}\tdefinitive={entry.definitive_percentage}",
+            )
+        for definition in sectors:
+            lines.append(
+                f"sector\t{definition.sector_id}\tletra={definition.letra}\t"
+                f"codes={','.join(definition.member_activity_codes)}",
+            )
+        emit_envelope(
+            ctx,
+            command=PRORRATA_LIST_OPERATION_DEFINITION_ID,
+            result=payload,
+            lines=lines,
         )
-    emit_envelope(
-        ctx,
-        command="ledger.prorrata.list",
-        result=payload,
-        lines=lines,
-    )
+
+    _present_registered_operation(completed, render)
+
+
+__all__ = [
+    "prorrata_declare_sector",
+    "prorrata_elect_especial",
+    "prorrata_elect_general",
+    "prorrata_list",
+    "prorrata_revoke_especial",
+    "prorrata_seed",
+    "prorrata_seed_sector",
+    "prorrata_settle_sector",
+]
+
+
+def _seed_advisories(projection: ProrrataMutationProjection) -> tuple[ProrrataFindingProjection, ...]:
+    """Project advisories only after excluding every blocking finding."""
+    advisories = tuple(item for item in projection.findings if not item.blocking)
+    if any(item.blocking for item in projection.findings):
+        raise CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
+    return advisories

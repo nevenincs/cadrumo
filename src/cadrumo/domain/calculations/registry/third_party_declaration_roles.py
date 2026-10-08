@@ -9,10 +9,14 @@ from types import MappingProxyType
 from typing import Final
 
 from ....core.aggregation import ThirdPartyDeclarationRole
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "third-party declaration role catalogue"
@@ -86,34 +90,10 @@ class ThirdPartyDeclarationRoleCatalogue:
         return frozenset(self.selections[normalized])
 
 
-def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    return unique_mapping_tokens(entries, key, subject=_ENTRY_SUBJECT)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("third-party declaration role entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(
-                f"duplicate third-party declaration role catalogue key {entry.key!r}",
-            )
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
-
-
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("third-party declaration role catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue:
@@ -129,7 +109,7 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
             ThirdPartyDeclarationRoleDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                legal_refs=_refs(entries, f"{prefix}legal_refs"),
+                legal_refs=unique_mapping_tokens(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
     if len(definitions) != len({item.token for item in definitions}):
@@ -153,27 +133,13 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
     )
 
 
-def _selected_catalogue(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource | None,
-) -> ThirdPartyDeclarationRoleCatalogue:
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError(
-            "third-party declaration-role resolution requires a generation-pinned governed-fact source",
-        )
-    return _catalogue(_resolve_entries(effective_date=effective_date, authority=selected))
-
-
 def resolve_third_party_declaration_role_catalogue(
     *,
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ThirdPartyDeclarationRoleCatalogue:
     """Resolve the dated third-party declaration-role vocabulary."""
-    coordinate = effective_date or today_madrid()
-    return _selected_catalogue(effective_date=coordinate, authority=authority)
+    return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
 def require_third_party_declaration_role(

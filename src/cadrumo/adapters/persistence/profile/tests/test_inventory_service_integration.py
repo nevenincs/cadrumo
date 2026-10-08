@@ -17,23 +17,25 @@ from cadrumo.adapters.persistence.storage.runtime_repository import secure_objec
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.contribuyente.inventory.records import (
-    InventoryAcquisitionCompleteness,
-    InventoryAcquisitionCost,
-    InventoryAcquisitionEvidence,
-    InventoryAcquisitionEvidenceKind,
+
+from .....domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
     InventoryClosingValuationBasis,
-    InventoryLedgerError,
-    MovementKind,
     PhysicalClosingEvidence,
     PhysicalClosingEvidenceRole,
     PhysicalClosingObservation,
     PriorClosingContinuityEvidence,
-    ValuationMethod,
     fingerprint_prior_authoritative_closing,
+)
+from .....domain.contribuyente.inventory.records import (
+    InventoryAcquisitionCompleteness,
+    InventoryAcquisitionCost,
+    InventoryAcquisitionEvidence,
+    InventoryAcquisitionEvidenceKind,
+    MovementKind,
+    ValuationMethod,
 )
 
 if TYPE_CHECKING:
@@ -372,7 +374,7 @@ class TestMovementAdd:
                 acquisition_cost=_acquisition("10.00"),
             ),
         )
-        with pytest.raises(InventoryLedgerError, match="consume more stock"):
+        with pytest.raises(InventoryServiceInputError) as exc_info:
             svc.movement_add(
                 bucket_id=secure_engine.bucket_id,
                 actividad_id="A1",
@@ -384,6 +386,20 @@ class TestMovementAdd:
                     quantity=Decimal("2"),
                 ),
             )
+        assert exc_info.value.translated_message == "errors.refused.refused_profile_inventory_validation"
+        assert exc_info.value.context == {
+            "actividad_id": "A1",
+            "year": "2025",
+            "movement_id": "SELL-TOO-MANY",
+        }
+        assert [
+            movement.movement_id
+            for movement in svc.show(
+                bucket_id=secure_engine.bucket_id,
+                actividad_id="A1",
+                year=2025,
+            ).period_movements
+        ] == ["BUY-1"]
 
 
 class TestValuationPreview:

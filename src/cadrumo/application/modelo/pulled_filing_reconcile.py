@@ -64,7 +64,6 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -76,6 +75,7 @@ from .reconcile_casilla import detect_casilla_divergences
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.modelos.calculation_revision import CalculationRevision
@@ -87,6 +87,7 @@ def _pulled_filed_values(
     *,
     work_unit: WorkUnit,
     repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> dict[CasillaId, Decimal] | None:
     """Return the pulled filing's casilla values for this work unit, or ``None``.
 
@@ -95,15 +96,24 @@ def _pulled_filed_values(
     """
     from ..calculations.observations_repository import require_observation_envelope_coordinates_current
 
-    stored = repository.load_observation(str(work_unit.modelo), work_unit.period)
+    stored = repository.load_observation_layers(str(work_unit.modelo), work_unit.period).official
     if stored is None:
         return None
-    with bundled_indexed_authority().operation() as operation:
-        require_observation_envelope_coordinates_current(stored, operation=operation)
+    require_observation_envelope_coordinates_current(stored, operation=operation)
+    coordinate = stored.registry_snapshot_ref
+    if (str(coordinate.modelo), coordinate.modelo_year, coordinate.period, coordinate.revision_id) != (
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period.registry_token,
+        work_unit.revision_id,
+    ):
+        from ...domain.calculations.registry.errors import RegistrySnapshotError
+
+        raise RegistrySnapshotError("pulled filing does not belong to the selected work-unit registry coordinate")
     return dict(stored.observation.casilla_values)
 
 
-def _law_resolved_snapshot(work_unit: WorkUnit) -> RegistrySnapshot | None:
+def _law_resolved_snapshot(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> RegistrySnapshot | None:
     """Resolve this work unit's registry snapshot from its own triple, or ``None``.
 
     Resolution is law-determined from modelo, filing year and period, never from
@@ -119,7 +129,7 @@ def _law_resolved_snapshot(work_unit: WorkUnit) -> RegistrySnapshot | None:
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     try:
-        return resolve_registry_snapshot_for_work_unit(work_unit)
+        return resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
     except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return None
 
@@ -129,6 +139,7 @@ def pulled_filing_divergence_findings(
     work_unit: WorkUnit,
     target: CalculationRevision,
     observation_repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> list[ModeloVerificationFinding]:
     """Compare the local calculation against this taxpayer's pulled filing.
 
@@ -140,7 +151,8 @@ def pulled_filing_divergence_findings(
             verification, supplying the local side and the supplied-input
             evidence the scope is resolved from.
         observation_repository: Injection point for the pulled-observation
-            store. Production passes nothing.
+            store containing official and pending-local layers.
+        operation: The caller's pinned registry authority for all coordinate and policy reads.
 
     Returns:
         One non-blocking WARNING finding per diverging casilla, empty when no
@@ -148,11 +160,11 @@ def pulled_filing_divergence_findings(
         supplied no independent evidence, or when every compared casilla agrees
         within tolerance.
     """
-    filed_values = _pulled_filed_values(work_unit=work_unit, repository=observation_repository)
+    filed_values = _pulled_filed_values(work_unit=work_unit, repository=observation_repository, operation=operation)
     if not filed_values:
         return []
 
-    snapshot = _law_resolved_snapshot(work_unit)
+    snapshot = _law_resolved_snapshot(work_unit, operation=operation)
     if snapshot is None:
         return []
     registry_revision = snapshot.revision

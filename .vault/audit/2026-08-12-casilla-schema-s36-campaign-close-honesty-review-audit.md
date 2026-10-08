@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9895bcd3c7b05177aa89ff6960f970e433c50e221a438c197057c58873dc1690'
+body_hash: 'sha256:3590ce0fb6b88004b52ae185f136d3fb8e8de01faf71be71413abc8597370e5c'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-blocker-spine-adr]]"
   - "[[2026-08-10-casilla-schema-canonical-derivations-adr]]"
   - "[[2026-08-10-casilla-schema-dead-surface-adr]]"
@@ -26,19 +25,19 @@ Lifecycle accounting is internally coherent but not complete: `vaultspec-core st
 
 ### spanish-casilla-stem | high | The campaign introduced an English alias family for the AEAT casilla concept
 
-`src/cadrumo/core/_official_box_status.py:8` declares `OfficialBoxStatus`; `src/cadrumo/domain/calculations/registry/_export.py:183` declares `classify_official_boxes`; `src/cadrumo/application/modelo/_work_review.py:150` persists `official_box_status`; and the TUI consumes the same English-named field. These are not generic UI boxes: their own definitions classify how a registry casilla is represented by an official AEAT export surface. The always-on naming authority predates the landing and requires the Spanish `casilla` stem for concepts mapping one-to-one to AEAT surfaces, explicitly forbidding English `Box` aliases. The canonical implementation is otherwise singular and facade-correct, so this is a destructive rename and consumer sweep, not a reason to add an alias.
+The retired module declared `OfficialBoxStatus`; the retired module declared `classify_official_boxes`; the retired module persists `official_box_status`; and the TUI consumes the same English-named field. These are not generic UI boxes: their own definitions classify how a registry casilla is represented by an official AEAT export surface. The always-on naming authority predates the landing and requires the Spanish `casilla` stem for concepts mapping one-to-one to AEAT surfaces, explicitly forbidding English `Box` aliases. The canonical implementation is otherwise singular and facade-correct, so this is a destructive rename and consumer sweep, not a reason to add an alias.
 
 ### m303-revision-split-regression | high | The campaign's M303 restructure left its end-to-end calculation chain pinned to a deleted revision
 
-`src/cadrumo/application/modelo/tests/test_e2e_ledger_m303_quarters_to_m390_annual.py:109` fixes `_M303_REVISION` to `2023-y-siguientes`, and line 508 passes it to the real work-unit creation path. The validated M303 authority now declares `2023`, the two split 2024 revisions, `2025`, and `2026-y-siguientes`; the retired id is correctly refused. The exact real persisted-repository module therefore fails all four tests before calculation. This is campaign-owned: S02 made the split the measurement basis, while S10's execution record already disclosed the stale deleted id and left it red. A campaign cannot close with its M303-to-M390 end-to-end chain disabled by its own revision migration.
+The retired test fixes `_M303_REVISION` to `2023-y-siguientes`, and line 508 passes it to the real work-unit creation path. The validated M303 authority now declares `2023`, the two split 2024 revisions, `2025`, and `2026-y-siguientes`; the retired id is correctly refused. The exact real persisted-repository module therefore fails all four tests before calculation. This is campaign-owned: S02 made the split the measurement basis, while S10's execution record already disclosed the stale deleted id and left it red. A campaign cannot close with its M303-to-M390 end-to-end chain disabled by its own revision migration.
 
 ### retired-verification-locales | high | Dead application-verification locale leaves survived the deletion campaign
 
-The locale authority reports `application.verification.errors.missing_binding_values`, `period_mapping_failed`, `registry_policy_invalid`, `registry_snapshot_invalid`, and `registry_snapshot_ref_mismatch` as extra in all four catalogues. Concrete residues start at `src/cadrumo/locales/en.yml:1308`, `es.yml:1478`, `ca.yml:1429`, and `hu.yml:1353`. S30 correctly deleted the application package, tests, registry consumer rows, and one separately reviewed orphan error leaf, but these five families still name the deleted package and have no live codebase key. Under the accepted dead-surface ADR and no-legacy rule they must be removed through `dev.locales`, not retained as dormant compatibility prose.
+The locale authority reports `application.verification.errors.missing_binding_values`, `period_mapping_failed`, `registry_policy_invalid`, `registry_snapshot_invalid`, and `registry_snapshot_ref_mismatch` as extra in all four catalogues. Concrete residues start at the retired data file, `es.yml:1478`, `ca.yml:1429`, and `hu.yml:1353`. S30 correctly deleted the application package, tests, registry consumer rows, and one separately reviewed orphan error leaf, but these five families still name the deleted package and have no live codebase key. Under the accepted dead-surface ADR and no-legacy rule they must be removed through `dev.locales`, not retained as dormant compatibility prose.
 
 ### stale-relation-applicability-counts | medium | A known exact-count gate is red and violates the standing quality rule
 
-`src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_inventory.py:108-114` hard-codes the full applicability population and its partitions. The exact owning lane now returns 156 rows instead of 108: 19 tests pass and this one fails. S13's execution record explicitly called it unrelated to S13 behavior and left it red, but it is inside the campaign's relation-handoff owner surface and the standing goal forbids exact counts as pass conditions. Replace the corpus tallies with invariant/property assertions and retain the measured distribution only as execution evidence.
+The retired test hard-codes the full applicability population and its partitions. The exact owning lane now returns 156 rows instead of 108: 19 tests pass and this one fails. S13's execution record explicitly called it unrelated to S13 behavior and left it red, but it is inside the campaign's relation-handoff owner surface and the standing goal forbids exact counts as pass conditions. Replace the corpus tallies with invariant/property assertions and retain the measured distribution only as execution evidence.
 
 ### generated-feature-index | medium | The generated casilla-schema index is radically stale
 

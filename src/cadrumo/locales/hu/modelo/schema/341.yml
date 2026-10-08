@@ -23,6 +23,48 @@ modelo:
             label: Az önadózás vonatkozási éve
           letras-etiqueta-persona-fisica:
             label: Azonosító címke betűi
+          m341-papel-domicilio-codigo-postal:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Irányítószám
+          m341-papel-domicilio-escalera:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Lépcsőház
+          m341-papel-domicilio-municipio:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Település
+          m341-papel-domicilio-numero:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Házszám
+          m341-papel-domicilio-piso:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Emelet
+          m341-papel-domicilio-provincia:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Tartomány
+          m341-papel-domicilio-puerta:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Ajtó
+          m341-papel-domicilio-telefono:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Telefonszám
+          m341-papel-domicilio-tipo-via:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Közterület jellege
+          m341-papel-domicilio-via:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Közterület neve
+          m341-papel-firma:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Aláírás
+          m341-papel-firma-fecha:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Aláírás dátuma
+          m341-papel-firma-lugar:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Aláírás helye
+          m341-papel-nombre-completo:
+            help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
+            label: Vezetéknév és utónév vagy cégnév
           observaciones-presentacion:
             label: Megjegyzések
           reagp-importe-compensacion:
@@ -36,12 +78,55 @@ modelo:
       construct:
         modelo-341-autoliquidacion:
           field:
-            title: '341-es nyomtatvány: önadózási bevallás - IVA'
+            title: 'Modelo 341 nyomtatvány: önadózási bevallás - IVA'
+        modelo-341-papel-identificacion-firma:
+          field:
+            title: Papíralapú azonosítás és aláírás
       field:
         official_name: Modelo 341. Kompenzációk visszatérítésére vonatkozó kérelem
           a mezőgazdasági, állattenyésztési és halászati különleges szabályozás keretében.
         title: Az IVA mezőgazdasági, állattenyésztési és halászati különleges szabályozása
           szerinti kompenzációk visszatérítése
+      form:
+        authored:
+          apellidos:
+            heading: Vezetéknév vagy cégnév
+          base:
+            heading: Ügyletek összege
+          bic:
+            heading: SWIFT/BIC
+          compensacion:
+            heading: Kompenzáció
+          contacto:
+            heading: Kapcsolattartó
+          devengo:
+            heading: Adóidőszak
+          devolucion:
+            heading: Visszatérítés
+          fila-1:
+            heading: Ügyletek 1
+          fila-2:
+            heading: Ügyletek 2
+          fila-3:
+            heading: Ügyletek 3
+          firma:
+            heading: Adóalany · Aláírás
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Azonosítás
+          importe:
+            heading: Kompenzáció összege
+          nif:
+            heading: Adóazonosító
+          nombre:
+            heading: Utónév
+          porcentaje:
+            heading: Kompenzáció százaléka
+          presentacion:
+            heading: Benyújtási adatok
+          telefono:
+            heading: Kapcsolattartó telefonszáma
       revision:
         2005-2015:
           field:

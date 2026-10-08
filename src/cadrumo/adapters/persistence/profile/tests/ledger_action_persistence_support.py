@@ -12,13 +12,27 @@ from pathlib import Path as _Path
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.ledger.actions_import import (
+    persist_prepared_ledger_source_import as _persist_prepared_ledger_source_import,
+)
+from .....application.ledger.actions_import import prepare_ledger_source_import as _prepare_ledger_source_import
 from .....application.ledger.actions_manual import create_manual_transaction as _create_manual_transaction
+from .....application.ledger.import_ports import LedgerImportPorts as _LedgerImportPorts
+from .....application.ledger.models import LedgerSourceImportCommand as _LedgerSourceImportCommand
+from .....application.ledger.models import LedgerSourceImportResult as _LedgerSourceImportResult
 from .....application.ledger.models import ManualLedgerTransactionCommand as _ManualLedgerTransactionCommand
 from .....application.ledger.models import ManualLedgerTransactionResult as _ManualLedgerTransactionResult
+from .....application.ledger.protocols import (
+    BucketEventHistoryCoCommitWriterProtocol as _BucketEventHistoryCoCommitWriterProtocol,
+)
+from .....application.ledger.protocols import (
+    TransactionCatalogueCoCommitWriterProtocol as _TransactionCatalogueCoCommitWriterProtocol,
+)
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.currency.service import CurrencyNormalizationService as _CurrencyNormalizationService
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
@@ -57,6 +71,7 @@ __all__ = [
     "BUCKET_ID",
     "OTHER_BUCKET_ID",
     "create_manual_row",
+    "import_ledger_source",
     "parsed_import_transaction",
     "persist_verified_revision_citing_transaction",
     "purchase_invoice",
@@ -294,4 +309,21 @@ def persist_verified_revision_citing_transaction(
         additional_transaction_ids=additional_transaction_ids,
         bucket_id=bucket_id,
         operation=operation,
+    )
+
+
+def import_ledger_source(
+    command: _LedgerSourceImportCommand,
+    *,
+    ports: _LedgerImportPorts,
+    transaction_repository: _TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: _BucketEventHistoryCoCommitWriterProtocol | None = None,
+    currency_normalizer: _CurrencyNormalizationService | None = None,
+) -> _LedgerSourceImportResult:
+    """Import one source through the prepare and persist boundaries the registered operation uses."""
+    return _persist_prepared_ledger_source_import(
+        _prepare_ledger_source_import(command, ports=ports),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=bucket_event_repository,
+        currency_normalizer=currency_normalizer,
     )

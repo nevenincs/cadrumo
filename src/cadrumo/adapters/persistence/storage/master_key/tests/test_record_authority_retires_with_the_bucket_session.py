@@ -26,7 +26,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
     profile_record_session_if_authenticated,
@@ -53,7 +53,7 @@ def test_closing_the_bucket_session_leaves_no_readable_record_authority(tmp_path
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=outcome.label,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -102,7 +102,7 @@ def test_a_sealed_but_still_bound_session_serves_no_record_authority(tmp_path: P
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=outcome.label,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -149,7 +149,7 @@ def test_an_open_bucket_session_still_serves_its_record_authority(tmp_path: Path
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=outcome.label,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,

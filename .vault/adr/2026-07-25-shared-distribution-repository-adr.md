@@ -8,10 +8,9 @@ related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-22-scoop-runner-topology-adr]]"
   - "[[2026-07-25-account-distribution-standard-research]]"
-  - "[[2026-07-17-post-release-distribution-plan]]"
 supersedes:
   - '2026-07-25-distribution-repo-topology-adr'
-modified: '2026-07-25'
+modified: '2026-10-03'
 body_hash: 'sha256:acd5d86ce24f94f37207990be9bc71132ee38c20abe8ac9fb78d7a87995f9d31'
 ---
 # `shared-distribution-repository` adr: `One shared account distribution repository, superseding the per-product topology and answering the sibling-serving and no-precedent objections` | (**status:** `accepted`)

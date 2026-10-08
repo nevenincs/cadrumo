@@ -1,0 +1,9 @@
+[[revisions.2003-y-siguientes.export_layouts]]
+id = 'modelo-156-fichero-hac-3580-2003'
+format = 'fixed_width'
+source_refs = ['enrolled-modelo-156-layout']
+legal_refs = [
+    'ley-58-2003:art-93',
+    'orden-hac-3580-2003:art-1',
+]
+dictionary_path_overrides = []

@@ -1,11 +1,10 @@
-"""Behavior handlers for the bounded evidence batch run.
+"""CLI presentation for the registered ledger evidence batch operation.
 
-The operator half of batch ingestion. The run itself belongs to
-:func:`~cadrumo.application.ledger.batch_ingest.run_evidence_batch`, which owns per-item
-truth, deterministic ordering, idempotent re-run and the inference lane; this
-module only resolves the operator's sources, projects the run's typed rows onto
-the JSON envelope, and turns the run's own signals into operator-facing text.
-Nothing here re-decides what a row means.
+The worker operation owns per-item truth, deterministic ordering, idempotent
+re-run and the inference lane. This module validates the operator's source
+selection, submits the exact-profile request, and turns the returned typed rows
+into the established JSON envelope and operator-facing text. Nothing here
+re-decides what a row means.
 
 Two reporting rules carry the design, and both are about what an operator is
 trained to believe:
@@ -26,10 +25,8 @@ keeps its status -- the document was read and stored -- and is reported beside
 it: the row carries the reason, and the run warns once with the count.
 
 See Also:
-    :func:`~cadrumo.application.ledger.batch_ingest.run_evidence_batch`
-        The run under this surface.
-    :class:`~cadrumo.application.ledger.batch_ingest.BatchRunResult`
-        The typed result this module projects.
+    :class:`~cadrumo.application.ledger.evidence_ingestion_contracts.LedgerEvidenceBatchProjection`
+        The typed worker result this module presents.
 """
 
 from __future__ import annotations
@@ -40,29 +37,22 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ...application.operator_actions.models import ActionReference
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...core.type_guards import is_object_dict
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.regime_legend import resolve_regime_legends
-from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 from .common import (
     bad,
-    current_workflow_state,
     emit_envelope,
     emit_progress_line,
     format_of,
     resolve_cli_precondition_action,
     resolve_notice_action,
-    transaction_catalogue_repo,
 )
 from .config.status_rendering import precondition_action_lines
-from .state_projection_support import ledger_evidence_ports_factory
 
 if TYPE_CHECKING:
     from ...application.ledger.batch_ingest import BatchItemResult, BatchRunResult, UnresolvedBatchSource
@@ -96,24 +86,15 @@ def evidence_batch(
         sources.insert(0, directory)
     if not sources:
         raise bad(tr("cli.app.ledger.evidence.batch_source_required"))
-    from ...application.ledger.batch_ingest import run_evidence_batch
+    from .runtime_ledger_evidence_ingestion import run_ledger_evidence_batch
 
-    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     text_mode = format_of(ctx) is not OutputFormat.JSON
-    evidence_ports = ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id)
-    with bundled_indexed_authority().operation() as operation:
-        period = default_invoice_extraction_period()
-        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
-        run = run_evidence_batch(
-            bucket_id=bucket_id,
-            sources=sources,
-            direction=kind,
-            evidence_ports=evidence_ports,
-            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
-            operation=operation,
-            legends=legends,
-            on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
-        )
+    projection = run_ledger_evidence_batch(ctx, sources=tuple(sources), direction=kind)
+    bucket_id = str(projection.profile_id)
+    run = projection.run.to_run()
+    if text_mode:
+        for item in run.items:
+            emit_progress_line(_progress_line(item))
     emit_envelope(
         ctx,
         command="ledger.evidence.batch",
@@ -401,6 +382,15 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
             f"unreadable\t{source.source_name}\t{source.refusal_code}\t{_condition_of(source.refusal_verdict)}",
         )
         lines.extend(_refusal_lines(source.refusal_verdict))
+    _append_batch_pause_lines(run, lines)
+    lines.append(f"any_failed\t{run.any_failed}")
+    lines.append(f"any_deferred\t{run.any_deferred}")
+    lines.extend(_notice_line(notice) for notice in _run_notices(run))
+    return lines
+
+
+def _append_batch_pause_lines(run: BatchRunResult, lines: list[str]) -> None:
+    """Append the existing paused facts and precondition actions after unresolved rows."""
     pause = run.inference_pause
     if pause is not None:
         lines.extend(
@@ -411,7 +401,3 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
             f"paused.{line}"
             for line in precondition_action_lines(resolve_cli_precondition_action(pause.precondition_verdict))
         )
-    lines.append(f"any_failed\t{run.any_failed}")
-    lines.append(f"any_deferred\t{run.any_deferred}")
-    lines.extend(_notice_line(notice) for notice in _run_notices(run))
-    return lines

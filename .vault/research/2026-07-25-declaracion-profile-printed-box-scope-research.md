@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#declaracion-profile-printed-box-scope'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:7d5d5dcec71c23358dd28546517b9a49bd5ce3efed906a4a7501e8e55eb8ce45'
+modified: '2026-10-03'
+body_hash: 'sha256:6ffb76d708711d2875ed0887bea219ea364c4e424ba248a4527f2d56897465ed'
 related: []
 ---
 
@@ -43,7 +43,7 @@ coverage numbers were measured against the splits, which is what they are for.
 ### Real-render coverage is 12/18, 11/18, 11/18, 10/18 — not a single figure
 
 Running the production classifier (`_classify_target`,
-`src/cadrumo/adapters/inbound/declaracion/_parser.py:548`) over each quarter with
+the former source file) over each quarter with
 the live registry profile gives:
 
 | quarter | covered | additional misses beyond the six |
@@ -88,7 +88,7 @@ to box `09` would encode that *this* filer entered 21% into the third triple.
 A filer using `(01,02,03)` for the same rate extracts blank. The correct
 address is conditional on a sibling cell's value, which `match_strategy` cannot
 express: it is a closed three-member Literal
-(`src/cadrumo/domain/calculations/registry/_schema_extraction.py:59`), and the
+, and the
 `bbox_anchored` member's `column_anchor` constrains an x-range, not a
 sibling-value predicate.
 
@@ -190,10 +190,6 @@ extraction; it is the substantive question the ADR must settle.
 - `src/cadrumo/tests/fixtures/manual_annexes/303/source-Cap_9_303_es_es.pdf` (and its `.json` sidecar), landed at commit `cdeeaa293c`
 - `src/cadrumo/tests/fixtures/manual_annexes/303/2024-1T.pdf` through `2024-4T.pdf`
 - https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/IVA_2024/Imagenes/Cap_9_303_es_es.pdf
-- `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml:1-155`
-- `src/cadrumo/domain/calculations/registry/_schema_extraction.py:48-80`
-- `src/cadrumo/adapters/inbound/declaracion/_parser.py:548`, `:630-694`, `:935-977`
+
 - `src/cadrumo/tests/fixtures/justificantes/_generate_iva_corpus.py:171`, `:478-530`
 - `src/cadrumo/adapters/inbound/declaracion/tests/_parser_boundary_m303_current_expected.py`
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/extraction_profiles/0001-extraction_profiles.toml:16-22`

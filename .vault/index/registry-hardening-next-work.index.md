@@ -4,17 +4,14 @@ tags:
   - '#index'
   - '#registry-hardening-next-work'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:39c10acf311663c9b568ac602a55f21b32ffc849fb296e9825602d6ddafb9dcf'
+body_hash: 'sha256:a7081e1d07a95b9c2201b844ce67376d635d2330a880c7883a631e268db2d875'
 related:
   - '[[2026-06-02-registry-hardening-next-work-audit]]'
-  - '[[2026-06-02-registry-hardening-next-work-ledger]]'
   - '[[2026-06-04-registry-completeness-code-review-audit]]'
   - '[[2026-06-04-registry-generic-fragmentation-contract-audit]]'
   - '[[2026-06-04-registry-generic-fragmentation-contract-code-review-audit]]'
-  - '[[2026-06-04-registry-hardening-next-work-W09-P13-summary]]'
-  - '[[2026-06-04-registry-hardening-next-work-adr]]'
   - '[[2026-06-04-registry-hardening-next-work-research]]'
   - '[[2026-06-04-registry-legal-grounding-audit]]'
   - '[[2026-06-04-registry-m200-completeness-audit]]'
@@ -28,10 +25,6 @@ Auto-generated index of all documents tagged with `#registry-hardening-next-work
 
 ## Documents
 
-### adr
-
-- `2026-06-04-registry-hardening-next-work-adr` - `registry-hardening-next-work` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-
 ### audit
 
 - `2026-06-02-registry-hardening-next-work-audit` - `registry-hardening-next-work` audit: `registry Python module size and ownership boundary audit`
@@ -42,11 +35,6 @@ Auto-generated index of all documents tagged with `#registry-hardening-next-work
 - `2026-06-04-registry-m200-completeness-audit` - `registry-hardening-next-work` audit: `M200 calculation completeness drift`
 - `2026-06-04-registry-m303-completeness-audit` - `registry-hardening-next-work` audit: `M303 completeness manifest stale totals`
 - `2026-06-04-registry-remaining-hardening-wireframe-audit` - `registry-hardening-next-work` audit: `remaining hardening execution wireframe`
-
-### exec
-
-- `2026-06-02-registry-hardening-next-work-ledger` - `registry-hardening-next-work` ledger
-- `2026-06-04-registry-hardening-next-work-W09-P13-summary` - `registry-hardening-next-work` `W09.P13` summary
 
 ### research
 

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-export-evidence-parity'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:120953f1700ed9e819928bc050b686014856400899c7959e009d7f5e94bf9185'
+modified: '2026-10-05'
+body_hash: 'sha256:9feec7e10475bc4dfe115d44534e48f829f0a5714f2acb9746c9ac562fa3e914'
 related:
   - "[[2026-06-03-modelo-export-evidence-parity-research]]"
   - "[[2026-06-02-modelo-filing-ledger-snapshot-adr]]"
@@ -105,8 +105,13 @@ per casilla, the contributing rows and manual entries with their amounts and
 legal grounding — and a machine-readable evidence sidecar accompanies the
 artefact. The flat / offline xls export and the online Sheets export both read
 the same bundled evidence so offline and online artefacts are evidence-identical.
-An export of a ledger-derived revision that lacks bundled evidence (or a
-resolvable reference) is refused.
+A filing-grade export of a ledger-derived revision that lacks bundled evidence
+(or a resolvable reference) is refused. The authorized 2026-10-05 outbound-review
+amendment permits a separate explicitly provisional/incomplete review export
+with missing evidence enumerated. It must not fill historical gaps from the
+current ledger or claim filing/audit completeness. Complete audit packages
+also require the actual permitted original payloads, verified against their
+digests; descriptive records or a checksum manifest alone are insufficient.
 
 ## Rationale
 
@@ -148,3 +153,7 @@ impossible to file.
   manual fact-basis entries) pegged to the revision's snapshot fingerprint, and
   every export of such a revision must carry that evidence or a resolvable
   in-system reference to it — an export with neither is refused.
+
+## Amendment 2026-10-05 - outbound review
+
+The product owner's Session 01 instruction authorizes the scoped wording changes above, governed by 2026-10-05-google-outbound-review-adr. Earlier descriptions of then-current behavior remain historical evidence, not permission to retain retired routes. Other commitments remain in force. This amendment records architecture, not completed implementation or live acceptance.

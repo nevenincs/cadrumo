@@ -8,7 +8,7 @@ aeat app ledger invoice list
 aeat --format json app ledger invoice view {invoice_id}
 @expect result.invoice_id == "{invoice_id}"
 @expect result.base_total == "2000.00"
-@step Create the Modelo 349 work unit for the period the invoice falls in.
+@step Create the Modelo 349 declaration for the period the invoice falls in.
 aeat --format json app modelo work create --modelo 349 --year 2026 --period 02
 @capture work_unit_id result.work_unit_id
 @step Calculate the recapitulative declaration.

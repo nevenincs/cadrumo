@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#calculation-engine-foundations'
 date: '2026-06-11'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:084302380222a11efeb3fda9b5c5e6130a9b908189227ede9bd1ea21a1da43ae'
 related:
-  - '[[2026-06-10-calculation-engine-foundations-plan]]'
   - '[[2026-06-11-calculation-engine-foundations-closeout-audit]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'

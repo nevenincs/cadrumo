@@ -1,6 +1,13 @@
 modelo:
   schema:
     '216':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Fizetendő összeg
+          irnr-retencion-resultados-anteriores:
+            label: Azonos adónemre, évre és időszakra vonatkozó korábbi bevallások
+              fizetendő összege
       construct:
         modelo-216-calculation-construct:
           field:
@@ -13,23 +20,57 @@ modelo:
           telephely közbenjárása nélkül elért jövedelmek. Adóelőleg-levonások és -befizetések.
           Bevallás és befizetési dokumentum.
         title: IRNR adóelőleg-levonások és -befizetések
+      form:
+        column:
+          base: A levont adó és az adóelőleg alapja
+          numero-rentas: Jövedelemtételek száma
+          retenciones: Levont adó és adóelőleg
+        context:
+          apellidos: Vezetéknév vagy cégnév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző önadózási bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          nombre-completo: Teljes név vagy cégnév
+          periodo: Időszak
+        page:
+          pag-1:
+            heading: Nem rezidensek jövedelemadója · Levont adó és adóelőleg
+        row:
+          base-historica: Adólevonás és adóelőleg alapja / Jövedelem összege
+          dividendos: Osztalék és tulajdoni részesedésből származó egyéb jövedelem
+          otras-rentas: Egyéb jövedelem
+          totales: Összesen
+        section:
+          complementaria:
+            heading: Kiegészítő bevallás
+          devengo:
+            heading: Adómegállapítási időszak
+          identificacion:
+            heading: Azonosítás
+          ingreso:
+            heading: Befizetés
+          liquidacion:
+            heading: Adóelszámolás
+          no-sometidas:
+            heading: II. Adólevonás vagy adóelőleg alá nem eső jövedelmek
+          sometidas:
+            heading: I. Adólevonás vagy adóelőleg alá eső jövedelmek
       revision:
         2020-2023:
           casilla:
             '1':
-              label: Elszámolás. Tétel 1. Jövedelmek száma
+              label: Adólevonás alá eső jövedelmek száma
             '2':
-              label: Elszámolás. Tétel 2. Levonások és előlegfizetések adóalapja
+              label: A levonások és adóelőlegek alapja
             '3':
-              label: Elszámolás. Tétel 3. Forrásadó és részletfizetés
+              label: Levonások és adóelőlegek
             '4':
-              label: Elszámolás. Tétel 4. Jövedelmek száma
+              label: Adólevonás alá nem eső jövedelmek száma
             '5':
-              label: Elszámolás. Tétel 5. Levonások és előlegfizetések adóalapja
-            '6':
-              label: Elszámolás. Tétel 6. Korábbi bevallásokból befizetendő összeg
-            '7':
-              label: Elszámolás. Tétel 7. Befizetendő eredmény
+              label: Adólevonás alá nem eső jövedelmek összege
           field:
             label: EHA/3290/2008 rendelet, 2020–2023. adóévek
         2024-y-siguientes:
@@ -75,10 +116,5 @@ modelo:
             '19':
               label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
                 Összesen
-            '20':
-              label: Korábbi bevallásokból befizetendő összegek ugyanazon tétel, év
-                és időszak esetén
-            '21':
-              label: Befizetendő eredmény
           field:
             label: HAC/56/2024 rendelet, 2024. adóévtől

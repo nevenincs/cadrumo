@@ -12,6 +12,7 @@ from ......tests.path_obstruction import obstructed_path
 from ..capsule_records import ProfileCustodyCapsuleLabel
 from ..errors import ProfileCustodyRecordError
 from ..label_head_repository import ProfileLabelHeadRepository
+from .label_head_probe import begin_advance, load_current
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -42,17 +43,13 @@ def test_pure_verify_never_publishes_or_repairs_a_pending_advance(tmp_path) -> N
 
     head = repository.publish_initial(label=initial, source_witness=_SOURCE_WITNESS)
     replacement = _replacement_label(initial)
-    repository.begin_advance(
-        current_head=head,
-        current_label=initial,
-        replacement_label=replacement,
-    )
+    begin_advance(repository, current_head=head, current_label=initial, replacement_label=replacement)
     pending_path = repository.pending_path(_PROFILE_ID)
     pending_bytes = pending_path.read_bytes()
 
     assert repository.verify(label=initial) == head
     assert pending_path.read_bytes() == pending_bytes
-    assert repository.load_current(_PROFILE_ID) == head
+    assert load_current(repository, _PROFILE_ID) == head
 
     repository.recover_pending(profile_id=_PROFILE_ID, current_label=initial)
 
@@ -66,11 +63,7 @@ def test_explicit_pending_recovery_repairs_the_replacement_head(tmp_path) -> Non
     initial = _initial_label()
     current_head = repository.publish_initial(label=initial, source_witness=_SOURCE_WITNESS)
     replacement = _replacement_label(initial)
-    repository.begin_advance(
-        current_head=current_head,
-        current_label=initial,
-        replacement_label=replacement,
-    )
+    begin_advance(repository, current_head=current_head, current_label=initial, replacement_label=replacement)
 
     repository.recover_pending(profile_id=_PROFILE_ID, current_label=replacement)
 

@@ -3,13 +3,20 @@ tags:
   - '#adr'
   - '#google-sa-impersonation'
 date: '2026-07-04'
-modified: '2026-09-08'
-body_hash: 'sha256:d8c40d6eae4a9c16975218d276aaef6551f95bdf1019870df85827a89bd9d982'
+modified: '2026-10-04'
+body_hash: 'sha256:f7511d4d229b301993548548393cbf9de8d0706aa87a723c87487d2993bb0ab7'
 related:
   - '[[2026-07-10-google-sa-impersonation-research]]'
+  - '[[2026-10-04-google-app-identity-adr]]'
 ---
 
-# `google-sa-impersonation` adr: `Google service-account impersonation credential source` | (**status:** `accepted`)
+# `google-sa-impersonation` adr: `Google service-account impersonation credential source` | (**status:** `deprecated`)
+
+Deprecated on 2026-10-04 by `2026-10-04-google-app-identity-adr`, which removes
+the service-account impersonation credential source: a service account cannot
+own Drive files, so the source cannot deliver an export a person can see once
+Cadrumo creates its own root folder. The need this record served, one shared
+Google identity for a gestor team, has no replacement.
 
 ## Problem Statement
 

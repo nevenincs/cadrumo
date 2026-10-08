@@ -135,13 +135,6 @@ def _active_record_session() -> ProfileRecordSession | None:
     return None if authority is None else authority.session
 
 
-@contextmanager
-def bound_profile_record_session(session: ProfileRecordSession) -> Generator[None]:
-    """Bind one authenticated record session for the duration of a command."""
-    with _ACTIVE_RECORD_AUTHORITY.override(_ProfileRecordAuthority(session=session, session_derived=False)):
-        yield
-
-
 def activate_profile_record_session(session: ProfileRecordSession) -> None:
     """Install the authenticated record authority for the active process session.
 
@@ -159,31 +152,15 @@ def activate_profile_record_session(session: ProfileRecordSession) -> None:
 def bind_active_profile_record_session(session: ProfileRecordSession) -> ProfileRecordSession | None:
     """Bind a candidate record authority without retiring the prior session.
 
-    Handover owns the two-phase lifetime: it first makes B observable, then
-    retires A only after every required B publication succeeds.  Returning A
-    lets that owner restore the exact prior authority if a later publication
-    fails, without a transient plaintext re-authentication or a duplicate
-    record-session constructor.
+    Returning the prior authority leaves its lifetime with the caller. The
+    candidate's record authority is derived from the live custody session that
+    the caller binds for the same profile.
     """
     previous = active_profile_record_session()
-    # Session-derived like the activating door: handover binds the candidate's
-    # authority beside the candidate's bucket session, and restores the prior
-    # authority beside the prior bucket session on rollback. Both halves are
-    # backed by a custody session, so both must retire when it goes.
+    # A session-derived authority remains readable only while the matching
+    # custody session is live, as with the activating door.
     _ACTIVE_RECORD_AUTHORITY.bind(_ProfileRecordAuthority(session=session, session_derived=True))
     return previous
-
-
-def clear_active_profile_record_session_binding(expected: ProfileRecordSession) -> None:
-    """Clear only an expected active binding without closing its owner.
-
-    Candidate cleanup first removes the context reference, then zeroises the
-    candidate.  The identity check prevents a late cleanup from unbinding a
-    replacement session installed by a nested operation.
-    """
-    authority = _ACTIVE_RECORD_AUTHORITY.get()
-    if authority is not None and authority.session is expected:
-        _ACTIVE_RECORD_AUTHORITY.clear_bound(authority)
 
 
 def active_profile_record_session() -> ProfileRecordSession | None:
@@ -258,11 +235,9 @@ def profile_record_session_if_authenticated(
     profile happened to be logged in, which is a different behaviour, not a
     stricter one.
 
-    Declining does not zeroise it. The record authority and the bucket session
-    are bound together and rebound together during the login handover's
-    rollback window, so a reader is not the owner that may destroy either;
-    :func:`~cadrumo.application.user_profile.login_session.logout_active_profile`, which is
-    the close owner, wipes it there.
+    Declining does not zeroise it: a reader does not own either session's
+    lifetime. The owner closes the record authority through
+    :func:`close_active_profile_record_session` when retiring local custody.
 
     A ``profile_id`` that is not a canonical UUID still raises: that is a
     caller defect rather than a lock state, and returning ``None`` for it would
@@ -542,8 +517,6 @@ __all__ = [
     "activate_profile_record_session",
     "active_profile_record_session",
     "bind_active_profile_record_session",
-    "bound_profile_record_session",
-    "clear_active_profile_record_session_binding",
     "close_active_profile_record_session",
     "invocation_profile_record_handoff",
     "profile_record_session_if_authenticated",

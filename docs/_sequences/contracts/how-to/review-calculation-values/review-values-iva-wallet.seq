@@ -1,4 +1,4 @@
-@step Inspect the local IVA compensation wallet balance.
+@step Inspect the local VAT compensation wallet balance.
 aeat app modelo iva-wallet balance --as-of-year 2026
 @step Seed a first-period opening balance of zero.
 aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm

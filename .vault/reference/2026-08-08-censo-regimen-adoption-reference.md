@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#censo-regimen-adoption'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:aa27f88085bba0aa49c3ecd30f833d0f7a5e7e16fda2493ee369f90f0bb4a69f'
+body_hash: 'sha256:a017d172ba017d112005edeb77c2afebee4997ff8d8bb9621fccae772911d8f2'
 related:
   - '[[2026-08-08-censo-regimen-adoption-adr]]'
 ---
@@ -19,12 +19,7 @@ adopts the Ley 49/2002 régimen axis from the Certificado de Situación Censal.
 
 ## The certificate record
 
-`src/cadrumo/domain/censo/_certificado.py` defines
-`CertificadoSituacionCensal` with the six officially certified G313 fields:
-`domicilio_fiscal`, `condicion_residencia`, `representantes_nif`,
-`situacion_tributaria`, `actividades`, `obligaciones_periodicas`. The two
-obligation-bearing fields are declared `tuple[str, ...]` — free-form prose
-lines with no typed vocabulary.
+The two obligation-bearing fields are declared `tuple[str, ...]` — free-form prose lines with no typed vocabulary.
 
 The module docstring records that the PDF layout extraction is deliberately
 unpinned until a real issued-certificate specimen exists, and that the inbound
@@ -52,15 +47,6 @@ rather than observed on an AEAT document.
 
 ## The régimen axis on the profile
 
-`src/cadrumo/application/wizard/_catalogue.py` declares the wizard questions
-binding `taxpayer_type.ley_49_2002_special_regime_option_declared`,
-`…_option_date`, `…_renunciation_declared` and `…_renunciation_date`, all
-sourced from the operator's own answers.
-
-`src/cadrumo/domain/deadlines/_profiles.py` reads all four canonical paths into
-the typed deadline profile, so the operator's typed answers reach obligation
-derivation directly.
-
 ## Legal grounding for the régimen itself
 
 The bundled consolidated corpus carries Ley 49/2002 arts. 6, 7, 10 and 14 under
@@ -79,19 +65,7 @@ and none of them is a régimen field.
 
 ## The divergence primitive
 
-`src/cadrumo/application/user_profile/_cotejo_apply.py` owns the whole
-deferred-divergence mechanism: the `CensoDivergence` typed row, the
-`censo.divergencia` indexed fact namespace, `divergence_facts`,
-`open_censo_divergences` reading through the last-value-wins projection,
-`censo_divergence_notice` returning a WARNING `Notice`, and `apply_cotejo`
-committing clearing facts, adopted facts and fresh divergence rows in one
-atomic `set_active_fields` call followed by exactly one `CENSO_APPLIED` event.
 Re-running the cotejo replaces the whole divergence namespace.
-
-The divergence-to-operator rendering path is live:
-`src/cadrumo/entrypoints/cli/_config/_profile_inspect.py` calls
-`censo_divergence_notice` and attaches the result to the `config.profile.show`
-envelope notices.
 
 ## Prior decisions bearing on the disagreement question
 

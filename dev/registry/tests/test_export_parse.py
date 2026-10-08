@@ -15,7 +15,8 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
@@ -200,27 +201,39 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
         FilingEnvelopePrefixRole,
     )
 
-    roles = tuple(
-        role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
+    roles = (
+        FilingEnvelopePrefixRole.OPENING_TAG,
+        FilingEnvelopePrefixRole.MODELO,
+        FilingEnvelopePrefixRole.DISCRIMINANT,
+        FilingEnvelopePrefixRole.FILING_YEAR,
+        FilingEnvelopePrefixRole.PERIOD,
+        FilingEnvelopePrefixRole.RECORD_TYPE,
+        FilingEnvelopePrefixRole.AUX_OPENING_TAG,
+        FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
+        FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER,
+        FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER,
+        FilingEnvelopePrefixRole.DEVELOPER_TAX_ID,
+        FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER,
+        FilingEnvelopePrefixRole.AUX_CLOSING_TAG,
     )
     declaration = AuxiliaryEnvelopeHeaderDefinition(
-        source_ref="aeat-dr-232-2018",
+        source_ref="synthetic-auxiliary-design",
         source_sha256="a" * 64,
-        record_identity="DR23200",
+        record_identity="SYN00",
         prefix_fields=tuple(FilingEnvelopePrefixFieldDeclaration(role=role, length=1) for role in roles),
         prefix_extent=13,
         product_identity_requirement="aeat-product-software-identity-v1",
     )
     record = ExportRecordDefinition.model_validate(
         {
-            "id": "record-m232-test",
+            "id": "record-synthetic-auxiliary-test",
             "record_type": "test",
             "order": 0,
             "encoding": ExportEncoding.ISO_8859_1,
             "line_ending": "crlf",
             "fields": (
                 {
-                    "id": "m232-test.f001",
+                    "id": "synthetic-auxiliary-test.f001",
                     "offset": 1,
                     "length": 1,
                     "kind": "literal",
@@ -231,16 +244,16 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
                     "justification": "left",
                     "signed": False,
                     "legal_refs": ("ley-27-2014:art-18",),
-                    "source_refs": ("aeat-dr-232-2018",),
+                    "source_refs": ("synthetic-auxiliary-design",),
                 },
             ),
         },
     )
     layout = ExportLayoutDefinition.model_validate(
         {
-            "id": "generated-modelo-232-test-fichero",
+            "id": "generated-synthetic-auxiliary-test-fichero",
             "format": "fixed_width",
-            "source_refs": ("aeat-dr-232-2018",),
+            "source_refs": ("synthetic-auxiliary-design",),
             "legal_refs": ("ley-27-2014:art-18",),
             "records": (record,),
             "auxiliary_envelope_header": declaration,
@@ -251,4 +264,4 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
     parsed = parse_export_payload(layout, payload)
     assert parsed.casillas == ()
     assert len(parsed.fields) == 1
-    assert parsed.fields[0].field_id == "m232-test.f001"
+    assert parsed.fields[0].field_id == "synthetic-auxiliary-test.f001"

@@ -3,17 +3,18 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-26'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:31cdeec9f92f7bdea7cd504377a68fc61480db9e24d962f4ea6677b34377a63a'
+body_hash: 'sha256:44f5a22ada06a1ce1c031de68e8b73b45e54f4628bef3fcc23564929086ae753'
 related:
   - "[[2026-08-26-tui-architecture-registry-facade-family-census-audit]]"
 ---
+
 # `repo-gate-integrity` audit: `registry facade census review remediation`
 
 ## Scope
 
-This follow-up audits the independent-review remediation of the fixed 78-row c941 registry-facade family in `dev/quality/registry_facade_family_census.py` and its reviewed matrix. It leaves the prior family-census audit frozen and does not close S175 or any dependent Step.
+It leaves the prior family-census audit frozen and does not close S175 or any dependent Step.
 
 ## Findings
 

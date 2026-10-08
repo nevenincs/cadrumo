@@ -203,12 +203,22 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "box": "06",
               "casilla_id": "06",
+              "detail": "Casilla '06' was filed with the value you supplied (100.00), not the 0 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
+              "level": "check",
               "reason": "operator_override_diverges_from_computed",
               "remedy": "Confirm the supplied value is the one you intend to file; to file the derived figure instead, recalculate without setting this casilla.",
               "source_kind": "operator_casilla_input"
             },
-            "message": "Casilla '06' was filed with the value you supplied (100.00), not the 0 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
+            "message": "The value in box 06 is the one you entered, not the one Cadrumo worked out.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
@@ -218,13 +228,11 @@
             "irpf.previous_year_economic_activity_net_income": "0",
             "modelo-130-actividad-economica-gastos-cumulative": "500",
             "modelo-130-actividad-economica-ingresos-cumulative": "1000",
-            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
             "modelo-130-actividad-economica-retenciones-cumulative": "0",
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "991fa15f6a5a927da4a72902fd82ceb053bf53af1690b353a23c22831052330b",
+          "calculation_revision_id": "94910367a24dfacab0e9ad4b4699b4a910bf9f7a7893912bbb2e435830acec96",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -252,7 +260,9 @@
             "closes_on": "2026-04-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 19,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-04-20"
           },
           "detail_rows": [],
           "filed_at": null,
@@ -358,7 +368,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 991fa15f6a5a927da4a72902fd82ceb053bf53af1690b353a23c22831052330b (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 94910367a24dfacab0e9ad4b4699b4a910bf9f7a7893912bbb2e435830acec96 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",

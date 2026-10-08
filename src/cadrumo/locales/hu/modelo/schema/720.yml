@@ -1,10 +1,37 @@
 modelo:
   schema:
     '720':
+      binding:
+        x-dlnm8pbcdsmjechg5pq7is35bsoisp35cdm62sj1cdkmurhdcdnmqs3cclmmarjkc5p6io9ddsmn6tbjehkn8tbkd5r62:
+          help: C jelölendő, ha a bevallás az azonos évi korábbi bevallásból kihagyott
+            tételeket tartalmazza, S, ha az azonos évi korábbi bevallást érvényteleníti
+            és helyettesíti.
+          label: Kiegészítő vagy helyettesítő bevallás
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjfdlh74p9dcdnmst31cdq6u:
+          label: Kapcsolattartó neve
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn0:
+          label: A bevallás azonosítószáma
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn2qobeehin4qbfe8:
+          label: A korábbi bevallás azonosítószáma
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdehnn8obc5li6abbicljmisrke9nn6bb4clhmoobic5i6uso:
+          label: A bevallott tételek teljes száma
+        ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qc9dedgmop3f5lniqtj1dhnn4bb15kpj2bb4ckmm8qb3d5imqojickmn6
+        : help: a december 31-i egyenleg vagy érték, a megszűnés napjának egyenlege
+            vagy értéke, vagy a szerzési érték.
+          label: 1. értékelés összesen
+        ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qchdd5mn0rriehiiqrpdepgmorri5li6abbcc4mn8sj1dppmqqbjd5nms
+        : help: Az átruházás összege vagy értéke, vagy az utolsó negyedév átlagos
+            egyenlege.
+          label: 2. értékelés összesen
+        x-dlnm8pbcdsmjechg5pq7is35bsoist35dhimcrredsmm6rreehgm6t3f:
+          label: Kapcsolattartó telefonszáma
+        x-dlnm8pbcdsmjechg5pq7is35bsoist39e1niqp355lpmus3fe9q6a:
+          help: 'A T kulcs adandó meg: elektronikus továbbítás.'
+          label: Adathordozó típusa
       construct:
         modelo-720-informative:
           field:
-            title: '720-as nyomtatvány: a külföldön birtokolt vagyonról és jogokról
+            title: 'Modelo 720 nyomtatvány: a külföldön birtokolt vagyonról és jogokról
               szóló adatszolgáltatás'
       field:
         official_name: Modelo 720. Adatszolgáltatási bevallás a külföldön található

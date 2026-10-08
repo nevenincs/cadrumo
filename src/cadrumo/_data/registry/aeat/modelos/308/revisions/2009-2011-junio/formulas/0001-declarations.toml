@@ -1,0 +1,22 @@
+[[revisions.2009-2011-junio.formulas]]
+id = "modelo-308-recargo-total"
+target_casilla_id = "decl.req-iva-devolver-17"
+rounding = "money-2"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["boe-modelo-308-2008-form-pdf", "aeat-dr-308-2009", "aeat-modelo-308-procedure"]
+
+[[revisions.2009-2011-junio.formulas.source_citations]]
+source_ref = "aeat-modelo-308-procedure"
+required_text = ["Modelo 308"]
+
+[revisions.2009-2011-junio.formulas.expression]
+op = "add"
+
+[[revisions.2009-2011-junio.formulas.expression.args]]
+casilla_id = "decl.req-cuota-10"
+
+[[revisions.2009-2011-junio.formulas.expression.args]]
+casilla_id = "decl.req-cuota-13"
+
+[[revisions.2009-2011-junio.formulas.expression.args]]
+casilla_id = "decl.req-cuota-16"

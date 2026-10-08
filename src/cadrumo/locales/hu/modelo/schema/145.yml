@@ -7,6 +7,52 @@ modelo:
           IRPF-rendelet 88. cikke).
         title: IRPF. Munkaviszonyból származó jövedelmek adóelőleg-levonása. Adatközlés
           a kifizető részére
+      form:
+        authored2012:
+          column:
+            anio-adopcion:
+              heading: Örökbefogadás vagy nevelésbe vétel éve
+            anio-nacimiento:
+              heading: Születési év
+            ayuda-movilidad:
+              heading: Más személy segítsége vagy mozgáskorlátozottság
+            computo-entero:
+              heading: Teljes összegű figyelembevétel
+            convivencia-otros:
+              heading: Együttélés más leszármazottakkal
+            discapacidad-grado:
+              heading: Fogyatékosság mértéke
+          page:
+            heading: Adatközlés a kifizetőnek · 2012-es tervezet, felülvizsgálatra
+              vár
+          row:
+            ascendiente-1:
+              heading: Felmenő 1
+            ascendiente-2:
+              heading: Felmenő 2
+            descendiente-1:
+              heading: Leszármazott 1
+            descendiente-2:
+              heading: Leszármazott 2
+            descendiente-3:
+              heading: Leszármazott 3
+            descendiente-4:
+              heading: Leszármazott 4
+          section:
+            acuse:
+              heading: 7. Átvételi elismervény
+            ascendientes:
+              heading: 3. Felmenők
+            descendientes:
+              heading: 2. Gyermekek és más leszármazottak
+            firma:
+              heading: 6. Az adatközlés dátuma és aláírása
+            pensiones:
+              heading: 4. Házastársi és gyermektartás
+            perceptor:
+              heading: 1. A jövedelem jogosultjának adatai
+            vivienda:
+              heading: 5. Állandó lakóhely
       revision:
         2012-01-31-y-siguientes:
           casilla:

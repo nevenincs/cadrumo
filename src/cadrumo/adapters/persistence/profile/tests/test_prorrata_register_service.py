@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 
+from .....application.prorrata_register.tests.provisional_override import record_aeat_autorizada
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
@@ -98,7 +99,8 @@ def test_record_aeat_autorizada_persists_authorised_override(
             ),
         )
 
-        updated = service.record_aeat_autorizada(
+        updated = record_aeat_autorizada(
+            service,
             ejercicio=2026,
             provisional_percentage=Decimal("63.5"),
             authorisation_reference="AEAT-AUTH-2026-0007",

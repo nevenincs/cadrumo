@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:1c478d6df046f8e4faa4a1e17ca05830192ffd1a44a092d450c197515b8fc0c0'
 related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
   - "[[2026-09-02-object-name-declustering-adr]]"
 ---
 
