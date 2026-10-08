@@ -91,3 +91,8 @@ def verify_admission_order(artifact: Path) -> None:
         < sequence.get("InstallFiles", 0)
     ):
         raise ValueError(f"MSI native scope admission has unsafe action ordering: {sequence}")
+    if "CadrumoAuthenticateOwner" in sequence and not (
+        sequence["CostFinalize"] < sequence.get("CadrumoPrepareOwner", 0) < sequence["CadrumoPrepareAdmission"]
+        and sequence["CadrumoScopeAdmission"] < sequence["CadrumoAuthenticateOwner"] < sequence["ProcessComponents"]
+    ):
+        raise ValueError(f"MSI native owner authentication has unsafe action ordering: {sequence}")

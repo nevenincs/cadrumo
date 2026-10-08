@@ -268,6 +268,7 @@ pub struct ProductDefinition {
     pub version: String,
     pub admission: Request,
     pub ownership: PackageOwnership,
+    pub owner: Option<OwnerMetadata>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
@@ -299,6 +300,9 @@ pub fn product_definition(path: &Path) -> Result<ProductDefinition, Refusal> {
         admission: Request::parse(&required("CadrumoAdmission")?)?,
         ownership: serde_json::from_str(&required("CadrumoPackage")?)
             .map_err(|_| Refusal::InvalidRequest)?,
+        owner: property(&database, "CadrumoOwner")?
+            .map(|value| serde_json::from_str(&value).map_err(|_| Refusal::InvalidRequest))
+            .transpose()?,
     })
 }
 pub fn standalone_gate_present(path: &Path) -> Result<bool, Refusal> {
@@ -609,11 +613,12 @@ fn admit(install: u32) -> Result<(), Refusal> {
 
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
-struct OwnerMetadata {
-    schema: u32,
-    scope: Scope,
-    product_code: String,
-    runner_sha256: cadrumo_application::value::Sha256Digest,
+pub struct OwnerMetadata {
+    pub schema: u32,
+    pub scope: Scope,
+    pub product_code: String,
+    pub role: crate::owner::Role,
+    pub runner_sha256: cadrumo_application::value::Sha256Digest,
 }
 
 fn prepare_owner(install: u32) -> Result<(), Refusal> {
@@ -634,6 +639,12 @@ fn prepare_owner(install: u32) -> Result<(), Refusal> {
             product_code: metadata.product_code,
             scope: metadata.scope,
             prefix: PathBuf::from(session_property(install, "INSTALL_ROOT")?),
+            operation: if session_property(install, "REMOVE")?.is_empty() {
+                crate::owner::Operation::Install
+            } else {
+                crate::owner::Operation::Remove
+            },
+            role: metadata.role,
         },
     };
     let bytes = serde_json::to_vec(&callback).map_err(|_| Refusal::InvalidRequest)?;

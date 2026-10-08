@@ -59,6 +59,11 @@ def verify_database(source: Path, database: Path) -> None:
     elif upgrade is None:
         raise ValueError("Registration MSI lost its major upgrade")
     admission = original.find("w:Property[@Id='CadrumoAdmission']", _NS)
+    owner = original.find("w:Property[@Id='CadrumoOwner']", _NS)
+    if owner is not None:
+        observed_owner = package.find("w:Property[@Id='CadrumoOwner']", _NS)
+        if observed_owner is None or observed_owner.attrib.get("Value") != owner.attrib["Value"]:
+            raise ValueError("MSI database lost immutable native owner authentication metadata")
     if admission is not None:
         observed = package.find("w:Property[@Id='CadrumoAdmission']", _NS)
         if observed is None or observed.attrib.get("Value") != admission.attrib["Value"]:
@@ -74,11 +79,16 @@ def verify_database(source: Path, database: Path) -> None:
 
 
 def compile_products(
-    build: Path, identity: Path, wix: Path, desktop: str | None = None, adapter: Path | None = None
+    build: Path,
+    identity: Path,
+    wix: Path,
+    desktop: str | None = None,
+    adapter: Path | None = None,
+    runner: Path | None = None,
 ) -> None:
     """Publish four gated products and a hash receipt only after all databases pass."""
     wix = wix.resolve(strict=True)
-    sources = author(build, identity, desktop, adapter)
+    sources = author(build, identity, desktop, adapter, runner)
     paths = build_paths(build)
     directory = member(paths["packages"], "msi")
     directory.mkdir(parents=True, exist_ok=True)
@@ -105,7 +115,7 @@ def compile_products(
                 verify_admission_order(artifact)
             artifacts[artifact.name] = digest(artifact)
         # Re-admit the payload after compilation, detecting a concurrently changed stage.
-        author(build, identity, desktop, adapter)
+        author(build, identity, desktop, adapter, runner)
         if inputs != {name: digest(path) for name, path in sources.items()} or digest(authoring) != authoring_hash:
             raise ValueError("MSI inputs changed during compilation")
         for name in artifacts:
@@ -122,9 +132,11 @@ def compile_products(
         os.replace(pending, receipt)
 
 
-def verify_products(build: Path, identity: Path, desktop: str | None = None, adapter: Path | None = None) -> None:
+def verify_products(
+    build: Path, identity: Path, desktop: str | None = None, adapter: Path | None = None, runner: Path | None = None
+) -> None:
     """Reject stale or altered build artifacts against the current admitted payload."""
-    sources = author(build, identity, desktop, adapter)
+    sources = author(build, identity, desktop, adapter, runner)
     paths = build_paths(build)
     directory = member(paths["packages"], "msi")
     receipt = json.loads(member(directory, "compiled.json").read_text(encoding="utf-8"))
@@ -147,11 +159,12 @@ def maintenance_plan(
     prefix: Path,
     desktop: str | None = None,
     adapter: Path | None = None,
+    runner: Path | None = None,
 ) -> Path:
     """Bind an explicit installation intent to the verified pair of native artifacts."""
     if scope not in {"user", "machine"} or not prefix.is_absolute():
         raise ValueError("Native MSI maintenance requires an explicit scope and absolute prefix")
-    verify_products(build, identity, desktop, adapter)
+    verify_products(build, identity, desktop, adapter, runner)
     paths = build_paths(build)
     authoring = json.loads(member(paths["installation_metadata"], "wix/authoring.json").read_text(encoding="utf-8"))
     compilation = json.loads(member(paths["packages"], "msi/compiled.json").read_text(encoding="utf-8"))
@@ -196,7 +209,7 @@ def main() -> None:
             if args.scope is None or args.prefix is None:
                 raise ValueError("Set CADRUMO_MSI_SCOPE and CADRUMO_MSI_PREFIX for explicit native maintenance")
             plan = maintenance_plan(
-                args.build.resolve(), args.identity, args.scope, args.prefix, args.desktop, args.adapter
+                args.build.resolve(), args.identity, args.scope, args.prefix, args.desktop, args.adapter, args.runner
             )
             if args.command == "install":
                 if args.runner is None or not args.runner.is_file():
@@ -210,9 +223,9 @@ def main() -> None:
         elif args.command == "build":
             if args.wix is None or not args.wix.is_file():
                 raise ValueError("Set CADRUMO_WIX_EXECUTABLE to an installed WiX 5+ executable")
-            compile_products(args.build.resolve(), args.identity, args.wix, args.desktop, args.adapter)
+            compile_products(args.build.resolve(), args.identity, args.wix, args.desktop, args.adapter, args.runner)
         else:
-            verify_products(args.build.resolve(), args.identity, args.desktop, args.adapter)
+            verify_products(args.build.resolve(), args.identity, args.desktop, args.adapter, args.runner)
     except (OSError, ValueError, KeyError) as error:
         parser.exit(1, f"{error}\n")
 

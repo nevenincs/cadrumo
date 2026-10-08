@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:5fcfe095e65c6aeb49f0a178e800d754c043b52d545c6f4e47b57581a33f6752'
+body_hash: 'sha256:98c51948989458c4f61d552f0b282db1a3885fcdc7b3b2fd1a6f0502385e90c3'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -222,6 +222,16 @@ related:
 - `S09` `verify:` `11 Linux package/XDG native-tool tests` -> `pass`
 - `S09` `verify:` `Native PE loader flags and runner asInvoker manifest` -> `pass`
 - `S09` `by:` `Codex`
+- `S09` `A` `native/installer/src/publication.rs`
+- `S09` `M` `native/installer/src/lib.rs`
+- `S09` `M` `native/installer/src/owner.rs`
+- `S09` `M` `native/installer/src/runner.rs`
+- `S09` `M` `native/installer/src/windows.rs`
+- `S09` `verify:` `CMake rust_installer Release and native PE manifest checks` -> `pass`
+- `S09` `verify:` `installer.rust (13 native tests, 33.25 seconds)` -> `pass`
+- `S09` `verify:` `Pinned Rust 1.96 installer all-target Clippy` -> `pass`
+- `S09` `verify:` `Windows MSI Python suite (22 tests, real CA-enrolled MSI compiler/database checks, 16.87 seconds)` -> `pass`
+- `S09` `verify:` `Scoped MSI Python Ruff and ty` -> `pass`
 
 ## Notes
 
@@ -237,3 +247,4 @@ related:
 - `S05` Cross-platform validation repairs. Full Linux Clippy encountered concurrently introduced manager cutover source and awaits owner stabilization. S05 stays open; no full payload acceptance.
 - `S05` Shared nested distribution configure/build serialized under process lock after independent review. Full payload and native installation acceptance remain open; standalone distribution commands must not overlap source native-installer.
 - `S09` Partial S09 transaction/custody/owner foundation; immutable exact-role binding corrected before freeze. Owner callbacks not enrolled; literal MSI gate retained. Publication ACLs, full owner recovery/uninstall/all-session protection and native acceptance remain open. Includes verified Linux graph gates and root SDK/bridge graph repairs in shared CMake files.
+- `S09` Partial S09: protected namespace ACLs including `OWNER_RIGHTS` and Program Files ancestry, read-only lease access, actual immediate/deferred owner CA enrollment and postcommit ACL revalidation verified. Literal-false installation gate remains. Cached old MSI compatibility, protected owner-record protocol, owner-loss recovery, native removal and disposable two-release acceptance remain unfinished. Record protocol decision was refined under existing user authorization; not implemented in this checkpoint.

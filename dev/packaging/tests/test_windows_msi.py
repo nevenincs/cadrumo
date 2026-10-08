@@ -215,20 +215,20 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(tmp_path
     assert configured, "Set CADRUMO_TEST_MSI_ADAPTER to the CMake rust_installer output"
     adapter = tmp_path / "adapter.dll"
     shutil.copyfile(Path(configured), adapter)
+    runner = Path(configured).with_name("cadrumo-msi-maintenance.exe")
+    assert runner.is_file(), "Build the native maintenance runner alongside its DLL"
     build, identity = _prepared(tmp_path)
     paths = build / "build-paths.json"
     document = json.loads(paths.read_text(encoding="utf-8"))
     document["paths"]["packages"] = "packages"
     paths.write_text(json.dumps(document), encoding="utf-8")
-    compile_products(build, identity, Path(wix), "cadrumo", adapter)
-    verify_products(build, identity, "cadrumo", adapter)
+    compile_products(build, identity, Path(wix), "cadrumo", adapter, runner)
+    verify_products(build, identity, "cadrumo", adapter, runner)
     receipt = json.loads((build / "packages/msi/compiled.json").read_text(encoding="utf-8"))
     assert receipt["installable"] is False
     assert len(receipt["artifacts"]) == 4
-    runner = Path(configured).with_name("cadrumo-msi-maintenance.exe")
-    assert runner.is_file(), "Build the native maintenance runner alongside its DLL"
     prefix = tmp_path / "never installed"
-    plan = maintenance_plan(build, identity, "user", prefix, "cadrumo", adapter)
+    plan = maintenance_plan(build, identity, "user", prefix, "cadrumo", adapter, runner)
 
     def run_plan() -> str:
         result = run_command([str(runner), "install", "--plan", str(plan)], cwd=build, timeout_seconds=30)
@@ -255,7 +255,7 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(tmp_path
     assert run_plan() == "artifact_or_owner_refused"
     adapter.write_bytes(adapter.read_bytes() + b"changed")
     with pytest.raises(ValueError, match="stale payload identity"):
-        verify_products(build, identity, "cadrumo", adapter)
+        verify_products(build, identity, "cadrumo", adapter, runner)
 
 
 @pytest.mark.parametrize("operation", ["author", "guard"])

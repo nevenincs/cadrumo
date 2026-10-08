@@ -160,12 +160,19 @@ function(cadrumo_distribution_package target generator)
 endfunction()
 if(CADRUMO_TARGET STREQUAL "windows-x86-64")
   set(CADRUMO_MSI_ADAPTER "" CACHE FILEPATH "Installer-only DLL built by the native rust_installer target")
+  set(CADRUMO_MSI_RUNNER "" CACHE FILEPATH "CMake-built explicit native MSI maintenance runner")
   set(msi_adapter_arguments)
   if(CADRUMO_MSI_ADAPTER)
     if(NOT IS_ABSOLUTE "${CADRUMO_MSI_ADAPTER}" OR NOT EXISTS "${CADRUMO_MSI_ADAPTER}")
       message(FATAL_ERROR "CADRUMO_MSI_ADAPTER must identify a built native installer DLL")
     endif()
     set(msi_adapter_arguments --adapter "${CADRUMO_MSI_ADAPTER}")
+  endif()
+  if(CADRUMO_MSI_RUNNER)
+    if(NOT CADRUMO_MSI_ADAPTER OR NOT IS_ABSOLUTE "${CADRUMO_MSI_RUNNER}" OR NOT EXISTS "${CADRUMO_MSI_RUNNER}")
+      message(FATAL_ERROR "CADRUMO_MSI_RUNNER requires its built installer DLL and runner executable")
+    endif()
+    list(APPEND msi_adapter_arguments --runner "${CADRUMO_MSI_RUNNER}")
   endif()
   add_custom_target(msi-author
     COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi author
@@ -185,13 +192,12 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
       COMMAND ${msi_build_helper} verify ${msi_build_arguments}
       DEPENDS msi WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
     add_custom_target(native-package DEPENDS msi-verify)
-    set(CADRUMO_MSI_RUNNER "" CACHE FILEPATH "CMake-built explicit native MSI maintenance runner")
     set(CADRUMO_MSI_SCOPE "" CACHE STRING "Explicit maintenance scope: user or machine")
     set_property(CACHE CADRUMO_MSI_SCOPE PROPERTY STRINGS user machine)
     set(CADRUMO_MSI_PREFIX "" CACHE PATH "Explicit native MSI installation prefix")
     add_custom_target(install-msi
       COMMAND ${msi_build_helper} install ${msi_build_arguments}
-        --runner "${CADRUMO_MSI_RUNNER}" --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
+        --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
       DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
     # Readiness is an independent refusal, so missing compilers do not hide the
     # lifecycle blockers. It never installs products or changes login registration.

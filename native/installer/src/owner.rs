@@ -34,11 +34,35 @@ const ENDPOINT_PREFIX: &str = r"\\.\pipe\CADRUMO.MsiOwner.";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(3);
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Operation {
+    Install,
+    Remove,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Role {
+    Version,
+    Registration,
+}
+impl Role {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Version => "version",
+            Self::Registration => "registration",
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Claim {
     pub product_code: String,
     pub scope: Scope,
     pub prefix: PathBuf,
+    pub operation: Operation,
+    pub role: Role,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -555,6 +579,8 @@ mod tests {
             product_code: "12345678-1234-1234-1234-123456789ABC".into(),
             scope: Scope::User,
             prefix: std::env::temp_dir(),
+            operation: Operation::Install,
+            role: Role::Version,
         }
     }
 

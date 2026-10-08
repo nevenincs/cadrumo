@@ -190,6 +190,7 @@ def _source(
     native_marker: tuple[str, Path],
     manifest_sha256: str,
     adapter: Path | None = None,
+    runner: Path | None = None,
 ) -> bytes:
     product = msi_identity(value, scope, role)
     wix = Element("Wix", xmlns=WIX_NAMESPACE, RequiredVersion="5.0")
@@ -235,6 +236,8 @@ def _source(
     SubElement(package, "Launch", Condition="0", Message=MAINTENANCE_GATE)
     if adapter is not None:
         _admission(package, value, scope, adapter)
+        if runner is not None:
+            _owner(package, product, runner)
     if role == "registration":
         SubElement(
             package,
@@ -295,8 +298,41 @@ def _admission(package: Element, value: DistributionIdentity, scope: Installatio
     SubElement(sequence, "Custom", Action="CadrumoScopeAdmission", After="InstallInitialize", Condition=condition)
 
 
+def _owner(package: Element, product: MsiIdentity, runner: Path) -> None:
+    """The public endpoint locates a server; native image/token checks grant authority."""
+    metadata = {
+        "schema": 1,
+        "scope": product.scope,
+        "product_code": product.product_code.upper(),
+        "role": product.role,
+        "runner_sha256": digest(runner),
+    }
+    SubElement(package, "Property", Id="CadrumoOwner", Value=json.dumps(metadata, separators=(",", ":")))
+    SubElement(package, "Property", Id="CADRUMO_MSI_OWNER", Secure="yes", Hidden="yes")
+    for name, execution in (("CadrumoPrepareOwner", "immediate"), ("CadrumoAuthenticateOwner", "deferred")):
+        attributes = {
+            "Id": name,
+            "BinaryRef": "CadrumoInstaller",
+            "DllEntry": name,
+            "Execute": execution,
+            "Return": "check",
+        }
+        if execution == "deferred":
+            attributes.update({"Impersonate": "no" if product.scope == "machine" else "yes", "HideTarget": "yes"})
+        SubElement(package, "CustomAction", attributes)
+    sequence = package.find("InstallExecuteSequence")
+    if sequence is None:
+        raise ValueError("Native owner requires enrolled scope admission")
+    SubElement(sequence, "Custom", Action="CadrumoPrepareOwner", Before="CadrumoPrepareAdmission")
+    SubElement(sequence, "Custom", Action="CadrumoAuthenticateOwner", After="CadrumoScopeAdmission")
+
+
 def author(
-    build: Path, identity_file: Path, desktop: str | None = None, adapter: Path | None = None
+    build: Path,
+    identity_file: Path,
+    desktop: str | None = None,
+    adapter: Path | None = None,
+    runner: Path | None = None,
 ) -> dict[str, Path]:
     """Emit four ownership sources from the verified stage without producing installable MSIs."""
     stage, owned, manifest_file, manifest = _staged_manifest(build)
@@ -304,6 +340,10 @@ def author(
         adapter = adapter.resolve(strict=True)
         if not adapter.is_file() or adapter.suffix.lower() != ".dll":
             raise ValueError("MSI adapter must be an existing native installer DLL")
+    if runner is not None:
+        runner = runner.resolve(strict=True)
+        if adapter is None or not runner.is_file() or runner.suffix.lower() != ".exe":
+            raise ValueError("MSI owner requires a built runner executable and native installer DLL")
     value = DistributionIdentity(**json.loads(identity_file.read_text(encoding="utf-8")))
     if value.target != "windows-x86-64":
         raise ValueError("MSI authoring requires a Windows payload")
@@ -345,6 +385,7 @@ def author(
                 (definition["marker"], native_marker),
                 digest(manifest_file),
                 adapter,
+                runner,
             )
     verify_inventory(stage, member(metadata, "installation.json"))
     directory.mkdir(exist_ok=True)
@@ -362,6 +403,7 @@ def author(
         "manifest_sha256": digest(manifest_file),
         "sources": {name: digest(path) for name, path in outputs.items()},
         "adapter_sha256": digest(adapter) if adapter is not None else None,
+        "runner_sha256": digest(runner) if runner is not None else None,
         "native_marker_sha256": digest(native_marker),
         "maintenance": {
             "version": value.version,
@@ -394,11 +436,12 @@ def main() -> None:
     source.add_argument("--identity", type=Path, required=True)
     source.add_argument("--desktop")
     source.add_argument("--adapter", type=Path)
+    source.add_argument("--runner", type=Path)
     guard = commands.add_parser("reject-combined")
     guard.add_argument("--build", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "author":
-        author(args.build, args.identity, args.desktop, args.adapter)
+        author(args.build, args.identity, args.desktop, args.adapter, args.runner)
     else:
         reject_combined_manager_msi(args.build)
 

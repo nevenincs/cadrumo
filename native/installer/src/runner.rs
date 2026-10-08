@@ -106,10 +106,58 @@ fn native_error(error: crate::admission::Refusal) -> Error {
     Error::Integrity(error.message().into())
 }
 
+fn admit_existing_prefix(plan: &Plan, store: &Store, owner: &NativeOwner) -> Result<(), Error> {
+    if !plan.prefix.try_exists()?
+        || std::fs::read_dir(&plan.prefix)?
+            .next()
+            .transpose()?
+            .is_none()
+    {
+        return Ok(());
+    }
+    let marker = plan.contract.layout.installation.marker.under(&plan.prefix);
+    if marker.try_exists()? {
+        let source = crate::custody::file(&marker).map_err(native_error)?;
+        let mut bytes = Vec::new();
+        source.file.take(16385).read_to_end(&mut bytes)?;
+        if bytes.len() > 16384 {
+            return Err(Error::LimitExceeded);
+        }
+        let observed: serde_json::Value = serde_json::from_slice(&bytes)?;
+        let expected = serde_json::json!({
+            "schema": plan.contract.layout.installation.schema,
+            "application_id": plan.contract.installation_identity.application_id,
+            "channel": plan.contract.installation_identity.channel,
+            "platform": plan.contract.layout.platform,
+            "abi": plan.contract.layout.abi,
+            "publication": plan.contract.layout.installation.publication,
+        });
+        if observed != expected {
+            return Err(Error::Integrity(
+                "existing prefix is not the same native installation".into(),
+            ));
+        }
+    }
+    // Missing stable marker can be an interrupted first install. Recovery still
+    // requires a prior durable exact product reservation, never an arbitrary folder.
+    let snapshot = store.snapshot()?;
+    if !snapshot
+        .versions()
+        .any(|(release, product)| release == plan.version && product.owner == *owner)
+        && !marker.try_exists()?
+    {
+        return Err(Error::Integrity(
+            "existing prefix has no native maintenance owner".into(),
+        ));
+    }
+    Ok(())
+}
+
 fn artifact(
     artifact: &Artifact,
     plan: &Plan,
     role: &str,
+    runner: &Sha256Digest,
 ) -> Result<(Request, crate::custody::FileCustody), Error> {
     // Retain the source handle through native installation; another writer cannot
     // replace or modify the admitted MSI while Windows Installer consumes it.
@@ -131,6 +179,20 @@ fn artifact(
         return Err(Error::Integrity("native MSI artifact hash changed".into()));
     }
     let definition = windows::product_definition(&artifact.path).map_err(native_error)?;
+    let owner = definition
+        .owner
+        .as_ref()
+        .ok_or_else(|| Error::Integrity("MSI has no authenticated native owner".into()))?;
+    if owner.schema != 1
+        || owner.scope != plan.scope
+        || owner.product_code != definition.code
+        || owner.role.as_str() != role
+        || &owner.runner_sha256 != runner
+    {
+        return Err(Error::Integrity(
+            "MSI belongs to another native maintenance owner".into(),
+        ));
+    }
     if definition.code
         != crate::admission::canonical_guid(&artifact.product_code).map_err(native_error)?
         || definition.version != plan.version
@@ -169,9 +231,21 @@ pub fn install(path: &Path) -> MaintenanceResult {
         Err(_) => return report(Outcome::Refused, "installer_authority_unavailable"),
     };
     let prepared = (|| -> Result<_, Error> {
-        let (admission, version_file) = artifact(&plan.version_product, &plan, "version")?;
+        let mut own_image =
+            crate::custody::file(&std::env::current_exe()?).map_err(native_error)?;
+        let mut digest = Sha256::new();
+        let mut buffer = [0; 65536];
+        loop {
+            let read = own_image.file.read(&mut buffer)?;
+            if read == 0 {
+                break;
+            }
+            digest.update(&buffer[..read]);
+        }
+        let runner = Sha256Digest::new(format!("{:x}", digest.finalize()))?;
+        let (admission, version_file) = artifact(&plan.version_product, &plan, "version", &runner)?;
         let (registration, registration_file) =
-            artifact(&plan.registration_product, &plan, "registration")?;
+            artifact(&plan.registration_product, &plan, "registration", &runner)?;
         if admission.permitted_families != registration.permitted_families
             || admission.conflicting_families != registration.conflicting_families
             || plan.version_product.product_code == plan.registration_product.product_code
@@ -237,12 +311,23 @@ pub fn install(path: &Path) -> MaintenanceResult {
         admission
             .admit(&windows::inventory(plan.scope).map_err(native_error)?)
             .map_err(native_error)?;
+        admit_existing_prefix(&plan, &store, &owner)?;
+        let publication = plan
+            .contract
+            .layout
+            .installation
+            .publication
+            .as_ref()
+            .expect("validated publication")
+            .under(&plan.prefix);
+        let namespace = crate::publication::prepare(&plan.prefix, &publication, owner.context())
+            .map_err(native_error)?;
         store.initialize()?;
         let maintenance = store.exclusive_maintenance()?;
         let version = store.prepare(&plan.version, owner.clone(), plan.manifest_sha256.clone())?;
-        Ok((maintenance, version))
+        Ok((maintenance, version, namespace))
     })();
-    let (_maintenance, _version) = match prepared {
+    let (_maintenance, _version, _namespace) = match prepared {
         Ok(guards) => guards,
         Err(_) => return rollback(transaction, "native_preparation_refused"),
     };
@@ -250,15 +335,17 @@ pub fn install(path: &Path) -> MaintenanceResult {
         Ok(broker) => broker,
         Err(_) => return rollback(transaction, "native_owner_unavailable"),
     };
-    let install = |artifact: &Artifact| {
+    let install = |artifact: &Artifact, role| {
         let _active = broker.activate(crate::owner::Claim {
             product_code: artifact.product_code.to_ascii_uppercase(),
             scope: plan.scope,
             prefix: plan.prefix.clone(),
+            operation: crate::owner::Operation::Install,
+            role,
         })?;
         transaction.install(&artifact.path, &plan.prefix, broker.endpoint())
     };
-    if install(&plan.version_product).is_err() {
+    if install(&plan.version_product, crate::owner::Role::Version).is_err() {
         return rollback(transaction, "version_installation_failed");
     }
     let package = plan
@@ -276,13 +363,41 @@ pub fn install(path: &Path) -> MaintenanceResult {
     {
         return rollback(transaction, "version_inventory_failed");
     }
-    if install(&plan.registration_product).is_err() {
+    let stable_manager = match plan.contract.manager_member() {
+        Ok(member) => member.under(&plan.prefix),
+        Err(_) => return rollback(transaction, "registration_entrypoint_invalid"),
+    };
+    let stable_available = (|| -> Result<bool, Error> {
+        if !stable_manager.try_exists()? {
+            return Ok(true);
+        }
+        Ok(windows::file_users(std::slice::from_ref(&stable_manager))
+            .map_err(native_error)?
+            .is_empty())
+    })();
+    if !matches!(stable_available, Ok(true)) {
+        return rollback(transaction, "shared_registration_in_use_or_unknown");
+    }
+    if install(&plan.registration_product, crate::owner::Role::Registration).is_err() {
         return rollback(transaction, "registration_installation_failed");
     }
     if transaction.commit().is_err() {
         return report(Outcome::NativeUnsettled, "native_commit_failed");
     }
     let published = (|| -> Result<(), Error> {
+        // Native file creation must preserve the admitted inherited ACLs. A
+        // committed product with unsafe new permissions remains unpublished.
+        let publication = plan
+            .contract
+            .layout
+            .installation
+            .publication
+            .as_ref()
+            .expect("validated publication")
+            .under(&plan.prefix);
+        let _postinstall_namespace =
+            crate::publication::prepare(&plan.prefix, &publication, owner.context())
+                .map_err(native_error)?;
         if MsiInventory.locate(&owner)?.as_ref() != Some(&owner)
             || MsiInventory.locate(&registration_owner)?.as_ref() != Some(&registration_owner)
         {

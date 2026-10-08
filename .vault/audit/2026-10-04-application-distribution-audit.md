@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f95a0e7f2a9ec42c6bbde68c4cee77249752fd955d31654c87ab5aa12514c5c'
+body_hash: 'sha256:ad5bd64c89204546c89c01ea4d6764d2720053e00347a3fd1c484eacf531323e'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -122,6 +122,10 @@ The installer-only DLL and explicit maintenance runner compile in the isolated p
 Verification: isolated Release DLL/runner build passed; application/installer CTests passed in 79.53s before the final metadata-only role binding change, and both pinned all-target Clippy checks passed afterward. Twenty-two Python MSI tests passed in 58.57s, compiling twelve real products and checking embedded adapter sequencing, receipt tampering, swapped-role/changed-channel rejection and refusal before prefix creation for the still-gated pair. Log: var/storage/development/.logs/test-runs/2026-10-08/20261008T100601.710324Z-pytest-4564-7471af5b/run.log. Root review's role-confusion issue is corrected. Linux native-package graph/gates are independently verified with real synthetic DEB/RPM builds.
 
 S09 remains open: protected publication-directory ACL custody, authenticated callback enrollment and happy native transaction evidence, ordered prior-registration removal, safe native uninstall, rollback/owner-death recovery and all-session in-use protection are not completed by this checkpoint. Software and disposable interactive host/two-release acceptance stay gated; certificates are excluded from current source/build work.
+
+
+2026-10-08 native CA/publication checkpoint: actual Windows tests admit the standard Program Files ancestry under the available elevated installer token, reject unsafe user-writable machine ancestry and implicit user-owner WRITE_DAC, preserve ordinary-user read/shared-lease access, and hold namespace custody. The native build and 13 installer tests passed; 22 Python MSI checks compiled and inspected the four CA-enrolled products and verified early gated refusal. Root reviewed the ACL, action sequencing and stable-entry dispatch integration. The active manager runs from its version subtree; a transient stable-entry image holder causes maintenance refusal rather than forced shutdown. Postcommit native creation is re-audited before publication. No install acceptance is claimed. Old cached custom actions pinned to the original runner hash cannot support arbitrary future runner changes; the accepted owner-compatibility refinement selects a protected identity-bound owner record, still to be implemented. Native removal/recovery and two-release interactive acceptance remain open; literal-false MSI gate stays in force.
+
 
 ## Recommendations
 

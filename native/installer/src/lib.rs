@@ -5,6 +5,8 @@ pub mod custody;
 #[cfg(windows)]
 pub mod owner;
 #[cfg(windows)]
+pub mod publication;
+#[cfg(windows)]
 pub mod runner;
 #[cfg(windows)]
 pub mod windows;
