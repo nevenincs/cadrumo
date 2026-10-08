@@ -28,6 +28,7 @@ from cadrumo.core.storage_environment import storage_directory
 from cadrumo.core.storage_materialization import ensure_storage_tree
 from cadrumo.tests.env_scope import derived_storage_settings
 
+from .. import posix_endpoint
 from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
 from ..posix import posix_storage_identity
 from ..posix_channel import PosixRuntimeChannel
@@ -48,6 +49,90 @@ def namespace() -> Iterator[Path]:
     base.mkdir(parents=True, exist_ok=True, mode=0o700)
     with tempfile.TemporaryDirectory(prefix="s-", dir=base) as root:
         yield Path(root) / "ipc"
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux O_PATH and procfs descriptor aliases")
+def test_socket_permissions_use_pinned_filesystem_inode(
+    tmp_path: Path, namespace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    endpoint = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+    chmod = os.chmod
+    changed: list[str] = []
+
+    def pinned_chmod(path: str, mode: int) -> None:
+        assert path.startswith("/proc/self/fd/")
+        changed.append(path)
+        chmod(path, mode)
+
+    monkeypatch.setattr(posix_endpoint.os, "chmod", pinned_chmod)
+    try:
+        endpoint.listen()
+        assert len(changed) == 1
+        assert stat.S_IMODE(endpoint._path.lstat().st_mode) == 0o600
+        client = endpoint.connect()
+        server = endpoint.accept()
+        client.close()
+        server.close()
+    finally:
+        endpoint.close()
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux O_PATH and procfs descriptor aliases")
+@pytest.mark.parametrize("substitute_before_pin", [True, False])
+def test_socket_chmod_substitution_never_changes_replacement(
+    tmp_path: Path, namespace: Path, monkeypatch: pytest.MonkeyPatch, substitute_before_pin: bool
+) -> None:
+    endpoint = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+    target = namespace / "untouched"
+    target.write_bytes(b"unrelated")
+    target.chmod(0o640)
+    original_open = os.open
+    original_chmod = os.chmod
+
+    def replace() -> None:
+        endpoint._path.unlink()
+        endpoint._path.symlink_to(target)
+
+    def intercepted_open(path: str, flags: int, mode: int = 0o777, *, dir_fd: int) -> int:
+        if flags & os.O_PATH:
+            replace()
+        return original_open(path, flags, mode, dir_fd=dir_fd)
+
+    def intercepted_chmod(path: str, mode: int) -> None:
+        replace()
+        original_chmod(path, mode)
+
+    if substitute_before_pin:
+        monkeypatch.setattr(posix_endpoint.os, "open", intercepted_open)
+    else:
+        monkeypatch.setattr(posix_endpoint.os, "chmod", intercepted_chmod)
+    try:
+        with pytest.raises(RuntimeRefusalError) as caught:
+            endpoint.listen()
+        assert caught.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
+        assert stat.S_IMODE(target.stat().st_mode) == 0o640
+        assert target.read_bytes() == b"unrelated"
+        assert endpoint._path.is_symlink()
+    finally:
+        endpoint.close()
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux O_PATH and procfs descriptor aliases")
+def test_missing_procfs_fails_closed_and_releases_endpoint(
+    tmp_path: Path, namespace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    endpoint = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+
+    def unavailable(path: str, mode: int) -> None:
+        raise FileNotFoundError(path)
+
+    monkeypatch.setattr(posix_endpoint.os, "chmod", unavailable)
+    with pytest.raises(RuntimeRefusalError) as caught:
+        endpoint.listen()
+    assert caught.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
+    assert endpoint._listener is None
+    assert endpoint._lock_fd is None
+    assert not endpoint._path.exists()
 
 
 def test_root_aliases_converge_and_owner_lock_survives_client_disconnect(tmp_path: Path, namespace: Path) -> None:

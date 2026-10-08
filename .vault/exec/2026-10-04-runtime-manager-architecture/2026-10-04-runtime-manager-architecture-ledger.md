@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:4761ebce4fca77a0bfd6c01633d30073e7bc37379c2adbc5fe162f225917ffd3'
+body_hash: 'sha256:a05b7d510b7c4901edc931791ae4692336fbf6e8900b727f72a1d5a7e6c2d84e'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -563,6 +563,13 @@ related:
 - `S19` `verify:` `manager pinned Clippy all-targets (1.75s)` -> `pass`
 - `S19` `verify:` `isolated Darwin-target Clippy (0.32s)` -> `pass`
 - `S19` `verify:` `independent macOS peer-session source review` -> `pass`
+- `S18` `M` `src/cadrumo/adapters/local_runtime/posix_endpoint.py`
+- `S18` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
+- `S18` `M` `.vault/plan/2026-10-04-runtime-manager-architecture-plan.md`
+- `S18` `verify:` `native Linux pytest test_posix.py -m integration (33 tests, 2.62s)` -> `pass`
+- `S18` `verify:` `scoped Ruff lint and format` -> `pass`
+- `S18` `verify:` `ty check posix_endpoint.py tests/test_posix.py` -> `pass`
+- `S18` `verify:` `independent endpoint identity review` -> `pass`
 
 ## Notes
 
@@ -604,3 +611,4 @@ related:
 - `S18` Partial S18 transport foundation only; main activation, cross-version cutover, placement choice and native acceptance remain open.
 - `S19` Partial unsigned S19 source foundation; no native macOS linking, execution, session or service activation evidence.
 - `S19` S19 remains open; actual Apple SDK build newly available on user-supplied non-disposable Mac. Preserve both existing machines and all lifecycle gates.
+- `S18` S18 remains open: manager loop, native placement and lifecycle acceptance remain unfinished; existing Windows and macOS hosts are non-disposable.

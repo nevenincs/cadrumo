@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:ff129ebc00676ec9bc39a3b28e14c56e4df625eb5e06c739f425bab33d04bcfb'
+body_hash: 'sha256:ed4f7102317a9cbf0bca26ec3ed6f42d873f65cf02f930e8f5b47021f0d65ce7'
 ---
 
 # `runtime-manager-architecture` plan
@@ -149,6 +149,8 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 2026-10-08 unsigned S19 source assignment: the linux_manager worker, after releasing its completed Linux IPC/SDK lane, owns a bounded macOS process-identity foundation in new native/manager/src/macos.rs, macos/records.rs and macos/process.rs, plus the minimal lib.rs export. Reuse the existing runtime's guarded native audit-token/libproc identity contract and retained kqueue exit observation; no numeric-PID signaling fallback, signing substitute or manager-main activation. Pure record/identity tests and source formatting may run on available hosts; native macOS compilation and behavior remain unverified without the Apple SDK/runner. This disjoint source slice may run alongside S09 installer recovery. Root owns shared CMake/build lanes, integrated review, vault and commits.
 
 2026-10-08 S19 continuation: linux_manager may add macos/login.rs and its macos.rs export, reusing the runtime's existing kernel LOCAL_PEERTOKEN/LOCAL_PEERPID and Security.framework SessionGetInfo policy for peer/session observation. Preserve held-process incarnation checks, unavailable/absent distinctions and unknown lock/console state. No manager self-session API, shared-session/main activation or signing-dependent registration is included in this slice. Root retains shared builds, vault and commits; coordinate native Cargo checks with the installer owner.
+
+2026-10-08 native build corrections: msi_maintenance, after completing its committed installer recovery checkpoint, may own the reproduced Linux socket-permission compatibility defect in src/cadrumo/adapters/local_runtime/posix_endpoint.py and focused owning tests. The glibc-2.28 builder's real CPython raises NotImplementedError for chmod(follow_symlinks=False); preserve no-follow identity/custody and do not introduce a pathname-following fallback or process-wide umask mutation. Root owns docs scratch propagation and frozen-source/full-build orchestration. linux_manager may correct the shared Python macOS login observer and Rust macos/login.rs known-flag validation after primary Apple evidence: SessionGetInfo returns native audit flags including SDK-documented 0x2000 and 0x4000. Recognize those documented bits without granting active/unlocked/unattended eligibility, keeping root/remote/non-graphical refusal. Coordinate tests and preserve all other native source edits; root owns vault and commits.
 
 ## Verification
 

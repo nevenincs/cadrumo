@@ -116,11 +116,42 @@ def _bind_endpoint_listener(endpoint: PosixRuntimeEndpoint, backlog: int) -> Non
     listener = _unix_socket()
     endpoint._listener = listener
     listener.bind(str(endpoint._path))
-    metadata = endpoint._path.lstat()
+    metadata = _owned_socket_metadata(endpoint)
     endpoint._socket_identity = (metadata.st_dev, metadata.st_ino)
-    os.chmod(endpoint._path, 0o600, follow_symlinks=False)
+    _restrict_socket_permissions(endpoint, metadata)
     listener.listen(backlog)
     endpoint._verify_namespace()
+
+
+def _restrict_socket_permissions(endpoint: PosixRuntimeEndpoint, original: os.stat_result) -> None:
+    """Change the bound filesystem inode, never the listener's sockfs inode."""
+    try:
+        if sys.platform == "linux":
+            # Linux/glibc may lack chmod(..., follow_symlinks=False). O_PATH
+            # pins the directory entry without opening or following a socket or
+            # symlink. Only procfs's alias to this held descriptor is followed.
+            descriptor = os.open(
+                endpoint._name, os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=endpoint._directory_fd
+            )
+            try:
+                held = os.fstat(descriptor)
+                if (
+                    not stat.S_ISSOCK(held.st_mode)
+                    or held.st_uid != posix_owner_uid()
+                    or (held.st_dev, held.st_ino) != (original.st_dev, original.st_ino)
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
+                _verify_socket_incarnation(endpoint, original)
+                os.chmod(f"/proc/self/fd/{descriptor}", 0o600)
+                if stat.S_IMODE(os.fstat(descriptor).st_mode) != 0o600:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
+            finally:
+                os.close(descriptor)
+        else:
+            os.chmod(endpoint._path, 0o600, follow_symlinks=False)
+        _verify_socket_incarnation(endpoint, original)
+    except (OSError, NotImplementedError):
+        raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
 
 
 def _release_failed_listen(endpoint: PosixRuntimeEndpoint, descriptor: int) -> None:

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:82566fef630d5054a8bfa25c8bebd03642466f7768013afbf1a507a21cb62dfa'
+body_hash: 'sha256:dd82dcab274ceaa117fdc12058a7c57394d4837bff45c00225896caf9a9f69fe'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -225,6 +225,13 @@ S19 adds a peer-session observer using native LOCAL_PEERTOKEN, LOCAL_PEERPID and
 Configured Windows manager.rust passed (18.64s), pinned Rust 1.96 all-target manager Clippy passed (1.75s), and isolated Darwin-target all-target Clippy passed (0.32s). Independent source review PASS against the existing Python owner and Apple sys/un.h/AuthSession.h definitions, no material findings. Target typechecking remains distinct from native linking/execution.
 
 The user subsequently supplied an existing ARM64 Mac at gergely.wootsch@gw-laptop and emphasized that both it and the Windows host are non-disposable. Read-only SSH confirms macOS 26.5.1 and an installed CommandLineTools Apple SDK. Native unsigned build verification will use a new isolated build directory; product install/uninstall, login registration, resets and reboots are not authorized by that build work. The temporary root-owned Linux test VM has been powered down and its disk retained. Existing release/native acceptance gates remain.
+
+
+### 2026-10-08 native Linux socket permissions and preserved runners
+
+The real glibc 2.28/Python 3.13.11 documentation runtime exposed unsupported chmod(follow_symlinks=False). Linux now pins the bound filesystem socket with O_PATH|O_NOFOLLOW under the held namespace, checks owner/type/incarnation, applies 0600 through its held procfs descriptor alias and rechecks identity and mode. Missing procfs and replacement before/after pinning refuse; the listener's unrelated sockfs inode is never used. Independent source review passed. All 33 POSIX integration tests passed on the native Linux container in 2.62s with a short task-owned socket directory; scoped Ruff/format and ty passed. Earlier long socket paths correctly refused admission. The subsequent real docs profile-setup page advances past permission setup but refuses runtime_containment_unavailable during synthetic login; that separate builder/fixture limitation is under investigation. This is transport evidence, not installed manager/login acceptance.
+
+The operator explicitly states that this Windows CI runner and gergely.wootsch@gw-laptop are non-disposable. Both are restricted to isolated builds and non-destructive probes; no product installation, removal, login registration or session-ending acceptance is authorized here. The exploratory Linux VM was shut down cleanly and its disk retained. macOS now has actual native SDK compilation evidence; signing certificates remain excluded by request. Installation/upgrade gates remain closed.
 
 ## Recommendations
 
