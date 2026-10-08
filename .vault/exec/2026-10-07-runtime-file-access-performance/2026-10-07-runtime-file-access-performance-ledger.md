@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#runtime-file-access-performance'
 date: '2026-10-07'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:4a7be30d6e799413c118def06968359e136fd2f82e8b67beeca7e2d662e62627'
+body_hash: 'sha256:baed440b9b1a5edb99f448ae1a74f667f7758f4aa96ce3df69d05893ad3c9309'
 related:
   - "[[2026-10-07-runtime-file-access-performance-plan]]"
 ---
@@ -148,6 +148,29 @@ related:
 - `S03` `verify:` `just check-style` -> `pass`
 - `S03` `verify:` `just check-format` -> `fail`
 - `S03` `verify:` `just check-types` -> `fail`
+- `S08` `A` `dev/packaging/native/build_timing.py`
+- `S08` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S08` `M` `justfile`
+- `S08` `M` `native/cmake/Packaging.cmake`
+- `S08` `M` `native/cmake/PackageInputs.cmake`
+- `S08` `A` `native/cmake/ReleaseVerification.cmake`
+- `S08` `M` `dev/packaging/native/action_cache.py`
+- `S08` `M` `dev/packaging/native/cached_command.py`
+- `S08` `M` `dev/packaging/native/cmake_build.py`
+- `S08` `M` `dev/packaging/native/product.py`
+- `S08` `M` `dev/packaging/native/assemble.py`
+- `S08` `M` `dev/packaging/native/tests/test_cached_command.py`
+- `S08` `M` `dev/packaging/native/tests/test_cmake_package_inputs.py`
+- `S08` `M` `dev/packaging/native/tests/test_incremental_generation.py`
+- `S08` `A` `dev/packaging/native/tests/test_build_timing.py`
+- `S08` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.json`
+- `S08` `verify:` `38-case regression cohort 20261008T043423.799522Z` -> `pass`
+- `S08` `verify:` `38-case compatibility cohort 20261008T044128.291844Z` -> `pass`
+- `S08` `verify:` `4-case final generation-stability cohort 20261008T044333.822922Z` -> `pass`
+- `S08` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S08` `verify:` `owning import_load_probe --compile-targets` -> `pass`
+- `S08` `verify:` `just --show test-native-release` -> `pass`
 
 ## Notes
 
@@ -197,3 +220,4 @@ related:
 - `S03` Native readiness medians wall 20.880s to 14.960s / CPU 14.969s to 11.313s, but 46 changed sources and wall range 9.757–32.471s prevent isolated causal claims; logical process read counts and bytes increased.
 - `S03` 615-log census: 270 original cases, 258 later PASSED and 12 last recorded FAILED. This workstream repaired 41 original cases through seven roots; other passes belong to separately authorized broad repairs. Full current suite verdict unavailable.
 - `S03` S03/S05 stay open: aggregate import invalidated by concurrent source changes, final whole format one peer fixture and types two peer `runtime_probe_artifacts` diagnostics; owned scoped checks pass.
+- `S08` Full product/native builds remain prohibited. Real small isolated CMake, CPack and Cargo fixtures passed; no new release timing claim.

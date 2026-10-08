@@ -10,9 +10,9 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
   - '[[2026-10-04-application-distribution-adr]]'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:0c1950427efce05ebbe165e1a209d413aeb3f04eaf4760bbec2c2b221a907548'
+body_hash: 'sha256:cd01accaadd3afd158dbfd316bff1165fa1e7e42fe48760e4b8ed671ccbd92f8'
 ---
 
 # `runtime-file-access-performance` plan
@@ -29,6 +29,8 @@ The user additionally authorized rebuilding the binaries and benchmarking the bu
 
 The user additionally requested a brief and assessment of the reported hundred-plus test failures. S05 inventories the actual two broad pytest reports, groups cases by owning root cause and checks fresh representative results before claiming a current defect or resolution. Confirmed routine command-inventory and strict registry snapshot decoding repairs fall within this authorization; wider filing-law, localization and source-corpus issues require their owning evidence and tracked repair work rather than altered assertions.
 
+On 2026-10-08 the user explicitly authorized fixing all rebuild-time findings: compute each unchanged package generation once, prevent repeated materialization, narrow assembly inputs, and retain actionable timing evidence. S08/S09 preserve the accepted interpreter foundation, distribution admission and owned build-output boundaries. These are equivalent call-stack and graph repairs, not changed artifact formats or weaker acceptance. The prior instruction to avoid new full builds remains in force: verify with focused real fixtures and existing artifact metadata, and do not launch another product/native release build.
+
 ## Steps
 
 - [x] `S01` - Measure runtime file access and attribute repeated opens to their callers; `dev/ci/runtime_file_access.py, dev/ci/tests/test_runtime_file_access.py, CLI-generated dev/quality/metadata/import_load_targets.dev.json and import_load_targets.json enrollment, plus ignored build/runtime-file-access measurements`.
@@ -38,6 +40,8 @@ The user additionally requested a brief and assessment of the reported hundred-p
 - [x] `S06` - Eliminate measured packaged source recompilation by publishing portable checked-hash bytecode after call-stack corrections; `dev/packaging/native/stdlib.py and assemble.py with focused bytecode tests and native/tests/package_smoke.py source-adjacent inventory acceptance, pinned optimization-zero compiler and relocated SDK source-hash plus executable-code admission, serialization reproducibility limits, generated metadata through its owning workflow, immutable packaged source/bytecode inventory and fresh native CLI/readiness comparison after rebuild`.
 - [x] `S07` - Remove duplicate packaged import directories at bootstrap and verify plugin discovery and hostile-path refusals; `native/interpreter/bootstrap.py path identity comparison, owning bootstrap contract tests and windows_verify.py packaged path uniqueness assertion, pinned-SDK metadata discovery counts, packaged import profile and final native admission`.
 - [ ] `S03` - Compare source and executable file access and review justified cache opportunities; `Fresh-process measurements, configured checks and the runtime-file-access-performance audit and ledger`.
+- [x] `S08` - Produce one stable bundle and archive per release graph with narrowly owned inputs and retained action timings; `justfile, native/cmake/Packaging.cmake, PackageInputs.cmake and ReleaseVerification.cmake, dev/packaging/native/cached_command.py, cmake_build.py, action_cache.py, build_timing.py, product.py and assemble.py, owning cached-command/package-input/incremental-generation/timing tests and CLI-generated import-load enrollment, ignored future benchmark driver corrected without execution, focused one-materialization and changed-during-build refusal proof`.
+- [ ] `S09` - Verify the one extracted artifact in place without a second full package materialization; `dev/packaging/native/artifact_verify.py and verify.py and platform verification adapters, owning relocation path admission and artifact acceptance tests, all loader refusals and immutable checks retained, integrated review and performance audit`.
 
 ## Parallelization
 

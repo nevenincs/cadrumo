@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 from collections.abc import Mapping
+from contextlib import nullcontext
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -18,6 +19,7 @@ from dev._paths import REPO_ROOT
 
 from ..runtime_wheel_selection import active_requirements
 from ..runtime_wheelhouse_contract import target_platform
+from .build_timing import BuildTimings
 from .docs_stage import verified_stage
 from .hashing import digest
 from .layout import ApplicationImage, backend, entrypoint_files, load_layout, staged_application_images
@@ -137,6 +139,7 @@ def assemble(
     development: bool = False,
     target: str,
     provenance: Mapping[str, object] | None = None,
+    timings: BuildTimings | None = None,
 ) -> None:
     """Relocate native modules while retaining their qualified import names."""
     root = destination.resolve()
@@ -195,16 +198,17 @@ def assemble(
     if bootstrap.count("LAYOUT = {}") != 1:
         raise ValueError("Missing bootstrap layout projection marker")
     bootstrap = bootstrap.replace("LAYOUT = {}", f"LAYOUT = {contract!r}")
-    bundle_stdlib(
-        python / contract["sdk"]["stdlib"],
-        lib,
-        contract["stdlib_exclude"],
-        {
-            "_cadrumo_bootstrap": bootstrap.encode(),
-            "_cadrumo_native": (REPO_ROOT / "native" / contract["bootstrap"]).read_bytes(),
-        },
-        build_identity["python"],
-    )
+    with timings.phase("stdlib-bytecode-zip") if timings is not None else nullcontext():
+        bundle_stdlib(
+            python / contract["sdk"]["stdlib"],
+            lib,
+            contract["stdlib_exclude"],
+            {
+                "_cadrumo_bootstrap": bootstrap.encode(),
+                "_cadrumo_native": (REPO_ROOT / "native" / contract["bootstrap"]).read_bytes(),
+            },
+            build_identity["python"],
+        )
 
     def omit_development(directory: str, names: list[str]) -> set[str]:
         excluded = {"__pycache__", "tests"}
@@ -212,7 +216,8 @@ def assemble(
             excluded.add("bin")
         return set(names) & excluded
 
-    shutil.copytree(dependencies, packages, ignore=omit_development)
+    with timings.phase("dependency-copy") if timings is not None else nullcontext():
+        shutil.copytree(dependencies, packages, ignore=omit_development)
     pruned = []
     for exclusion in contract.get("package_exclusions", []):
         matches = list(packages.glob(exclusion["pattern"]))
@@ -240,9 +245,10 @@ def assemble(
         development_executable.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(build / development_executable.name, development_executable)
     shutil.copy2(build / files["bridge"], native)
-    native_manifest = backend(contract).assemble_native(
-        python, packages, native, root, native_assembly_layout(contract, provenance or {})
-    )
+    with timings.phase("native-relocation") if timings is not None else nullcontext():
+        native_manifest = backend(contract).assemble_native(
+            python, packages, native, root, native_assembly_layout(contract, provenance or {})
+        )
     modules = native_manifest["modules"]
     paths = native_manifest["python_paths"]
     relocation = native_manifest.pop("relocation")
@@ -272,7 +278,8 @@ def assemble(
     )
     stage_sdk_licenses(root, python, contract)
     shutil.copy2(metadata, root / files["build_metadata"])
-    compile_packages_bytecode(packages, prefix=layout["packages"], version=build_identity["python"])
+    with timings.phase("dependency-bytecode") if timings is not None else nullcontext():
+        compile_packages_bytecode(packages, prefix=layout["packages"], version=build_identity["python"])
     startup_files = [
         layout["executable"],
         *entrypoints,
@@ -288,6 +295,12 @@ def assemble(
         startup_files.append(files["development_executable"])
     if any(name.startswith(f"{docs_prefix}/") for name in startup_files):
         raise ValueError("Startup files must not belong to a delegated inventory")
+    with timings.phase("package-inventory") if timings is not None else nullcontext():
+        inventoried_files = {
+            relative: digest(root / relative)
+            for relative in (p.relative_to(root).as_posix() for p in sorted(root.rglob("*")) if p.is_file())
+            if relative == docs_manifest or not relative.startswith(f"{docs_prefix}/")
+        }
     manifest = {
         "build": build_identity,
         "layout": contract,
@@ -302,11 +315,7 @@ def assemble(
         "pruned": pruned,
         # The documentation tree is inventoried by its own hashed manifest, so interpreter
         # startup never visits it; full package checks expand that delegated inventory.
-        "files": {
-            relative: digest(root / relative)
-            for relative in (p.relative_to(root).as_posix() for p in sorted(root.rglob("*")) if p.is_file())
-            if relative == docs_manifest or not relative.startswith(f"{docs_prefix}/")
-        },
+        "files": inventoried_files,
         DELEGATED_INVENTORIES: {docs_prefix: docs_manifest} if user_docs is not None else {},
         USER_DOCS: {"directory": docs_prefix, "bundled": user_docs is not None},
     }

@@ -3869,6 +3869,7 @@
         "dev.packaging.native.assemble",
         "dev.packaging.native.authority_build",
         "dev.packaging.native.build_paths",
+        "dev.packaging.native.build_timing",
         "dev.packaging.native.build_toolchain",
         "dev.packaging.native.cached_command",
         "dev.packaging.native.cleanup",

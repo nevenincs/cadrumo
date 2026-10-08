@@ -106,7 +106,8 @@ if(image_count GREATER 0)
 endif()
 include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
 cadrumo_package_bootstrap(package_bootstrap "${package_layout}" "${PROJECT_SOURCE_DIR}")
-set(assembly_inputs "${CADRUMO_PATH_RUNTIME}" "${CADRUMO_PATH_PYTHON_SDK}" "${CADRUMO_PATH_PRODUCT}"
+cadrumo_assembly_product_inputs(assembly_product_inputs "${CADRUMO_PATH_PRODUCT}")
+set(assembly_inputs "${CADRUMO_PATH_RUNTIME}/runtime-inputs.json" "${CADRUMO_PATH_PYTHON_SDK}" ${assembly_product_inputs}
   "${CADRUMO_PATH_GENERATED}/build.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
   "${package_bootstrap}" ${contract_inputs})
 foreach(target cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${development_target})
@@ -121,11 +122,10 @@ if(CADRUMO_PACKAGE_USER_DOCS)
   list(APPEND assembly_inputs "${CADRUMO_PATH_USER_DOCS_STAGE}")
 endif()
 # These helpers own assembly; unrelated native build/test helpers are not inputs.
-foreach(helper assemble stdlib package_inventory layout hashing build_paths docs_stage cmake_build cached_command)
+foreach(helper assemble stdlib package_inventory layout hashing build_paths docs_stage cmake_build cached_command build_timing)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/${helper}.py")
 endforeach()
-file(GLOB assembly_backend_inputs CONFIGURE_DEPENDS
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/${CADRUMO_BACKEND}*.py")
+cadrumo_assembly_backend_inputs(assembly_backend_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
 list(APPEND assembly_inputs ${assembly_backend_inputs})
 if(WIN32)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/pe.py")
@@ -214,3 +214,6 @@ add_custom_target(verify-package
     --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
     --application-probe-command "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}"
   DEPENDS zip WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" USES_TERMINAL VERBATIM)
+# One dependency graph builds the bundle/ZIP once and verifies that exact artifact.
+# Separate recipe invocations repeat graph traversal and can observe different inputs.
+include("${CMAKE_CURRENT_LIST_DIR}/ReleaseVerification.cmake")

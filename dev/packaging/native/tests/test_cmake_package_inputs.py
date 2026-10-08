@@ -12,9 +12,72 @@ from dev._paths import REPO_ROOT
 
 from ...command_execution import run_command
 from ..action_cache import fingerprint
+from ..cached_command import inventory
 from ..layout import load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize("backend", ["windows", "linux", "macos"])
+def test_assembly_backend_currency_ignores_verification_siblings(tmp_path: Path, backend: str) -> None:
+    platform = tmp_path / "dev/packaging/native/platforms"
+    platform.mkdir(parents=True)
+    producer = platform / f"{backend}.py"
+    verifier = platform / f"{backend}_verify.py"
+    producer.write_text("assembly producer one")
+    verifier.write_text("verification one")
+    script = tmp_path / "inputs.cmake"
+    listing = tmp_path / "inputs.txt"
+    script.write_text(
+        f'include("{(REPO_ROOT / "native/cmake/PackageInputs.cmake").as_posix()}")\n'
+        f'cadrumo_assembly_backend_inputs(inputs "{tmp_path.as_posix()}" "{backend}")\n'
+        'list(JOIN inputs "\\n" contents)\n'
+        f'file(WRITE "{listing.as_posix()}" "${{contents}}\\n")\n'
+    )
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    result = run_command([cmake, "-P", str(script)], cwd=tmp_path)
+    assert result.returncode == 0, result.stderr
+    inputs = listing.read_text().splitlines()
+    baseline = inventory(inputs)
+    verifier.write_text("verification two")
+    assert inventory(inputs) == baseline
+    producer.write_text("assembly producer two")
+    assert inventory(inputs) != baseline
+
+
+def test_assembly_consumes_payload_and_provenance_without_build_scratch(tmp_path: Path) -> None:
+    product = tmp_path / "product"
+    payload = product / "dependencies/module.py"
+    payload.parent.mkdir(parents=True)
+    payload.write_text("answer=1\n")
+    provenance = product / "build/product-wheels.json"
+    provenance.parent.mkdir(parents=True)
+    provenance.write_text('{"wheel":"identity"}')
+    scratch = product / "build/source/unrelated.txt"
+    scratch.parent.mkdir()
+    scratch.write_text("scratch one")
+    script = tmp_path / "inputs.cmake"
+    listing = tmp_path / "inputs.txt"
+    script.write_text(
+        f'include("{(REPO_ROOT / "native/cmake/PackageInputs.cmake").as_posix()}")\n'
+        f'cadrumo_assembly_product_inputs(inputs "{product.as_posix()}")\n'
+        'list(JOIN inputs "\\n" contents)\n'
+        f'file(WRITE "{listing.as_posix()}" "${{contents}}\\n")\n'
+    )
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    result = run_command([cmake, "-P", str(script)], cwd=tmp_path)
+    assert result.returncode == 0, result.stderr
+    inputs = listing.read_text().splitlines()
+    original = inventory(inputs)
+    scratch.write_text("scratch changed")
+    assert inventory(inputs) == original
+    payload.write_text("answer=2\n")
+    assert inventory(inputs) != original
+    payload.write_text("answer=1\n")
+    provenance.write_text('{"wheel":"modified"}')
+    assert inventory(inputs) != original
 
 
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64", "linux-aarch64", "macos-arm64"])

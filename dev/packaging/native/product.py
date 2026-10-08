@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 from collections.abc import Mapping
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,7 @@ from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
 from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json
 from ..wheel_metadata import read_wheel_metadata
+from .build_timing import BuildTimings
 from .build_toolchain import selected_uv
 from .hashing import digest
 from .target import uv_environment, uv_platform
@@ -34,6 +36,7 @@ def build_product(
     *,
     build_toolchain: Mapping[str, Any] | None = None,
     uv_executable: Path | None = None,
+    timings: BuildTimings | None = None,
 ) -> None:
     """Compose existing snapshot, build hooks and wheel metadata owners."""
     client = build_client_json(REPO_ROOT)
@@ -60,8 +63,10 @@ def build_product(
             for part in Path(name).parts
         )
     )
-    snapshot(REPO_ROOT, files, source)
-    stage_published_authority(REPO_ROOT, source)
+    with timings.phase("source-snapshot") if timings is not None else nullcontext():
+        snapshot(REPO_ROOT, files, source)
+    with timings.phase("published-authority-staging") if timings is not None else nullcontext():
+        stage_published_authority(REPO_ROOT, source)
     environment = dict(os.environ)
     environment[GOOGLE_OAUTH_ENV] = client.get_secret_value()
     environment[AUTHORITY_ROOT_ENV] = str(source / ".authority")
@@ -72,13 +77,24 @@ def build_product(
         source / project["tool"]["uv"]["sources"][name]["path"] for name in PRODUCT_IDENTITY.companion_distributions
     )
     for directory in projects:
-        result = run_command(
-            [uv, "build", "--wheel", "--python", str(python), "--project", str(directory), "--out-dir", str(wheels)],
-            cwd=REPO_ROOT,
-            environment=environment,
-        )
-        if result.returncode:
-            raise RuntimeError(result.stderr)
+        with timings.phase(f"wheel-build-{directory.name}") if timings is not None else nullcontext():
+            result = run_command(
+                [
+                    uv,
+                    "build",
+                    "--wheel",
+                    "--python",
+                    str(python),
+                    "--project",
+                    str(directory),
+                    "--out-dir",
+                    str(wheels),
+                ],
+                cwd=REPO_ROOT,
+                environment=environment,
+            )
+            if result.returncode:
+                raise RuntimeError(result.stderr)
     artifacts = sorted(wheels.glob("*.whl"))
     metadata = [read_wheel_metadata(wheel) for wheel in artifacts]
     expected = set(PRODUCT_IDENTITY.cohort_distributions)

@@ -61,6 +61,73 @@ def test_failed_action_does_not_publish_receipt(tmp_path: Path) -> None:
     assert not marker.exists()
 
 
+def test_changed_producer_inputs_refuse_receipt_and_record_failed_phase(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.write_bytes(b"original")
+    output = tmp_path / "output"
+    marker = tmp_path / "receipt.json"
+    spec = tmp_path / "spec.json"
+    spec.write_text(
+        json.dumps({"name": "copy", "inputs": [str(source)], "outputs": [str(output)], "marker": str(marker)})
+    )
+    command = [
+        sys.executable,
+        "-c",
+        "import pathlib,sys; a,b=map(pathlib.Path,sys.argv[1:]); "
+        "b.write_bytes(a.read_bytes()); a.write_bytes(b'changed!')",
+        str(source),
+        str(output),
+    ]
+    with pytest.raises(RuntimeError, match="Inputs changed during copy"):
+        run_cached(tmp_path, spec, command)
+    assert not marker.exists()
+    timing = json.loads(next((tmp_path / "timings").glob("copy-*.json")).read_text())
+    assert any(phase["phase"] == "input-stability" and phase["outcome"] == "fail" for phase in timing["phases"])
+    assert timing["phases"][-1]["phase"] == "total"
+    assert timing["phases"][-1]["outcome"] == "fail"
+
+
+def test_release_graph_materializes_bundle_and_archive_once(tmp_path: Path) -> None:
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    source = tmp_path / "source"
+    source.mkdir()
+    helper = source / "action.py"
+    helper.write_text(
+        "import pathlib,sys\n"
+        "root=pathlib.Path(sys.argv[1]); name=sys.argv[2]\n"
+        "counter=root/(name+'.calls')\n"
+        "counter.write_text(counter.read_text()+'1' if counter.exists() else '1')\n"
+        "if name=='bundle': (root/'payload').write_text('one generation')\n"
+        "elif name=='zip': (root/'archive').write_bytes((root/'payload').read_bytes())\n"
+        "else: assert (root/'archive').read_bytes()==(root/'payload').read_bytes()\n",
+        encoding="utf-8",
+    )
+    (source / "CMakeLists.txt").write_text(
+        "cmake_minimum_required(VERSION 4.4)\nproject(ReleaseGraph LANGUAGES NONE)\ninclude(CTest)\n"
+        f'set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
+        f'add_custom_target(bundle COMMAND "${{CADRUMO_DEV_PYTHON}}" "{helper.as_posix()}" '
+        '"${CMAKE_BINARY_DIR}" bundle)\n'
+        f'add_custom_target(zip COMMAND "${{CADRUMO_DEV_PYTHON}}" "{helper.as_posix()}" '
+        '"${CMAKE_BINARY_DIR}" zip DEPENDS bundle)\n'
+        'add_test(NAME bundle-immutable COMMAND "${CMAKE_COMMAND}" -E compare_files '
+        '"${CMAKE_BINARY_DIR}/payload" "${CMAKE_BINARY_DIR}/archive")\n'
+        f'set(CADRUMO_HELPER "${{CADRUMO_DEV_PYTHON}}" "{helper.as_posix()}" "${{CMAKE_BINARY_DIR}}" acceptance)\n'
+        "set(native_verification_targets bundle)\nset(CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE unused)\n"
+        f'include("{(REPO_ROOT / "native/cmake/ReleaseVerification.cmake").as_posix()}")\n',
+        encoding="utf-8",
+    )
+    build = tmp_path / "build"
+    for argv in (
+        [cmake, "-S", str(source), "-B", str(build), "-G", "Ninja", "-DCMAKE_BUILD_TYPE=Release"],
+        [cmake, "--build", str(build), "--target", "verify-release"],
+    ):
+        result = run_command(argv, cwd=REPO_ROOT)
+        assert result.returncode == 0, result.stdout + result.stderr
+    for name in ("bundle", "zip", "acceptance"):
+        assert (build / f"{name}.calls").read_text() == "1"
+
+
 def test_cmake_targets_reuse_siblings_and_cpack_uses_install(tmp_path: Path) -> None:
     cmake = shutil.which("cmake")
     assert cmake is not None

@@ -675,6 +675,11 @@ build-native-package CONFIGURATION="Release": (_native-configure CONFIGURATION)
 test-native-package CONFIGURATION="Release": (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify-package
 
+[doc('Build one bundle and ZIP, then run native and extracted-artifact verification in the same graph.')]
+[group('test')]
+test-native-release CONFIGURATION="Release": (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify-release
+
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Two questions about the same artifacts. actionlint asks whether the YAML is

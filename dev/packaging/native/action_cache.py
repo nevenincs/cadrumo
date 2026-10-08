@@ -7,31 +7,33 @@ import json
 import os
 import time
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from typing import Any
 
+from .build_timing import BuildTimings
 from .build_toolchain import sysroot_inventory
 
 
 @contextmanager
-def action_lock(build: Path, action: str) -> Iterator[None]:
+def action_lock(build: Path, action: str, *, timings: BuildTimings | None = None) -> Iterator[None]:
     """Serialize shared writers; OS locks release even if the build is interrupted."""
     with (build / f".{action}.lock").open("a+b") as stream:
         stream.seek(0)
-        if os.name == "nt":
-            import msvcrt
+        with timings.phase("lock-wait") if timings is not None else nullcontext():
+            if os.name == "nt":
+                import msvcrt
 
-            while True:
-                try:
-                    msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
-                    break
-                except PermissionError:
-                    time.sleep(0.2)
-        else:
-            import fcntl
+                while True:
+                    try:
+                        msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                        break
+                    except PermissionError:
+                        time.sleep(0.2)
+            else:
+                import fcntl
 
-            fcntl.flock(stream, fcntl.LOCK_EX)
+                fcntl.flock(stream, fcntl.LOCK_EX)
         try:
             yield
         finally:

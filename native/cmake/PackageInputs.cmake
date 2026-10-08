@@ -26,11 +26,21 @@ function(cadrumo_product_inputs output source_root)
       list(APPEND inputs "${source_root}/${name}")
     endif()
   endforeach()
-  foreach(helper product hashing cmake_build action_cache target build_toolchain layout build_paths)
+  foreach(helper product hashing cmake_build action_cache target build_toolchain layout build_paths build_timing)
     list(APPEND inputs "${source_root}/dev/packaging/native/${helper}.py")
   endforeach()
   list(REMOVE_DUPLICATES inputs)
   set(${output} "${inputs}" PARENT_SCOPE)
+endfunction()
+
+function(cadrumo_assembly_product_inputs output product_root)
+  # Assembly reads installed payloads and provenance, never wheel-build scratch.
+  set(${output} "${product_root}/dependencies" "${product_root}/build/product-wheels.json" PARENT_SCOPE)
+endfunction()
+
+function(cadrumo_assembly_backend_inputs output source_root backend)
+  # A verification-only sibling cannot change the assembled payload.
+  set(${output} "${source_root}/dev/packaging/native/platforms/${backend}.py" PARENT_SCOPE)
 endfunction()
 
 function(cadrumo_provision_helpers output source_root)

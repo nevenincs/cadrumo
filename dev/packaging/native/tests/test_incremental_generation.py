@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import copy
 import io
+import json
 import os
 import shutil
 import sys
@@ -19,11 +20,58 @@ from dev._paths import REPO_ROOT
 from ...command_execution import run_command
 from ...runtime_wheelhouse_contract import LockedWheel
 from .. import cmake_build, provision
+from ..build_timing import measure_build
 from ..cmake_build import action_toolchain
 from ..generate import generate
 from ..metadata import generate as generate_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize("mutation", ["none", "source", "producer", "independent"])
+def test_shared_producer_reuses_stable_generation_and_refuses_moving_inputs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation: str
+) -> None:
+    generated = tmp_path / "generated"
+    generated.mkdir()
+    (generated / "build-toolchain.json").write_text("{}")
+    (generated / "identity.json").write_text(json.dumps({"target": "windows-x86-64"}))
+    source = tmp_path / "input"
+    source.write_bytes(b"original")
+    inputs = tmp_path / "inputs.txt"
+    inputs.write_text(str(source) + "\n")
+    destination = tmp_path / "tools"
+    monkeypatch.setattr(cmake_build, "build_paths", lambda build: {"generated": generated, "tools": destination})
+    calls = []
+
+    def producer(build: Path, arguments: argparse.Namespace, **kwargs: object) -> Path:
+        calls.append(arguments.action)
+        destination.mkdir(exist_ok=True)
+        (destination / "payload").write_bytes(source.read_bytes())
+        if mutation == "source":
+            source.write_bytes(b"modified")
+        elif mutation in {"producer", "independent"}:
+            name = "CADRUMO_UV" if mutation == "producer" else "desktop/npm-lock"
+            (generated / "build-toolchain.json").write_text(
+                json.dumps({"builder_files": {name: {"sha256": "changed"}}})
+            )
+        return destination
+
+    monkeypatch.setattr(cmake_build, "build_action", producer)
+    arguments = argparse.Namespace(action="tools", inputs=inputs)
+    if mutation in {"source", "producer"}:
+        with (
+            pytest.raises(RuntimeError, match="Inputs changed during tools"),
+            measure_build(tmp_path, "tools") as timings,
+        ):
+            cmake_build.execute_action(tmp_path, arguments, timings)
+        assert not (destination / "ready").exists()
+    else:
+        for _ in range(2):
+            with measure_build(tmp_path, "tools") as timings:
+                cmake_build.execute_action(tmp_path, arguments, timings)
+        assert (destination / "ready").is_file()
+    assert calls == ["tools"]
 
 
 def _freeze_outputs(root: Path) -> dict[str, tuple[bytes, int]]:
