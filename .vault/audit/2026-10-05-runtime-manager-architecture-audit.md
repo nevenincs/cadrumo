@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e9172861477c250d27c47e8b241f34f9b901b16904bb2a597346a12efa906e1'
+body_hash: 'sha256:7f9edc8fa1ee5c95529235b15bee279d736d13f0208d92a23fa37dcb899acfa8'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -174,6 +174,14 @@ The operator excludes certificates from current work. macOS unsigned bundle auth
 ### 2026-10-08 cutover integration review — revision required
 
 Independent integrated review of the in-progress S12/S16/S17 wiring found two high issues: Windows session-end/other exit paths could drop a retained cutover claim without confirming successor/runtime cleanup, and the parent inferred Ready response delivery from an IPC reconnect state also reached after write/closing failures. A medium observation gap required the manager to sample each registration Ready generation before recognizing a later committed Absent generation, missing upgrade-plus-uninstall between polls. The worker is correcting these with bounded retained cleanup, explicit positive delivery/confirmation evidence and verified registration identity continuity; no installation gate is lifted on the current snapshot. Root additionally corrected unbounded child.wait after failed process observation and required exact immutable MSI role/identity binding instead of membership in a shared permitted-family list. Follow-up verification and review must close these findings before integrated source completion.
+
+### 2026-10-08 cutover corrective source review
+
+All reported high/high/medium source findings are corrected in the frozen S16/S17 snapshot. Every reviewed close/error/session-end path cancels the coordinator and retains the claim and child/runtime witnesses until confirmed cleanup; cancellation resumes through restored session/IPC ownership. Readiness uses ordered authenticated reports and an explicit final acknowledgement. The final pipe-close-before-parent-exit race is handled by a bounded ten-second observation of the already-held parent on the reporter thread, without blocking the UI. Committed registration absence permits skipped Ready generations only within the validated store identity/scope/prefix and cleared anchors. Restart refuses an unsettled handoff. Missing old auxiliary files no longer prevent admission of the exact held old manager while the candidate still requires full inventory proof.
+
+Independent re-review reports no residual material issue in these corrected paths. Latest manager CTest passes in 13.74s; configured pinned all-target Clippy passes; final Release binary rebuild passes. Evidence: build/windows-installers-x64/verification/manager-cutover-native-tests.log. Thirteen canonical projection/taxonomy tests pass. Native/application tests also pass against the additive catalogue/specific-version APIs and publication state. Sixteen passive CLI/TUI/MCP remedy cases pass in the explicit selected lane; scoped Ruff/ty pass.
+
+This is source integration evidence, not attended native acceptance. Existing hidden-window tests do not exercise a complete installed two-release Coordinator cancellation. Connected-frontend update notifications, obsolete native-product cleanup and the completed native removal emitter remain explicit work. S12/S13/S15/S16/S17 retain their broader verification/acceptance obligations; no release or installation gate is lifted.
 
 ## Recommendations
 

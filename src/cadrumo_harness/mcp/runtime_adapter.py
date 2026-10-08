@@ -20,6 +20,7 @@ from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.automation_enrollment import (
@@ -206,7 +207,11 @@ class RuntimeMcpAdapter:
             except AutomationRequesterUncertainError as error:
                 return {"outcome": "unresolved", "request_id": str(error.request_id), "code": error.reason}
             except Exception as error:
-                return {"outcome": "refused", "code": refusal_code(error)}
+                code = refusal_code(error)
+                reply: dict[str, Any] = {"outcome": "refused", "code": code}
+                if remedy := runtime_unavailable_remedy(code):
+                    reply["remedy"] = remedy
+                return reply
 
     async def _wire(self, function: Callable[[], WireResultT]) -> WireResultT:
         return await await_cancellation_complete(asyncio.to_thread(function), task_name="mcp-runtime-call")

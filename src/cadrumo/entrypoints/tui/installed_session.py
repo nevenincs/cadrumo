@@ -21,6 +21,7 @@ from ...adapters.local_runtime.runtime_credentials import open_installed_credent
 from ...adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ...application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from ...application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from ...application.runtime.contracts import RuntimeRefusalError
 from ...application.user_profile.login_interaction import (
     ProfileLoginInventoryState,
@@ -225,6 +226,8 @@ def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusal
         primary_error=error,
     )
     sys.stderr.write(f"{reason}\n")
+    if remedy := runtime_unavailable_remedy(reason):
+        sys.stderr.write(f"{remedy}\n")
     return SESSION_INVENTORY_UNAVAILABLE
 
 

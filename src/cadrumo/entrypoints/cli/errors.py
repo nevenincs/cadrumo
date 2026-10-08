@@ -46,6 +46,7 @@ from pydantic import BaseModel, ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions.models import PreconditionVerdict
+from ...application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from ...core.click_context import argv_requests_json, json_output_requested
 from ...core.config_state_root import FormerProductStateError
 from ...core.errors.error_codes import (
@@ -648,15 +649,23 @@ def render_error_payload(
     authentication_notices = resolve_notice_actions(
         (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices()),
     )
+    reason = getattr(error, "reason", None)
+    if reason is None and isinstance(error, CadrumoError):
+        reason = (error.context or {}).get("reason")
+    if reason is None and isinstance(error, CliRefusedBoundaryError) and error.args:
+        reason = error.args[0]
+    remedy = runtime_unavailable_remedy(reason if isinstance(reason, str) else None)
+    remedy_context = {"remedy": remedy} if remedy is not None else None
     if as_json:
         return render_error_json(
             error,
+            context=remedy_context,
             action=action,
             active_profile=active_profile_label_for_error(error),
             command=command,
             notices=(*(() if notice is None else (notice,)), *authentication_notices),
         )
-    text = render_error_text(error)
+    text = render_error_text(error, context=remedy_context)
     if action is not None:
         text = _render_precondition_action_text(text, command=command, action=action)
     if authentication_notices:

@@ -21,6 +21,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
+from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
@@ -68,12 +69,15 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
 
 
 def _unauthenticated_status(profile_id: UUID, denial: str | None) -> dict[str, Any]:
-    return {
+    reply: dict[str, Any] = {
         "outcome": "status",
         "profile_id": str(profile_id),
         "authenticated": False,
         "denial": denial or "authentication_required",
     }
+    if remedy := runtime_unavailable_remedy(denial):
+        reply["remedy"] = remedy
+    return reply
 
 
 def _search(client: RuntimeFrontendClient, profile_id: UUID, args: dict[str, Any], deadline: float) -> dict[str, Any]:

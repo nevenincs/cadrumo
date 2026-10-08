@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:4003fbb54dd84237780ce3cd003fc6f3e18adee0ba908b424ce67915f0a64fa9'
+body_hash: 'sha256:a4dca2133c4c20ef5dff2e7fe8ec0f8ffbfc81d0c66a7684fd1a2c1f990fe4fc'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -405,6 +405,17 @@ related:
 - `S19` `verify:` `Configured builder macOS metadata and installation tests 28 passed 2 POSIX skipped` -> `pass`
 - `S19` `verify:` `Scoped Ruff format lint ty and diff` -> `pass`
 - `S19` `by:` `Codex`
+- `S15` `M` `src/cadrumo/application/operator_output/runtime_remedies.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S15` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S15` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_manager_remedy.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_manager_remedy.py`
+- `S15` `M` `src/cadrumo_harness/mcp/tests/test_runtime_manager_remedy.py`
+- `S15` `verify:` `16 explicit CLI/TUI/MCP remedy tests` -> `pass`
+- `S15` `verify:` `Scoped Ruff and ty` -> `pass`
+- `S15` `by:` `Codex`
 
 ## Notes
 
@@ -437,3 +448,4 @@ related:
 - `S24` Existing canonical taxonomy already enrolls all six manager/runtime records; added cross-version grammar and enrollment/axis assertions without a second path authority.
 - `S13` Coherent shared Windows tray/IPC and Linux foundation checkpoint; S13 remains open until integration review/interactive evidence. S12 successor readiness and S18 production composition remain open. Linux test harness fixes are verified separately. No disposable-host installation acceptance.
 - `S19` Unsigned metadata/source checkpoint only. No login registration, ad-hoc substitute, Apple SDK/Mach-O build, DMG or native SMAppService acceptance. S19 stays open. Shared distribution cache input enrollment follows in S09 graph checkpoint.
+- `S15` Localized passive guidance; no manager request or business-code change. Repository-wide import gate previously blocked by unrelated concurrent module removals; S15 broader gate remains open.
